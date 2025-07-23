@@ -395,7 +395,10 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v1_
                     aggregate_expression: None,
                 },
                 arguments: {},
-                permissions: {},
+                permissions: ModelPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {
                     arguments_input_config: None,

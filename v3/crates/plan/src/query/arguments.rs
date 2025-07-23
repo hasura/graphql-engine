@@ -10,7 +10,7 @@ use metadata_resolve::data_connectors::ArgumentPresetValue;
 use metadata_resolve::{
     ArgumentInfo, CommandWithPermissions, FieldMapping, Metadata, ModelWithPermissions,
     ObjectTypeWithRelationships, Qualified, QualifiedBaseType, QualifiedTypeName,
-    QualifiedTypeReference, TypeMapping, ValueExpressionOrPredicate, unwrap_custom_type_name,
+    QualifiedTypeReference, TypeMapping, unwrap_custom_type_name,
 };
 use open_dds::{
     arguments::ArgumentName,
@@ -76,38 +76,21 @@ pub fn process_argument_presets_for_model<'s>(
     arguments: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>,
     model: &'s ModelWithPermissions,
     metadata: &'s Metadata,
+    model_view: &'s metadata_accessor::ModelView<'s>,
     session: &Session,
     request_headers: &HeaderMap,
     plan_state: &mut PlanState,
     usage_counts: &mut UsagesCounts,
 ) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>, PlanError> {
-    let model_source = model.model.source.as_ref().ok_or_else(|| {
-        ArgumentPresetExecutionError::ModelSourceNotFound {
-            model_name: model.model.name.clone(),
-        }
-    })?;
-
-    let argument_presets = &model
-        .permissions
-        .get(&session.role)
-        .and_then(|permissions| permissions.select.as_ref())
-        .ok_or_else(
-            || ArgumentPresetExecutionError::ModelArgumentPresetsNotFound {
-                model_name: model.model.name.clone(),
-                role: session.role.clone(),
-            },
-        )?
-        .argument_presets;
-
     process_argument_presets(
         arguments,
         &model.arguments,
-        &model_source.argument_mappings,
-        argument_presets,
+        &model_view.source.argument_mappings,
+        &model_view.permission.argument_presets,
         metadata,
-        &model_source.type_mappings,
-        &model_source.data_connector,
-        &model_source.data_connector_link_argument_presets,
+        &model_view.source.type_mappings,
+        &model_view.source.data_connector,
+        &model_view.source.data_connector_link_argument_presets,
         session,
         request_headers,
         plan_state,
@@ -131,7 +114,7 @@ pub fn process_argument_presets_for_command<'s>(
         }
     })?;
 
-    process_argument_presets_for_auth_rules(
+    process_argument_presets(
         arguments,
         &command.command.arguments,
         &command_source.argument_mappings,
@@ -147,9 +130,7 @@ pub fn process_argument_presets_for_command<'s>(
     )
 }
 
-// the commands and model types are subtly different now. once models use rules-based
-// auth we can keep this as the only one
-fn process_argument_presets_for_auth_rules<'s>(
+fn process_argument_presets<'s>(
     mut arguments: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>,
     argument_infos: &IndexMap<ArgumentName, ArgumentInfo>,
     argument_mappings: &BTreeMap<ArgumentName, DataConnectorArgumentName>,
@@ -183,92 +164,10 @@ fn process_argument_presets_for_auth_rules<'s>(
                 }
             })?;
 
-        let argument_value =
-            permissions::make_argument_from_value_expression_or_predicate_auth_rules(
-                data_connector_link,
-                type_mappings,
-                argument_value,
-                &session.variables,
-                &metadata.object_types,
-                usage_counts,
-            )?;
-
-        arguments.insert(data_connector_argument_name.clone(), argument_value);
-    }
-
-    // Apply input field presets from the TypePermissions involved in the arguments' types
-    for (argument_name, argument_info) in argument_infos {
-        let data_connector_argument_name =
-            argument_mappings.get(argument_name).ok_or_else(|| {
-                ArgumentPresetExecutionError::ArgumentMappingNotFound {
-                    argument_name: argument_name.clone(),
-                }
-            })?;
-
-        if let Some(existing_argument_value) = arguments.get_mut(data_connector_argument_name) {
-            match existing_argument_value {
-                UnresolvedArgument::Literal { value } => {
-                    apply_input_field_presets_to_value(
-                        value,
-                        metadata,
-                        &argument_info.argument_type,
-                        type_mappings,
-                        session,
-                        plan_state,
-                    )?;
-                }
-                UnresolvedArgument::BooleanExpression { .. } => {
-                    // We don't apply input field presets to boolean expression arguments
-                }
-            }
-        }
-    }
-
-    Ok(arguments)
-}
-
-fn process_argument_presets<'s>(
-    mut arguments: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>,
-    argument_infos: &IndexMap<ArgumentName, ArgumentInfo>,
-    argument_mappings: &BTreeMap<ArgumentName, DataConnectorArgumentName>,
-    argument_presets: &'s BTreeMap<
-        ArgumentName,
-        (QualifiedTypeReference, ValueExpressionOrPredicate),
-    >,
-    metadata: &Metadata,
-    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-    data_connector_link: &'s metadata_resolve::DataConnectorLink,
-    data_connector_link_argument_presets: &BTreeMap<DataConnectorArgumentName, ArgumentPresetValue>,
-    session: &Session,
-    request_headers: &HeaderMap,
-    plan_state: &mut PlanState,
-    usage_counts: &mut UsagesCounts,
-) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>, PlanError> {
-    // Preset arguments from `DataConnectorLink` argument presets
-    for (argument_name, value) in process_connector_link_presets(
-        data_connector_link_argument_presets,
-        &session.variables,
-        request_headers,
-        type_mappings,
-        &metadata.object_types,
-    )? {
-        arguments.insert(argument_name, UnresolvedArgument::Literal { value });
-    }
-
-    // Preset arguments from Model/CommandPermission argument presets
-    for (argument_name, (field_type, argument_value)) in argument_presets {
-        let data_connector_argument_name =
-            argument_mappings.get(argument_name).ok_or_else(|| {
-                ArgumentPresetExecutionError::ArgumentMappingNotFound {
-                    argument_name: argument_name.clone(),
-                }
-            })?;
-
         let argument_value = permissions::make_argument_from_value_expression_or_predicate(
             data_connector_link,
             type_mappings,
             argument_value,
-            field_type,
             &session.variables,
             &metadata.object_types,
             usage_counts,
@@ -483,7 +382,6 @@ pub enum ArgumentPresetExecutionError {
         role: Role,
         model_name: Qualified<ModelName>,
     },
-
     #[error("command {command_name} does not have a source defined")]
     CommandSourceNotFound {
         command_name: Qualified<CommandName>,

@@ -520,7 +520,10 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
                         type_representation: None,
                     },
                 },
-                permissions: {},
+                permissions: ModelPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {
                     arguments_input_config: Some(

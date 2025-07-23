@@ -1,6 +1,7 @@
 mod error;
 mod predicate;
 mod types;
+use crate::Conditions;
 use crate::stages::{
     boolean_expressions, data_connector_scalar_types, models_graphql, object_relationships,
     scalar_types,
@@ -10,11 +11,12 @@ use indexmap::IndexMap;
 use open_dds::identifier::SubgraphName;
 use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
 use std::collections::BTreeMap;
+use types::ModelPermissions;
 pub use types::{
-    FilterPermission, ModelPermissionIssue, ModelPermissionsOutput, ModelPredicate,
-    ModelTargetSource, ModelWithPermissions, PredicateRelationshipInfo, RelationalDeletePermission,
-    RelationalInsertPermission, RelationalUpdatePermission, SelectPermission,
-    UnaryComparisonOperator,
+    FilterPermission, ModelAuthorizationRule, ModelPermissionIssue, ModelPermissionsOutput,
+    ModelPredicate, ModelTargetSource, ModelWithPermissions, PredicateRelationshipInfo,
+    RelationalDeletePermission, RelationalInsertPermission, RelationalOperation,
+    RelationalUpdatePermission, SelectPermission, UnaryComparisonOperator,
 };
 mod model_permission;
 pub(crate) use predicate::resolve_model_predicate_with_type;
@@ -40,6 +42,7 @@ pub fn resolve(
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
+    conditions: &mut Conditions,
 ) -> Result<ModelPermissionsOutput, Vec<Error>> {
     let mut issues = Vec::new();
     let mut models_with_permissions: IndexMap<Qualified<ModelName>, ModelWithPermissions> = models
@@ -52,7 +55,7 @@ pub fn resolve(
                     arguments: model.arguments.clone(),
                     filter_expression_type: model.filter_expression_type.clone(),
                     graphql_api: model.graphql_api.clone(),
-                    permissions: BTreeMap::new(),
+                    permissions: ModelPermissions::new(),
                     description: model.description.clone(),
                 },
             )
@@ -79,8 +82,9 @@ pub fn resolve(
             scalar_types,
             models,
             boolean_expression_types,
-            &mut models_with_permissions,
             permissions,
+            &mut models_with_permissions,
+            conditions,
             &mut issues,
         ));
     }
@@ -106,8 +110,9 @@ fn resolve_model_permissions(
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
-    models_with_permissions: &mut IndexMap<Qualified<ModelName>, ModelWithPermissions>,
     permissions: &open_dds::permissions::ModelPermissionsV2,
+    models_with_permissions: &mut IndexMap<Qualified<ModelName>, ModelWithPermissions>,
+    conditions: &mut Conditions,
     issues: &mut Vec<ModelPermissionIssue>,
 ) -> Result<(), Error> {
     let model_name =
@@ -137,6 +142,7 @@ fn resolve_model_permissions(
             scalar_types,
             models,
             boolean_expression_types,
+            conditions,
             issues,
         )?;
 

@@ -15,6 +15,7 @@ pub fn build_model(
     // if we have no select permission for the model, ignore it
     if model
         .permissions
+        .by_role
         .get(role)
         .and_then(|permissions| permissions.select.as_ref())
         .is_none()

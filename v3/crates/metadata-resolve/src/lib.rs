@@ -39,9 +39,10 @@ pub use stages::data_connectors::{
 };
 pub use stages::graphql_config::{GlobalGraphqlConfig, MultipleOrderByInputObjectFields};
 pub use stages::model_permissions::{
-    FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions,
-    PredicateRelationshipInfo, RelationalDeletePermission, RelationalInsertPermission,
-    RelationalUpdatePermission, SelectPermission, UnaryComparisonOperator,
+    FilterPermission, ModelAuthorizationRule, ModelPredicate, ModelTargetSource,
+    ModelWithPermissions, PredicateRelationshipInfo, RelationalDeletePermission,
+    RelationalInsertPermission, RelationalOperation, RelationalUpdatePermission, SelectPermission,
+    UnaryComparisonOperator,
 };
 pub use stages::models::{ModelSource, ModelsError};
 pub use stages::models_graphql::{

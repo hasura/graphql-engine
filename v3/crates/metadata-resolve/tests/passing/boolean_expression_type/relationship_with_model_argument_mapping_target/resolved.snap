@@ -1313,20 +1313,41 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/relati
                     aggregate_expression: None,
                 },
                 arguments: {},
-                permissions: {
-                    Role(
-                        "user",
-                    ): ResolvedPermissions {
-                        select: Some(
-                            SelectPermission {
-                                filter: AllowAll,
-                                argument_presets: {},
-                                allow_subscriptions: false,
-                            },
-                        ),
-                        relational_insert: None,
-                        relational_update: None,
-                        relational_delete: None,
+                permissions: ModelPermissions {
+                    authorization_rules: [
+                        Access {
+                            condition: Some(
+                                ConditionHash(
+                                    5261800314210927403,
+                                ),
+                            ),
+                            allow_or_deny: Allow,
+                        },
+                        Subscription {
+                            condition: Some(
+                                ConditionHash(
+                                    5261800314210927403,
+                                ),
+                            ),
+                            allow_or_deny: Deny,
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "user",
+                        ): ModelPermission {
+                            select: Some(
+                                SelectPermission {
+                                    filter: AllowAll,
+                                    allow_subscriptions: false,
+                                },
+                            ),
+                            input: Some(
+                                ModelInputPermission {
+                                    argument_presets: {},
+                                },
+                            ),
+                        },
                     },
                 },
                 filter_expression_type: Some(
@@ -2101,20 +2122,41 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/relati
                         type_representation: None,
                     },
                 },
-                permissions: {
-                    Role(
-                        "user",
-                    ): ResolvedPermissions {
-                        select: Some(
-                            SelectPermission {
-                                filter: AllowAll,
-                                argument_presets: {},
-                                allow_subscriptions: false,
-                            },
-                        ),
-                        relational_insert: None,
-                        relational_update: None,
-                        relational_delete: None,
+                permissions: ModelPermissions {
+                    authorization_rules: [
+                        Access {
+                            condition: Some(
+                                ConditionHash(
+                                    5261800314210927403,
+                                ),
+                            ),
+                            allow_or_deny: Allow,
+                        },
+                        Subscription {
+                            condition: Some(
+                                ConditionHash(
+                                    5261800314210927403,
+                                ),
+                            ),
+                            allow_or_deny: Deny,
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "user",
+                        ): ModelPermission {
+                            select: Some(
+                                SelectPermission {
+                                    filter: AllowAll,
+                                    allow_subscriptions: false,
+                                },
+                            ),
+                            input: Some(
+                                ModelInputPermission {
+                                    argument_presets: {},
+                                },
+                            ),
+                        },
                     },
                 },
                 filter_expression_type: None,

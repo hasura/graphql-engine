@@ -501,7 +501,10 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
                         type_representation: None,
                     },
                 },
-                permissions: {},
+                permissions: ModelPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {
                     arguments_input_config: Some(

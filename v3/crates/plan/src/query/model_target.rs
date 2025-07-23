@@ -3,6 +3,7 @@ use super::arguments::{
 };
 use super::process_argument_presets_for_model;
 use super::types::NDCQuery;
+use crate::ModelView;
 use crate::filter::{resolve_model_permission_filter, to_filter_expression};
 use crate::metadata_accessor::OutputObjectTypeView;
 use crate::order_by::to_resolved_order_by_element;
@@ -22,6 +23,7 @@ pub fn model_target_to_ndc_query(
     model: &metadata_resolve::ModelWithPermissions,
     model_source: &metadata_resolve::ModelSource,
     model_object_type: &OutputObjectTypeView,
+    model_view: &ModelView,
     remote_predicates: &mut PredicateQueryTrees,
     plan_state: &mut PlanState,
 ) -> Result<NDCQuery, PlanError> {
@@ -32,7 +34,7 @@ pub fn model_target_to_ndc_query(
     // Permission filter
     let permission_filter = resolve_model_permission_filter(
         session,
-        model,
+        model_view,
         model_source,
         &metadata.object_types,
         &mut relationships,
@@ -58,6 +60,7 @@ pub fn model_target_to_ndc_query(
         unresolved_arguments,
         model,
         metadata,
+        model_view,
         session,
         request_headers,
         plan_state,

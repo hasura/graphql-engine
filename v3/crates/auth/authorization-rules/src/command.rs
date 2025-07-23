@@ -57,12 +57,7 @@ pub fn evaluate_command_authorization_rules<'a>(
                     conditions,
                     condition_cache,
                 )? {
-                    allow_access = match allow_or_deny {
-                        metadata_resolve::AllowOrDeny::Allow => {
-                            allow_access.append(HasAccess::Allow)
-                        }
-                        metadata_resolve::AllowOrDeny::Deny => allow_access.append(HasAccess::Deny),
-                    };
+                    allow_access.set(allow_or_deny);
                 }
             }
             CommandAuthorizationRule::ArgumentPresetValue {

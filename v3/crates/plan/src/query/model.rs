@@ -57,6 +57,14 @@ pub fn from_model_group_by(
         plan_state,
     )?;
 
+    let model_view = crate::metadata_accessor::get_model(
+        metadata,
+        &model.model.name,
+        &session.role,
+        &session.variables,
+        plan_state,
+    )?;
+
     let data_connector = &model_source.data_connector;
     let ndc_version = data_connector.capabilities.supported_ndc_version;
 
@@ -229,6 +237,7 @@ pub fn from_model_group_by(
         model,
         model_source,
         &model_object_type,
+        &model_view,
         &mut remote_predicates,
         plan_state,
     )?;
@@ -316,6 +325,14 @@ pub fn from_model_aggregate_selection(
         plan_state,
     )?;
 
+    let model_view = crate::metadata_accessor::get_model(
+        metadata,
+        &model.model.name,
+        &session.role,
+        &session.variables,
+        plan_state,
+    )?;
+
     let data_connector = &model_source.data_connector;
     let ndc_version = data_connector.capabilities.supported_ndc_version;
 
@@ -351,6 +368,7 @@ pub fn from_model_aggregate_selection(
         model,
         model_source,
         &model_object_type,
+        &model_view,
         &mut remote_predicates,
         plan_state,
     )?;
@@ -645,6 +663,14 @@ pub fn from_model_selection(
         plan_state,
     )?;
 
+    let model_view = crate::metadata_accessor::get_model(
+        metadata,
+        &model.model.name,
+        &session.role,
+        &session.variables,
+        plan_state,
+    )?;
+
     let mut relationships = BTreeMap::new();
 
     let ndc_fields = field_selection::resolve_field_selection(
@@ -670,6 +696,7 @@ pub fn from_model_selection(
         model,
         model_source,
         &model_object_type,
+        &model_view,
         &mut remote_predicates,
         plan_state,
     )?;

@@ -334,6 +334,7 @@ fn resolve_internal(
         &scalar_types,
         &models_with_graphql,
         &boolean_expression_types,
+        &mut conditions,
     )
     .map_err(flatten_multiple_errors)?;
 

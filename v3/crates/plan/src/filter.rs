@@ -1,5 +1,6 @@
-use crate::process_model_predicate;
+use crate::query::process_permissions;
 use crate::types::PlanState;
+use crate::{ModelView, process_model_predicate};
 mod helpers;
 use super::column::{ResolvedColumn, to_resolved_column};
 use super::types::{BooleanExpressionError, PermissionError, PlanError};
@@ -7,8 +8,8 @@ use crate::metadata_accessor::OutputObjectTypeView;
 use hasura_authn_core::Session;
 pub use helpers::with_nesting_path;
 use metadata_resolve::{
-    DataConnectorLink, ObjectComparisonKind, ObjectTypeWithRelationships, Qualified,
-    QualifiedBaseType, ResolvedObjectBooleanExpressionType, TypeMapping,
+    DataConnectorLink, ModelPredicate, ObjectComparisonKind, ObjectTypeWithRelationships,
+    Qualified, QualifiedBaseType, ResolvedObjectBooleanExpressionType, TypeMapping,
 };
 use open_dds::{
     data_connector::{DataConnectorColumnName, DataConnectorName, DataConnectorOperatorName},
@@ -421,16 +422,17 @@ pub(crate) fn model_permission_filter_to_expression<'metadata>(
     object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     usage_counts: &mut UsagesCounts,
 ) -> Result<Option<Expression<'metadata>>, PlanError> {
-    match &model.select_permission.filter {
-        metadata_resolve::FilterPermission::AllowAll => Ok::<_, PlanError>(None),
-        metadata_resolve::FilterPermission::Filter(filter) => Ok(Some(process_model_predicate(
+    if model.permission.filters.is_empty() {
+        Ok::<_, PlanError>(None)
+    } else {
+        Ok(Some(process_permissions(
             &model.source.data_connector,
             &model.source.type_mappings,
-            filter,
+            &model.permission.filters,
             &session.variables,
             object_types,
             usage_counts,
-        )?)),
+        )?))
     }
 }
 
@@ -1079,7 +1081,7 @@ fn boolean_expression_for_comparison(
 // Resolve the model permission filter
 pub(crate) fn resolve_model_permission_filter(
     session: &Session,
-    model: &metadata_resolve::ModelWithPermissions,
+    model_view: &ModelView,
     model_source: &metadata_resolve::ModelSource,
     object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     collect_relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
@@ -1087,41 +1089,33 @@ pub(crate) fn resolve_model_permission_filter(
     plan_state: &mut PlanState,
     usage_counts: &mut UsagesCounts,
 ) -> Result<Option<ResolvedFilterExpression>, PlanError> {
-    let model_name = &model.model.name;
-    let model_permission = model.permissions.get(&session.role).ok_or_else(|| {
-        PlanError::Permission(PermissionError::Other(format!(
-            "Role '{}' does not have select permission for model '{}'",
-            session.role, model_name
-        )))
-    })?;
+    if model_view.permission.filters.is_empty() {
+        Ok(None)
+    } else {
+        let filter = &ModelPredicate::And(
+            model_view
+                .permission
+                .filters
+                .iter()
+                .map(|filter| (*filter).clone())
+                .collect(),
+        );
+        let filter_ir = process_model_predicate(
+            &model_source.data_connector,
+            &model_source.type_mappings,
+            filter,
+            &session.variables,
+            object_types,
+            usage_counts,
+        )?;
 
-    let model_select_permission = model_permission.select.as_ref().ok_or_else(|| {
-        PlanError::Permission(PermissionError::Other(format!(
-            "Role '{}' does not have select permission for model '{}'",
-            session.role, model_name
-        )))
-    })?;
+        let filter = crate::plan_expression(
+            &filter_ir,
+            collect_relationships,
+            remote_predicates,
+            plan_state,
+        )?;
 
-    match &model_select_permission.filter {
-        metadata_resolve::FilterPermission::AllowAll => Ok::<_, PlanError>(None),
-        metadata_resolve::FilterPermission::Filter(filter) => {
-            let filter_ir = process_model_predicate(
-                &model_source.data_connector,
-                &model_source.type_mappings,
-                filter,
-                &session.variables,
-                object_types,
-                usage_counts,
-            )?;
-
-            let filter = crate::plan_expression(
-                &filter_ir,
-                collect_relationships,
-                remote_predicates,
-                plan_state,
-            )?;
-
-            Ok(filter.remove_always_true_expression())
-        }
+        Ok(filter.remove_always_true_expression())
     }
 }

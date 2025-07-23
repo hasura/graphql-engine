@@ -1,7 +1,8 @@
 use crate::{PermissionError, types::PlanState};
 use authorization_rules::{
-    ArgumentPolicy, ConditionCache, ObjectInputPolicy, evaluate_command_authorization_rules,
-    evaluate_field_authorization_rules, evaluate_type_input_authorization_rules,
+    ArgumentPolicy, ConditionCache, ModelPermission, ObjectInputPolicy,
+    evaluate_command_authorization_rules, evaluate_field_authorization_rules,
+    evaluate_model_authorization_rules, evaluate_type_input_authorization_rules,
 };
 use hasura_authn_core::{Role, SessionVariables};
 use indexmap::IndexMap;
@@ -154,7 +155,7 @@ pub fn get_input_object_type<'metadata>(
 pub struct ModelView<'metadata> {
     pub data_type: &'metadata Qualified<CustomTypeName>,
     pub source: &'metadata metadata_resolve::ModelSource,
-    pub select_permission: &'metadata metadata_resolve::SelectPermission,
+    pub permission: ModelPermission<'metadata>,
 }
 
 // fetch a model from metadata, ensuring we have ModelPermissions
@@ -173,25 +174,28 @@ pub fn get_model<'metadata>(
             model_name: model_name.clone(),
         })?;
 
-    if let Some(permission) = model.permissions.get(role) {
-        if let Some(select_permission) = &permission.select {
-            if is_allowed_access_to_object_type(
-                metadata,
-                &model.model.data_type,
-                session_variables,
-                &mut plan_state.condition_cache,
-            )? {
-                if let Some(model_source) = &model.model.source {
-                    return Ok(ModelView {
-                        data_type: &model.model.data_type,
-                        source: model_source,
-                        select_permission,
-                    });
-                }
-                return Err(PermissionError::ModelHasNoSource {
-                    model_name: model_name.clone(),
+    if let Some(permission) = evaluate_model_authorization_rules(
+        &model.permissions.authorization_rules,
+        session_variables,
+        &metadata.conditions,
+        &mut plan_state.condition_cache,
+    )? {
+        if is_allowed_access_to_object_type(
+            metadata,
+            &model.model.data_type,
+            session_variables,
+            &mut plan_state.condition_cache,
+        )? {
+            if let Some(model_source) = &model.model.source {
+                return Ok(ModelView {
+                    data_type: &model.model.data_type,
+                    source: model_source,
+                    permission,
                 });
             }
+            return Err(PermissionError::ModelHasNoSource {
+                model_name: model_name.clone(),
+            });
         }
     }
 
