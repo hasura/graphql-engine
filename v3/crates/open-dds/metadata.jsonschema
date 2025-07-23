@@ -2509,6 +2509,18 @@
               "$ref": "#/definitions/LifecyclePreResponsePluginHookConfigRequest"
             }
           ]
+        },
+        "mode": {
+          "description": "Configuration for the mode of the plugin hook (synchronous or asynchronous) If not specified, the default is asynchronous.",
+          "default": null,
+          "anyOf": [
+            {
+              "$ref": "#/definitions/LifecyclePreResponsePluginHookMode"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "additionalProperties": false
@@ -2565,6 +2577,56 @@
         }
       },
       "additionalProperties": false
+    },
+    "LifecyclePreResponsePluginHookMode": {
+      "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePreResponsePluginHookMode",
+      "title": "LifecyclePreResponsePluginHookMode",
+      "description": "Configuration for the mode of the plugin hook (synchronous or asynchronous)",
+      "oneOf": [
+        {
+          "title": "LifecyclePreResponsePluginHookSynchronousModeConfig",
+          "description": "Synchronous mode. The engine will wait for the plugin hook to respond before continuing.",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "synchronous"
+              ]
+            },
+            "onPluginFailure": {
+              "description": "Configuration for the on-plugin-failure behavior of the plugin hook (default: fail).",
+              "default": "fail",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/OnPluginFailure"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "LifecyclePreResponsePluginHookAsynchronousModeConfig",
+          "description": "Asynchronous mode. The engine will not wait for the plugin hook to respond before continuing.",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "asynchronous"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
     },
     "LifecyclePreRoutePluginHookConfig": {
       "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePreRoutePluginHookConfig",
@@ -3925,6 +3987,27 @@
         }
       },
       "additionalProperties": false
+    },
+    "OnPluginFailure": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OnPluginFailure",
+      "title": "OnPluginFailure",
+      "description": "Configuration for the on-plugin-failure behavior of the plugin hook.",
+      "oneOf": [
+        {
+          "description": "Fail the request if the plugin hook fails.",
+          "type": "string",
+          "enum": [
+            "fail"
+          ]
+        },
+        {
+          "description": "Continue with the request if the plugin hook fails.",
+          "type": "string",
+          "enum": [
+            "continue"
+          ]
+        }
+      ]
     },
     "OpenDdFlags": {
       "$id": "https://hasura.io/jsonschemas/metadata/OpenDdFlags",

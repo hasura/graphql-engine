@@ -8,7 +8,7 @@ use graphql_ir::{RequestPlan, generate_request_plan};
 use graphql_schema::GDS;
 use hasura_authn_core::Identity;
 use lang_graphql::http::RawRequest;
-use metadata_resolve::LifecyclePluginConfigs;
+use metadata_resolve::{LifecyclePluginConfigs, ResolvedLifecyclePreResponsePluginHooks};
 use open_dds::permissions::Role;
 use std::collections::BTreeMap;
 use std::fs;
@@ -98,7 +98,7 @@ pub fn bench_execute(
         pre_ndc_request_plugins: BTreeMap::new(),
         pre_ndc_response_plugins: BTreeMap::new(),
         pre_parse_plugins: Vec::new(),
-        pre_response_plugins: Vec::new(),
+        pre_response_plugins: ResolvedLifecyclePreResponsePluginHooks::new(),
         pre_route_plugins: Vec::new(),
     };
 

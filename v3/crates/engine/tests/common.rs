@@ -7,8 +7,8 @@ use hasura_authn_core::{
 };
 use lang_graphql::ast::common as ast;
 use lang_graphql::{http::RawRequest, schema::Schema};
-use metadata_resolve::LifecyclePluginConfigs;
 use metadata_resolve::data_connectors::NdcVersion;
+use metadata_resolve::{LifecyclePluginConfigs, ResolvedLifecyclePreResponsePluginHooks};
 use open_dds::session_variables::{SESSION_VARIABLE_ROLE, SessionVariableName};
 use pretty_assertions::assert_eq;
 use serde_json as json;
@@ -127,7 +127,7 @@ pub(crate) fn test_introspection_expectation(
             pre_ndc_request_plugins: BTreeMap::new(),
             pre_ndc_response_plugins: BTreeMap::new(),
             pre_parse_plugins: Vec::new(),
-            pre_response_plugins: Vec::new(),
+            pre_response_plugins: ResolvedLifecyclePreResponsePluginHooks::new(),
             pre_route_plugins: Vec::new(),
         };
 
@@ -404,7 +404,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                 pre_ndc_request_plugins: BTreeMap::new(),
                 pre_ndc_response_plugins: BTreeMap::new(),
                 pre_parse_plugins: Vec::new(),
-                pre_response_plugins: Vec::new(),
+                pre_response_plugins: ResolvedLifecyclePreResponsePluginHooks::new(),
                 pre_route_plugins: Vec::new(),
             };
 
@@ -615,7 +615,7 @@ pub fn test_execute_explain(
             pre_ndc_request_plugins: BTreeMap::new(),
             pre_ndc_response_plugins: BTreeMap::new(),
             pre_parse_plugins: Vec::new(),
-            pre_response_plugins: Vec::new(),
+            pre_response_plugins: ResolvedLifecyclePreResponsePluginHooks::new(),
             pre_route_plugins: Vec::new(),
         };
         let query = read_to_string(&root_test_dir.join(gql_request_file_path))?;

@@ -2,6 +2,56 @@
 
 ## [Unreleased]
 
+### Synchronous Mode Pre-Response Plugins
+
+Added support for synchronous pre-response plugins that can intercept and modify
+GraphQL responses before they are sent to clients.
+
+**Key Features:**
+
+- **Response Modification**: Plugins can transform response content and pass
+  modified responses to subsequent plugins in the chain
+- **Sequential Execution**: Plugins execute in order, allowing response
+  transformations to build upon each other
+- **Flexible Response Handling**: Support for multiple HTTP status codes:
+  - `204 No Content`: Continue with original response
+  - `200 OK`: Continue with modified response (JSON body)
+  - `400 Bad Request`: Return user error to client
+  - `500 Internal Server Error`: Return internal error
+- **On-Plugin-Failure Support**: Configure plugins to fail gracefully without
+  breaking the entire request
+
+**Configuration:** Following is an example of the OpenDD metadata for the
+pre-response plugin in synchronous mode:
+
+```yaml
+kind: LifecyclePluginHook
+version: v1
+definition:
+  pre: response
+  name: test-1
+  url:
+    value: http://localhost:5001/extensions/add_ai_summary
+  config:
+    request:
+      session: {}
+      rawRequest:
+        query: {}
+        variables: {}
+    mode:
+      type: synchronous
+      onPluginFailure: continue
+```
+
+The `mode` field in the `LifecyclePreResponsePluginHook` configuration allows
+specifying the mode of the plugin hook.
+
+- `type` (`string`): The type of the mode. Can be either `synchronous` or
+  `asynchronous` (default).
+- `onPluginFailure` (`string`): The behavior of the engine when the plugin
+  returns 400 or 500. Can be one of `fail` (default) or `continue`. This field
+  is only for `synchronous` pre-response plugins.
+
 ### Changed
 
 ### Fixed

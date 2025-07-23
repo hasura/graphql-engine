@@ -2,6 +2,7 @@ use super::types::{ConnectionInitState, OperationId, ServerMessage};
 use crate::metrics::WebSocketMetrics;
 use crate::poller;
 use crate::websocket::types as ws;
+use ::pre_response_plugin::execute::PreResponsePluginResponse;
 use axum::http;
 use blake2::{Blake2b, Digest};
 use engine_types::ExposeInternalErrors;
@@ -608,6 +609,12 @@ impl GraphQLResponse {
     }
 }
 
+/// A helper enum to represent a GraphQL response or a custom response.
+enum GraphQLResponseOrCustomResponse {
+    GraphQLResponse(Box<GraphQLResponse>),
+    CustomResponse(Vec<u8>),
+}
+
 /// Sends a single result (query or mutation) along with a completion message.
 /// If there are errors, they are sent before the complete message.
 async fn send_single_result_operation_response<M: WebSocketMetrics>(
@@ -623,24 +630,52 @@ async fn send_single_result_operation_response<M: WebSocketMetrics>(
     let graphql_response =
         graphql_frontend::GraphQLResponse::from_result(result, expose_internal_errors).inner();
     // Execute pre-response plugins
-    run_pre_response_plugins(
+    let plugin_response = run_pre_response_plugins(
         client_address,
         raw_request,
         session,
         headers,
         &graphql_response,
         connection,
-    );
-    // Send the ok response and a complete message.
-    match GraphQLResponse::new(graphql_response) {
-        GraphQLResponse::Ok(response) => {
-            send_graphql_ok(operation_id.clone(), response, connection).await;
-            send_complete(operation_id, connection).await;
+    )
+    .await;
+    let response = match plugin_response {
+        Ok(PreResponsePluginResponse::Continue) => {
+            GraphQLResponseOrCustomResponse::GraphQLResponse(Box::new(GraphQLResponse::new(
+                graphql_response,
+            )))
         }
-        GraphQLResponse::Error(errors) => {
-            // No need to send a complete message after sending errors.
-            // Ref: https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md#complete
-            send_graphql_errors(operation_id, errors, connection).await;
+        Ok(PreResponsePluginResponse::ReturnError { plugin_name, error }) => {
+            // Send the plugin error response to the client
+            let graphql_error = error.into_graphql_error(&plugin_name);
+            GraphQLResponseOrCustomResponse::GraphQLResponse(Box::new(GraphQLResponse::Error(
+                NonEmpty::new(graphql_error),
+            )))
+        }
+        Ok(PreResponsePluginResponse::ReturnResponse(new_response_bytes)) => {
+            GraphQLResponseOrCustomResponse::CustomResponse(new_response_bytes)
+        }
+        Err(response) => GraphQLResponseOrCustomResponse::GraphQLResponse(Box::new(response)),
+    };
+    // Send the ok response and a complete message.
+    match response {
+        GraphQLResponseOrCustomResponse::GraphQLResponse(response) => {
+            match *response {
+                GraphQLResponse::Ok(response) => {
+                    send_graphql_ok(operation_id.clone(), response, connection).await;
+                    send_complete(operation_id, connection).await;
+                }
+                GraphQLResponse::Error(errors) => {
+                    // No need to send a complete message after sending errors.
+                    // Ref: https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md#complete
+                    send_graphql_errors(operation_id, errors, connection).await;
+                }
+            }
+        }
+        GraphQLResponseOrCustomResponse::CustomResponse(bytes) => {
+            connection
+                .send(ws::Message::Raw(axum::extract::ws::Message::Binary(bytes)))
+                .await;
         }
     }
 }
@@ -659,23 +694,50 @@ async fn send_subscription_operation_response<M: WebSocketMetrics>(
     let mut stop_subscription = false;
     if !response_hash.matches(&response) {
         // Execute pre-response plugins before sending the response
-        run_pre_response_plugins(
+        let plugin_response = run_pre_response_plugins(
             client_address,
             raw_request,
             session.clone(),
             headers.clone(),
             &response,
             connection,
-        );
-        match GraphQLResponse::new(response) {
-            // Send the ok response
-            GraphQLResponse::Ok(ok_response) => {
-                send_graphql_ok(operation_id, ok_response, connection).await;
+        )
+        .await;
+        let graphql_response = match plugin_response {
+            Ok(PreResponsePluginResponse::Continue) => {
+                GraphQLResponseOrCustomResponse::GraphQLResponse(Box::new(GraphQLResponse::new(
+                    response,
+                )))
             }
-            GraphQLResponse::Error(errors) => {
-                // Send the errors and stop subscription
-                send_graphql_errors(operation_id, errors, connection).await;
-                stop_subscription = true;
+            Ok(PreResponsePluginResponse::ReturnError { plugin_name, error }) => {
+                // Send the plugin error response to the client
+                let graphql_error = error.into_graphql_error(&plugin_name);
+                GraphQLResponseOrCustomResponse::GraphQLResponse(Box::new(GraphQLResponse::Error(
+                    NonEmpty::new(graphql_error),
+                )))
+            }
+            Ok(PreResponsePluginResponse::ReturnResponse(new_response_bytes)) => {
+                GraphQLResponseOrCustomResponse::CustomResponse(new_response_bytes)
+            }
+            Err(response) => GraphQLResponseOrCustomResponse::GraphQLResponse(Box::new(response)),
+        };
+        match graphql_response {
+            GraphQLResponseOrCustomResponse::GraphQLResponse(response) => {
+                match *response {
+                    GraphQLResponse::Ok(ok_response) => {
+                        send_graphql_ok(operation_id, ok_response, connection).await;
+                    }
+                    GraphQLResponse::Error(errors) => {
+                        // Send the errors and stop subscription
+                        send_graphql_errors(operation_id, errors, connection).await;
+                        stop_subscription = true;
+                    }
+                }
+            }
+            GraphQLResponseOrCustomResponse::CustomResponse(bytes) => {
+                connection
+                    .send(ws::Message::Raw(axum::extract::ws::Message::Binary(bytes)))
+                    .await;
             }
         }
     }
@@ -684,7 +746,12 @@ async fn send_subscription_operation_response<M: WebSocketMetrics>(
 
 #[derive(thiserror::Error, Debug)]
 #[error("error in executing pre-response plugins, unable to encode response: {0}")]
-struct ExecutePreResponsePluginsError(#[from] serde_json::Error);
+enum ExecutePreResponsePluginsError {
+    #[error("error in executing pre-response plugins, unable to encode response: {0}")]
+    EncodeError(#[from] serde_json::Error),
+    #[error("error in executing pre-response plugins: {0}")]
+    PreResponsePluginError(#[from] pre_response_plugin::Error),
+}
 
 impl tracing_util::TraceableError for ExecutePreResponsePluginsError {
     fn visibility(&self) -> tracing_util::ErrorVisibility {
@@ -692,48 +759,97 @@ impl tracing_util::TraceableError for ExecutePreResponsePluginsError {
     }
 }
 
-fn run_pre_response_plugins<M: WebSocketMetrics>(
+async fn run_pre_response_plugins<M: WebSocketMetrics>(
     client_address: std::net::SocketAddr,
     raw_request: &lang_graphql::http::RawRequest,
     session: Session,
     headers: http::HeaderMap,
     response: &lang_graphql::http::Response,
     connection: &ws::Connection<M>,
-) {
+) -> Result<PreResponsePluginResponse, GraphQLResponse> {
     // Execute pre-response plugins only if there are any
-    if let Some(pre_response_plugins) = NonEmpty::from_vec(
-        connection
-            .context
-            .metadata
-            .plugin_configs
-            .pre_response_plugins
-            .clone(),
-    ) {
+    let pre_response_plugins = &connection
+        .context
+        .metadata
+        .plugin_configs
+        .pre_response_plugins;
+    if pre_response_plugins.is_empty() {
+        Ok(PreResponsePluginResponse::Continue)
+    } else {
         let tracer = tracing_util::global_tracer();
         // Errors will be traced in the following span.
+
+        // Execute Async pre-response plugins
         let _result: Result<(), ExecutePreResponsePluginsError> = tracer.in_span(
-            "run_pre_response_plugins",
-            "Running pre-response plugins",
+            "run_async_pre_response_plugins",
+            "Running Async pre-response plugins",
             tracing_util::SpanVisibility::User,
             || {
-                let response_json = serde_json::to_value(response)?;
-                // Open new trace for executing pre-response plugin with linking current span
-                let plugin_execution_tracing_strategy =
-                    pre_response_plugin::ExecutePluginsTracing::NewTraceWithLink {
-                        span_link: tracing_util::SpanLink::from_current_span(),
-                    };
-                pre_response_plugin::execute_pre_response_plugins_in_task(
-                    client_address,
-                    pre_response_plugins,
-                    connection.context.http_context.client.clone(),
-                    session,
-                    raw_request.clone(),
-                    response_json,
-                    headers,
-                    plugin_execution_tracing_strategy,
-                );
+                if let Some(async_pre_response_plugins) =
+                    NonEmpty::from_vec(pre_response_plugins.async_hooks.clone())
+                {
+                    let response_json = serde_json::to_value(response)?;
+                    // Open new trace for executing pre-response plugin with linking current span
+                    let plugin_execution_tracing_strategy =
+                        pre_response_plugin::ExecutePluginsTracing::NewTraceWithLink {
+                            span_link: tracing_util::SpanLink::from_current_span(),
+                        };
+                    pre_response_plugin::execute_async_pre_response_plugins_in_task(
+                        client_address,
+                        async_pre_response_plugins,
+                        connection.context.http_context.client.clone(),
+                        session.clone(),
+                        raw_request.clone(),
+                        response_json,
+                        headers.clone(),
+                        plugin_execution_tracing_strategy,
+                    );
+                }
                 Ok(())
             },
         );
+        // Execute Sync pre-response plugins
+        let sync_pre_response_plugins_response = tracer
+            .in_span_async(
+                "run_sync_pre_response_plugins",
+                "Running Sync pre-response plugins",
+                tracing_util::SpanVisibility::User,
+                || {
+                    Box::pin(async {
+                        if let Some(sync_pre_response_plugins) =
+                            NonEmpty::from_vec(pre_response_plugins.sync_hooks.clone())
+                        {
+                            let response_json = serde_json::to_value(response)?;
+                            pre_response_plugin::execute_sync_pre_response_plugins(
+                                client_address,
+                                &sync_pre_response_plugins,
+                                &connection.context.http_context.client,
+                                &session,
+                                raw_request.clone(),
+                                response_json,
+                                &headers,
+                            )
+                            .await
+                            .map_err(ExecutePreResponsePluginsError::PreResponsePluginError)
+                        } else {
+                            Ok(PreResponsePluginResponse::Continue)
+                        }
+                    })
+                },
+            )
+            .await;
+        match sync_pre_response_plugins_response {
+            Ok(response) => Ok(response),
+            Err(ExecutePreResponsePluginsError::PreResponsePluginError(err)) => {
+                Err(GraphQLResponse::new(err.to_graphql_response()))
+            }
+            Err(ExecutePreResponsePluginsError::EncodeError(err)) => Err(GraphQLResponse::new(
+                lang_graphql::http::Response::error_message_with_status(
+                    http::StatusCode::INTERNAL_SERVER_ERROR,
+                    err.to_string(),
+                    true,
+                ),
+            )),
+        }
     }
 }

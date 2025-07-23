@@ -71,6 +71,10 @@ pub use stages::order_by_expressions::{
 pub use stages::plugins::{
     LifecyclePluginConfigs, ResolvedLifecyclePreNdcRequestPluginHook,
     ResolvedLifecyclePreNdcResponsePluginHook,
+    types::{
+        ResolvedLifecyclePreResponseAsyncPluginHook, ResolvedLifecyclePreResponsePluginHooks,
+        ResolvedLifecyclePreResponseSyncPluginHook,
+    },
 };
 pub use stages::scalar_boolean_expressions::{
     LogicalOperators, LogicalOperatorsGraphqlConfig, ResolvedScalarBooleanExpressionType,

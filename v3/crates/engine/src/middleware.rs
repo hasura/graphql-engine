@@ -17,6 +17,7 @@ use pre_parse_plugin::execute::pre_parse_plugins_handler;
 use pre_response_plugin::execute::pre_response_plugins_handler;
 
 use hasura_authn_core::Session;
+use pre_response_plugin::execute::ProcessedPreResponsePluginResponse;
 use tracing_util::{SpanVisibility, TraceableHttpResponse};
 
 use super::types::RequestType;
@@ -198,21 +199,29 @@ pub async fn plugins_middleware(
         })?
         .to_bytes();
 
-    if let Some(pre_response_plugins) = nonempty::NonEmpty::from_slice(
-        &engine_state
-            .resolved_metadata
-            .plugin_configs
-            .pre_response_plugins,
-    ) {
-        pre_response_plugins_handler(
+    // Execute pre-response plugins
+    let pre_response_plugins = &engine_state
+        .resolved_metadata
+        .plugin_configs
+        .pre_response_plugins;
+
+    if !pre_response_plugins.is_empty() {
+        let plugin_response = pre_response_plugins_handler(
             client_address,
-            &pre_response_plugins,
+            pre_response_plugins,
             &engine_state.http_context.client,
             session,
             &raw_request,
             &response_bytes,
             headers_map,
-        )?;
+        )
+        .await?;
+        match plugin_response {
+            ProcessedPreResponsePluginResponse::Continue => {}
+            ProcessedPreResponsePluginResponse::Response(new_raw_response) => {
+                return Ok(new_raw_response);
+            }
+        }
     }
     let recreated_response =
         axum::response::Response::from_parts(parts, axum::body::Body::from(response_bytes));

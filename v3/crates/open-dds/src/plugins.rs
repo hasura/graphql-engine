@@ -198,6 +198,10 @@ pub struct LifecyclePreResponsePluginHook {
 pub struct LifecyclePreResponsePluginHookConfig {
     /// Configuration for the request to the lifecycle plugin hook.
     pub request: LifecyclePreResponsePluginHookConfigRequest,
+    #[serde(default)]
+    /// Configuration for the mode of the plugin hook (synchronous or asynchronous)
+    /// If not specified, the default is asynchronous.
+    pub mode: Option<LifecyclePreResponsePluginHookMode>,
 }
 
 #[derive(
@@ -217,6 +221,60 @@ pub struct LifecyclePreResponsePluginHookConfigRequest {
     /// Configuration for the response.
     pub raw_response: Option<LeafConfig>,
 }
+
+#[derive(
+    Serialize, Deserialize, JsonSchema, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd,
+)]
+#[serde(rename_all = "camelCase")]
+#[serde(tag = "type")]
+#[serde(deny_unknown_fields)]
+#[schemars(title = "LifecyclePreResponsePluginHookMode")]
+/// Configuration for the mode of the plugin hook (synchronous or asynchronous)
+pub enum LifecyclePreResponsePluginHookMode {
+    /// Synchronous mode. The engine will wait for the plugin hook to respond before continuing.
+    Synchronous(LifecyclePreResponsePluginHookSynchronousModeConfig),
+    /// Asynchronous mode. The engine will not wait for the plugin hook to respond before continuing.
+    // The config is empty to disallow any additional configuration for now.
+    Asynchronous(LifecyclePreResponsePluginHookAsynchronousModeConfig),
+}
+
+#[derive(
+    Serialize, Deserialize, JsonSchema, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd,
+)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[schemars(title = "LifecyclePreResponsePluginHookSynchronousModeConfig")]
+/// Configuration for the synchronous mode of the plugin hook.
+pub struct LifecyclePreResponsePluginHookSynchronousModeConfig {
+    #[serde(default)]
+    /// Configuration for the on-plugin-failure behavior of the plugin hook (default: fail).
+    pub on_plugin_failure: OnPluginFailure,
+}
+
+#[derive(
+    Serialize, Deserialize, JsonSchema, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd,
+)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[schemars(title = "OnPluginFailure")]
+/// Configuration for the on-plugin-failure behavior of the plugin hook.
+#[derive(Default)]
+pub enum OnPluginFailure {
+    /// Fail the request if the plugin hook fails.
+    #[default]
+    Fail,
+    /// Continue with the request if the plugin hook fails.
+    Continue,
+}
+
+#[derive(
+    Serialize, Deserialize, JsonSchema, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd,
+)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[schemars(title = "LifecyclePreResponsePluginHookAsynchronousModeConfig")]
+/// Configuration for the asynchronous mode of the plugin hook.
+pub struct LifecyclePreResponsePluginHookAsynchronousModeConfig {}
 
 #[derive(
     Serialize, Deserialize, JsonSchema, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd,

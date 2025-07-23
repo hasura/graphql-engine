@@ -4574,6 +4574,7 @@ dependencies = [
  "futures-util",
  "hasura-authn-core",
  "lang-graphql",
+ "metadata-resolve",
  "nonempty",
  "open-dds",
  "reqwest",
