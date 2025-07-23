@@ -241,6 +241,7 @@ fn expression_capabilities() -> ndc_models::RelationalExpressionCapabilities {
         },
         scalar_types: Some(ndc_models::RelationalScalarTypeCapabilities {
             interval: Some(ndc_models::LeafCapability {}),
+            from_type: Some(ndc_models::LeafCapability {}),
         }),
     }
 }

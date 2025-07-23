@@ -668,6 +668,17 @@ pub struct DataConnectorRelationalScalarTypeCapabilities {
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_interval: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_from_type: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct DataConnectorRelationalCastCapabilities {
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_from_type: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -1478,6 +1489,7 @@ fn mk_relational_expression_capabilities(
             supports_scalar_types: capabilities.scalar_types.as_ref().map(|scalar_types| {
                 DataConnectorRelationalScalarTypeCapabilities {
                     supports_interval: scalar_types.interval.is_some(),
+                    supports_from_type: scalar_types.from_type.is_some(),
                 }
             }),
         };
