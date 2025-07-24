@@ -47,7 +47,7 @@ class TestActionsSyncWebsocket:
     def test_create_user_relationship(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/create_user_relationship.yaml', transport)
 
-    def test_create_user_relationship(self, hge_ctx, transport):
+    def test_create_user_relationship_fail(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/create_user_relationship_fail.yaml', transport)
 
     def test_create_users_fail(self, hge_ctx, transport):
