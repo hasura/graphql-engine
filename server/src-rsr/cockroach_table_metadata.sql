@@ -74,7 +74,8 @@ LEFT JOIN LATERAL
                                               ELSE "array_type".typname || '[]' END),
                                 'type', "type".typtype),
       'is_nullable', NOT "column".attnotnull,
-      'description', '', -- pg_catalog.col_description("table".oid, "column".attnum), -- removing this for now as it takes ~20 seconds per lookup
+      -- NULL keeps this consistent with the other backends' handling of absent descriptions:
+      'description', NULL, -- pg_catalog.col_description("table".oid, "column".attnum), -- removing this for now as it takes ~20 seconds per lookup
       'mutability', jsonb_build_object(
         'is_insertable', NOT ("column".attidentity = 'a' OR "column".attgenerated = 's'),
         'is_updatable', NOT ("column".attidentity = 'a' OR "column".attgenerated = 's'))
