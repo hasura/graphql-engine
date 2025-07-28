@@ -159,7 +159,7 @@ tokio-test = "0.4"
 tokio-tungstenite = "0.24.0"
 tower = "0.5"
 # Prefer zstd-encoded request bodies, but also support gzip in case a client can't do that
-tower-http = { version = "0.5", features = ["cors", "fs", "decompression-gzip", "decompression-zstd", "compression-gzip", "compression-zstd", "trace" ] }
+tower-http = { version = "0.6", features = ["cors", "fs", "decompression-gzip", "decompression-zstd", "compression-gzip", "compression-zstd", "trace" ] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["json"] }
 transitive = "0.5"
