@@ -219,10 +219,11 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
             showIcon
             status="info"
             customIcon={FaMagic}
-            headline="No Parameterized variable specification needed"
+            headline="Variables can be populated from path components"
           >
-            All parameterized variables (e.g. {prependLabel}example/:id) in your
-            GraphQL query will be auto-specifed in the URL
+            Variables parameterized in the graphql query can be populated from
+            the URL path by including the variable name in the template above
+            starting with a colon (e.g. {prependLabel}example/:id)
           </IndicatorCard>
         </div>
         <CheckboxesField
