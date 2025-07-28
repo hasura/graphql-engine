@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Changed
+
+### Fixed
+
+### Added
+
+## [v2025.07.28]
+
 ### Synchronous Mode Pre-Response Plugins
 
 Added support for synchronous pre-response plugins that can intercept and modify
@@ -51,12 +59,6 @@ specifying the mode of the plugin hook.
 - `onPluginFailure` (`string`): The behavior of the engine when the plugin
   returns 400 or 500. Can be one of `fail` (default) or `continue`. This field
   is only for `synchronous` pre-response plugins.
-
-### Changed
-
-### Fixed
-
-### Added
 
 ## [v2025.07.22]
 
@@ -1916,7 +1918,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.07.22...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.07.28...HEAD
+[v2025.07.28]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.28
 [v2025.07.22]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.22
 [v2025.07.21]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.21
 [v2025.07.14]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.14
