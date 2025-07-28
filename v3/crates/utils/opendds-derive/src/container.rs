@@ -34,6 +34,7 @@ struct FieldOpts {
     #[darling(default)]
     json_schema: JsonSchemaFieldOpts,
     hidden: Option<bool>,
+    deserialize_with: Option<String>,
 }
 
 pub enum DefaultAttribute {
@@ -230,6 +231,7 @@ pub struct NamedField<'a> {
     pub description: Option<String>,
     pub title: Option<String>,
     pub hidden: bool,
+    pub deserialize_with: Option<String>,
 }
 
 impl<'a> NamedField<'a> {
@@ -251,6 +253,7 @@ impl<'a> NamedField<'a> {
         let default_exp = field_opts.json_schema.default_exp;
         let title = field_opts.json_schema.title;
         let hidden = field_opts.hidden.unwrap_or(false);
+        let deserialize_with = field_opts.deserialize_with;
         if hidden && !is_default && !is_optional {
             Err(syn::Error::new_spanned(
                 field,
@@ -268,6 +271,7 @@ impl<'a> NamedField<'a> {
             description,
             title,
             hidden,
+            deserialize_with,
         })
     }
 }
