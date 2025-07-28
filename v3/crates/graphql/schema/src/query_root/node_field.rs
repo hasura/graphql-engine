@@ -2,7 +2,7 @@
 
 use lang_graphql::{ast::common as ast, schema as gql_schema};
 use open_dds::types::CustomTypeName;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use crate::permissions::get_node_field_namespace_permissions;
 use crate::types::RelayInputAnnotation;
@@ -15,14 +15,16 @@ use crate::types::{
     },
 };
 use crate::{GDS, Role};
-use json_ext::HashMapWithJsonKey;
 use metadata_resolve;
 use metadata_resolve::Qualified;
 
 pub(crate) struct RelayNodeFieldOutput {
     pub relay_node_gql_field: gql_schema::Field<GDS>,
     /// Roles having access to the `node` field.
-    pub relay_node_field_permissions: HashMap<Role, Option<types::NamespaceAnnotation>>,
+    ///
+    /// We add Box indirection here to save memory when None's of this fairly large enum are stored
+    /// in containers
+    pub relay_node_field_permissions: HashMap<Role, Option<Box<types::NamespaceAnnotation>>>,
 }
 
 /// Calculates the relay `node` field and also returns the
@@ -50,12 +52,10 @@ pub(crate) fn relay_node_field(
     // objects implementing the interface define all the fields
     // defined by the interface.
 
-    let mut roles_type_permissions: HashMap<
-        Role,
-        HashMap<Qualified<CustomTypeName>, metadata_resolve::FilterPermission>,
-    > = HashMap::new();
+    let mut roles_type_permissions: HashMap<Role, BTreeSet<Qualified<CustomTypeName>>> =
+        HashMap::new();
     for model in gds.metadata.models.values() {
-        if let Some(global_id_source) = &model.model.global_id_source {
+        if model.model.global_id_source.is_some() {
             let output_typename = get_custom_output_type(gds, builder, &model.model.data_type)?;
 
             let object_type_representation =
@@ -64,10 +64,9 @@ pub(crate) fn relay_node_field(
             let node_field_permissions =
                 get_node_field_namespace_permissions(object_type_representation, model);
 
-            for (role, model_predicate) in &node_field_permissions {
+            for role in node_field_permissions {
                 let role_type_permissions = roles_type_permissions.entry(role.clone()).or_default();
-                role_type_permissions
-                    .insert(model.model.data_type.clone(), model_predicate.clone());
+                role_type_permissions.insert(model.model.data_type.clone());
             }
 
             if typename_mappings
@@ -77,7 +76,6 @@ pub(crate) fn relay_node_field(
                         model_name: model.model.name.clone(),
                         type_name: model.model.data_type.clone(),
                         model_source: model.model.source.clone(),
-                        global_id_fields_ndc_mapping: global_id_source.ndc_mapping.clone(),
                     },
                 )
                 .is_some()
@@ -111,9 +109,9 @@ pub(crate) fn relay_node_field(
     for (role, role_type_permission) in roles_type_permissions {
         relay_node_field_permissions.insert(
             role.clone(),
-            Some(types::NamespaceAnnotation::NodeFieldTypeMappings(
-                HashMapWithJsonKey(role_type_permission),
-            )),
+            Some(Box::new(types::NamespaceAnnotation::NodeFieldTypeMappings(
+                role_type_permission,
+            ))),
         );
     }
     let relay_node_gql_field = gql_schema::Field::new(

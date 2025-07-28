@@ -2197,8 +2197,239 @@
             }
           },
           "additionalProperties": false
+        },
+        {
+          "title": "LifecyclePreNdcRequestPluginHook",
+          "description": "Definition of a lifecycle plugin hook for the pre-ndc-request stage.",
+          "type": "object",
+          "required": [
+            "config",
+            "connectors",
+            "name",
+            "pre",
+            "url"
+          ],
+          "properties": {
+            "pre": {
+              "type": "string",
+              "enum": [
+                "ndcRequest"
+              ]
+            },
+            "name": {
+              "description": "The name of the lifecycle plugin hook.",
+              "type": "string"
+            },
+            "connectors": {
+              "description": "A list of data connectors that this plugin hook should be applied to. There can only be one plugin hook of this type per data connector.",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/DataConnectorName"
+              }
+            },
+            "url": {
+              "description": "The URL to access the lifecycle plugin hook.",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/EnvironmentValue"
+                }
+              ]
+            },
+            "config": {
+              "description": "Configuration for the lifecycle plugin hook.",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/LifecyclePreNdcRequestPluginHookConfig"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "LifecyclePreNdcResponsePluginHook",
+          "description": "Definition of a lifecycle plugin hook for the pre-ndc-response stage.",
+          "type": "object",
+          "required": [
+            "config",
+            "connectors",
+            "name",
+            "pre",
+            "url"
+          ],
+          "properties": {
+            "pre": {
+              "type": "string",
+              "enum": [
+                "ndcResponse"
+              ]
+            },
+            "name": {
+              "description": "The name of the lifecycle plugin hook.",
+              "type": "string"
+            },
+            "connectors": {
+              "description": "A list of data connectors that this plugin hook should be applied to. There can only be one plugin hook of this type per data connector.",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/DataConnectorName"
+              }
+            },
+            "url": {
+              "description": "The URL to access the lifecycle plugin hook.",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/EnvironmentValue"
+                }
+              ]
+            },
+            "config": {
+              "description": "Configuration for the lifecycle plugin hook.",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/LifecyclePreNdcResponsePluginHookConfig"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
         }
       ]
+    },
+    "LifecyclePreNdcRequestPluginHookConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePreNdcRequestPluginHookConfig",
+      "title": "LifecyclePreNdcRequestPluginHookConfig",
+      "description": "config for pre-ndc-request hook Configuration for a lifecycle plugin hook.",
+      "type": "object",
+      "required": [
+        "request"
+      ],
+      "properties": {
+        "request": {
+          "description": "Configuration for the request to the lifecycle plugin hook.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/LifecyclePreNdcRequestPluginHookConfigRequest"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "LifecyclePreNdcRequestPluginHookConfigRequest": {
+      "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePreNdcRequestPluginHookConfigRequest",
+      "title": "LifecyclePreNdcRequestPluginHookConfigRequest",
+      "description": "Configuration for a lifecycle plugin hook request.",
+      "type": "object",
+      "properties": {
+        "headers": {
+          "description": "Configuration for the headers.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/HttpHeaders"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "session": {
+          "description": "Configuration for the session (includes roles and session variables).",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/LeafConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ndcRequest": {
+          "description": "Configuration for the request.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/LeafConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "LifecyclePreNdcResponsePluginHookConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePreNdcResponsePluginHookConfig",
+      "title": "LifecyclePreNdcResponsePluginHookConfig",
+      "description": "Configuration for a lifecycle plugin hook.",
+      "type": "object",
+      "required": [
+        "request"
+      ],
+      "properties": {
+        "request": {
+          "description": "Configuration for the request to the lifecycle plugin hook.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/LifecyclePreNdcResponsePluginHookConfigRequest"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "LifecyclePreNdcResponsePluginHookConfigRequest": {
+      "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePreNdcResponsePluginHookConfigRequest",
+      "title": "LifecyclePreNdcResponsePluginHookConfigRequest",
+      "description": "Configuration for a lifecycle plugin hook request.",
+      "type": "object",
+      "properties": {
+        "headers": {
+          "description": "Configuration for the headers.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/HttpHeaders"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "session": {
+          "description": "Configuration for the session (includes roles and session variables).",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/LeafConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ndcRequest": {
+          "description": "Configuration for the request.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/LeafConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ndcResponse": {
+          "description": "Configuration for the response.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/LeafConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
     },
     "LifecyclePreParsePluginHookConfig": {
       "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePreParsePluginHookConfig",
@@ -2278,6 +2509,18 @@
               "$ref": "#/definitions/LifecyclePreResponsePluginHookConfigRequest"
             }
           ]
+        },
+        "mode": {
+          "description": "Configuration for the mode of the plugin hook (synchronous or asynchronous) If not specified, the default is asynchronous.",
+          "default": null,
+          "anyOf": [
+            {
+              "$ref": "#/definitions/LifecyclePreResponsePluginHookMode"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "additionalProperties": false
@@ -2334,6 +2577,56 @@
         }
       },
       "additionalProperties": false
+    },
+    "LifecyclePreResponsePluginHookMode": {
+      "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePreResponsePluginHookMode",
+      "title": "LifecyclePreResponsePluginHookMode",
+      "description": "Configuration for the mode of the plugin hook (synchronous or asynchronous)",
+      "oneOf": [
+        {
+          "title": "LifecyclePreResponsePluginHookSynchronousModeConfig",
+          "description": "Synchronous mode. The engine will wait for the plugin hook to respond before continuing.",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "synchronous"
+              ]
+            },
+            "onPluginFailure": {
+              "description": "Configuration for the on-plugin-failure behavior of the plugin hook (default: fail).",
+              "default": "fail",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/OnPluginFailure"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "LifecyclePreResponsePluginHookAsynchronousModeConfig",
+          "description": "Asynchronous mode. The engine will not wait for the plugin hook to respond before continuing.",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "asynchronous"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
     },
     "LifecyclePreRoutePluginHookConfig": {
       "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePreRoutePluginHookConfig",
@@ -2798,6 +3091,39 @@
           "anyOf": [
             {
               "$ref": "#/definitions/SelectPermission"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "relationalInsert": {
+          "description": "The permissions for relational insert operations on this model for this role. If this is null, the role is not allowed to perform relational inserts on this model. This is only applicable for data connectors that support relational operations.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/RelationalInsertPermission"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "relationalUpdate": {
+          "description": "The permissions for relational update operations on this model for this role. If this is null, the role is not allowed to perform relational updates on this model. This is only applicable for data connectors that support relational operations.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/RelationalUpdatePermission"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "relationalDelete": {
+          "description": "The permissions for relational delete operations on this model for this role. If this is null, the role is not allowed to perform relational deletes on this model. This is only applicable for data connectors that support relational operations.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/RelationalDeletePermission"
             },
             {
               "type": "null"
@@ -3662,6 +3988,27 @@
       },
       "additionalProperties": false
     },
+    "OnPluginFailure": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OnPluginFailure",
+      "title": "OnPluginFailure",
+      "description": "Configuration for the on-plugin-failure behavior of the plugin hook.",
+      "oneOf": [
+        {
+          "description": "Fail the request if the plugin hook fails.",
+          "type": "string",
+          "enum": [
+            "fail"
+          ]
+        },
+        {
+          "description": "Continue with the request if the plugin hook fails.",
+          "type": "string",
+          "enum": [
+            "continue"
+          ]
+        }
+      ]
+    },
     "OpenDdFlags": {
       "$id": "https://hasura.io/jsonschemas/metadata/OpenDdFlags",
       "title": "OpenDdFlags",
@@ -3833,6 +4180,10 @@
           "type": "boolean"
         },
         "send_missing_arguments_to_ndc_as_nulls": {
+          "default": false,
+          "type": "boolean"
+        },
+        "disallow_literals_as_boolean_expression_arguments": {
           "default": false,
           "type": "boolean"
         }
@@ -5697,6 +6048,27 @@
       },
       "additionalProperties": false
     },
+    "RelationalDeletePermission": {
+      "$id": "https://hasura.io/jsonschemas/metadata/RelationalDeletePermission",
+      "title": "RelationalDeletePermission",
+      "description": "Defines the permissions for relational delete operations on a model for a role. If null, the role is not allowed to perform relational deletes on this model. This is only applicable for data connectors that support relational operations.",
+      "type": "object",
+      "additionalProperties": false
+    },
+    "RelationalInsertPermission": {
+      "$id": "https://hasura.io/jsonschemas/metadata/RelationalInsertPermission",
+      "title": "RelationalInsertPermission",
+      "description": "Defines the permissions for relational insert operations on a model for a role. If null, the role is not allowed to perform relational inserts on this model. This is only applicable for data connectors that support relational operations.",
+      "type": "object",
+      "additionalProperties": false
+    },
+    "RelationalUpdatePermission": {
+      "$id": "https://hasura.io/jsonschemas/metadata/RelationalUpdatePermission",
+      "title": "RelationalUpdatePermission",
+      "description": "Defines the permissions for relational update operations on a model for a role. If null, the role is not allowed to perform relational updates on this model. This is only applicable for data connectors that support relational operations.",
+      "type": "object",
+      "additionalProperties": false
+    },
     "RelationshipGraphQlDefinition": {
       "$id": "https://hasura.io/jsonschemas/metadata/RelationshipGraphQlDefinition",
       "title": "RelationshipGraphQlDefinition",
@@ -6644,10 +7016,10 @@
               ]
             },
             "schema": {
-              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.2/ndc-models/tests/json_schema/schema_response.jsonschema"
+              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.9/ndc-models/tests/json_schema/schema_response.jsonschema"
             },
             "capabilities": {
-              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.2/ndc-models/tests/json_schema/capabilities_response.jsonschema"
+              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.9/ndc-models/tests/json_schema/capabilities_response.jsonschema"
             }
           },
           "additionalProperties": false

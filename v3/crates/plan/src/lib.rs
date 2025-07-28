@@ -10,7 +10,7 @@ mod types;
 pub use column::{ResolvedColumn, to_resolved_column};
 pub use error::{InternalDeveloperError, InternalEngineError, InternalError};
 pub use metadata_accessor::{
-    FieldView, ModelView, OutputObjectTypeView, get_model, get_output_object_type,
+    FieldView, ModelView, OutputObjectTypeView, get_command, get_model, get_output_object_type,
 };
 pub use model_tracking::{count_command, count_model, extend_usage_count};
 pub use order_by::to_resolved_order_by_element;
@@ -24,4 +24,4 @@ pub use query::{
     process_command_relationship_definition, process_model_predicate,
     process_model_relationship_definition, query_to_plan,
 };
-pub use types::{PermissionError, PlanError};
+pub use types::{PermissionError, PlanError, PlanState};

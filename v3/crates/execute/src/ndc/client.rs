@@ -12,6 +12,12 @@ use super::{
     NdcQueryResponse,
 };
 
+// Add the new type imports
+use ndc_models::{
+    RelationalDeleteRequest, RelationalDeleteResponse, RelationalInsertRequest,
+    RelationalInsertResponse, RelationalUpdateRequest, RelationalUpdateResponse,
+};
+
 /// Error type for the NDC API client interactions
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -23,9 +29,6 @@ pub enum Error {
 
     #[error("unable to decode JSON response from connector: {0}")]
     Serde(#[from] serde_json::Error),
-
-    #[error("internal IO error: {0}")]
-    Io(#[from] std::io::Error),
 
     #[error("invalid connector base URL")]
     InvalidBaseURL,
@@ -41,11 +44,30 @@ pub enum Error {
 
     #[error("invalid connector error: {0}")]
     InvalidConnector(InvalidConnectorError),
+
+    #[error("Error while executing pre ndc request plugin: {0}")]
+    PreNdcRequestPluginError(#[from] pre_ndc_request_plugin::execute::Error),
+
+    #[error("Error while executing pre ndc response plugin: {0}")]
+    PreNdcResponsePluginError(#[from] pre_ndc_response_plugin::execute::Error),
 }
 
 impl tracing_util::TraceableError for Error {
     fn visibility(&self) -> tracing_util::ErrorVisibility {
-        tracing_util::ErrorVisibility::Internal
+        match self {
+            // Invalid connector errors with 5xx status codes are considered user errors
+            // (connector implementation issues, not engine issues)
+            Self::InvalidConnector(InvalidConnectorError { status, .. })
+                if status.is_server_error() =>
+            {
+                tracing_util::ErrorVisibility::User
+            }
+
+            // TODO some of these other cases seem like User errors also...
+
+            // All other errors are internal
+            _ => tracing_util::ErrorVisibility::Internal,
+        }
     }
 }
 
@@ -76,7 +98,7 @@ pub struct Configuration<'s> {
 /// POST on /query/explain endpoint
 ///
 /// <https://hasura.github.io/ndc-spec/specification/explain.html?highlight=%2Fexplain#request>
-pub async fn explain_query_post(
+pub(crate) async fn explain_query_post(
     configuration: Configuration<'_>,
     query_request: &NdcQueryRequest,
 ) -> Result<NdcExplainResponse, Error> {
@@ -134,7 +156,7 @@ pub async fn explain_query_post(
 /// POST on /mutation/explain endpoint
 ///
 /// <https://hasura.github.io/ndc-spec/specification/explain.html?highlight=%2Fexplain#request-1>
-pub async fn explain_mutation_post(
+pub(crate) async fn explain_mutation_post(
     configuration: Configuration<'_>,
     mutation_request: &NdcMutationRequest,
 ) -> Result<NdcExplainResponse, Error> {
@@ -192,7 +214,7 @@ pub async fn explain_mutation_post(
 /// POST on /mutation endpoint
 ///
 /// <https://hasura.github.io/ndc-spec/specification/mutations/index.html>
-pub async fn mutation_post(
+pub(crate) async fn mutation_post(
     configuration: Configuration<'_>,
     mutation_request: &NdcMutationRequest,
 ) -> Result<NdcMutationResponse, Error> {
@@ -250,7 +272,7 @@ pub async fn mutation_post(
 /// POST on /query endpoint
 ///
 /// <https://hasura.github.io/ndc-spec/specification/queries/index.html>
-pub async fn query_post(
+pub(crate) async fn query_post(
     configuration: Configuration<'_>,
     query_request: &NdcQueryRequest,
 ) -> Result<NdcQueryResponse, Error> {
@@ -320,6 +342,114 @@ pub async fn query_relational_post(
             || {
                 Box::pin(async {
                     let url = append_path(configuration.base_path, &["query", "relational"])?;
+                    let response_size_limit = configuration.response_size_limit;
+
+                    let request = construct_request(
+                        configuration,
+                        NdcVersion::V02,
+                        reqwest::Method::POST,
+                        url,
+                        |r| r.json(request),
+                    );
+                    let response =
+                        execute_request(request, response_size_limit, NdcErrorResponse::V02)
+                            .await?;
+                    Ok(response)
+                })
+            },
+        )
+        .await
+}
+
+/// POST on /mutation/rel/insert endpoint
+///
+/// Sends a relational insert request to the connector
+pub async fn mutation_relational_insert_post(
+    configuration: Configuration<'_>,
+    request: &RelationalInsertRequest,
+) -> Result<RelationalInsertResponse, Error> {
+    let tracer = tracing_util::global_tracer();
+
+    tracer
+        .in_span_async(
+            "mutation_rel_insert_post",
+            "Post relational insert mutation",
+            SpanVisibility::Internal,
+            || {
+                Box::pin(async {
+                    let url = append_path(configuration.base_path, &["mutation", "rel", "insert"])?;
+                    let response_size_limit = configuration.response_size_limit;
+
+                    let request = construct_request(
+                        configuration,
+                        NdcVersion::V02,
+                        reqwest::Method::POST,
+                        url,
+                        |r| r.json(request),
+                    );
+                    let response =
+                        execute_request(request, response_size_limit, NdcErrorResponse::V02)
+                            .await?;
+                    Ok(response)
+                })
+            },
+        )
+        .await
+}
+
+/// POST on /mutation/rel/update endpoint
+///
+/// Sends a relational update request to the connector
+pub async fn mutation_relational_update_post(
+    configuration: Configuration<'_>,
+    request: &RelationalUpdateRequest,
+) -> Result<RelationalUpdateResponse, Error> {
+    let tracer = tracing_util::global_tracer();
+
+    tracer
+        .in_span_async(
+            "mutation_rel_update_post",
+            "Post relational update mutation",
+            SpanVisibility::Internal,
+            || {
+                Box::pin(async {
+                    let url = append_path(configuration.base_path, &["mutation", "rel", "update"])?;
+                    let response_size_limit = configuration.response_size_limit;
+
+                    let request = construct_request(
+                        configuration,
+                        NdcVersion::V02,
+                        reqwest::Method::POST,
+                        url,
+                        |r| r.json(request),
+                    );
+                    let response =
+                        execute_request(request, response_size_limit, NdcErrorResponse::V02)
+                            .await?;
+                    Ok(response)
+                })
+            },
+        )
+        .await
+}
+
+/// POST on /mutation/rel/delete endpoint
+///
+/// Sends a relational delete request to the connector
+pub async fn mutation_relational_delete_post(
+    configuration: Configuration<'_>,
+    request: &RelationalDeleteRequest,
+) -> Result<RelationalDeleteResponse, Error> {
+    let tracer = tracing_util::global_tracer();
+
+    tracer
+        .in_span_async(
+            "mutation_rel_delete_post",
+            "Post relational delete mutation",
+            SpanVisibility::Internal,
+            || {
+                Box::pin(async {
+                    let url = append_path(configuration.base_path, &["mutation", "rel", "delete"])?;
                     let response_size_limit = configuration.response_size_limit;
 
                     let request = construct_request(

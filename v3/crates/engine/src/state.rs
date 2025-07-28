@@ -53,6 +53,7 @@ pub fn build_state(
     expose_internal_errors: ExposeInternalErrors,
     auth_config: hasura_authn::ResolvedAuthConfig,
     resolved_metadata: metadata_resolve::Metadata,
+    auth_mode_header: String,
 ) -> Result<EngineState, anyhow::Error> {
     // Metadata
     let resolved_metadata = Arc::new(resolved_metadata);
@@ -77,6 +78,7 @@ pub fn build_state(
         resolved_metadata,
         auth_config: Arc::new(auth_config),
         graphql_websocket_server: Arc::new(graphql_ws::WebSocketServer::new()),
+        auth_mode_header,
     };
     Ok(state)
 }

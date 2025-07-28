@@ -18,6 +18,7 @@ use serde::Serialize;
 use crate::arguments;
 use crate::error;
 use crate::filter;
+use crate::flags::GraphqlIrFlags;
 use crate::model_selection;
 use crate::order_by;
 
@@ -43,6 +44,7 @@ pub(crate) fn select_aggregate_generate_ir<'n, 's>(
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
     model_source: &'s metadata_resolve::ModelSource,
     model_name: &'s Qualified<open_dds::models::ModelName>,
+    flags: &GraphqlIrFlags,
 ) -> Result<ModelSelectAggregate<'n>, error::Error> {
     let mut usage_counts = UsagesCounts::new();
     let AggregateQuery {
@@ -51,7 +53,13 @@ pub(crate) fn select_aggregate_generate_ir<'n, 's>(
         where_clause,
         model_arguments,
         order_by,
-    } = aggregate_query(field_call, model_name, model_source, &mut usage_counts)?;
+    } = aggregate_query(
+        field_call,
+        model_name,
+        model_source,
+        flags,
+        &mut usage_counts,
+    )?;
 
     let model_selection = model_selection::model_aggregate_selection_open_dd_ir(
         &field.selection_set,
@@ -84,6 +92,7 @@ pub fn aggregate_query(
     field_call: &normalized_ast::FieldCall<'_, GDS>,
     model_name: &Qualified<open_dds::models::ModelName>,
     model_source: &metadata_resolve::ModelSource,
+    flags: &GraphqlIrFlags,
     usage_counts: &mut UsagesCounts,
 ) -> Result<AggregateQuery, error::Error> {
     let mut limit = None;
@@ -123,7 +132,10 @@ pub fn aggregate_query(
                             // Limit is optional
                             limit = filter_input_field_arg
                                 .value
-                                .as_nullable(normalized_ast::Value::as_int_u32)
+                                .as_nullable(
+                                    &flags.validate_non_null_graphql_variables,
+                                    normalized_ast::Value::as_int_u32,
+                                )
                                 .map_err(error::Error::map_unexpected_value_to_external_error)?;
                         }
 
@@ -140,7 +152,10 @@ pub fn aggregate_query(
                             // Offset is optional
                             offset = filter_input_field_arg
                                 .value
-                                .as_nullable(normalized_ast::Value::as_int_u32)
+                                .as_nullable(
+                                    &flags.validate_non_null_graphql_variables,
+                                    normalized_ast::Value::as_int_u32,
+                                )
                                 .map_err(error::Error::map_unexpected_value_to_external_error)?;
                         }
 
@@ -149,7 +164,10 @@ pub fn aggregate_query(
                             ModelInputAnnotation::ModelOrderByExpression,
                         )) => {
                             // order by argument is optional
-                            if !filter_input_field_arg.value.is_null() {
+                            if !filter_input_field_arg
+                                .value
+                                .is_null(&flags.validate_non_null_graphql_variables)
+                            {
                                 order_by_input = Some(&filter_input_field_arg.value);
                             }
                         }
@@ -165,7 +183,10 @@ pub fn aggregate_query(
                                 .into());
                             }
                             // where argument is optional
-                            if !filter_input_field_arg.value.is_null() {
+                            if !filter_input_field_arg
+                                .value
+                                .is_null(&flags.validate_non_null_graphql_variables)
+                            {
                                 where_input = Some(filter_input_field_arg.value.as_object()?);
                             }
                         }
@@ -201,6 +222,7 @@ pub fn aggregate_query(
             arguments::resolve_model_arguments_input_opendd(
                 arguments_input,
                 &model_source.type_mappings,
+                flags,
                 usage_counts,
             )
         })

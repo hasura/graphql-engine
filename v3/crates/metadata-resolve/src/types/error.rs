@@ -6,7 +6,7 @@ use crate::stages::{
     aggregate_boolean_expressions, aggregates::AggregateExpressionError, apollo, arguments,
     boolean_expressions, commands, data_connector_scalar_types, data_connectors, glossaries,
     graphql_config, model_permissions, models, models_graphql, object_relationships, object_types,
-    order_by_expressions, relationships, relay, scalar_boolean_expressions, scalar_types,
+    order_by_expressions, plugins, relationships, relay, scalar_boolean_expressions, scalar_types,
     type_permissions,
 };
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
@@ -277,6 +277,8 @@ pub enum Error {
     GlossaryError(#[from] glossaries::GlossaryError),
     #[error("{warning_as_error}")]
     CompatibilityError { warning_as_error: crate::Warning },
+    #[error("{0}")]
+    LifecyclePuginError(#[from] plugins::PluginValidationError),
     #[error("{errors}")]
     MultipleErrors {
         errors: SeparatedBy<WithContext<Error>>,

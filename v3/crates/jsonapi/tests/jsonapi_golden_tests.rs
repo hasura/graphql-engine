@@ -3,6 +3,7 @@
 use engine_types::HttpContext;
 use hasura_authn_core::{Identity, Role};
 use jsonapi_library::api::{DocumentData, IdentifierData, PrimaryData};
+use metadata_resolve::{LifecyclePluginConfigs, ResolvedLifecyclePreResponsePluginHooks};
 use reqwest::header::HeaderMap;
 use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -41,9 +42,18 @@ fn test_get_succeeding_requests() {
 
                 let session = create_default_session();
 
+                let plugins = LifecyclePluginConfigs {
+                    pre_parse_plugins: Vec::new(),
+                    pre_response_plugins: ResolvedLifecyclePreResponsePluginHooks::new(),
+                    pre_route_plugins: Vec::new(),
+                    pre_ndc_request_plugins: BTreeMap::new(),
+                    pre_ndc_response_plugins: BTreeMap::new(),
+                };
+
                 let result = jsonapi::handler_internal(
                     Arc::new(HeaderMap::default()),
                     Arc::new(http_context.clone()),
+                    Arc::new(plugins.clone()),
                     Arc::new(session.clone()),
                     &jsonapi_catalog,
                     metadata.into(),
@@ -104,9 +114,18 @@ fn test_get_failing_requests() {
 
                 let session = create_default_session();
 
+                let plugins = LifecyclePluginConfigs {
+                    pre_parse_plugins: Vec::new(),
+                    pre_response_plugins: ResolvedLifecyclePreResponsePluginHooks::new(),
+                    pre_route_plugins: Vec::new(),
+                    pre_ndc_request_plugins: BTreeMap::new(),
+                    pre_ndc_response_plugins: BTreeMap::new()
+                };
+
                 let result = jsonapi::handler_internal(
                     Arc::new(HeaderMap::default()),
                     Arc::new(http_context.clone()),
+                    Arc::new(plugins.clone()),
                     Arc::new(session.clone()),
                     &jsonapi_catalog,
                     metadata.into(),
@@ -236,6 +255,7 @@ fn create_default_session() -> hasura_authn_core::Session {
 fn get_metadata_resolve_configuration() -> metadata_resolve::configuration::Configuration {
     let unstable_features = metadata_resolve::configuration::UnstableFeatures {
         enable_aggregation_predicates: false,
+        enable_authorization_rules: false,
     };
 
     metadata_resolve::configuration::Configuration { unstable_features }

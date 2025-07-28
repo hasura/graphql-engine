@@ -651,11 +651,13 @@ validateEnumTypeDefinition providedEnum upstreamEnum = do
     refute $ pure $ DuplicateEnumValues providedName dups
   for_ (NE.nonEmpty $ S.toList fieldsDifference) $ \nonExistingEnumVals ->
     dispute $ pure $ NonExistingEnumValues providedName nonExistingEnumVals
-  pure providedEnum
+  -- Preserve upstream description if not provided in role schema
+  let mergedDescription = providedDescription <|> upstreamDescription
+  pure $ providedEnum {G._etdDescription = mergedDescription}
   where
-    G.EnumTypeDefinition _ providedName providedDirectives providedValueDefns = providedEnum
+    G.EnumTypeDefinition providedDescription providedName providedDirectives providedValueDefns = providedEnum
 
-    G.EnumTypeDefinition _ upstreamName upstreamDirectives upstreamValueDefns = upstreamEnum
+    G.EnumTypeDefinition upstreamDescription upstreamName upstreamDirectives upstreamValueDefns = upstreamEnum
 
     providedEnumValNames = map (G.unEnumValue . G._evdName) $ providedValueDefns
 
@@ -696,10 +698,13 @@ validateInputValueDefinition providedDefn upstreamDefn inputObjectName = do
       upstreamDefaultValue
       providedDefaultValue
   presetArguments <- for presetDirective $ parsePresetDirective providedType providedName
-  pure $ RemoteSchemaInputValueDefinition providedDefn presetArguments
+  -- Preserve upstream description if not provided in role schema
+  let mergedDescription = providedDescription <|> upstreamDescription
+      mergedDefn = providedDefn {G._ivdDescription = mergedDescription}
+  pure $ RemoteSchemaInputValueDefinition mergedDefn presetArguments
   where
-    G.InputValueDefinition _ providedName providedType providedDefaultValue providedDirectives = providedDefn
-    G.InputValueDefinition _ upstreamName upstreamType upstreamDefaultValue upstreamDirectives = upstreamDefn
+    G.InputValueDefinition providedDescription providedName providedType providedDefaultValue providedDirectives = providedDefn
+    G.InputValueDefinition upstreamDescription upstreamName upstreamType upstreamDefaultValue upstreamDirectives = upstreamDefn
 
 -- | `validateArguments` validates the provided arguments against the corresponding
 --    upstream remote schema arguments.
@@ -745,11 +750,13 @@ validateInputObjectTypeDefinition providedInputObj upstreamInputObj = do
     $ UnexpectedNonMatchingNames providedName upstreamName InputObject
   void $ validateDirectives providedDirectives upstreamDirectives G.TSDLINPUT_OBJECT $ (InputObject, providedName)
   args <- validateArguments providedArgs upstreamArgs $ providedName
-  pure $ providedInputObj {G._iotdValueDefinitions = args}
+  -- Preserve upstream description if not provided in role schema
+  let mergedDescription = providedDescription <|> upstreamDescription
+  pure $ providedInputObj {G._iotdValueDefinitions = args, G._iotdDescription = mergedDescription}
   where
-    G.InputObjectTypeDefinition _ providedName providedDirectives providedArgs = providedInputObj
+    G.InputObjectTypeDefinition providedDescription providedName providedDirectives providedArgs = providedInputObj
 
-    G.InputObjectTypeDefinition _ upstreamName upstreamDirectives upstreamArgs = upstreamInputObj
+    G.InputObjectTypeDefinition upstreamDescription upstreamName upstreamDirectives upstreamArgs = upstreamInputObj
 
 validateFieldDefinition ::
   ( MonadValidate [RoleBasedSchemaValidationError] m,
@@ -770,11 +777,13 @@ validateFieldDefinition providedFieldDefinition upstreamFieldDefinition (parentT
     $ pure
     $ NonMatchingType providedName (Field parentType) upstreamType providedType
   args <- validateArguments providedArgs upstreamArgs $ providedName
-  pure $ providedFieldDefinition {G._fldArgumentsDefinition = args}
+  -- Preserve upstream description if not provided in role schema
+  let mergedDescription = providedDescription <|> upstreamDescription
+  pure $ providedFieldDefinition {G._fldArgumentsDefinition = args, G._fldDescription = mergedDescription}
   where
-    G.FieldDefinition _ providedName providedArgs providedType providedDirectives = providedFieldDefinition
+    G.FieldDefinition providedDescription providedName providedArgs providedType providedDirectives = providedFieldDefinition
 
-    G.FieldDefinition _ upstreamName upstreamArgs upstreamType upstreamDirectives = upstreamFieldDefinition
+    G.FieldDefinition upstreamDescription upstreamName upstreamArgs upstreamType upstreamDirectives = upstreamFieldDefinition
 
 validateFieldDefinitions ::
   ( MonadValidate [RoleBasedSchemaValidationError] m,
@@ -812,11 +821,13 @@ validateInterfaceDefinition providedInterfaceDefn upstreamInterfaceDefn = do
     $ UnexpectedNonMatchingNames providedName upstreamName Interface
   void $ validateDirectives providedDirectives upstreamDirectives G.TSDLINTERFACE $ (Interface, providedName)
   fieldDefinitions <- validateFieldDefinitions providedFieldDefns upstreamFieldDefns $ (InterfaceField, providedName)
-  pure $ providedInterfaceDefn {G._itdFieldsDefinition = fieldDefinitions}
+  -- Preserve upstream description if not provided in role schema
+  let mergedDescription = providedDescription <|> upstreamDescription
+  pure $ providedInterfaceDefn {G._itdFieldsDefinition = fieldDefinitions, G._itdDescription = mergedDescription}
   where
-    G.InterfaceTypeDefinition _ providedName providedDirectives providedFieldDefns _ = providedInterfaceDefn
+    G.InterfaceTypeDefinition providedDescription providedName providedDirectives providedFieldDefns _ = providedInterfaceDefn
 
-    G.InterfaceTypeDefinition _ upstreamName upstreamDirectives upstreamFieldDefns _ = upstreamInterfaceDefn
+    G.InterfaceTypeDefinition upstreamDescription upstreamName upstreamDirectives upstreamFieldDefns _ = upstreamInterfaceDefn
 
 validateScalarDefinition ::
   (MonadValidate [RoleBasedSchemaValidationError] m) =>
@@ -829,11 +840,13 @@ validateScalarDefinition providedScalar upstreamScalar = do
     $ pure
     $ UnexpectedNonMatchingNames providedName upstreamName Scalar
   void $ validateDirectives providedDirectives upstreamDirectives G.TSDLSCALAR $ (Scalar, providedName)
-  pure providedScalar
+  -- Preserve upstream description if not provided in role schema
+  let mergedDescription = providedDescription <|> upstreamDescription
+  pure $ providedScalar {G._stdDescription = mergedDescription}
   where
-    G.ScalarTypeDefinition _ providedName providedDirectives = providedScalar
+    G.ScalarTypeDefinition providedDescription providedName providedDirectives = providedScalar
 
-    G.ScalarTypeDefinition _ upstreamName upstreamDirectives = upstreamScalar
+    G.ScalarTypeDefinition upstreamDescription upstreamName upstreamDirectives = upstreamScalar
 
 validateUnionDefinition ::
   (MonadValidate [RoleBasedSchemaValidationError] m) =>
@@ -848,11 +861,13 @@ validateUnionDefinition providedUnion upstreamUnion = do
   void $ validateDirectives providedDirectives upstreamDirectives G.TSDLUNION $ (Union, providedName)
   for_ (NE.nonEmpty $ S.toList memberTypesDiff) $ \nonExistingMembers ->
     refute $ pure $ NonExistingUnionMemberTypes providedName nonExistingMembers
-  pure providedUnion
+  -- Preserve upstream description if not provided in role schema
+  let mergedDescription = providedDescription <|> upstreamDescription
+  pure $ providedUnion {G._utdDescription = mergedDescription}
   where
-    G.UnionTypeDefinition _ providedName providedDirectives providedMemberTypes = providedUnion
+    G.UnionTypeDefinition providedDescription providedName providedDirectives providedMemberTypes = providedUnion
 
-    G.UnionTypeDefinition _ upstreamName upstreamDirectives upstreamMemberTypes = upstreamUnion
+    G.UnionTypeDefinition upstreamDescription upstreamName upstreamDirectives upstreamMemberTypes = upstreamUnion
 
     memberTypesDiff = getDifference providedMemberTypes upstreamMemberTypes
 
@@ -877,17 +892,19 @@ validateObjectDefinition providedObj upstreamObj interfacesDeclared = do
     dispute $ pure $ ObjectImplementsNonExistingInterfaces providedName ifaces
   fieldDefinitions <-
     validateFieldDefinitions providedFldDefnitions upstreamFldDefnitions $ (ObjectField, providedName)
-  pure $ providedObj {G._otdFieldsDefinition = fieldDefinitions}
+  -- Preserve upstream description if not provided in role schema
+  let mergedDescription = providedDescription <|> upstreamDescription
+  pure $ providedObj {G._otdFieldsDefinition = fieldDefinitions, G._otdDescription = mergedDescription}
   where
     G.ObjectTypeDefinition
-      _
+      providedDescription
       providedName
       providedIfaces
       providedDirectives
       providedFldDefnitions = providedObj
 
     G.ObjectTypeDefinition
-      _
+      upstreamDescription
       upstreamName
       upstreamIfaces
       upstreamDirectives

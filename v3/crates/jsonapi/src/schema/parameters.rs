@@ -6,6 +6,7 @@ use crate::catalog::{Model, ObjectType, Type};
 use crate::schema::shared::json_schema;
 use std::collections::BTreeMap;
 use std::string::ToString;
+use std::sync::Arc;
 
 pub fn page_offset_parameter() -> oas3::spec::Parameter {
     let schema = oas3::spec::ObjectOrReference::Object(int_schema());
@@ -250,7 +251,7 @@ pub fn filter_parameters(
     // We don't need this right away, this will be used once we start supporting nested filters
     _filter_boolean_expression_types: &BTreeMap<
         String,
-        metadata_resolve::ResolvedObjectBooleanExpressionType,
+        Arc<metadata_resolve::ResolvedObjectBooleanExpressionType>,
     >,
 ) -> Option<oas3::spec::Parameter> {
     // only include a filter if the model has a `BooleanExpressionType`

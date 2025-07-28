@@ -35,12 +35,6 @@ pub(crate) fn generate_command_argument(
             argument_name: argument_name.clone(),
             argument_type: argument_type.argument_type.clone(),
             argument_kind: argument_type.argument_kind.clone(),
-            ndc_func_proc_argument: command
-                .command
-                .source
-                .as_ref()
-                .and_then(|command_source| command_source.argument_mappings.get(argument_name))
-                .cloned(),
         }),
         input_type,
         None,
@@ -50,13 +44,13 @@ pub(crate) fn generate_command_argument(
     // a role is "allowed" to use this argument if it DOESN'T have a preset argument defined
     let mut namespaced_annotations = HashMap::new();
 
-    for (namespace, permission) in &command.permissions {
+    for (namespace, permission) in &command.permissions.by_role {
         // if there is a preset for this argument, remove it from the schema
         // so the user cannot provide one
         if !permission.argument_presets.contains_key(argument_name) {
             let annotation =
                 build_input_field_presets_annotation(gds, namespace, &argument_type.argument_type);
-            namespaced_annotations.insert(namespace.clone(), annotation);
+            namespaced_annotations.insert(namespace.clone(), annotation.map(Box::new));
         }
     }
 

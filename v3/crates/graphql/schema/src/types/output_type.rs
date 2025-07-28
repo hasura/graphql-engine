@@ -235,7 +235,7 @@ fn object_type_fields(
             // include fields
             let namespaced_field = {
                 let mut role_map = HashMap::new();
-                for (role, perms) in &object_type_representation.type_output_permissions {
+                for (role, perms) in &object_type_representation.type_output_permissions.by_role {
                     if perms.allowed_fields.contains(field_name) {
                         role_map.insert(Role(role.0.clone()), None);
                     }
@@ -339,6 +339,7 @@ fn command_relationship_field(
         .iter()
         .map(|mapping| &mapping.argument_name)
         .collect::<HashSet<_>>();
+
     let arguments = command
         .command
         .arguments
@@ -358,7 +359,7 @@ fn command_relationship_field(
                     source_type: relationship.source.clone(),
                     relationship_name: relationship.relationship_name.clone(),
                     command_name: command_relationship_target.command_name.clone(),
-                    target_source: CommandTargetSource::new(command, relationship)?,
+                    target_source: CommandTargetSource::new(command)?,
                     target_type: command_relationship_target.target_type.clone(),
                     target_base_type_kind: get_type_kind(
                         gds,
@@ -522,7 +523,6 @@ fn model_aggregate_relationship_field(
                     source_type: relationship.source.clone(),
                     relationship_name: relationship.relationship_name.clone(),
                     target_model_name: target_model.model.name.clone(),
-                    target_capabilities: relationship.target_capabilities.clone(),
                     target_type: target_typename.clone(),
                     mappings: mappings.to_vec(),
                     deprecated: relationship.deprecated.clone(),

@@ -954,7 +954,6 @@ Type categories:
 
 - `<object type>_order_by` - Select an ordering based on something in the object
   type
-
   - Example type: `Invoice_order_by`
   - Usage: `{ InvoiceId: Asc }`
   - Configurable in OpenDD:
@@ -962,7 +961,6 @@ Type categories:
 
 - `<object_type>_aggregate_order_by` - Select an ordering based on an aggregate
   of something about object type
-
   - Example type: `InvoiceLine_aggregate_order_by`
   - Usage: `{ Quantity: { _sum: Asc } }`
   - Configurable in OpenDD:
@@ -971,7 +969,6 @@ Type categories:
 
 - `<scalar type>_aggregate_order_by` - Select an ordering based on an
   aggregation function over something of the scalar type
-
   - Example type: `String_aggregate_order_by`
   - Usage: `{ _max: Asc }`
   - Configurable in OpenDD:
@@ -980,7 +977,6 @@ Type categories:
 
 - `<scalar type>_<n-ary aggregate function>_aggregate_order_by` - Set the
   arguments to pass to the n-ary aggregate function and select an ordering
-
   - Example type: `String_concat_aggregate_order_by`
   - Usage: `{ args: { separator: ", " }, ordering: Asc }`
   - Configurable in OpenDD:
@@ -990,7 +986,6 @@ Type categories:
 
 - `<scalar type>_<n-ary aggregate function>_aggregate_args` - The arguments to
   pass to the n-ary aggregate function
-
   - Example type: `String_concat_aggregate_args`
   - Usage: `{ separator: ", " }`
   - Configurable in OpenDD:
@@ -1185,14 +1180,12 @@ Type categories:
 
 - `<object type>_bool_exp` - Allows comparison against properties of an object
   type, plus boolean logic operators
-
   - Example type: `Invoice_bool_exp`
   - Usage: `{ InvoiceId: { _eq: 1 } }`
   - Configurable in OpenDD via `OrderByExpression` (object variant)
 
 - `<scalar type>_bool_exp` - Application of comparison functions for the scalar
   type, plus boolean logic operators
-
   - Example type: `Int_bool_exp`
   - Usage: `{ _eq: 1 }`
   - Configurable in OpenDD via `OrderByExpression` (scalar variant)
@@ -1200,7 +1193,6 @@ Type categories:
 - `<object type>_aggregate_predicate_exp` - Top level aggregation predicate for
   the object type, allows setting a filter applied before aggregation, then the
   predicate to evaluate after aggregation
-
   - Example type: `InvoiceLine_aggregate_predicate_exp`
   - Usage:
     `{ filter_input: { where: { InvoiceId: { _gt: 1 } } }, predicate: { Quantity: { _sum: { _gt: 2 } } } }`
@@ -1211,7 +1203,6 @@ Type categories:
 - `<scalar type>_array_aggregate_predicate_exp` - Top level aggregation
   predicate for nested arrays of a scalar type, allows setting a filter applied
   before aggregation, then the predicate to evaluate after aggregation
-
   - Example type: `String_array_aggregate_predicate_exp`
   - Usage:
     `{ filter_input: { where: { _gt: 1 } }, predicate: { _sum: { _gt: 2 } } }`
@@ -1221,7 +1212,6 @@ Type categories:
 
 - `<object type>_aggregate_bool_exp` - Boolean expression over aggregations of
   properties of the object type
-
   - Example type: `InvoiceLine_aggregate_bool_exp`
   - Usage: `{ Quantity: { _sum: { _gt: 2 } } } }`
   - Configurable in OpenDD via
@@ -1230,7 +1220,6 @@ Type categories:
 
 - `<scalar type>_aggregate_bool_exp` - Application of aggregate functions and
   then applying a comparison to the result, plus boolean logic operators
-
   - Example type: `Int_aggregate_bool_exp`
   - Usage: `{ _sum: { _gt: 2 } } }`
   - Configurable in OpenDD via
@@ -1754,7 +1743,6 @@ Type categories:
 
 - `<object type>_grouping_key` - Allows the selection of either a scalar column
   or nesting into an object or array aggregation to use for a grouping key
-
   - Example type: `Invoice_grouping_key`
   - Usage: `{ _scalar_field: InvoiceDate }`
   - Configurable in OpenDD:
@@ -1767,7 +1755,6 @@ Type categories:
 
 - `<object type>_scalar_fields` - An enum of all scalar fields on the object
   type
-
   - Example type: `Invoice_scalar_fields`
   - Usage: `InvoiceDate`
   - Configurable in OpenDD:
@@ -1776,7 +1763,6 @@ Type categories:
 
 - `<object type>_aggregate_select` - Allows the selection of an aggregate over a
   property on the object type
-
   - Example type: `InvoiceLine_aggregate_select`
   - Usage: `{ Quantity: { _unary_fn: _sum } }`
   - Configurable in OpenDD:
@@ -1787,7 +1773,6 @@ Type categories:
 
 - `<scalar type>_aggregate_select` - Allows the selection of an aggregation
   function for a scalar type
-
   - Example type: `String_aggregate_select`
   - Usage: `{ _unary_fn: _max }` or `{ _concat: { separator: ", " } }`
   - Configurable in OpenDD:
@@ -2032,7 +2017,6 @@ Type categories:
 
 - `<object type>_groups` - Allows the selection of fields from the group key or
   objects from the group (or a further aggregation thereof)
-
   - Example type: `Invoice_groups`
   - Usage: `{ group_key { InvoiceDate } group_aggregate { _count }`
   - Configurable in OpenDD:

@@ -25,6 +25,7 @@ pub struct Context<M> {
     pub auth_config: Arc<ResolvedAuthConfig>,
     pub metrics: M,
     pub handshake_headers: Arc<HeaderMap>,
+    pub auth_mode_header: String,
 }
 
 /// Represents a WebSocket connection ID.

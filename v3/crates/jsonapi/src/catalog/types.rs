@@ -15,6 +15,7 @@ use open_dds::{
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
+use std::sync::Arc;
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct Catalog {
@@ -162,5 +163,5 @@ pub struct Model {
     pub description: Option<String>,
     pub data_type: Qualified<CustomTypeName>,
     pub data_connector_name: Qualified<DataConnectorName>,
-    pub filter_expression_type: Option<ResolvedObjectBooleanExpressionType>,
+    pub filter_expression_type: Option<Arc<ResolvedObjectBooleanExpressionType>>,
 }

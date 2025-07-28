@@ -252,29 +252,25 @@ throwErrorForRemoteRelationshipInPermissionPredicate q = do
           TAFAgg _ -> pure ()
           TAFExp _ -> pure ()
 
--- | Remove multiplexed results from a subscription poll.
+-- | Alter streaming subscription or livequery SQL so that rows with empty
+-- results (no new data) are filtered. This saves significant IO between
+-- postgres and hasura for users with many multiplexed subscriptions which most
+-- of the time return no new results. There is no observable change to the
+-- graphql subscription client.
 --
--- The basic multiplexed subscription query groups all requests by query shape
--- (poller) and then subgroups by current cursor assignments (cohort). Each
--- poller acts independently, resulting in each one having its own query to the
--- database.
+-- The main body of a subscription query, without this wrapper, returns
+-- something like (e.g. for the streaming variant, 'mkStreamingMultiplexedQuery'):
 --
--- Within these independent queries, we take arrays of configuration to
--- represent all our cohorts. We query across all the cohorts in a poller, and
--- return a list of cohort results. If there are no new results, these cohort
--- results will be empty.
+--                 result_id               |                 result                 |       cursor
+--   --------------------------------------+----------------------------------------+---------------------
+--    4bd57826-7ed1-4aa0-869e-0bdc87bdd049 | {"Album_stream" : [{"Title":"ZZ1 3"}]} | {"Title" : "ZZ1 3"}
+--    14cff8be-8fb7-425a-88c5-bd77428db955 | {"Album_stream" : []}                  | {"Title" : null}
 --
--- The question this function answers is: what if I have a million
--- subscriptions with different cohort variables that are all waiting for new
--- information? In this case, we end up returning a one-million row result
--- with each row containing a map of empty arrays. This is a massive amount of
--- network traffic to spend on a no-op update.
+-- The `where` clause defined here strips rows like the second where there are
+-- no new results.
 --
--- This function very simply filters out any rows that contain no values on the
--- database side, saving the network overhead. What this means, however, is
--- that consumers will no longer receive empty results for a subscription: with
--- this feature enabled, responses are always non-empty, and if there's an
--- hour's wait between two responses, then so be it.
+-- This needs to stay compatible with both 'mkStreamingMultiplexedQuery' and
+-- 'mkMultiplexedQuery'.
 removeEmptyMultiplexedResults :: S.Select -> S.Select
 removeEmptyMultiplexedResults inner = do
   let nonEmptyRowFilter :: S.WhereFrag
@@ -282,28 +278,7 @@ removeEmptyMultiplexedResults inner = do
         S.WhereFrag
           $ S.BEExists
           $ S.mkSelect
-            { -- For a request that looks like this:
-              --
-              --     subscription Example {
-              --       sub_one { .. }
-              --       sub_two { .. }
-              --     }
-              --
-              -- ... we'll get back an object that looks like this:
-              --
-              --     { "sub_one": [ .. ], "sub_two": [ .. ] }
-              --
-              -- ... so we only want to return if one of the arrays contains
-              -- information. To do this, we sub-select `json_each` of the
-              -- result, filter for rows containing non-empty arrays, and then
-              -- if there exists any remaining information, we have an update.
-              --
-              -- Note that this is a semantic choice: we don't wait until /all/
-              -- the given subscriptions contain data, just /any/ of them,
-              -- which means that you can still end up with empty responses for
-              -- subscription requests containing multiple fields. It's simply
-              -- the case that they can't all be empty at once.
-              S.selFrom =
+            { S.selFrom =
                 Just
                   $ S.FromExp
                     [ S.FIUnqualifiedFunc
@@ -402,12 +377,15 @@ mkStreamingMultiplexedQuery ::
     MonadIO m,
     MonadError QErr m
   ) =>
+  RemoveEmptySubscriptionResponses ->
   UserInfo ->
   (G.Name, (QueryDB ('Postgres pgKind) Void S.SQLExp)) ->
   m MultiplexedQuery
-mkStreamingMultiplexedQuery userInfo (fieldAlias, resolvedAST) = do
+mkStreamingMultiplexedQuery removeEmptySubscriptionResponses userInfo (fieldAlias, resolvedAST) = do
   (fromSQL, customSQLCTEs) <- runWriterT (toSQLFromItem userInfo (S.mkTableAlias $ G.unName fieldAlias) resolvedAST)
-  let selectWith = S.SelectWith [] select
+  let selectWith = case removeEmptySubscriptionResponses of
+        RemoveEmptyResponses -> S.SelectWith [] (removeEmptyMultiplexedResults select)
+        PreserveEmptyResponses -> S.SelectWith [] select
       select =
         S.mkSelect
           { S.selExtr =

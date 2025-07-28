@@ -1,5 +1,6 @@
 use crate::catalog::{Model, ObjectType, State};
 use std::collections::BTreeMap;
+use std::sync::Arc;
 mod output;
 mod parameters;
 mod shared;
@@ -57,7 +58,7 @@ fn get_route_for_model(
     schemas: &mut BTreeMap<String, oas3::spec::ObjectOrReference<oas3::spec::ObjectSchema>>,
     filter_boolean_expression_types: &BTreeMap<
         String,
-        metadata_resolve::ResolvedObjectBooleanExpressionType,
+        Arc<metadata_resolve::ResolvedObjectBooleanExpressionType>,
     >,
 ) -> oas3::spec::Operation {
     let mut parameters = vec![

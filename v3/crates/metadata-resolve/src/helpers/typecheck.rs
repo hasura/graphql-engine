@@ -1,9 +1,11 @@
 //! Functions for typechecking JSON literals against expected types
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::stages::object_types;
 use crate::types::error::ShouldBeAnError;
-use crate::types::subgraph;
+use crate::{Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference};
+use open_dds::flags::Flag;
+use open_dds::types::{CustomTypeName, FieldName};
 use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq)]
@@ -27,21 +29,35 @@ pub enum TypecheckError {
 pub enum TypecheckIssue {
     #[error("Expected an object value of type {expected:} but got value {actual:}")]
     ObjectTypeMismatch {
-        expected: subgraph::Qualified<open_dds::types::CustomTypeName>,
+        expected: Qualified<CustomTypeName>,
         actual: serde_json::Value,
     },
 
     #[error("Typecheck failed for field {field_name:} in object type {object_type:}: {error:}")]
     ObjectTypeField {
-        field_name: open_dds::types::FieldName,
-        object_type: subgraph::Qualified<open_dds::types::CustomTypeName>,
+        field_name: FieldName,
+        object_type: Qualified<CustomTypeName>,
         error: TypecheckError,
+    },
+
+    #[error(
+        "Found a literal value but the argument is a boolean expression type '{boolean_expression_type_name}'"
+    )]
+    LiteralValueUsedForBooleanExpression {
+        boolean_expression_type_name: Qualified<CustomTypeName>,
     },
 }
 
 impl ShouldBeAnError for TypecheckIssue {
     fn should_be_an_error(&self, flags: &open_dds::flags::OpenDdFlags) -> bool {
-        flags.contains(open_dds::flags::Flag::TypecheckObjectTypeValuesInPresets)
+        match self {
+            TypecheckIssue::ObjectTypeField { .. } | TypecheckIssue::ObjectTypeMismatch { .. } => {
+                flags.contains(Flag::TypecheckObjectTypeValuesInPresets)
+            }
+            TypecheckIssue::LiteralValueUsedForBooleanExpression { .. } => {
+                flags.contains(Flag::DisallowLiteralsAsBooleanExpressionArguments)
+            }
+        }
     }
 }
 
@@ -50,18 +66,22 @@ impl ShouldBeAnError for TypecheckIssue {
 /// If the values are passed in a session variable then there is nothing we can do at this point
 /// and we must rely on run time casts
 pub fn typecheck_value_expression(
-    object_types: &BTreeMap<
-        &subgraph::Qualified<open_dds::types::CustomTypeName>,
-        &object_types::ObjectTypeRepresentation,
-    >,
-    ty: &subgraph::QualifiedTypeReference,
+    object_types: &BTreeMap<&Qualified<CustomTypeName>, &object_types::ObjectTypeRepresentation>,
+    boolean_expression_type_names: &BTreeSet<&Qualified<CustomTypeName>>,
+    ty: &QualifiedTypeReference,
     value_expression: &open_dds::permissions::ValueExpression,
 ) -> Result<Vec<TypecheckIssue>, TypecheckError> {
     let mut issues = Vec::new();
     match &value_expression {
         open_dds::permissions::ValueExpression::SessionVariable(_) => {}
         open_dds::permissions::ValueExpression::Literal(json_value) => {
-            typecheck_qualified_type_reference(object_types, ty, json_value, &mut issues)?;
+            typecheck_qualified_type_reference(
+                object_types,
+                boolean_expression_type_names,
+                ty,
+                json_value,
+                &mut issues,
+            )?;
         }
     }
     Ok(issues)
@@ -71,11 +91,9 @@ pub fn typecheck_value_expression(
 /// currently only works for primitive types (Int, String, etc)
 /// and arrays of those types
 pub fn typecheck_qualified_type_reference(
-    object_types: &BTreeMap<
-        &subgraph::Qualified<open_dds::types::CustomTypeName>,
-        &object_types::ObjectTypeRepresentation,
-    >,
-    ty: &subgraph::QualifiedTypeReference,
+    object_types: &BTreeMap<&Qualified<CustomTypeName>, &object_types::ObjectTypeRepresentation>,
+    boolean_expression_type_names: &BTreeSet<&Qualified<CustomTypeName>>,
+    ty: &QualifiedTypeReference,
     value: &serde_json::Value,
     issues: &mut Vec<TypecheckIssue>,
 ) -> Result<(), TypecheckError> {
@@ -89,29 +107,38 @@ pub fn typecheck_qualified_type_reference(
             }
         }
         // check basic inbuilt types
-        (subgraph::QualifiedBaseType::Named(subgraph::QualifiedTypeName::Inbuilt(inbuilt)), _) => {
+        (QualifiedBaseType::Named(QualifiedTypeName::Inbuilt(inbuilt)), _) => {
             typecheck_inbuilt_type(inbuilt, value)
         }
         // check each item in an array
-        (subgraph::QualifiedBaseType::List(inner_type), serde_json::Value::Array(array_values)) => {
+        (QualifiedBaseType::List(inner_type), serde_json::Value::Array(array_values)) => {
             array_values.iter().try_for_each(|array_value| {
-                typecheck_qualified_type_reference(object_types, inner_type, array_value, issues)
-                    .map_err(|inner_error| TypecheckError::ArrayItemMismatch {
-                        inner_error: Box::new(inner_error),
-                    })
+                typecheck_qualified_type_reference(
+                    object_types,
+                    boolean_expression_type_names,
+                    inner_type,
+                    array_value,
+                    issues,
+                )
+                .map_err(|inner_error| TypecheckError::ArrayItemMismatch {
+                    inner_error: Box::new(inner_error),
+                })
             })
         }
         // array expected, non-array value
-        (subgraph::QualifiedBaseType::List(_), value) => Err(TypecheckError::NonArrayValue {
+        (QualifiedBaseType::List(_), value) => Err(TypecheckError::NonArrayValue {
             value: value.clone(),
         }),
 
         // check custom types
-        (
-            subgraph::QualifiedBaseType::Named(subgraph::QualifiedTypeName::Custom(custom_type)),
-            _,
-        ) => {
-            typecheck_custom_type(object_types, custom_type, value, issues);
+        (QualifiedBaseType::Named(QualifiedTypeName::Custom(custom_type)), _) => {
+            typecheck_custom_type(
+                object_types,
+                boolean_expression_type_names,
+                custom_type,
+                value,
+                issues,
+            );
             Ok(())
         }
     }
@@ -141,11 +168,9 @@ fn typecheck_inbuilt_type(
 
 /// check a JSON value matches an expected custom type.
 fn typecheck_custom_type(
-    object_types: &BTreeMap<
-        &subgraph::Qualified<open_dds::types::CustomTypeName>,
-        &object_types::ObjectTypeRepresentation,
-    >,
-    custom_type: &subgraph::Qualified<open_dds::types::CustomTypeName>,
+    object_types: &BTreeMap<&Qualified<CustomTypeName>, &object_types::ObjectTypeRepresentation>,
+    boolean_expression_type_names: &BTreeSet<&Qualified<CustomTypeName>>,
+    custom_type: &Qualified<CustomTypeName>,
     value: &serde_json::Value,
     issues: &mut Vec<TypecheckIssue>,
 ) {
@@ -159,6 +184,7 @@ fn typecheck_custom_type(
                     .unwrap_or_else(|| &serde_json::Value::Null);
                 if let Err(e) = typecheck_qualified_type_reference(
                     object_types,
+                    boolean_expression_type_names,
                     &field_definition.field_type,
                     field_value,
                     issues,
@@ -177,15 +203,23 @@ fn typecheck_custom_type(
                 actual: value.clone(),
             });
         }
+    } else if boolean_expression_type_names.contains(custom_type) {
+        // boolean expressions shouldn't be provided as literals
+        issues.push(TypecheckIssue::LiteralValueUsedForBooleanExpression {
+            boolean_expression_type_name: custom_type.clone(),
+        });
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::collections::BTreeMap;
+    use std::collections::{BTreeMap, BTreeSet};
 
-    use super::{TypecheckError, subgraph, typecheck_qualified_type_reference};
-    use crate::stages::object_types;
+    use super::{TypecheckError, typecheck_qualified_type_reference};
+    use crate::{
+        Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
+        stages::object_types,
+    };
     use indexmap::IndexMap;
     use open_dds::{
         identifier::{Identifier, SubgraphName},
@@ -193,62 +227,60 @@ mod tests {
     };
     use serde_json::json;
 
-    fn empty_object_types<'a>() -> BTreeMap<
-        &'a subgraph::Qualified<open_dds::types::CustomTypeName>,
-        &'a object_types::ObjectTypeRepresentation,
-    > {
+    fn empty_object_types<'a>()
+    -> BTreeMap<&'a Qualified<CustomTypeName>, &'a object_types::ObjectTypeRepresentation> {
         BTreeMap::new()
     }
 
-    fn int_type(nullable: bool) -> subgraph::QualifiedTypeReference {
-        subgraph::QualifiedTypeReference {
+    fn int_type(nullable: bool) -> QualifiedTypeReference {
+        QualifiedTypeReference {
             nullable,
-            underlying_type: subgraph::QualifiedBaseType::Named(
-                subgraph::QualifiedTypeName::Inbuilt(open_dds::types::InbuiltType::Int),
-            ),
+            underlying_type: QualifiedBaseType::Named(QualifiedTypeName::Inbuilt(
+                open_dds::types::InbuiltType::Int,
+            )),
         }
     }
 
-    fn string_type() -> subgraph::QualifiedTypeReference {
-        subgraph::QualifiedTypeReference {
+    fn string_type() -> QualifiedTypeReference {
+        QualifiedTypeReference {
             nullable: false,
-            underlying_type: subgraph::QualifiedBaseType::Named(
-                subgraph::QualifiedTypeName::Inbuilt(open_dds::types::InbuiltType::String),
-            ),
+            underlying_type: QualifiedBaseType::Named(QualifiedTypeName::Inbuilt(
+                open_dds::types::InbuiltType::String,
+            )),
         }
     }
 
-    fn boolean_type() -> subgraph::QualifiedTypeReference {
-        subgraph::QualifiedTypeReference {
+    fn boolean_type() -> QualifiedTypeReference {
+        QualifiedTypeReference {
             nullable: false,
-            underlying_type: subgraph::QualifiedBaseType::Named(
-                subgraph::QualifiedTypeName::Inbuilt(open_dds::types::InbuiltType::Boolean),
-            ),
+            underlying_type: QualifiedBaseType::Named(QualifiedTypeName::Inbuilt(
+                open_dds::types::InbuiltType::Boolean,
+            )),
         }
     }
 
-    fn float_type() -> subgraph::QualifiedTypeReference {
-        subgraph::QualifiedTypeReference {
+    fn float_type() -> QualifiedTypeReference {
+        QualifiedTypeReference {
             nullable: false,
-            underlying_type: subgraph::QualifiedBaseType::Named(
-                subgraph::QualifiedTypeName::Inbuilt(open_dds::types::InbuiltType::Float),
-            ),
+            underlying_type: QualifiedBaseType::Named(QualifiedTypeName::Inbuilt(
+                open_dds::types::InbuiltType::Float,
+            )),
         }
     }
 
-    fn id_type() -> subgraph::QualifiedTypeReference {
-        subgraph::QualifiedTypeReference {
+    fn id_type() -> QualifiedTypeReference {
+        QualifiedTypeReference {
             nullable: false,
-            underlying_type: subgraph::QualifiedBaseType::Named(
-                subgraph::QualifiedTypeName::Inbuilt(open_dds::types::InbuiltType::ID),
-            ),
+            underlying_type: QualifiedBaseType::Named(QualifiedTypeName::Inbuilt(
+                open_dds::types::InbuiltType::ID,
+            )),
         }
     }
 
-    fn array_of(item: subgraph::QualifiedTypeReference) -> subgraph::QualifiedTypeReference {
-        subgraph::QualifiedTypeReference {
+    fn array_of(item: QualifiedTypeReference) -> QualifiedTypeReference {
+        QualifiedTypeReference {
             nullable: false,
-            underlying_type: subgraph::QualifiedBaseType::List(Box::new(item)),
+            underlying_type: QualifiedBaseType::List(Box::new(item)),
         }
     }
 
@@ -259,7 +291,13 @@ mod tests {
         let value = json!(1);
 
         assert_eq!(
-            typecheck_qualified_type_reference(&empty_object_types(), &ty, &value, &mut vec![]),
+            typecheck_qualified_type_reference(
+                &empty_object_types(),
+                &BTreeSet::new(),
+                &ty,
+                &value,
+                &mut vec![]
+            ),
             Ok(())
         );
     }
@@ -271,7 +309,13 @@ mod tests {
         let value = json!(123.123);
 
         assert_eq!(
-            typecheck_qualified_type_reference(&empty_object_types(), &ty, &value, &mut vec![]),
+            typecheck_qualified_type_reference(
+                &empty_object_types(),
+                &BTreeSet::new(),
+                &ty,
+                &value,
+                &mut vec![]
+            ),
             Ok(())
         );
     }
@@ -282,7 +326,13 @@ mod tests {
         let value = json!("dog");
 
         assert_eq!(
-            typecheck_qualified_type_reference(&empty_object_types(), &ty, &value, &mut vec![]),
+            typecheck_qualified_type_reference(
+                &empty_object_types(),
+                &BTreeSet::new(),
+                &ty,
+                &value,
+                &mut vec![]
+            ),
             Ok(())
         );
     }
@@ -293,7 +343,13 @@ mod tests {
         let value = json!(true);
 
         assert_eq!(
-            typecheck_qualified_type_reference(&empty_object_types(), &ty, &value, &mut vec![]),
+            typecheck_qualified_type_reference(
+                &empty_object_types(),
+                &BTreeSet::new(),
+                &ty,
+                &value,
+                &mut vec![]
+            ),
             Ok(())
         );
     }
@@ -304,7 +360,13 @@ mod tests {
         let value = json!("12312312sdwfdsff123123");
 
         assert_eq!(
-            typecheck_qualified_type_reference(&empty_object_types(), &ty, &value, &mut vec![]),
+            typecheck_qualified_type_reference(
+                &empty_object_types(),
+                &BTreeSet::new(),
+                &ty,
+                &value,
+                &mut vec![]
+            ),
             Ok(())
         );
     }
@@ -315,7 +377,13 @@ mod tests {
         let value = json!([true, false]);
 
         assert_eq!(
-            typecheck_qualified_type_reference(&empty_object_types(), &ty, &value, &mut vec![]),
+            typecheck_qualified_type_reference(
+                &empty_object_types(),
+                &BTreeSet::new(),
+                &ty,
+                &value,
+                &mut vec![]
+            ),
             Ok(())
         );
     }
@@ -326,7 +394,13 @@ mod tests {
         let value = json!([[true, false]]);
 
         assert_eq!(
-            typecheck_qualified_type_reference(&empty_object_types(), &ty, &value, &mut vec![]),
+            typecheck_qualified_type_reference(
+                &empty_object_types(),
+                &BTreeSet::new(),
+                &ty,
+                &value,
+                &mut vec![]
+            ),
             Ok(())
         );
     }
@@ -337,7 +411,13 @@ mod tests {
         let value = json!([true, 123]);
 
         assert_eq!(
-            typecheck_qualified_type_reference(&empty_object_types(), &ty, &value, &mut vec![]),
+            typecheck_qualified_type_reference(
+                &empty_object_types(),
+                &BTreeSet::new(),
+                &ty,
+                &value,
+                &mut vec![]
+            ),
             Err(TypecheckError::ArrayItemMismatch {
                 inner_error: Box::new(TypecheckError::ScalarTypeMismatch {
                     expected: open_dds::types::InbuiltType::Boolean,
@@ -353,7 +433,13 @@ mod tests {
         let value = json!(true);
 
         assert_eq!(
-            typecheck_qualified_type_reference(&empty_object_types(), &ty, &value, &mut vec![]),
+            typecheck_qualified_type_reference(
+                &empty_object_types(),
+                &BTreeSet::new(),
+                &ty,
+                &value,
+                &mut vec![]
+            ),
             Err(TypecheckError::NonArrayValue { value })
         );
     }
@@ -364,7 +450,13 @@ mod tests {
         let value = json!(null);
 
         assert_eq!(
-            typecheck_qualified_type_reference(&empty_object_types(), &ty, &value, &mut vec![]),
+            typecheck_qualified_type_reference(
+                &empty_object_types(),
+                &BTreeSet::new(),
+                &ty,
+                &value,
+                &mut vec![]
+            ),
             Err(TypecheckError::NullInNonNullableColumn)
         );
     }
@@ -375,7 +467,13 @@ mod tests {
         let value = json!(null);
 
         assert_eq!(
-            typecheck_qualified_type_reference(&empty_object_types(), &ty, &value, &mut vec![]),
+            typecheck_qualified_type_reference(
+                &empty_object_types(),
+                &BTreeSet::new(),
+                &ty,
+                &value,
+                &mut vec![]
+            ),
             Ok(())
         );
     }
@@ -386,7 +484,13 @@ mod tests {
         let value = json!("dog");
 
         assert_eq!(
-            typecheck_qualified_type_reference(&empty_object_types(), &ty, &value, &mut vec![]),
+            typecheck_qualified_type_reference(
+                &empty_object_types(),
+                &BTreeSet::new(),
+                &ty,
+                &value,
+                &mut vec![]
+            ),
             Err(TypecheckError::ScalarTypeMismatch {
                 expected: open_dds::types::InbuiltType::Int,
                 actual: value.clone()
@@ -395,10 +499,10 @@ mod tests {
     }
 
     fn create_test_object_type() -> (
-        subgraph::Qualified<open_dds::types::CustomTypeName>,
+        Qualified<CustomTypeName>,
         object_types::ObjectTypeRepresentation,
     ) {
-        let custom_type = subgraph::Qualified {
+        let custom_type = Qualified {
             subgraph: SubgraphName::new_inline_static("default"),
             name: CustomTypeName(Identifier::new("Person").unwrap()),
         };
@@ -444,11 +548,11 @@ mod tests {
         object_types.insert(&custom_type, &object_type);
 
         // Create the qualified type reference for our custom type
-        let ty = subgraph::QualifiedTypeReference {
+        let ty = QualifiedTypeReference {
             nullable: false,
-            underlying_type: subgraph::QualifiedBaseType::Named(
-                subgraph::QualifiedTypeName::Custom(custom_type.clone()),
-            ),
+            underlying_type: QualifiedBaseType::Named(QualifiedTypeName::Custom(
+                custom_type.clone(),
+            )),
         };
 
         // Test valid object
@@ -458,7 +562,13 @@ mod tests {
         });
 
         assert_eq!(
-            typecheck_qualified_type_reference(&object_types, &ty, &valid_value, &mut vec![]),
+            typecheck_qualified_type_reference(
+                &object_types,
+                &BTreeSet::new(),
+                &ty,
+                &valid_value,
+                &mut vec![]
+            ),
             Ok(())
         );
 
@@ -468,8 +578,14 @@ mod tests {
             "age": "thirty"
         });
         let mut issues = vec![];
-        typecheck_qualified_type_reference(&object_types, &ty, &invalid_value, &mut issues)
-            .unwrap();
+        typecheck_qualified_type_reference(
+            &object_types,
+            &BTreeSet::new(),
+            &ty,
+            &invalid_value,
+            &mut issues,
+        )
+        .unwrap();
         assert_eq!(
             issues.into_iter().next().unwrap().to_string(),
             format!(
@@ -483,8 +599,14 @@ mod tests {
         });
 
         let mut issues = vec![];
-        typecheck_qualified_type_reference(&object_types, &ty, &missing_field_value, &mut issues)
-            .unwrap();
+        typecheck_qualified_type_reference(
+            &object_types,
+            &BTreeSet::new(),
+            &ty,
+            &missing_field_value,
+            &mut issues,
+        )
+        .unwrap();
         assert_eq!(
             issues.into_iter().next().unwrap().to_string(),
             format!(
@@ -496,8 +618,14 @@ mod tests {
         let non_object_value = json!("not an object");
 
         let mut issues = vec![];
-        typecheck_qualified_type_reference(&object_types, &ty, &non_object_value, &mut issues)
-            .unwrap();
+        typecheck_qualified_type_reference(
+            &object_types,
+            &BTreeSet::new(),
+            &ty,
+            &non_object_value,
+            &mut issues,
+        )
+        .unwrap();
         assert_eq!(
             issues.into_iter().next().unwrap().to_string(),
             format!(

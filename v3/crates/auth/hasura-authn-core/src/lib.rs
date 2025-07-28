@@ -7,7 +7,7 @@ use axum::{
 };
 use axum_core::body::Body;
 use schemars::JsonSchema;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, btree_map};
 use std::{
     borrow::Cow,
     collections::{HashMap, HashSet},
@@ -100,8 +100,32 @@ impl SessionVariables {
     pub fn get(&self, session_variable: &SessionVariableName) -> Option<&SessionVariableValue> {
         self.0.get(session_variable)
     }
+
+    pub fn iter(&self) -> btree_map::Iter<'_, SessionVariableName, SessionVariableValue> {
+        self.0.iter()
+    }
 }
 
+impl IntoIterator for SessionVariables {
+    type Item = (SessionVariableName, SessionVariableValue);
+    type IntoIter = btree_map::IntoIter<SessionVariableName, SessionVariableValue>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a SessionVariables {
+    type Item = (
+        &'a open_dds::session_variables::SessionVariableName,
+        &'a SessionVariableValue,
+    );
+    type IntoIter =
+        btree_map::Iter<'a, open_dds::session_variables::SessionVariableName, SessionVariableValue>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
 // The privilege with which a request is executed
 #[derive(Clone, Debug, Eq, PartialEq, serde::Serialize)]
 pub struct Session {
@@ -131,6 +155,12 @@ impl RoleAuthorization {
         };
         let mut session_variables = allowed_client_session_variables;
         session_variables.extend(self.session_variables.clone());
+
+        session_variables.insert(
+            SESSION_VARIABLE_ROLE,
+            SessionVariableValue::Parsed(serde_json::json!(self.role.to_string())),
+        );
+
         Session {
             role: self.role.clone(),
             variables: SessionVariables(session_variables),
@@ -310,6 +340,11 @@ mod tests {
         let mut expected_session_variables = client_session_variables.clone();
 
         expected_session_variables.insert(
+            SessionVariableName::from_str("x-hasura-role").unwrap(),
+            SessionVariableValue::Parsed("test-role".into()),
+        );
+
+        expected_session_variables.insert(
             SessionVariableName::from_str("x-hasura-user-id").unwrap(),
             SessionVariableValue::new("1"),
         );
@@ -364,6 +399,12 @@ mod tests {
             SessionVariableName::from_str("x-hasura-user-id").unwrap(),
             SessionVariableValue::new("1"),
         );
+
+        expected_session_variables.insert(
+            SessionVariableName::from_str("x-hasura-role").unwrap(),
+            SessionVariableValue::Parsed("test-role".into()),
+        );
+
         pa::assert_eq!(
             Session {
                 role: Role::new("test-role"),
@@ -406,6 +447,11 @@ mod tests {
         expected_session_variables.insert(
             SessionVariableName::from_str("x-hasura-user-id").unwrap(),
             SessionVariableValue::new("1"),
+        );
+
+        expected_session_variables.insert(
+            SessionVariableName::from_str("x-hasura-role").unwrap(),
+            SessionVariableValue::Parsed("test-role".into()),
         );
 
         pa::assert_eq!(

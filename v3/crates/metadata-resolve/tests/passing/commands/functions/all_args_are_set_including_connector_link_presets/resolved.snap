@@ -197,6 +197,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/all_args_ar
                                         },
                                     ),
                                     supports_relational_queries: None,
+                                    supports_relational_mutations: None,
                                 },
                             },
                             source: Function(
@@ -269,7 +270,10 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/all_args_ar
                     ),
                     description: None,
                 },
-                permissions: {},
+                permissions: CommandPermissions {
+                    by_role: {},
+                    authorization_rules: [],
+                },
             },
         },
         boolean_expression_types: BooleanExpressionTypes {
@@ -318,10 +322,18 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/all_args_ar
         glossaries: {},
         plugin_configs: LifecyclePluginConfigs {
             pre_parse_plugins: [],
-            pre_response_plugins: [],
+            pre_response_plugins: ResolvedLifecyclePreResponsePluginHooks {
+                sync_hooks: [],
+                async_hooks: [],
+            },
             pre_route_plugins: [],
+            pre_ndc_request_plugins: {},
+            pre_ndc_response_plugins: {},
         },
         roles: {},
+        conditions: Conditions {
+            conditions: {},
+        },
         runtime_flags: RuntimeFlags(
             {},
         ),

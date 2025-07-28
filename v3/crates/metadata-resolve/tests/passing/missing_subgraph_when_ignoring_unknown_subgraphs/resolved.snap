@@ -88,62 +88,125 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                     graphql_input_type_name: None,
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "article_id",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "article_id",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "title",
+                                FieldName(
+                                    Identifier(
+                                        "title",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "author_id",
+                                FieldName(
+                                    Identifier(
+                                        "author_id",
+                                    ),
                                 ),
-                            ),
-                        },
-                    },
-                    Role(
-                        "user1",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "title",
-                                ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "author_id",
-                                ),
+                            ],
+                            condition: ConditionHash(
+                                14539879520726521060,
                             ),
                         },
-                    },
-                    Role(
-                        "user2",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "title",
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "title",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "author_id",
+                                FieldName(
+                                    Identifier(
+                                        "author_id",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                14454357423896325477,
                             ),
+                        },
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "title",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "author_id",
+                                    ),
+                                ),
+                            ],
+                            condition: ConditionHash(
+                                1826476065993054670,
+                            ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "article_id",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "title",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "author_id",
+                                    ),
+                                ),
+                            },
+                        },
+                        Role(
+                            "user1",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "title",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "author_id",
+                                    ),
+                                ),
+                            },
+                        },
+                        Role(
+                            "user2",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "title",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "author_id",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {
@@ -709,6 +772,7 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                         },
                                     ),
                                     supports_relational_queries: None,
+                                    supports_relational_mutations: None,
                                 },
                             },
                             collection: CollectionName(
@@ -1124,19 +1188,47 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                     aggregate_expression: None,
                 },
                 arguments: {},
-                select_permissions: {
-                    Role(
-                        "admin",
-                    ): SelectPermission {
-                        filter: AllowAll,
-                        argument_presets: {},
-                        allow_subscriptions: false,
-                    },
-                    Role(
-                        "user1",
-                    ): SelectPermission {
-                        filter: Filter(
-                            BinaryFieldComparison {
+                permissions: ModelPermissions {
+                    authorization_rules: [
+                        Access {
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
+                            ),
+                            allow_or_deny: Allow,
+                        },
+                        Subscription {
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
+                            ),
+                            allow_or_deny: Deny,
+                        },
+                        Access {
+                            condition: Some(
+                                ConditionHash(
+                                    14454357423896325477,
+                                ),
+                            ),
+                            allow_or_deny: Allow,
+                        },
+                        Subscription {
+                            condition: Some(
+                                ConditionHash(
+                                    14454357423896325477,
+                                ),
+                            ),
+                            allow_or_deny: Deny,
+                        },
+                        Filter {
+                            condition: Some(
+                                ConditionHash(
+                                    14454357423896325477,
+                                ),
+                            ),
+                            predicate: BinaryFieldComparison {
                                 field: FieldName(
                                     Identifier(
                                         "author_id",
@@ -1181,16 +1273,116 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                 ),
                                 deprecated: None,
                             },
-                        ),
-                        argument_presets: {},
-                        allow_subscriptions: false,
-                    },
-                    Role(
-                        "user2",
-                    ): SelectPermission {
-                        filter: AllowAll,
-                        argument_presets: {},
-                        allow_subscriptions: false,
+                        },
+                        Access {
+                            condition: Some(
+                                ConditionHash(
+                                    1826476065993054670,
+                                ),
+                            ),
+                            allow_or_deny: Allow,
+                        },
+                        Subscription {
+                            condition: Some(
+                                ConditionHash(
+                                    1826476065993054670,
+                                ),
+                            ),
+                            allow_or_deny: Deny,
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): ModelPermission {
+                            select: Some(
+                                SelectPermission {
+                                    filter: AllowAll,
+                                    allow_subscriptions: false,
+                                },
+                            ),
+                            input: Some(
+                                ModelInputPermission {
+                                    argument_presets: {},
+                                },
+                            ),
+                        },
+                        Role(
+                            "user1",
+                        ): ModelPermission {
+                            select: Some(
+                                SelectPermission {
+                                    filter: Filter(
+                                        BinaryFieldComparison {
+                                            field: FieldName(
+                                                Identifier(
+                                                    "author_id",
+                                                ),
+                                            ),
+                                            field_parent_type: Qualified {
+                                                subgraph: SubgraphName(
+                                                    "article_namespace",
+                                                ),
+                                                name: CustomTypeName(
+                                                    Identifier(
+                                                        "article",
+                                                    ),
+                                                ),
+                                            },
+                                            ndc_column: DataConnectorColumnName(
+                                                "author_id",
+                                            ),
+                                            operator: ResolvedOperator {
+                                                data_connector_operator_name: DataConnectorOperatorName(
+                                                    "_eq",
+                                                ),
+                                                comparison_operator: Equals,
+                                            },
+                                            column_path: [],
+                                            argument_type: QualifiedTypeReference {
+                                                underlying_type: Named(
+                                                    Inbuilt(
+                                                        Int,
+                                                    ),
+                                                ),
+                                                nullable: false,
+                                            },
+                                            value: SessionVariable(
+                                                SessionVariableReference {
+                                                    name: SessionVariableName(
+                                                        "x-hasura-user-id",
+                                                    ),
+                                                    passed_as_json: false,
+                                                    disallow_unknown_fields: false,
+                                                },
+                                            ),
+                                            deprecated: None,
+                                        },
+                                    ),
+                                    allow_subscriptions: false,
+                                },
+                            ),
+                            input: Some(
+                                ModelInputPermission {
+                                    argument_presets: {},
+                                },
+                            ),
+                        },
+                        Role(
+                            "user2",
+                        ): ModelPermission {
+                            select: Some(
+                                SelectPermission {
+                                    filter: AllowAll,
+                                    allow_subscriptions: false,
+                                },
+                            ),
+                            input: Some(
+                                ModelInputPermission {
+                                    argument_presets: {},
+                                },
+                            ),
+                        },
                     },
                 },
                 filter_expression_type: None,
@@ -1393,8 +1585,13 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
         glossaries: {},
         plugin_configs: LifecyclePluginConfigs {
             pre_parse_plugins: [],
-            pre_response_plugins: [],
+            pre_response_plugins: ResolvedLifecyclePreResponsePluginHooks {
+                sync_hooks: [],
+                async_hooks: [],
+            },
             pre_route_plugins: [],
+            pre_ndc_request_plugins: {},
+            pre_ndc_response_plugins: {},
         },
         roles: {
             Role(
@@ -1406,6 +1603,61 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
             Role(
                 "user2",
             ),
+        },
+        conditions: Conditions {
+            conditions: {
+                ConditionHash(
+                    1826476065993054670,
+                ): BinaryOperation {
+                    op: Equals,
+                    left: SessionVariable(
+                        SessionVariableReference {
+                            name: SessionVariableName(
+                                "x-hasura-role",
+                            ),
+                            passed_as_json: false,
+                            disallow_unknown_fields: false,
+                        },
+                    ),
+                    right: Literal(
+                        String("user2"),
+                    ),
+                },
+                ConditionHash(
+                    14454357423896325477,
+                ): BinaryOperation {
+                    op: Equals,
+                    left: SessionVariable(
+                        SessionVariableReference {
+                            name: SessionVariableName(
+                                "x-hasura-role",
+                            ),
+                            passed_as_json: false,
+                            disallow_unknown_fields: false,
+                        },
+                    ),
+                    right: Literal(
+                        String("user1"),
+                    ),
+                },
+                ConditionHash(
+                    14539879520726521060,
+                ): BinaryOperation {
+                    op: Equals,
+                    left: SessionVariable(
+                        SessionVariableReference {
+                            name: SessionVariableName(
+                                "x-hasura-role",
+                            ),
+                            passed_as_json: false,
+                            disallow_unknown_fields: false,
+                        },
+                    ),
+                    right: Literal(
+                        String("admin"),
+                    ),
+                },
+            },
         },
         runtime_flags: RuntimeFlags(
             {},

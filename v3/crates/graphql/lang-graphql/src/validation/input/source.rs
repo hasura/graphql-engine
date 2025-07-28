@@ -2,6 +2,7 @@ use crate::ast::common as ast;
 use crate::ast::value as gql;
 use crate::normalized_ast as normalized;
 use crate::schema;
+use crate::validation::NonNullGraphqlVariablesValidation;
 use crate::validation::error::*;
 
 pub enum LocationType<'q, 's> {
@@ -63,6 +64,7 @@ where
         namespaced_getter: &NSGet,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
+        validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
     ) -> Result<normalized::Value<'s, S>>;
     fn get_float<NSGet: schema::NamespacedGetter<S>>(
         &self,
@@ -70,6 +72,7 @@ where
         namespaced_getter: &NSGet,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
+        validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
     ) -> Result<normalized::Value<'s, S>>;
     fn get_boolean<NSGet: schema::NamespacedGetter<S>>(
         &self,
@@ -77,6 +80,7 @@ where
         namespaced_getter: &NSGet,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
+        validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
     ) -> Result<normalized::Value<'s, S>>;
     fn get_string<NSGet: schema::NamespacedGetter<S>>(
         &self,
@@ -84,6 +88,7 @@ where
         namespaced_getter: &NSGet,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
+        validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
     ) -> Result<normalized::Value<'s, S>>;
     fn get_id<NSGet: schema::NamespacedGetter<S>>(
         &self,
@@ -91,6 +96,7 @@ where
         namespaced_getter: &NSGet,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
+        validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
     ) -> Result<normalized::Value<'s, S>>;
 
     fn fold_enum<F, NSGet>(
@@ -99,6 +105,7 @@ where
         namespaced_getter: &NSGet,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
+        validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
         f: F,
     ) -> Result<normalized::Value<'s, S>>
     where
@@ -111,6 +118,8 @@ where
         namespaced_getter: &NSGet,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
+        validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
+
         f: F,
     ) -> Result<normalized::Value<'s, S>>
     where
@@ -122,6 +131,8 @@ where
         namespaced_getter: &NSGet,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
+        validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
+
         f: F,
     ) -> Result<normalized::Value<'s, S>>
     where
@@ -133,6 +144,7 @@ where
         namespaced_getter: &NSGet,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
+        validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
     ) -> Result<serde_json::Value>;
 
     fn as_json_normalized<NSGet: schema::NamespacedGetter<S>>(
@@ -141,9 +153,16 @@ where
         namespaced_getter: &NSGet,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
+        validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
     ) -> Result<normalized::Value<'s, S>> {
-        self.as_json(schema, namespaced_getter, context, location_type)
-            .map(|v| normalized::Value::Json(v))
+        self.as_json(
+            schema,
+            namespaced_getter,
+            context,
+            location_type,
+            validate_non_null_graphql_variables,
+        )
+        .map(|v| normalized::Value::Json(v))
     }
 
     fn is_list(&self) -> bool;

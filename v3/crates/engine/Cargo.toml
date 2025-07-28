@@ -33,7 +33,7 @@ hasura-authn-noauth = { path = "../auth/hasura-authn-noauth" }
 jsonapi = { path = "../jsonapi" }
 jsonpath = { path = "../utils/jsonpath" }
 lang-graphql = { path = "../graphql/lang-graphql" }
-metadata-resolve = {path = "../metadata-resolve" }
+metadata-resolve = { path = "../metadata-resolve" }
 open-dds = { path = "../open-dds" }
 pre-parse-plugin = { path = "../plugins/pre-parse-plugin" }
 pre-response-plugin = { path = "../plugins/pre-response-plugin" }

@@ -107,6 +107,7 @@ async fn start_websocket_server_inner(
         auth_config: Arc::new(auth_config),
         metrics: graphql_ws::NoOpWebSocketMetrics,
         handshake_headers: Arc::new(HeaderMap::new()), // Will be populated in "ws_handler"
+        auth_mode_header: "x-hasura-auth-mode".to_string(),
     };
 
     let connections = graphql_ws::Connections::new();

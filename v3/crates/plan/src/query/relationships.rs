@@ -31,11 +31,9 @@ pub fn process_model_relationship_definition(
         relationship_name,
         relationship_type,
         source_type,
-        source_data_connector: _,
         source_type_mappings,
         target_model_name,
         target_source,
-        target_type: _,
         mappings,
     } = relationship_info;
 
@@ -188,6 +186,7 @@ pub fn process_command_relationship_definition(
         target_collection: CollectionName::from(function_name.as_str()),
         arguments,
     };
+
     Ok(relationship)
 }
 

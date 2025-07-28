@@ -186,6 +186,7 @@ pub fn normalize_operation<'q, 's, S: schema::SchemaContext, NSGet: schema::Name
         &variables,
         &selection_set_type_info,
         &operation.selection_set.item,
+        validate_non_null_graphql_variables,
     )?;
     Ok(normalized::Operation {
         ty: operation.ty,

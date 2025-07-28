@@ -1,0 +1,16 @@
+[
+  {
+    "data": {
+      "FlipYesNo": null
+    },
+    "errors": [
+      {
+        "message": "internal error: ndc_unexpected: ndc_client error: connector error: connector returned status code 400 Bad Request with message: Expected string for argument 'yes_no', details: null",
+        "path": ["FlipYesNo"],
+        "extensions": {
+          "details": null
+        }
+      }
+    ]
+  }
+]

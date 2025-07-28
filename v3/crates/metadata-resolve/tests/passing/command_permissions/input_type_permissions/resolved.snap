@@ -115,30 +115,59 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                     ),
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "albumId",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "albumId",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "artistId",
+                                FieldName(
+                                    Identifier(
+                                        "artistId",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "title",
+                                FieldName(
+                                    Identifier(
+                                        "title",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                3363483249683024545,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "albumId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "artistId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "title",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {
@@ -623,38 +652,78 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                     ),
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "name",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "name",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "lengthMins",
+                                FieldName(
+                                    Identifier(
+                                        "lengthMins",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                3363483249683024545,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "name",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "lengthMins",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
-                type_input_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeInputPermission {
-                        field_presets: {
-                            FieldName(
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [
+                        FieldPresetValue {
+                            condition: Some(
+                                ConditionHash(
+                                    3363483249683024545,
+                                ),
+                            ),
+                            field_name: FieldName(
                                 Identifier(
                                     "lengthMins",
                                 ),
-                            ): FieldPresetInfo {
-                                value: Literal(
-                                    Number(70),
-                                ),
-                                deprecated: None,
+                            ),
+                            value: Literal(
+                                Number(70),
+                            ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeInputPermission {
+                            field_presets: {
+                                FieldName(
+                                    Identifier(
+                                        "lengthMins",
+                                    ),
+                                ): FieldPresetInfo {
+                                    value: Literal(
+                                        Number(70),
+                                    ),
+                                    deprecated: None,
+                                },
                             },
                         },
                     },
@@ -1100,54 +1169,110 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                     ),
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "albumId",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "albumId",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "artistId",
+                                FieldName(
+                                    Identifier(
+                                        "artistId",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "title",
+                                FieldName(
+                                    Identifier(
+                                        "title",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "discs",
+                                FieldName(
+                                    Identifier(
+                                        "discs",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                3363483249683024545,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "albumId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "artistId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "title",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "discs",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
-                type_input_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeInputPermission {
-                        field_presets: {
-                            FieldName(
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [
+                        FieldPresetValue {
+                            condition: Some(
+                                ConditionHash(
+                                    3363483249683024545,
+                                ),
+                            ),
+                            field_name: FieldName(
                                 Identifier(
                                     "artistId",
                                 ),
-                            ): FieldPresetInfo {
-                                value: SessionVariable(
-                                    SessionVariableReference {
-                                        name: SessionVariableName(
-                                            "x-hasura-artist-id",
-                                        ),
-                                        passed_as_json: true,
-                                        disallow_unknown_fields: false,
-                                    },
-                                ),
-                                deprecated: None,
+                            ),
+                            value: SessionVariable(
+                                SessionVariableReference {
+                                    name: SessionVariableName(
+                                        "x-hasura-artist-id",
+                                    ),
+                                    passed_as_json: true,
+                                    disallow_unknown_fields: false,
+                                },
+                            ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeInputPermission {
+                            field_presets: {
+                                FieldName(
+                                    Identifier(
+                                        "artistId",
+                                    ),
+                                ): FieldPresetInfo {
+                                    value: SessionVariable(
+                                        SessionVariableReference {
+                                            name: SessionVariableName(
+                                                "x-hasura-artist-id",
+                                            ),
+                                            passed_as_json: true,
+                                            disallow_unknown_fields: false,
+                                        },
+                                    ),
+                                    deprecated: None,
+                                },
                             },
                         },
                     },
@@ -1691,25 +1816,49 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                         "Responses from the 'insert_album' procedure",
                     ),
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "affectedRows",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "affectedRows",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "returning",
+                                FieldName(
+                                    Identifier(
+                                        "returning",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                3363483249683024545,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "affectedRows",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "returning",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {
@@ -1957,38 +2106,78 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                     ),
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "name",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "name",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "exclusiveRights",
+                                FieldName(
+                                    Identifier(
+                                        "exclusiveRights",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                3363483249683024545,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "name",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "exclusiveRights",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
-                type_input_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeInputPermission {
-                        field_presets: {
-                            FieldName(
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [
+                        FieldPresetValue {
+                            condition: Some(
+                                ConditionHash(
+                                    3363483249683024545,
+                                ),
+                            ),
+                            field_name: FieldName(
                                 Identifier(
                                     "exclusiveRights",
                                 ),
-                            ): FieldPresetInfo {
-                                value: Literal(
-                                    Bool(true),
-                                ),
-                                deprecated: None,
+                            ),
+                            value: Literal(
+                                Bool(true),
+                            ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeInputPermission {
+                            field_presets: {
+                                FieldName(
+                                    Identifier(
+                                        "exclusiveRights",
+                                    ),
+                                ): FieldPresetInfo {
+                                    value: Literal(
+                                        Bool(true),
+                                    ),
+                                    deprecated: None,
+                                },
                             },
                         },
                     },
@@ -2503,6 +2692,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                         },
                                     ),
                                     supports_relational_queries: None,
+                                    supports_relational_mutations: None,
                                 },
                             },
                             source: Procedure(
@@ -4047,18 +4237,142 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                         "Insert into the album table",
                     ),
                 },
-                permissions: {
-                    Role(
-                        "admin",
-                    ): CommandPermission {
-                        allow_execution: true,
-                        argument_presets: {
-                            ArgumentName(
+                permissions: CommandPermissions {
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): CommandPermission {
+                            allow_execution: true,
+                            argument_presets: {
+                                ArgumentName(
+                                    Identifier(
+                                        "postCheck",
+                                    ),
+                                ): (
+                                    QualifiedTypeReference {
+                                        underlying_type: Named(
+                                            Custom(
+                                                Qualified {
+                                                    subgraph: SubgraphName(
+                                                        "default",
+                                                    ),
+                                                    name: CustomTypeName(
+                                                        Identifier(
+                                                            "AlbumBoolExp",
+                                                        ),
+                                                    ),
+                                                },
+                                            ),
+                                        ),
+                                        nullable: true,
+                                    },
+                                    BooleanExpression(
+                                        BinaryFieldComparison {
+                                            field: FieldName(
+                                                Identifier(
+                                                    "artistId",
+                                                ),
+                                            ),
+                                            field_parent_type: Qualified {
+                                                subgraph: SubgraphName(
+                                                    "default",
+                                                ),
+                                                name: CustomTypeName(
+                                                    Identifier(
+                                                        "Album",
+                                                    ),
+                                                ),
+                                            },
+                                            ndc_column: DataConnectorColumnName(
+                                                "artist_id",
+                                            ),
+                                            operator: ResolvedOperator {
+                                                data_connector_operator_name: DataConnectorOperatorName(
+                                                    "_eq",
+                                                ),
+                                                comparison_operator: Equals,
+                                            },
+                                            column_path: [],
+                                            argument_type: QualifiedTypeReference {
+                                                underlying_type: Named(
+                                                    Custom(
+                                                        Qualified {
+                                                            subgraph: SubgraphName(
+                                                                "default",
+                                                            ),
+                                                            name: CustomTypeName(
+                                                                Identifier(
+                                                                    "Int4",
+                                                                ),
+                                                            ),
+                                                        },
+                                                    ),
+                                                ),
+                                                nullable: false,
+                                            },
+                                            value: SessionVariable(
+                                                SessionVariableReference {
+                                                    name: SessionVariableName(
+                                                        "x-hasura-artist-id",
+                                                    ),
+                                                    passed_as_json: true,
+                                                    disallow_unknown_fields: false,
+                                                },
+                                            ),
+                                            deprecated: None,
+                                        },
+                                    ),
+                                ),
+                            },
+                        },
+                    },
+                    authorization_rules: [
+                        Access {
+                            condition: Some(
+                                ConditionHash(
+                                    3363483249683024545,
+                                ),
+                            ),
+                            allow_or_deny: Allow,
+                        },
+                        ArgumentAuthPredicate {
+                            condition: Some(
+                                ConditionHash(
+                                    3363483249683024545,
+                                ),
+                            ),
+                            argument_name: ArgumentName(
                                 Identifier(
                                     "postCheck",
                                 ),
-                            ): (
-                                QualifiedTypeReference {
+                            ),
+                            predicate: BinaryFieldComparison {
+                                field: FieldName(
+                                    Identifier(
+                                        "artistId",
+                                    ),
+                                ),
+                                field_parent_type: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: CustomTypeName(
+                                        Identifier(
+                                            "Album",
+                                        ),
+                                    ),
+                                },
+                                ndc_column: DataConnectorColumnName(
+                                    "artist_id",
+                                ),
+                                operator: ResolvedOperator {
+                                    data_connector_operator_name: DataConnectorOperatorName(
+                                        "_eq",
+                                    ),
+                                    comparison_operator: Equals,
+                                },
+                                column_path: [],
+                                argument_type: QualifiedTypeReference {
                                     underlying_type: Named(
                                         Custom(
                                             Qualified {
@@ -4067,73 +4381,27 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                                 ),
                                                 name: CustomTypeName(
                                                     Identifier(
-                                                        "AlbumBoolExp",
+                                                        "Int4",
                                                     ),
                                                 ),
                                             },
                                         ),
                                     ),
-                                    nullable: true,
+                                    nullable: false,
                                 },
-                                BooleanExpression(
-                                    BinaryFieldComparison {
-                                        field: FieldName(
-                                            Identifier(
-                                                "artistId",
-                                            ),
+                                value: SessionVariable(
+                                    SessionVariableReference {
+                                        name: SessionVariableName(
+                                            "x-hasura-artist-id",
                                         ),
-                                        field_parent_type: Qualified {
-                                            subgraph: SubgraphName(
-                                                "default",
-                                            ),
-                                            name: CustomTypeName(
-                                                Identifier(
-                                                    "Album",
-                                                ),
-                                            ),
-                                        },
-                                        ndc_column: DataConnectorColumnName(
-                                            "artist_id",
-                                        ),
-                                        operator: ResolvedOperator {
-                                            data_connector_operator_name: DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                            comparison_operator: Equals,
-                                        },
-                                        column_path: [],
-                                        argument_type: QualifiedTypeReference {
-                                            underlying_type: Named(
-                                                Custom(
-                                                    Qualified {
-                                                        subgraph: SubgraphName(
-                                                            "default",
-                                                        ),
-                                                        name: CustomTypeName(
-                                                            Identifier(
-                                                                "Int4",
-                                                            ),
-                                                        ),
-                                                    },
-                                                ),
-                                            ),
-                                            nullable: false,
-                                        },
-                                        value: SessionVariable(
-                                            SessionVariableReference {
-                                                name: SessionVariableName(
-                                                    "x-hasura-artist-id",
-                                                ),
-                                                passed_as_json: true,
-                                                disallow_unknown_fields: false,
-                                            },
-                                        ),
-                                        deprecated: None,
+                                        passed_as_json: true,
+                                        disallow_unknown_fields: false,
                                     },
                                 ),
-                            ),
+                                deprecated: None,
+                            },
                         },
-                    },
+                    ],
                 },
             },
         },
@@ -5956,13 +6224,39 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
         glossaries: {},
         plugin_configs: LifecyclePluginConfigs {
             pre_parse_plugins: [],
-            pre_response_plugins: [],
+            pre_response_plugins: ResolvedLifecyclePreResponsePluginHooks {
+                sync_hooks: [],
+                async_hooks: [],
+            },
             pre_route_plugins: [],
+            pre_ndc_request_plugins: {},
+            pre_ndc_response_plugins: {},
         },
         roles: {
             Role(
                 "admin",
             ),
+        },
+        conditions: Conditions {
+            conditions: {
+                ConditionHash(
+                    3363483249683024545,
+                ): BinaryOperation {
+                    op: Equals,
+                    left: SessionVariable(
+                        SessionVariableReference {
+                            name: SessionVariableName(
+                                "x-hasura-role",
+                            ),
+                            passed_as_json: true,
+                            disallow_unknown_fields: false,
+                        },
+                    ),
+                    right: Literal(
+                        String("admin"),
+                    ),
+                },
+            },
         },
         runtime_flags: RuntimeFlags(
             {},

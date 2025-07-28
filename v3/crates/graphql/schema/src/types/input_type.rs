@@ -155,13 +155,19 @@ fn input_object_type_input_fields(
             // construct the input field based on input permissions
             let namespaced_input_field = {
                 // if no input permissions are defined, include the field for all roles
-                if object_type_representation.type_input_permissions.is_empty() {
+                if object_type_representation
+                    .type_input_permissions
+                    .by_role
+                    .is_empty()
+                {
                     builder.allow_all_namespaced(input_field)
                 // if input permissions are defined, include the field conditionally
                 } else {
                     let mut role_map = HashMap::new();
 
-                    for (role, permission) in &object_type_representation.type_input_permissions {
+                    for (role, permission) in
+                        &object_type_representation.type_input_permissions.by_role
+                    {
                         // add the field only if there is no field preset defined
                         // for this role
                         if !permission.field_presets.contains_key(field_name) {
@@ -170,7 +176,7 @@ fn input_object_type_input_fields(
                                 role,
                                 &field_definition.field_type,
                             );
-                            role_map.insert(Role(role.0.clone()), annotation);
+                            role_map.insert(Role(role.0.clone()), annotation.map(Box::new));
                         }
                     }
                     // for roles present in the metadata, but does not have any
@@ -178,6 +184,7 @@ fn input_object_type_input_fields(
                     // all fields
                     let roles_in_this_permission: Vec<_> = object_type_representation
                         .type_input_permissions
+                        .by_role
                         .keys()
                         .collect();
                     let roles_not_in_this_permission: Vec<_> = gds
@@ -192,7 +199,7 @@ fn input_object_type_input_fields(
                             role,
                             &field_definition.field_type,
                         );
-                        role_map.insert(Role(role.0.clone()), annotation);
+                        role_map.insert(Role(role.0.clone()), annotation.map(Box::new));
                     }
 
                     builder.conditional_namespaced(input_field, role_map)
@@ -216,9 +223,15 @@ pub(crate) fn build_input_field_presets_annotation(
         {
             annotation = field_object_type_representation
                 .type_input_permissions
+                .by_role
                 .get(role)
                 .map(|input_permissions| {
-                    let presets_fields = input_permissions.field_presets.clone();
+                    let presets_fields = input_permissions
+                        .field_presets
+                        .clone()
+                        .into_iter()
+                        .map(|(name, field_preset)| (name, field_preset.deprecated))
+                        .collect::<BTreeMap<_, _>>();
                     NamespaceAnnotation::InputFieldPresets {
                         presets_fields,
                         type_name: field_type_name.clone(),

@@ -23,20 +23,20 @@ pub fn resolve(
 ) -> BTreeSet<Role> {
     let mut roles = BTreeSet::new();
     for object_type in object_types.values() {
-        for role in object_type.type_output_permissions.keys() {
+        for role in object_type.type_output_permissions.by_role.keys() {
             roles.insert(role.clone());
         }
-        for role in object_type.type_input_permissions.keys() {
+        for role in object_type.type_input_permissions.by_role.keys() {
             roles.insert(role.clone());
         }
     }
     for model in models.values() {
-        for role in model.select_permissions.keys() {
+        for role in model.permissions.by_role.keys() {
             roles.insert(role.clone());
         }
     }
     for command in commands.values() {
-        for role in command.permissions.keys() {
+        for role in command.permissions.by_role.keys() {
             roles.insert(role.clone());
         }
     }

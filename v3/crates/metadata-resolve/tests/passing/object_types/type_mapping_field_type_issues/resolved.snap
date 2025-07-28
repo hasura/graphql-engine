@@ -144,40 +144,79 @@ input_file: crates/metadata-resolve/tests/passing/object_types/type_mapping_fiel
                     graphql_input_type_name: None,
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "id",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "id",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "name",
+                                FieldName(
+                                    Identifier(
+                                        "name",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "location",
+                                FieldName(
+                                    Identifier(
+                                        "location",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "staff",
+                                FieldName(
+                                    Identifier(
+                                        "staff",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "departments",
+                                FieldName(
+                                    Identifier(
+                                        "departments",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                3363483249683024545,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "id",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "name",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "location",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "staff",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "departments",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {
@@ -557,30 +596,59 @@ input_file: crates/metadata-resolve/tests/passing/object_types/type_mapping_fiel
                     graphql_input_type_name: None,
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "city",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "city",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "country",
+                                FieldName(
+                                    Identifier(
+                                        "country",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "campuses",
+                                FieldName(
+                                    Identifier(
+                                        "campuses",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                3363483249683024545,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "city",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "country",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "campuses",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {
@@ -924,30 +992,59 @@ input_file: crates/metadata-resolve/tests/passing/object_types/type_mapping_fiel
                     graphql_input_type_name: None,
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "first_name",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "first_name",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "last_name",
+                                FieldName(
+                                    Identifier(
+                                        "last_name",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "specialities",
+                                FieldName(
+                                    Identifier(
+                                        "specialities",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                3363483249683024545,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "first_name",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "last_name",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "specialities",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {
@@ -1447,6 +1544,7 @@ input_file: crates/metadata-resolve/tests/passing/object_types/type_mapping_fiel
                                         },
                                     ),
                                     supports_relational_queries: None,
+                                    supports_relational_mutations: None,
                                 },
                             },
                             collection: CollectionName(
@@ -2259,13 +2357,41 @@ input_file: crates/metadata-resolve/tests/passing/object_types/type_mapping_fiel
                     aggregate_expression: None,
                 },
                 arguments: {},
-                select_permissions: {
-                    Role(
-                        "admin",
-                    ): SelectPermission {
-                        filter: AllowAll,
-                        argument_presets: {},
-                        allow_subscriptions: false,
+                permissions: ModelPermissions {
+                    authorization_rules: [
+                        Access {
+                            condition: Some(
+                                ConditionHash(
+                                    3363483249683024545,
+                                ),
+                            ),
+                            allow_or_deny: Allow,
+                        },
+                        Subscription {
+                            condition: Some(
+                                ConditionHash(
+                                    3363483249683024545,
+                                ),
+                            ),
+                            allow_or_deny: Deny,
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): ModelPermission {
+                            select: Some(
+                                SelectPermission {
+                                    filter: AllowAll,
+                                    allow_subscriptions: false,
+                                },
+                            ),
+                            input: Some(
+                                ModelInputPermission {
+                                    argument_presets: {},
+                                },
+                            ),
+                        },
                     },
                 },
                 filter_expression_type: Some(
@@ -3179,13 +3305,39 @@ input_file: crates/metadata-resolve/tests/passing/object_types/type_mapping_fiel
         glossaries: {},
         plugin_configs: LifecyclePluginConfigs {
             pre_parse_plugins: [],
-            pre_response_plugins: [],
+            pre_response_plugins: ResolvedLifecyclePreResponsePluginHooks {
+                sync_hooks: [],
+                async_hooks: [],
+            },
             pre_route_plugins: [],
+            pre_ndc_request_plugins: {},
+            pre_ndc_response_plugins: {},
         },
         roles: {
             Role(
                 "admin",
             ),
+        },
+        conditions: Conditions {
+            conditions: {
+                ConditionHash(
+                    3363483249683024545,
+                ): BinaryOperation {
+                    op: Equals,
+                    left: SessionVariable(
+                        SessionVariableReference {
+                            name: SessionVariableName(
+                                "x-hasura-role",
+                            ),
+                            passed_as_json: true,
+                            disallow_unknown_fields: false,
+                        },
+                    ),
+                    right: Literal(
+                        String("admin"),
+                    ),
+                },
+            },
         },
         runtime_flags: RuntimeFlags(
             {},

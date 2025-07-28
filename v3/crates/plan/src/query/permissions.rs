@@ -1,3 +1,4 @@
+use authorization_rules::ArgumentPolicy;
 use hasura_authn_core::{SessionVariableName, SessionVariableValue, SessionVariables};
 use std::collections::BTreeMap;
 
@@ -7,7 +8,7 @@ use crate::error::{InternalDeveloperError, InternalEngineError, InternalError};
 use crate::types::PlanError;
 use metadata_resolve::{
     ObjectTypeWithRelationships, Qualified, QualifiedBaseType, QualifiedTypeName,
-    QualifiedTypeReference, TypeMapping, UnaryComparisonOperator,
+    QualifiedTypeReference, TypeMapping, UnaryComparisonOperator, ValueExpression,
 };
 use open_dds::{
     data_connector::{DataConnectorColumnName, DataConnectorOperatorName},
@@ -16,6 +17,31 @@ use open_dds::{
 use plan_types::{
     ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison, UsagesCounts,
 };
+
+pub fn process_permissions<'s>(
+    data_connector_link: &'s metadata_resolve::DataConnectorLink,
+    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    permissions: &Vec<&'s metadata_resolve::ModelPredicate>,
+    session_variables: &SessionVariables,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
+    usage_counts: &mut UsagesCounts,
+) -> Result<Expression<'s>, PlanError> {
+    Ok(Expression::And {
+        expressions: permissions
+            .iter()
+            .map(|permission| {
+                process_model_predicate(
+                    data_connector_link,
+                    type_mappings,
+                    permission,
+                    session_variables,
+                    object_types,
+                    usage_counts,
+                )
+            })
+            .collect::<Result<Vec<_>, PlanError>>()?,
+    })
+}
 
 pub fn process_model_predicate<'s>(
     data_connector_link: &'s metadata_resolve::DataConnectorLink,
@@ -126,7 +152,6 @@ pub fn process_model_predicate<'s>(
                 &relationship_info.target_model_name,
                 &relationship_info.target_source.model,
                 &relationship_info.target_source.capabilities,
-                &relationship_info.target_type,
                 &relationship_info.mappings,
                 relationship_predicate,
             )?)
@@ -211,19 +236,21 @@ pub fn make_argument_from_value_expression(
 pub(crate) fn make_argument_from_value_expression_or_predicate<'s>(
     data_connector_link: &'s metadata_resolve::DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-    val_expr: &'s metadata_resolve::ValueExpressionOrPredicate,
-    value_type: &QualifiedTypeReference,
+    val_expr: &'s ArgumentPolicy<'s>,
     session_variables: &SessionVariables,
     object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     usage_counts: &mut UsagesCounts,
 ) -> Result<UnresolvedArgument<'s>, PlanError> {
     match val_expr {
-        metadata_resolve::ValueExpressionOrPredicate::Literal(val) => {
+        ArgumentPolicy::ValueExpression {
+            argument_type,
+            value_expression: ValueExpression::Literal(val),
+        } => {
             let mut value = val.clone();
 
             map_field_names_to_ndc_field_names(
                 &mut value,
-                value_type,
+                argument_type,
                 type_mappings,
                 object_types,
                 false, // we have already statically validated values so don't need runtime
@@ -233,7 +260,10 @@ pub(crate) fn make_argument_from_value_expression_or_predicate<'s>(
 
             Ok(UnresolvedArgument::Literal { value })
         }
-        metadata_resolve::ValueExpressionOrPredicate::SessionVariable(session_var) => {
+        ArgumentPolicy::ValueExpression {
+            argument_type,
+            value_expression: ValueExpression::SessionVariable(session_var),
+        } => {
             let value = session_variables
                 .get(&session_var.name)
                 .ok_or_else(|| InternalDeveloperError::MissingSessionVariable {
@@ -247,18 +277,18 @@ pub(crate) fn make_argument_from_value_expression_or_predicate<'s>(
                     value,
                     session_var.passed_as_json,
                     session_var.disallow_unknown_fields,
-                    value_type,
+                    argument_type,
                     type_mappings,
                     object_types,
                 )
                 .map_err(PlanError::InternalError)?,
             })
         }
-        metadata_resolve::ValueExpressionOrPredicate::BooleanExpression(model_predicate) => {
-            let filter_expression = process_model_predicate(
+        ArgumentPolicy::BooleanExpression { predicates } => {
+            let filter_expression = process_permissions(
                 data_connector_link,
                 type_mappings,
-                model_predicate,
+                predicates,
                 session_variables,
                 object_types,
                 usage_counts,

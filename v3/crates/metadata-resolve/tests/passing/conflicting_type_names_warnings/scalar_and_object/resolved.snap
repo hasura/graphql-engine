@@ -44,8 +44,14 @@ input_file: crates/metadata-resolve/tests/passing/conflicting_type_names_warning
                         "This is an object type",
                     ),
                 },
-                type_output_permissions: {},
-                type_input_permissions: {},
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {},
@@ -118,10 +124,18 @@ input_file: crates/metadata-resolve/tests/passing/conflicting_type_names_warning
         glossaries: {},
         plugin_configs: LifecyclePluginConfigs {
             pre_parse_plugins: [],
-            pre_response_plugins: [],
+            pre_response_plugins: ResolvedLifecyclePreResponsePluginHooks {
+                sync_hooks: [],
+                async_hooks: [],
+            },
             pre_route_plugins: [],
+            pre_ndc_request_plugins: {},
+            pre_ndc_response_plugins: {},
         },
         roles: {},
+        conditions: Conditions {
+            conditions: {},
+        },
         runtime_flags: RuntimeFlags(
             {},
         ),

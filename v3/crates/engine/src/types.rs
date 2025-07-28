@@ -16,6 +16,7 @@ pub struct EngineState {
     pub auth_config: Arc<ResolvedAuthConfig>,
     pub graphql_websocket_server:
         Arc<graphql_ws::WebSocketServer<graphql_ws::NoOpWebSocketMetrics>>,
+    pub auth_mode_header: String,
 }
 
 #[derive(thiserror::Error, Debug)]

@@ -4,6 +4,7 @@ use crate::types::subgraph::Qualified;
 use crate::{helpers::typecheck, types::error::TypePredicateError};
 use error_context::{Context, Step};
 use jsonpath::JSONPath;
+use open_dds::data_connector::DataConnectorName;
 use open_dds::{
     models::ModelName, permissions::Role, query::ArgumentName, spanned::Spanned,
     types::CustomTypeName,
@@ -51,6 +52,20 @@ pub enum ModelPermissionError {
     UnknownType {
         custom_type_name: Qualified<CustomTypeName>,
     },
+
+    #[error("model source is required to resolve relational permissions")]
+    ModelSourceRequiredForRelationalPermissions,
+    #[error("unknown collection {collection} in data connector {data_connector}")]
+    UnknownModelCollection {
+        data_connector: Qualified<DataConnectorName>,
+        collection: open_dds::data_connector::CollectionName,
+    },
+    #[error("relational insert is not supported for this model")]
+    RelationalInsertNotSupported,
+    #[error("relational update is not supported for this model")]
+    RelationalUpdateNotSupported,
+    #[error("relational delete is not supported for this model")]
+    RelationalDeleteNotSupported,
 
     #[error("{0}")]
     ModelsError(#[from] models::ModelsError),
@@ -124,7 +139,12 @@ impl ContextualError for NamedModelPermissionError {
                     })
                 })
             }
-            ModelPermissionError::UnknownType { .. } => None,
+            ModelPermissionError::UnknownType { .. }
+            | ModelPermissionError::ModelSourceRequiredForRelationalPermissions
+            | ModelPermissionError::UnknownModelCollection { .. }
+            | ModelPermissionError::RelationalInsertNotSupported
+            | ModelPermissionError::RelationalUpdateNotSupported
+            | ModelPermissionError::RelationalDeleteNotSupported => None,
             ModelPermissionError::ModelsError(error) => error.create_error_context(),
         }
     }

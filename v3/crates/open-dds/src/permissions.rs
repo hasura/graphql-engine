@@ -57,6 +57,8 @@ pub struct ArgumentPreset {
 /// Definition of permissions for an OpenDD type.
 pub enum TypePermissions {
     V1(TypePermissionsV1),
+    #[opendd(hidden = true)]
+    V2(TypePermissionsV2),
 }
 
 impl TypePermissions {
@@ -93,9 +95,13 @@ impl TypePermissions {
         )
     }
 
-    pub fn upgrade(self) -> TypePermissionsV1 {
+    pub fn upgrade(self) -> TypePermissionsV2 {
         match self {
-            TypePermissions::V1(v1) => v1,
+            TypePermissions::V1(v1) => TypePermissionsV2 {
+                type_name: v1.type_name,
+                permissions: TypePermissionOperand::RoleBased(v1.permissions),
+            },
+            TypePermissions::V2(v2) => v2,
         }
     }
 }
@@ -109,6 +115,27 @@ pub struct TypePermissionsV1 {
     pub type_name: CustomTypeName,
     /// A list of type permissions, one for each role.
     pub permissions: Vec<TypePermission>,
+}
+
+#[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[opendd(json_schema(title = "TypePermissionsV1"))]
+/// Definition of permissions for an OpenDD type.
+pub struct TypePermissionsV2 {
+    /// The name of the type for which permissions are being defined. Must be an object type.
+    pub type_name: CustomTypeName,
+    /// Type permissions definitions
+    pub permissions: TypePermissionOperand,
+}
+
+/// Configuration for type permissions
+#[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[opendd(externally_tagged, json_schema(title = "TypePermissionOperand"))]
+pub enum TypePermissionOperand {
+    /// Definition of role-based type permissions on an OpenDD object type
+    #[opendd(json_schema(title = "RoleBased"))]
+    RoleBased(Vec<TypePermission>),
 }
 
 #[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
@@ -199,6 +226,8 @@ pub struct FieldPreset {
 /// Definition of permissions for an OpenDD model.
 pub enum ModelPermissions {
     V1(ModelPermissionsV1),
+    #[opendd(hidden = true)]
+    V2(ModelPermissionsV2),
 }
 
 impl ModelPermissions {
@@ -275,9 +304,13 @@ impl ModelPermissions {
         )
     }
 
-    pub fn upgrade(self) -> ModelPermissionsV1 {
+    pub fn upgrade(self) -> ModelPermissionsV2 {
         match self {
-            ModelPermissions::V1(v1) => v1,
+            ModelPermissions::V1(v1) => ModelPermissionsV2 {
+                model_name: v1.model_name,
+                permissions: ModelPermissionOperand::RoleBased(v1.permissions),
+            },
+            ModelPermissions::V2(v2) => v2,
         }
     }
 }
@@ -293,6 +326,27 @@ pub struct ModelPermissionsV1 {
     pub permissions: Vec<ModelPermission>,
 }
 
+/// Configuration for role-based model permissions
+#[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[opendd(externally_tagged, json_schema(title = "ModelPermissionOperand"))]
+pub enum ModelPermissionOperand {
+    /// Definition of role-based type permissions on an OpenDD model
+    #[opendd(json_schema(title = "RoleBased"))]
+    RoleBased(Vec<ModelPermission>),
+}
+
+#[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[opendd(json_schema(title = "ModelPermissionsV2"))]
+/// Definition of permissions for an OpenDD model.
+pub struct ModelPermissionsV2 {
+    /// The name of the model for which permissions are being defined.
+    pub model_name: Spanned<ModelName>,
+    /// Permissions for this model
+    pub permissions: ModelPermissionOperand,
+}
+
 #[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "ModelPermission", example = "ModelPermission::example"))]
@@ -303,6 +357,21 @@ pub struct ModelPermission {
     /// The permissions for selecting from this model for this role.
     /// If this is null, the role is not allowed to query the model.
     pub select: Option<SelectPermission>,
+    /// The permissions for relational insert operations on this model for this role.
+    /// If this is null, the role is not allowed to perform relational inserts on this model.
+    /// This is only applicable for data connectors that support relational operations.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub relational_insert: Option<RelationalInsertPermission>,
+    /// The permissions for relational update operations on this model for this role.
+    /// If this is null, the role is not allowed to perform relational updates on this model.
+    /// This is only applicable for data connectors that support relational operations.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub relational_update: Option<RelationalUpdatePermission>,
+    /// The permissions for relational delete operations on this model for this role.
+    /// If this is null, the role is not allowed to perform relational deletes on this model.
+    /// This is only applicable for data connectors that support relational operations.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub relational_delete: Option<RelationalDeletePermission>,
 }
 
 impl ModelPermission {
@@ -436,6 +505,8 @@ impl CommandPermission {
 /// Definition of permissions for an OpenDD command.
 pub enum CommandPermissions {
     V1(CommandPermissionsV1),
+    #[opendd(hidden = true)]
+    V2(CommandPermissionsV2),
 }
 
 impl CommandPermissions {
@@ -461,9 +532,13 @@ impl CommandPermissions {
         )
     }
 
-    pub fn upgrade(self) -> CommandPermissionsV1 {
+    pub fn upgrade(self) -> CommandPermissionsV2 {
         match self {
-            CommandPermissions::V1(v1) => v1,
+            CommandPermissions::V1(v1) => CommandPermissionsV2 {
+                command_name: v1.command_name,
+                permissions: CommandPermissionOperand::RoleBased(v1.permissions),
+            },
+            CommandPermissions::V2(v2) => v2,
         }
     }
 }
@@ -477,6 +552,27 @@ pub struct CommandPermissionsV1 {
     pub command_name: CommandName,
     /// A list of command permissions, one for each role.
     pub permissions: Vec<CommandPermission>,
+}
+
+/// Configuration for role-based command permissions
+#[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[opendd(externally_tagged, json_schema(title = "CommandPermissionOperand"))]
+pub enum CommandPermissionOperand {
+    /// Definition of role-based type permissions on an OpenDD command
+    #[opendd(json_schema(title = "RoleBased"))]
+    RoleBased(Vec<CommandPermission>),
+}
+
+#[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[opendd(json_schema(title = "CommandPermissionsV2"))]
+/// Definition of permissions for an OpenDD command.
+pub struct CommandPermissionsV2 {
+    /// The name of the command for which permissions are being defined.
+    pub command_name: CommandName,
+    /// The permissions for the command.
+    pub permissions: CommandPermissionOperand,
 }
 
 #[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
@@ -787,3 +883,36 @@ impl traits::OpenDd for ValueExpressionOrPredicate {
 }
 
 impl_JsonSchema_with_OpenDd_for!(ValueExpressionOrPredicate);
+
+#[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[opendd(json_schema(title = "RelationalInsertPermission"))]
+/// Defines the permissions for relational insert operations on a model for a role.
+/// If null, the role is not allowed to perform relational inserts on this model.
+/// This is only applicable for data connectors that support relational operations.
+pub struct RelationalInsertPermission {
+    // Empty for now, will be extended later with filter predicates and argument presets
+}
+
+#[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[opendd(json_schema(title = "RelationalUpdatePermission"))]
+/// Defines the permissions for relational update operations on a model for a role.
+/// If null, the role is not allowed to perform relational updates on this model.
+/// This is only applicable for data connectors that support relational operations.
+pub struct RelationalUpdatePermission {
+    // Empty for now, will be extended later with filter predicates and argument presets
+}
+
+#[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[opendd(json_schema(title = "RelationalDeletePermission"))]
+/// Defines the permissions for relational delete operations on a model for a role.
+/// If null, the role is not allowed to perform relational deletes on this model.
+/// This is only applicable for data connectors that support relational operations.
+pub struct RelationalDeletePermission {
+    // Empty for now, will be extended later with filter predicates and argument presets
+}

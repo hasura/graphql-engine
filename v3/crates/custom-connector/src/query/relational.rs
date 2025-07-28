@@ -31,10 +31,13 @@ use std::sync::Arc;
 
 pub type Result<A> = std::result::Result<A, (StatusCode, Json<ndc_models::ErrorResponse>)>;
 
+#[allow(clippy::print_stdout)]
 pub async fn execute_relational_query(
     state: &AppState,
     query: &RelationalQuery,
 ) -> Result<Vec<Vec<serde_json::Value>>> {
+    println!("[SELECT]: query={query:?}");
+
     let logical_plan: datafusion::logical_expr::LogicalPlan =
         convert_relation_to_logical_plan(&query.root_relation, state).map_err(|err| {
             (
@@ -67,6 +70,7 @@ pub async fn execute_relational_query(
                 }),
             )
         })?;
+
     let results = datafusion::physical_plan::collect(physical_plan, task_ctx)
         .await
         .map_err(|err| {
@@ -170,8 +174,11 @@ fn convert_relation_to_logical_plan(
         Relation::From {
             collection,
             columns,
+            arguments,
         } => {
-            let table_provider: Arc<dyn TableProvider> = get_table_provider(collection, state)?;
+            let table_provider: Arc<dyn TableProvider> =
+                get_table_provider(collection, arguments, state)?;
+
             let table_schema: SchemaRef = table_provider.as_ref().schema();
 
             let projection = columns
@@ -183,6 +190,7 @@ fn convert_relation_to_logical_plan(
                         .map_err(|e| DataFusionError::ArrowError(e, None))
                 })
                 .collect::<datafusion::error::Result<Vec<_>>>()?;
+
             let table_scan_plan = datafusion::logical_expr::LogicalPlan::TableScan(
                 datafusion::logical_expr::TableScan::try_new(
                     TableReference::bare(collection.as_str()),
@@ -197,6 +205,7 @@ fn convert_relation_to_logical_plan(
         }
         Relation::Paginate { input, fetch, skip } => {
             let input_plan = convert_relation_to_logical_plan(input, state)?;
+
             let logical_plan =
                 datafusion::logical_expr::LogicalPlan::Limit(datafusion::logical_expr::Limit {
                     input: Arc::new(input_plan),
@@ -207,6 +216,7 @@ fn convert_relation_to_logical_plan(
                         i64::try_from(*skip).expect("cast u64 to i64").lit(),
                     )),
                 });
+
             Ok(logical_plan)
         }
         Relation::Project { input, exprs } => {
@@ -219,8 +229,10 @@ fn convert_relation_to_logical_plan(
                 let name = format!("column_{i}");
                 let logical_expr: datafusion::logical_expr::Expr =
                     convert_expression_to_logical_expr(expr, input_plan.schema())?;
+
                 let (data_type, nullable) =
                     logical_expr.data_type_and_nullable(input_plan.schema())?;
+
                 logical_exprs.push(logical_expr.alias(&name));
                 schema_builder.push(Field::new(&name, data_type, nullable));
             }
@@ -324,14 +336,17 @@ fn convert_relation_to_logical_plan(
             aggregates,
         } => {
             let input_plan = convert_relation_to_logical_plan(input, state)?;
+
             let group_by = group_by
                 .iter()
                 .map(|expr| convert_expression_to_logical_expr(expr, input_plan.schema()))
                 .collect::<datafusion::error::Result<Vec<_>>>()?;
+
             let aggr_expr = aggregates
                 .iter()
                 .map(|expr| convert_expression_to_logical_expr(expr, input_plan.schema()))
                 .collect::<datafusion::error::Result<Vec<_>>>()?;
+
             let aggregate_plan = datafusion::logical_expr::LogicalPlan::Aggregate(
                 datafusion::logical_expr::Aggregate::try_new(
                     Arc::new(input_plan),
@@ -352,12 +367,23 @@ fn convert_relation_to_logical_plan(
             );
             Ok(window_plan)
         }
+        Relation::Union { relations } => {
+            let input_plans = relations
+                .iter()
+                .map(|relation| Ok(Arc::new(convert_relation_to_logical_plan(relation, state)?)))
+                .collect::<datafusion::error::Result<Vec<_>>>()?;
+            let union_plan = datafusion::logical_expr::LogicalPlan::Union(
+                datafusion::logical_expr::Union::try_new_by_name(input_plans)?,
+            );
+            Ok(union_plan)
+        }
     }
 }
 
 // return types for tables, with columns / data we don't current support filtered out
 fn get_table_provider(
     collection_name: &ndc_models::CollectionName,
+    arguments: &BTreeMap<ndc_models::ArgumentName, RelationalLiteral>,
     state: &AppState,
 ) -> datafusion::error::Result<Arc<dyn TableProvider>> {
     let (rows, collection_fields) = match collection_name.as_str() {
@@ -366,6 +392,26 @@ fn get_table_provider(
                 .map_err(|e| DataFusionError::Internal(e.1.0.message))?,
             crate::types::actor::definition().fields,
         ),
+        "actors_by_movie" => {
+            let movie_id_int: i32 = arguments
+                .get("movie_id")
+                .and_then(|v| match v {
+                    RelationalLiteral::Int64 { value } => {
+                        Some(i32::try_from(*value).expect("movie_id out of range"))
+                    }
+                    _ => None,
+                })
+                .ok_or_else(|| {
+                    DataFusionError::Internal(
+                        "actors_by_movie requires a movie_id argument".to_string(),
+                    )
+                })?;
+
+            (
+                crate::collections::actors_by_movie::rows_inner(movie_id_int, state),
+                crate::types::actor::definition().fields,
+            )
+        }
         "countries" => (
             crate::collections::countries::rows(&BTreeMap::new(), state)
                 .map_err(|e| DataFusionError::Internal(e.1.0.message))?
@@ -524,11 +570,15 @@ fn get_table_provider(
                 .collect(),
             crate::types::institution::definition().fields,
         ),
-        _ => unimplemented!(),
+        _ => {
+            return Err(DataFusionError::Internal(format!(
+                "Collection {collection_name} not found"
+            )));
+        }
     };
     let mut schema_builder = SchemaBuilder::new();
     for (field_name, object_field) in &collection_fields {
-        let (data_type, nullable) = to_df_datatype(&object_field.r#type);
+        let (data_type, nullable) = to_df_datatype(&object_field.r#type)?;
         schema_builder.push(Field::new(field_name.as_str(), data_type, nullable));
     }
 
@@ -541,8 +591,10 @@ fn get_table_provider(
     Ok(Arc::new(mem_table))
 }
 
-fn to_df_datatype(ty: &ndc_models::Type) -> (datafusion::arrow::datatypes::DataType, bool) {
-    match ty {
+fn to_df_datatype(
+    ty: &ndc_models::Type,
+) -> datafusion::error::Result<(datafusion::arrow::datatypes::DataType, bool)> {
+    Ok(match ty {
         ndc_models::Type::Named { name } if name.as_str() == "Int" => {
             (datafusion::arrow::datatypes::DataType::Int64, false)
         }
@@ -557,7 +609,7 @@ fn to_df_datatype(ty: &ndc_models::Type) -> (datafusion::arrow::datatypes::DataT
             (datafusion::arrow::datatypes::DataType::Utf8, false)
         }
         ndc_models::Type::Named { name } if name.as_str() == "Date" => {
-            (datafusion::arrow::datatypes::DataType::Utf8, false)
+            (datafusion::arrow::datatypes::DataType::Date32, false)
         }
         ndc_models::Type::Named { name } if name.as_str() == "location" => {
             (crate::types::location::arrow_type(), true)
@@ -566,11 +618,11 @@ fn to_df_datatype(ty: &ndc_models::Type) -> (datafusion::arrow::datatypes::DataT
             (crate::types::staff_member::arrow_type(), true)
         }
         ndc_models::Type::Nullable { underlying_type } => {
-            let (dt, _) = to_df_datatype(underlying_type);
+            let (dt, _) = to_df_datatype(underlying_type)?;
             (dt, true)
         }
         ndc_models::Type::Array { element_type } => {
-            let (dt, _) = to_df_datatype(element_type);
+            let (dt, _) = to_df_datatype(element_type)?;
             (
                 datafusion::arrow::datatypes::DataType::List(Arc::new(Field::new(
                     "item", dt, true,
@@ -578,8 +630,12 @@ fn to_df_datatype(ty: &ndc_models::Type) -> (datafusion::arrow::datatypes::DataT
                 true,
             )
         }
-        _ => unimplemented!(),
-    }
+        _ => {
+            return Err(DataFusionError::Internal(format!(
+                "Unsupported type: {ty:?}"
+            )));
+        }
+    })
 }
 
 fn convert_expression_to_logical_expr(
@@ -589,7 +645,7 @@ fn convert_expression_to_logical_expr(
     match expr {
         // Data Selection
         RelationalExpression::Literal { literal } => Ok(datafusion::prelude::Expr::Literal(
-            convert_literal_to_logical_expr(literal),
+            convert_literal_to_logical_expr(literal),None
         )),
         RelationalExpression::Column { index } => Ok(datafusion::prelude::Expr::Column(
             schema.columns()[usize::try_from(*index).expect("cast u64 to usize in column index")]
@@ -597,7 +653,13 @@ fn convert_expression_to_logical_expr(
         )),
 
         // Conditional operators
-        RelationalExpression::Case { when, default } => {
+        RelationalExpression::Case { scrutinee, when, default } => {
+            let scrutinee_expr = scrutinee
+                .as_ref()
+                .map(|e| -> datafusion::error::Result<_> {
+                    Ok(Box::new(convert_expression_to_logical_expr(e, schema)?))
+                })
+                .transpose()?;
             let when_then_expr = when
                 .iter()
                 .map(|case_when: &CaseWhen| {
@@ -614,7 +676,7 @@ fn convert_expression_to_logical_expr(
                 })
                 .transpose()?;
             Ok(datafusion::prelude::Expr::Case(
-                datafusion::logical_expr::Case::new(None, when_then_expr, else_expr),
+                datafusion::logical_expr::Case::new(scrutinee_expr, when_then_expr, else_expr),
             ))
         }
 
@@ -698,6 +760,20 @@ fn convert_expression_to_logical_expr(
         RelationalExpression::IsNotFalse { expr } => Ok(datafusion::prelude::Expr::IsNotFalse(
             Box::new(convert_expression_to_logical_expr(expr, schema)?),
         )),
+        RelationalExpression::IsDistinctFrom { left, right } => Ok(
+            datafusion::prelude::Expr::BinaryExpr(datafusion::logical_expr::BinaryExpr {
+                left: Box::new(convert_expression_to_logical_expr(left, schema)?),
+                op: datafusion::logical_expr::Operator::IsDistinctFrom,
+                right: Box::new(convert_expression_to_logical_expr(right, schema)?),
+            }),
+        ),
+        RelationalExpression::IsNotDistinctFrom { left, right } => Ok(
+            datafusion::prelude::Expr::BinaryExpr(datafusion::logical_expr::BinaryExpr {
+                left: Box::new(convert_expression_to_logical_expr(left, schema)?),
+                op: datafusion::logical_expr::Operator::IsNotDistinctFrom,
+                right: Box::new(convert_expression_to_logical_expr(right, schema)?),
+            }),
+        ),
         RelationalExpression::In { expr, list } => {
             let list = list
                 .iter()
@@ -765,6 +841,13 @@ fn convert_expression_to_logical_expr(
                 },
             ))
         }
+        RelationalExpression::BinaryConcat { left, right } => Ok(
+            datafusion::prelude::Expr::BinaryExpr(datafusion::logical_expr::BinaryExpr {
+                left: Box::new(convert_expression_to_logical_expr(left, schema)?),
+                op: datafusion::logical_expr::Operator::StringConcat,
+                right: Box::new(convert_expression_to_logical_expr(right, schema)?),
+            }),
+        ),
         RelationalExpression::IsNaN { expr } => {
             Ok(isnan(convert_expression_to_logical_expr(expr, schema)?))
         }
@@ -813,12 +896,13 @@ fn convert_expression_to_logical_expr(
         ))),
 
         // Scalar functions
-        RelationalExpression::Cast { expr, as_type } => {
+        RelationalExpression::Cast { expr, from_type: _, as_type } => {
             convert_expression_to_logical_expr(expr, schema)?
                 .cast_to(&convert_cast_type_to_data_type(as_type), schema)
         }
         RelationalExpression::TryCast {
             expr: _,
+            from_type: _,
             as_type: _,
         } => unimplemented!(),
         RelationalExpression::Abs { expr } => {
@@ -877,7 +961,7 @@ fn convert_expression_to_logical_expr(
                 expr: Box::new(datafusion::logical_expr::Expr::Literal(
                     convert_literal_to_logical_expr(&RelationalLiteral::UInt64 {
                         value: *index as u64,
-                    }),
+                    }),None
                 )),
             }),
         )),
@@ -1069,7 +1153,7 @@ fn convert_expression_to_logical_expr(
         })),
 
         // Aggregate functions
-        RelationalExpression::Average { expr: _ } => {
+        RelationalExpression::Average { expr } => {
             Ok(datafusion::prelude::Expr::AggregateFunction(
                 datafusion::logical_expr::expr::AggregateFunction {
                     func: average::avg_udaf(),
@@ -1101,7 +1185,7 @@ fn convert_expression_to_logical_expr(
         }
         RelationalExpression::FirstValue { expr: _ } => unimplemented!(),
         RelationalExpression::LastValue { expr: _ } => unimplemented!(),
-        RelationalExpression::Max { expr: _ } => Ok(datafusion::prelude::Expr::AggregateFunction(
+        RelationalExpression::Max { expr  } => Ok(datafusion::prelude::Expr::AggregateFunction(
             datafusion::logical_expr::expr::AggregateFunction {
                 func: min_max::max_udaf(),
                 params: AggregateFunctionParams {
@@ -1114,7 +1198,7 @@ fn convert_expression_to_logical_expr(
             },
         )),
         RelationalExpression::Median { expr: _ } => unimplemented!(),
-        RelationalExpression::Min { expr: _ } => Ok(datafusion::prelude::Expr::AggregateFunction(
+        RelationalExpression::Min { expr } => Ok(datafusion::prelude::Expr::AggregateFunction(
             datafusion::logical_expr::expr::AggregateFunction {
                 func: min_max::min_udaf(),
                 params: AggregateFunctionParams {
@@ -1126,7 +1210,28 @@ fn convert_expression_to_logical_expr(
                 },
             },
         )),
-        RelationalExpression::StringAgg { expr: _ } => unimplemented!(),
+        RelationalExpression::StringAgg { expr, separator, distinct, order_by } => {
+            let order_by = order_by.as_ref()
+                .map(|order_by| {
+                    order_by
+                        .iter()
+                        .map(|s| convert_sort_to_logical_sort(s, schema))
+                        .collect::<datafusion::error::Result<Vec<_>>>()
+                })
+                .transpose()?;
+            Ok(datafusion::prelude::Expr::AggregateFunction(
+                datafusion::logical_expr::expr::AggregateFunction {
+                    func: datafusion::functions_aggregate::string_agg::string_agg_udaf(),
+                    params: AggregateFunctionParams {
+                        args: vec![convert_expression_to_logical_expr(expr, schema)?, separator.lit()],
+                        distinct: *distinct,
+                        filter: None,
+                        order_by,
+                        null_treatment: None,
+                    },
+                },
+            ))
+        }
         RelationalExpression::Sum { expr } => Ok(datafusion::prelude::Expr::AggregateFunction(
             datafusion::logical_expr::expr::AggregateFunction {
                 func: sum::sum_udaf(),
@@ -1140,7 +1245,83 @@ fn convert_expression_to_logical_expr(
             },
         )),
         RelationalExpression::Var { expr: _ } => unimplemented!(),
-
+        RelationalExpression::Stddev { expr } => Ok(datafusion::prelude::Expr::AggregateFunction(
+            datafusion::logical_expr::expr::AggregateFunction {
+                func: datafusion::functions_aggregate::stddev::stddev_udaf(),
+                params: AggregateFunctionParams {
+                    args: vec![convert_expression_to_logical_expr(expr, schema)?],
+                    distinct: false,
+                    filter: None,
+                    order_by: None,
+                    null_treatment: None,
+                },
+            },
+        )),
+        RelationalExpression::StddevPop { expr } => Ok(datafusion::prelude::Expr::AggregateFunction(
+            datafusion::logical_expr::expr::AggregateFunction {
+                func: datafusion::functions_aggregate::stddev::stddev_pop_udaf(),
+                params: AggregateFunctionParams {
+                    args: vec![convert_expression_to_logical_expr(expr, schema)?],
+                    distinct: false,
+                    filter: None,
+                    order_by: None,
+                    null_treatment: None,
+                },
+            },
+        )),
+        RelationalExpression::ApproxPercentileCont { expr, percentile } => {
+            Ok(datafusion::prelude::Expr::AggregateFunction(
+                datafusion::logical_expr::expr::AggregateFunction {
+                    func: datafusion::functions_aggregate::approx_percentile_cont::approx_percentile_cont_udaf(),
+                    params: AggregateFunctionParams {
+                        args: vec![
+                            convert_expression_to_logical_expr(expr, schema)?,
+                            percentile.0.lit(),
+                        ],
+                        distinct: false,
+                        filter: None,
+                        order_by: None,
+                        null_treatment: None,
+                    },
+                },
+            ))
+        },
+        RelationalExpression::ApproxDistinct { expr } => {
+            Ok(datafusion::prelude::Expr::AggregateFunction(
+                datafusion::logical_expr::expr::AggregateFunction {
+                    func: datafusion::functions_aggregate::approx_distinct::approx_distinct_udaf(),
+                    params: AggregateFunctionParams {
+                        args: vec![convert_expression_to_logical_expr(expr, schema)?],
+                        distinct: false,
+                        filter: None,
+                        order_by: None,
+                        null_treatment: None,
+                    },
+                },
+            ))
+        },
+        RelationalExpression::ArrayAgg { expr, distinct, order_by } => {
+            let order_by = order_by.as_ref()
+                .map(|order_by| {
+                    order_by
+                        .iter()
+                        .map(|s| convert_sort_to_logical_sort(s, schema))
+                        .collect::<datafusion::error::Result<Vec<_>>>()
+                })
+                .transpose()?;
+            Ok(datafusion::prelude::Expr::AggregateFunction(
+                datafusion::logical_expr::expr::AggregateFunction {
+                    func: datafusion::functions_aggregate::array_agg::array_agg_udaf(),
+                    params: AggregateFunctionParams {
+                        args: vec![convert_expression_to_logical_expr(expr, schema)?],
+                        distinct: *distinct,
+                        filter: None,
+                        order_by,
+                        null_treatment: None,
+                    },
+                },
+            ))
+        },
         // Window functions
         RelationalExpression::RowNumber {
             order_by,
@@ -1231,6 +1412,9 @@ fn convert_cast_type_to_data_type(
         ndc_models::CastType::Duration => datafusion::arrow::datatypes::DataType::Duration(
             datafusion::arrow::datatypes::TimeUnit::Nanosecond,
         ),
+        ndc_models::CastType::Interval => datafusion::arrow::datatypes::DataType::Interval(
+            datafusion::arrow::datatypes::IntervalUnit::MonthDayNano,
+        ),
     }
 }
 
@@ -1238,8 +1422,8 @@ fn convert_literal_to_logical_expr(literal: &RelationalLiteral) -> ScalarValue {
     match literal {
         RelationalLiteral::Null => ScalarValue::Null,
         RelationalLiteral::Boolean { value } => ScalarValue::Boolean(Some(*value)),
-        RelationalLiteral::Float32 { value } => ScalarValue::Float32(Some(*value)),
-        RelationalLiteral::Float64 { value } => ScalarValue::Float64(Some(*value)),
+        RelationalLiteral::Float32 { value } => ScalarValue::Float32(Some(value.0)),
+        RelationalLiteral::Float64 { value } => ScalarValue::Float64(Some(value.0)),
         RelationalLiteral::Int8 { value } => ScalarValue::Int8(Some(*value)),
         RelationalLiteral::Int16 { value } => ScalarValue::Int16(Some(*value)),
         RelationalLiteral::Int32 { value } => ScalarValue::Int32(Some(*value)),
@@ -1291,6 +1475,13 @@ fn convert_literal_to_logical_expr(literal: &RelationalLiteral) -> ScalarValue {
         RelationalLiteral::DurationNanosecond { value } => {
             ScalarValue::DurationNanosecond(Some(*value))
         }
+        RelationalLiteral::Interval {
+            months,
+            days,
+            nanoseconds,
+        } => ScalarValue::IntervalMonthDayNano(Some(
+            datafusion::arrow::datatypes::IntervalMonthDayNano::new(*months, *days, *nanoseconds),
+        )),
     }
 }
 
@@ -1314,19 +1505,23 @@ fn convert_sort_to_logical_sort(
 fn convert_date_part_unit_to_literal_expr(
     part: ndc_models::DatePartUnit,
 ) -> datafusion::logical_expr::Expr {
-    datafusion::logical_expr::Expr::Literal(ScalarValue::Utf8(Some(String::from(match part {
-        ndc_models::DatePartUnit::Year => "year",
-        ndc_models::DatePartUnit::Quarter => "quarter",
-        ndc_models::DatePartUnit::Month => "month",
-        ndc_models::DatePartUnit::Week => "week",
-        ndc_models::DatePartUnit::DayOfWeek => "dow",
-        ndc_models::DatePartUnit::DayOfYear => "doy",
-        ndc_models::DatePartUnit::Day => "day",
-        ndc_models::DatePartUnit::Hour => "hour",
-        ndc_models::DatePartUnit::Minute => "minute",
-        ndc_models::DatePartUnit::Second => "second",
-        ndc_models::DatePartUnit::Microsecond => "microsecond",
-        ndc_models::DatePartUnit::Millisecond => "millisecond",
-        ndc_models::DatePartUnit::Nanosecond => "nanosecond",
-    }))))
+    datafusion::logical_expr::Expr::Literal(
+        ScalarValue::Utf8(Some(String::from(match part {
+            ndc_models::DatePartUnit::Year => "year",
+            ndc_models::DatePartUnit::Quarter => "quarter",
+            ndc_models::DatePartUnit::Month => "month",
+            ndc_models::DatePartUnit::Week => "week",
+            ndc_models::DatePartUnit::DayOfWeek => "dow",
+            ndc_models::DatePartUnit::DayOfYear => "doy",
+            ndc_models::DatePartUnit::Day => "day",
+            ndc_models::DatePartUnit::Hour => "hour",
+            ndc_models::DatePartUnit::Minute => "minute",
+            ndc_models::DatePartUnit::Second => "second",
+            ndc_models::DatePartUnit::Microsecond => "microsecond",
+            ndc_models::DatePartUnit::Millisecond => "millisecond",
+            ndc_models::DatePartUnit::Nanosecond => "nanosecond",
+            ndc_models::DatePartUnit::Epoch => "epoch",
+        }))),
+        None,
+    )
 }

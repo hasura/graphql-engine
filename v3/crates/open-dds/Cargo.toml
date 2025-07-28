@@ -30,10 +30,5 @@ thiserror = { workspace = true }
 goldenfile = { workspace = true }
 pretty_assertions = { workspace = true }
 
-[package.metadata.cargo-machete]
-ignored = [
-  "strum", # used by strum_macros
-]
-
 [lints]
 workspace = true

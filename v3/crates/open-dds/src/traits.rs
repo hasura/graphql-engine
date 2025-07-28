@@ -295,6 +295,44 @@ mod tests {
     }
 
     #[test]
+    fn test_deserialize_with_attribute() {
+        use serde::de::Error;
+
+        fn custom_deserializer(
+            value: serde_json::Value,
+            _path: jsonpath::JSONPath,
+        ) -> Result<String, crate::traits::OpenDdDeserializeError> {
+            match value {
+                serde_json::Value::String(s) => Ok(format!("custom_{s}")),
+                _ => Err(crate::traits::OpenDdDeserializeError {
+                    error: serde_json::Error::custom("expected string"),
+                    path: jsonpath::JSONPath::new(),
+                }),
+            }
+        }
+
+        #[derive(Debug, PartialEq, OpenDd)]
+        struct TestStruct {
+            normal_field: String,
+            #[opendd(deserialize_with = "custom_deserializer")]
+            custom_field: String,
+        }
+
+        let json = serde_json::json!({
+            "normalField": "normal_value",
+            "customField": "test_value"
+        });
+
+        let expected = TestStruct {
+            normal_field: "normal_value".to_string(),
+            custom_field: "custom_test_value".to_string(),
+        };
+
+        let result = traits::OpenDd::deserialize(json, jsonpath::JSONPath::new()).unwrap();
+        assert_eq!(expected, result);
+    }
+
+    #[test]
     fn test_parse_kind_enum() {
         #[derive(Debug, PartialEq, OpenDd)]
         struct MyStruct {

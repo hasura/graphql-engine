@@ -21,6 +21,11 @@ pub(crate) fn collection_info() -> ndc_models::CollectionInfo {
                 unique_columns: vec!["id".into()],
             },
         )]),
+        relational_mutations: Some(ndc_models::RelationalMutationInfo {
+            insertable: true,
+            updatable: true,
+            deletable: true,
+        }),
     }
 }
 

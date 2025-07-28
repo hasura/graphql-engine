@@ -19,10 +19,6 @@ harness = false
 name = "validation"
 harness = false
 
-[[bench]]
-name = "schema_serde"
-harness = false
-
 [dependencies]
 recursion_limit_macro = { path = "../../utils/recursion_limit_macro" }
 serde-ext = { path = "../../utils/serde-ext" }
@@ -35,7 +31,6 @@ nonempty = { workspace = true }
 schemars = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-serde_with = { workspace = true }
 smol_str = { workspace = true }
 thiserror = { workspace = true }
 tracing-util = { path = "../../utils/tracing-util" }
@@ -45,16 +40,11 @@ json-ext = { path = "../../utils/json-ext" }
 anyhow = { workspace = true }
 apollo-parser = { workspace = true }
 async-graphql-parser = { workspace = true }
-bincode = { workspace = true }
-bson = { workspace = true }
 criterion = { workspace = true }
 diffy = { workspace = true }
 expect-test = { workspace = true }
 graphql-parser = { workspace = true }
-human_bytes = { workspace = true }
-postcard = { workspace = true }
 pretty_assertions = { workspace = true }
-rmp-serde = { workspace = true }
 
 [lints]
 workspace = true

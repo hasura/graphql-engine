@@ -316,6 +316,7 @@ pub(crate) fn resolve_value_expression_for_argument(
                     .iter()
                     .map(|(field_name, object_type)| (field_name, &object_type.object_type))
                     .collect(), // Convert &BTreeMap<field_name, object_type> to BTreeMap<&field_name, &object_type>
+                &boolean_expression_types.get_type_names(),
                 argument_type,
                 json_value,
                 &mut issues,
@@ -344,6 +345,7 @@ pub(crate) fn resolve_value_expression_for_argument(
                         // is there a preset for this role and this field?
                         let has_preset = object_type_representation
                             .type_input_permissions
+                            .by_role
                             .get(role)
                             .is_some_and(|type_input_permission| {
                                 type_input_permission.field_presets.contains_key(field_name)

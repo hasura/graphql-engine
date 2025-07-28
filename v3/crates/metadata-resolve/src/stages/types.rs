@@ -11,6 +11,7 @@ use open_dds::{
 };
 
 use crate::flags::RuntimeFlags;
+use crate::types::condition::Conditions;
 use crate::types::subgraph::Qualified;
 
 use crate::stages::{
@@ -43,5 +44,6 @@ pub struct Metadata {
     pub glossaries: BTreeMap<Qualified<GlossaryName>, glossaries::Glossary>,
     pub plugin_configs: LifecyclePluginConfigs,
     pub roles: BTreeSet<Role>,
+    pub conditions: Conditions,
     pub runtime_flags: RuntimeFlags,
 }

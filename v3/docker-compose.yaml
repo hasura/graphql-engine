@@ -98,7 +98,7 @@ services:
       COLLECTOR_ZIPKIN_HOST_PORT: "9411"
 
   postgres_connector_ndc_v01:
-    image: ghcr.io/hasura/ndc-postgres:dev-main
+    image: ghcr.io/hasura/ndc-postgres:122d80f6c
     ports:
       - 8080:8080
     environment:
@@ -116,7 +116,7 @@ services:
         condition: service_healthy
 
   postgres_connector:
-    image: ghcr.io/hasura/ndc-postgres:dev-benoit-eng-362-update-ndc-postgres-to-ndc_models-020
+    image: ghcr.io/hasura/ndc-postgres:dev-main
     ports:
       - 8082:8080
     environment:

@@ -22,8 +22,12 @@
                 ]
               }
             },
-            "logicalOperators": { "enable": true },
-            "isNull": { "enable": true },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
             "graphql": {
               "typeName": "String_Comparison_Exp"
             }
@@ -47,8 +51,12 @@
                 ]
               }
             },
-            "logicalOperators": { "enable": true },
-            "isNull": { "enable": true },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
             "graphql": {
               "typeName": "Int_Comparison_Exp"
             }
@@ -79,12 +87,17 @@
                 "comparableRelationships": []
               }
             },
-            "logicalOperators": { "enable": true },
-            "isNull": { "enable": true },
-            "graphql": { "typeName": "InstitutionBoolExp" }
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "InstitutionBoolExp"
+            }
           }
         },
-
         {
           "kind": "ObjectType",
           "version": "v1",
@@ -196,9 +209,15 @@
                 "comparableRelationships": []
               }
             },
-            "logicalOperators": { "enable": true },
-            "isNull": { "enable": true },
-            "graphql": { "typeName": "LocationBoolExp" }
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "LocationBoolExp"
+            }
           }
         },
         {

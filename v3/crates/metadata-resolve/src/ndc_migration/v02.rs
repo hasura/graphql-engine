@@ -45,7 +45,8 @@ pub fn migrate_schema_response_from_v01(
             .into_iter()
             .map(migrate_procedure_info_from_v01)
             .collect(),
-        capabilities: None, // v0.1.x did not have schema capabilities
+        capabilities: None,      // v0.1.x did not have schema capabilities
+        request_arguments: None, // v0.1.x did not have request arguments
     }
 }
 
@@ -252,6 +253,7 @@ fn migrate_collection_info_from_v01(
                 (name, migrate_uniqueness_constraint_from_v01(old_constraint))
             })
             .collect(),
+        relational_mutations: None,
     }
 }
 

@@ -189,7 +189,7 @@ pub fn build_model_order_by_input_schema(
                 type_name: order_by_expression.ordered_type.clone(),
             })?;
 
-        let field_permissions: HashMap<Role, Option<types::NamespaceAnnotation>> =
+        let field_permissions: HashMap<Role, Option<Box<types::NamespaceAnnotation>>> =
             permissions::get_allowed_roles_for_field(object_type_representation, field_name)
                 .map(|role| (role.clone(), None))
                 .collect();
@@ -262,7 +262,6 @@ pub fn build_model_order_by_input_schema(
         gds,
         &mut fields,
         builder,
-        &order_by_expression.ordered_type,
         object_type_representation,
         &order_by_expression.orderable_relationships,
     )?;
@@ -278,7 +277,6 @@ fn build_orderable_relationships(
     gds: &GDS,
     fields: &mut BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
     builder: &mut gql_schema::Builder<GDS>,
-    object_type_name: &Qualified<CustomTypeName>,
     object_type_representation: &ObjectTypeWithRelationships,
     orderable_relationships: &BTreeMap<RelationshipName, OrderableRelationship>,
 ) -> Result<(), Error> {
@@ -378,7 +376,6 @@ fn build_orderable_relationships(
                             target_type: target_typename.clone(),
                             relationship_type: relationship_type.clone(),
                             mappings: mappings.clone(),
-                            object_type_name: object_type_name.clone(),
                             deprecated: relationship.deprecated.clone(),
                             multiple_input_properties: gds
                                 .metadata

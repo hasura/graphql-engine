@@ -247,7 +247,7 @@ fn get_select_one_namespace_annotations(
     model: &metadata_resolve::ModelWithPermissions,
     object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
     unique_identifier: &IndexMap<FieldName, metadata_resolve::UniqueIdentifierField>,
-) -> HashMap<Role, Option<types::NamespaceAnnotation>> {
+) -> HashMap<Role, Option<Box<types::NamespaceAnnotation>>> {
     let annotations = super::permissions::get_select_one_namespace_annotations(
         model,
         object_type_representation,
@@ -262,7 +262,7 @@ fn get_select_one_namespace_annotations(
 /// applying subscription permission for select root fields.
 fn get_select_permissions_namespace_annotations(
     model: &metadata_resolve::ModelWithPermissions,
-) -> HashMap<Role, Option<types::NamespaceAnnotation>> {
+) -> HashMap<Role, Option<Box<types::NamespaceAnnotation>>> {
     let annotations = super::permissions::get_select_permissions_namespace_annotations(model);
     apply_subscription_permissions_model(annotations)
 }
@@ -270,16 +270,19 @@ fn get_select_permissions_namespace_annotations(
 /// Filters a HashMap of role-to-annotation mappings, retaining only those
 /// where subscriptions are explicitly allowed.
 fn apply_subscription_permissions_model(
-    annotations: HashMap<Role, Option<types::NamespaceAnnotation>>,
-) -> HashMap<Role, Option<types::NamespaceAnnotation>> {
+    annotations: HashMap<Role, Option<Box<types::NamespaceAnnotation>>>,
+) -> HashMap<Role, Option<Box<types::NamespaceAnnotation>>> {
     annotations
         .into_iter()
-        .filter_map(|(role, annotation)| match annotation {
-            Some(types::NamespaceAnnotation::Model {
-                allow_subscriptions,
-                ..
-            }) if allow_subscriptions => Some((role, annotation)),
-            _ => None,
+        .filter_map(|(role, annotation)| match &annotation {
+            Some(boxed_annotation) => match boxed_annotation.as_ref() {
+                types::NamespaceAnnotation::Model {
+                    allow_subscriptions,
+                    ..
+                } if *allow_subscriptions => Some((role, annotation)),
+                _ => None,
+            },
+            None => None,
         })
         .collect()
 }

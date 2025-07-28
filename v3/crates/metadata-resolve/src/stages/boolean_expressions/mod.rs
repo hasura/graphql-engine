@@ -8,6 +8,7 @@ pub use error::BooleanExpressionError;
 use open_dds::identifier::SubgraphName;
 use open_dds::models::ModelName;
 use std::collections::{BTreeMap, BTreeSet};
+use std::sync::Arc;
 
 use open_dds::{
     boolean_expression::BooleanExpressionOperand, data_connector::DataConnectorName,
@@ -189,7 +190,7 @@ fn resolve_object_boolean_expression_type(
     graphql_config: &graphql_config::GraphqlConfig,
     boolean_expression_object_types: &mut BTreeMap<
         Qualified<CustomTypeName>,
-        ResolvedObjectBooleanExpressionType,
+        Arc<ResolvedObjectBooleanExpressionType>,
     >,
     issues: &mut Vec<BooleanExpressionIssue>,
     graphql_types: &mut graphql_config::GraphqlTypeNames,
@@ -218,7 +219,7 @@ fn resolve_object_boolean_expression_type(
         issues.extend(boolean_expression_issues);
         boolean_expression_object_types.insert(
             boolean_expression_type_name.clone(),
-            object_boolean_expression_type,
+            Arc::new(object_boolean_expression_type),
         );
     }
     Ok(())
@@ -251,7 +252,7 @@ fn resolve_legacy_object_boolean_expression_type(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     boolean_expression_object_types: &mut BTreeMap<
         Qualified<CustomTypeName>,
-        ResolvedObjectBooleanExpressionType,
+        Arc<ResolvedObjectBooleanExpressionType>,
     >,
     issues: &mut Vec<BooleanExpressionIssue>,
     graphql_types: &mut graphql_config::GraphqlTypeNames,
@@ -281,7 +282,7 @@ fn resolve_legacy_object_boolean_expression_type(
     issues.extend(boolean_expression_issues);
     boolean_expression_object_types.insert(
         boolean_expression_type_name.clone(),
-        object_boolean_expression_type,
+        Arc::new(object_boolean_expression_type),
     );
 
     Ok(())

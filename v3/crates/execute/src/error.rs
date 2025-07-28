@@ -69,10 +69,10 @@ impl FieldError {
     ) -> FieldErrorResponse {
         let details = self.get_details();
         match (self, expose_internal_errors) {
-            (Self::InternalError(_internal), ExposeInternalErrors::Censor) => FieldErrorResponse {
+            (Self::InternalError(internal), ExposeInternalErrors::Censor) => FieldErrorResponse {
                 message: "internal error".into(),
                 details: None,
-                is_internal: true,
+                is_internal: internal.is_engine_internal_error(),
             },
             (e, _) => FieldErrorResponse {
                 message: e.to_string(),
@@ -154,6 +154,18 @@ impl FieldInternalError {
             Self::NDCUnexpected(ndc_unexpected) => ndc_unexpected.get_details(),
             _ => None,
         }
+    }
+
+    pub fn is_engine_internal_error(&self) -> bool {
+        !matches!(
+            self,
+            Self::NDCUnexpected(
+                NDCUnexpectedError::BadNDCResponse { .. }
+                    | NDCUnexpectedError::NDCClientError(
+                        ndc_client::Error::InvalidConnector(_) | ndc_client::Error::Connector(_)
+                    )
+            )
+        )
     }
 }
 

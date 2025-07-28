@@ -8,6 +8,7 @@ use hasura_authn_core::{
 use lang_graphql::ast::common as ast;
 use lang_graphql::{http::RawRequest, schema::Schema};
 use metadata_resolve::data_connectors::NdcVersion;
+use metadata_resolve::{LifecyclePluginConfigs, ResolvedLifecyclePreResponsePluginHooks};
 use open_dds::session_variables::{SESSION_VARIABLE_ROLE, SessionVariableName};
 use pretty_assertions::assert_eq;
 use serde_json as json;
@@ -104,21 +105,6 @@ pub(crate) fn test_introspection_expectation(
 
         let schema = GDS::build_schema(&gds)?;
 
-        // Verify successful serialization and deserialization of the schema.
-        // Hasura V3 relies on the serialized schema for handling requests.
-        // Therefore, it is crucial to ensure the functionality of both
-        // deserialization and serialization.
-        // Testing this within this function allows us to detect errors for any
-        // future metadata tests that may be added.
-        let serialized_metadata =
-            serde_json::to_string(&schema).expect("Failed to serialize schema");
-        let deserialized_metadata: Schema<GDS> =
-            serde_json::from_str(&serialized_metadata).expect("Failed to deserialize metadata");
-        assert_eq!(
-            schema, deserialized_metadata,
-            "initial built metadata does not match deserialized metadata"
-        );
-
         let query = read_to_string(&request_path)?;
 
         let request_headers = reqwest::header::HeaderMap::new();
@@ -137,6 +123,14 @@ pub(crate) fn test_introspection_expectation(
             })
             .collect::<Result<_, _>>()?;
 
+        let plugins = LifecyclePluginConfigs {
+            pre_ndc_request_plugins: BTreeMap::new(),
+            pre_ndc_response_plugins: BTreeMap::new(),
+            pre_parse_plugins: Vec::new(),
+            pre_response_plugins: ResolvedLifecyclePreResponsePluginHooks::new(),
+            pre_route_plugins: Vec::new(),
+        };
+
         let raw_request = RawRequest {
             operation_name: None,
             query,
@@ -151,6 +145,7 @@ pub(crate) fn test_introspection_expectation(
                 &test_ctx.http_context,
                 &schema,
                 &arc_resolved_metadata,
+                &plugins,
                 session,
                 &request_headers,
                 raw_request.clone(),
@@ -251,6 +246,7 @@ async fn test_jsonapi(
             let result = jsonapi::handler_internal(
                 Arc::new(HeaderMap::default()),
                 Arc::new(test_ctx.http_context.clone()),
+                Arc::new(resolved_metadata.plugin_configs.clone()),
                 Arc::new(session.clone()),
                 &catalog,
                 resolved_metadata.clone(),
@@ -376,17 +372,6 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
 
             let schema = GDS::build_schema(&gds)?;
 
-            // Verify successful serialization and deserialization of the schema.
-            // Hasura V3 relies on the serialized schema for handling requests.
-            // Therefore, it is crucial to ensure the functionality of both
-            // deserialization and serialization.
-            // Testing this within this function allows us to detect errors for any
-            // future metadata tests that may be added.
-            let serialized_metadata =
-                serde_json::to_string(&schema).expect("Failed to serialize schema");
-            let _deserialized_metadata: Schema<GDS> =
-                serde_json::from_str(&serialized_metadata).expect("Failed to deserialize metadata");
-
             let query = read_to_string(&request_path)?;
 
             // Read optional GQL query variables.
@@ -415,6 +400,14 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                 })
                 .collect::<Result<_, _>>()?;
 
+            let plugins = LifecyclePluginConfigs {
+                pre_ndc_request_plugins: BTreeMap::new(),
+                pre_ndc_response_plugins: BTreeMap::new(),
+                pre_parse_plugins: Vec::new(),
+                pre_response_plugins: ResolvedLifecyclePreResponsePluginHooks::new(),
+                pre_route_plugins: Vec::new(),
+            };
+
             // expected response headers are a `Vec<String>`; one set for each
             // session/role.
             let expected_headers: Option<Vec<Vec<String>>> =
@@ -439,6 +432,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                             &test_ctx.http_context,
                             &schema,
                             &arc_resolved_metadata.clone(),
+                            &plugins,
                             session,
                             &request_headers,
                             raw_request.clone(),
@@ -479,6 +473,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                             &test_ctx.http_context,
                             &schema,
                             &arc_resolved_metadata,
+                            &plugins,
                             session,
                             &request_headers,
                             raw_request.clone(),
@@ -616,6 +611,13 @@ pub fn test_execute_explain(
                 )]);
             resolve_session(session_variables)
         }?;
+        let plugins = LifecyclePluginConfigs {
+            pre_ndc_request_plugins: BTreeMap::new(),
+            pre_ndc_response_plugins: BTreeMap::new(),
+            pre_parse_plugins: Vec::new(),
+            pre_response_plugins: ResolvedLifecyclePreResponsePluginHooks::new(),
+            pre_route_plugins: Vec::new(),
+        };
         let query = read_to_string(&root_test_dir.join(gql_request_file_path))?;
         let raw_request = lang_graphql::http::RawRequest {
             operation_name: None,
@@ -625,6 +627,7 @@ pub fn test_execute_explain(
         let (_, raw_response) = graphql_frontend::execute_explain(
             ExposeInternalErrors::Expose,
             &test_ctx.http_context,
+            &plugins,
             &schema,
             &arc_resolved_metadata,
             &session,
@@ -657,6 +660,7 @@ pub(crate) fn test_metadata_resolve_configuration() -> metadata_resolve::configu
 {
     metadata_resolve::configuration::Configuration {
         unstable_features: metadata_resolve::configuration::UnstableFeatures {
+            enable_authorization_rules: true,
             ..Default::default()
         },
     }
@@ -727,6 +731,7 @@ async fn run_query_graphql_ws(
         auth_config: Arc::new(dummy_auth_config),
         metrics: graphql_ws::NoOpWebSocketMetrics,
         handshake_headers: Arc::new(request_headers.clone()),
+        auth_mode_header: "x-hasura-auth-mode".to_string(),
     };
     let (channel_sender, mut channel_receiver) =
         tokio::sync::mpsc::channel::<graphql_ws::Message>(10);

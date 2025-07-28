@@ -10,6 +10,7 @@ hasura-authn-core = { path = "../../auth/hasura-authn-core" }
 lang-graphql = { path = "../../graphql/lang-graphql" }
 tracing-util = { path = "../../utils/tracing-util" }
 open-dds = { path = "../../open-dds" }
+metadata-resolve = { path = "../../metadata-resolve" }
 
 axum = { workspace = true }
 futures-util = { workspace = true }

@@ -26,6 +26,7 @@ members = [
 
 # generally following guidance from https://nnethercote.github.io/perf-book/build-configuration.html
 [profile.release]
+# FYI increasing this to 16 or more when profiling seems to be effective in getting more granularity in heaptrack profiles
 codegen-units = 1 # reduce parallelisation to increase optimisations
 
 [workspace.lints.clippy]
@@ -64,7 +65,7 @@ used_underscore_binding = "allow"
 private_intra_doc_links = "allow"
 
 [workspace.dependencies]
-ndc-models = { package = "ndc-models", git = "https://github.com/hasura/ndc-spec.git", tag = "v0.2.2", features = ["arc-relation"]} # When you update this tag, also update the schema references in crates/open-dds/src/data_connector.rs
+ndc-models = { package = "ndc-models", git = "https://github.com/hasura/ndc-spec.git", tag = "v0.2.9", features = ["arc-relation"]} # When you update this tag, also update the schema references in crates/open-dds/src/data_connector.rs
 ndc-models-v01 = { package = "ndc-models", git = "https://github.com/hasura/ndc-spec.git", tag = "v0.1.6" } # When you update this tag, also update the schema references in crates/open-dds/src/data_connector.rs
 
 anyhow = "1"
@@ -87,7 +88,7 @@ convert_case = "0.6"
 cookie = "0.18"
 criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
 darling = "0.20"
-datafusion = { version = "47", features = ["serde"] }
+datafusion = { version = "48", features = ["serde"] }
 derive_more = { version = "1.0", features = ["full"] }
 diffy = "0.4"
 env_logger = "0.11"
@@ -134,12 +135,15 @@ quote = "1"
 rand = "0.9"
 ref-cast = "1"
 regex = "1"
-reqwest = { version = "0.12", features = ["json", "multipart", "stream"] }
+# Adding the gzip/zstd features have the library send appropriate
+# Accept-Encoding and automatically decompress. As of this version it doesn't
+# express preference with quality (q) values, but we'd prefer zstd always
+reqwest = { version = "0.12", features = ["gzip", "zstd", "json", "multipart", "stream"] }
 rmp-serde = "1"
 semver = "1.0"
 schemars = { version = "0.8", features = ["preserve_order", "smol_str", "url"] }
 serde = { version = "1", features = ["derive", "rc"] }
-serde_arrow = { version = "0.13.3", features = ["arrow-55"] }
+serde_arrow = { version = "0.13.4", features = ["arrow-55"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 serde_path_to_error = "0.1"
 serde_with = { version = "3", features = ["indexmap_2"] }
@@ -155,7 +159,7 @@ tokio-test = "0.4"
 tokio-tungstenite = "0.24.0"
 tower = "0.5"
 # Prefer zstd-encoded request bodies, but also support gzip in case a client can't do that
-tower-http = { version = "0.5", features = ["cors", "fs", "decompression-gzip", "decompression-zstd", "trace" ] }
+tower-http = { version = "0.6", features = ["cors", "fs", "decompression-gzip", "decompression-zstd", "compression-gzip", "compression-zstd", "trace" ] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["json"] }
 transitive = "0.5"

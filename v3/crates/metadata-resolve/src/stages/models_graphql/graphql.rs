@@ -136,7 +136,7 @@ pub(crate) fn resolve_model_graphql_api(
                             })?;
 
                         let mut order_by_fields = BTreeMap::new();
-                        for (field_name, field_mapping) in field_mappings {
+                        for (field_name, field_mapping) in field_mappings.iter() {
                             // fields with arguments are not allowed in sorting expression
                             if field_mapping.argument_mappings.is_empty() {
                                 order_by_fields.insert(

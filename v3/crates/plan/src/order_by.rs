@@ -1,13 +1,13 @@
 use std::collections::BTreeMap;
 
 use super::types::{OrderByError, PlanError};
-use crate::metadata_accessor::OutputObjectTypeView;
+use crate::{metadata_accessor::OutputObjectTypeView, types::PlanState};
 use hasura_authn_core::Session;
 use metadata_resolve::{Qualified, RelationshipTarget, TypeMapping};
 use open_dds::{
     data_connector::DataConnectorColumnName, query::OrderByElement, types::CustomTypeName,
 };
-use plan_types::{PredicateQueryTrees, ResolvedFilterExpression, UniqueNumber, UsagesCounts};
+use plan_types::{PredicateQueryTrees, ResolvedFilterExpression, UsagesCounts};
 
 pub fn to_resolved_order_by_element(
     metadata: &metadata_resolve::Metadata,
@@ -19,7 +19,7 @@ pub fn to_resolved_order_by_element(
     element: &OrderByElement,
     collect_relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
     remote_predicates: &mut PredicateQueryTrees,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
     usage_counts: &mut UsagesCounts,
 ) -> Result<plan_types::OrderByElement<ResolvedFilterExpression>, PlanError> {
     let order_direction = match element.direction {
@@ -38,7 +38,7 @@ pub fn to_resolved_order_by_element(
         vec![], // Start with empty field path
         collect_relationships,
         remote_predicates,
-        unique_number,
+        plan_state,
         usage_counts,
     )?;
     Ok(plan_types::OrderByElement {
@@ -59,7 +59,7 @@ fn from_operand(
     field_path: Vec<DataConnectorColumnName>,
     collect_relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
     remote_predicates: &mut PredicateQueryTrees,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
     usage_counts: &mut UsagesCounts,
 ) -> Result<plan_types::OrderByTarget<ResolvedFilterExpression>, PlanError> {
     match operand {
@@ -75,7 +75,7 @@ fn from_operand(
             field_path,
             collect_relationships,
             remote_predicates,
-            unique_number,
+            plan_state,
             usage_counts,
         ),
         open_dds::query::Operand::Relationship(relationship_operand) => {
@@ -91,7 +91,7 @@ fn from_operand(
                 field_path,
                 collect_relationships,
                 remote_predicates,
-                unique_number,
+                plan_state,
                 usage_counts,
             )
         }
@@ -116,7 +116,7 @@ fn resolve_field_operand(
     mut field_path: Vec<DataConnectorColumnName>,
     collect_relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
     remote_predicates: &mut PredicateQueryTrees,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
     usage_counts: &mut UsagesCounts,
 ) -> Result<plan_types::OrderByTarget<ResolvedFilterExpression>, PlanError> {
     let type_mapping = type_mappings.get(type_name).ok_or_else(|| {
@@ -160,8 +160,13 @@ fn resolve_field_operand(
                 .into_plan_error()
             })?;
 
-        let field_object_type =
-            crate::metadata_accessor::get_output_object_type(metadata, field_type, &session.role)?;
+        let field_object_type = crate::metadata_accessor::get_output_object_type(
+            metadata,
+            field_type,
+            &session.role,
+            &session.variables,
+            plan_state,
+        )?;
 
         field_path.push(column_name);
         from_operand(
@@ -176,7 +181,7 @@ fn resolve_field_operand(
             field_path,
             collect_relationships,
             remote_predicates,
-            unique_number,
+            plan_state,
             usage_counts,
         )
     } else {
@@ -209,7 +214,7 @@ fn resolve_relationship_operand(
     mut field_path: Vec<DataConnectorColumnName>,
     collect_relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
     remote_predicates: &mut PredicateQueryTrees,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
     usage_counts: &mut UsagesCounts,
 ) -> Result<plan_types::OrderByTarget<ResolvedFilterExpression>, PlanError> {
     let relationship_name = &operand.target.relationship_name;
@@ -229,25 +234,21 @@ fn resolve_relationship_operand(
         RelationshipTarget::Model(model_relationship_target) => {
             // Get the target model
             let target_model_name = &model_relationship_target.model_name;
-            let target_model = metadata.models.get(target_model_name).ok_or_else(|| {
-                OrderByError::Internal(format!("model {target_model_name} not found in metadata"))
-                    .into_plan_error()
-            })?;
-
-            let target_model_source = target_model.model.source.as_deref().ok_or_else(|| {
-                OrderByError::Internal(format!("model {target_model_name} has no source"))
-                    .into_plan_error()
-            })?;
+            let target_model_view = crate::metadata_accessor::get_model(
+                metadata,
+                target_model_name,
+                &session.role,
+                &session.variables,
+                plan_state,
+            )?;
 
             let local_model_relationship_info = plan_types::LocalModelRelationshipInfo {
                 relationship_name,
                 relationship_type: &model_relationship_target.relationship_type,
                 source_type: type_name,
-                source_data_connector: data_connector,
                 source_type_mappings: type_mappings,
                 target_model_name,
-                target_source: target_model_source,
-                target_type: &model_relationship_target.target_typename,
+                target_source: target_model_view.source,
                 mappings: &model_relationship_target.mappings,
             };
 
@@ -258,7 +259,7 @@ fn resolve_relationship_operand(
             super::query::field_selection::reject_remote_relationship(
                 relationship_name,
                 data_connector,
-                &target_model_source.data_connector,
+                &target_model_view.source.data_connector,
             )
             .map_err(|e| {
                 // Convert to OrderByError for more specific error handling
@@ -268,12 +269,12 @@ fn resolve_relationship_operand(
             // Permission filter
             let target_permission_filter = super::filter::resolve_model_permission_filter(
                 session,
-                target_model,
-                target_model_source,
+                &target_model_view,
+                target_model_view.source,
                 &metadata.object_types,
                 collect_relationships,
                 remote_predicates,
-                unique_number,
+                plan_state,
                 usage_counts,
             )?;
 
@@ -285,7 +286,7 @@ fn resolve_relationship_operand(
                 )?,
             );
             let target_type = &model_relationship_target.target_typename;
-            let target_type_mappings = &target_model_source.type_mappings;
+            let target_type_mappings = &target_model_view.source.type_mappings;
 
             // Create relationship path element
             let path_element = plan_types::RelationshipPathElement {
@@ -300,6 +301,8 @@ fn resolve_relationship_operand(
                 metadata,
                 target_type,
                 &session.role,
+                &session.variables,
+                plan_state,
             )?;
 
             // Handle nested operand
@@ -316,7 +319,7 @@ fn resolve_relationship_operand(
                     field_path,
                     collect_relationships,
                     remote_predicates,
-                    unique_number,
+                    plan_state,
                     usage_counts,
                 ),
                 None => Err(OrderByError::Internal(

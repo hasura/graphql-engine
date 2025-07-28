@@ -10,9 +10,11 @@ use graphql_ir::MutationPlan;
 use graphql_ir::{ApolloFederationSelect, NodeQueryPlan, QueryPlan};
 use graphql_schema::GDS;
 use graphql_schema::GDSRoleNamespaceGetter;
+use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
+use metadata_resolve::LifecyclePluginConfigs;
 use plan_types::{NDCMutationExecution, NDCQueryExecution};
 use tracing_util::{AttributeVisibility, set_attribute_on_active_span};
 pub use types::{ExecuteQueryResult, RootFieldResult};
@@ -21,6 +23,8 @@ pub use types::{ExecuteQueryResult, RootFieldResult};
 /// root fields of the query in parallel, and joining the results back together.
 pub async fn execute_query_plan(
     http_context: &HttpContext,
+    plugins: &LifecyclePluginConfigs,
+    session: &Session,
     query_plan: QueryPlan<'_, '_, '_>,
     project_id: Option<&ProjectId>,
 ) -> ExecuteQueryResult {
@@ -30,8 +34,15 @@ pub async fn execute_query_plan(
     // To run the field plans parallely, we will need to use tokio::spawn for each field plan.
     let executed_root_fields =
         futures_ext::execute_concurrently(query_plan.into_iter(), |(alias, field_plan)| async {
-            let plan_result =
-                execute_query_field_plan(&alias, http_context, field_plan, project_id).await;
+            let plan_result = execute_query_field_plan(
+                &alias,
+                http_context,
+                plugins,
+                session,
+                field_plan,
+                project_id,
+            )
+            .await;
             (alias, plan_result)
         })
         .await;
@@ -47,6 +58,8 @@ pub async fn execute_query_plan(
 async fn execute_query_field_plan(
     field_alias: &ast::Alias,
     http_context: &HttpContext,
+    plugins: &LifecyclePluginConfigs,
+    session: &Session,
     query_plan: NodeQueryPlan<'_, '_, '_>,
     project_id: Option<&ProjectId>,
 ) -> RootFieldResult {
@@ -109,6 +122,8 @@ async fn execute_query_field_plan(
                             let process_response_as = &ndc_query.process_response_as.clone();
                             let processed_response = execute::resolve_ndc_query_execution(
                                 http_context,
+                                plugins,
+                                session,
                                 ndc_query,
                                 project_id,
                             )
@@ -131,7 +146,7 @@ async fn execute_query_field_plan(
                             optional_query.as_ref().is_none_or( |(ndc_query,_selection_set)| {
                                 ndc_query.process_response_as.is_nullable()
                             }),
-                            resolve_optional_ndc_select(http_context, optional_query, project_id)
+                            resolve_optional_ndc_select(http_context, plugins, session, optional_query, project_id)
                                 .await,
                         ),
                         NodeQueryPlan::ApolloFederationSelect(
@@ -145,6 +160,8 @@ async fn execute_query_field_plan(
                                 let task = async {
                                     (resolve_optional_ndc_select(
                                         http_context,
+                                        plugins,
+                                        session,
                                         Some(query),
                                         project_id,
                                     )
@@ -204,6 +221,8 @@ fn resolve_type_name(type_name: ast::TypeName) -> Result<serde_json::Value, Fiel
 /// Execute a single root field's mutation plan to produce a result.
 async fn execute_mutation_field_plan(
     http_context: &HttpContext,
+    plugins: &LifecyclePluginConfigs,
+    session: &Session,
     mutation_plan: NDCMutationExecution,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     project_id: Option<&ProjectId>,
@@ -217,16 +236,21 @@ async fn execute_mutation_field_plan(
             || {
                 Box::pin(async {
                     let process_response_as = &mutation_plan.process_response_as.clone();
-                    let processed_response =
-                        resolve_ndc_mutation_execution(http_context, mutation_plan, project_id)
-                            .await
-                            .and_then(|mutation_response| {
-                                process_mutation_response(
-                                    selection_set,
-                                    mutation_response,
-                                    process_response_as,
-                                )
-                            });
+                    let processed_response = resolve_ndc_mutation_execution(
+                        http_context,
+                        plugins,
+                        session,
+                        mutation_plan,
+                        project_id,
+                    )
+                    .await
+                    .and_then(|mutation_response| {
+                        process_mutation_response(
+                            selection_set,
+                            mutation_response,
+                            process_response_as,
+                        )
+                    });
 
                     RootFieldResult::from_processed_response(
                         process_response_as.is_nullable(),
@@ -243,6 +267,8 @@ async fn execute_mutation_field_plan(
 /// `IndexMap`'s keys.
 pub async fn execute_mutation_plan(
     http_context: &HttpContext,
+    plugins: &LifecyclePluginConfigs,
+    session: &Session,
     mutation_plan: MutationPlan<'_, '_>,
     project_id: Option<&ProjectId>,
 ) -> ExecuteQueryResult {
@@ -267,6 +293,8 @@ pub async fn execute_mutation_plan(
                 alias,
                 execute_mutation_field_plan(
                     http_context,
+                    plugins,
+                    session,
                     field_plan.mutation_execution,
                     field_plan.selection_set,
                     project_id,
@@ -314,6 +342,8 @@ fn resolve_schema_field<NSGet: NamespacedGetter<GDS>>(
 
 async fn resolve_optional_ndc_select(
     http_context: &HttpContext,
+    plugins: &metadata_resolve::LifecyclePluginConfigs,
+    session: &Session,
     optional_query: Option<(NDCQueryExecution, &normalized_ast::SelectionSet<'_, GDS>)>,
     project_id: Option<&ProjectId>,
 ) -> Result<ProcessedResponse, FieldError> {
@@ -324,7 +354,7 @@ async fn resolve_optional_ndc_select(
         }),
         Some((ndc_query, selection_set)) => {
             let process_response_as = &ndc_query.process_response_as.clone();
-            resolve_ndc_query_execution(http_context, ndc_query, project_id)
+            resolve_ndc_query_execution(http_context, plugins, session, ndc_query, project_id)
                 .await
                 .and_then(|row_sets| process_response(selection_set, row_sets, process_response_as))
         }

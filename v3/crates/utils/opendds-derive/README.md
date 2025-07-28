@@ -103,6 +103,13 @@ here.
   Hide the field from the json schema, useful for keeping work in progress out
   of the public API.
 
+- `#[opendd(deserialize_with = "function_name")]`
+
+  Use a custom deserializer function for this field. The function should have
+  the signature
+  `fn(serde_json::Value, jsonpath::JSONPath) -> Result<T, OpenDdDeserializeError>`
+  where `T` is the field type.
+
 - `#[opendd(json_schema(default_exp = "some::function()"))]`
 
   To be used in conjuction with [#[opendd(default)]](#field-level). The given

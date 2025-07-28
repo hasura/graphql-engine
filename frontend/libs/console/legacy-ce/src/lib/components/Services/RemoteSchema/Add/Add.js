@@ -19,7 +19,13 @@ const Add = ({ isRequesting, dispatch, ...props }) => {
       onSuccess={remoteSchemaName => {
         // This only exists right now because the sidebar is reading from redux state
         dispatch(exportMetadata()).then(() => {
-          dispatch(_push(`${appPrefix}/manage/${remoteSchemaName}/details`));
+          dispatch(
+            _push(
+              `${appPrefix}/manage/${encodeURIComponent(
+                remoteSchemaName
+              )}/details`
+            )
+          );
         });
       }}
     />

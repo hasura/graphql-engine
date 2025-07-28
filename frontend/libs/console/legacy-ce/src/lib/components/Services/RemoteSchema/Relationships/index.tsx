@@ -20,7 +20,7 @@ const RelationshipsConnector = (props: Props) => {
     },
     {
       title: remoteSchemaName,
-      url: `${appPrefix}/manage/${remoteSchemaName}/modify`,
+      url: `${appPrefix}/manage/${encodeURIComponent(remoteSchemaName)}/modify`,
     },
     {
       title: 'relationships',
@@ -35,7 +35,7 @@ const RelationshipsConnector = (props: Props) => {
         currentTab="relationships"
         heading={remoteSchemaName}
         breadCrumbs={breadCrumbs}
-        baseUrl={`${appPrefix}/manage/${remoteSchemaName}`}
+        baseUrl={`${appPrefix}/manage/${encodeURIComponent(remoteSchemaName)}`}
         showLoader={false}
         testPrefix="remote-schema-container-tabs"
       />

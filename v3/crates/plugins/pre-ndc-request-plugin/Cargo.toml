@@ -1,0 +1,22 @@
+[package]
+name = "pre-ndc-request-plugin"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+
+hasura-authn-core = { path = "../../auth/hasura-authn-core" }
+tracing-util = { path = "../../utils/tracing-util" }
+open-dds = { path = "../../open-dds" }
+metadata-resolve = { path = "../../metadata-resolve" }
+engine-types = { path = "../../engine-types" }
+
+axum = { workspace = true }
+reqwest = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+
+[lints]
+workspace = true

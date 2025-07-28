@@ -99,35 +99,69 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                     graphql_input_type_name: None,
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "user",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "AlbumId",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "AlbumId",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "ArtistTenantId",
+                                FieldName(
+                                    Identifier(
+                                        "ArtistTenantId",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "ArtistId",
+                                FieldName(
+                                    Identifier(
+                                        "ArtistId",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "Title",
+                                FieldName(
+                                    Identifier(
+                                        "Title",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                5261800314210927403,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "user",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "AlbumId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "ArtistTenantId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "ArtistId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "Title",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {
                     RelationshipName(
                         Identifier(
@@ -595,25 +629,49 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                     graphql_input_type_name: None,
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "user",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "ArtistId",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "ArtistId",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "Name",
+                                FieldName(
+                                    Identifier(
+                                        "Name",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                5261800314210927403,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "user",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "ArtistId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "Name",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {
@@ -954,6 +1012,7 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                                         },
                                     ),
                                     supports_relational_queries: None,
+                                    supports_relational_mutations: None,
                                 },
                             },
                             collection: CollectionName(
@@ -1254,13 +1313,41 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                     aggregate_expression: None,
                 },
                 arguments: {},
-                select_permissions: {
-                    Role(
-                        "user",
-                    ): SelectPermission {
-                        filter: AllowAll,
-                        argument_presets: {},
-                        allow_subscriptions: false,
+                permissions: ModelPermissions {
+                    authorization_rules: [
+                        Access {
+                            condition: Some(
+                                ConditionHash(
+                                    5261800314210927403,
+                                ),
+                            ),
+                            allow_or_deny: Allow,
+                        },
+                        Subscription {
+                            condition: Some(
+                                ConditionHash(
+                                    5261800314210927403,
+                                ),
+                            ),
+                            allow_or_deny: Deny,
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "user",
+                        ): ModelPermission {
+                            select: Some(
+                                SelectPermission {
+                                    filter: AllowAll,
+                                    allow_subscriptions: false,
+                                },
+                            ),
+                            input: Some(
+                                ModelInputPermission {
+                                    argument_presets: {},
+                                },
+                            ),
+                        },
                     },
                 },
                 filter_expression_type: None,
@@ -1477,6 +1564,7 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                                         },
                                     ),
                                     supports_relational_queries: None,
+                                    supports_relational_mutations: None,
                                 },
                             },
                             collection: CollectionName(
@@ -1681,13 +1769,41 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                         type_representation: None,
                     },
                 },
-                select_permissions: {
-                    Role(
-                        "user",
-                    ): SelectPermission {
-                        filter: AllowAll,
-                        argument_presets: {},
-                        allow_subscriptions: false,
+                permissions: ModelPermissions {
+                    authorization_rules: [
+                        Access {
+                            condition: Some(
+                                ConditionHash(
+                                    5261800314210927403,
+                                ),
+                            ),
+                            allow_or_deny: Allow,
+                        },
+                        Subscription {
+                            condition: Some(
+                                ConditionHash(
+                                    5261800314210927403,
+                                ),
+                            ),
+                            allow_or_deny: Deny,
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "user",
+                        ): ModelPermission {
+                            select: Some(
+                                SelectPermission {
+                                    filter: AllowAll,
+                                    allow_subscriptions: false,
+                                },
+                            ),
+                            input: Some(
+                                ModelInputPermission {
+                                    argument_presets: {},
+                                },
+                            ),
+                        },
                     },
                 },
                 filter_expression_type: None,
@@ -1807,13 +1923,39 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
         glossaries: {},
         plugin_configs: LifecyclePluginConfigs {
             pre_parse_plugins: [],
-            pre_response_plugins: [],
+            pre_response_plugins: ResolvedLifecyclePreResponsePluginHooks {
+                sync_hooks: [],
+                async_hooks: [],
+            },
             pre_route_plugins: [],
+            pre_ndc_request_plugins: {},
+            pre_ndc_response_plugins: {},
         },
         roles: {
             Role(
                 "user",
             ),
+        },
+        conditions: Conditions {
+            conditions: {
+                ConditionHash(
+                    5261800314210927403,
+                ): BinaryOperation {
+                    op: Equals,
+                    left: SessionVariable(
+                        SessionVariableReference {
+                            name: SessionVariableName(
+                                "x-hasura-role",
+                            ),
+                            passed_as_json: false,
+                            disallow_unknown_fields: false,
+                        },
+                    ),
+                    right: Literal(
+                        String("user"),
+                    ),
+                },
+            },
         },
         runtime_flags: RuntimeFlags(
             {},

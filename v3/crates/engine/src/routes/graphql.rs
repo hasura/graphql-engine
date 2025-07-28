@@ -33,6 +33,7 @@ pub async fn handle_request(
                             &state.http_context,
                             &state.graphql_state,
                             &state.resolved_metadata,
+                            &state.resolved_metadata.plugin_configs,
                             &session,
                             &headers,
                             request,
@@ -74,6 +75,7 @@ pub async fn handle_explain_request(
                     graphql_frontend::execute_explain(
                         state.expose_internal_errors,
                         &state.http_context,
+                        &state.resolved_metadata.plugin_configs,
                         &state.graphql_state,
                         &state.resolved_metadata,
                         &session,
@@ -108,6 +110,7 @@ pub async fn handle_websocket_request(
         auth_config: engine_state.auth_config,
         metrics: graphql_ws::NoOpWebSocketMetrics, // No metrics implementation
         handshake_headers: Arc::new(headers), // Preserve the headers received during this handshake request.
+        auth_mode_header: engine_state.auth_mode_header,
     };
 
     engine_state

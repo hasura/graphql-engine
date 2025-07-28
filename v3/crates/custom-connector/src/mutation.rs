@@ -7,6 +7,57 @@ use crate::{procedures, state::AppState};
 
 type Result<A> = std::result::Result<A, (StatusCode, Json<ndc_models::ErrorResponse>)>;
 
+// Add this new function to handle relational inserts
+#[allow(clippy::print_stdout)]
+pub fn execute_relational_insert(
+    _state: &AppState,
+    request: &ndc_models::RelationalInsertRequest,
+) -> Result<ndc_models::RelationalInsertResponse> {
+    println!(
+        "[INSERT]: collection={}, columns={}, rows={:?}",
+        request.collection.as_str(),
+        request
+            .columns
+            .iter()
+            .map(ndc_models::FieldName::as_str)
+            .collect::<Vec<_>>()
+            .join(","),
+        request.rows
+    );
+
+    Ok(ndc_models::RelationalInsertResponse { affected_rows: 0 })
+}
+
+// Add this new function to handle relational updates
+#[allow(clippy::print_stdout)]
+pub fn execute_relational_update(
+    _state: &AppState,
+    request: &ndc_models::RelationalUpdateRequest,
+) -> Result<ndc_models::RelationalUpdateResponse> {
+    println!(
+        "[UPDATE]: collection={}, relation={:?}",
+        request.collection.as_str(),
+        request.relation
+    );
+
+    Ok(ndc_models::RelationalUpdateResponse { affected_rows: 0 })
+}
+
+// Add this new function to handle relational deletes
+#[allow(clippy::print_stdout)]
+pub fn execute_relational_delete(
+    _state: &AppState,
+    request: &ndc_models::RelationalDeleteRequest,
+) -> Result<ndc_models::RelationalDeleteResponse> {
+    println!(
+        "[DELETE]: collection={}, relation={:?}",
+        request.collection.as_str(),
+        request.relation
+    );
+
+    Ok(ndc_models::RelationalDeleteResponse { affected_rows: 0 })
+}
+
 pub fn execute_mutation_request(
     state: &AppState,
     request: &ndc_models::MutationRequest,

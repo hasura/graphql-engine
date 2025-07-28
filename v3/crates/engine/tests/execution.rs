@@ -1306,6 +1306,18 @@ fn test_model_select_many_where_nested_scalar_array() -> anyhow::Result<()> {
 }
 
 #[test]
+fn test_model_select_many_where_nested_scalar_array_fails_on_v01() -> anyhow::Result<()> {
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/models/select_many/where/nested_scalar_array/not_supported",
+        &[],
+        BTreeMap::from([(
+            NdcVersion::V01,
+            vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+        )]),
+    )
+}
+
+#[test]
 fn test_model_select_many_object_type_input_arguments() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/object_type_input_arguments";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
@@ -3166,6 +3178,41 @@ fn test_variables_non_null_type_omit_variable() -> anyhow::Result<()> {
             (
                 NdcVersion::V02,
                 vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
+            ),
+        ]),
+    )
+}
+
+// this test is to ensure that omitted enum arguments to functions that _should_ be non-nullable
+// are not validated, and `null` is passed to NDC
+#[test]
+fn test_variables_non_null_type_omit_variable_with_enum() -> anyhow::Result<()> {
+    let test_path_string = "execute/variables/non_null_type_omit_variable/with_enum";
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        test_path_string,
+        &[],
+        BTreeMap::from([
+            // not defined in v01 connector
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
+    )
+}
+
+// this test is to ensure that when we turn the flag on, we do indeed validate the missing non-nullanle argument
+#[test]
+fn test_variables_non_null_type_omit_variable_with_enum_and_validation() -> anyhow::Result<()> {
+    let test_path_string = "execute/variables/non_null_type_omit_variable/with_enum_and_validation";
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        test_path_string,
+        &[],
+        BTreeMap::from([
+            // not defined in v01 connector
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
     )

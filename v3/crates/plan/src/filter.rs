@@ -1,4 +1,6 @@
-use crate::process_model_predicate;
+use crate::query::process_permissions;
+use crate::types::PlanState;
+use crate::{ModelView, process_model_predicate};
 mod helpers;
 use super::column::{ResolvedColumn, to_resolved_column};
 use super::types::{BooleanExpressionError, PermissionError, PlanError};
@@ -6,17 +8,15 @@ use crate::metadata_accessor::OutputObjectTypeView;
 use hasura_authn_core::Session;
 pub use helpers::with_nesting_path;
 use metadata_resolve::{
-    DataConnectorLink, ObjectComparisonKind, ObjectTypeWithRelationships, Qualified,
-    QualifiedBaseType, ResolvedObjectBooleanExpressionType, TypeMapping,
+    DataConnectorLink, ModelPredicate, ObjectComparisonKind, ObjectTypeWithRelationships,
+    Qualified, QualifiedBaseType, ResolvedObjectBooleanExpressionType, TypeMapping,
 };
 use open_dds::{
     data_connector::{DataConnectorColumnName, DataConnectorName, DataConnectorOperatorName},
     query::{BooleanExpression, ComparisonOperator},
     types::{CustomTypeName, FieldName},
 };
-use plan_types::{
-    Expression, PredicateQueryTrees, ResolvedFilterExpression, UniqueNumber, UsagesCounts,
-};
+use plan_types::{Expression, PredicateQueryTrees, ResolvedFilterExpression, UsagesCounts};
 use std::collections::BTreeMap;
 
 // we have to allow equals without a boolean expression for Select One, let's track depth
@@ -38,6 +38,7 @@ pub fn to_filter_expression<'metadata>(
     >,
     expr: &'_ BooleanExpression,
     data_connector: &'metadata DataConnectorLink,
+    plan_state: &mut PlanState,
     usage_counts: &mut UsagesCounts,
 ) -> Result<Expression<'metadata>, PlanError> {
     to_filter_expression_internal(
@@ -49,6 +50,7 @@ pub fn to_filter_expression<'metadata>(
         expr,
         data_connector,
         Nesting::No,
+        plan_state,
         usage_counts,
     )
 }
@@ -64,6 +66,7 @@ fn to_filter_expression_internal<'metadata>(
     expr: &'_ BooleanExpression,
     data_connector: &'metadata DataConnectorLink,
     nesting: Nesting,
+    plan_state: &mut PlanState,
     usage_counts: &mut UsagesCounts,
 ) -> Result<Expression<'metadata>, PlanError> {
     match expr {
@@ -80,6 +83,7 @@ fn to_filter_expression_internal<'metadata>(
                         expr,
                         data_connector,
                         nesting,
+                        plan_state,
                         usage_counts,
                     )
                 })
@@ -98,6 +102,7 @@ fn to_filter_expression_internal<'metadata>(
                         expr,
                         data_connector,
                         nesting,
+                        plan_state,
                         usage_counts,
                     )
                 })
@@ -112,6 +117,7 @@ fn to_filter_expression_internal<'metadata>(
             expr,
             data_connector,
             nesting,
+            plan_state,
             usage_counts,
         )?)),
 
@@ -126,6 +132,7 @@ fn to_filter_expression_internal<'metadata>(
             boolean_expression_type,
             data_connector,
             nesting,
+            plan_state,
             usage_counts,
         ),
 
@@ -144,6 +151,7 @@ fn to_filter_expression_internal<'metadata>(
             boolean_expression_type,
             data_connector,
             nesting,
+            plan_state,
             usage_counts,
         ),
         BooleanExpression::Relationship {
@@ -172,6 +180,8 @@ fn to_filter_expression_internal<'metadata>(
                 metadata,
                 &source_boolean_expression_type.object_type,
                 &session.role,
+                &session.variables,
+                plan_state,
             )?;
 
             // first try looking for a relationship
@@ -201,6 +211,8 @@ fn to_filter_expression_internal<'metadata>(
                             metadata,
                             &target_boolean_expression_type.object_type,
                             &session.role,
+                            &session.variables,
+                            plan_state,
                         )?;
 
                     // look up relationship on the source model
@@ -221,6 +233,8 @@ fn to_filter_expression_internal<'metadata>(
                                 metadata,
                                 &model_target.model_name,
                                 &session.role,
+                                &session.variables,
+                                plan_state,
                             )?;
 
                             // build expression for any model permissions for the target model
@@ -241,6 +255,7 @@ fn to_filter_expression_internal<'metadata>(
                                 predicate,
                                 &target_model_source.source.data_connector,
                                 Nesting::Relationship,
+                                plan_state,
                                 usage_counts,
                             )?;
 
@@ -262,11 +277,12 @@ fn to_filter_expression_internal<'metadata>(
                                         field_path,
                                         field_mapping: _,
                                     } = to_resolved_column(
-                                        &session.role,
+                                        session,
                                         metadata,
                                         type_mappings,
                                         model_object_type,
                                         object_field_operand,
+                                        plan_state,
                                     )?;
                                     Ok(field_path.into_iter().chain([column_name]).collect())
                                 }
@@ -296,7 +312,6 @@ fn to_filter_expression_internal<'metadata>(
                                             .clone(),
                                     }
                                 })?,
-                                &model_target.target_typename,
                                 &model_target.mappings,
                                 predicate,
                             )?);
@@ -373,6 +388,7 @@ fn to_comparison_expression<'metadata>(
     >,
     data_connector: &'metadata DataConnectorLink,
     nesting: Nesting,
+    plan_state: &mut PlanState,
     usage_counts: &mut UsagesCounts,
 ) -> Result<Expression<'metadata>, PlanError> {
     match operand {
@@ -387,6 +403,7 @@ fn to_comparison_expression<'metadata>(
             boolean_expression_type,
             data_connector,
             nesting,
+            plan_state,
             usage_counts,
         ),
         open_dds::query::Operand::Relationship(_) => {
@@ -405,16 +422,17 @@ pub(crate) fn model_permission_filter_to_expression<'metadata>(
     object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     usage_counts: &mut UsagesCounts,
 ) -> Result<Option<Expression<'metadata>>, PlanError> {
-    match &model.select_permission.filter {
-        metadata_resolve::FilterPermission::AllowAll => Ok::<_, PlanError>(None),
-        metadata_resolve::FilterPermission::Filter(filter) => Ok(Some(process_model_predicate(
+    if model.permission.filters.is_empty() {
+        Ok::<_, PlanError>(None)
+    } else {
+        Ok(Some(process_permissions(
             &model.source.data_connector,
             &model.source.type_mappings,
-            filter,
+            &model.permission.filters,
             &session.variables,
             object_types,
             usage_counts,
-        )?)),
+        )?))
     }
 }
 
@@ -439,6 +457,7 @@ fn to_field_comparison_expression<'metadata>(
     >,
     data_connector: &'metadata DataConnectorLink,
     nesting: Nesting,
+    plan_state: &mut PlanState,
     usage_counts: &mut UsagesCounts,
 ) -> Result<Expression<'metadata>, PlanError> {
     let type_name = source_object_type.object_type_name;
@@ -469,6 +488,8 @@ fn to_field_comparison_expression<'metadata>(
                 metadata,
                 &nested_boolean_expression_type.object_type,
                 &session.role,
+                &session.variables,
+                plan_state,
             )?;
 
             let TypeMapping::Object {
@@ -504,6 +525,7 @@ fn to_field_comparison_expression<'metadata>(
                         Some(nested_boolean_expression_type),
                         data_connector,
                         Nesting::NestedField,
+                        plan_state,
                         usage_counts,
                     )
                 }
@@ -519,6 +541,7 @@ fn to_field_comparison_expression<'metadata>(
                         Some(nested_boolean_expression_type),
                         data_connector,
                         Nesting::NestedField,
+                        plan_state,
                         usage_counts,
                     )?;
 
@@ -587,6 +610,7 @@ fn to_field_comparison_expression<'metadata>(
                         operator,
                         argument,
                         Nesting::Array,
+                        plan_state,
                     )?,
                     Comparison::IsNull => to_is_null_field(
                         metadata,
@@ -595,8 +619,19 @@ fn to_field_comparison_expression<'metadata>(
                         source_object_type,
                         column_path,
                         field,
+                        plan_state,
                     )?,
                 };
+
+                if !data_connector
+                    .capabilities
+                    .supports_nested_scalar_array_filtering
+                {
+                    return Err(PermissionError::NestedScalarFilteringNotSupported {
+                        data_connector_name: data_connector.name.clone(),
+                    }
+                    .into());
+                }
 
                 Ok(Expression::LocalNestedScalarArray {
                     field_path,
@@ -617,6 +652,7 @@ fn to_field_comparison_expression<'metadata>(
                     operator,
                     argument,
                     nesting,
+                    plan_state,
                 ),
                 Comparison::IsNull => to_is_null_field(
                     metadata,
@@ -625,6 +661,7 @@ fn to_field_comparison_expression<'metadata>(
                     source_object_type,
                     column_path,
                     field,
+                    plan_state,
                 ),
             },
         }
@@ -638,17 +675,19 @@ fn to_is_null_field<'metadata>(
     source_object_type: &'_ OutputObjectTypeView,
     column_path: &[&'_ DataConnectorColumnName],
     object_field_operand: &'_ open_dds::query::ObjectFieldOperand,
+    plan_state: &mut PlanState,
 ) -> Result<Expression<'metadata>, PlanError> {
     let ResolvedColumn {
         column_name: source_column,
         field_path: more_column_path,
         field_mapping: _,
     } = to_resolved_column(
-        &session.role,
+        session,
         metadata,
         type_mappings,
         source_object_type,
         object_field_operand,
+        plan_state,
     )?;
 
     // add field path to existing
@@ -690,6 +729,7 @@ fn to_scalar_comparison_field<'metadata>(
     operator: &'_ ComparisonOperator,
     argument: &'_ open_dds::query::Value,
     nesting: Nesting,
+    plan_state: &mut PlanState,
 ) -> Result<Expression<'metadata>, PlanError> {
     let type_name = source_object_type.object_type_name;
 
@@ -698,11 +738,12 @@ fn to_scalar_comparison_field<'metadata>(
         field_path: more_column_path,
         field_mapping,
     } = to_resolved_column(
-        &session.role,
+        session,
         metadata,
         type_mappings,
         source_object_type,
         object_field_operand,
+        plan_state,
     )?;
 
     // add field path to existing
@@ -1040,42 +1081,41 @@ fn boolean_expression_for_comparison(
 // Resolve the model permission filter
 pub(crate) fn resolve_model_permission_filter(
     session: &Session,
-    model: &metadata_resolve::ModelWithPermissions,
+    model_view: &ModelView,
     model_source: &metadata_resolve::ModelSource,
     object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     collect_relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
     remote_predicates: &mut PredicateQueryTrees,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
     usage_counts: &mut UsagesCounts,
 ) -> Result<Option<ResolvedFilterExpression>, PlanError> {
-    let model_name = &model.model.name;
-    let model_select_permission = model.select_permissions.get(&session.role).ok_or_else(|| {
-        PlanError::Permission(PermissionError::Other(format!(
-            "role {} does not have select permission for model {model_name}",
-            session.role
-        )))
-    })?;
+    if model_view.permission.filters.is_empty() {
+        Ok(None)
+    } else {
+        let filter = &ModelPredicate::And(
+            model_view
+                .permission
+                .filters
+                .iter()
+                .map(|filter| (*filter).clone())
+                .collect(),
+        );
+        let filter_ir = process_model_predicate(
+            &model_source.data_connector,
+            &model_source.type_mappings,
+            filter,
+            &session.variables,
+            object_types,
+            usage_counts,
+        )?;
 
-    match &model_select_permission.filter {
-        metadata_resolve::FilterPermission::AllowAll => Ok::<_, PlanError>(None),
-        metadata_resolve::FilterPermission::Filter(filter) => {
-            let filter_ir = process_model_predicate(
-                &model_source.data_connector,
-                &model_source.type_mappings,
-                filter,
-                &session.variables,
-                object_types,
-                usage_counts,
-            )?;
+        let filter = crate::plan_expression(
+            &filter_ir,
+            collect_relationships,
+            remote_predicates,
+            plan_state,
+        )?;
 
-            let filter = crate::plan_expression(
-                &filter_ir,
-                collect_relationships,
-                remote_predicates,
-                unique_number,
-            )?;
-
-            Ok(filter.remove_always_true_expression())
-        }
+        Ok(filter.remove_always_true_expression())
     }
 }

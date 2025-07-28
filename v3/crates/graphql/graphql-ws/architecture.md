@@ -41,7 +41,6 @@
 ### Subscription Handling
 
 - **Subscription Creation**
-
   - Validates subscription request.
   - Executes pre-parse plugins (if configured).
   - Parses and normalizes GraphQL query.
