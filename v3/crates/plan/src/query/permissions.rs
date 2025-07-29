@@ -233,9 +233,7 @@ pub fn make_argument_from_value_expression(
     }
 }
 
-// this is a copy of `make_argument_from_value_expression_or_predicate` but for auth rules types
-// once models use auth rules for presets we can remove the other one
-pub(crate) fn make_argument_from_value_expression_or_predicate_auth_rules<'s>(
+pub(crate) fn make_argument_from_value_expression_or_predicate<'s>(
     data_connector_link: &'s metadata_resolve::DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     val_expr: &'s ArgumentPolicy<'s>,
@@ -291,68 +289,6 @@ pub(crate) fn make_argument_from_value_expression_or_predicate_auth_rules<'s>(
                 data_connector_link,
                 type_mappings,
                 predicates,
-                session_variables,
-                object_types,
-                usage_counts,
-            )?;
-            Ok(UnresolvedArgument::BooleanExpression {
-                predicate: filter_expression,
-            })
-        }
-    }
-}
-
-pub(crate) fn make_argument_from_value_expression_or_predicate<'s>(
-    data_connector_link: &'s metadata_resolve::DataConnectorLink,
-    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-    val_expr: &'s metadata_resolve::ValueExpressionOrPredicate,
-    value_type: &QualifiedTypeReference,
-    session_variables: &SessionVariables,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
-    usage_counts: &mut UsagesCounts,
-) -> Result<UnresolvedArgument<'s>, PlanError> {
-    match val_expr {
-        metadata_resolve::ValueExpressionOrPredicate::Literal(val) => {
-            let mut value = val.clone();
-
-            map_field_names_to_ndc_field_names(
-                &mut value,
-                value_type,
-                type_mappings,
-                object_types,
-                false, // we have already statically validated values so don't need runtime
-                       // checking
-            )
-            .map_err(ArgumentPresetExecutionError::MapFieldNamesError)?;
-
-            Ok(UnresolvedArgument::Literal { value })
-        }
-        metadata_resolve::ValueExpressionOrPredicate::SessionVariable(session_var) => {
-            let value = session_variables
-                .get(&session_var.name)
-                .ok_or_else(|| InternalDeveloperError::MissingSessionVariable {
-                    session_variable: session_var.name.clone(),
-                })
-                .map_err(|e| PlanError::InternalError(InternalError::Developer(e)))?;
-
-            Ok(UnresolvedArgument::Literal {
-                value: typecast_session_variable(
-                    &session_var.name,
-                    value,
-                    session_var.passed_as_json,
-                    session_var.disallow_unknown_fields,
-                    value_type,
-                    type_mappings,
-                    object_types,
-                )
-                .map_err(PlanError::InternalError)?,
-            })
-        }
-        metadata_resolve::ValueExpressionOrPredicate::BooleanExpression(model_predicate) => {
-            let filter_expression = process_model_predicate(
-                data_connector_link,
-                type_mappings,
-                model_predicate,
                 session_variables,
                 object_types,
                 usage_counts,

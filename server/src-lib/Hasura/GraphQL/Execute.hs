@@ -155,6 +155,7 @@ buildSubscriptionPlan removeEmptySubscriptionResponses userInfo rootFields param
                           mkDBStreamingSubscriptionPlanResult =
                             runReaderT
                               ( EB.mkDBStreamingSubscriptionPlan
+                                  removeEmptySubscriptionResponses
                                   userInfo
                                   sourceName
                                   sourceConfig

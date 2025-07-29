@@ -164,7 +164,10 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                         },
                     },
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {
@@ -688,20 +691,39 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                         },
                     },
                 },
-                type_input_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeInputPermission {
-                        field_presets: {
-                            FieldName(
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [
+                        FieldPresetValue {
+                            condition: Some(
+                                ConditionHash(
+                                    3363483249683024545,
+                                ),
+                            ),
+                            field_name: FieldName(
                                 Identifier(
                                     "lengthMins",
                                 ),
-                            ): FieldPresetInfo {
-                                value: Literal(
-                                    Number(70),
-                                ),
-                                deprecated: None,
+                            ),
+                            value: Literal(
+                                Number(70),
+                            ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeInputPermission {
+                            field_presets: {
+                                FieldName(
+                                    Identifier(
+                                        "lengthMins",
+                                    ),
+                                ): FieldPresetInfo {
+                                    value: Literal(
+                                        Number(70),
+                                    ),
+                                    deprecated: None,
+                                },
                             },
                         },
                     },
@@ -1206,26 +1228,51 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                         },
                     },
                 },
-                type_input_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeInputPermission {
-                        field_presets: {
-                            FieldName(
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [
+                        FieldPresetValue {
+                            condition: Some(
+                                ConditionHash(
+                                    3363483249683024545,
+                                ),
+                            ),
+                            field_name: FieldName(
                                 Identifier(
                                     "artistId",
                                 ),
-                            ): FieldPresetInfo {
-                                value: SessionVariable(
-                                    SessionVariableReference {
-                                        name: SessionVariableName(
-                                            "x-hasura-artist-id",
-                                        ),
-                                        passed_as_json: true,
-                                        disallow_unknown_fields: false,
-                                    },
-                                ),
-                                deprecated: None,
+                            ),
+                            value: SessionVariable(
+                                SessionVariableReference {
+                                    name: SessionVariableName(
+                                        "x-hasura-artist-id",
+                                    ),
+                                    passed_as_json: true,
+                                    disallow_unknown_fields: false,
+                                },
+                            ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeInputPermission {
+                            field_presets: {
+                                FieldName(
+                                    Identifier(
+                                        "artistId",
+                                    ),
+                                ): FieldPresetInfo {
+                                    value: SessionVariable(
+                                        SessionVariableReference {
+                                            name: SessionVariableName(
+                                                "x-hasura-artist-id",
+                                            ),
+                                            passed_as_json: true,
+                                            disallow_unknown_fields: false,
+                                        },
+                                    ),
+                                    deprecated: None,
+                                },
                             },
                         },
                     },
@@ -1808,7 +1855,10 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                         },
                     },
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {
@@ -2095,20 +2145,39 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                         },
                     },
                 },
-                type_input_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeInputPermission {
-                        field_presets: {
-                            FieldName(
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [
+                        FieldPresetValue {
+                            condition: Some(
+                                ConditionHash(
+                                    3363483249683024545,
+                                ),
+                            ),
+                            field_name: FieldName(
                                 Identifier(
                                     "exclusiveRights",
                                 ),
-                            ): FieldPresetInfo {
-                                value: Literal(
-                                    Bool(true),
-                                ),
-                                deprecated: None,
+                            ),
+                            value: Literal(
+                                Bool(true),
+                            ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeInputPermission {
+                            field_presets: {
+                                FieldName(
+                                    Identifier(
+                                        "exclusiveRights",
+                                    ),
+                                ): FieldPresetInfo {
+                                    value: Literal(
+                                        Bool(true),
+                                    ),
+                                    deprecated: None,
+                                },
                             },
                         },
                     },
@@ -6155,7 +6224,10 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
         glossaries: {},
         plugin_configs: LifecyclePluginConfigs {
             pre_parse_plugins: [],
-            pre_response_plugins: [],
+            pre_response_plugins: ResolvedLifecyclePreResponsePluginHooks {
+                sync_hooks: [],
+                async_hooks: [],
+            },
             pre_route_plugins: [],
             pre_ndc_request_plugins: {},
             pre_ndc_response_plugins: {},

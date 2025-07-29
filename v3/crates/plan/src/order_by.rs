@@ -234,15 +234,13 @@ fn resolve_relationship_operand(
         RelationshipTarget::Model(model_relationship_target) => {
             // Get the target model
             let target_model_name = &model_relationship_target.model_name;
-            let target_model = metadata.models.get(target_model_name).ok_or_else(|| {
-                OrderByError::Internal(format!("model {target_model_name} not found in metadata"))
-                    .into_plan_error()
-            })?;
-
-            let target_model_source = target_model.model.source.as_deref().ok_or_else(|| {
-                OrderByError::Internal(format!("model {target_model_name} has no source"))
-                    .into_plan_error()
-            })?;
+            let target_model_view = crate::metadata_accessor::get_model(
+                metadata,
+                target_model_name,
+                &session.role,
+                &session.variables,
+                plan_state,
+            )?;
 
             let local_model_relationship_info = plan_types::LocalModelRelationshipInfo {
                 relationship_name,
@@ -250,7 +248,7 @@ fn resolve_relationship_operand(
                 source_type: type_name,
                 source_type_mappings: type_mappings,
                 target_model_name,
-                target_source: target_model_source,
+                target_source: target_model_view.source,
                 mappings: &model_relationship_target.mappings,
             };
 
@@ -261,7 +259,7 @@ fn resolve_relationship_operand(
             super::query::field_selection::reject_remote_relationship(
                 relationship_name,
                 data_connector,
-                &target_model_source.data_connector,
+                &target_model_view.source.data_connector,
             )
             .map_err(|e| {
                 // Convert to OrderByError for more specific error handling
@@ -271,8 +269,8 @@ fn resolve_relationship_operand(
             // Permission filter
             let target_permission_filter = super::filter::resolve_model_permission_filter(
                 session,
-                target_model,
-                target_model_source,
+                &target_model_view,
+                target_model_view.source,
                 &metadata.object_types,
                 collect_relationships,
                 remote_predicates,
@@ -288,7 +286,7 @@ fn resolve_relationship_operand(
                 )?,
             );
             let target_type = &model_relationship_target.target_typename;
-            let target_type_mappings = &target_model_source.type_mappings;
+            let target_type_mappings = &target_model_view.source.type_mappings;
 
             // Create relationship path element
             let path_element = plan_types::RelationshipPathElement {

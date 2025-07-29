@@ -94,8 +94,16 @@ fn generate_named_fields_value<'a>(
         let field_name = field.field_name;
         let field_name_str = field.renamed_field.as_str();
 
-        let field_value_deserialize = quote! {
-            |__value| open_dds::traits::deserialize_key(__value, path.clone(), #field_name_str.to_string())
+        let field_value_deserialize = if let Some(deserialize_with) = &field.deserialize_with {
+            let deserialize_fn = syn::parse_str::<syn::Path>(deserialize_with)
+                .expect("deserialize_with should be a valid function path");
+            quote! {
+                |__value| #deserialize_fn(__value, path.clone())
+            }
+        } else {
+            quote! {
+                |__value| open_dds::traits::deserialize_key(__value, path.clone(), #field_name_str.to_string())
+            }
         };
 
         let deserialize_field = quote! {

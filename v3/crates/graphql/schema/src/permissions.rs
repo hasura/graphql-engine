@@ -13,13 +13,19 @@ pub(crate) fn get_select_permissions_namespace_annotations(
 ) -> HashMap<Role, Option<Box<types::NamespaceAnnotation>>> {
     let mut namespace_annotations = HashMap::new();
 
-    for (role, resolved_permissions) in &model.permissions {
+    for (role, resolved_permissions) in &model.permissions.by_role {
+        let argument_presets = resolved_permissions
+            .input
+            .as_ref()
+            .map(|p| p.argument_presets.clone())
+            .unwrap_or_default();
+
         if let Some(select_permission) = &resolved_permissions.select {
             namespace_annotations.insert(
                 role.clone(),
                 Some(Box::new(types::NamespaceAnnotation::Model {
                     filter: select_permission.filter.clone(),
-                    argument_presets: select_permission.argument_presets.clone(),
+                    argument_presets,
                     allow_subscriptions: select_permission.allow_subscriptions,
                 })),
             );
@@ -230,6 +236,7 @@ pub(crate) fn get_node_field_namespace_permissions(
         if is_global_id_field_accessible {
             let select_permission = model
                 .permissions
+                .by_role
                 .get(role)
                 .and_then(|permissions| permissions.select.as_ref())
                 .map(|s| s.filter.clone());
@@ -266,6 +273,7 @@ pub(crate) fn get_entities_field_namespace_permissions(
             if is_all_keys_field_accessible {
                 let select_permission = model
                     .permissions
+                    .by_role
                     .get(role)
                     .and_then(|permissions| permissions.select.as_ref())
                     .map(|s| s.filter.clone());

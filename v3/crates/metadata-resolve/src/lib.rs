@@ -39,9 +39,10 @@ pub use stages::data_connectors::{
 };
 pub use stages::graphql_config::{GlobalGraphqlConfig, MultipleOrderByInputObjectFields};
 pub use stages::model_permissions::{
-    FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions,
-    PredicateRelationshipInfo, RelationalDeletePermission, RelationalInsertPermission,
-    RelationalUpdatePermission, SelectPermission, UnaryComparisonOperator,
+    FilterPermission, ModelAuthorizationRule, ModelPredicate, ModelTargetSource,
+    ModelWithPermissions, PredicateRelationshipInfo, RelationalDeletePermission,
+    RelationalInsertPermission, RelationalOperation, RelationalUpdatePermission, SelectPermission,
+    UnaryComparisonOperator,
 };
 pub use stages::models::{ModelSource, ModelsError};
 pub use stages::models_graphql::{
@@ -70,12 +71,18 @@ pub use stages::order_by_expressions::{
 pub use stages::plugins::{
     LifecyclePluginConfigs, ResolvedLifecyclePreNdcRequestPluginHook,
     ResolvedLifecyclePreNdcResponsePluginHook,
+    types::{
+        ResolvedLifecyclePreResponseAsyncPluginHook, ResolvedLifecyclePreResponsePluginHooks,
+        ResolvedLifecyclePreResponseSyncPluginHook,
+    },
 };
 pub use stages::scalar_boolean_expressions::{
     LogicalOperators, LogicalOperatorsGraphqlConfig, ResolvedScalarBooleanExpressionType,
 };
 pub use stages::scalar_type_representations::ScalarTypeRepresentation;
-pub use stages::type_permissions::{FieldAuthorizationRule, FieldPresetInfo, TypeInputPermission};
+pub use stages::type_permissions::{
+    FieldAuthorizationRule, FieldPresetInfo, TypeInputAuthorizationRule, TypeInputPermission,
+};
 pub use stages::{Metadata, resolve};
 pub use stages::{
     command_permissions::{AllowOrDeny, Command, CommandAuthorizationRule, CommandWithPermissions},

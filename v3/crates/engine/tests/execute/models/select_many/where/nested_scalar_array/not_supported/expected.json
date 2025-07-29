@@ -1,0 +1,26 @@
+[
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "Nested scalar filtering is not supported by data connector custom (in subgraph default)"
+      }
+    ]
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "Nested scalar filtering is not supported by data connector custom (in subgraph default)"
+      }
+    ]
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: the field campuses on type location_bool_exp is not found"
+      }
+    ]
+  }
+]

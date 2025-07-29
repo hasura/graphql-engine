@@ -17,6 +17,7 @@ use pre_parse_plugin::execute::pre_parse_plugins_handler;
 use pre_response_plugin::execute::pre_response_plugins_handler;
 
 use hasura_authn_core::Session;
+use pre_response_plugin::execute::ProcessedPreResponsePluginResponse;
 use tracing_util::{SpanVisibility, TraceableHttpResponse};
 
 use super::types::RequestType;
@@ -167,11 +168,24 @@ pub async fn plugins_middleware(
             .await
             .map_err(|err| state.handle_error(err.into_middleware_error()))?;
 
-            if let Some(response) = response {
-                Ok(response)
-            } else {
-                let recreated_request = Request::from_parts(parts, axum::body::Body::from(bytes));
-                Ok(next.run(recreated_request).await)
+            match response {
+                pre_parse_plugin::execute::ProcessedPreParsePluginResponse::Return(response) => {
+                    Ok(response)
+                }
+                pre_parse_plugin::execute::ProcessedPreParsePluginResponse::Continue(
+                    new_raw_request,
+                ) => {
+                    let recreated_request = if let Some(new_raw_request) = new_raw_request {
+                        let bytes = serde_json::to_vec(&new_raw_request).map_err(|err| {
+                            (reqwest::StatusCode::INTERNAL_SERVER_ERROR, err.to_string())
+                                .into_response()
+                        })?;
+                        Request::from_parts(parts, axum::body::Body::from(bytes))
+                    } else {
+                        Request::from_parts(parts, axum::body::Body::from(bytes))
+                    };
+                    Ok(next.run(recreated_request).await)
+                }
             }
         }
     }?;
@@ -185,21 +199,29 @@ pub async fn plugins_middleware(
         })?
         .to_bytes();
 
-    if let Some(pre_response_plugins) = nonempty::NonEmpty::from_slice(
-        &engine_state
-            .resolved_metadata
-            .plugin_configs
-            .pre_response_plugins,
-    ) {
-        pre_response_plugins_handler(
+    // Execute pre-response plugins
+    let pre_response_plugins = &engine_state
+        .resolved_metadata
+        .plugin_configs
+        .pre_response_plugins;
+
+    if !pre_response_plugins.is_empty() {
+        let plugin_response = pre_response_plugins_handler(
             client_address,
-            &pre_response_plugins,
+            pre_response_plugins,
             &engine_state.http_context.client,
             session,
             &raw_request,
             &response_bytes,
             headers_map,
-        )?;
+        )
+        .await?;
+        match plugin_response {
+            ProcessedPreResponsePluginResponse::Continue => {}
+            ProcessedPreResponsePluginResponse::Response(new_raw_response) => {
+                return Ok(new_raw_response);
+            }
+        }
     }
     let recreated_response =
         axum::response::Response::from_parts(parts, axum::body::Body::from(response_bytes));

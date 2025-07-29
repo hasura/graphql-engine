@@ -40,6 +40,15 @@ pub struct TypeInputPermission {
     pub field_presets: BTreeMap<FieldName, FieldPresetInfo>,
 }
 
+/// Permissions for a type for a particular role when used in an input context.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct TypeInputPermissions {
+    /// Fields presets available according to rules
+    pub authorization_rules: Vec<TypeInputAuthorizationRule>,
+    /// Old-style permissions by role. Only used for graphql/jsonapi schema generation
+    pub by_role: BTreeMap<Role, TypeInputPermission>,
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct FieldPresetInfo {
     pub value: ValueExpression,
@@ -56,7 +65,7 @@ pub struct ObjectTypeWithPermissions {
     pub type_output_permissions: TypeOutputPermissions,
     /// permissions on this type, when it is used in an input context (e.g. in
     /// an argument type of Model or Command)
-    pub type_input_permissions: BTreeMap<Role, TypeInputPermission>,
+    pub type_input_permissions: TypeInputPermissions,
     /// type mappings for each data connector
     pub type_mappings: object_types::DataConnectorTypeMappingsForObject,
 }
@@ -79,5 +88,15 @@ pub enum FieldAuthorizationRule {
     DenyFields {
         fields: Vec<FieldName>,
         condition: ConditionHash,
+    },
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub enum TypeInputAuthorizationRule {
+    // value for an field preset. the last value wins where multiple items are used.
+    FieldPresetValue {
+        condition: Option<ConditionHash>,
+        field_name: FieldName,
+        value: ValueExpression,
     },
 }

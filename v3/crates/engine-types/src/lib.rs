@@ -1,3 +1,5 @@
+use serde::Serialize;
+
 /// Context for making HTTP requests
 #[derive(Debug, Clone)]
 pub struct HttpContext {
@@ -27,6 +29,16 @@ pub struct MiddlewareError {
     pub is_internal: bool,
 }
 
+impl MiddlewareError {
+    pub fn to_error_type(&self) -> ErrorType {
+        if self.is_internal {
+            ErrorType::Internal
+        } else {
+            ErrorType::User
+        }
+    }
+}
+
 /// A wrapper around a middleware state that also contains an error converter
 #[derive(Clone)]
 pub struct WithMiddlewareErrorConverter<S> {
@@ -53,12 +65,18 @@ impl<S> WithMiddlewareErrorConverter<S> {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize)]
 pub enum ErrorType {
     // error caused by user actions, such as syntax error or expired JWT token
     User,
     // internal errors that we count in our alerting. this should not include 5xx errors from downstream services
     Internal,
-    // errors whilst calling external services such as a connector. these should not count in our alerting, but should still be returned as 5xx errors
-    External,
+    // errors caused by a user not having permissions to do something
+    Permission,
+    // some unsupported feature
+    Unsupported,
+    // error parsing SQL
+    Parse,
+    // connector error
+    Connector,
 }

@@ -1,13 +1,14 @@
 use crate::{PermissionError, types::PlanState};
 use authorization_rules::{
-    ArgumentPolicy, ConditionCache, evaluate_command_authorization_rules,
-    evaluate_field_authorization_rules,
+    ArgumentPolicy, ConditionCache, ModelPermission, ObjectInputPolicy,
+    evaluate_command_authorization_rules, evaluate_field_authorization_rules,
+    evaluate_model_authorization_rules, evaluate_type_input_authorization_rules,
 };
 use hasura_authn_core::{Role, SessionVariables};
 use indexmap::IndexMap;
 use metadata_resolve::{
     Conditions, FieldDefinition, Metadata, ObjectTypeWithRelationships, Qualified,
-    QualifiedTypeReference, RelationshipTarget,
+    QualifiedTypeReference, RelationshipTarget, ValueExpression,
 };
 use open_dds::{
     commands::CommandName,
@@ -124,10 +125,37 @@ pub fn get_output_object_type<'metadata>(
     })
 }
 
+#[derive(Debug, Clone)]
+pub struct InputObjectTypeView<'metadata> {
+    pub field_presets: BTreeMap<&'metadata FieldName, &'metadata ValueExpression>,
+}
+
+pub fn get_input_object_type<'metadata>(
+    metadata: &'metadata Metadata,
+    object_type_name: &'metadata Qualified<CustomTypeName>,
+    session_variables: &'_ SessionVariables,
+    plan_state: &mut PlanState,
+) -> Result<InputObjectTypeView<'metadata>, PermissionError> {
+    let object_type = metadata.object_types.get(object_type_name).ok_or_else(|| {
+        PermissionError::ObjectTypeNotFound {
+            object_type_name: object_type_name.clone(),
+        }
+    })?;
+
+    let ObjectInputPolicy { field_presets } = evaluate_type_input_authorization_rules(
+        &object_type.type_input_permissions.authorization_rules,
+        session_variables,
+        &metadata.conditions,
+        &mut plan_state.condition_cache,
+    )?;
+
+    Ok(InputObjectTypeView { field_presets })
+}
+
 pub struct ModelView<'metadata> {
     pub data_type: &'metadata Qualified<CustomTypeName>,
     pub source: &'metadata metadata_resolve::ModelSource,
-    pub select_permission: &'metadata metadata_resolve::SelectPermission,
+    pub permission: ModelPermission<'metadata>,
 }
 
 // fetch a model from metadata, ensuring we have ModelPermissions
@@ -146,25 +174,28 @@ pub fn get_model<'metadata>(
             model_name: model_name.clone(),
         })?;
 
-    if let Some(permission) = model.permissions.get(role) {
-        if let Some(select_permission) = &permission.select {
-            if is_allowed_access_to_object_type(
-                metadata,
-                &model.model.data_type,
-                session_variables,
-                &mut plan_state.condition_cache,
-            )? {
-                if let Some(model_source) = &model.model.source {
-                    return Ok(ModelView {
-                        data_type: &model.model.data_type,
-                        source: model_source,
-                        select_permission,
-                    });
-                }
-                return Err(PermissionError::ModelHasNoSource {
-                    model_name: model_name.clone(),
+    if let Some(permission) = evaluate_model_authorization_rules(
+        &model.permissions.authorization_rules,
+        session_variables,
+        &metadata.conditions,
+        &mut plan_state.condition_cache,
+    )? {
+        if is_allowed_access_to_object_type(
+            metadata,
+            &model.model.data_type,
+            session_variables,
+            &mut plan_state.condition_cache,
+        )? {
+            if let Some(model_source) = &model.model.source {
+                return Ok(ModelView {
+                    data_type: &model.model.data_type,
+                    source: model_source,
+                    permission,
                 });
             }
+            return Err(PermissionError::ModelHasNoSource {
+                model_name: model_name.clone(),
+            });
         }
     }
 

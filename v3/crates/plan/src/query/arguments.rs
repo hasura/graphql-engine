@@ -1,6 +1,6 @@
 use super::permissions;
-use crate::metadata_accessor;
-use crate::metadata_accessor::CommandView;
+use crate::metadata_accessor::{self, get_input_object_type};
+use crate::metadata_accessor::{CommandView, InputObjectTypeView};
 use crate::plan_expression;
 use crate::types::PlanState;
 use authorization_rules::ArgumentPolicy;
@@ -10,7 +10,7 @@ use metadata_resolve::data_connectors::ArgumentPresetValue;
 use metadata_resolve::{
     ArgumentInfo, CommandWithPermissions, FieldMapping, Metadata, ModelWithPermissions,
     ObjectTypeWithRelationships, Qualified, QualifiedBaseType, QualifiedTypeName,
-    QualifiedTypeReference, TypeMapping, ValueExpressionOrPredicate, unwrap_custom_type_name,
+    QualifiedTypeReference, TypeMapping, unwrap_custom_type_name,
 };
 use open_dds::{
     arguments::ArgumentName,
@@ -21,7 +21,6 @@ use open_dds::{
 use plan_types::{Argument, Expression, PredicateQueryTrees, Relationship, UsagesCounts};
 use reqwest::header::HeaderMap;
 use serde::Serialize;
-use std::borrow::Cow;
 use std::collections::BTreeMap;
 use tracing_util::{ErrorVisibility, TraceableError};
 
@@ -76,40 +75,25 @@ pub fn add_missing_nullable_arguments<'s>(
 pub fn process_argument_presets_for_model<'s>(
     arguments: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>,
     model: &'s ModelWithPermissions,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
+    metadata: &'s Metadata,
+    model_view: &'s metadata_accessor::ModelView<'s>,
     session: &Session,
     request_headers: &HeaderMap,
+    plan_state: &mut PlanState,
     usage_counts: &mut UsagesCounts,
 ) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>, PlanError> {
-    let model_source = model.model.source.as_ref().ok_or_else(|| {
-        ArgumentPresetExecutionError::ModelSourceNotFound {
-            model_name: model.model.name.clone(),
-        }
-    })?;
-
-    let argument_presets = &model
-        .permissions
-        .get(&session.role)
-        .and_then(|permissions| permissions.select.as_ref())
-        .ok_or_else(
-            || ArgumentPresetExecutionError::ModelArgumentPresetsNotFound {
-                model_name: model.model.name.clone(),
-                role: session.role.clone(),
-            },
-        )?
-        .argument_presets;
-
     process_argument_presets(
         arguments,
         &model.arguments,
-        &model_source.argument_mappings,
-        argument_presets,
-        object_types,
-        &model_source.type_mappings,
-        &model_source.data_connector,
-        &model_source.data_connector_link_argument_presets,
+        &model_view.source.argument_mappings,
+        &model_view.permission.argument_presets,
+        metadata,
+        &model_view.source.type_mappings,
+        &model_view.source.data_connector,
+        &model_view.source.data_connector_link_argument_presets,
         session,
         request_headers,
+        plan_state,
         usage_counts,
     )
 }
@@ -118,9 +102,10 @@ pub fn process_argument_presets_for_command<'s>(
     arguments: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>,
     command: &'s CommandWithPermissions,
     command_view: &'s CommandView<'s>,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
+    metadata: &Metadata,
     session: &Session,
     request_headers: &HeaderMap,
+    plan_state: &mut PlanState,
     usage_counts: &mut UsagesCounts,
 ) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>, PlanError> {
     let command_source = command.command.source.as_ref().ok_or_else(|| {
@@ -129,34 +114,34 @@ pub fn process_argument_presets_for_command<'s>(
         }
     })?;
 
-    process_argument_presets_for_auth_rules(
+    process_argument_presets(
         arguments,
         &command.command.arguments,
         &command_source.argument_mappings,
         &command_view.argument_presets,
-        object_types,
+        metadata,
         &command_source.type_mappings,
         &command_source.data_connector,
         &command_source.data_connector_link_argument_presets,
         session,
         request_headers,
+        plan_state,
         usage_counts,
     )
 }
 
-// the commands and model types are subtly different now. once models use rules-based
-// auth we can keep this as the only one
-fn process_argument_presets_for_auth_rules<'s>(
+fn process_argument_presets<'s>(
     mut arguments: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>,
     argument_infos: &IndexMap<ArgumentName, ArgumentInfo>,
     argument_mappings: &BTreeMap<ArgumentName, DataConnectorArgumentName>,
     argument_presets: &'s BTreeMap<&'s ArgumentName, ArgumentPolicy<'s>>,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
+    metadata: &Metadata,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     data_connector_link: &'s metadata_resolve::DataConnectorLink,
     data_connector_link_argument_presets: &BTreeMap<DataConnectorArgumentName, ArgumentPresetValue>,
     session: &Session,
     request_headers: &HeaderMap,
+    plan_state: &mut PlanState,
     usage_counts: &mut UsagesCounts,
 ) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>, PlanError> {
     // Preset arguments from `DataConnectorLink` argument presets
@@ -165,7 +150,7 @@ fn process_argument_presets_for_auth_rules<'s>(
         &session.variables,
         request_headers,
         type_mappings,
-        object_types,
+        &metadata.object_types,
     )? {
         arguments.insert(argument_name, UnresolvedArgument::Literal { value });
     }
@@ -179,92 +164,12 @@ fn process_argument_presets_for_auth_rules<'s>(
                 }
             })?;
 
-        let argument_value =
-            permissions::make_argument_from_value_expression_or_predicate_auth_rules(
-                data_connector_link,
-                type_mappings,
-                argument_value,
-                &session.variables,
-                object_types,
-                usage_counts,
-            )?;
-
-        arguments.insert(data_connector_argument_name.clone(), argument_value);
-    }
-
-    // Apply input field presets from the TypePermissions involved in the arguments' types
-    for (argument_name, argument_info) in argument_infos {
-        let data_connector_argument_name =
-            argument_mappings.get(argument_name).ok_or_else(|| {
-                ArgumentPresetExecutionError::ArgumentMappingNotFound {
-                    argument_name: argument_name.clone(),
-                }
-            })?;
-
-        if let Some(existing_argument_value) = arguments.get_mut(data_connector_argument_name) {
-            match existing_argument_value {
-                UnresolvedArgument::Literal { value } => {
-                    apply_input_field_presets_to_value(
-                        value,
-                        &argument_info.argument_type,
-                        type_mappings,
-                        object_types,
-                        session,
-                    )?;
-                }
-                UnresolvedArgument::BooleanExpression { .. } => {
-                    // We don't apply input field presets to boolean expression arguments
-                }
-            }
-        }
-    }
-
-    Ok(arguments)
-}
-
-fn process_argument_presets<'s>(
-    mut arguments: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>,
-    argument_infos: &IndexMap<ArgumentName, ArgumentInfo>,
-    argument_mappings: &BTreeMap<ArgumentName, DataConnectorArgumentName>,
-    argument_presets: &'s BTreeMap<
-        ArgumentName,
-        (QualifiedTypeReference, ValueExpressionOrPredicate),
-    >,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
-    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-    data_connector_link: &'s metadata_resolve::DataConnectorLink,
-    data_connector_link_argument_presets: &BTreeMap<DataConnectorArgumentName, ArgumentPresetValue>,
-    session: &Session,
-    request_headers: &HeaderMap,
-    usage_counts: &mut UsagesCounts,
-) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>, PlanError> {
-    // Preset arguments from `DataConnectorLink` argument presets
-    for (argument_name, value) in process_connector_link_presets(
-        data_connector_link_argument_presets,
-        &session.variables,
-        request_headers,
-        type_mappings,
-        object_types,
-    )? {
-        arguments.insert(argument_name, UnresolvedArgument::Literal { value });
-    }
-
-    // Preset arguments from Model/CommandPermission argument presets
-    for (argument_name, (field_type, argument_value)) in argument_presets {
-        let data_connector_argument_name =
-            argument_mappings.get(argument_name).ok_or_else(|| {
-                ArgumentPresetExecutionError::ArgumentMappingNotFound {
-                    argument_name: argument_name.clone(),
-                }
-            })?;
-
         let argument_value = permissions::make_argument_from_value_expression_or_predicate(
             data_connector_link,
             type_mappings,
             argument_value,
-            field_type,
             &session.variables,
-            object_types,
+            &metadata.object_types,
             usage_counts,
         )?;
 
@@ -285,10 +190,11 @@ fn process_argument_presets<'s>(
                 UnresolvedArgument::Literal { value } => {
                     apply_input_field_presets_to_value(
                         value,
+                        metadata,
                         &argument_info.argument_type,
                         type_mappings,
-                        object_types,
                         session,
+                        plan_state,
                     )?;
                 }
                 UnresolvedArgument::BooleanExpression { .. } => {
@@ -303,10 +209,11 @@ fn process_argument_presets<'s>(
 
 fn apply_input_field_presets_to_value(
     value: &mut serde_json::Value,
+    metadata: &Metadata,
     type_reference: &QualifiedTypeReference,
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     session: &Session,
+    plan_state: &mut PlanState,
 ) -> Result<(), PlanError> {
     match &type_reference.underlying_type {
         QualifiedBaseType::List(list_element_type) => {
@@ -318,10 +225,11 @@ fn apply_input_field_presets_to_value(
             for element_value in array_elements {
                 apply_input_field_presets_to_value(
                     element_value,
+                    metadata,
                     list_element_type,
                     type_mappings,
-                    object_types,
                     session,
+                    plan_state,
                 )?;
             }
         }
@@ -330,7 +238,8 @@ fn apply_input_field_presets_to_value(
             let Some((object_type_name, object_type_info)) = qualified_type_name
                 .get_custom_type_name()
                 .and_then(|type_name| {
-                    object_types
+                    metadata
+                        .object_types
                         .get(type_name)
                         .map(|object_type_info| (type_name, object_type_info))
                 })
@@ -353,14 +262,8 @@ fn apply_input_field_presets_to_value(
                     value.as_object_mut().unwrap() // This is safe because we just created an object value
                 };
 
-            // Get the input permissions for this object type for the current role
-            let field_presets = object_type_info
-                .type_input_permissions
-                .get(&session.role)
-                .map_or_else(
-                    || Cow::Owned(BTreeMap::new()),
-                    |input_permissions| Cow::Borrowed(&input_permissions.field_presets),
-                );
+            let InputObjectTypeView { field_presets } =
+                get_input_object_type(metadata, object_type_name, &session.variables, plan_state)?;
 
             // Get the data connector type mapping for this object type
             let TypeMapping::Object { field_mappings, .. } = type_mappings
@@ -370,7 +273,7 @@ fn apply_input_field_presets_to_value(
                 })?;
 
             // Apply all input field presets to the object value
-            for (field_name, field_preset) in field_presets.as_ref() {
+            for (field_name, value_expression) in field_presets {
                 // Get the data connector field mapping for this field
                 let field_mapping = field_mappings.get(field_name).ok_or_else(|| {
                     ArgumentPresetExecutionError::FieldMappingNotFound {
@@ -390,11 +293,11 @@ fn apply_input_field_presets_to_value(
                     })?;
 
                 let argument_value = permissions::make_argument_from_value_expression(
-                    &field_preset.value,
+                    value_expression,
                     &field_info.field_type,
                     &session.variables,
                     type_mappings,
-                    object_types,
+                    &metadata.object_types,
                 )?;
 
                 object_value.insert(field_mapping.column.as_str().to_owned(), argument_value);
@@ -414,20 +317,22 @@ fn apply_input_field_presets_to_value(
                 if let Some(field_value) = object_value.get_mut(field_mapping.column.as_str()) {
                     apply_input_field_presets_to_value(
                         field_value,
+                        metadata,
                         &field_info.field_type,
                         type_mappings,
-                        object_types,
                         session,
+                        plan_state,
                     )?;
                 } else {
                     let mut field_value = serde_json::Value::Null;
 
                     apply_input_field_presets_to_value(
                         &mut field_value,
+                        metadata,
                         &field_info.field_type,
                         type_mappings,
-                        object_types,
                         session,
+                        plan_state,
                     )?;
 
                     // If the field value is still null, don't insert it into the object
@@ -477,7 +382,6 @@ pub enum ArgumentPresetExecutionError {
         role: Role,
         model_name: Qualified<ModelName>,
     },
-
     #[error("command {command_name} does not have a source defined")]
     CommandSourceNotFound {
         command_name: Qualified<CommandName>,

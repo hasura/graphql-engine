@@ -2,11 +2,81 @@
 
 ## [Unreleased]
 
-### Added
-
 ### Changed
 
 ### Fixed
+
+### Added
+
+## [v2025.07.29]
+
+No changes since last release.
+
+## [v2025.07.28]
+
+### Synchronous Mode Pre-Response Plugins
+
+Added support for synchronous pre-response plugins that can intercept and modify
+GraphQL responses before they are sent to clients.
+
+**Key Features:**
+
+- **Response Modification**: Plugins can transform response content and pass
+  modified responses to subsequent plugins in the chain
+- **Sequential Execution**: Plugins execute in order, allowing response
+  transformations to build upon each other
+- **Flexible Response Handling**: Support for multiple HTTP status codes:
+  - `204 No Content`: Continue with original response
+  - `200 OK`: Continue with modified response (JSON body)
+  - `400 Bad Request`: Return user error to client
+  - `500 Internal Server Error`: Return internal error
+- **On-Plugin-Failure Support**: Configure plugins to fail gracefully without
+  breaking the entire request
+
+**Configuration:** Following is an example of the OpenDD metadata for the
+pre-response plugin in synchronous mode:
+
+```yaml
+kind: LifecyclePluginHook
+version: v1
+definition:
+  pre: response
+  name: test-1
+  url:
+    value: http://localhost:5001/extensions/add_ai_summary
+  config:
+    request:
+      session: {}
+      rawRequest:
+        query: {}
+        variables: {}
+    mode:
+      type: synchronous
+      onPluginFailure: continue
+```
+
+The `mode` field in the `LifecyclePreResponsePluginHook` configuration allows
+specifying the mode of the plugin hook.
+
+- `type` (`string`): The type of the mode. Can be either `synchronous` or
+  `asynchronous` (default).
+- `onPluginFailure` (`string`): The behavior of the engine when the plugin
+  returns 400 or 500. Can be one of `fail` (default) or `continue`. This field
+  is only for `synchronous` pre-response plugins.
+
+## [v2025.07.22]
+
+### Changed
+
+- Check data connector capabilities for nested scalar comparisons in `plan`
+  stage so any errors are returned as user rather than internal errors.
+
+## [v2025.07.21]
+
+### Added
+
+- Allow pre-parse plugins to modify the request before it is sent to the engine.
+  Use HTTP status code `299` to indicate that the request should be modified.
 
 ## [v2025.07.14]
 
@@ -1852,7 +1922,11 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.07.14...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.07.29...HEAD
+[v2025.07.29]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.29
+[v2025.07.28]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.28
+[v2025.07.22]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.22
+[v2025.07.21]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.21
 [v2025.07.14]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.14
 [v2025.07.10]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.10
 [v2025.07.07]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.07

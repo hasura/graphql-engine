@@ -14,10 +14,16 @@ use open_dds::{
     types::{CustomTypeName, Deprecated, FieldName},
 };
 
-use crate::types::permission::{ValueExpression, ValueExpressionOrPredicate};
-use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 use crate::types::subgraph::{deserialize_qualified_btreemap, serialize_qualified_btreemap};
+use crate::{
+    AllowOrDeny,
+    types::subgraph::{Qualified, QualifiedTypeReference},
+};
 use crate::{ArgumentInfo, types::error::ContextualError};
+use crate::{
+    ConditionHash,
+    types::permission::{ValueExpression, ValueExpressionOrPredicate},
+};
 use crate::{
     helpers::typecheck,
     stages::{
@@ -44,22 +50,92 @@ pub struct RelationalDeletePermission {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct ResolvedPermissions {
-    pub select: Option<SelectPermission>,
-    pub relational_insert: Option<RelationalInsertPermission>,
-    pub relational_update: Option<RelationalUpdatePermission>,
-    pub relational_delete: Option<RelationalDeletePermission>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct ModelWithPermissions {
     pub model: models_graphql::Model,
     pub arguments: IndexMap<ArgumentName, ArgumentInfo>,
-    pub permissions: BTreeMap<Role, ResolvedPermissions>,
+    pub permissions: ModelPermissions,
     pub filter_expression_type:
         Option<Arc<boolean_expressions::ResolvedObjectBooleanExpressionType>>,
     pub graphql_api: models_graphql::ModelGraphQlApi,
     pub description: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct SelectPermissions {
+    pub by_role: BTreeMap<Role, SelectPermission>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub enum ModelAuthorizationRule {
+    Access {
+        condition: Option<ConditionHash>,
+        allow_or_deny: AllowOrDeny,
+    },
+    Subscription {
+        condition: Option<ConditionHash>,
+        allow_or_deny: AllowOrDeny,
+    },
+    Filter {
+        condition: Option<ConditionHash>,
+        predicate: ModelPredicate,
+    },
+    // value for an argument preset. the last value wins where multiple items are used.
+    ArgumentPresetValue {
+        condition: Option<ConditionHash>,
+        argument_name: ArgumentName,
+        argument_type: QualifiedTypeReference,
+        value: ValueExpression,
+    },
+    // boolean expression for an argument preset. if multiple items are provided for one argument
+    // then we "and" them together
+    ArgumentAuthPredicate {
+        condition: Option<ConditionHash>,
+        argument_name: ArgumentName,
+        predicate: ModelPredicate,
+    },
+    RelationalPermission {
+        condition: Option<ConditionHash>,
+        allow_or_deny: AllowOrDeny,
+        relational_operation: RelationalOperation,
+    },
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub enum RelationalOperation {
+    Insert,
+    Update,
+    Delete,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct ModelPermissions {
+    pub authorization_rules: Vec<ModelAuthorizationRule>,
+    pub by_role: BTreeMap<Role, ModelPermission>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct ModelPermission {
+    pub select: Option<SelectPermission>,
+    pub input: Option<ModelInputPermission>,
+}
+
+impl ModelPermissions {
+    pub fn new() -> Self {
+        Self {
+            by_role: BTreeMap::new(),
+            authorization_rules: Vec::new(),
+        }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.by_role.is_empty() && self.authorization_rules.is_empty()
+    }
+}
+
+impl Default for ModelPermissions {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -72,9 +148,13 @@ pub enum FilterPermission {
 pub struct SelectPermission {
     pub filter: FilterPermission,
     // pub allow_aggregations: bool,
+    pub allow_subscriptions: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct ModelInputPermission {
     pub argument_presets:
         BTreeMap<ArgumentName, (QualifiedTypeReference, ValueExpressionOrPredicate)>,
-    pub allow_subscriptions: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

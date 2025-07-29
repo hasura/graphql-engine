@@ -50,6 +50,7 @@ impl TraceableError for PlanError {
 }
 
 #[derive(Debug, thiserror::Error)]
+// errors thrown during permissions evaluation, but not necessary errors due to permisssions
 pub enum PermissionError {
     #[error("command {command_name:} could not be found")]
     CommandNotFound {
@@ -121,6 +122,11 @@ pub enum PermissionError {
     #[error("Error evaluating condition: {0}")]
     ConditionEvaluationError(#[from] authorization_rules::ConditionError),
 
+    #[error("Nested scalar filtering is not supported by data connector {data_connector_name}")]
+    NestedScalarFilteringNotSupported {
+        data_connector_name: Qualified<DataConnectorName>,
+    },
+
     #[error("{0}")]
     Other(String),
 }
@@ -129,20 +135,21 @@ impl TraceableError for PermissionError {
     fn visibility(&self) -> ErrorVisibility {
         match self {
             Self::ObjectTypeNotFound { .. }
-            | Self::ObjectTypeNotAccessible { .. }
-            | Self::ObjectFieldNotFound { .. }
             | Self::CommandNotFound { .. }
-            | Self::CommandNotAccessible { .. }
             | Self::ModelNotFound { .. }
             | Self::ModelHasNoSource { .. }
-            | Self::ModelNotAccessible { .. }
             | Self::RelationshipNotFound { .. }
             | Self::InternalMissingRelationshipCapabilities { .. }
             | Self::FieldNotFoundInBooleanExpressionType { .. }
             | Self::RelationshipNotFoundInBooleanExpressionType { .. }
             | Self::ObjectBooleanExpressionTypeNotFound { .. }
-            | Self::ConditionEvaluationError(_) => ErrorVisibility::Internal,
-            Self::Other(_) => ErrorVisibility::User,
+            | Self::ConditionEvaluationError(_)
+            | Self::NestedScalarFilteringNotSupported { .. } => ErrorVisibility::Internal,
+            Self::ObjectFieldNotFound { .. }
+            | Self::ObjectTypeNotAccessible { .. }
+            | Self::CommandNotAccessible { .. }
+            | Self::ModelNotAccessible { .. }
+            | Self::Other(_) => ErrorVisibility::User,
         }
     }
 }

@@ -3,22 +3,23 @@ pub mod types;
 use crate::Qualified;
 pub use error::PluginValidationError;
 use open_dds::data_connector::DataConnectorName;
-use open_dds::plugins::LifecyclePluginHookV1;
 use open_dds::plugins::{
-    LifecyclePluginName, LifecyclePreParsePluginHook, LifecyclePreResponsePluginHook,
-    LifecyclePreRoutePluginHook,
+    LifecyclePluginHookV1, LifecyclePluginName, LifecyclePreParsePluginHook,
+    LifecyclePreResponsePluginHookMode, LifecyclePreRoutePluginHook,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashSet};
 use std::sync::Arc;
 pub use types::{
     ResolvedLifecyclePreNdcRequestPluginHook, ResolvedLifecyclePreNdcResponsePluginHook,
+    ResolvedLifecyclePreResponseAsyncPluginHook, ResolvedLifecyclePreResponsePluginHooks,
+    ResolvedLifecyclePreResponseSyncPluginHook, ResolvedLifecyclePreResponseSyncPluginHookConfig,
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct LifecyclePluginConfigs {
     pub pre_parse_plugins: Vec<LifecyclePreParsePluginHook>,
-    pub pre_response_plugins: Vec<LifecyclePreResponsePluginHook>,
+    pub pre_response_plugins: ResolvedLifecyclePreResponsePluginHooks,
     pub pre_route_plugins: Vec<LifecyclePreRoutePluginHook>,
     pub pre_ndc_request_plugins:
         BTreeMap<Qualified<DataConnectorName>, Arc<ResolvedLifecyclePreNdcRequestPluginHook>>,
@@ -31,7 +32,8 @@ pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
 ) -> Result<LifecyclePluginConfigs, Vec<PluginValidationError>> {
     let mut pre_parse_plugins = Vec::new();
-    let mut pre_response_plugins = Vec::new();
+    let mut pre_response_async_plugins = Vec::new();
+    let mut pre_response_sync_plugins = Vec::new();
     let mut pre_route_plugins = Vec::new();
     let mut pre_ndc_request_plugins = BTreeMap::new();
     let mut pre_ndc_response_plugins = BTreeMap::new();
@@ -60,7 +62,33 @@ pub fn resolve(
 
         match &plugin_obj.object {
             LifecyclePluginHookV1::Parse(plugin) => pre_parse_plugins.push(plugin.clone()),
-            LifecyclePluginHookV1::Response(plugin) => pre_response_plugins.push(plugin.clone()),
+            LifecyclePluginHookV1::Response(plugin) => {
+                match &plugin.config.mode {
+                    // No mode specified, or asynchronous mode
+                    None | Some(LifecyclePreResponsePluginHookMode::Asynchronous(_)) => {
+                        pre_response_async_plugins.push(
+                            ResolvedLifecyclePreResponseAsyncPluginHook {
+                                name: plugin.name.clone(),
+                                url: plugin.url.clone(),
+                                request: plugin.config.request.clone(),
+                            },
+                        );
+                    }
+                    // Synchronous mode
+                    Some(LifecyclePreResponsePluginHookMode::Synchronous(config)) => {
+                        pre_response_sync_plugins.push(
+                            ResolvedLifecyclePreResponseSyncPluginHook {
+                                name: plugin.name.clone(),
+                                url: plugin.url.clone(),
+                                config: ResolvedLifecyclePreResponseSyncPluginHookConfig {
+                                    request: plugin.config.request.clone(),
+                                    on_plugin_failure: config.on_plugin_failure.clone(),
+                                },
+                            },
+                        );
+                    }
+                }
+            }
             LifecyclePluginHookV1::Route(plugin) => pre_route_plugins.push(plugin.clone()),
             LifecyclePluginHookV1::NdcRequest(plugin) => {
                 let qualified_plugin_name = Qualified::new(subgraph.clone(), plugin.name.clone());
@@ -161,7 +189,10 @@ pub fn resolve(
     if validation_errors.is_empty() {
         Ok(LifecyclePluginConfigs {
             pre_parse_plugins,
-            pre_response_plugins,
+            pre_response_plugins: ResolvedLifecyclePreResponsePluginHooks {
+                sync_hooks: pre_response_sync_plugins,
+                async_hooks: pre_response_async_plugins,
+            },
             pre_route_plugins,
             pre_ndc_request_plugins,
             pre_ndc_response_plugins,

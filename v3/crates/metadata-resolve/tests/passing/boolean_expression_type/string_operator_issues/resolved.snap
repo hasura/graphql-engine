@@ -63,7 +63,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/string
                     authorization_rules: [],
                     by_role: {},
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {
                     RelationshipName(
                         Identifier(
@@ -392,7 +395,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/string
                     authorization_rules: [],
                     by_role: {},
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {
@@ -968,7 +974,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/string
                     aggregate_expression: None,
                 },
                 arguments: {},
-                permissions: {},
+                permissions: ModelPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {
                     arguments_input_config: None,
@@ -1362,7 +1371,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/string
         glossaries: {},
         plugin_configs: LifecyclePluginConfigs {
             pre_parse_plugins: [],
-            pre_response_plugins: [],
+            pre_response_plugins: ResolvedLifecyclePreResponsePluginHooks {
+                sync_hooks: [],
+                async_hooks: [],
+            },
             pre_route_plugins: [],
             pre_ndc_request_plugins: {},
             pre_ndc_response_plugins: {},

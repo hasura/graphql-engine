@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 
+use super::has_access::HasAccess;
 use hasura_authn_core::SessionVariables;
 use metadata_resolve::{
     CommandAuthorizationRule, Conditions, ModelPredicate, QualifiedTypeReference, ValueExpression,
@@ -41,7 +42,7 @@ pub fn evaluate_command_authorization_rules<'a>(
     conditions: &Conditions,
     condition_cache: &mut ConditionCache,
 ) -> Result<Option<CommandPermission<'a>>, ConditionError> {
-    let mut allow_access = false;
+    let mut allow_access = HasAccess::default();
     let mut argument_presets = BTreeMap::new();
 
     for command_rule in rule {
@@ -56,10 +57,7 @@ pub fn evaluate_command_authorization_rules<'a>(
                     conditions,
                     condition_cache,
                 )? {
-                    match allow_or_deny {
-                        metadata_resolve::AllowOrDeny::Allow => allow_access = true,
-                        metadata_resolve::AllowOrDeny::Deny => return Ok(None),
-                    }
+                    allow_access.set(allow_or_deny);
                 }
             }
             CommandAuthorizationRule::ArgumentPresetValue {
@@ -124,7 +122,7 @@ pub fn evaluate_command_authorization_rules<'a>(
         }
     }
 
-    if !allow_access {
+    if !allow_access.has_access() {
         return Ok(None);
     }
 

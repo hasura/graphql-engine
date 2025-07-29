@@ -111,7 +111,9 @@ pub fn get_capabilities(state: &AppState) -> ndc_models::CapabilitiesResponse {
 fn expression_capabilities() -> ndc_models::RelationalExpressionCapabilities {
     ndc_models::RelationalExpressionCapabilities {
         conditional: ndc_models::RelationalConditionalExpressionCapabilities {
-            case: Some(ndc_models::LeafCapability {}),
+            case: Some(ndc_models::RelationalCaseCapabilities {
+                scrutinee: Some(ndc_models::LeafCapability {}),
+            }),
             nullif: Some(ndc_models::LeafCapability {}),
         },
         comparison: ndc_models::RelationalComparisonExpressionCapabilities {
@@ -127,6 +129,7 @@ fn expression_capabilities() -> ndc_models::RelationalExpressionCapabilities {
             is_false: Some(ndc_models::LeafCapability {}),
             is_null: Some(ndc_models::LeafCapability {}),
             is_true: Some(ndc_models::LeafCapability {}),
+            is_distinct_from: Some(ndc_models::LeafCapability {}),
             less_than_eq: Some(ndc_models::LeafCapability {}),
             less_than: Some(ndc_models::LeafCapability {}),
         },
@@ -213,14 +216,20 @@ fn expression_capabilities() -> ndc_models::RelationalExpressionCapabilities {
             max: Some(ndc_models::LeafCapability {}),
             median: None,
             min: Some(ndc_models::LeafCapability {}),
-            string_agg: None,
+            string_agg: Some(ndc_models::RelationalOrderedAggregateFunctionCapabilities {
+                distinct: Some(ndc_models::LeafCapability {}),
+                order_by: Some(ndc_models::LeafCapability {}),
+            }),
             sum: Some(ndc_models::LeafCapability {}),
             var: None,
             stddev: Some(ndc_models::LeafCapability {}),
             stddev_pop: Some(ndc_models::LeafCapability {}),
             approx_percentile_cont: Some(ndc_models::LeafCapability {}),
             approx_distinct: Some(ndc_models::LeafCapability {}),
-            array_agg: Some(ndc_models::LeafCapability {}),
+            array_agg: Some(ndc_models::RelationalOrderedAggregateFunctionCapabilities {
+                distinct: Some(ndc_models::LeafCapability {}),
+                order_by: Some(ndc_models::LeafCapability {}),
+            }),
         },
         window: ndc_models::RelationalWindowExpressionCapabilities {
             row_number: Some(ndc_models::LeafCapability {}),
@@ -232,6 +241,7 @@ fn expression_capabilities() -> ndc_models::RelationalExpressionCapabilities {
         },
         scalar_types: Some(ndc_models::RelationalScalarTypeCapabilities {
             interval: Some(ndc_models::LeafCapability {}),
+            from_type: Some(ndc_models::LeafCapability {}),
         }),
     }
 }

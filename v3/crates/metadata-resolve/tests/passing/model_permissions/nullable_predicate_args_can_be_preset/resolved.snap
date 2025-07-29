@@ -137,7 +137,10 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                         },
                     },
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {
@@ -836,91 +839,169 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                         type_representation: None,
                     },
                 },
-                permissions: {
-                    Role(
-                        "user",
-                    ): ResolvedPermissions {
-                        select: Some(
-                            SelectPermission {
-                                filter: AllowAll,
-                                argument_presets: {
-                                    ArgumentName(
+                permissions: ModelPermissions {
+                    authorization_rules: [
+                        Access {
+                            condition: Some(
+                                ConditionHash(
+                                    9295230919520119376,
+                                ),
+                            ),
+                            allow_or_deny: Allow,
+                        },
+                        Subscription {
+                            condition: Some(
+                                ConditionHash(
+                                    9295230919520119376,
+                                ),
+                            ),
+                            allow_or_deny: Deny,
+                        },
+                        ArgumentAuthPredicate {
+                            condition: Some(
+                                ConditionHash(
+                                    9295230919520119376,
+                                ),
+                            ),
+                            argument_name: ArgumentName(
+                                Identifier(
+                                    "special_where",
+                                ),
+                            ),
+                            predicate: BinaryFieldComparison {
+                                field: FieldName(
+                                    Identifier(
+                                        "AlbumId",
+                                    ),
+                                ),
+                                field_parent_type: Qualified {
+                                    subgraph: SubgraphName(
+                                        "subgraphs",
+                                    ),
+                                    name: CustomTypeName(
                                         Identifier(
-                                            "special_where",
+                                            "Album",
                                         ),
-                                    ): (
-                                        QualifiedTypeReference {
-                                            underlying_type: Named(
-                                                Custom(
-                                                    Qualified {
+                                    ),
+                                },
+                                ndc_column: DataConnectorColumnName(
+                                    "AlbumId",
+                                ),
+                                operator: ResolvedOperator {
+                                    data_connector_operator_name: DataConnectorOperatorName(
+                                        "eq",
+                                    ),
+                                    comparison_operator: Equals,
+                                },
+                                column_path: [],
+                                argument_type: QualifiedTypeReference {
+                                    underlying_type: Named(
+                                        Inbuilt(
+                                            Int,
+                                        ),
+                                    ),
+                                    nullable: false,
+                                },
+                                value: SessionVariable(
+                                    SessionVariableReference {
+                                        name: SessionVariableName(
+                                            "x-hasura-album-id",
+                                        ),
+                                        passed_as_json: true,
+                                        disallow_unknown_fields: false,
+                                    },
+                                ),
+                                deprecated: None,
+                            },
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "user",
+                        ): ModelPermission {
+                            select: Some(
+                                SelectPermission {
+                                    filter: AllowAll,
+                                    allow_subscriptions: false,
+                                },
+                            ),
+                            input: Some(
+                                ModelInputPermission {
+                                    argument_presets: {
+                                        ArgumentName(
+                                            Identifier(
+                                                "special_where",
+                                            ),
+                                        ): (
+                                            QualifiedTypeReference {
+                                                underlying_type: Named(
+                                                    Custom(
+                                                        Qualified {
+                                                            subgraph: SubgraphName(
+                                                                "subgraphs",
+                                                            ),
+                                                            name: CustomTypeName(
+                                                                Identifier(
+                                                                    "Album_bool_exp",
+                                                                ),
+                                                            ),
+                                                        },
+                                                    ),
+                                                ),
+                                                nullable: true,
+                                            },
+                                            BooleanExpression(
+                                                BinaryFieldComparison {
+                                                    field: FieldName(
+                                                        Identifier(
+                                                            "AlbumId",
+                                                        ),
+                                                    ),
+                                                    field_parent_type: Qualified {
                                                         subgraph: SubgraphName(
                                                             "subgraphs",
                                                         ),
                                                         name: CustomTypeName(
                                                             Identifier(
-                                                                "Album_bool_exp",
+                                                                "Album",
                                                             ),
                                                         ),
                                                     },
-                                                ),
-                                            ),
-                                            nullable: true,
-                                        },
-                                        BooleanExpression(
-                                            BinaryFieldComparison {
-                                                field: FieldName(
-                                                    Identifier(
+                                                    ndc_column: DataConnectorColumnName(
                                                         "AlbumId",
                                                     ),
-                                                ),
-                                                field_parent_type: Qualified {
-                                                    subgraph: SubgraphName(
-                                                        "subgraphs",
-                                                    ),
-                                                    name: CustomTypeName(
-                                                        Identifier(
-                                                            "Album",
+                                                    operator: ResolvedOperator {
+                                                        data_connector_operator_name: DataConnectorOperatorName(
+                                                            "eq",
                                                         ),
-                                                    ),
-                                                },
-                                                ndc_column: DataConnectorColumnName(
-                                                    "AlbumId",
-                                                ),
-                                                operator: ResolvedOperator {
-                                                    data_connector_operator_name: DataConnectorOperatorName(
-                                                        "eq",
-                                                    ),
-                                                    comparison_operator: Equals,
-                                                },
-                                                column_path: [],
-                                                argument_type: QualifiedTypeReference {
-                                                    underlying_type: Named(
-                                                        Inbuilt(
-                                                            Int,
-                                                        ),
-                                                    ),
-                                                    nullable: false,
-                                                },
-                                                value: SessionVariable(
-                                                    SessionVariableReference {
-                                                        name: SessionVariableName(
-                                                            "x-hasura-album-id",
-                                                        ),
-                                                        passed_as_json: true,
-                                                        disallow_unknown_fields: false,
+                                                        comparison_operator: Equals,
                                                     },
-                                                ),
-                                                deprecated: None,
-                                            },
+                                                    column_path: [],
+                                                    argument_type: QualifiedTypeReference {
+                                                        underlying_type: Named(
+                                                            Inbuilt(
+                                                                Int,
+                                                            ),
+                                                        ),
+                                                        nullable: false,
+                                                    },
+                                                    value: SessionVariable(
+                                                        SessionVariableReference {
+                                                            name: SessionVariableName(
+                                                                "x-hasura-album-id",
+                                                            ),
+                                                            passed_as_json: true,
+                                                            disallow_unknown_fields: false,
+                                                        },
+                                                    ),
+                                                    deprecated: None,
+                                                },
+                                            ),
                                         ),
-                                    ),
+                                    },
                                 },
-                                allow_subscriptions: false,
-                            },
-                        ),
-                        relational_insert: None,
-                        relational_update: None,
-                        relational_delete: None,
+                            ),
+                        },
                     },
                 },
                 filter_expression_type: Some(
@@ -1801,7 +1882,10 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
         glossaries: {},
         plugin_configs: LifecyclePluginConfigs {
             pre_parse_plugins: [],
-            pre_response_plugins: [],
+            pre_response_plugins: ResolvedLifecyclePreResponsePluginHooks {
+                sync_hooks: [],
+                async_hooks: [],
+            },
             pre_route_plugins: [],
             pre_ndc_request_plugins: {},
             pre_ndc_response_plugins: {},
