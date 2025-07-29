@@ -44,7 +44,7 @@ log "Selecting version..."
 # version=${VERSION:-`echo $(curl -s -f -H 'Content-Type: application/json' \
     # https://releases.hasura.io/graphql-engine?agent=cli-get.sh) | sed -n -e "s/^.*\"$release\":\"\([^\",}]*\)\".*$/\1/p"`}
 
-version=${VERSION:-v2.46.0}
+version=${VERSION:-v2.48.3}
 
 if [ ! $version ]; then
     log "${YELLOW}"
@@ -62,7 +62,7 @@ log "Selected version: $version"
 
 log "${YELLOW}"
 log NOTE: Install a specific version of the CLI by using VERSION variable
-log 'curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | VERSION=v2.46.0 bash'
+log 'curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | VERSION=v2.48.3 bash'
 log "${NC}"
 
 # check for existing hasura installation

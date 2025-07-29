@@ -19,7 +19,7 @@
     
     You can also install a specific version of the CLI by providing the `VERSION` variable:
     ```bash
-    curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | VERSION=v2.46.0 bash
+    curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | VERSION=v2.48.3 bash
     ```
 
 - Windows
