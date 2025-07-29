@@ -157,7 +157,7 @@ A typical test will look similar to this:
 There are times when you would want to debug a test failure by playing
 around with the Hasura's Graphql engine or by inspecting the
 database. The default behavior of the test suite is to drop all the
-data and the tables onces the test suite finishes. To prevent that,
+data and the tables once the test suite finishes. To prevent that,
 you can modify your test module to prevent teardown. Example:
 
 ```diff

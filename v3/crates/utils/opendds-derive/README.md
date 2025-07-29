@@ -112,7 +112,7 @@ here.
 
 - `#[opendd(json_schema(default_exp = "some::function()"))]`
 
-  To be used in conjuction with [#[opendd(default)]](#field-level). The given
+  To be used in conjunction with [#[opendd(default)]](#field-level). The given
   function should return a json value which is included in the generated
   schema's `default`. Not needed when the field type has `serde::Serialize`
   trait implemented. The default JSON value will be inferred using
