@@ -87,7 +87,7 @@ buildEndpoint schemaTypes method EndpointMetadata {..} = do
           <> queryText
           <> "\n```"
       endpointName = unNonEmptyText $ unEndpointName _ceName
-  reqBody <- buildRequestBody analysis
+  reqBody <- buildRequestBody method analysis
   response <- buildResponse analysis method endpointURL
 
   let -- building the PathItem
@@ -136,14 +136,17 @@ collectParams (Structure _ vars) eURL = do
         Just (refType, typePattern, _shouldInline) -> do
           -- TODO: there's duplication between this piece of the code and the request body
           -- do we want to ensure consistency by deduplicating?
-          let isRequired = not $ G.unNullability nullability || isJust _viDefaultValue
-              desc =
-                if isRequired
-                  then Just $ "_\"" <> varName <> "\" is required (enter it either in parameters or request body)_"
-                  else Nothing
+          let isDefaultable = G.unNullability nullability || isJust _viDefaultValue
+              isInParamPath = parameterLocation == ParamPath
+              isRequired = not isDefaultable || isInParamPath
+              desc
+                | isInParamPath = Just $ "_\"" <> varName <> "\" is required as part of the path_"
+                | isRequired = Just $ "_\"" <> varName <> "\" is required (enter it either in parameters or request body)_"
+                | otherwise = Nothing
               -- TODO: document this
               -- NOTE: URL Variable name ':' prefix is removed for `elem` lookup.
               pathVars = map (T.drop 1) $ concat $ splitPath pure (const []) eURL
+              parameterLocation = if varName `elem` pathVars then ParamPath else ParamQuery
           pure
             $
             -- We always inline the schema, since we might need to add the default value.
@@ -151,7 +154,9 @@ collectParams (Structure _ vars) eURL = do
             $ mempty
             & name .~ varName
             & description .~ desc
-            & in_ .~ (if varName `elem` pathVars then ParamPath else ParamQuery)
+            & in_ .~ parameterLocation
+            -- path variables are always required, and this is checked by the validator:
+            & required ?~ isRequired
             & schema
               ?~ Inline
                 ( mempty
@@ -170,11 +175,15 @@ collectParams (Structure _ vars) eURL = do
 -- request body.
 buildRequestBody ::
   (MonadError QErr m, MonadFix m) =>
+  EndpointMethod ->
   Structure ->
   DeclareM m (Maybe (Referenced RequestBody))
-buildRequestBody Structure {..} = do
+buildRequestBody method Structure {..} = do
   let vars = HashMap.toList _stVariables
-  if null vars
+  -- A 'requestBody' on e.g. GET results in an invalid spec, so remove it even
+  -- though such requests are still suppported. This was formerly briefly
+  -- worked around on the frontend in #11258
+  if null vars || not (method `elem` [POST, PUT, PATCH])
     then pure Nothing
     else do
       (varProperties, Any isBodyRequired) <-
