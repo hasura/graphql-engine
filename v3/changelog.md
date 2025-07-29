@@ -8,6 +8,10 @@
 
 ### Added
 
+## [v2025.07.29]
+
+No changes since last release.
+
 ## [v2025.07.28]
 
 ### Synchronous Mode Pre-Response Plugins
@@ -1918,7 +1922,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.07.28...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.07.29...HEAD
+[v2025.07.29]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.29
 [v2025.07.28]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.28
 [v2025.07.22]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.22
 [v2025.07.21]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.21
