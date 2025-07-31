@@ -11,6 +11,7 @@ use crate::{
 pub mod actor_names_by_movie;
 pub mod eval_institutions;
 pub mod eval_location;
+pub mod eval_where;
 pub mod flip_yes_no;
 pub mod get_actor_by_id;
 pub mod get_actors_by_bool_exp;
@@ -28,6 +29,7 @@ pub mod latest_actor_name;
 
 pub(crate) fn get_functions() -> Vec<ndc_models::FunctionInfo> {
     vec![
+        eval_where::function_info(),
         eval_institutions::function_info(),
         eval_location::function_info(),
         latest_actor_id::function_info(),
@@ -55,6 +57,7 @@ pub(crate) fn get_function_by_name(
     state: &AppState,
 ) -> Result<Vec<Row>> {
     match collection_name.as_str() {
+        "eval_where" => eval_where::rows(arguments),
         "eval_institutions" => eval_institutions::rows(arguments, collection_relationships, state),
         "eval_location" => eval_location::rows(arguments, collection_relationships, state),
         "latest_actor_id" => latest_actor_id::rows(arguments, state),

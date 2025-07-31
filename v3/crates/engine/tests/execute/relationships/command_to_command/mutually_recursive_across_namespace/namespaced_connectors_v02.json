@@ -1158,6 +1158,94 @@
                       }
                     },
                     "foreign_keys": {}
+                  },
+                  "where": {
+                    "description": "A where clause",
+                    "fields": {
+                      "age": {
+                        "description": "Optional filtering over age",
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "where_int"
+                          }
+                        }
+                      },
+                      "name": {
+                        "description": "Optional filtering over name",
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "where_string"
+                          }
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  "where_int": {
+                    "description": "A where comparison over ints",
+                    "fields": {
+                      "_eq": {
+                        "description": "Optional equality check",
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int"
+                          }
+                        }
+                      },
+                      "_gt": {
+                        "description": "Optional less-than check",
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int"
+                          }
+                        }
+                      },
+                      "_lt": {
+                        "description": "Optional less-than check",
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int"
+                          }
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  "where_string": {
+                    "description": "A where comparison over strings",
+                    "fields": {
+                      "_eq": {
+                        "description": "Optional equality check",
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "string"
+                          }
+                        }
+                      },
+                      "_neq": {
+                        "description": "Optional non-equality check",
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "string"
+                          }
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
                   }
                 },
                 "collections": [
@@ -1288,6 +1376,29 @@
                   }
                 ],
                 "functions": [
+                  {
+                    "name": "eval_where",
+                    "description": "Returns fields described in a where clause",
+                    "arguments": {
+                      "where": {
+                        "description": "The where clause to evaluate",
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "where"
+                          }
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "array",
+                      "element_type": {
+                        "type": "named",
+                        "name": "String"
+                      }
+                    }
+                  },
                   {
                     "name": "eval_institutions",
                     "description": "Evaluates submitted institution objects against the provided boolean expression",
@@ -1815,10 +1926,11 @@
                       "count_scalar_type": "Int"
                     }
                   }
-                }
+                },
+                "request_arguments": null
               },
               "capabilities": {
-                "version": "0.2.2",
+                "version": "0.2.9",
                 "capabilities": {
                   "query": {
                     "aggregates": {
@@ -1854,7 +1966,9 @@
                     "project": {
                       "expression": {
                         "conditional": {
-                          "case": {},
+                          "case": {
+                            "scrutinee": {}
+                          },
                           "nullif": {}
                         },
                         "comparison": {
@@ -1864,6 +1978,7 @@
                           "greater_than": {},
                           "ilike": {},
                           "in_list": {},
+                          "is_distinct_from": {},
                           "is_false": {},
                           "is_nan": {},
                           "is_null": {},
@@ -1877,6 +1992,7 @@
                           "abs": {},
                           "and": {},
                           "array_element": {},
+                          "binary_concat": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
@@ -1899,7 +2015,8 @@
                             "second": {},
                             "microsecond": {},
                             "millisecond": {},
-                            "nanosecond": {}
+                            "nanosecond": {},
+                            "epoch": {}
                           },
                           "date_trunc": {},
                           "divide": {},
@@ -1949,17 +2066,35 @@
                           },
                           "max": {},
                           "min": {},
-                          "sum": {}
+                          "string_agg": {
+                            "distinct": {},
+                            "order_by": {}
+                          },
+                          "sum": {},
+                          "stddev": {},
+                          "stddev_pop": {},
+                          "approx_percentile_cont": {},
+                          "array_agg": {
+                            "distinct": {},
+                            "order_by": {}
+                          },
+                          "approx_distinct": {}
                         },
                         "window": {
                           "row_number": {},
                           "ntile": {}
+                        },
+                        "scalar_types": {
+                          "interval": {},
+                          "from_type": {}
                         }
                       }
                     },
                     "filter": {
                       "conditional": {
-                        "case": {},
+                        "case": {
+                          "scrutinee": {}
+                        },
                         "nullif": {}
                       },
                       "comparison": {
@@ -1969,6 +2104,7 @@
                         "greater_than": {},
                         "ilike": {},
                         "in_list": {},
+                        "is_distinct_from": {},
                         "is_false": {},
                         "is_nan": {},
                         "is_null": {},
@@ -1982,6 +2118,7 @@
                         "abs": {},
                         "and": {},
                         "array_element": {},
+                        "binary_concat": {},
                         "btrim": {},
                         "ceil": {},
                         "character_length": {},
@@ -2004,7 +2141,8 @@
                           "second": {},
                           "microsecond": {},
                           "millisecond": {},
-                          "nanosecond": {}
+                          "nanosecond": {},
+                          "epoch": {}
                         },
                         "date_trunc": {},
                         "divide": {},
@@ -2054,17 +2192,35 @@
                         },
                         "max": {},
                         "min": {},
-                        "sum": {}
+                        "string_agg": {
+                          "distinct": {},
+                          "order_by": {}
+                        },
+                        "sum": {},
+                        "stddev": {},
+                        "stddev_pop": {},
+                        "approx_percentile_cont": {},
+                        "array_agg": {
+                          "distinct": {},
+                          "order_by": {}
+                        },
+                        "approx_distinct": {}
                       },
                       "window": {
                         "row_number": {},
                         "ntile": {}
+                      },
+                      "scalar_types": {
+                        "interval": {},
+                        "from_type": {}
                       }
                     },
                     "sort": {
                       "expression": {
                         "conditional": {
-                          "case": {},
+                          "case": {
+                            "scrutinee": {}
+                          },
                           "nullif": {}
                         },
                         "comparison": {
@@ -2074,6 +2230,7 @@
                           "greater_than": {},
                           "ilike": {},
                           "in_list": {},
+                          "is_distinct_from": {},
                           "is_false": {},
                           "is_nan": {},
                           "is_null": {},
@@ -2087,6 +2244,7 @@
                           "abs": {},
                           "and": {},
                           "array_element": {},
+                          "binary_concat": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
@@ -2109,7 +2267,8 @@
                             "second": {},
                             "microsecond": {},
                             "millisecond": {},
-                            "nanosecond": {}
+                            "nanosecond": {},
+                            "epoch": {}
                           },
                           "date_trunc": {},
                           "divide": {},
@@ -2159,18 +2318,36 @@
                           },
                           "max": {},
                           "min": {},
-                          "sum": {}
+                          "string_agg": {
+                            "distinct": {},
+                            "order_by": {}
+                          },
+                          "sum": {},
+                          "stddev": {},
+                          "stddev_pop": {},
+                          "approx_percentile_cont": {},
+                          "array_agg": {
+                            "distinct": {},
+                            "order_by": {}
+                          },
+                          "approx_distinct": {}
                         },
                         "window": {
                           "row_number": {},
                           "ntile": {}
+                        },
+                        "scalar_types": {
+                          "interval": {},
+                          "from_type": {}
                         }
                       }
                     },
                     "join": {
                       "expression": {
                         "conditional": {
-                          "case": {},
+                          "case": {
+                            "scrutinee": {}
+                          },
                           "nullif": {}
                         },
                         "comparison": {
@@ -2180,6 +2357,7 @@
                           "greater_than": {},
                           "ilike": {},
                           "in_list": {},
+                          "is_distinct_from": {},
                           "is_false": {},
                           "is_nan": {},
                           "is_null": {},
@@ -2193,6 +2371,7 @@
                           "abs": {},
                           "and": {},
                           "array_element": {},
+                          "binary_concat": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
@@ -2215,7 +2394,8 @@
                             "second": {},
                             "microsecond": {},
                             "millisecond": {},
-                            "nanosecond": {}
+                            "nanosecond": {},
+                            "epoch": {}
                           },
                           "date_trunc": {},
                           "divide": {},
@@ -2265,11 +2445,27 @@
                           },
                           "max": {},
                           "min": {},
-                          "sum": {}
+                          "string_agg": {
+                            "distinct": {},
+                            "order_by": {}
+                          },
+                          "sum": {},
+                          "stddev": {},
+                          "stddev_pop": {},
+                          "approx_percentile_cont": {},
+                          "array_agg": {
+                            "distinct": {},
+                            "order_by": {}
+                          },
+                          "approx_distinct": {}
                         },
                         "window": {
                           "row_number": {},
                           "ntile": {}
+                        },
+                        "scalar_types": {
+                          "interval": {},
+                          "from_type": {}
                         }
                       },
                       "join_types": {
@@ -2286,7 +2482,9 @@
                     "aggregate": {
                       "expression": {
                         "conditional": {
-                          "case": {},
+                          "case": {
+                            "scrutinee": {}
+                          },
                           "nullif": {}
                         },
                         "comparison": {
@@ -2296,6 +2494,7 @@
                           "greater_than": {},
                           "ilike": {},
                           "in_list": {},
+                          "is_distinct_from": {},
                           "is_false": {},
                           "is_nan": {},
                           "is_null": {},
@@ -2309,6 +2508,7 @@
                           "abs": {},
                           "and": {},
                           "array_element": {},
+                          "binary_concat": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
@@ -2331,7 +2531,8 @@
                             "second": {},
                             "microsecond": {},
                             "millisecond": {},
-                            "nanosecond": {}
+                            "nanosecond": {},
+                            "epoch": {}
                           },
                           "date_trunc": {},
                           "divide": {},
@@ -2381,11 +2582,27 @@
                           },
                           "max": {},
                           "min": {},
-                          "sum": {}
+                          "string_agg": {
+                            "distinct": {},
+                            "order_by": {}
+                          },
+                          "sum": {},
+                          "stddev": {},
+                          "stddev_pop": {},
+                          "approx_percentile_cont": {},
+                          "array_agg": {
+                            "distinct": {},
+                            "order_by": {}
+                          },
+                          "approx_distinct": {}
                         },
                         "window": {
                           "row_number": {},
                           "ntile": {}
+                        },
+                        "scalar_types": {
+                          "interval": {},
+                          "from_type": {}
                         }
                       },
                       "group_by": {}
@@ -2393,7 +2610,9 @@
                     "window": {
                       "expression": {
                         "conditional": {
-                          "case": {},
+                          "case": {
+                            "scrutinee": {}
+                          },
                           "nullif": {}
                         },
                         "comparison": {
@@ -2403,6 +2622,7 @@
                           "greater_than": {},
                           "ilike": {},
                           "in_list": {},
+                          "is_distinct_from": {},
                           "is_false": {},
                           "is_nan": {},
                           "is_null": {},
@@ -2416,6 +2636,7 @@
                           "abs": {},
                           "and": {},
                           "array_element": {},
+                          "binary_concat": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
@@ -2438,7 +2659,8 @@
                             "second": {},
                             "microsecond": {},
                             "millisecond": {},
-                            "nanosecond": {}
+                            "nanosecond": {},
+                            "epoch": {}
                           },
                           "date_trunc": {},
                           "divide": {},
@@ -2488,17 +2710,36 @@
                           },
                           "max": {},
                           "min": {},
-                          "sum": {}
+                          "string_agg": {
+                            "distinct": {},
+                            "order_by": {}
+                          },
+                          "sum": {},
+                          "stddev": {},
+                          "stddev_pop": {},
+                          "approx_percentile_cont": {},
+                          "array_agg": {
+                            "distinct": {},
+                            "order_by": {}
+                          },
+                          "approx_distinct": {}
                         },
                         "window": {
                           "row_number": {},
                           "ntile": {}
+                        },
+                        "scalar_types": {
+                          "interval": {},
+                          "from_type": {}
                         }
                       }
-                    }
+                    },
+                    "union": {}
                   },
                   "relational_mutation": {
-                    "insert": {}
+                    "insert": {},
+                    "update": {},
+                    "delete": {}
                   }
                 }
               }
@@ -3664,6 +3905,94 @@
                       }
                     },
                     "foreign_keys": {}
+                  },
+                  "where": {
+                    "description": "A where clause",
+                    "fields": {
+                      "age": {
+                        "description": "Optional filtering over age",
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "where_int"
+                          }
+                        }
+                      },
+                      "name": {
+                        "description": "Optional filtering over name",
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "where_string"
+                          }
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  "where_int": {
+                    "description": "A where comparison over ints",
+                    "fields": {
+                      "_eq": {
+                        "description": "Optional equality check",
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int"
+                          }
+                        }
+                      },
+                      "_gt": {
+                        "description": "Optional less-than check",
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int"
+                          }
+                        }
+                      },
+                      "_lt": {
+                        "description": "Optional less-than check",
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int"
+                          }
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  "where_string": {
+                    "description": "A where comparison over strings",
+                    "fields": {
+                      "_eq": {
+                        "description": "Optional equality check",
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "string"
+                          }
+                        }
+                      },
+                      "_neq": {
+                        "description": "Optional non-equality check",
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "string"
+                          }
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
                   }
                 },
                 "collections": [
@@ -3794,6 +4123,29 @@
                   }
                 ],
                 "functions": [
+                  {
+                    "name": "eval_where",
+                    "description": "Returns fields described in a where clause",
+                    "arguments": {
+                      "where": {
+                        "description": "The where clause to evaluate",
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "where"
+                          }
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "array",
+                      "element_type": {
+                        "type": "named",
+                        "name": "String"
+                      }
+                    }
+                  },
                   {
                     "name": "eval_institutions",
                     "description": "Evaluates submitted institution objects against the provided boolean expression",
@@ -4321,10 +4673,11 @@
                       "count_scalar_type": "Int"
                     }
                   }
-                }
+                },
+                "request_arguments": null
               },
               "capabilities": {
-                "version": "0.2.2",
+                "version": "0.2.9",
                 "capabilities": {
                   "query": {
                     "aggregates": {
@@ -4360,7 +4713,9 @@
                     "project": {
                       "expression": {
                         "conditional": {
-                          "case": {},
+                          "case": {
+                            "scrutinee": {}
+                          },
                           "nullif": {}
                         },
                         "comparison": {
@@ -4370,6 +4725,7 @@
                           "greater_than": {},
                           "ilike": {},
                           "in_list": {},
+                          "is_distinct_from": {},
                           "is_false": {},
                           "is_nan": {},
                           "is_null": {},
@@ -4383,6 +4739,7 @@
                           "abs": {},
                           "and": {},
                           "array_element": {},
+                          "binary_concat": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
@@ -4405,7 +4762,8 @@
                             "second": {},
                             "microsecond": {},
                             "millisecond": {},
-                            "nanosecond": {}
+                            "nanosecond": {},
+                            "epoch": {}
                           },
                           "date_trunc": {},
                           "divide": {},
@@ -4455,17 +4813,35 @@
                           },
                           "max": {},
                           "min": {},
-                          "sum": {}
+                          "string_agg": {
+                            "distinct": {},
+                            "order_by": {}
+                          },
+                          "sum": {},
+                          "stddev": {},
+                          "stddev_pop": {},
+                          "approx_percentile_cont": {},
+                          "array_agg": {
+                            "distinct": {},
+                            "order_by": {}
+                          },
+                          "approx_distinct": {}
                         },
                         "window": {
                           "row_number": {},
                           "ntile": {}
+                        },
+                        "scalar_types": {
+                          "interval": {},
+                          "from_type": {}
                         }
                       }
                     },
                     "filter": {
                       "conditional": {
-                        "case": {},
+                        "case": {
+                          "scrutinee": {}
+                        },
                         "nullif": {}
                       },
                       "comparison": {
@@ -4475,6 +4851,7 @@
                         "greater_than": {},
                         "ilike": {},
                         "in_list": {},
+                        "is_distinct_from": {},
                         "is_false": {},
                         "is_nan": {},
                         "is_null": {},
@@ -4488,6 +4865,7 @@
                         "abs": {},
                         "and": {},
                         "array_element": {},
+                        "binary_concat": {},
                         "btrim": {},
                         "ceil": {},
                         "character_length": {},
@@ -4510,7 +4888,8 @@
                           "second": {},
                           "microsecond": {},
                           "millisecond": {},
-                          "nanosecond": {}
+                          "nanosecond": {},
+                          "epoch": {}
                         },
                         "date_trunc": {},
                         "divide": {},
@@ -4560,17 +4939,35 @@
                         },
                         "max": {},
                         "min": {},
-                        "sum": {}
+                        "string_agg": {
+                          "distinct": {},
+                          "order_by": {}
+                        },
+                        "sum": {},
+                        "stddev": {},
+                        "stddev_pop": {},
+                        "approx_percentile_cont": {},
+                        "array_agg": {
+                          "distinct": {},
+                          "order_by": {}
+                        },
+                        "approx_distinct": {}
                       },
                       "window": {
                         "row_number": {},
                         "ntile": {}
+                      },
+                      "scalar_types": {
+                        "interval": {},
+                        "from_type": {}
                       }
                     },
                     "sort": {
                       "expression": {
                         "conditional": {
-                          "case": {},
+                          "case": {
+                            "scrutinee": {}
+                          },
                           "nullif": {}
                         },
                         "comparison": {
@@ -4580,6 +4977,7 @@
                           "greater_than": {},
                           "ilike": {},
                           "in_list": {},
+                          "is_distinct_from": {},
                           "is_false": {},
                           "is_nan": {},
                           "is_null": {},
@@ -4593,6 +4991,7 @@
                           "abs": {},
                           "and": {},
                           "array_element": {},
+                          "binary_concat": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
@@ -4615,7 +5014,8 @@
                             "second": {},
                             "microsecond": {},
                             "millisecond": {},
-                            "nanosecond": {}
+                            "nanosecond": {},
+                            "epoch": {}
                           },
                           "date_trunc": {},
                           "divide": {},
@@ -4665,18 +5065,36 @@
                           },
                           "max": {},
                           "min": {},
-                          "sum": {}
+                          "string_agg": {
+                            "distinct": {},
+                            "order_by": {}
+                          },
+                          "sum": {},
+                          "stddev": {},
+                          "stddev_pop": {},
+                          "approx_percentile_cont": {},
+                          "array_agg": {
+                            "distinct": {},
+                            "order_by": {}
+                          },
+                          "approx_distinct": {}
                         },
                         "window": {
                           "row_number": {},
                           "ntile": {}
+                        },
+                        "scalar_types": {
+                          "interval": {},
+                          "from_type": {}
                         }
                       }
                     },
                     "join": {
                       "expression": {
                         "conditional": {
-                          "case": {},
+                          "case": {
+                            "scrutinee": {}
+                          },
                           "nullif": {}
                         },
                         "comparison": {
@@ -4686,6 +5104,7 @@
                           "greater_than": {},
                           "ilike": {},
                           "in_list": {},
+                          "is_distinct_from": {},
                           "is_false": {},
                           "is_nan": {},
                           "is_null": {},
@@ -4699,6 +5118,7 @@
                           "abs": {},
                           "and": {},
                           "array_element": {},
+                          "binary_concat": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
@@ -4721,7 +5141,8 @@
                             "second": {},
                             "microsecond": {},
                             "millisecond": {},
-                            "nanosecond": {}
+                            "nanosecond": {},
+                            "epoch": {}
                           },
                           "date_trunc": {},
                           "divide": {},
@@ -4771,11 +5192,27 @@
                           },
                           "max": {},
                           "min": {},
-                          "sum": {}
+                          "string_agg": {
+                            "distinct": {},
+                            "order_by": {}
+                          },
+                          "sum": {},
+                          "stddev": {},
+                          "stddev_pop": {},
+                          "approx_percentile_cont": {},
+                          "array_agg": {
+                            "distinct": {},
+                            "order_by": {}
+                          },
+                          "approx_distinct": {}
                         },
                         "window": {
                           "row_number": {},
                           "ntile": {}
+                        },
+                        "scalar_types": {
+                          "interval": {},
+                          "from_type": {}
                         }
                       },
                       "join_types": {
@@ -4792,7 +5229,9 @@
                     "aggregate": {
                       "expression": {
                         "conditional": {
-                          "case": {},
+                          "case": {
+                            "scrutinee": {}
+                          },
                           "nullif": {}
                         },
                         "comparison": {
@@ -4802,6 +5241,7 @@
                           "greater_than": {},
                           "ilike": {},
                           "in_list": {},
+                          "is_distinct_from": {},
                           "is_false": {},
                           "is_nan": {},
                           "is_null": {},
@@ -4815,6 +5255,7 @@
                           "abs": {},
                           "and": {},
                           "array_element": {},
+                          "binary_concat": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
@@ -4837,7 +5278,8 @@
                             "second": {},
                             "microsecond": {},
                             "millisecond": {},
-                            "nanosecond": {}
+                            "nanosecond": {},
+                            "epoch": {}
                           },
                           "date_trunc": {},
                           "divide": {},
@@ -4887,11 +5329,27 @@
                           },
                           "max": {},
                           "min": {},
-                          "sum": {}
+                          "string_agg": {
+                            "distinct": {},
+                            "order_by": {}
+                          },
+                          "sum": {},
+                          "stddev": {},
+                          "stddev_pop": {},
+                          "approx_percentile_cont": {},
+                          "array_agg": {
+                            "distinct": {},
+                            "order_by": {}
+                          },
+                          "approx_distinct": {}
                         },
                         "window": {
                           "row_number": {},
                           "ntile": {}
+                        },
+                        "scalar_types": {
+                          "interval": {},
+                          "from_type": {}
                         }
                       },
                       "group_by": {}
@@ -4899,7 +5357,9 @@
                     "window": {
                       "expression": {
                         "conditional": {
-                          "case": {},
+                          "case": {
+                            "scrutinee": {}
+                          },
                           "nullif": {}
                         },
                         "comparison": {
@@ -4909,6 +5369,7 @@
                           "greater_than": {},
                           "ilike": {},
                           "in_list": {},
+                          "is_distinct_from": {},
                           "is_false": {},
                           "is_nan": {},
                           "is_null": {},
@@ -4922,6 +5383,7 @@
                           "abs": {},
                           "and": {},
                           "array_element": {},
+                          "binary_concat": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
@@ -4944,7 +5406,8 @@
                             "second": {},
                             "microsecond": {},
                             "millisecond": {},
-                            "nanosecond": {}
+                            "nanosecond": {},
+                            "epoch": {}
                           },
                           "date_trunc": {},
                           "divide": {},
@@ -4994,17 +5457,36 @@
                           },
                           "max": {},
                           "min": {},
-                          "sum": {}
+                          "string_agg": {
+                            "distinct": {},
+                            "order_by": {}
+                          },
+                          "sum": {},
+                          "stddev": {},
+                          "stddev_pop": {},
+                          "approx_percentile_cont": {},
+                          "array_agg": {
+                            "distinct": {},
+                            "order_by": {}
+                          },
+                          "approx_distinct": {}
                         },
                         "window": {
                           "row_number": {},
                           "ntile": {}
+                        },
+                        "scalar_types": {
+                          "interval": {},
+                          "from_type": {}
                         }
                       }
-                    }
+                    },
+                    "union": {}
                   },
                   "relational_mutation": {
-                    "insert": {}
+                    "insert": {},
+                    "update": {},
+                    "delete": {}
                   }
                 }
               }
