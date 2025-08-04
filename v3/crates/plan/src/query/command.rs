@@ -182,6 +182,8 @@ pub(crate) fn from_command_selection(
     )?;
 
     // resolve arguments, adding in presets
+    // currently we expect arguments to have already been converted from OpenDD -> NDC field names
+    // by this point
     let unresolved_arguments = get_unresolved_arguments(
         &command_selection.target.arguments,
         &command.command.arguments,
