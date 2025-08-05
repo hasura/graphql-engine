@@ -279,12 +279,19 @@ pub enum BooleanExpressionError {
         boolean_expression_type_name: metadata_resolve::BooleanExpressionTypeIdentifier,
         data_connector_name: Qualified<DataConnectorName>,
     },
+    #[error(
+        "Built-in operators require a boolean expression type. Could not find one for object type {object_type_name}"
+    )]
+    BuiltInOperatorsRequireABooleanExpressionType {
+        object_type_name: Qualified<CustomTypeName>,
+    },
 }
 
 impl TraceableError for BooleanExpressionError {
     fn visibility(&self) -> ErrorVisibility {
         match self {
-            Self::ComparisonOperatorNotFound { .. } => ErrorVisibility::User,
+            Self::ComparisonOperatorNotFound { .. }
+            | Self::BuiltInOperatorsRequireABooleanExpressionType { .. } => ErrorVisibility::User,
         }
     }
 }

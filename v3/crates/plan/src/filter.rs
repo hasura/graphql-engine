@@ -921,7 +921,9 @@ fn to_scalar_comparison_field<'metadata>(
 
             // Boolean expression type is required to resolve built-in operators
             let boolean_expression_type = boolean_expression_type.ok_or_else(|| {
-                PlanError::Internal("Built-in operators require a boolean expression type".into())
+                BooleanExpressionError::BuiltInOperatorsRequireABooleanExpressionType {
+                    object_type_name: source_object_type.object_type_name.clone(),
+                }
             })?;
 
             // ensure we are allowed to access this operator
