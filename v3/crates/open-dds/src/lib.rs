@@ -13,7 +13,6 @@ pub mod boolean_expression;
 pub mod commands;
 pub mod data_connector;
 pub mod flags;
-pub mod glossary;
 pub mod graphql_config;
 pub mod identifier;
 pub mod models;
@@ -123,10 +122,6 @@ pub enum OpenDdSubgraphObject {
     TypePermissions(Spanned<permissions::TypePermissions>),
     ModelPermissions(Spanned<permissions::ModelPermissions>),
     CommandPermissions(Spanned<permissions::CommandPermissions>),
-
-    /// Glossary
-    #[opendd(hidden = true)]
-    Glossary(Spanned<glossary::Glossary>),
 
     // Plugin
     LifecyclePluginHook(Spanned<plugins::LifecyclePluginHook>),

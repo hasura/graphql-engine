@@ -6,8 +6,8 @@ use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
 use open_dds::{
-    aggregates::AggregateExpressionName, commands::CommandName, glossary::GlossaryName,
-    models::ModelName, types::CustomTypeName,
+    aggregates::AggregateExpressionName, commands::CommandName, models::ModelName,
+    types::CustomTypeName,
 };
 
 use crate::flags::RuntimeFlags;
@@ -15,8 +15,8 @@ use crate::types::condition::Conditions;
 use crate::types::subgraph::Qualified;
 
 use crate::stages::{
-    aggregates, boolean_expressions, command_permissions, glossaries, graphql_config,
-    model_permissions, object_relationships, order_by_expressions, scalar_type_representations,
+    aggregates, boolean_expressions, command_permissions, graphql_config, model_permissions,
+    object_relationships, order_by_expressions, scalar_type_representations,
 };
 
 use super::plugins::LifecyclePluginConfigs;
@@ -41,7 +41,6 @@ pub struct Metadata {
     pub aggregate_expressions:
         BTreeMap<Qualified<AggregateExpressionName>, aggregates::AggregateExpression>,
     pub graphql_config: graphql_config::GlobalGraphqlConfig,
-    pub glossaries: BTreeMap<Qualified<GlossaryName>, glossaries::Glossary>,
     pub plugin_configs: LifecyclePluginConfigs,
     pub roles: BTreeSet<Role>,
     pub conditions: Conditions,
