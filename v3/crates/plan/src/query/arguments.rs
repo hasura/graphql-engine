@@ -584,7 +584,6 @@ pub fn get_unresolved_arguments<'s>(
                 let argument_object_type = metadata_accessor::get_output_object_type(
                     metadata,
                     &boolean_expression_type.object_type,
-                    &session.role,
                     &session.variables,
                     plan_state,
                 )?;

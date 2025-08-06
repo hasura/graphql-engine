@@ -146,7 +146,7 @@ fn from_field_selection(
         arguments,
     } = &field_selection.target;
 
-    let field_type = object_type.get_field(field_name, &session.role)?.field_type;
+    let field_type = object_type.get_field(field_name)?.field_type;
 
     let field_mapping = field_mappings.get(field_name).ok_or_else(|| {
         PlanError::Internal(format!(
@@ -257,7 +257,6 @@ fn resolve_nested_field_selection(
             let field_nested_object_type = crate::metadata_accessor::get_output_object_type(
                 metadata,
                 field_type_name,
-                &session.role,
                 &session.variables,
                 plan_state,
             )?;
@@ -467,7 +466,6 @@ fn from_model_relationship(
                 mut relationship_join_filter_expressions,
                 arguments: new_arguments,
             } = calculate_remote_relationship_fields_for_model_target(
-                session,
                 metadata,
                 object_type,
                 relationship_name,
@@ -681,7 +679,6 @@ fn from_command_relationship(
                 object_type_field_mappings,
                 arguments: arguments_from_join,
             } = calculate_remote_relationship_fields_for_command_target(
-                session,
                 metadata,
                 object_type,
                 relationship_name,
@@ -958,7 +955,6 @@ fn from_relationship_aggregate_selection(
                         mut relationship_join_filter_expressions,
                         arguments: new_arguments,
                     } = calculate_remote_relationship_fields_for_model_target(
-                        session,
                         metadata,
                         object_type,
                         relationship_name,
@@ -1112,7 +1108,6 @@ fn ndc_nested_field_selection_for(
                 let object_type = crate::metadata_accessor::get_output_object_type(
                     metadata,
                     name,
-                    &session.role,
                     &session.variables,
                     plan_state,
                 )?;

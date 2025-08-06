@@ -179,7 +179,6 @@ fn to_filter_expression_internal<'metadata>(
             let source_object_type = crate::metadata_accessor::get_output_object_type(
                 metadata,
                 &source_boolean_expression_type.object_type,
-                &session.role,
                 &session.variables,
                 plan_state,
             )?;
@@ -210,7 +209,6 @@ fn to_filter_expression_internal<'metadata>(
                         crate::metadata_accessor::get_output_object_type(
                             metadata,
                             &target_boolean_expression_type.object_type,
-                            &session.role,
                             &session.variables,
                             plan_state,
                         )?;
@@ -232,7 +230,6 @@ fn to_filter_expression_internal<'metadata>(
                             let target_model_source = crate::metadata_accessor::get_model(
                                 metadata,
                                 &model_target.model_name,
-                                &session.role,
                                 &session.variables,
                                 plan_state,
                             )?;
@@ -487,7 +484,6 @@ fn to_field_comparison_expression<'metadata>(
             let target_object_type = crate::metadata_accessor::get_output_object_type(
                 metadata,
                 &nested_boolean_expression_type.object_type,
-                &session.role,
                 &session.variables,
                 plan_state,
             )?;

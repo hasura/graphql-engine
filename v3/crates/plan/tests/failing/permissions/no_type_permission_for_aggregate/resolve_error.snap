@@ -3,4 +3,4 @@ source: crates/plan/tests/plan_golden_tests.rs
 expression: msg
 input_file: crates/plan/tests/failing/permissions/no_type_permission_for_aggregate/query.json
 ---
-role admin does not have permission to select from field movie_id in type actor (in subgraph default)
+no permission to select from field movie_id in type actor (in subgraph default)
