@@ -108,8 +108,10 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/predicate_ar
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                9295230919520119376,
+                            condition: Some(
+                                ConditionHash(
+                                    9295230919520119376,
+                                ),
                             ),
                         },
                     ],

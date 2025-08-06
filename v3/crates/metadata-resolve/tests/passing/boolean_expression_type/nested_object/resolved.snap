@@ -174,8 +174,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -599,8 +601,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -971,8 +975,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],

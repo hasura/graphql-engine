@@ -108,8 +108,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                         AllowFields {
@@ -125,8 +127,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14454357423896325477,
+                            condition: Some(
+                                ConditionHash(
+                                    14454357423896325477,
+                                ),
                             ),
                         },
                         AllowFields {
@@ -142,8 +146,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                1826476065993054670,
+                            condition: Some(
+                                ConditionHash(
+                                    1826476065993054670,
+                                ),
                             ),
                         },
                     ],

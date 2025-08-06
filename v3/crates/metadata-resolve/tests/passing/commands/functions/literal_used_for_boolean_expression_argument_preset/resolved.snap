@@ -80,8 +80,10 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                3363483249683024545,
+                            condition: Some(
+                                ConditionHash(
+                                    3363483249683024545,
+                                ),
                             ),
                         },
                         AllowFields {
@@ -97,8 +99,10 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                11131531502033717022,
+                            condition: Some(
+                                ConditionHash(
+                                    11131531502033717022,
+                                ),
                             ),
                         },
                     ],

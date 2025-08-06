@@ -135,8 +135,10 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                3363483249683024545,
+                            condition: Some(
+                                ConditionHash(
+                                    3363483249683024545,
+                                ),
                             ),
                         },
                     ],
@@ -667,8 +669,10 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                3363483249683024545,
+                            condition: Some(
+                                ConditionHash(
+                                    3363483249683024545,
+                                ),
                             ),
                         },
                     ],
@@ -1194,8 +1198,10 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                3363483249683024545,
+                            condition: Some(
+                                ConditionHash(
+                                    3363483249683024545,
+                                ),
                             ),
                         },
                     ],
@@ -1831,8 +1837,10 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                3363483249683024545,
+                            condition: Some(
+                                ConditionHash(
+                                    3363483249683024545,
+                                ),
                             ),
                         },
                     ],
@@ -2121,8 +2129,10 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                3363483249683024545,
+                            condition: Some(
+                                ConditionHash(
+                                    3363483249683024545,
+                                ),
                             ),
                         },
                     ],

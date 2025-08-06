@@ -83,11 +83,11 @@ pub struct TypeOutputPermissions {
 pub enum FieldAuthorizationRule {
     AllowFields {
         fields: Vec<FieldName>,
-        condition: ConditionHash,
+        condition: Option<ConditionHash>,
     },
     DenyFields {
         fields: Vec<FieldName>,
-        condition: ConditionHash,
+        condition: Option<ConditionHash>,
     },
 }
 

@@ -132,9 +132,13 @@ fn resolve_internal(
     let mut conditions = Conditions::new();
 
     // Fetch and validate permissions, and attach them to the relevant object types
-    let (object_types_with_permissions, type_permission_issues) =
-        type_permissions::resolve(&metadata_accessor, object_types, &mut conditions)
-            .map_err(flatten_multiple_errors)?;
+    let (object_types_with_permissions, type_permission_issues) = type_permissions::resolve(
+        &metadata_accessor,
+        object_types,
+        configuration,
+        &mut conditions,
+    )
+    .map_err(flatten_multiple_errors)?;
 
     all_issues.extend(type_permission_issues.into_iter().map(Warning::from));
 

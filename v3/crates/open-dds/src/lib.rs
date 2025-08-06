@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 pub mod accessor;
 pub mod aggregates;
 pub mod arguments;
+pub mod authorization;
 pub mod boolean_expression;
 pub mod commands;
 pub mod data_connector;

@@ -5,6 +5,7 @@ use serde_json::Value as JsonValue;
 
 use crate::{
     arguments::ArgumentName,
+    authorization,
     commands::CommandName,
     impl_JsonSchema_with_OpenDd_for,
     models::ModelName,
@@ -136,6 +137,9 @@ pub enum TypePermissionOperand {
     /// Definition of role-based type permissions on an OpenDD object type
     #[opendd(json_schema(title = "RoleBased"))]
     RoleBased(Vec<TypePermission>),
+    /// Definition of rules-based type permissions on an OpenDD object type
+    #[opendd(json_schema(title = "RulesBased"))]
+    RulesBased(Vec<authorization::TypeAuthorizationRule>),
 }
 
 #[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]

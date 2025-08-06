@@ -206,8 +206,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                3363483249683024545,
+                            condition: Some(
+                                ConditionHash(
+                                    3363483249683024545,
+                                ),
                             ),
                         },
                     ],

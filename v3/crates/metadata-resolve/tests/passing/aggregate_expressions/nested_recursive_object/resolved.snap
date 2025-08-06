@@ -89,8 +89,10 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/nested_r
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                3363483249683024545,
+                            condition: Some(
+                                ConditionHash(
+                                    3363483249683024545,
+                                ),
                             ),
                         },
                     ],

@@ -21,6 +21,12 @@ pub enum TypeOutputPermissionError {
         field_name: FieldName,
         type_name: CustomTypeName,
     },
+    #[error(
+        "Output TypePermissions for object type {object_type_name} use authorization rules but they are not enabled"
+    )]
+    AuthorizationRulesNotEnabled {
+        object_type_name: Qualified<CustomTypeName>,
+    },
 }
 
 impl ContextualError for TypeOutputPermissionError {

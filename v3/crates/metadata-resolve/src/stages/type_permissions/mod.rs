@@ -1,7 +1,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 
+mod condition;
 mod error;
 mod types;
+use crate::configuration::Configuration;
 use crate::types::condition::{BinaryOperation, Condition, Conditions};
 use crate::types::subgraph::Qualified;
 pub use error::{
@@ -21,6 +23,7 @@ pub use types::{
 use crate::ValueExpression;
 use crate::helpers::typecheck;
 use crate::stages::object_types;
+use condition::resolve_condition;
 
 fn get_boolean_expression_type_names(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
@@ -48,6 +51,7 @@ fn get_boolean_expression_type_names(
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     object_types: object_types::ObjectTypesWithTypeMappings,
+    configuration: &Configuration,
     conditions: &mut Conditions,
 ) -> Result<(ObjectTypesWithPermissions, Vec<TypePermissionIssue>), Vec<TypePermissionError>> {
     let mut issues = Vec::new();
@@ -78,6 +82,7 @@ pub fn resolve(
             &boolean_expression_type_names.iter().collect(),
             &object_types_context,
             &metadata_accessor.flags,
+            configuration,
             &mut type_permissions,
             conditions,
             &mut issues,
@@ -130,7 +135,7 @@ struct Permissions {
 }
 
 fn resolve_type_permission(
-    output_type_permission: &TypePermissionsV2,
+    type_permission: &TypePermissionsV2,
     subgraph: &SubgraphName,
     object_types: &object_types::ObjectTypesWithTypeMappings,
     boolean_expression_type_names: &BTreeSet<&Qualified<CustomTypeName>>,
@@ -139,12 +144,12 @@ fn resolve_type_permission(
         &object_types::ObjectTypeRepresentation,
     >,
     flags: &open_dds::flags::OpenDdFlags,
+    configuration: &Configuration,
     type_permissions: &mut BTreeMap<Qualified<CustomTypeName>, Permissions>,
     conditions: &mut Conditions,
     issues: &mut Vec<TypePermissionIssue>,
 ) -> Result<(), TypePermissionError> {
-    let qualified_type_name =
-        Qualified::new(subgraph.clone(), output_type_permission.type_name.clone());
+    let qualified_type_name = Qualified::new(subgraph.clone(), type_permission.type_name.clone());
 
     match object_types.0.get(&qualified_type_name) {
         None => {
@@ -156,9 +161,11 @@ fn resolve_type_permission(
         }
         Some(object_type) => {
             let type_output_permissions = resolve_output_type_permission(
+                &qualified_type_name,
                 &object_type.object_type,
-                output_type_permission,
+                type_permission,
                 flags,
+                configuration,
                 conditions,
             )?;
 
@@ -167,7 +174,7 @@ fn resolve_type_permission(
                 object_types_context,
                 boolean_expression_type_names,
                 &object_type.object_type,
-                output_type_permission,
+                type_permission,
                 conditions,
                 issues,
             )?;
@@ -185,16 +192,53 @@ fn resolve_type_permission(
 }
 
 pub fn resolve_output_type_permission(
+    object_type_name: &Qualified<CustomTypeName>,
     object_type_representation: &object_types::ObjectTypeRepresentation,
     type_permissions: &TypePermissionsV2,
     flags: &open_dds::flags::OpenDdFlags,
+    configuration: &Configuration,
     conditions: &mut Conditions,
 ) -> Result<TypeOutputPermissions, TypeOutputPermissionError> {
-    let mut authorization_rules = Vec::new();
-    let mut by_role = BTreeMap::new();
-
     match &type_permissions.permissions {
+        TypePermissionOperand::RulesBased(type_authorization_rules) => {
+            if !configuration.unstable_features.enable_authorization_rules {
+                return Err(TypeOutputPermissionError::AuthorizationRulesNotEnabled {
+                    object_type_name: object_type_name.clone(),
+                });
+            }
+            let authorization_rules = type_authorization_rules
+                .iter()
+                .map(|field_authorization_rule| match field_authorization_rule {
+                    open_dds::authorization::TypeAuthorizationRule::AllowFields {
+                        fields,
+                        condition,
+                    } => FieldAuthorizationRule::AllowFields {
+                        fields: fields.clone(),
+                        condition: condition
+                            .as_ref()
+                            .map(|condition| conditions.add(resolve_condition(condition, flags))),
+                    },
+                    open_dds::authorization::TypeAuthorizationRule::DenyFields {
+                        fields,
+                        condition,
+                    } => FieldAuthorizationRule::DenyFields {
+                        fields: fields.clone(),
+                        condition: condition
+                            .as_ref()
+                            .map(|condition| conditions.add(resolve_condition(condition, flags))),
+                    },
+                })
+                .collect();
+
+            Ok(TypeOutputPermissions {
+                authorization_rules,
+                by_role: BTreeMap::new(),
+            })
+        }
         TypePermissionOperand::RoleBased(role_based_type_permissions) => {
+            let mut authorization_rules = Vec::new();
+            let mut by_role = BTreeMap::new();
+
             // validate all the fields definied in output permissions actually
             // exist in this type definition
             for role_based_type_permission in role_based_type_permissions {
@@ -260,7 +304,7 @@ fn authorization_rule_for_role(
 
     FieldAuthorizationRule::AllowFields {
         fields: allowed_fields.iter().cloned().collect(),
-        condition: hash,
+        condition: Some(hash),
     }
 }
 
@@ -277,6 +321,14 @@ pub(crate) fn resolve_input_type_permission(
     issues: &mut Vec<TypePermissionIssue>,
 ) -> Result<TypeInputPermissions, TypeInputPermissionError> {
     match &type_permissions.permissions {
+        TypePermissionOperand::RulesBased(_field_authorization_rules) => {
+            // we don't have input permissions with AuthorizationBased for now,
+            // so these are the same as "no permissions defined"
+            Ok(TypeInputPermissions {
+                by_role: BTreeMap::new(),
+                authorization_rules: Vec::new(),
+            })
+        }
         TypePermissionOperand::RoleBased(role_based_type_permissions) => {
             let mut by_role = BTreeMap::new();
             let mut authorization_rules = Vec::new();

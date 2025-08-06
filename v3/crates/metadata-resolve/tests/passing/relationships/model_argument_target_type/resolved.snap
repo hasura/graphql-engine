@@ -124,8 +124,10 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                5261800314210927403,
+                            condition: Some(
+                                ConditionHash(
+                                    5261800314210927403,
+                                ),
                             ),
                         },
                     ],
@@ -644,8 +646,10 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                5261800314210927403,
+                            condition: Some(
+                                ConditionHash(
+                                    5261800314210927403,
+                                ),
                             ),
                         },
                     ],

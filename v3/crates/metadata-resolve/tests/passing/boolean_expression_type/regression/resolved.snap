@@ -102,8 +102,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -748,8 +750,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -1006,8 +1010,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                         AllowFields {
@@ -1023,8 +1029,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                9591853440105325468,
+                            condition: Some(
+                                ConditionHash(
+                                    9591853440105325468,
+                                ),
                             ),
                         },
                     ],
@@ -1486,8 +1494,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -1750,8 +1760,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -2086,8 +2098,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -2639,8 +2653,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -3158,8 +3174,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -3362,8 +3380,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -3623,8 +3643,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -3871,8 +3893,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -4230,8 +4254,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -4498,8 +4524,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -4770,8 +4798,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -4936,8 +4966,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
