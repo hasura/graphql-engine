@@ -235,6 +235,7 @@ pollLiveQuery pollerId pollerResponseState lqOpts (sourceName, sourceConfig) rol
       let cohortSnapshot = C.CohortSnapshot cohortVars respRef (map snd curOpsL) (map snd newOpsL)
       return (resId, cohortSnapshot)
 
+    getCohortSnapshot :: (CohortVariables, C.Cohort ()) -> STM.STM (CohortId, C.CohortSnapshot)
     getCohortOperations cohorts = \case
       Left e ->
         -- TODO: this is internal error
@@ -243,6 +244,8 @@ pollLiveQuery pollerId pollerResponseState lqOpts (sourceName, sourceConfig) rol
       Right responses -> do
         let cohortSnapshotMap = HashMap.fromList cohorts
         flip mapMaybe responses $ \(cohortId, respBS) ->
+          -- respBS represents the raw top-level field result, exactly as it will appear in
+          -- '{data: <respBS>}' modulo mysterious things done to it by 'modifier' (namespacing?)
           let respHash = mkRespHash respBS
               respSize = BS.length respBS
            in -- TODO: currently we ignore the cases when the cohortId from

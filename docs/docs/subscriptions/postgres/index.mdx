@@ -100,9 +100,11 @@ subscriptions. Let's see how they can be used and how they differ from each othe
 
 The experimental feature flag
 [`remove_empty_subscription_responses`](/deployment/graphql-engine-flags/reference.mdx#experimental-features)
-can be used to reduce network overhead for projects making heavy use of
-streaming subscriptions where responses are often empty by only returning
-non-empty result sets.
+can be used to reduce network overhead for projects making heavy use of streaming subscriptions where responses are often
+empty by only returning non-empty result sets. Note that for _streaming_ subscriptions this shouldn't result in any
+observable change from the subscriber's point of view, but for live queries `null` and `[]` will **never be returned**
+which means the subscriber won't receive an initial empty result, for instance, or won't be able to detect when a
+query goes from returning a certain result to returning no result(s).
 
 ## Communication protocol
 

@@ -146,8 +146,7 @@ toSQLFromItem userInfo tableAlias query = do
     QDBStreamMultipleRows s -> S.mkSelFromItem <$> DS.mkStreamSQLSelect userInfo s <*> pure tableAlias
 
 throwErrorForRemoteRelationshipInPermissionPredicate ::
-  ( MonadError QErr m
-  ) =>
+  (MonadError QErr m) =>
   QueryDB ('Postgres pgKind) Void S.SQLExp ->
   m ()
 throwErrorForRemoteRelationshipInPermissionPredicate q = do
@@ -185,8 +184,7 @@ throwErrorForRemoteRelationshipInPermissionPredicate q = do
     haveRemoteRelationshipPredicate _ = False
 
     throwErrorForRemoteRelationshipInPermissionPredicateInField ::
-      ( MonadError QErr m
-      ) =>
+      (MonadError QErr m) =>
       AnnFieldG ('Postgres pgKind) Void S.SQLExp ->
       m ()
     throwErrorForRemoteRelationshipInPermissionPredicateInField (AFObjectRelation objRel) = do
@@ -211,8 +209,7 @@ throwErrorForRemoteRelationshipInPermissionPredicate q = do
     throwErrorForRemoteRelationshipInPermissionPredicateInField (AFExpression _) = pure ()
 
     throwErrorForRemoteRelationshipInPermissionPredicateInConnectionFields ::
-      ( MonadError QErr m
-      ) =>
+      (MonadError QErr m) =>
       Fields (ConnectionField ('Postgres pgKind) Void S.SQLExp) ->
       m ()
     throwErrorForRemoteRelationshipInPermissionPredicateInConnectionFields connFields =
@@ -230,8 +227,7 @@ throwErrorForRemoteRelationshipInPermissionPredicate q = do
           ConnectionPageInfo _ -> pure ()
 
     throwErrorForRemoteRelationshipInPermissionPredicateInAggregateFields ::
-      ( MonadError QErr m
-      ) =>
+      (MonadError QErr m) =>
       Fields (TableAggregateFieldG ('Postgres pgKind) Void S.SQLExp) ->
       m ()
     throwErrorForRemoteRelationshipInPermissionPredicateInAggregateFields aggFields =
@@ -266,14 +262,56 @@ throwErrorForRemoteRelationshipInPermissionPredicate q = do
 --    4bd57826-7ed1-4aa0-869e-0bdc87bdd049 | {"Album_stream" : [{"Title":"ZZ1 3"}]} | {"Title" : "ZZ1 3"}
 --    14cff8be-8fb7-425a-88c5-bd77428db955 | {"Album_stream" : []}                  | {"Title" : null}
 --
+-- ...or for live queries (and in this case):
+--
+--                 result_id               |                   result
+--   --------------------------------------+--------------------------------------------
+--    baa89ba1-7ad6-499d-a802-6fdcbc152ede | {"Artist_by_pk" : {"Name":"Billy Cobham"}}
+--    14cff8be-8fb7-425a-88c5-bd77428db955 | {"Artist_by_pk" : null}
+--
+--
 -- The `where` clause defined here strips rows like the second where there are
 -- no new results.
 --
 -- This needs to stay compatible with both 'mkStreamingMultiplexedQuery' and
 -- 'mkMultiplexedQuery'.
+--
+-- NOTE!: as far as I can tell this results in no change from the point of view
+-- of a streaming subscriber client (they never receive empty results), and so
+-- this behavior can likely be made the default for those (with thorough
+-- review). However the behavior is strange for regular subscriptions; the
+-- subscriber never receives empty results and so can't e.g. determine when the
+-- query goes from some result to an empty result.
 removeEmptyMultiplexedResults :: S.Select -> S.Select
-removeEmptyMultiplexedResults inner = do
-  let nonEmptyRowFilter :: S.WhereFrag
+removeEmptyMultiplexedResults inner =
+  let -- is "value" neither an array nor a json null?:
+      valueIsNonNullNonArray =
+        S.BEBin
+          S.AndOp
+          ( S.BECompare
+              S.SNE
+              (S.SEFnApp "json_typeof" [S.SEIdentifier (Identifier "value")] Nothing)
+              (S.SELit "array")
+          )
+          ( S.BECompare
+              S.SNE
+              (S.SEFnApp "json_typeof" [S.SEIdentifier (Identifier "value")] Nothing)
+              (S.SELit "null")
+          )
+      -- ...or is it a non-empty array
+      valueIsNonEmptyArray = S.BEBin S.AndOp jsonTypeOfValueIsArray arrayLengthIsGTZero
+      jsonTypeOfValueIsArray =
+        S.BECompare
+          S.SEQ
+          (S.SEFnApp "json_typeof" [S.SEIdentifier (Identifier "value")] Nothing)
+          (S.SELit "array")
+      arrayLengthIsGTZero =
+        S.BECompare
+          S.SGT
+          (S.SEFnApp "json_array_length" [S.SEIdentifier (Identifier "value")] Nothing)
+          (S.SELit "0")
+
+      nonEmptyRowFilter :: S.WhereFrag
       nonEmptyRowFilter =
         S.WhereFrag
           $ S.BEExists
@@ -292,19 +330,16 @@ removeEmptyMultiplexedResults inner = do
               S.selWhere =
                 Just
                   $ S.WhereFrag
-                  $ S.BECompare
-                    S.SGT
-                    (S.SEFnApp "json_array_length" [S.SEIdentifier (Identifier "value")] Nothing)
-                    (S.SELit "0")
+                  -- we need to be careful to support 'null', '[]' and '{..}' here
+                  $ S.BEBin S.OrOp valueIsNonEmptyArray valueIsNonNullNonArray
             }
-
-  -- Ultimately, we select all the multiplexed results, and filter according to
-  -- the definition above.
-  S.mkSelect
-    { S.selFrom = Just $ S.FromExp [S.FISelect (S.Lateral False) inner "_multiplex"],
-      S.selExtr = [S.Extractor (S.SEStar Nothing) Nothing],
-      S.selWhere = Just nonEmptyRowFilter
-    }
+   in -- Ultimately, we select all the multiplexed results, and filter according to
+      -- the definition above.
+      S.mkSelect
+        { S.selFrom = Just $ S.FromExp [S.FISelect (S.Lateral False) inner "_multiplex"],
+          S.selExtr = [S.Extractor (S.SEStar Nothing) Nothing],
+          S.selWhere = Just nonEmptyRowFilter
+        }
 
 mkMultiplexedQuery ::
   ( Backend ('Postgres pgKind),
