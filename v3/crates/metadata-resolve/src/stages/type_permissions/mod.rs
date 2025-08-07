@@ -213,23 +213,39 @@ pub fn resolve_output_type_permission(
                     open_dds::authorization::TypeAuthorizationRule::AllowFields(Fields {
                         fields,
                         condition,
-                    }) => FieldAuthorizationRule::AllowFields {
-                        fields: fields.clone(),
-                        condition: condition
-                            .as_ref()
-                            .map(|condition| conditions.add(resolve_condition(condition, flags))),
-                    },
+                    }) => {
+                        validate_fields_exist(
+                            object_type_representation,
+                            object_type_name,
+                            fields.iter(),
+                        )?;
+
+                        Ok::<_, TypeOutputPermissionError>(FieldAuthorizationRule::AllowFields {
+                            fields: fields.clone(),
+                            condition: condition.as_ref().map(|condition| {
+                                conditions.add(resolve_condition(condition, flags))
+                            }),
+                        })
+                    }
                     open_dds::authorization::TypeAuthorizationRule::DenyFields(Fields {
                         fields,
                         condition,
-                    }) => FieldAuthorizationRule::DenyFields {
-                        fields: fields.clone(),
-                        condition: condition
-                            .as_ref()
-                            .map(|condition| conditions.add(resolve_condition(condition, flags))),
-                    },
+                    }) => {
+                        validate_fields_exist(
+                            object_type_representation,
+                            object_type_name,
+                            fields.iter(),
+                        )?;
+
+                        Ok(FieldAuthorizationRule::DenyFields {
+                            fields: fields.clone(),
+                            condition: condition.as_ref().map(|condition| {
+                                conditions.add(resolve_condition(condition, flags))
+                            }),
+                        })
+                    }
                 })
-                .collect();
+                .collect::<Result<Vec<_>, _>>()?;
 
             Ok(TypeOutputPermissions {
                 authorization_rules,
@@ -244,16 +260,11 @@ pub fn resolve_output_type_permission(
             // exist in this type definition
             for role_based_type_permission in role_based_type_permissions {
                 if let Some(output) = &role_based_type_permission.output {
-                    for field_name in &output.allowed_fields {
-                        if !object_type_representation.fields.contains_key(field_name) {
-                            return Err(
-                                TypeOutputPermissionError::UnknownFieldInOutputPermissionsDefinition {
-                                    field_name: field_name.clone(),
-                                    type_name: type_permissions.type_name.clone(),
-                                },
-                            );
-                        }
-                    }
+                    validate_fields_exist(
+                        object_type_representation,
+                        object_type_name,
+                        output.allowed_fields.iter(),
+                    )?;
 
                     let authorization_rule = authorization_rule_for_role(
                         &role_based_type_permission.role,
@@ -280,6 +291,24 @@ pub fn resolve_output_type_permission(
             })
         }
     }
+}
+
+fn validate_fields_exist<'a>(
+    object_type_representation: &object_types::ObjectTypeRepresentation,
+    object_type_name: &Qualified<CustomTypeName>,
+    fields: impl Iterator<Item = &'a FieldName>,
+) -> Result<(), TypeOutputPermissionError> {
+    for field_name in fields {
+        if !object_type_representation.fields.contains_key(field_name) {
+            return Err(
+                TypeOutputPermissionError::UnknownFieldInOutputPermissionsDefinition {
+                    field_name: field_name.clone(),
+                    type_name: object_type_name.clone(),
+                },
+            );
+        }
+    }
+    Ok(())
 }
 
 // given a role and some fields, return a FieldAuthorizationRule

@@ -1,0 +1,6 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: string
+input_file: crates/metadata-resolve/tests/failing/type_permissions/rules_based/metadata.json
+---
+Error: unknown field 'DoesntExist' used in output permissions of type 'Album (in subgraph subgraphs)'

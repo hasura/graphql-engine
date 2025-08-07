@@ -19,7 +19,7 @@ pub enum TypeOutputPermissionError {
     #[error("unknown field '{field_name:}' used in output permissions of type '{type_name:}'")]
     UnknownFieldInOutputPermissionsDefinition {
         field_name: FieldName,
-        type_name: CustomTypeName,
+        type_name: Qualified<CustomTypeName>,
     },
     #[error(
         "Output TypePermissions for object type {object_type_name} use authorization rules but they are not enabled"
