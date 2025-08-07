@@ -11,7 +11,7 @@ pub use error::{
 };
 use hasura_authn_core::SESSION_VARIABLE_ROLE;
 use indexmap::IndexSet;
-use open_dds::authorization::Fields;
+use open_dds::authorization::{Fields, InputTypeFieldPreset};
 use open_dds::identifier::SubgraphName;
 use open_dds::permissions::{FieldPreset, Role, TypePermissionOperand, TypePermissionsV2};
 use open_dds::session_variables::SessionVariableReference;
@@ -21,9 +21,9 @@ pub use types::{
     TypeInputAuthorizationRule, TypeInputPermission, TypeInputPermissions, TypeOutputPermissions,
 };
 
-use crate::ValueExpression;
 use crate::helpers::typecheck;
 use crate::stages::object_types;
+use crate::{FieldDefinition, ValueExpression};
 pub use condition::resolve_condition;
 
 fn get_boolean_expression_type_names(
@@ -175,7 +175,9 @@ fn resolve_type_permission(
                 object_types_context,
                 boolean_expression_type_names,
                 &object_type.object_type,
+                &qualified_type_name,
                 type_permission,
+                configuration,
                 conditions,
                 issues,
             )?;
@@ -207,9 +209,11 @@ pub fn resolve_output_type_permission(
                     object_type_name: object_type_name.clone(),
                 });
             }
-            let authorization_rules = type_authorization_rules
-                .iter()
-                .map(|field_authorization_rule| match field_authorization_rule {
+
+            let mut authorization_rules = vec![];
+
+            for type_authorization_rule in type_authorization_rules {
+                match type_authorization_rule {
                     open_dds::authorization::TypeAuthorizationRule::AllowFields(Fields {
                         fields,
                         condition,
@@ -220,12 +224,12 @@ pub fn resolve_output_type_permission(
                             fields.iter(),
                         )?;
 
-                        Ok::<_, TypeOutputPermissionError>(FieldAuthorizationRule::AllowFields {
+                        authorization_rules.push(FieldAuthorizationRule::AllowFields {
                             fields: fields.clone(),
                             condition: condition.as_ref().map(|condition| {
                                 conditions.add(resolve_condition(condition, flags))
                             }),
-                        })
+                        });
                     }
                     open_dds::authorization::TypeAuthorizationRule::DenyFields(Fields {
                         fields,
@@ -237,15 +241,17 @@ pub fn resolve_output_type_permission(
                             fields.iter(),
                         )?;
 
-                        Ok(FieldAuthorizationRule::DenyFields {
+                        authorization_rules.push(FieldAuthorizationRule::DenyFields {
                             fields: fields.clone(),
                             condition: condition.as_ref().map(|condition| {
                                 conditions.add(resolve_condition(condition, flags))
                             }),
-                        })
+                        });
                     }
-                })
-                .collect::<Result<Vec<_>, _>>()?;
+
+                    open_dds::authorization::TypeAuthorizationRule::FieldPreset(_) => {}
+                }
+            }
 
             Ok(TypeOutputPermissions {
                 authorization_rules,
@@ -346,17 +352,57 @@ pub(crate) fn resolve_input_type_permission(
     >,
     boolean_expression_type_names: &BTreeSet<&Qualified<CustomTypeName>>,
     object_type_representation: &object_types::ObjectTypeRepresentation,
+    object_type_name: &Qualified<CustomTypeName>,
     type_permissions: &TypePermissionsV2,
+    configuration: &Configuration,
     conditions: &mut Conditions,
     issues: &mut Vec<TypePermissionIssue>,
 ) -> Result<TypeInputPermissions, TypeInputPermissionError> {
     match &type_permissions.permissions {
-        TypePermissionOperand::RulesBased(_field_authorization_rules) => {
-            // we don't have input permissions with AuthorizationBased for now,
-            // so these are the same as "no permissions defined"
+        TypePermissionOperand::RulesBased(type_authorization_rules) => {
+            if !configuration.unstable_features.enable_authorization_rules {
+                return Err(TypeInputPermissionError::AuthorizationRulesNotEnabled {
+                    object_type_name: object_type_name.clone(),
+                });
+            }
+
+            let mut authorization_rules = vec![];
+
+            for type_authorization_rule in type_authorization_rules {
+                if let open_dds::authorization::TypeAuthorizationRule::FieldPreset(
+                    InputTypeFieldPreset {
+                        condition,
+                        field_name,
+                        value,
+                    },
+                ) = type_authorization_rule
+                {
+                    let condition = condition
+                        .as_ref()
+                        .map(|condition| conditions.add(resolve_condition(condition, flags)));
+
+                    let (value_expression, _field_definition) = resolve_field_preset(
+                        field_name,
+                        value,
+                        object_types,
+                        boolean_expression_type_names,
+                        object_type_representation,
+                        type_permissions,
+                        flags,
+                        issues,
+                    )?;
+
+                    authorization_rules.push(TypeInputAuthorizationRule::FieldPresetValue {
+                        field_name: field_name.clone(),
+                        condition,
+                        value: value_expression,
+                    });
+                }
+            }
+
             Ok(TypeInputPermissions {
+                authorization_rules,
                 by_role: BTreeMap::new(),
-                authorization_rules: Vec::new(),
             })
         }
         TypePermissionOperand::RoleBased(role_based_type_permissions) => {
@@ -371,67 +417,21 @@ pub(crate) fn resolve_input_type_permission(
                         value,
                     } in &input.field_presets
                     {
-                        // check if the field exists on this type
-                        let field_definition = match object_type_representation
-                            .fields
-                            .get(field_name)
-                        {
-                            Some(field_definition) => {
-                                // check if the value is provided typechecks
-                                let new_issues = typecheck::typecheck_value_expression(
-                                    object_types,
-                                    boolean_expression_type_names,
-                                    &field_definition.field_type,
-                                    value,
-                                )
-                                .map_err(|type_error| {
-                                    TypeInputPermissionError::FieldPresetTypeError {
-                                        field_name: field_name.clone(),
-                                        type_name: type_permissions.type_name.clone(),
-                                        type_error,
-                                    }
-                                })?;
-                                // Convert typecheck issues into type permission issues and collect them
-                                for issue in new_issues {
-                                    issues.push(TypePermissionIssue::FieldPresetTypecheckIssue {
-                                        field_name: field_name.clone(),
-                                        type_name: type_permissions.type_name.clone(),
-                                        typecheck_issue: issue,
-                                    });
-                                }
-                                field_definition
-                            }
-                            None => {
-                                return Err(
-                            TypeInputPermissionError::UnknownFieldInInputPermissionsDefinition {
-                                field_name: field_name.clone(),
-                                type_name: type_permissions.type_name.clone(),
-                            },
-                        );
-                            }
-                        };
-                        let resolved_value = match &value {
-                            open_dds::permissions::ValueExpression::Literal(literal) => {
-                                ValueExpression::Literal(literal.clone())
-                            }
-                            open_dds::permissions::ValueExpression::SessionVariable(
-                                session_variable,
-                            ) => ValueExpression::SessionVariable(
-                                hasura_authn_core::SessionVariableReference {
-                                    name: session_variable.clone(),
-                                    passed_as_json: flags
-                                        .contains(open_dds::flags::Flag::JsonSessionVariables),
-                                    disallow_unknown_fields: flags.contains(
-                                        open_dds::flags::Flag::DisallowUnknownValuesInArguments,
-                                    ),
-                                },
-                            ),
-                        };
+                        let (value_expression, field_definition) = resolve_field_preset(
+                            field_name,
+                            value,
+                            object_types,
+                            boolean_expression_type_names,
+                            object_type_representation,
+                            type_permissions,
+                            flags,
+                            issues,
+                        )?;
 
                         authorization_rules.push(authorization_rule_for_field_preset(
                             &role_based_type_permission.role,
                             field_name,
-                            &resolved_value,
+                            &value_expression,
                             flags,
                             conditions,
                         ));
@@ -439,7 +439,7 @@ pub(crate) fn resolve_input_type_permission(
                         resolved_field_presets.insert(
                             field_name.clone(),
                             FieldPresetInfo {
-                                value: resolved_value,
+                                value: value_expression,
                                 deprecated: field_definition.deprecated.clone(),
                             },
                         );
@@ -465,6 +465,73 @@ pub(crate) fn resolve_input_type_permission(
             })
         }
     }
+}
+
+fn resolve_field_preset<'a>(
+    field_name: &FieldName,
+    value: &open_dds::permissions::ValueExpression,
+    object_types: &BTreeMap<
+        &Qualified<open_dds::types::CustomTypeName>,
+        &object_types::ObjectTypeRepresentation,
+    >,
+    boolean_expression_type_names: &BTreeSet<&Qualified<CustomTypeName>>,
+    object_type_representation: &'a object_types::ObjectTypeRepresentation,
+    type_permissions: &TypePermissionsV2,
+    flags: &open_dds::flags::OpenDdFlags,
+    issues: &mut Vec<TypePermissionIssue>,
+) -> Result<(ValueExpression, &'a FieldDefinition), TypeInputPermissionError> {
+    // check if the field exists on this type
+    let field_definition = match object_type_representation.fields.get(field_name) {
+        Some(field_definition) => {
+            // check if the value is provided typechecks
+            let new_issues = typecheck::typecheck_value_expression(
+                object_types,
+                boolean_expression_type_names,
+                &field_definition.field_type,
+                value,
+            )
+            .map_err(
+                |type_error| TypeInputPermissionError::FieldPresetTypeError {
+                    field_name: field_name.clone(),
+                    type_name: type_permissions.type_name.clone(),
+                    type_error,
+                },
+            )?;
+            // Convert typecheck issues into type permission issues and collect them
+            for issue in new_issues {
+                issues.push(TypePermissionIssue::FieldPresetTypecheckIssue {
+                    field_name: field_name.clone(),
+                    type_name: type_permissions.type_name.clone(),
+                    typecheck_issue: issue,
+                });
+            }
+            field_definition
+        }
+        None => {
+            return Err(
+                TypeInputPermissionError::UnknownFieldInInputPermissionsDefinition {
+                    field_name: field_name.clone(),
+                    type_name: type_permissions.type_name.clone(),
+                },
+            );
+        }
+    };
+
+    let resolved_value = match &value {
+        open_dds::permissions::ValueExpression::Literal(literal) => {
+            ValueExpression::Literal(literal.clone())
+        }
+        open_dds::permissions::ValueExpression::SessionVariable(session_variable) => {
+            ValueExpression::SessionVariable(hasura_authn_core::SessionVariableReference {
+                name: session_variable.clone(),
+                passed_as_json: flags.contains(open_dds::flags::Flag::JsonSessionVariables),
+                disallow_unknown_fields: flags
+                    .contains(open_dds::flags::Flag::DisallowUnknownValuesInArguments),
+            })
+        }
+    };
+
+    Ok((resolved_value, field_definition))
 }
 
 // given a role and a field preset return an authorization rule

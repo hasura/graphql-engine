@@ -61,6 +61,9 @@ pub enum TypeAuthorizationRule {
     // if a condition is provided, it must evaluate to `true` for these fields
     // to be denied to the user. A denied field takes precedence over an allowed field.
     DenyFields(Fields),
+    // if a condition is provided, it must evaluate to `true` for this field
+    // to be preset for the user.
+    FieldPreset(InputTypeFieldPreset),
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
@@ -70,6 +73,16 @@ pub enum TypeAuthorizationRule {
 pub struct Fields {
     pub fields: Vec<FieldName>,
     pub condition: Option<Condition>,
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[opendd(json_schema(title = "InputTypeFieldPreset"))]
+pub struct InputTypeFieldPreset {
+    pub condition: Option<Condition>,
+    pub field_name: FieldName,
+    pub value: ValueExpression,
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
