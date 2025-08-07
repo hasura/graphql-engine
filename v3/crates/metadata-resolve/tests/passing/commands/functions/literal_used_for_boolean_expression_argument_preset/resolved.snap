@@ -2205,8 +2205,10 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
         ),
         CommandPermissionIssue(
             CommandArgumentPresetTypecheckIssue {
-                role: Role(
-                    "literal_user",
+                role: Some(
+                    Role(
+                        "literal_user",
+                    ),
                 ),
                 command_name: Qualified {
                     subgraph: SubgraphName(

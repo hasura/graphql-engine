@@ -11,6 +11,7 @@ pub use error::{
 };
 use hasura_authn_core::SESSION_VARIABLE_ROLE;
 use indexmap::IndexSet;
+use open_dds::authorization::Fields;
 use open_dds::identifier::SubgraphName;
 use open_dds::permissions::{FieldPreset, Role, TypePermissionOperand, TypePermissionsV2};
 use open_dds::session_variables::SessionVariableReference;
@@ -23,7 +24,7 @@ pub use types::{
 use crate::ValueExpression;
 use crate::helpers::typecheck;
 use crate::stages::object_types;
-use condition::resolve_condition;
+pub use condition::resolve_condition;
 
 fn get_boolean_expression_type_names(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
@@ -209,19 +210,19 @@ pub fn resolve_output_type_permission(
             let authorization_rules = type_authorization_rules
                 .iter()
                 .map(|field_authorization_rule| match field_authorization_rule {
-                    open_dds::authorization::TypeAuthorizationRule::AllowFields {
+                    open_dds::authorization::TypeAuthorizationRule::AllowFields(Fields {
                         fields,
                         condition,
-                    } => FieldAuthorizationRule::AllowFields {
+                    }) => FieldAuthorizationRule::AllowFields {
                         fields: fields.clone(),
                         condition: condition
                             .as_ref()
                             .map(|condition| conditions.add(resolve_condition(condition, flags))),
                     },
-                    open_dds::authorization::TypeAuthorizationRule::DenyFields {
+                    open_dds::authorization::TypeAuthorizationRule::DenyFields(Fields {
                         fields,
                         condition,
-                    } => FieldAuthorizationRule::DenyFields {
+                    }) => FieldAuthorizationRule::DenyFields {
                         fields: fields.clone(),
                         condition: condition
                             .as_ref()

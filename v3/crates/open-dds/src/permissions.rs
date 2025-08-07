@@ -563,9 +563,12 @@ pub struct CommandPermissionsV1 {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[opendd(externally_tagged, json_schema(title = "CommandPermissionOperand"))]
 pub enum CommandPermissionOperand {
-    /// Definition of role-based type permissions on an OpenDD command
+    /// Definition of role-based permissions on an OpenDD command
     #[opendd(json_schema(title = "RoleBased"))]
     RoleBased(Vec<CommandPermission>),
+    /// Definition of a rules-based permissions on an OpenDD command
+    #[opendd(json_schema(title = "RulesBased"))]
+    RulesBased(Vec<authorization::CommandAuthorizationRule>),
 }
 
 #[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]

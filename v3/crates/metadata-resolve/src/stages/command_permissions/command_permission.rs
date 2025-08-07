@@ -1,9 +1,11 @@
 use hasura_authn_core::{Role, SESSION_VARIABLE_ROLE, SessionVariableReference};
 use indexmap::IndexMap;
 
+use open_dds::authorization::{Allow, Deny, PresetArgument};
 use open_dds::query::ArgumentName;
 use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
 
+use crate::stages::type_permissions::resolve_condition;
 use crate::stages::{
     boolean_expressions, commands, data_connector_scalar_types, models_graphql,
     object_relationships, scalar_types,
@@ -13,18 +15,21 @@ use crate::types::subgraph::Qualified;
 
 use crate::helpers::argument::resolve_value_expression_for_argument;
 use crate::{
-    BinaryOperation, Condition, Conditions, QualifiedTypeReference, ValueExpression,
-    ValueExpressionOrPredicate,
+    BinaryOperation, CommandSource, Condition, Conditions, QualifiedTypeReference, ValueExpression,
+    ValueExpressionOrPredicate, configuration,
 };
 
 use open_dds::permissions::{CommandPermissionOperand, CommandPermissionsV2};
 
-use super::types::{Command, CommandPermission, CommandPermissionIssue, CommandPermissions};
+use super::types::{
+    Command, CommandPermission, CommandPermissionError, CommandPermissionIssue, CommandPermissions,
+};
 use super::{AllowOrDeny, CommandAuthorizationRule};
 use std::collections::BTreeMap;
 
 pub fn resolve_command_permissions(
     flags: &open_dds::flags::OpenDdFlags,
+    configuration: &configuration::Configuration,
     command: &Command,
     permissions: &CommandPermissionsV2,
     object_types: &BTreeMap<
@@ -43,113 +48,311 @@ pub fn resolve_command_permissions(
 ) -> Result<CommandPermissions, Error> {
     match &permissions.permissions {
         CommandPermissionOperand::RoleBased(role_based_command_permissions) => {
-            let mut command_permissions_by_role = BTreeMap::new();
-            let mut authorization_rules = vec![];
+            resolve_role_based_command_permissions(
+                flags,
+                command,
+                role_based_command_permissions,
+                object_types,
+                scalar_types,
+                boolean_expression_types,
+                models,
+                data_connector_scalars,
+                conditions,
+                issues,
+            )
+        }
+        CommandPermissionOperand::RulesBased(command_authorization_rules) => {
+            resolve_rules_based_command_permissions(
+                flags,
+                command,
+                command_authorization_rules,
+                object_types,
+                scalar_types,
+                boolean_expression_types,
+                models,
+                data_connector_scalars,
+                configuration,
+                conditions,
+                issues,
+            )
+        }
+    }
+}
 
-            for role_based_command_permission in role_based_command_permissions {
-                let mut argument_presets = BTreeMap::new();
+fn resolve_rules_based_command_permissions(
+    flags: &open_dds::flags::OpenDdFlags,
+    command: &Command,
+    command_authorization_rules: &Vec<open_dds::authorization::CommandAuthorizationRule>,
+    object_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        object_relationships::ObjectTypeWithRelationships,
+    >,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
+    models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::DataConnectorScalars,
+    >,
+    configuration: &configuration::Configuration,
+    conditions: &mut Conditions,
+    issues: &mut Vec<CommandPermissionIssue>,
+) -> Result<CommandPermissions, Error> {
+    if !configuration.unstable_features.enable_authorization_rules {
+        return Err(CommandPermissionError::AuthorizationRulesNotEnabled {
+            command_name: command.name.clone(),
+        }
+        .into());
+    }
 
-                authorization_rules.push(authorization_rule_for_access(
-                    &role_based_command_permission.role,
-                    role_based_command_permission.allow_execution,
+    let mut authorization_rules = vec![];
+
+    for command_authorization_rule in command_authorization_rules {
+        let authorization_rule = match command_authorization_rule {
+            open_dds::authorization::CommandAuthorizationRule::Allow(Allow { condition }) => {
+                let hash = condition
+                    .as_ref()
+                    .map(|condition| conditions.add(resolve_condition(condition, flags)));
+
+                CommandAuthorizationRule::Access {
+                    allow_or_deny: AllowOrDeny::Allow,
+                    condition: hash,
+                }
+            }
+            open_dds::authorization::CommandAuthorizationRule::Deny(Deny { condition }) => {
+                let hash = conditions.add(resolve_condition(condition, flags));
+
+                CommandAuthorizationRule::Access {
+                    allow_or_deny: AllowOrDeny::Deny,
+                    condition: Some(hash),
+                }
+            }
+            open_dds::authorization::CommandAuthorizationRule::PresetArgument(PresetArgument {
+                argument_name,
+                condition,
+                value,
+            }) => {
+                let command_source = command.source.as_ref().ok_or_else(|| {
+                    commands::CommandsError::CommandSourceRequiredForArgumentPreset {
+                        command_name: command.name.clone(),
+                    }
+                })?;
+
+                let hash = condition
+                    .as_ref()
+                    .map(|condition| conditions.add(resolve_condition(condition, flags)));
+
+                let (argument_type, value_expression_or_predicate) = resolve_argument_preset(
                     flags,
-                    conditions,
-                ));
+                    command,
+                    command_source,
+                    argument_name,
+                    value,
+                    object_types,
+                    scalar_types,
+                    boolean_expression_types,
+                    models,
+                    data_connector_scalars,
+                    None,
+                    issues,
+                )?;
 
-                for argument_preset in &role_based_command_permission.argument_presets {
-                    if argument_presets.contains_key(&argument_preset.argument.value) {
-                        return Err(Error::DuplicateCommandArgumentPreset {
+                match value_expression_or_predicate.split_predicate() {
+                    Ok(value_expression) => CommandAuthorizationRule::ArgumentPresetValue {
+                        condition: hash,
+                        argument_type,
+                        argument_name: argument_name.clone(),
+                        value: value_expression,
+                    },
+                    Err(boolean_expression) => CommandAuthorizationRule::ArgumentAuthPredicate {
+                        condition: hash,
+                        argument_name: argument_name.clone(),
+                        predicate: boolean_expression,
+                    },
+                }
+            }
+        };
+
+        authorization_rules.push(authorization_rule);
+    }
+
+    Ok(CommandPermissions {
+        by_role: BTreeMap::new(),
+        authorization_rules,
+    })
+}
+fn resolve_role_based_command_permissions(
+    flags: &open_dds::flags::OpenDdFlags,
+    command: &Command,
+    role_based_command_permissions: &Vec<open_dds::permissions::CommandPermission>,
+    object_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        object_relationships::ObjectTypeWithRelationships,
+    >,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
+    models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::DataConnectorScalars,
+    >,
+    conditions: &mut Conditions,
+    issues: &mut Vec<CommandPermissionIssue>,
+) -> Result<CommandPermissions, Error> {
+    let mut command_permissions_by_role = BTreeMap::new();
+    let mut authorization_rules = vec![];
+
+    for role_based_command_permission in role_based_command_permissions {
+        let mut argument_presets = BTreeMap::new();
+
+        authorization_rules.push(authorization_rule_for_access(
+            &role_based_command_permission.role,
+            role_based_command_permission.allow_execution,
+            flags,
+            conditions,
+        ));
+
+        for argument_preset in &role_based_command_permission.argument_presets {
+            if argument_presets.contains_key(&argument_preset.argument.value) {
+                return Err(Error::DuplicateCommandArgumentPreset {
+                    command_name: command.name.clone(),
+                    argument_name: argument_preset.argument.value.clone(),
+                });
+            }
+
+            let command_source = command.source.as_ref().ok_or_else(|| {
+                commands::CommandsError::CommandSourceRequiredForArgumentPreset {
+                    command_name: command.name.clone(),
+                }
+            })?;
+
+            match command.arguments.get(&argument_preset.argument.value) {
+                Some(argument) => {
+                    let (argument_type, value_expression_or_predicate) = resolve_argument_preset(
+                        flags,
+                        command,
+                        command_source,
+                        &argument_preset.argument,
+                        &argument_preset.value,
+                        object_types,
+                        scalar_types,
+                        boolean_expression_types,
+                        models,
+                        data_connector_scalars,
+                        Some(&role_based_command_permission.role),
+                        issues,
+                    )?;
+
+                    // store authorization rule for argument preset
+                    authorization_rules.push(authorization_rule_for_argument_preset(
+                        &role_based_command_permission.role,
+                        &argument_preset.argument.value,
+                        &argument.argument_type,
+                        &value_expression_or_predicate,
+                        flags,
+                        conditions,
+                    ));
+
+                    argument_presets.insert(
+                        argument_preset.argument.value.clone(),
+                        (argument_type.clone(), value_expression_or_predicate),
+                    );
+                }
+                None => {
+                    return Err(Error::from(
+                        commands::CommandsError::CommandArgumentPresetMismatch {
                             command_name: command.name.clone(),
                             argument_name: argument_preset.argument.value.clone(),
-                        });
-                    }
-
-                    let command_source = command.source.as_ref().ok_or_else(|| {
-                        commands::CommandsError::CommandSourceRequiredForPredicate {
-                            command_name: command.name.clone(),
-                        }
-                    })?;
-
-                    match command.arguments.get(&argument_preset.argument.value) {
-                        Some(argument) => {
-                            let error_mapper = |type_error| Error::CommandArgumentPresetTypeError {
-                                role: role_based_command_permission.role.clone(),
-                                command_name: command.name.clone(),
-                                argument_name: argument_preset.argument.value.clone(),
-                                type_error,
-                            };
-                            let (value_expression_or_predicate, new_issues) =
-                                resolve_value_expression_for_argument(
-                                    &role_based_command_permission.role,
-                                    flags,
-                                    &argument_preset.argument,
-                                    &argument_preset.value,
-                                    &argument.argument_type,
-                                    &command_source.data_connector,
-                                    object_types,
-                                    scalar_types,
-                                    boolean_expression_types,
-                                    models,
-                                    &command_source.type_mappings,
-                                    data_connector_scalars,
-                                    error_mapper,
-                                )?;
-
-                            // Convert typecheck issues into command permission issues and collect them
-                            for issue in new_issues {
-                                issues.push(
-                                    CommandPermissionIssue::CommandArgumentPresetTypecheckIssue {
-                                        role: role_based_command_permission.role.clone(),
-                                        command_name: command.name.clone(),
-                                        argument_name: argument_preset.argument.value.clone(),
-                                        typecheck_issue: issue,
-                                    },
-                                );
-                            }
-
-                            // store authorization rule for argument preset
-                            authorization_rules.push(authorization_rule_for_argument_preset(
-                                &role_based_command_permission.role,
-                                &argument_preset.argument.value,
-                                &argument.argument_type,
-                                &value_expression_or_predicate,
-                                flags,
-                                conditions,
-                            ));
-
-                            argument_presets.insert(
-                                argument_preset.argument.value.clone(),
-                                (
-                                    argument.argument_type.clone(),
-                                    value_expression_or_predicate,
-                                ),
-                            );
-                        }
-                        None => {
-                            return Err(Error::from(
-                                commands::CommandsError::CommandArgumentPresetMismatch {
-                                    command_name: command.name.clone(),
-                                    argument_name: argument_preset.argument.value.clone(),
-                                },
-                            ));
-                        }
-                    }
+                        },
+                    ));
                 }
+            }
+        }
 
-                let resolved_permission = CommandPermission {
-                    allow_execution: role_based_command_permission.allow_execution,
-                    argument_presets,
-                };
-                command_permissions_by_role.insert(
-                    role_based_command_permission.role.clone(),
-                    resolved_permission,
+        let resolved_permission = CommandPermission {
+            allow_execution: role_based_command_permission.allow_execution,
+            argument_presets,
+        };
+        command_permissions_by_role.insert(
+            role_based_command_permission.role.clone(),
+            resolved_permission,
+        );
+    }
+    Ok(CommandPermissions {
+        by_role: command_permissions_by_role,
+        authorization_rules,
+    })
+}
+
+fn resolve_argument_preset(
+    flags: &open_dds::flags::OpenDdFlags,
+    command: &Command,
+    command_source: &CommandSource,
+    argument_name: &ArgumentName,
+    value_expression_or_predicate: &open_dds::permissions::ValueExpressionOrPredicate,
+    object_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        object_relationships::ObjectTypeWithRelationships,
+    >,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
+    models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::DataConnectorScalars,
+    >,
+    role: Option<&Role>,
+    issues: &mut Vec<CommandPermissionIssue>,
+) -> Result<(QualifiedTypeReference, ValueExpressionOrPredicate), Error> {
+    let type_error_mapper = |type_error| Error::CommandArgumentPresetTypeError {
+        role: role.cloned(),
+        command_name: command.name.clone(),
+        argument_name: argument_name.clone(),
+        type_error,
+    };
+
+    match command.arguments.get(argument_name) {
+        Some(argument) => {
+            let (value_expression_or_predicate, new_issues) =
+                resolve_value_expression_for_argument(
+                    role,
+                    flags,
+                    argument_name,
+                    value_expression_or_predicate,
+                    &argument.argument_type,
+                    &command_source.data_connector,
+                    object_types,
+                    scalar_types,
+                    boolean_expression_types,
+                    models,
+                    &command_source.type_mappings,
+                    data_connector_scalars,
+                    type_error_mapper,
+                )?;
+
+            // Convert typecheck issues into command permission issues and collect them
+            for issue in new_issues {
+                issues.push(
+                    CommandPermissionIssue::CommandArgumentPresetTypecheckIssue {
+                        role: role.cloned(),
+                        command_name: command.name.clone(),
+                        argument_name: argument_name.clone(),
+                        typecheck_issue: issue,
+                    },
                 );
             }
-            Ok(CommandPermissions {
-                by_role: command_permissions_by_role,
-                authorization_rules,
-            })
+
+            Ok((
+                argument.argument_type.clone(),
+                value_expression_or_predicate,
+            ))
         }
+        None => Err(Error::from(
+            commands::CommandsError::CommandArgumentPresetMismatch {
+                command_name: command.name.clone(),
+                argument_name: argument_name.clone(),
+            },
+        )),
     }
 }
 

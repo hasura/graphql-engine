@@ -2,6 +2,7 @@ use crate::helpers::typecheck::TypecheckError;
 use crate::helpers::{
     ndc_validation::NDCValidationError, type_mappings::TypeMappingCollectionError, typecheck,
 };
+use crate::stages::command_permissions;
 use crate::stages::{
     aggregate_boolean_expressions, aggregates::AggregateExpressionError, apollo, arguments,
     boolean_expressions, commands, data_connector_scalar_types, data_connectors, graphql_config,
@@ -213,10 +214,14 @@ pub enum Error {
         data_type: Qualified<CustomTypeName>,
     },
     #[error(
-        "Type error in preset argument {argument_name:} for role {role:} in command {command_name:}: {type_error:}"
+        "Type error in preset argument {argument_name:} {}in command {command_name:}: {type_error:}",
+        match .role {
+            Some(role) => format!("for role {role:} "),
+            None => String::new(),
+        }
     )]
     CommandArgumentPresetTypeError {
-        role: Role,
+        role: Option<Role>,
         command_name: Qualified<CommandName>,
         argument_name: ArgumentName,
         type_error: typecheck::TypecheckError,
@@ -265,6 +270,8 @@ pub enum Error {
     ObjectRelationshipError(#[from] object_relationships::RelationshipError),
     #[error("{0}")]
     ModelPermissionsError(#[from] model_permissions::NamedModelPermissionError),
+    #[error("{0}")]
+    CommandPermissionsError(#[from] command_permissions::CommandPermissionError),
     #[error("{0}")]
     DataConnectorScalarTypesError(
         #[from] data_connector_scalar_types::DataConnectorScalarTypesError,

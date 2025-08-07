@@ -15,18 +15,19 @@ use crate::stages::{
 };
 use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
-use crate::{ArgumentInfo, Conditions};
+use crate::{ArgumentInfo, Conditions, configuration};
 
 use std::collections::BTreeMap;
 mod types;
 pub use types::{
-    AllowOrDeny, Command, CommandAuthorizationRule, CommandPermissionIssue,
+    AllowOrDeny, Command, CommandAuthorizationRule, CommandPermissionError, CommandPermissionIssue,
     CommandPermissionsOutput, CommandWithPermissions,
 };
 
 /// resolve command permissions
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
+    configuration: &configuration::Configuration,
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
     object_types: &BTreeMap<
         Qualified<CustomTypeName>,
@@ -80,6 +81,7 @@ pub fn resolve(
     {
         results.push(resolve_command_permission(
             metadata_accessor,
+            configuration,
             object_types,
             scalar_types,
             boolean_expression_types,
@@ -101,6 +103,7 @@ pub fn resolve(
 
 fn resolve_command_permission(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
+    configuration: &configuration::Configuration,
     object_types: &BTreeMap<
         Qualified<CustomTypeName>,
         object_relationships::ObjectTypeWithRelationships,
@@ -125,9 +128,11 @@ fn resolve_command_permission(
         .ok_or_else(|| Error::UnknownCommandInCommandPermissions {
             command_name: qualified_command_name.clone(),
         })?;
-    if command.permissions.by_role.is_empty() {
+    if command.permissions.by_role.is_empty() && command.permissions.authorization_rules.is_empty()
+    {
         command.permissions = command_permission::resolve_command_permissions(
             &metadata_accessor.flags,
+            configuration,
             &command.command,
             command_permissions,
             object_types,

@@ -455,7 +455,7 @@ fn resolve_model_argument_presets(
         };
 
         let (value_expression_or_predicate, new_issues) = resolve_value_expression_for_argument(
-            role,
+            Some(role),
             flags,
             &argument_preset.argument,
             &argument_preset.value,

@@ -313,6 +313,7 @@ fn resolve_internal(
         issues: command_permission_issues,
     } = command_permissions::resolve(
         &metadata_accessor,
+        configuration,
         &commands,
         &object_types_with_relationships,
         &scalar_types,
