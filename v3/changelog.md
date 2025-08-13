@@ -8,6 +8,10 @@
 
 ### Added
 
+- Add support for wildcard at leaf subdomain level in allowed CORS origins. Eg.
+  `https://*.example.com` will allow `https://api.example.com`,
+  `https://auth.example.com`, and so on.
+
 ## [v2025.07.29]
 
 No changes since last release.

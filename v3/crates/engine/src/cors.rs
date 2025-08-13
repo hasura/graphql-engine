@@ -21,6 +21,44 @@ const TRACE_RESPONSE_HEADER_NAMES: [HeaderName; 7] = [
     HeaderName::from_static("x-b3-sampled"),
 ];
 
+// match origin header against a CORS pattern
+// supported patterns:
+// - exact match (eg. http://example.com)
+// - leaf subdomain wildcard match (eg. https://*.example.com)
+// not supported:
+// - multiple wildcard match (eg. https://*.*.example.com)
+// - schemeless wildcard match (eg. *.example.com)
+fn match_cors_origin(origin: &str, pattern: &str) -> bool {
+    let pattern = pattern.trim();
+
+    // exact match (no wildcards)
+    if !pattern.starts_with("https://*.") && !pattern.starts_with("http://*.") {
+        return origin == pattern;
+    }
+
+    // if multiple wildcards in pattern, return false
+    if pattern.matches("*.").count() > 1 {
+        return false;
+    }
+
+    // if different levels of subdomains, return false
+    // eg. origin: https://test.api.example.com, pattern: https://*.example.com
+    if pattern.matches('.').count() != origin.matches('.').count() {
+        return false;
+    }
+
+    let scheme_end = pattern.find("://").unwrap_or(0);
+    let scheme = &pattern[..scheme_end];
+
+    // if different scheme, return false
+    if !origin.starts_with(scheme) {
+        return false;
+    }
+    // if different suffix, return false
+    let rest = &pattern[scheme_end + 5..];
+    origin.ends_with(rest)
+}
+
 /// Add CORS layer to the app.
 pub fn build_cors_layer(cors_allow_origin: &[String]) -> cors::CorsLayer {
     let cors_allow_origin = if cors_allow_origin.is_empty() {
@@ -29,11 +67,12 @@ pub fn build_cors_layer(cors_allow_origin: &[String]) -> cors::CorsLayer {
     } else {
         let allowed_origins = cors_allow_origin.to_owned();
         cors::AllowOrigin::predicate(move |origin_header_value, _req| {
+            let origin_str = origin_header_value.to_str().unwrap_or("");
             allowed_origins.iter().any(|allowed_origin| {
                 // The allowed origins can include leading whitespace characters when
                 // provided as a comma-space-separated list.
                 // Example: --cors-allow-origin = 'val1, val2, val3'
-                origin_header_value == allowed_origin.trim()
+                match_cors_origin(origin_str, allowed_origin.trim())
             })
         })
     };
@@ -56,6 +95,27 @@ mod test {
     use pretty_assertions::assert_eq;
     use reqwest::StatusCode;
     use tower::ServiceExt;
+
+    #[test]
+    fn test_cors_pattern_matching() {
+        let m = super::match_cors_origin;
+
+        // exact matches
+        assert!(m("https://example.com", "https://example.com"));
+        assert!(!m("http://example.com", "https://example.com"));
+
+        // leaf subdomain wildcard matches
+        assert!(m("https://api.example.com", "https://*.example.com"));
+        assert!(!m("http://api.example.com", "https://*.example.com"));
+        assert!(!m("https://example.com", "*.example.com"));
+        assert!(!m("https://api.example.com", "https://api.*.com"));
+
+        // multiple wildcard matches
+        assert!(!m("https://api.example.com", "https://*.*.com"));
+
+        // schemeless wildcard matches
+        assert!(!m("https://api.example.com", "*.example.com"));
+    }
 
     #[tokio::test]
     async fn test_no_cors() {
@@ -93,7 +153,6 @@ mod test {
             .unwrap();
 
         assert_eq!(response.status(), StatusCode::OK);
-
         assert_eq!(
             response.headers().get("access-control-allow-origin"),
             Some(&HeaderValue::from_static("http://example.com"))
@@ -117,7 +176,6 @@ mod test {
             .unwrap();
 
         assert_eq!(response.status(), StatusCode::OK);
-
         assert_eq!(
             response.headers().get("access-control-allow-origin"), // Response shouldn't contain the allow origin header
             None
@@ -149,5 +207,77 @@ mod test {
             response.headers().get("access-control-allow-origin"),
             Some(&HeaderValue::from_static("http://example.com"))
         );
+    }
+
+    #[tokio::test]
+    async fn test_cors_valid_wildcard_match() {
+        let app = Router::new().layer(super::build_cors_layer(&[
+            "https://*.example.com".to_string()
+        ]));
+
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .uri("/")
+                    .method("OPTIONS")
+                    .header("Origin", "https://api.example.com")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(
+            response.headers().get("access-control-allow-origin"),
+            Some(&HeaderValue::from_static("https://api.example.com"))
+        );
+    }
+
+    #[tokio::test]
+    async fn test_cors_valid_wildcard_no_match() {
+        let app = Router::new().layer(super::build_cors_layer(&[
+            "https://*.example.com".to_string()
+        ]));
+
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .uri("/")
+                    .method("OPTIONS")
+                    .header("Origin", "https://example.com")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.headers().get("access-control-allow-origin"), None);
+    }
+
+    #[tokio::test]
+    async fn test_cors_invalid_wildcard() {
+        // Test that invalid wildcard patterns don't match anything
+        let app = Router::new().layer(super::build_cors_layer(&[
+            "*.example.com".to_string(),     // schemeless wildcard
+            "https://*.*.com".to_string(),   // multiple wildcard
+            "https://api.*.com".to_string(), // non-leaf wildcard
+        ]));
+
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .uri("/")
+                    .method("OPTIONS")
+                    .header("Origin", "https://api.example.com")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.headers().get("access-control-allow-origin"), None);
     }
 }
