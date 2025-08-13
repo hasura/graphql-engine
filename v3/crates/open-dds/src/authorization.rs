@@ -2,8 +2,9 @@ use opendds_derive;
 use serde::Serialize;
 
 use crate::{
-    permissions::{ValueExpression, ValueExpressionOrPredicate},
+    permissions::{ModelPredicate, ValueExpression, ValueExpressionOrPredicate},
     query::ArgumentName,
+    spanned::Spanned,
     types::FieldName,
 };
 
@@ -94,7 +95,7 @@ pub enum CommandAuthorizationRule {
     // if a condition is provided, it must evaluate to 'true' for
     // this Command to be available to the user
     Allow(Allow),
-    // if the provided condition must evaluate to 'true' this Command will not be available to the user
+    // if the provided condition evaluates to 'true' this Command will not be available to the user
     Deny(Deny),
     // if a condition is provided, it must evaluate to `true` for this argument to be preset
     PresetArgument(PresetArgument),
@@ -121,7 +122,34 @@ pub struct Deny {
 #[serde(deny_unknown_fields)]
 #[opendd(json_schema(title = "PresetArgument"))]
 pub struct PresetArgument {
-    pub argument_name: ArgumentName,
+    pub argument_name: Spanned<ArgumentName>,
     pub condition: Option<Condition>,
-    pub value: ValueExpressionOrPredicate,
+    pub value: Spanned<ValueExpressionOrPredicate>,
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[opendd(externally_tagged, json_schema(title = "ModelAuthorizationRule"))]
+/// A rule that determines which model and argument presets are available to a user
+pub enum ModelAuthorizationRule {
+    // if a condition is provided, it must evaluate to 'true' for
+    // this Model to be available to the user
+    Allow(Allow),
+    // if the provided condition evaluates to 'true' this Model will not be available to the user
+    Deny(Deny),
+    // if a condition is provided, it must evaluate to `true` for this argument to be preset
+    PresetArgument(PresetArgument),
+    // if a condition is provided, it must evaluate to `true` for this filter to be included in
+    // requests. Multiple filters that match will be combined with `AND`
+    Filter(Filter),
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[opendd(json_schema(title = "Filter"))]
+pub struct Filter {
+    pub condition: Option<Condition>,
+    pub predicate: ModelPredicate,
 }

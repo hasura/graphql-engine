@@ -338,6 +338,9 @@ pub enum ModelPermissionOperand {
     /// Definition of role-based type permissions on an OpenDD model
     #[opendd(json_schema(title = "RoleBased"))]
     RoleBased(Vec<ModelPermission>),
+    /// Definition of rules-based type permissions on an OpenDD model
+    #[opendd(json_schema(title = "RulesBased"))]
+    RulesBased(Vec<authorization::ModelAuthorizationRule>),
 }
 
 #[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]

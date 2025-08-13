@@ -4,6 +4,7 @@ use super::types::{
 };
 use super::{ModelPermissionError, NamedModelPermissionError, RelationalOperation, predicate};
 use crate::helpers::argument::resolve_value_expression_for_argument;
+use crate::stages::type_permissions::resolve_condition;
 use crate::stages::{
     boolean_expressions, data_connector_scalar_types, models_graphql, object_relationships,
     scalar_types,
@@ -44,9 +45,194 @@ pub fn resolve_all_model_permissions(
     conditions: &mut Conditions,
     issues: &mut Vec<ModelPermissionIssue>,
 ) -> Result<ModelPermissions, Error> {
-    let ModelPermissionOperand::RoleBased(role_based_model_permissions) =
-        &model_permissions.permissions;
+    match &model_permissions.permissions {
+        ModelPermissionOperand::RoleBased(role_based_model_permissions) => {
+            resolve_role_based_model_permissions(
+                flags,
+                model,
+                arguments,
+                role_based_model_permissions,
+                boolean_expression,
+                data_connectors,
+                data_connector_scalars,
+                object_types,
+                scalar_types,
+                models,
+                boolean_expression_types,
+                conditions,
+                issues,
+            )
+        }
+        ModelPermissionOperand::RulesBased(model_authorization_rules) => {
+            resolve_rules_based_model_permissions(
+                flags,
+                model,
+                arguments,
+                model_authorization_rules,
+                boolean_expression,
+                data_connector_scalars,
+                object_types,
+                scalar_types,
+                models,
+                boolean_expression_types,
+                conditions,
+                issues,
+            )
+        }
+    }
+}
 
+pub fn resolve_rules_based_model_permissions(
+    flags: &open_dds::flags::OpenDdFlags,
+    model: &models_graphql::Model,
+    arguments: &IndexMap<ArgumentName, ArgumentInfo>,
+    model_authorization_rules: &[open_dds::authorization::ModelAuthorizationRule],
+    boolean_expression: Option<&boolean_expressions::ResolvedObjectBooleanExpressionType>,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::DataConnectorScalars,
+    >,
+    object_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        object_relationships::ObjectTypeWithRelationships,
+    >,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
+    boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
+    conditions: &mut Conditions,
+    issues: &mut Vec<ModelPermissionIssue>,
+) -> Result<ModelPermissions, Error> {
+    let mut authorization_rules = vec![];
+
+    for model_authorization_rule in model_authorization_rules {
+        let authorization_rule = match model_authorization_rule {
+            open_dds::authorization::ModelAuthorizationRule::Allow(
+                open_dds::authorization::Allow { condition },
+            ) => {
+                let condition = condition
+                    .as_ref()
+                    .map(|condition| conditions.add(resolve_condition(condition, flags)));
+
+                ModelAuthorizationRule::Access {
+                    allow_or_deny: AllowOrDeny::Allow,
+                    condition,
+                }
+            }
+            open_dds::authorization::ModelAuthorizationRule::Deny(
+                open_dds::authorization::Deny { condition },
+            ) => {
+                let condition = conditions.add(resolve_condition(condition, flags));
+
+                ModelAuthorizationRule::Access {
+                    allow_or_deny: AllowOrDeny::Deny,
+                    condition: Some(condition),
+                }
+            }
+            open_dds::authorization::ModelAuthorizationRule::PresetArgument(
+                open_dds::authorization::PresetArgument {
+                    argument_name,
+                    condition,
+                    value,
+                },
+            ) => {
+                let condition = condition
+                    .as_ref()
+                    .map(|condition| conditions.add(resolve_condition(condition, flags)));
+
+                let (value_expression_or_predicate, argument_type) = resolve_model_argument_preset(
+                    argument_name,
+                    value,
+                    None,
+                    flags,
+                    model,
+                    arguments,
+                    data_connector_scalars,
+                    object_types,
+                    scalar_types,
+                    boolean_expression_types,
+                    models,
+                    issues,
+                )?;
+
+                match value_expression_or_predicate.split_predicate() {
+                    Ok(value_expression) => ModelAuthorizationRule::ArgumentPresetValue {
+                        condition,
+                        argument_type,
+                        argument_name: argument_name.value.clone(),
+                        value: value_expression,
+                    },
+                    Err(boolean_expression) => ModelAuthorizationRule::ArgumentAuthPredicate {
+                        condition,
+                        argument_name: argument_name.value.clone(),
+                        predicate: boolean_expression,
+                    },
+                }
+            }
+            open_dds::authorization::ModelAuthorizationRule::Filter(
+                open_dds::authorization::Filter {
+                    condition,
+                    predicate,
+                },
+            ) => {
+                let condition = condition
+                    .as_ref()
+                    .map(|condition| conditions.add(resolve_condition(condition, flags)));
+
+                let predicate = predicate::resolve_model_predicate_with_model(
+                    flags,
+                    predicate,
+                    model,
+                    boolean_expression,
+                    data_connector_scalars,
+                    object_types,
+                    scalar_types,
+                    boolean_expression_types,
+                    models,
+                )
+                .map_err(|error| {
+                    Error::ModelPermissionsError(NamedModelPermissionError {
+                        model_name: model.name.clone(),
+                        role: None,
+                        error,
+                    })
+                })?;
+
+                ModelAuthorizationRule::Filter {
+                    condition,
+                    predicate,
+                }
+            }
+        };
+        authorization_rules.push(authorization_rule);
+    }
+
+    Ok(ModelPermissions {
+        authorization_rules,
+        by_role: BTreeMap::new(),
+    })
+}
+
+pub fn resolve_role_based_model_permissions(
+    flags: &open_dds::flags::OpenDdFlags,
+    model: &models_graphql::Model,
+    arguments: &IndexMap<ArgumentName, ArgumentInfo>,
+    role_based_model_permissions: &[open_dds::permissions::ModelPermission],
+    boolean_expression: Option<&boolean_expressions::ResolvedObjectBooleanExpressionType>,
+    data_connectors: &data_connectors::DataConnectors,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::DataConnectorScalars,
+    >,
+    object_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        object_relationships::ObjectTypeWithRelationships,
+    >,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
+    boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
+    conditions: &mut Conditions,
+    issues: &mut Vec<ModelPermissionIssue>,
+) -> Result<ModelPermissions, Error> {
     let mut resolved_roles = BTreeSet::new();
     let mut authorization_rules = vec![];
     let mut by_role = BTreeMap::new();
@@ -127,7 +313,7 @@ pub fn resolve_all_model_permissions(
             {
                 return Err(Error::ModelPermissionsError(NamedModelPermissionError {
                     model_name: model.name.clone(),
-                    role: model_permission.role.clone(),
+                    role: Some(model_permission.role.clone()),
                     error: ModelPermissionError::RelationalInsertNotSupported,
                 }));
             }
@@ -150,7 +336,7 @@ pub fn resolve_all_model_permissions(
             {
                 return Err(Error::ModelPermissionsError(NamedModelPermissionError {
                     model_name: model.name.clone(),
-                    role: model_permission.role.clone(),
+                    role: Some(model_permission.role.clone()),
                     error: ModelPermissionError::RelationalUpdateNotSupported,
                 }));
             }
@@ -173,7 +359,7 @@ pub fn resolve_all_model_permissions(
             {
                 return Err(Error::ModelPermissionsError(NamedModelPermissionError {
                     model_name: model.name.clone(),
-                    role: model_permission.role.clone(),
+                    role: Some(model_permission.role.clone()),
                     error: ModelPermissionError::RelationalDeleteNotSupported,
                 }));
             }
@@ -305,7 +491,7 @@ fn lookup_collection_info<'a>(
     let model_source = model.source.as_ref().ok_or_else(|| {
         Error::ModelPermissionsError(NamedModelPermissionError {
             model_name: model.name.clone(),
-            role: model_permission.role.clone(),
+            role: Some(model_permission.role.clone()),
             error: ModelPermissionError::ModelSourceRequiredForRelationalPermissions,
         })
     })?;
@@ -326,7 +512,7 @@ fn lookup_collection_info<'a>(
         .ok_or_else(|| {
             Error::ModelPermissionsError(NamedModelPermissionError {
                 model_name: model.name.clone(),
-                role: model_permission.role.clone(),
+                role: Some(model_permission.role.clone()),
                 error: ModelPermissionError::UnknownModelCollection {
                     data_connector: model_source.data_connector.name.clone(),
                     collection: model_source.collection.clone(),
@@ -368,7 +554,7 @@ fn resolve_model_select_permissions(
             .map_err(|error| {
                 Error::ModelPermissionsError(NamedModelPermissionError {
                     model_name: model.name.clone(),
-                    role: role.clone(),
+                    role: Some(role.clone()),
                     error,
                 })
             })
@@ -406,7 +592,7 @@ fn resolve_model_argument_presets(
         if argument_presets.contains_key(&argument_preset.argument.value) {
             return Err(NamedModelPermissionError {
                 model_name: model.name.clone(),
-                role: role.clone(),
+                role: Some(role.clone()),
                 error: ModelPermissionError::DuplicateModelArgumentPreset {
                     argument_name: argument_preset.argument.clone(),
                 },
@@ -414,77 +600,26 @@ fn resolve_model_argument_presets(
             .into());
         }
 
-        let model_source = model
-            .source
-            .as_ref()
-            .ok_or_else(|| NamedModelPermissionError {
-                model_name: model.name.clone(),
-                role: role.clone(),
-                error: ModelPermissionError::ModelSourceRequiredForPredicate {
-                    model_name: Spanned {
-                        path: model.path.clone(),
-                        value: model.name.clone(),
-                    },
-                },
-            })?;
-
-        let argument = arguments
-            .get(&argument_preset.argument.value)
-            .ok_or_else(|| NamedModelPermissionError {
-                model_name: model.name.clone(),
-                role: role.clone(),
-                error: ModelPermissionError::ModelArgumentPresetArgumentNotFound {
-                    model_name: Spanned {
-                        path: model.path.clone(),
-                        value: model.name.clone(),
-                    },
-                    argument_name: argument_preset.argument.clone(),
-                },
-            })?;
-
-        let error_mapper = |type_error| {
-            Error::ModelPermissionsError(NamedModelPermissionError {
-                model_name: model.name.clone(),
-                role: role.clone(),
-                error: ModelPermissionError::ModelArgumentValuePresetTypeError {
-                    argument_name: argument_preset.argument.clone(),
-                    value_path: argument_preset.value.path.clone(),
-                    type_error,
-                },
-            })
-        };
-
-        let (value_expression_or_predicate, new_issues) = resolve_value_expression_for_argument(
-            Some(role),
-            flags,
+        let (value_expression_or_predicate, argument_type) = resolve_model_argument_preset(
             &argument_preset.argument,
             &argument_preset.value,
-            &argument.argument_type,
-            &model_source.data_connector,
+            Some(role),
+            flags,
+            model,
+            arguments,
+            data_connector_scalars,
             object_types,
             scalar_types,
             boolean_expression_types,
             models,
-            &model_source.type_mappings,
-            data_connector_scalars,
-            error_mapper,
+            issues,
         )?;
-
-        // Convert typecheck issues into model permission issues and collect them
-        for issue in new_issues {
-            issues.push(ModelPermissionIssue::ModelArgumentPresetTypecheckIssue {
-                role: role.value.clone(),
-                model_name: model.name.clone(),
-                argument_name: argument_preset.argument.value.clone(),
-                typecheck_issue: issue,
-            });
-        }
 
         // store authorization rule for argument preset
         authorization_rules.push(authorization_rule_for_argument_preset(
             role,
             &argument_preset.argument.value,
-            &argument.argument_type,
+            &argument_type,
             &value_expression_or_predicate,
             flags,
             conditions,
@@ -492,10 +627,7 @@ fn resolve_model_argument_presets(
 
         argument_presets.insert(
             argument_preset.argument.value.clone(),
-            (
-                argument.argument_type.clone(),
-                value_expression_or_predicate,
-            ),
+            (argument_type.clone(), value_expression_or_predicate),
         );
     }
 
@@ -503,4 +635,94 @@ fn resolve_model_argument_presets(
         argument_presets,
         authorization_rules,
     })
+}
+
+fn resolve_model_argument_preset(
+    argument_name: &Spanned<ArgumentName>,
+    value_expression_or_predicate: &Spanned<open_dds::permissions::ValueExpressionOrPredicate>,
+    role: Option<&Spanned<open_dds::permissions::Role>>,
+    flags: &open_dds::flags::OpenDdFlags,
+    model: &models_graphql::Model,
+    arguments: &IndexMap<ArgumentName, ArgumentInfo>,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::DataConnectorScalars<'_>,
+    >,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, crate::ObjectTypeWithRelationships>,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
+    models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
+    issues: &mut Vec<ModelPermissionIssue>,
+) -> Result<(ValueExpressionOrPredicate, QualifiedTypeReference), Error> {
+    let model_source = model
+        .source
+        .as_ref()
+        .ok_or_else(|| NamedModelPermissionError {
+            model_name: model.name.clone(),
+            role: role.cloned(),
+            error: ModelPermissionError::ModelSourceRequiredForPredicate {
+                model_name: Spanned {
+                    path: model.path.clone(),
+                    value: model.name.clone(),
+                },
+            },
+        })?;
+
+    let argument =
+        arguments
+            .get(&argument_name.value)
+            .ok_or_else(|| NamedModelPermissionError {
+                model_name: model.name.clone(),
+                role: role.cloned(),
+                error: ModelPermissionError::ModelArgumentPresetArgumentNotFound {
+                    model_name: Spanned {
+                        path: model.path.clone(),
+                        value: model.name.clone(),
+                    },
+                    argument_name: argument_name.clone(),
+                },
+            })?;
+
+    let error_mapper = |type_error| {
+        Error::ModelPermissionsError(NamedModelPermissionError {
+            model_name: model.name.clone(),
+            role: role.cloned(),
+            error: ModelPermissionError::ModelArgumentValuePresetTypeError {
+                argument_name: argument_name.clone(),
+                value_path: value_expression_or_predicate.path.clone(),
+                type_error,
+            },
+        })
+    };
+
+    let (value_expression_or_predicate, new_issues) = resolve_value_expression_for_argument(
+        role.map(|v| &**v),
+        flags,
+        argument_name,
+        value_expression_or_predicate,
+        &argument.argument_type,
+        &model_source.data_connector,
+        object_types,
+        scalar_types,
+        boolean_expression_types,
+        models,
+        &model_source.type_mappings,
+        data_connector_scalars,
+        error_mapper,
+    )?;
+
+    // Convert typecheck issues into model permission issues and collect them
+    for issue in new_issues {
+        issues.push(ModelPermissionIssue::ModelArgumentPresetTypecheckIssue {
+            role: role.as_ref().map(|role| role.value.clone()),
+            model_name: model.name.clone(),
+            argument_name: argument_name.value.clone(),
+            typecheck_issue: issue,
+        });
+    }
+
+    Ok((
+        value_expression_or_predicate,
+        argument.argument_type.clone(),
+    ))
 }

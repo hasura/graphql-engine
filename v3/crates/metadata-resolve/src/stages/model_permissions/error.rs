@@ -11,10 +11,12 @@ use open_dds::{
 };
 
 #[derive(Debug, thiserror::Error)]
-#[error("Error in model permission for model '{model_name}' for role '{role}': {error}")]
+#[error("Error in model permission for model '{model_name}'{}: {error}",
+        match role { Some(role) => format!(" for role '{role}'"), None => String::new()}
+)]
 pub struct NamedModelPermissionError {
     pub model_name: Qualified<ModelName>,
-    pub role: Spanned<Role>,
+    pub role: Option<Spanned<Role>>,
     pub error: ModelPermissionError,
 }
 
@@ -74,19 +76,23 @@ pub enum ModelPermissionError {
 impl ContextualError for NamedModelPermissionError {
     fn create_error_context(&self) -> Option<Context> {
         match &self.error {
-            ModelPermissionError::DuplicateModelArgumentPreset { argument_name } => Some(
-                Context::from_step(Step {
+            ModelPermissionError::DuplicateModelArgumentPreset { argument_name } => {
+                let root_error = Context::from_step(Step {
                     message: "This argument preset is a duplicate".to_owned(),
                     path: argument_name.path.clone(),
                     subgraph: Some(self.model_name.subgraph.clone()),
+                });
+
+                Some(match &self.role {
+                    Some(role) => root_error.append(Step {
+                        message: "The duplicate is defined in argument presets for this role"
+                            .to_owned(),
+                        path: role.path.clone(),
+                        subgraph: Some(self.model_name.subgraph.clone()),
+                    }),
+                    None => root_error,
                 })
-                .append(Step {
-                    message: "The duplicate is defined in argument presets for this role"
-                        .to_owned(),
-                    path: self.role.path.clone(),
-                    subgraph: Some(self.model_name.subgraph.clone()),
-                }),
-            ),
+            }
 
             ModelPermissionError::ModelSourceRequiredForPredicate { model_name } => {
                 Some(Context::from_step(Step {
@@ -128,15 +134,18 @@ impl ContextualError for NamedModelPermissionError {
                 }),
             ),
             ModelPermissionError::SelectFilterPermissionTypePredicateError { error } => {
-                error.create_error_context().map(|context| {
-                    context.prepend(Step {
+                let root_error = error.create_error_context()?;
+
+                Some(match &self.role {
+                    Some(role) => root_error.prepend(Step {
                         message: format!(
                             "Error in model permission for the role '{}' on the model '{}'",
-                            self.role, self.model_name.name
+                            role, self.model_name.name
                         ),
-                        path: self.role.path.clone(),
+                        path: role.path.clone(),
                         subgraph: Some(self.model_name.subgraph.clone()),
-                    })
+                    }),
+                    None => root_error,
                 })
             }
             ModelPermissionError::UnknownType { .. }

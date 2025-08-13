@@ -161,12 +161,12 @@ fn resolve_rules_based_command_permissions(
                     Ok(value_expression) => CommandAuthorizationRule::ArgumentPresetValue {
                         condition: hash,
                         argument_type,
-                        argument_name: argument_name.clone(),
+                        argument_name: argument_name.value.clone(),
                         value: value_expression,
                     },
                     Err(boolean_expression) => CommandAuthorizationRule::ArgumentAuthPredicate {
                         condition: hash,
-                        argument_name: argument_name.clone(),
+                        argument_name: argument_name.value.clone(),
                         predicate: boolean_expression,
                     },
                 }

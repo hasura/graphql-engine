@@ -268,10 +268,11 @@ pub enum ModelPermissionIssue {
         model_name: Qualified<ModelName>,
     },
     #[error(
-        "Type error in preset argument {argument_name:} for role {role:} in model {model_name:}: {typecheck_issue:}"
+        "Type error in preset argument {argument_name:}{} in model {model_name:}: {typecheck_issue:}",
+        match role { Some(role) => format!(" for role {role:}"), None => String::new() }
     )]
     ModelArgumentPresetTypecheckIssue {
-        role: Role,
+        role: Option<Role>,
         model_name: Qualified<ModelName>,
         argument_name: ArgumentName,
         typecheck_issue: typecheck::TypecheckIssue,
