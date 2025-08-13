@@ -114,6 +114,7 @@ jsonwebkey = { features = ["generate", "jsonwebtoken","pkcs-convert"], git = "ht
 jsonwebtoken = "9"
 lazy_static = "1.5.0"
 lexical-core = "1"
+log = "0.4"
 mimalloc = "0.1"
 mockito = { version = "~1.4", default-features = false } # v1.5+ depends on http v1
 nonempty = { version = "0.10", features = ["serialize"] }

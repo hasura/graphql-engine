@@ -203,7 +203,8 @@ run-for-sql METADATA_PATH="static/metadata.json": start-docker-run-deps
     --metadata-path {{ METADATA_PATH }} \
     --enable-sql-interface \
     --expose-internal-errors \
-    --export-traces-stdout 
+    --export-traces-stdout \
+    --unstable-feature enable-authorization-rules
 
 # run the engine using schema from tests
 run METADATA_PATH="static/metadata.json": start-docker-test-deps
