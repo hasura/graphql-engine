@@ -6,6 +6,10 @@
 
 ### Fixed
 
+- Fixed an issue in remote joins where a command that returns headers on the
+  left hand side of the join wouldn't correctly pass arguments to the right hand
+  side.
+
 ### Added
 
 ## [v2025.08.13]

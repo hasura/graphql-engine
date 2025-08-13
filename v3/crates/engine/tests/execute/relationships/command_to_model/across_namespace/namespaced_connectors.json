@@ -1025,6 +1025,13 @@
                           "name": "String"
                         }
                       },
+                      "session_id": {
+                        "description": "Session ID",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
                       "token": {
                         "description": "Session token",
                         "type": {
@@ -3770,6 +3777,13 @@
                         "type": {
                           "type": "named",
                           "name": "String"
+                        }
+                      },
+                      "session_id": {
+                        "description": "Session ID",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
                         }
                       },
                       "token": {

@@ -1,0 +1,216 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "commandActor",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["actor_id", "name", "movie_id"]
+                }
+              },
+              {
+                "role": "user",
+                "output": {
+                  "allowedFields": ["actor_id", "name", "movie_id"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "SessionInfo",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["token", "expiry", "session_id"]
+                }
+              },
+              {
+                "role": "user",
+                "output": {
+                  "allowedFields": ["token", "expiry", "session_id"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "CommandPermissions",
+          "version": "v1",
+          "definition": {
+            "commandName": "get_actor_by_id",
+            "permissions": [
+              {
+                "role": "admin",
+                "allowExecution": true
+              },
+              {
+                "role": "user",
+                "allowExecution": true
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "get_actor_by_id",
+            "arguments": [
+              {
+                "name": "actor_id",
+                "type": "Int!"
+              }
+            ],
+            "outputType": "commandActor",
+            "source": {
+              "dataConnectorName": "custom",
+              "dataConnectorCommand": {
+                "function": "get_actor_by_id"
+              },
+              "argumentMapping": {
+                "actor_id": "id"
+              }
+            },
+            "graphql": {
+              "rootFieldName": "getActorById",
+              "rootFieldKind": "Query"
+            }
+          }
+        },
+        {
+          "kind": "CommandPermissions",
+          "version": "v1",
+          "definition": {
+            "commandName": "getSessionDetails",
+            "permissions": [
+              {
+                "role": "admin",
+                "allowExecution": true
+              },
+              {
+                "role": "user",
+                "allowExecution": true
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "getSessionDetails",
+            "arguments": [
+              {
+                "name": "user_id",
+                "type": "Int!"
+              }
+            ],
+            "outputType": "SessionInfo",
+            "source": {
+              "dataConnectorName": "custom_no_relationships",
+              "dataConnectorCommand": {
+                "function": "get_session_details"
+              },
+              "argumentMapping": {
+                "user_id": "user_id"
+              }
+            },
+            "graphql": {
+              "rootFieldName": "getSessionDetails",
+              "rootFieldKind": "Query"
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "SessionInfo",
+            "fields": [
+              {
+                "name": "token",
+                "type": "String!"
+              },
+              {
+                "name": "expiry",
+                "type": "String!"
+              },
+              {
+                "name": "session_id",
+                "type": "Int!"
+              }
+            ],
+            "graphql": {
+              "typeName": "SessionInfo"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom_no_relationships",
+                "dataConnectorObjectType": "session_info",
+                "fieldMapping": {
+                  "token": {
+                    "column": {
+                      "name": "token"
+                    }
+                  },
+                  "expiry": {
+                    "column": {
+                      "name": "expiry"
+                    }
+                  },
+                  "session_id": {
+                    "column": {
+                      "name": "session_id"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "sourceType": "SessionInfo",
+            "name": "getActorById",
+            "target": {
+              "command": {
+                "name": "get_actor_by_id"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "session_id"
+                    }
+                  ]
+                },
+                "target": {
+                  "argument": {
+                    "argumentName": "actor_id"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
