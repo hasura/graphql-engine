@@ -13,6 +13,8 @@ use tracing_util::{SpanVisibility, add_event_on_active_span, set_attribute_on_ac
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
+static MB: usize = 1_048_576;
+
 static DEFAULT_OTEL_SERVICE_NAME: &str = "ddn-engine";
 const DEFAULT_PORT: u16 = 3000;
 
@@ -78,6 +80,10 @@ struct ServerOptions {
     /// Defaults to "X-Hasura-Auth-Mode" if not specified.
     #[arg(long, env = "AUTH_MODE_HEADER", default_value = "X-Hasura-Auth-Mode")]
     auth_mode_header: String,
+
+    /// Maximum size of response for NDC responses in bytes
+    #[arg(long, value_name = "NDC_RESPONSE_SIZE_LIMIT in bytes", env = "NDC_RESPONSE_SIZE_LIMIT", default_value_t = 30 * MB)]
+    ndc_response_size_limit: usize,
 }
 
 #[tokio::main]
@@ -148,6 +154,7 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
         auth_config,
         resolved_metadata,
         server.auth_mode_header.clone(),
+        server.ndc_response_size_limit,
     )
     .map_err(StartupError::ReadSchema)?;
 

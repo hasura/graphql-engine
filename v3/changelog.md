@@ -12,6 +12,9 @@
 
 ### Added
 
+- Added `NDC_RESPONSE_SIZE_LIMIT` that allows limiting response sizes, set in
+  bytes. Defaults to 30MB.
+
 ## [v2025.08.13]
 
 ### Added
