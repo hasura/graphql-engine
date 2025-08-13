@@ -58,7 +58,7 @@ const fillAndSubmitForm: Story['play'] = async (
     'my_native_query'
   );
   await userEvent.type(
-    c.getByPlaceholderText('A description of this logical model'),
+    c.getByPlaceholderText('A description of this Native query'),
     'a description'
   );
 
