@@ -5,7 +5,9 @@ use open_dds::authorization::{Allow, Deny, PresetArgument};
 use open_dds::query::ArgumentName;
 use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
 
-use crate::stages::type_permissions::resolve_condition;
+use crate::stages::type_permissions::{
+    ObjectTypeToCheck, resolve_condition, types_that_use_fancy_auth,
+};
 use crate::stages::{
     boolean_expressions, commands, data_connector_scalar_types, models_graphql,
     object_relationships, scalar_types,
@@ -16,7 +18,7 @@ use crate::types::subgraph::Qualified;
 use crate::helpers::argument::resolve_value_expression_for_argument;
 use crate::{
     BinaryOperation, CommandSource, Condition, Conditions, QualifiedTypeReference, ValueExpression,
-    ValueExpressionOrPredicate, configuration,
+    ValueExpressionOrPredicate, configuration, unwrap_custom_type_name,
 };
 
 use open_dds::permissions::{CommandPermissionOperand, CommandPermissionsV2};
@@ -25,7 +27,7 @@ use super::types::{
     Command, CommandPermission, CommandPermissionError, CommandPermissionIssue, CommandPermissions,
 };
 use super::{AllowOrDeny, CommandAuthorizationRule};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 pub fn resolve_command_permissions(
     flags: &open_dds::flags::OpenDdFlags,
@@ -46,6 +48,8 @@ pub fn resolve_command_permissions(
     conditions: &mut Conditions,
     issues: &mut Vec<CommandPermissionIssue>,
 ) -> Result<CommandPermissions, Error> {
+    warn_on_fancy_type_permissions(command, permissions, object_types, issues);
+
     match &permissions.permissions {
         CommandPermissionOperand::RoleBased(role_based_command_permissions) => {
             resolve_role_based_command_permissions(
@@ -422,5 +426,74 @@ fn authorization_rule_for_argument_preset(
             value: value_expression,
             condition: Some(hash),
         },
+    }
+}
+
+// raise a warning if this command's return type uses fancy auth and has a graphql api
+// (as it won't appear in the schema)
+fn warn_on_fancy_type_permissions(
+    command: &Command,
+    command_permissions: &CommandPermissionsV2,
+    object_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        object_relationships::ObjectTypeWithRelationships,
+    >,
+    issues: &mut Vec<CommandPermissionIssue>,
+) {
+    let has_graphql_api = command.graphql_api.is_some();
+
+    if !has_graphql_api {
+        return;
+    }
+
+    // raise issue if command itself uses rules-based auth
+    if matches!(
+        command_permissions.permissions,
+        CommandPermissionOperand::RulesBased(_)
+    ) {
+        issues.push(CommandPermissionIssue::CommandUsesRulesBasedAuthorization {
+            command_name: command.name.clone(),
+        });
+        // don't need the more granular warnings if command is not exposed in the schema
+        return;
+    }
+
+    if has_graphql_api {
+        let mut argument_types_with_fancy_auth = BTreeSet::new();
+        for argument in command.arguments.values() {
+            if let Some(custom_type_name) = unwrap_custom_type_name(&argument.argument_type) {
+                argument_types_with_fancy_auth.extend(types_that_use_fancy_auth(
+                    object_types,
+                    custom_type_name,
+                    ObjectTypeToCheck::Input,
+                ));
+            }
+        }
+
+        // raise issue for every input type that uses rules-based auth
+        for argument_type in argument_types_with_fancy_auth {
+            issues.push(
+                CommandPermissionIssue::CommandArgumentTypeUsesRulesBasedAuthorization {
+                    command_name: command.name.clone(),
+                    argument_type,
+                },
+            );
+        }
+
+        // raise issue for every output type that uses rules-based auth
+        if let Some(custom_return_type_name) = unwrap_custom_type_name(&command.output_type) {
+            for custom_type_name in types_that_use_fancy_auth(
+                object_types,
+                custom_return_type_name,
+                ObjectTypeToCheck::Output,
+            ) {
+                issues.push(
+                    CommandPermissionIssue::CommandReturnTypeUsesRulesBasedAuthorization {
+                        command_name: command.name.clone(),
+                        data_type: custom_type_name.clone(),
+                    },
+                );
+            }
+        }
     }
 }

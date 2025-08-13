@@ -2,6 +2,7 @@ use error_context::Context;
 use hasura_authn_core::Role;
 use indexmap::IndexMap;
 use open_dds::commands::CommandName;
+use open_dds::types::CustomTypeName;
 use serde::{Deserialize, Serialize};
 
 use crate::helpers::typecheck;
@@ -47,6 +48,7 @@ pub struct CommandPermission {
 }
 
 #[derive(Debug, thiserror::Error)]
+#[allow(clippy::enum_variant_names)]
 pub enum CommandPermissionIssue {
     #[error(
         "Type error in preset argument {argument_name:} {}in command {command_name:}: {typecheck_issue:}", 
@@ -58,6 +60,26 @@ pub enum CommandPermissionIssue {
         argument_name: ArgumentName,
         typecheck_issue: typecheck::TypecheckIssue,
     },
+    #[error(
+        "the object type {data_type} used as a return type for command {command_name} uses rules-based authorization so will not appear in the GraphQL schema"
+    )]
+    CommandReturnTypeUsesRulesBasedAuthorization {
+        command_name: Qualified<CommandName>,
+        data_type: Qualified<CustomTypeName>,
+    },
+    #[error(
+        "the command {command_name} uses rules-based authorization so will not appear in the GraphQL schema"
+    )]
+    CommandUsesRulesBasedAuthorization {
+        command_name: Qualified<CommandName>,
+    },
+    #[error(
+        "the object type {argument_type} used in arguments for the command {command_name} uses rules-based authorization so any presets will not be applied in the GraphQL schema"
+    )]
+    CommandArgumentTypeUsesRulesBasedAuthorization {
+        command_name: Qualified<CommandName>,
+        argument_type: Qualified<CustomTypeName>,
+    },
 }
 
 impl ShouldBeAnError for CommandPermissionIssue {
@@ -66,6 +88,11 @@ impl ShouldBeAnError for CommandPermissionIssue {
             CommandPermissionIssue::CommandArgumentPresetTypecheckIssue {
                 typecheck_issue, ..
             } => typecheck_issue.should_be_an_error(flags),
+            CommandPermissionIssue::CommandReturnTypeUsesRulesBasedAuthorization { .. }
+            | CommandPermissionIssue::CommandUsesRulesBasedAuthorization { .. }
+            | CommandPermissionIssue::CommandArgumentTypeUsesRulesBasedAuthorization { .. } => {
+                false
+            }
         }
     }
 }

@@ -104,10 +104,12 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/rules_base
                         },
                     ],
                     by_role: {},
+                    uses_rules_based_auth: true,
                 },
                 type_input_permissions: TypeInputPermissions {
                     authorization_rules: [],
                     by_role: {},
+                    uses_rules_based_auth: true,
                 },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {

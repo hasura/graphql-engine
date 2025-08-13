@@ -277,6 +277,24 @@ pub enum ModelPermissionIssue {
         argument_name: ArgumentName,
         typecheck_issue: typecheck::TypecheckIssue,
     },
+    #[error(
+        "the object type {data_type} used by model {model_name} uses rules-based authorization so will not appear in the GraphQL schema"
+    )]
+    ModelDataTypeUsesRulesBasedAuthorization {
+        model_name: Qualified<ModelName>,
+        data_type: Qualified<CustomTypeName>,
+    },
+    #[error(
+        "the object type {argument_type} used in arguments for the model {model_name} uses rules-based authorization so any presets will not be applied in the GraphQL schema"
+    )]
+    ModelArgumentTypeUsesRulesBasedAuthorization {
+        model_name: Qualified<ModelName>,
+        argument_type: Qualified<CustomTypeName>,
+    },
+    #[error(
+        "the model {model_name} uses rules-based authorization so will not appear in the GraphQL schema"
+    )]
+    ModelUsesRulesBasedAuthorization { model_name: Qualified<ModelName> },
 }
 
 impl ContextualError for ModelPermissionIssue {
@@ -289,7 +307,10 @@ impl ContextualError for ModelPermissionIssue {
                     subgraph: Some(model_name.subgraph.clone()),
                 }))
             }
-            ModelPermissionIssue::ModelArgumentPresetTypecheckIssue { .. } => None,
+            ModelPermissionIssue::ModelArgumentPresetTypecheckIssue { .. }
+            | ModelPermissionIssue::ModelArgumentTypeUsesRulesBasedAuthorization { .. }
+            | ModelPermissionIssue::ModelDataTypeUsesRulesBasedAuthorization { .. }
+            | ModelPermissionIssue::ModelUsesRulesBasedAuthorization { .. } => None,
         }
     }
 }
@@ -303,6 +324,9 @@ impl ShouldBeAnError for ModelPermissionIssue {
             ModelPermissionIssue::ModelArgumentPresetTypecheckIssue {
                 typecheck_issue, ..
             } => typecheck_issue.should_be_an_error(flags),
+            ModelPermissionIssue::ModelDataTypeUsesRulesBasedAuthorization { .. }
+            | ModelPermissionIssue::ModelUsesRulesBasedAuthorization { .. }
+            | ModelPermissionIssue::ModelArgumentTypeUsesRulesBasedAuthorization { .. } => false,
         }
     }
 }

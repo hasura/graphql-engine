@@ -214,10 +214,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             },
                         },
                     },
+                    uses_rules_based_auth: false,
                 },
                 type_input_permissions: TypeInputPermissions {
                     authorization_rules: [],
                     by_role: {},
+                    uses_rules_based_auth: false,
                 },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
@@ -631,10 +633,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             },
                         },
                     },
+                    uses_rules_based_auth: false,
                 },
                 type_input_permissions: TypeInputPermissions {
                     authorization_rules: [],
                     by_role: {},
+                    uses_rules_based_auth: false,
                 },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
@@ -1005,10 +1009,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             },
                         },
                     },
+                    uses_rules_based_auth: false,
                 },
                 type_input_permissions: TypeInputPermissions {
                     authorization_rules: [],
                     by_role: {},
+                    uses_rules_based_auth: false,
                 },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {

@@ -1,7 +1,7 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
 expression: resolved
-input_file: crates/metadata-resolve/tests/passing/command_permissions/nullable_predicate_args_can_be_preset/metadata.json
+input_file: crates/metadata-resolve/tests/passing/command_permissions/role_based/nullable_predicate_args_can_be_preset/metadata.json
 ---
 (
     Metadata {
@@ -138,10 +138,12 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/nullable_p
                             },
                         },
                     },
+                    uses_rules_based_auth: false,
                 },
                 type_input_permissions: TypeInputPermissions {
                     authorization_rules: [],
                     by_role: {},
+                    uses_rules_based_auth: false,
                 },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {

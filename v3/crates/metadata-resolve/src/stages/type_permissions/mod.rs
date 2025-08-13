@@ -23,8 +23,10 @@ pub use types::{
 
 use crate::helpers::typecheck;
 use crate::stages::object_types;
-use crate::{FieldDefinition, ValueExpression};
+use crate::{FieldDefinition, ValueExpression, unwrap_custom_type_name};
 pub use condition::resolve_condition;
+
+use super::object_relationships;
 
 fn get_boolean_expression_type_names(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
@@ -106,10 +108,12 @@ pub fn resolve(
                         input: TypeInputPermissions {
                             by_role: BTreeMap::new(),
                             authorization_rules: vec![],
+                            uses_rules_based_auth: false,
                         },
                         output: TypeOutputPermissions {
                             authorization_rules: vec![],
                             by_role: BTreeMap::new(),
+                            uses_rules_based_auth: false,
                         },
                     }); // Assume no permissions if not found in the map
                 (
@@ -161,6 +165,13 @@ fn resolve_type_permission(
             ));
         }
         Some(object_type) => {
+            warn_on_fancy_type_permissions(
+                &qualified_type_name,
+                type_permission,
+                object_type,
+                issues,
+            );
+
             let type_output_permissions = resolve_output_type_permission(
                 &qualified_type_name,
                 &object_type.object_type,
@@ -256,6 +267,7 @@ pub fn resolve_output_type_permission(
             Ok(TypeOutputPermissions {
                 authorization_rules,
                 by_role: BTreeMap::new(),
+                uses_rules_based_auth: true,
             })
         }
         TypePermissionOperand::RoleBased(role_based_type_permissions) => {
@@ -294,6 +306,7 @@ pub fn resolve_output_type_permission(
             Ok(TypeOutputPermissions {
                 authorization_rules,
                 by_role,
+                uses_rules_based_auth: false,
             })
         }
     }
@@ -403,6 +416,7 @@ pub(crate) fn resolve_input_type_permission(
             Ok(TypeInputPermissions {
                 authorization_rules,
                 by_role: BTreeMap::new(),
+                uses_rules_based_auth: true,
             })
         }
         TypePermissionOperand::RoleBased(role_based_type_permissions) => {
@@ -462,6 +476,7 @@ pub(crate) fn resolve_input_type_permission(
             Ok(TypeInputPermissions {
                 authorization_rules,
                 by_role,
+                uses_rules_based_auth: false,
             })
         }
     }
@@ -560,5 +575,107 @@ fn authorization_rule_for_field_preset(
         field_name: field_name.clone(),
         value: value.clone(),
         condition: Some(hash),
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum ObjectTypeToCheck {
+    Output,
+    Input,
+}
+
+// raise a warning if this type uses fancy auth and has a graphql type name for output
+// (as it won't appear in the schema)
+fn warn_on_fancy_type_permissions(
+    qualified_type_name: &Qualified<CustomTypeName>,
+    type_permission: &TypePermissionsV2,
+    object_type: &object_types::ObjectTypeWithTypeMappings,
+    issues: &mut Vec<TypePermissionIssue>,
+) {
+    let has_graphql_api = object_type.object_type.graphql_output_type_name.is_some();
+
+    if !has_graphql_api {
+        return;
+    }
+
+    let uses_fancy_auth = matches!(
+        type_permission.permissions,
+        TypePermissionOperand::RulesBased { .. }
+    );
+
+    if uses_fancy_auth {
+        issues.push(TypePermissionIssue::UsesRulesBasedAuthorizationAndGraphql {
+            object_type_name: qualified_type_name.clone(),
+        });
+    }
+}
+
+// collect all types that use rules-based auth
+pub fn types_that_use_fancy_auth(
+    object_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        object_relationships::ObjectTypeWithRelationships,
+    >,
+    data_type: &Qualified<CustomTypeName>,
+    object_type_to_check: ObjectTypeToCheck,
+) -> BTreeSet<Qualified<CustomTypeName>> {
+    let mut types = BTreeMap::new();
+
+    types_that_use_fancy_auth_inner(object_types, data_type, object_type_to_check, &mut types);
+
+    types
+        .into_iter()
+        .filter_map(|(data_type, uses_fancy_auth)| {
+            if uses_fancy_auth {
+                Some(data_type)
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
+// we pass a mutable `types` around to stop us getting caught in a loop with
+// recursive types
+fn types_that_use_fancy_auth_inner(
+    object_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        object_relationships::ObjectTypeWithRelationships,
+    >,
+    data_type: &Qualified<CustomTypeName>,
+    object_type_to_check: ObjectTypeToCheck,
+    types: &mut BTreeMap<Qualified<CustomTypeName>, bool>,
+) {
+    if let Some(object_type) = object_types.get(data_type) {
+        let uses_rules_based_auth = match object_type_to_check {
+            ObjectTypeToCheck::Output => {
+                object_type.type_output_permissions.uses_rules_based_auth
+                    && !object_type
+                        .type_output_permissions
+                        .authorization_rules
+                        .is_empty()
+            }
+            ObjectTypeToCheck::Input => {
+                object_type.type_input_permissions.uses_rules_based_auth
+                    && !object_type
+                        .type_input_permissions
+                        .authorization_rules
+                        .is_empty()
+            }
+        };
+        types.insert(data_type.clone(), uses_rules_based_auth);
+
+        for field in object_type.object_type.fields.values() {
+            if let Some(custom_type_name) = unwrap_custom_type_name(&field.field_type) {
+                if !types.contains_key(custom_type_name) {
+                    types_that_use_fancy_auth_inner(
+                        object_types,
+                        custom_type_name,
+                        object_type_to_check,
+                        types,
+                    );
+                }
+            }
+        }
     }
 }

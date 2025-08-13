@@ -118,6 +118,13 @@ fn resolve_model_permissions(
     let model_name =
         Qualified::new(subgraph.clone(), permissions.model_name.clone()).transpose_spanned();
 
+    let input_model =
+        models
+            .get(&model_name.value)
+            .ok_or_else(|| Error::UnknownModelInModelPermissions {
+                model_name: model_name.clone(),
+            })?;
+
     let model = models_with_permissions
         .get_mut(&model_name.value)
         .ok_or_else(|| Error::UnknownModelInModelPermissions {
@@ -132,8 +139,7 @@ fn resolve_model_permissions(
 
         let permissions = model_permission::resolve_all_model_permissions(
             &metadata_accessor.flags,
-            &model.model,
-            &model.arguments,
+            input_model,
             permissions,
             boolean_expression,
             data_connectors,
