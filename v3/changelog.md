@@ -8,6 +8,10 @@
 
 ### Added
 
+## [v2025.08.13]
+
+### Added
+
 - Add support for wildcard at leaf subdomain level in allowed CORS origins. Eg.
   `https://*.example.com` will allow `https://api.example.com`,
   `https://auth.example.com`, and so on.
@@ -1926,7 +1930,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.07.29...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.08.13...HEAD
+[v2025.08.13]: https://github.com/hasura/v3-engine/releases/tag/v2025.08.13
 [v2025.07.29]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.29
 [v2025.07.28]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.28
 [v2025.07.22]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.22
