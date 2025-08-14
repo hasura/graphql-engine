@@ -2093,6 +2093,10 @@
                             "distinct": {},
                             "order_by": {}
                           },
+                          "string_agg_with_separator": {
+                            "distinct": {},
+                            "order_by": {}
+                          },
                           "sum": {},
                           "stddev": {},
                           "stddev_pop": {},
@@ -2216,6 +2220,10 @@
                         "max": {},
                         "min": {},
                         "string_agg": {
+                          "distinct": {},
+                          "order_by": {}
+                        },
+                        "string_agg_with_separator": {
                           "distinct": {},
                           "order_by": {}
                         },
@@ -2345,6 +2353,10 @@
                             "distinct": {},
                             "order_by": {}
                           },
+                          "string_agg_with_separator": {
+                            "distinct": {},
+                            "order_by": {}
+                          },
                           "sum": {},
                           "stddev": {},
                           "stddev_pop": {},
@@ -2469,6 +2481,10 @@
                           "max": {},
                           "min": {},
                           "string_agg": {
+                            "distinct": {},
+                            "order_by": {}
+                          },
+                          "string_agg_with_separator": {
                             "distinct": {},
                             "order_by": {}
                           },
@@ -2609,6 +2625,10 @@
                             "distinct": {},
                             "order_by": {}
                           },
+                          "string_agg_with_separator": {
+                            "distinct": {},
+                            "order_by": {}
+                          },
                           "sum": {},
                           "stddev": {},
                           "stddev_pop": {},
@@ -2734,6 +2754,10 @@
                           "max": {},
                           "min": {},
                           "string_agg": {
+                            "distinct": {},
+                            "order_by": {}
+                          },
+                          "string_agg_with_separator": {
                             "distinct": {},
                             "order_by": {}
                           },
