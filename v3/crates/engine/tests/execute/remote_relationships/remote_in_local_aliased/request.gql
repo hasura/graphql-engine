@@ -1,0 +1,20 @@
+query RemoteJoinsCandidateQueryAliased {
+  MovieMany {
+    title
+    rating
+    cast: Actors {
+      name
+      film: Movie {
+        title
+        Analytics {
+          num_users_faved
+          num_views_day
+        }
+      }
+    }
+    Analytics {
+      num_users_faved
+      num_views_day
+    }
+  }
+}

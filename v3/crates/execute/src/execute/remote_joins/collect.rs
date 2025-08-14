@@ -164,8 +164,9 @@ fn collect_argument_from_row(
             ) = nonempty_path.split_first();
             let nested_val = row.get(alias.as_str()).ok_or_else(|| {
                 error::FieldInternalError::InternalGeneric {
-                    description: "invalid NDC response; could not find {key} in response"
-                        .to_string(),
+                    description: format!(
+                        "invalid NDC response; could not find {alias} in response"
+                    ),
                 }
             })?;
             if let Some(parsed_rows) = rows_from_row_field_value(*location_kind, nested_val)? {

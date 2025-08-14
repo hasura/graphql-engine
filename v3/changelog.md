@@ -10,6 +10,8 @@
   left hand side of the join wouldn't correctly pass arguments to the right hand
   side.
 
+- Fix a bug where remote relationships from fields with aliases wouldn't work.
+
 ### Added
 
 - Added `NDC_RESPONSE_SIZE_LIMIT` that allows limiting response sizes, set in

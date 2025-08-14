@@ -174,8 +174,9 @@ fn from_field_selection(
     if !nested_remote_join_executions.locations.is_empty() {
         // take any remote joins from the inner selection
         // and wrap them in nesting
+        // Use the NDC field alias here so traversal matches the response keys
         remote_join_executions.locations.insert(
-            field_name.to_string(),
+            ndc_field_alias.to_string(),
             Location {
                 join_node: JoinNode::Local(LocationKind::NestedData),
                 rest: nested_remote_join_executions,
@@ -555,8 +556,9 @@ fn from_model_relationship(
 
             if !new_remote_join_executions.is_empty() {
                 // Collect remote joins, adding local relationship context to them
+                // Use the NDC field alias here so traversal matches the response keys
                 remote_join_executions.locations.insert(
-                    relationship_name.to_string(),
+                    ndc_field_alias.to_string(),
                     Location {
                         join_node: JoinNode::Local(LocationKind::LocalRelationship),
                         rest: new_remote_join_executions,
@@ -794,8 +796,9 @@ fn from_command_relationship(
 
             if !new_remote_join_executions.locations.is_empty() {
                 // Collect any remote joins, adding local relationship context
+                // Use the NDC field alias here so traversal matches the response keys
                 remote_join_executions.locations.insert(
-                    relationship_name.to_string(),
+                    ndc_field_alias.to_string(),
                     Location {
                         join_node: JoinNode::Local(LocationKind::LocalRelationship),
                         rest: new_remote_join_executions,

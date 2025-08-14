@@ -501,6 +501,18 @@ fn test_remote_relationships_remote_in_local() -> anyhow::Result<()> {
 }
 
 #[test]
+fn test_remote_relationships_remote_in_local_aliased() -> anyhow::Result<()> {
+    let test_path_string = "execute/remote_relationships/remote_in_local_aliased";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            "execute/common_metadata/postgres_connector_ndc_v01_schema.json",
+            "execute/common_metadata/custom_connector_v02_schema.json",
+        ],
+    )
+}
+
+#[test]
 fn test_remote_relationships_from_nested() -> anyhow::Result<()> {
     let test_path_string = "execute/remote_relationships/from_nested";
     common::test_execution_expectation(
