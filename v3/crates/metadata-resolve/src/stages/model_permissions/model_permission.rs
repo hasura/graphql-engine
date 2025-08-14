@@ -105,7 +105,7 @@ pub fn resolve_rules_based_model_permissions(
     let mut authorization_rules = vec![];
 
     for model_authorization_rule in model_authorization_rules {
-        let authorization_rule = match model_authorization_rule {
+        let new_authorization_rules = match model_authorization_rule {
             open_dds::authorization::ModelAuthorizationRule::Allow(
                 open_dds::authorization::Allow { condition },
             ) => {
@@ -113,20 +113,20 @@ pub fn resolve_rules_based_model_permissions(
                     .as_ref()
                     .map(|condition| conditions.add(resolve_condition(condition, flags)));
 
-                ModelAuthorizationRule::Access {
+                vec![ModelAuthorizationRule::Access {
                     allow_or_deny: AllowOrDeny::Allow,
                     condition,
-                }
+                }]
             }
             open_dds::authorization::ModelAuthorizationRule::Deny(
                 open_dds::authorization::Deny { condition },
             ) => {
                 let condition = conditions.add(resolve_condition(condition, flags));
 
-                ModelAuthorizationRule::Access {
+                vec![ModelAuthorizationRule::Access {
                     allow_or_deny: AllowOrDeny::Deny,
                     condition: Some(condition),
-                }
+                }]
             }
             open_dds::authorization::ModelAuthorizationRule::PresetArgument(
                 open_dds::authorization::PresetArgument {
@@ -153,7 +153,7 @@ pub fn resolve_rules_based_model_permissions(
                     issues,
                 )?;
 
-                match value_expression_or_predicate.split_predicate() {
+                vec![match value_expression_or_predicate.split_predicate() {
                     Ok(value_expression) => ModelAuthorizationRule::ArgumentPresetValue {
                         condition,
                         argument_type,
@@ -165,7 +165,7 @@ pub fn resolve_rules_based_model_permissions(
                         argument_name: argument_name.value.clone(),
                         predicate: boolean_expression,
                     },
-                }
+                }]
             }
             open_dds::authorization::ModelAuthorizationRule::Filter(
                 open_dds::authorization::Filter {
@@ -196,13 +196,75 @@ pub fn resolve_rules_based_model_permissions(
                     })
                 })?;
 
-                ModelAuthorizationRule::Filter {
+                vec![ModelAuthorizationRule::Filter {
                     condition,
                     predicate,
-                }
+                }]
+            }
+            open_dds::authorization::ModelAuthorizationRule::AllowRelationalOperations(
+                open_dds::authorization::AllowRelationalOperations {
+                    condition,
+                    operations,
+                },
+            ) => {
+                let condition = condition
+                    .as_ref()
+                    .map(|condition| conditions.add(resolve_condition(condition, flags)));
+
+                operations
+                    .iter()
+                    .map(|operation| {
+                        let relational_operation = match operation {
+                            open_dds::authorization::RelationalOperation::Insert => {
+                                RelationalOperation::Insert
+                            }
+                            open_dds::authorization::RelationalOperation::Update => {
+                                RelationalOperation::Update
+                            }
+                            open_dds::authorization::RelationalOperation::Delete => {
+                                RelationalOperation::Delete
+                            }
+                        };
+                        ModelAuthorizationRule::RelationalPermission {
+                            condition,
+                            allow_or_deny: AllowOrDeny::Allow,
+                            relational_operation,
+                        }
+                    })
+                    .collect()
+            }
+            open_dds::authorization::ModelAuthorizationRule::DenyRelationalOperations(
+                open_dds::authorization::DenyRelationalOperations {
+                    condition,
+                    operations,
+                },
+            ) => {
+                let condition = conditions.add(resolve_condition(condition, flags));
+
+                operations
+                    .iter()
+                    .map(|operation| {
+                        let relational_operation = match operation {
+                            open_dds::authorization::RelationalOperation::Insert => {
+                                RelationalOperation::Insert
+                            }
+                            open_dds::authorization::RelationalOperation::Update => {
+                                RelationalOperation::Update
+                            }
+                            open_dds::authorization::RelationalOperation::Delete => {
+                                RelationalOperation::Delete
+                            }
+                        };
+                        ModelAuthorizationRule::RelationalPermission {
+                            condition: Some(condition),
+                            allow_or_deny: AllowOrDeny::Deny,
+                            relational_operation,
+                        }
+                    })
+                    .collect()
             }
         };
-        authorization_rules.push(authorization_rule);
+        authorization_rules.extend(new_authorization_rules);
     }
 
     Ok(ModelPermissions {

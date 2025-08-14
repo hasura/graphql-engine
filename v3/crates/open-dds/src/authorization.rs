@@ -1,5 +1,6 @@
 use opendds_derive;
-use serde::Serialize;
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     permissions::{ModelPredicate, ValueExpression, ValueExpressionOrPredicate},
@@ -143,6 +144,12 @@ pub enum ModelAuthorizationRule {
     // if a condition is provided, it must evaluate to `true` for this filter to be included in
     // requests. Multiple filters that match will be combined with `AND`
     Filter(Filter),
+    // if a condition is provided, it must evaluate to `true` for these relational operations to be
+    // available to the user
+    AllowRelationalOperations(AllowRelationalOperations),
+    // if the provided condition evaluates to `true` these relational operations will not be available
+    // to the user
+    DenyRelationalOperations(DenyRelationalOperations),
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
@@ -152,4 +159,33 @@ pub enum ModelAuthorizationRule {
 pub struct Filter {
     pub condition: Option<Condition>,
     pub predicate: ModelPredicate,
+}
+
+#[derive(
+    Serialize, Deserialize, JsonSchema, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd,
+)]
+#[schemars(title = "RelationalOperation")]
+#[serde(rename_all = "camelCase")]
+pub enum RelationalOperation {
+    Insert,
+    Update,
+    Delete,
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[opendd(json_schema(title = "AllowRelationalOperations"))]
+pub struct AllowRelationalOperations {
+    pub condition: Option<Condition>,
+    pub operations: Vec<RelationalOperation>,
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[opendd(json_schema(title = "DenyRelationalOperations"))]
+pub struct DenyRelationalOperations {
+    pub condition: Condition,
+    pub operations: Vec<RelationalOperation>,
 }
