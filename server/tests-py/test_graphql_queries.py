@@ -759,6 +759,17 @@ class TestGraphQLQueryBoolExpRaster:
         return 'queries/graphql_query/boolexp/raster'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
+@usefixtures('postgis', 'per_class_tests_db_state')
+class TestGraphQLQueryAggregatePostGIS:
+
+    def test_aggregate_st_srid(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/st_srid.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/aggregate/postgis'
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryOrderBy:
     def test_articles_order_by_without_id(self, hge_ctx, transport):
