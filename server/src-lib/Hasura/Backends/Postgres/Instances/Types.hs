@@ -16,6 +16,7 @@ import Data.Environment qualified as Env
 import Data.Kind (Type)
 import Data.Text.Extended (toTxt)
 import Data.Typeable
+import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.Postgres.Connection qualified as Postgres
 import Hasura.Backends.Postgres.Connection.VersionCheck (runCockroachVersionCheck)
 import Hasura.Backends.Postgres.Execute.ConnectionTemplate qualified as Postgres
@@ -146,6 +147,20 @@ instance
   runPingSource = runPingSourceImpl @pgKind
   isComparableType = Postgres.isComparableType
   isNumType = Postgres.isNumType
+  -- | Add built-in custom aggregate operator `st_srid` which returns the SRID (integer)
+  --   for geometry/geography columns. Exposed in GraphQL as:
+  --   table_aggregate { aggregate { st_srid { geom_col } } }
+  --   yielding an object mapping each geo column requested to its SRID (or null if all rows null).
+  --   Implementation uses existing custom aggregate operators mechanism so no
+  --   special-casing is required in SQL translation.
+  getCustomAggregateOperators _sourceConfig =
+    let opName = $$(G.litName "st_srid")
+        -- Map input scalar types -> result scalar type (both geometry & geography -> integer)
+        typeMap = HashMap.fromList
+          [ (Postgres.PGGeometry, Postgres.PGInteger)
+          , (Postgres.PGGeography, Postgres.PGInteger)
+          ]
+     in HashMap.singleton opName typeMap
   textToScalarValue = Postgres.textToScalarValue
   parseScalarValue () ty val = runAesonParser (Postgres.parsePGValue ty) val
   scalarValueToJSON = Postgres.pgScalarValueToJson

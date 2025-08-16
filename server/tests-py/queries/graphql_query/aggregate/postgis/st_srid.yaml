@@ -1,0 +1,18 @@
+description: Query ST_SRID aggregate for geometry column
+url: /v1/graphql
+authorization: HASURA_GRAPHQL_TEST_COOKIE
+status: 200
+response:
+  data:
+    geom_table_aggregate:
+      aggregate:
+        st_srid:
+          geom_col: 4326
+query: |
+  query {
+    geom_table_aggregate {
+      aggregate {
+        st_srid { geom_col }
+      }
+    }
+  }
