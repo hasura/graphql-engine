@@ -98,7 +98,7 @@
     "firewallRuleName": "allow-all-azure-firewall-rule",
     "containerGroupName": "[concat(parameters('name'), '-container-group')]",
     "containerName": "hasura-graphql-engine",
-    "containerImage": "hasura/graphql-engine:v2.48.3"
+    "containerImage": "hasura/graphql-engine:v2.48.4"
   },
   "resources": [
     {
