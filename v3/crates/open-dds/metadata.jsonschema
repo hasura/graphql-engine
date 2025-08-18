@@ -4186,6 +4186,10 @@
         "disallow_literals_as_boolean_expression_arguments": {
           "default": false,
           "type": "boolean"
+        },
+        "fix_exists_in_nested_arrays": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false

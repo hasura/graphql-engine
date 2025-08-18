@@ -6,6 +6,32 @@
 
 ### Fixed
 
+- Fixes to `_and` filters inside nested arrays.
+
+This filter means "return an item when there is a user inside 'users' with first
+name 'Bruce' and last name 'Willis'".
+
+```graphql
+where: { users: { _and: [
+  { first_name: { _eq: "Bruce" },
+  { last_name: { _eq: "Willis" }
+]}}
+```
+
+This filter means "return an item when there is a user inside 'users' with first
+name 'Bruce' and there is a user inside 'users' with last name 'Willis'".
+
+```graphql
+where: { _and: [
+  { users: { first_name: { _eq: "Bruce" } },
+  { users: { last_name: { _eq: "Willis" } }
+]}}
+```
+
+Previously both examples would be treated as the latter, which was incorrect,
+but now each is treated correctly once the OpenDD flag
+`fix_exists_in_nested_arrays` is enabled.
+
 ### Added
 
 ## [v2025.08.14-1]

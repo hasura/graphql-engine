@@ -66,10 +66,12 @@ pub fn resolve_argument_opendd<'s>(
                 .map(open_dds::query::Value::Literal)?
         }
 
-        ArgumentKind::NDCExpression => {
-            filter::resolve_filter_expression_open_dd(argument.value.as_object()?, usage_counts)
-                .map(open_dds::query::Value::BooleanExpression)?
-        }
+        ArgumentKind::NDCExpression => filter::resolve_filter_expression_open_dd(
+            argument.value.as_object()?,
+            flags,
+            usage_counts,
+        )
+        .map(open_dds::query::Value::BooleanExpression)?,
     };
     Ok((argument_name.clone(), mapped_argument_value))
 }
@@ -108,10 +110,12 @@ pub fn build_argument_as_value<'s>(
                 .map(open_dds::query::Value::Literal)?
         }
 
-        ArgumentKind::NDCExpression => {
-            filter::resolve_filter_expression_open_dd(argument.value.as_object()?, usage_counts)
-                .map(open_dds::query::Value::BooleanExpression)?
-        }
+        ArgumentKind::NDCExpression => filter::resolve_filter_expression_open_dd(
+            argument.value.as_object()?,
+            flags,
+            usage_counts,
+        )
+        .map(open_dds::query::Value::BooleanExpression)?,
     };
 
     let argument_name = ArgumentName::new(Identifier::new(argument.name.as_str()).unwrap());
