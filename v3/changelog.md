@@ -6,6 +6,12 @@
 
 ### Fixed
 
+### Added
+
+## [v2025.08.18]
+
+### Fixed
+
 - Fixes to `_and` filters inside nested arrays.
 
 This filter means "return an item when there is a user inside 'users' with first
@@ -31,8 +37,6 @@ where: { _and: [
 Previously both examples would be treated as the latter, which was incorrect,
 but now each is treated correctly once the OpenDD flag
 `fix_exists_in_nested_arrays` is enabled.
-
-### Added
 
 ## [v2025.08.14-1]
 
@@ -1975,7 +1979,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.08.14-1...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.08.18...HEAD
+[v2025.08.18]: https://github.com/hasura/v3-engine/releases/tag/v2025.08.18
 [v2025.08.14-1]: https://github.com/hasura/v3-engine/releases/tag/v2025.08.14-1
 [v2025.08.14]: https://github.com/hasura/v3-engine/releases/tag/v2025.08.14
 [v2025.08.13]: https://github.com/hasura/v3-engine/releases/tag/v2025.08.13
