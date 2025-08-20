@@ -222,11 +222,11 @@ convertRemoteSourceRelationship
 
       relationshipField = case relationship of
         SourceRelationshipObject s ->
-          AFObjectRelation $ AnnRelationSelectG relName columnMapping Nullable s
+          AFObjectRelation $ AnnRelationSelectG relName columnMapping Nullable Nothing s
         SourceRelationshipArray s ->
-          AFArrayRelation $ ASSimple $ AnnRelationSelectG relName columnMapping Nullable s
+          AFArrayRelation $ ASSimple $ AnnRelationSelectG relName columnMapping Nullable Nothing s
         SourceRelationshipArrayAggregate s ->
-          AFArrayRelation $ ASAggregate $ AnnRelationSelectG relName columnMapping Nullable s
+          AFArrayRelation $ ASAggregate $ AnnRelationSelectG relName columnMapping Nullable Nothing s
 
       argumentIdField =
         ( fromCol @b argumentIdColumn,
@@ -246,6 +246,7 @@ convertRemoteSourceRelationship
             _asnFrom = selectFrom,
             _asnPerm = TablePerm annBoolExpTrue Nothing,
             _asnArgs = noSelectArgs,
+            _asnDirectives = Nothing,
             _asnStrfyNum = stringifyNumbers,
             _asnNamingConvention = Nothing
           }

@@ -239,6 +239,7 @@ genRelInfo genTableName genColumn =
     <*> genRelTarget genTableName
     <*> bool_
     <*> genInsertOrder
+    <*> bool_
 
 genRelTarget :: (MonadGen m) => m (TableName b) -> m (RelTarget b)
 genRelTarget genTableName =
