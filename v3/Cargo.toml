@@ -22,6 +22,7 @@ members = [
   "crates/plugins/*",
   "crates/query-usage-analytics",
   "crates/utils/*",
+
 ]
 
 # generally following guidance from https://nnethercote.github.io/perf-book/build-configuration.html

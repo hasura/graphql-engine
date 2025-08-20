@@ -82,7 +82,7 @@ pub enum PreNdcRequestPluginResponse<Req, Res> {
 }
 
 /// Operation type determines the request and response types that are expected in the payload and optionally the response
-#[derive(Serialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum OperationType {
     Query,
@@ -91,10 +91,10 @@ pub enum OperationType {
     MutationExplain,
 }
 
-#[derive(Serialize, Clone, Debug)]
-struct PreNdcRequestSession {
-    role: Role,
-    variables: BTreeMap<SessionVariableName, serde_json::Value>,
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct PreNdcRequestSession {
+    pub role: Role,
+    pub variables: BTreeMap<SessionVariableName, serde_json::Value>,
 }
 
 impl TryFrom<Session> for PreNdcRequestSession {
@@ -113,9 +113,9 @@ impl TryFrom<Session> for PreNdcRequestSession {
     }
 }
 
-#[derive(Serialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-struct PreNdcRequestPluginRequestBody<Req> {
+pub struct PreNdcRequestPluginRequestBody<Req> {
     pub session: Option<PreNdcRequestSession>,
     pub ndc_request: Option<Req>,
     pub data_connector_name: Qualified<DataConnectorName>,
@@ -140,7 +140,7 @@ pub async fn execute_pre_ndc_request_plugins<Req, Res>(
     ndc_version: &str,
 ) -> Result<Option<PreNdcRequestPluginResponse<Req, Res>>, Error>
 where
-    Req: Serialize + for<'de> Deserialize<'de> + Clone + Send + Sync,
+    Req: Serialize + for<'de> Deserialize<'de> + Clone + Send + Sync + std::fmt::Debug,
     Res: for<'de> Deserialize<'de>,
 {
     match pre_ndc_request_plugins.get(&data_connector.name) {
@@ -171,7 +171,7 @@ async fn handle_pre_ndc_request_plugin<Req, Res>(
     ndc_version: &str,
 ) -> Result<Option<PreNdcRequestPluginResponse<Req, Res>>, Error>
 where
-    Req: Serialize + for<'de> Deserialize<'de> + Clone + Send + Sync,
+    Req: Serialize + for<'de> Deserialize<'de> + Clone + Send + Sync + std::fmt::Debug,
     Res: for<'de> Deserialize<'de>,
 {
     let tracer = tracing_util::global_tracer();
@@ -291,7 +291,7 @@ fn build_request<Req>(
     ndc_version: &str,
 ) -> Result<reqwest::RequestBuilder, BuildRequestError>
 where
-    Req: Serialize,
+    Req: Serialize + std::fmt::Debug,
 {
     let mut http_headers = HeaderMap::new();
 
@@ -331,6 +331,7 @@ where
     if pre_ndc_request_plugin.config.request.ndc_request.is_some() {
         request_body.ndc_request = Some(ndc_request);
     }
+
     request_builder = request_builder.json(&request_body);
 
     Ok(request_builder)

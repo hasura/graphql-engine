@@ -42,6 +42,7 @@
           "engine"
           "custom-connector"
           "dev-auth-webhook"
+          "pre-ndc-request-plugin-example"
         ];
 
         binaryPackages = {

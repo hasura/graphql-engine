@@ -4534,6 +4534,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "pre-ndc-request-plugin-example"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "ndc-models 0.1.6",
+ "ndc-models 0.2.9",
+ "pre-ndc-request-plugin",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "pre-ndc-response-plugin"
 version = "3.0.0"
 dependencies = [
