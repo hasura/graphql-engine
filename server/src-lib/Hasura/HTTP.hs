@@ -12,7 +12,6 @@ module Hasura.HTTP
     ShowHeadersAndEnvVarInfo (..),
     serializeHTTPExceptionWithErrorMessage,
     serializeHTTPExceptionMessageForDebugging,
-    encodeHTTPRequestJSON,
     ShowErrorInfo (..),
     getHttpExceptionJson,
     serializeServantClientErrorMessage,
@@ -25,12 +24,10 @@ import Control.Lens hiding ((.=))
 import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KM
 import Data.CaseInsensitive (mk, original)
-import Data.HashMap.Strict qualified as HashMap
 import Data.Text qualified as T
 import Data.Text.Conversions (UTF8 (..), convertText)
 import Data.Text.Encoding qualified as TE
 import Data.Text.Encoding.Error qualified as TE
-import Hasura.Authentication.Header (redactSensitiveHeader)
 import Hasura.Prelude
 import Hasura.Server.Version (currentVersion)
 import Network.HTTP.Client qualified as HTTP
@@ -169,7 +166,11 @@ encodeHTTPRequestJSON request =
       [ ("host", J.toJSON $ TE.decodeUtf8 $ HTTP.host request),
         ("port", J.toJSON $ HTTP.port request),
         ("secure", J.toJSON $ HTTP.secure request),
-        ("requestHeaders", J.toJSON $ HashMap.fromList $ hdrsToText $ map redactSensitiveHeader $ HTTP.requestHeaders request),
+        -- We've learned we need to redact not only known sensitiveHeaders, but
+        -- also headers from_env. Unfortunately we can't get that information
+        -- to here so although this might make debugging more difficult we need
+        -- to remove this. We might add it back behind a flag, if requested
+        -- ("requestHeaders", J.toJSON $ HashMap.fromList $ hdrsToText $ map redactSensitiveHeader $ HTTP.requestHeaders request),
         ("path", J.toJSON $ TE.decodeUtf8 $ HTTP.path request),
         ("queryString", J.toJSON $ TE.decodeUtf8 $ HTTP.queryString request),
         ("method", J.toJSON $ TE.decodeUtf8 $ HTTP.method request),
