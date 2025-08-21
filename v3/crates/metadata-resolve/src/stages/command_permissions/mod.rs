@@ -15,7 +15,7 @@ use crate::stages::{
 };
 use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
-use crate::{ArgumentInfo, Conditions, configuration};
+use crate::{ArgumentInfo, Conditions};
 
 use std::collections::BTreeMap;
 mod types;
@@ -27,7 +27,6 @@ pub use types::{
 /// resolve command permissions
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    configuration: &configuration::Configuration,
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
     object_types: &BTreeMap<
         Qualified<CustomTypeName>,
@@ -81,7 +80,6 @@ pub fn resolve(
     {
         results.push(resolve_command_permission(
             metadata_accessor,
-            configuration,
             object_types,
             scalar_types,
             boolean_expression_types,
@@ -103,7 +101,6 @@ pub fn resolve(
 
 fn resolve_command_permission(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    configuration: &configuration::Configuration,
     object_types: &BTreeMap<
         Qualified<CustomTypeName>,
         object_relationships::ObjectTypeWithRelationships,
@@ -132,7 +129,6 @@ fn resolve_command_permission(
     {
         command.permissions = command_permission::resolve_command_permissions(
             &metadata_accessor.flags,
-            configuration,
             &command.command,
             command_permissions,
             object_types,

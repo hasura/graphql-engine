@@ -92,8 +92,7 @@ watch: start-docker-test-deps
       --otlp-endpoint http://localhost:4317 \
       --authn-config-path static/auth/auth_config_v3.json \
       --metadata-path static/metadata.json \
-      --expose-internal-errors \
-      --unstable-feature enable-authorization-rules'
+      --expose-internal-errors'
 
 # check the code is fine
 lint:
@@ -204,8 +203,7 @@ run-for-sql METADATA_PATH="static/metadata.json": start-docker-run-deps
     --metadata-path {{ METADATA_PATH }} \
     --enable-sql-interface \
     --expose-internal-errors \
-    --export-traces-stdout \
-    --unstable-feature enable-authorization-rules
+    --export-traces-stdout
 
 # run the engine using schema from tests
 run METADATA_PATH="static/metadata.json": start-docker-test-deps

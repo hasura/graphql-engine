@@ -8,6 +8,9 @@
 
 ### Added
 
+- Version 2 of `ModelPermissions`, `CommandPermissions` and `TypePermissions`
+  that allows both role-based and rule-based permission definitions.
+
 ## [v2025.08.18]
 
 ### Fixed

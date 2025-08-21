@@ -58,7 +58,6 @@ pub struct ArgumentPreset {
 /// Definition of permissions for an OpenDD type.
 pub enum TypePermissions {
     V1(TypePermissionsV1),
-    #[opendd(hidden = true)]
     V2(TypePermissionsV2),
 }
 
@@ -230,7 +229,6 @@ pub struct FieldPreset {
 /// Definition of permissions for an OpenDD model.
 pub enum ModelPermissions {
     V1(ModelPermissionsV1),
-    #[opendd(hidden = true)]
     V2(ModelPermissionsV2),
 }
 
@@ -512,7 +510,6 @@ impl CommandPermission {
 /// Definition of permissions for an OpenDD command.
 pub enum CommandPermissions {
     V1(CommandPermissionsV1),
-    #[opendd(hidden = true)]
     V2(CommandPermissionsV2),
 }
 

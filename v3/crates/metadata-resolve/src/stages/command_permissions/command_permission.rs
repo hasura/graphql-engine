@@ -18,20 +18,17 @@ use crate::types::subgraph::Qualified;
 use crate::helpers::argument::resolve_value_expression_for_argument;
 use crate::{
     BinaryOperation, CommandSource, Condition, Conditions, QualifiedTypeReference, ValueExpression,
-    ValueExpressionOrPredicate, configuration, unwrap_custom_type_name,
+    ValueExpressionOrPredicate, unwrap_custom_type_name,
 };
 
 use open_dds::permissions::{CommandPermissionOperand, CommandPermissionsV2};
 
-use super::types::{
-    Command, CommandPermission, CommandPermissionError, CommandPermissionIssue, CommandPermissions,
-};
+use super::types::{Command, CommandPermission, CommandPermissionIssue, CommandPermissions};
 use super::{AllowOrDeny, CommandAuthorizationRule};
 use std::collections::{BTreeMap, BTreeSet};
 
 pub fn resolve_command_permissions(
     flags: &open_dds::flags::OpenDdFlags,
-    configuration: &configuration::Configuration,
     command: &Command,
     permissions: &CommandPermissionsV2,
     object_types: &BTreeMap<
@@ -75,7 +72,6 @@ pub fn resolve_command_permissions(
                 boolean_expression_types,
                 models,
                 data_connector_scalars,
-                configuration,
                 conditions,
                 issues,
             )
@@ -98,17 +94,9 @@ fn resolve_rules_based_command_permissions(
         Qualified<DataConnectorName>,
         data_connector_scalar_types::DataConnectorScalars,
     >,
-    configuration: &configuration::Configuration,
     conditions: &mut Conditions,
     issues: &mut Vec<CommandPermissionIssue>,
 ) -> Result<CommandPermissions, Error> {
-    if !configuration.unstable_features.enable_authorization_rules {
-        return Err(CommandPermissionError::AuthorizationRulesNotEnabled {
-            command_name: command.name.clone(),
-        }
-        .into());
-    }
-
     let mut authorization_rules = vec![];
 
     for command_authorization_rule in command_authorization_rules {

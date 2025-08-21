@@ -3,7 +3,6 @@ use std::collections::{BTreeMap, BTreeSet};
 mod condition;
 mod error;
 mod types;
-use crate::configuration::Configuration;
 use crate::types::condition::{BinaryOperation, Condition, Conditions};
 use crate::types::subgraph::Qualified;
 pub use error::{
@@ -54,7 +53,6 @@ fn get_boolean_expression_type_names(
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     object_types: object_types::ObjectTypesWithTypeMappings,
-    configuration: &Configuration,
     conditions: &mut Conditions,
 ) -> Result<(ObjectTypesWithPermissions, Vec<TypePermissionIssue>), Vec<TypePermissionError>> {
     let mut issues = Vec::new();
@@ -85,7 +83,6 @@ pub fn resolve(
             &boolean_expression_type_names.iter().collect(),
             &object_types_context,
             &metadata_accessor.flags,
-            configuration,
             &mut type_permissions,
             conditions,
             &mut issues,
@@ -149,7 +146,6 @@ fn resolve_type_permission(
         &object_types::ObjectTypeRepresentation,
     >,
     flags: &open_dds::flags::OpenDdFlags,
-    configuration: &Configuration,
     type_permissions: &mut BTreeMap<Qualified<CustomTypeName>, Permissions>,
     conditions: &mut Conditions,
     issues: &mut Vec<TypePermissionIssue>,
@@ -177,7 +173,6 @@ fn resolve_type_permission(
                 &object_type.object_type,
                 type_permission,
                 flags,
-                configuration,
                 conditions,
             )?;
 
@@ -186,9 +181,7 @@ fn resolve_type_permission(
                 object_types_context,
                 boolean_expression_type_names,
                 &object_type.object_type,
-                &qualified_type_name,
                 type_permission,
-                configuration,
                 conditions,
                 issues,
             )?;
@@ -210,17 +203,10 @@ pub fn resolve_output_type_permission(
     object_type_representation: &object_types::ObjectTypeRepresentation,
     type_permissions: &TypePermissionsV2,
     flags: &open_dds::flags::OpenDdFlags,
-    configuration: &Configuration,
     conditions: &mut Conditions,
 ) -> Result<TypeOutputPermissions, TypeOutputPermissionError> {
     match &type_permissions.permissions {
         TypePermissionOperand::RulesBased(type_authorization_rules) => {
-            if !configuration.unstable_features.enable_authorization_rules {
-                return Err(TypeOutputPermissionError::AuthorizationRulesNotEnabled {
-                    object_type_name: object_type_name.clone(),
-                });
-            }
-
             let mut authorization_rules = vec![];
 
             for type_authorization_rule in type_authorization_rules {
@@ -365,20 +351,12 @@ pub(crate) fn resolve_input_type_permission(
     >,
     boolean_expression_type_names: &BTreeSet<&Qualified<CustomTypeName>>,
     object_type_representation: &object_types::ObjectTypeRepresentation,
-    object_type_name: &Qualified<CustomTypeName>,
     type_permissions: &TypePermissionsV2,
-    configuration: &Configuration,
     conditions: &mut Conditions,
     issues: &mut Vec<TypePermissionIssue>,
 ) -> Result<TypeInputPermissions, TypeInputPermissionError> {
     match &type_permissions.permissions {
         TypePermissionOperand::RulesBased(type_authorization_rules) => {
-            if !configuration.unstable_features.enable_authorization_rules {
-                return Err(TypeInputPermissionError::AuthorizationRulesNotEnabled {
-                    object_type_name: object_type_name.clone(),
-                });
-            }
-
             let mut authorization_rules = vec![];
 
             for type_authorization_rule in type_authorization_rules {

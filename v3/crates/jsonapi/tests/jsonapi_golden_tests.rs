@@ -255,7 +255,6 @@ fn create_default_session() -> hasura_authn_core::Session {
 fn get_metadata_resolve_configuration() -> metadata_resolve::configuration::Configuration {
     let unstable_features = metadata_resolve::configuration::UnstableFeatures {
         enable_aggregation_predicates: false,
-        enable_authorization_rules: false,
     };
 
     metadata_resolve::configuration::Configuration { unstable_features }

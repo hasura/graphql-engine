@@ -98,20 +98,11 @@ impl ShouldBeAnError for CommandPermissionIssue {
 }
 
 #[derive(Debug, thiserror::Error)]
-pub enum CommandPermissionError {
-    #[error(
-        "CommandPermission for command {command_name} use authorization rules but they are not enabled"
-    )]
-    AuthorizationRulesNotEnabled {
-        command_name: Qualified<CommandName>,
-    },
-}
+pub enum CommandPermissionError {}
 
 impl ContextualError for CommandPermissionError {
     fn create_error_context(&self) -> Option<Context> {
-        match &self {
-            CommandPermissionError::AuthorizationRulesNotEnabled { .. } => None,
-        }
+        None
     }
 }
 
