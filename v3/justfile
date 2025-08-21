@@ -50,14 +50,15 @@ start-docker-test-deps:
       auth_hook postgres postgres_connector \
       postgres_connector_ndc_v01 custom_connector \
       custom_connector_no_relationships custom_connector_ndc_v01 \
-      postgres_promptql
+      postgres_promptql \
+      pre_ndc_request_plugin_example
 
 # pull / build all docker deps
 docker-refresh: stop-docker
     docker compose -f ci.docker-compose.yaml pull \
-      postgres_connector postgres_connector_ndc_v01 postgres_promptql
+      postgres_connector postgres_connector_ndc_v01 postgres_promptql 
     docker compose -f ci.docker-compose.yaml build \
-      custom_connector custom_connector_no_relationships auth_hook
+      custom_connector custom_connector_no_relationships auth_hook pre_ndc_request_plugin_example
 
 alias refresh-docker := docker-refresh
 
@@ -91,8 +92,7 @@ watch: start-docker-test-deps
       --otlp-endpoint http://localhost:4317 \
       --authn-config-path static/auth/auth_config_v3.json \
       --metadata-path static/metadata.json \
-      --expose-internal-errors \
-      --unstable-feature enable-authorization-rules'
+      --expose-internal-errors'
 
 # check the code is fine
 lint:
@@ -203,7 +203,7 @@ run-for-sql METADATA_PATH="static/metadata.json": start-docker-run-deps
     --metadata-path {{ METADATA_PATH }} \
     --enable-sql-interface \
     --expose-internal-errors \
-    --export-traces-stdout 
+    --export-traces-stdout
 
 # run the engine using schema from tests
 run METADATA_PATH="static/metadata.json": start-docker-test-deps

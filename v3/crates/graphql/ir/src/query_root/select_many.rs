@@ -141,6 +141,7 @@ pub fn select_many_generate_ir<'n, 's>(
     let where_clause = match where_input {
         Some(where_input) => Some(filter::resolve_filter_expression_open_dd(
             where_input,
+            flags,
             &mut usage_counts,
         )?),
         None => None,

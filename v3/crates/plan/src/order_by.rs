@@ -163,7 +163,6 @@ fn resolve_field_operand(
         let field_object_type = crate::metadata_accessor::get_output_object_type(
             metadata,
             field_type,
-            &session.role,
             &session.variables,
             plan_state,
         )?;
@@ -237,7 +236,6 @@ fn resolve_relationship_operand(
             let target_model_view = crate::metadata_accessor::get_model(
                 metadata,
                 target_model_name,
-                &session.role,
                 &session.variables,
                 plan_state,
             )?;
@@ -300,7 +298,6 @@ fn resolve_relationship_operand(
             let target_output_object_type = crate::metadata_accessor::get_output_object_type(
                 metadata,
                 target_type,
-                &session.role,
                 &session.variables,
                 plan_state,
             )?;

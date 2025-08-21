@@ -102,8 +102,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -130,10 +132,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         },
                     },
+                    uses_rules_based_auth: false,
                 },
                 type_input_permissions: TypeInputPermissions {
                     authorization_rules: [],
                     by_role: {},
+                    uses_rules_based_auth: false,
                 },
                 relationship_fields: {
                     RelationshipName(
@@ -748,8 +752,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -771,10 +777,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         },
                     },
+                    uses_rules_based_auth: false,
                 },
                 type_input_permissions: TypeInputPermissions {
                     authorization_rules: [],
                     by_role: {},
+                    uses_rules_based_auth: false,
                 },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
@@ -1006,8 +1014,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                         AllowFields {
@@ -1023,8 +1033,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                9591853440105325468,
+                            condition: Some(
+                                ConditionHash(
+                                    9591853440105325468,
+                                ),
                             ),
                         },
                     ],
@@ -1062,10 +1074,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         },
                     },
+                    uses_rules_based_auth: false,
                 },
                 type_input_permissions: TypeInputPermissions {
                     authorization_rules: [],
                     by_role: {},
+                    uses_rules_based_auth: false,
                 },
                 relationship_fields: {
                     RelationshipName(
@@ -1486,8 +1500,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -1509,10 +1525,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         },
                     },
+                    uses_rules_based_auth: false,
                 },
                 type_input_permissions: TypeInputPermissions {
                     authorization_rules: [],
                     by_role: {},
+                    uses_rules_based_auth: false,
                 },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
@@ -1750,8 +1768,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -1773,10 +1793,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         },
                     },
+                    uses_rules_based_auth: false,
                 },
                 type_input_permissions: TypeInputPermissions {
                     authorization_rules: [],
                     by_role: {},
+                    uses_rules_based_auth: false,
                 },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
@@ -2086,8 +2108,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -2114,10 +2138,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         },
                     },
+                    uses_rules_based_auth: false,
                 },
                 type_input_permissions: TypeInputPermissions {
                     authorization_rules: [],
                     by_role: {},
+                    uses_rules_based_auth: false,
                 },
                 relationship_fields: {
                     RelationshipName(
@@ -2639,8 +2665,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -2667,10 +2695,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         },
                     },
+                    uses_rules_based_auth: false,
                 },
                 type_input_permissions: TypeInputPermissions {
                     authorization_rules: [],
                     by_role: {},
+                    uses_rules_based_auth: false,
                 },
                 relationship_fields: {
                     RelationshipName(
@@ -3158,8 +3188,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -3176,10 +3208,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         },
                     },
+                    uses_rules_based_auth: false,
                 },
                 type_input_permissions: TypeInputPermissions {
                     authorization_rules: [],
                     by_role: {},
+                    uses_rules_based_auth: false,
                 },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
@@ -3362,8 +3396,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -3380,10 +3416,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         },
                     },
+                    uses_rules_based_auth: false,
                 },
                 type_input_permissions: TypeInputPermissions {
                     authorization_rules: [],
                     by_role: {},
+                    uses_rules_based_auth: false,
                 },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
@@ -3623,8 +3661,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -3646,10 +3686,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         },
                     },
+                    uses_rules_based_auth: false,
                 },
                 type_input_permissions: TypeInputPermissions {
                     authorization_rules: [],
                     by_role: {},
+                    uses_rules_based_auth: false,
                 },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
@@ -3871,8 +3913,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -3894,10 +3938,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         },
                     },
+                    uses_rules_based_auth: false,
                 },
                 type_input_permissions: TypeInputPermissions {
                     authorization_rules: [],
                     by_role: {},
+                    uses_rules_based_auth: false,
                 },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
@@ -4230,8 +4276,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -4253,10 +4301,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         },
                     },
+                    uses_rules_based_auth: false,
                 },
                 type_input_permissions: TypeInputPermissions {
                     authorization_rules: [],
                     by_role: {},
+                    uses_rules_based_auth: false,
                 },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
@@ -4498,8 +4548,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -4521,10 +4573,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         },
                     },
+                    uses_rules_based_auth: false,
                 },
                 type_input_permissions: TypeInputPermissions {
                     authorization_rules: [],
                     by_role: {},
+                    uses_rules_based_auth: false,
                 },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
@@ -4770,8 +4824,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -4793,10 +4849,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         },
                     },
+                    uses_rules_based_auth: false,
                 },
                 type_input_permissions: TypeInputPermissions {
                     authorization_rules: [],
                     by_role: {},
+                    uses_rules_based_auth: false,
                 },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
@@ -4936,8 +4994,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                14539879520726521060,
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
                             ),
                         },
                     ],
@@ -4959,10 +5019,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         },
                     },
+                    uses_rules_based_auth: false,
                 },
                 type_input_permissions: TypeInputPermissions {
                     authorization_rules: [],
                     by_role: {},
+                    uses_rules_based_auth: false,
                 },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
@@ -23907,7 +23969,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
             propagate_boolean_expression_deprecation_status: false,
             multiple_order_by_input_object_fields: Allow,
         },
-        glossaries: {},
         plugin_configs: LifecyclePluginConfigs {
             pre_parse_plugins: [],
             pre_response_plugins: ResolvedLifecyclePreResponsePluginHooks {

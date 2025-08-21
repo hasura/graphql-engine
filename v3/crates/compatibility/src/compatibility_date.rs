@@ -185,5 +185,6 @@ pub fn get_compatibility_date_for_flag(flag: Flag) -> Option<CompatibilityDate> 
         Flag::DisallowLiteralsAsBooleanExpressionArguments => {
             Some(new_compatibility_date(2025, 7, 11))
         }
+        Flag::FixExistsInNestedArrays => Some(new_compatibility_date(2025, 8, 19)),
     }
 }

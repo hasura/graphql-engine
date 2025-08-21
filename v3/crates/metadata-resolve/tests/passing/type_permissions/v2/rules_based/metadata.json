@@ -1,0 +1,62 @@
+{
+  "version": "v3",
+  "subgraphs": [
+    {
+      "name": "subgraphs",
+      "objects": [
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Album",
+            "fields": [
+              {
+                "name": "AlbumId",
+                "type": "Int!"
+              },
+              {
+                "name": "ArtistId",
+                "type": "Int!"
+              },
+              {
+                "name": "Title",
+                "type": "String!"
+              }
+            ],
+            "graphql": {
+              "typeName": "Album",
+              "inputTypeName": "Album_input"
+            }
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v2",
+          "definition": {
+            "typeName": "Album",
+            "permissions": {
+              "rulesBased": [
+                {
+                  "allowFields": {
+                    "condition": {
+                      "equal": {
+                        "left": {
+                          "sessionVariable": "x-hasura-role"
+                        },
+                        "right": {
+                          "literal": "admin"
+                        }
+                      }
+                    },
+                    "fields": ["AlbumId", "ArtistId", "Title"]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "flags": {}
+}

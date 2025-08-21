@@ -4,6 +4,7 @@ use lang_graphql::normalized_ast;
 use serde::Serialize;
 
 use crate::error;
+use crate::flags::GraphqlIrFlags;
 use graphql_schema::{self};
 use graphql_schema::{BooleanExpressionAnnotation, InputAnnotation, ObjectFieldKind};
 use graphql_schema::{
@@ -37,14 +38,16 @@ pub struct QueryFilter<'s> {
 /// Generate the OpenDD IR for GraphQL 'where' boolean expression
 pub fn resolve_filter_expression_open_dd(
     fields: &IndexMap<ast::Name, normalized_ast::InputField<'_, GDS>>,
+    flags: &GraphqlIrFlags,
     usage_counts: &mut UsagesCounts,
 ) -> Result<open_dds::query::BooleanExpression, error::Error> {
-    resolve_object_boolean_expression_open_dd(fields, &[], usage_counts)
+    resolve_object_boolean_expression_open_dd(fields, &[], flags, usage_counts)
 }
 
 fn resolve_object_boolean_expression_open_dd(
     fields: &IndexMap<ast::Name, normalized_ast::InputField<'_, GDS>>,
     field_path: &[open_dds::query::ObjectFieldTarget],
+    flags: &GraphqlIrFlags,
     usage_counts: &mut UsagesCounts,
 ) -> Result<open_dds::query::BooleanExpression, error::Error> {
     let field_expressions = fields
@@ -66,6 +69,7 @@ fn resolve_object_boolean_expression_open_dd(
                             resolve_object_boolean_expression_open_dd(
                                 value_object,
                                 field_path,
+                                flags,
                                 usage_counts,
                             )
                         })
@@ -85,6 +89,7 @@ fn resolve_object_boolean_expression_open_dd(
                             resolve_object_boolean_expression_open_dd(
                                 value_object,
                                 field_path,
+                                flags,
                                 usage_counts,
                             )
                         })
@@ -100,6 +105,7 @@ fn resolve_object_boolean_expression_open_dd(
                     let not_filter_expression = resolve_object_boolean_expression_open_dd(
                         not_value,
                         field_path,
+                        flags,
                         usage_counts,
                     )?;
                     open_dds::query::BooleanExpression::Not(Box::new(not_filter_expression))
@@ -114,7 +120,7 @@ fn resolve_object_boolean_expression_open_dd(
                     let field_value = field.value.as_object()?;
 
                     match object_field_kind {
-                        ObjectFieldKind::Object | ObjectFieldKind::ObjectArray => {
+                        ObjectFieldKind::Object => {
                             // Append the current column to the column_path before descending into the nested object expression
                             let new_field_path = field_path
                                 .iter()
@@ -124,12 +130,51 @@ fn resolve_object_boolean_expression_open_dd(
                                     arguments: IndexMap::new(),
                                 }])
                                 .collect::<Vec<_>>();
+
                             resolve_object_boolean_expression_open_dd(
                                 field_value,
                                 &new_field_path,
+                                flags,
                                 usage_counts,
                             )?
                         }
+                        ObjectFieldKind::ObjectArray => {
+                            if flags.fix_exists_in_nested_arrays {
+                                // correctly use `BooleanExpression::Exists` to nest "AND" inside
+                                // nested arrays properly
+                                let inner = resolve_object_boolean_expression_open_dd(
+                                    field_value,
+                                    &[],
+                                    flags,
+                                    usage_counts,
+                                )?;
+
+                                open_dds::query::BooleanExpression::Exists {
+                                    operand: build_nested_field_path(field_path).map(|a| *a),
+                                    predicate: Box::new(inner),
+                                    field_name: field_name.clone(),
+                                }
+                            } else {
+                                // old behaviour, should match `ObjectFieldKind::Object` above
+                                // Append the current column to the column_path before descending into the nested object expression
+                                let new_field_path = field_path
+                                    .iter()
+                                    .cloned()
+                                    .chain([open_dds::query::ObjectFieldTarget {
+                                        field_name: field_name.clone(),
+                                        arguments: IndexMap::new(),
+                                    }])
+                                    .collect::<Vec<_>>();
+
+                                resolve_object_boolean_expression_open_dd(
+                                    field_value,
+                                    &new_field_path,
+                                    flags,
+                                    usage_counts,
+                                )?
+                            }
+                        }
+
                         ObjectFieldKind::Scalar | ObjectFieldKind::ScalarArray => {
                             resolve_scalar_boolean_expression_open_dd(
                                 field_value,
@@ -154,6 +199,7 @@ fn resolve_object_boolean_expression_open_dd(
                     let inner = resolve_object_boolean_expression_open_dd(
                         field_value,
                         &[], // should we reset this?
+                        flags,
                         usage_counts,
                     )?;
 

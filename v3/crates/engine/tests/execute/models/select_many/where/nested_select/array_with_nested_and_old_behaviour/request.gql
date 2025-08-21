@@ -1,0 +1,35 @@
+query MyQuery {
+  where_does_koen_hughes_work: InstitutionMany(
+    where: {
+      staff: {
+        _and: [
+          { last_name: { _eq: "Hughes" } }
+          { first_name: { _eq: "Koen" } }
+        ]
+      }
+    }
+  ) {
+    id
+    location {
+      city
+      campuses
+    }
+  }
+
+  where_does_john_hughes_work: InstitutionMany(
+    where: {
+      staff: {
+        _and: [
+          { last_name: { _eq: "Hughes" } }
+          { first_name: { _eq: "John" } }
+        ]
+      }
+    }
+  ) {
+    id
+    location {
+      city
+      campuses
+    }
+  }
+}

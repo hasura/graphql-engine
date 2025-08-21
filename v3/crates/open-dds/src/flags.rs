@@ -57,6 +57,7 @@ pub enum Flag {
     DisallowComparableRelationshipTargetWithNoBooleanExpressionType,
     SendMissingArgumentsToNdcAsNulls,
     DisallowLiteralsAsBooleanExpressionArguments,
+    FixExistsInNestedArrays,
 }
 
 impl Flag {
@@ -159,6 +160,7 @@ impl Flag {
             Flag::DisallowLiteralsAsBooleanExpressionArguments => {
                 "disallow_literals_as_boolean_expression_arguments"
             }
+            Flag::FixExistsInNestedArrays => "fix_exists_in_nested_arrays",
         }
     }
 }

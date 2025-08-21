@@ -14,6 +14,9 @@ pub mod login;
 pub mod movie;
 pub mod name_query;
 pub mod staff_member;
+pub mod r#where;
+pub mod where_int;
+pub mod where_string;
 
 pub(crate) fn scalar_types() -> BTreeMap<ndc_models::ScalarTypeName, ndc_models::ScalarType> {
     BTreeMap::from_iter([
@@ -240,5 +243,8 @@ pub(crate) fn object_types() -> BTreeMap<ndc_models::ObjectTypeName, ndc_models:
             login::definition_session_response(),
         ),
         ("session_info".into(), login::definition_session_info()),
+        ("where".into(), r#where::definition()),
+        ("where_string".into(), where_string::definition()),
+        ("where_int".into(), where_int::definition()),
     ])
 }

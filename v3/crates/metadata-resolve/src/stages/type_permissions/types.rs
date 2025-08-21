@@ -47,6 +47,8 @@ pub struct TypeInputPermissions {
     pub authorization_rules: Vec<TypeInputAuthorizationRule>,
     /// Old-style permissions by role. Only used for graphql/jsonapi schema generation
     pub by_role: BTreeMap<Role, TypeInputPermission>,
+    /// Were these type's permissions defined with rules-based auth?
+    pub uses_rules_based_auth: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -77,17 +79,19 @@ pub struct TypeOutputPermissions {
     pub authorization_rules: Vec<FieldAuthorizationRule>,
     /// Old-style permissions by role. Only used for graphql/jsonapi schema generation
     pub by_role: BTreeMap<Role, TypeOutputPermission>,
+    /// Were these type's permissions defined with rules-based auth?
+    pub uses_rules_based_auth: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum FieldAuthorizationRule {
     AllowFields {
         fields: Vec<FieldName>,
-        condition: ConditionHash,
+        condition: Option<ConditionHash>,
     },
     DenyFields {
         fields: Vec<FieldName>,
-        condition: ConditionHash,
+        condition: Option<ConditionHash>,
     },
 }
 

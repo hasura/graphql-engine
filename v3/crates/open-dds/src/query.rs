@@ -307,6 +307,11 @@ pub enum BooleanExpression {
         relationship_name: RelationshipName,
         predicate: Box<BooleanExpression>,
     },
+    Exists {
+        operand: Option<Operand>,
+        field_name: FieldName,
+        predicate: Box<BooleanExpression>,
+    },
 }
 
 impl BooleanExpression {
@@ -337,6 +342,15 @@ impl BooleanExpression {
             } => format!(
                 "In relationship {}, predicate {}",
                 relationship_name,
+                predicate.fmt_for_explain()
+            ),
+            BooleanExpression::Exists {
+                field_name,
+                predicate,
+                ..
+            } => format!(
+                "In nested array {}, predicate {}",
+                field_name,
                 predicate.fmt_for_explain()
             ),
             BooleanExpression::Comparison {

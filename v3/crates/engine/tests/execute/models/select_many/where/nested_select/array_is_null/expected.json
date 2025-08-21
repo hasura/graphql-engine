@@ -20,13 +20,6 @@
             "city": "Gothenburg",
             "campuses": ["Johanneberg", "Lindholmen"]
           }
-        },
-        {
-          "id": 3,
-          "location": {
-            "city": null,
-            "campuses": null
-          }
         }
       ],
       "where_has_staff_with_a_pet_with_no_name": [],
@@ -58,14 +51,6 @@
                   "name": "Stockholm"
                 }
               ]
-            }
-          }
-        },
-        {
-          "id": 3,
-          "location": {
-            "country": {
-              "cities": null
             }
           }
         }

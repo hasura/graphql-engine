@@ -20,7 +20,7 @@ use crate::{ArgumentInfo, Conditions};
 use std::collections::BTreeMap;
 mod types;
 pub use types::{
-    AllowOrDeny, Command, CommandAuthorizationRule, CommandPermissionIssue,
+    AllowOrDeny, Command, CommandAuthorizationRule, CommandPermissionError, CommandPermissionIssue,
     CommandPermissionsOutput, CommandWithPermissions,
 };
 
@@ -125,7 +125,8 @@ fn resolve_command_permission(
         .ok_or_else(|| Error::UnknownCommandInCommandPermissions {
             command_name: qualified_command_name.clone(),
         })?;
-    if command.permissions.by_role.is_empty() {
+    if command.permissions.by_role.is_empty() && command.permissions.authorization_rules.is_empty()
+    {
         command.permissions = command_permission::resolve_command_permissions(
             &metadata_accessor.flags,
             &command.command,

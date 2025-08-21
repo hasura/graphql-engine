@@ -5,7 +5,7 @@ use super::{field_selection, process_argument_presets_for_command};
 use crate::PlanError;
 use crate::metadata_accessor::OutputObjectTypeView;
 use crate::types::PlanState;
-use hasura_authn_core::{Role, Session, SessionVariables};
+use hasura_authn_core::{Session, SessionVariables};
 use indexmap::IndexMap;
 use metadata_resolve::{Metadata, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference};
 use open_dds::query::CommandSelection;
@@ -155,7 +155,6 @@ pub(crate) fn from_command_selection(
     let output_shape = return_type_shape(
         &command.command.output_type,
         metadata,
-        &session.role,
         &session.variables,
         plan_state,
     )?;
@@ -176,12 +175,13 @@ pub(crate) fn from_command_selection(
     let command_view = crate::metadata_accessor::get_command(
         metadata,
         &command.command.name,
-        &session.role,
         &session.variables,
         plan_state,
     )?;
 
     // resolve arguments, adding in presets
+    // currently we expect arguments to have already been converted from OpenDD -> NDC field names
+    // by this point
     let unresolved_arguments = get_unresolved_arguments(
         &command_selection.target.arguments,
         &command.command.arguments,
@@ -383,7 +383,6 @@ fn wrap_scalar_select(nested_fields: Option<NestedField>) -> IndexMap<NdcFieldAl
 fn return_type_shape<'metadata>(
     output_type: &'metadata QualifiedTypeReference,
     metadata: &'metadata Metadata,
-    role: &'_ Role,
     session_variables: &SessionVariables,
     plan_state: &mut PlanState,
 ) -> Result<OutputShape<'metadata>, PlanError> {
@@ -399,7 +398,6 @@ fn return_type_shape<'metadata>(
                 None => Ok(crate::metadata_accessor::get_output_object_type(
                     metadata,
                     custom_type,
-                    role,
                     session_variables,
                     plan_state,
                 )
@@ -409,13 +407,7 @@ fn return_type_shape<'metadata>(
             }
         }
         QualifiedBaseType::List(type_reference) => {
-            let inner = return_type_shape(
-                type_reference,
-                metadata,
-                role,
-                session_variables,
-                plan_state,
-            )?;
+            let inner = return_type_shape(type_reference, metadata, session_variables, plan_state)?;
             Ok(OutputShape::Array {
                 inner: Box::new(inner),
             })

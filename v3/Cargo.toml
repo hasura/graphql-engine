@@ -22,6 +22,7 @@ members = [
   "crates/plugins/*",
   "crates/query-usage-analytics",
   "crates/utils/*",
+
 ]
 
 # generally following guidance from https://nnethercote.github.io/perf-book/build-configuration.html
@@ -65,7 +66,7 @@ used_underscore_binding = "allow"
 private_intra_doc_links = "allow"
 
 [workspace.dependencies]
-ndc-models = { package = "ndc-models", git = "https://github.com/hasura/ndc-spec.git", tag = "v0.2.9", features = ["arc-relation"]} # When you update this tag, also update the schema references in crates/open-dds/src/data_connector.rs
+ndc-models = { package = "ndc-models", git = "https://github.com/hasura/ndc-spec.git", rev = "f8036879ce75b31d94d5f08d15fa93e319af00f7", features = ["arc-relation"]} # When you update this tag, also update the schema references in crates/open-dds/src/data_connector.rs
 ndc-models-v01 = { package = "ndc-models", git = "https://github.com/hasura/ndc-spec.git", tag = "v0.1.6" } # When you update this tag, also update the schema references in crates/open-dds/src/data_connector.rs
 
 anyhow = "1"
@@ -114,6 +115,7 @@ jsonwebkey = { features = ["generate", "jsonwebtoken","pkcs-convert"], git = "ht
 jsonwebtoken = "9"
 lazy_static = "1.5.0"
 lexical-core = "1"
+log = "0.4"
 mimalloc = "0.1"
 mockito = { version = "~1.4", default-features = false } # v1.5+ depends on http v1
 nonempty = { version = "0.10", features = ["serialize"] }
@@ -143,7 +145,7 @@ rmp-serde = "1"
 semver = "1.0"
 schemars = { version = "0.8", features = ["preserve_order", "smol_str", "url"] }
 serde = { version = "1", features = ["derive", "rc"] }
-serde_arrow = { version = "0.13.4", features = ["arrow-55"] }
+serde_arrow = { version = "0.13.5", features = ["arrow-55"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 serde_path_to_error = "0.1"
 serde_with = { version = "3", features = ["indexmap_2"] }

@@ -5,8 +5,10 @@ use indexmap::IndexMap;
 use metadata_resolve::{Conditions, FieldAuthorizationRule};
 use open_dds::types::FieldName;
 
-use super::condition::evaluate_condition_hash;
-use crate::{ConditionCache, condition::ConditionError};
+use crate::{
+    ConditionCache,
+    condition::{ConditionError, evaluate_optional_condition_hash},
+};
 
 // Given a vector of field authorization rules, evaluate them and return the set of fields that
 // should be allowed for this request.
@@ -29,8 +31,8 @@ pub fn evaluate_field_authorization_rules<'a, A>(
     for field_rule in rule {
         match field_rule {
             FieldAuthorizationRule::AllowFields { fields, condition } => {
-                if evaluate_condition_hash(
-                    condition,
+                if evaluate_optional_condition_hash(
+                    condition.as_ref(),
                     session_variables,
                     conditions,
                     condition_cache,
@@ -41,8 +43,8 @@ pub fn evaluate_field_authorization_rules<'a, A>(
                 }
             }
             FieldAuthorizationRule::DenyFields { fields, condition } => {
-                if evaluate_condition_hash(
-                    condition,
+                if evaluate_optional_condition_hash(
+                    condition.as_ref(),
                     session_variables,
                     conditions,
                     condition_cache,
@@ -135,7 +137,7 @@ mod tests {
 
         let allow_all_fields_rule = FieldAuthorizationRule::AllowFields {
             fields: fields_list.clone(),
-            condition: condition_id,
+            condition: Some(condition_id),
         };
 
         assert_eq!(
@@ -157,7 +159,7 @@ mod tests {
 
         let deny_all_fields_rule = FieldAuthorizationRule::DenyFields {
             fields: fields_list,
-            condition: condition_id,
+            condition: Some(condition_id),
         };
 
         assert_eq!(

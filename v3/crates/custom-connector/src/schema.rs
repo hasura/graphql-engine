@@ -220,6 +220,12 @@ fn expression_capabilities() -> ndc_models::RelationalExpressionCapabilities {
                 distinct: Some(ndc_models::LeafCapability {}),
                 order_by: Some(ndc_models::LeafCapability {}),
             }),
+            string_agg_with_separator: Some(
+                ndc_models::RelationalOrderedAggregateFunctionCapabilities {
+                    distinct: Some(ndc_models::LeafCapability {}),
+                    order_by: Some(ndc_models::LeafCapability {}),
+                },
+            ),
             sum: Some(ndc_models::LeafCapability {}),
             var: None,
             stddev: Some(ndc_models::LeafCapability {}),

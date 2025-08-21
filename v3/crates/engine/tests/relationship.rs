@@ -309,6 +309,24 @@ fn test_remote_mutually_recursive_relationships_to_command_across_namespace() ->
 }
 
 #[test]
+fn test_remote_relationships_command_to_command() -> anyhow::Result<()> {
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/remote_relationships/command/command_to_command",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            // can't test with v0.1, we need the no-relationships-connector(
+            (
+                NdcVersion::V02,
+                vec![
+                    "execute/common_metadata/custom_connector_v02_no_relationships_schema.json",
+                    "execute/common_metadata/custom_connector_v02_schema.json",
+                ],
+            ),
+        ]),
+    )
+}
+
+#[test]
 fn test_remote_relationships_remote_object_in_local_array_1() -> anyhow::Result<()> {
     let test_path_string =
         "execute/remote_relationships/remote_in_local/local_array_remote_object/two_pg_ndc";
@@ -473,6 +491,18 @@ fn test_remote_relationships_model_to_model_array_with_arguments() -> anyhow::Re
 #[test]
 fn test_remote_relationships_remote_in_local() -> anyhow::Result<()> {
     let test_path_string = "execute/remote_relationships/remote_in_local";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            "execute/common_metadata/postgres_connector_ndc_v01_schema.json",
+            "execute/common_metadata/custom_connector_v02_schema.json",
+        ],
+    )
+}
+
+#[test]
+fn test_remote_relationships_remote_in_local_aliased() -> anyhow::Result<()> {
+    let test_path_string = "execute/remote_relationships/remote_in_local_aliased";
     common::test_execution_expectation(
         test_path_string,
         &[

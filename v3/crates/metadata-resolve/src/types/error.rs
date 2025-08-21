@@ -2,10 +2,11 @@ use crate::helpers::typecheck::TypecheckError;
 use crate::helpers::{
     ndc_validation::NDCValidationError, type_mappings::TypeMappingCollectionError, typecheck,
 };
+use crate::stages::command_permissions;
 use crate::stages::{
     aggregate_boolean_expressions, aggregates::AggregateExpressionError, apollo, arguments,
-    boolean_expressions, commands, data_connector_scalar_types, data_connectors, glossaries,
-    graphql_config, model_permissions, models, models_graphql, object_relationships, object_types,
+    boolean_expressions, commands, data_connector_scalar_types, data_connectors, graphql_config,
+    model_permissions, models, models_graphql, object_relationships, object_types,
     order_by_expressions, plugins, relationships, relay, scalar_boolean_expressions, scalar_types,
     type_permissions,
 };
@@ -213,10 +214,14 @@ pub enum Error {
         data_type: Qualified<CustomTypeName>,
     },
     #[error(
-        "Type error in preset argument {argument_name:} for role {role:} in command {command_name:}: {type_error:}"
+        "Type error in preset argument {argument_name:} {}in command {command_name:}: {type_error:}",
+        match .role {
+            Some(role) => format!("for role {role:} "),
+            None => String::new(),
+        }
     )]
     CommandArgumentPresetTypeError {
-        role: Role,
+        role: Option<Role>,
         command_name: Qualified<CommandName>,
         argument_name: ArgumentName,
         type_error: typecheck::TypecheckError,
@@ -266,6 +271,8 @@ pub enum Error {
     #[error("{0}")]
     ModelPermissionsError(#[from] model_permissions::NamedModelPermissionError),
     #[error("{0}")]
+    CommandPermissionsError(#[from] command_permissions::CommandPermissionError),
+    #[error("{0}")]
     DataConnectorScalarTypesError(
         #[from] data_connector_scalar_types::DataConnectorScalarTypesError,
     ),
@@ -273,8 +280,6 @@ pub enum Error {
     ArgumentError(#[from] arguments::NamedArgumentError),
     #[error("{0}")]
     ModelGraphqlError(#[from] models_graphql::ModelGraphqlError),
-    #[error("{0}")]
-    GlossaryError(#[from] glossaries::GlossaryError),
     #[error("{warning_as_error}")]
     CompatibilityError { warning_as_error: crate::Warning },
     #[error("{0}")]
@@ -340,7 +345,6 @@ impl ContextualError for Error {
             Error::ArgumentError(error) => error.create_error_context(),
             Error::ModelGraphqlError(error) => error.create_error_context(),
             Error::GraphqlConfigError(error) => error.create_error_context(),
-            Error::GlossaryError(error) => error.create_error_context(),
             Error::CompatibilityError { warning_as_error } => {
                 warning_as_error.create_error_context()
             }

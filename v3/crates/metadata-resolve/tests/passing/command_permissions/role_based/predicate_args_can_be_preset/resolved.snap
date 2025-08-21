@@ -1,0 +1,1472 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: resolved
+input_file: crates/metadata-resolve/tests/passing/command_permissions/role_based/predicate_args_can_be_preset/metadata.json
+---
+(
+    Metadata {
+        object_types: {
+            Qualified {
+                subgraph: SubgraphName(
+                    "subgraphs",
+                ),
+                name: CustomTypeName(
+                    Identifier(
+                        "Album",
+                    ),
+                ),
+            }: ObjectTypeWithRelationships {
+                object_type: ObjectTypeRepresentation {
+                    fields: {
+                        FieldName(
+                            Identifier(
+                                "AlbumId",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "ArtistId",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "Title",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        String,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                    },
+                    global_id_fields: [],
+                    apollo_federation_config: None,
+                    graphql_output_type_name: Some(
+                        TypeName(
+                            Name(
+                                "Album",
+                            ),
+                        ),
+                    ),
+                    graphql_input_type_name: Some(
+                        TypeName(
+                            Name(
+                                "Album_input",
+                            ),
+                        ),
+                    ),
+                    description: None,
+                },
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "AlbumId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "ArtistId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "Title",
+                                    ),
+                                ),
+                            ],
+                            condition: Some(
+                                ConditionHash(
+                                    9295230919520119376,
+                                ),
+                            ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "user",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "AlbumId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "ArtistId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "Title",
+                                    ),
+                                ),
+                            },
+                        },
+                    },
+                    uses_rules_based_auth: false,
+                },
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                    uses_rules_based_auth: false,
+                },
+                relationship_fields: {},
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "subgraphs",
+                            ),
+                            name: DataConnectorName(
+                                Identifier(
+                                    "myconnector",
+                                ),
+                            ),
+                        }: {
+                            DataConnectorObjectType(
+                                "Album",
+                            ): Object {
+                                ndc_object_type_name: DataConnectorObjectType(
+                                    "Album",
+                                ),
+                                field_mappings: {
+                                    FieldName(
+                                        Identifier(
+                                            "AlbumId",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "AlbumId",
+                                        ),
+                                        column_type: Named {
+                                            name: TypeName(
+                                                "Int",
+                                            ),
+                                        },
+                                        column_type_representation: Some(
+                                            Int32,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                eq_operator: Some(
+                                                    DataConnectorOperatorName(
+                                                        "eq",
+                                                    ),
+                                                ),
+                                                in_operator: None,
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
+                                                other_operators: [],
+                                            },
+                                        ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [],
+                                            },
+                                        ),
+                                        extraction_functions: Some(
+                                            ExtractionFunctions {
+                                                year_function: None,
+                                                month_function: None,
+                                                day_function: None,
+                                                nanosecond_function: None,
+                                                microsecond_function: None,
+                                                millisecond_function: None,
+                                                second_function: None,
+                                                minute_function: None,
+                                                hour_function: None,
+                                                week_function: None,
+                                                quarter_function: None,
+                                                day_of_week_function: None,
+                                                day_of_year_function: None,
+                                                other_functions: [],
+                                            },
+                                        ),
+                                        argument_mappings: {},
+                                    },
+                                    FieldName(
+                                        Identifier(
+                                            "ArtistId",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "ArtistId",
+                                        ),
+                                        column_type: Named {
+                                            name: TypeName(
+                                                "Int",
+                                            ),
+                                        },
+                                        column_type_representation: Some(
+                                            Int32,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                eq_operator: Some(
+                                                    DataConnectorOperatorName(
+                                                        "eq",
+                                                    ),
+                                                ),
+                                                in_operator: None,
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
+                                                other_operators: [],
+                                            },
+                                        ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [],
+                                            },
+                                        ),
+                                        extraction_functions: Some(
+                                            ExtractionFunctions {
+                                                year_function: None,
+                                                month_function: None,
+                                                day_function: None,
+                                                nanosecond_function: None,
+                                                microsecond_function: None,
+                                                millisecond_function: None,
+                                                second_function: None,
+                                                minute_function: None,
+                                                hour_function: None,
+                                                week_function: None,
+                                                quarter_function: None,
+                                                day_of_week_function: None,
+                                                day_of_year_function: None,
+                                                other_functions: [],
+                                            },
+                                        ),
+                                        argument_mappings: {},
+                                    },
+                                    FieldName(
+                                        Identifier(
+                                            "Title",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "Title",
+                                        ),
+                                        column_type: Named {
+                                            name: TypeName(
+                                                "String",
+                                            ),
+                                        },
+                                        column_type_representation: Some(
+                                            String,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                eq_operator: Some(
+                                                    DataConnectorOperatorName(
+                                                        "eq",
+                                                    ),
+                                                ),
+                                                in_operator: None,
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
+                                                other_operators: [],
+                                            },
+                                        ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [],
+                                            },
+                                        ),
+                                        extraction_functions: Some(
+                                            ExtractionFunctions {
+                                                year_function: None,
+                                                month_function: None,
+                                                day_function: None,
+                                                nanosecond_function: None,
+                                                microsecond_function: None,
+                                                millisecond_function: None,
+                                                second_function: None,
+                                                minute_function: None,
+                                                hour_function: None,
+                                                week_function: None,
+                                                quarter_function: None,
+                                                day_of_week_function: None,
+                                                day_of_year_function: None,
+                                                other_functions: [],
+                                            },
+                                        ),
+                                        argument_mappings: {},
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        scalar_types: {},
+        models: {},
+        commands: {
+            Qualified {
+                subgraph: SubgraphName(
+                    "subgraphs",
+                ),
+                name: CommandName(
+                    Identifier(
+                        "GetAlbums",
+                    ),
+                ),
+            }: CommandWithPermissions {
+                command: Command {
+                    name: Qualified {
+                        subgraph: SubgraphName(
+                            "subgraphs",
+                        ),
+                        name: CommandName(
+                            Identifier(
+                                "GetAlbums",
+                            ),
+                        ),
+                    },
+                    output_type: QualifiedTypeReference {
+                        underlying_type: List(
+                            QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "subgraphs",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Album",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                        ),
+                        nullable: false,
+                    },
+                    arguments: {
+                        ArgumentName(
+                            Identifier(
+                                "where",
+                            ),
+                        ): ArgumentInfo {
+                            argument_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "subgraphs",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Album_bool_exp",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            argument_kind: NDCExpression,
+                            type_representation: None,
+                        },
+                    },
+                    graphql_api: Some(
+                        CommandGraphQlApi {
+                            root_field_kind: Query,
+                            root_field_name: Name(
+                                "GetAlbums",
+                            ),
+                            deprecated: None,
+                        },
+                    ),
+                    source: Some(
+                        CommandSource {
+                            data_connector: DataConnectorLink {
+                                name: Qualified {
+                                    subgraph: SubgraphName(
+                                        "subgraphs",
+                                    ),
+                                    name: DataConnectorName(
+                                        Identifier(
+                                            "myconnector",
+                                        ),
+                                    ),
+                                },
+                                url: ReadWriteUrls(
+                                    ResolvedReadWriteUrls {
+                                        read: SerializableUrl(
+                                            Url {
+                                                scheme: "http",
+                                                cannot_be_a_base: false,
+                                                username: "",
+                                                password: None,
+                                                host: Some(
+                                                    Domain(
+                                                        "local-dev.hasura.me",
+                                                    ),
+                                                ),
+                                                port: Some(
+                                                    8080,
+                                                ),
+                                                path: "/",
+                                                query: None,
+                                                fragment: None,
+                                            },
+                                        ),
+                                        write: SerializableUrl(
+                                            Url {
+                                                scheme: "http",
+                                                cannot_be_a_base: false,
+                                                username: "",
+                                                password: None,
+                                                host: Some(
+                                                    Domain(
+                                                        "local-dev.hasura.me",
+                                                    ),
+                                                ),
+                                                port: Some(
+                                                    8080,
+                                                ),
+                                                path: "/",
+                                                query: None,
+                                                fragment: None,
+                                            },
+                                        ),
+                                    },
+                                ),
+                                headers: SerializableHeaderMap(
+                                    {},
+                                ),
+                                response_config: None,
+                                capabilities: DataConnectorCapabilities {
+                                    supported_ndc_version: V01,
+                                    supports_explaining_queries: true,
+                                    supports_explaining_mutations: true,
+                                    supports_nested_object_filtering: false,
+                                    supports_nested_object_ordering: false,
+                                    supports_nested_object_array_filtering: false,
+                                    supports_nested_scalar_array_filtering: false,
+                                    supports_aggregates: Some(
+                                        DataConnectorAggregateCapabilities {
+                                            supports_nested_object_aggregations: false,
+                                            aggregate_count_scalar_type: None,
+                                            supports_grouping: None,
+                                        },
+                                    ),
+                                    supports_query_variables: true,
+                                    supports_relationships: Some(
+                                        DataConnectorRelationshipCapabilities {
+                                            supports_relation_comparisons: true,
+                                            supports_nested_relationships: Some(
+                                                DataConnectorNestedRelationshipCapabilities {
+                                                    supports_nested_array_selection: true,
+                                                    supports_nested_in_filtering: false,
+                                                    supports_nested_in_ordering: false,
+                                                },
+                                            ),
+                                        },
+                                    ),
+                                    supports_relational_queries: None,
+                                    supports_relational_mutations: None,
+                                },
+                            },
+                            source: Function(
+                                FunctionName(
+                                    "get_albums",
+                                ),
+                            ),
+                            ndc_type_opendd_type_same: true,
+                            type_mappings: {
+                                Qualified {
+                                    subgraph: SubgraphName(
+                                        "subgraphs",
+                                    ),
+                                    name: CustomTypeName(
+                                        Identifier(
+                                            "Album",
+                                        ),
+                                    ),
+                                }: Object {
+                                    ndc_object_type_name: DataConnectorObjectType(
+                                        "Album",
+                                    ),
+                                    field_mappings: {
+                                        FieldName(
+                                            Identifier(
+                                                "AlbumId",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "AlbumId",
+                                            ),
+                                            column_type: Named {
+                                                name: TypeName(
+                                                    "Int",
+                                                ),
+                                            },
+                                            column_type_representation: Some(
+                                                Int32,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    eq_operator: Some(
+                                                        DataConnectorOperatorName(
+                                                            "eq",
+                                                        ),
+                                                    ),
+                                                    in_operator: None,
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: None,
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
+                                                    other_operators: [],
+                                                },
+                                            ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
+                                            extraction_functions: Some(
+                                                ExtractionFunctions {
+                                                    year_function: None,
+                                                    month_function: None,
+                                                    day_function: None,
+                                                    nanosecond_function: None,
+                                                    microsecond_function: None,
+                                                    millisecond_function: None,
+                                                    second_function: None,
+                                                    minute_function: None,
+                                                    hour_function: None,
+                                                    week_function: None,
+                                                    quarter_function: None,
+                                                    day_of_week_function: None,
+                                                    day_of_year_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                        FieldName(
+                                            Identifier(
+                                                "ArtistId",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "ArtistId",
+                                            ),
+                                            column_type: Named {
+                                                name: TypeName(
+                                                    "Int",
+                                                ),
+                                            },
+                                            column_type_representation: Some(
+                                                Int32,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    eq_operator: Some(
+                                                        DataConnectorOperatorName(
+                                                            "eq",
+                                                        ),
+                                                    ),
+                                                    in_operator: None,
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: None,
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
+                                                    other_operators: [],
+                                                },
+                                            ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
+                                            extraction_functions: Some(
+                                                ExtractionFunctions {
+                                                    year_function: None,
+                                                    month_function: None,
+                                                    day_function: None,
+                                                    nanosecond_function: None,
+                                                    microsecond_function: None,
+                                                    millisecond_function: None,
+                                                    second_function: None,
+                                                    minute_function: None,
+                                                    hour_function: None,
+                                                    week_function: None,
+                                                    quarter_function: None,
+                                                    day_of_week_function: None,
+                                                    day_of_year_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                        FieldName(
+                                            Identifier(
+                                                "Title",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "Title",
+                                            ),
+                                            column_type: Named {
+                                                name: TypeName(
+                                                    "String",
+                                                ),
+                                            },
+                                            column_type_representation: Some(
+                                                String,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    eq_operator: Some(
+                                                        DataConnectorOperatorName(
+                                                            "eq",
+                                                        ),
+                                                    ),
+                                                    in_operator: None,
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: None,
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
+                                                    other_operators: [],
+                                                },
+                                            ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
+                                            extraction_functions: Some(
+                                                ExtractionFunctions {
+                                                    year_function: None,
+                                                    month_function: None,
+                                                    day_function: None,
+                                                    nanosecond_function: None,
+                                                    microsecond_function: None,
+                                                    millisecond_function: None,
+                                                    second_function: None,
+                                                    minute_function: None,
+                                                    hour_function: None,
+                                                    week_function: None,
+                                                    quarter_function: None,
+                                                    day_of_week_function: None,
+                                                    day_of_year_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                    },
+                                },
+                            },
+                            argument_mappings: {
+                                ArgumentName(
+                                    Identifier(
+                                        "where",
+                                    ),
+                                ): DataConnectorArgumentName(
+                                    "where",
+                                ),
+                            },
+                            data_connector_link_argument_presets: {},
+                            source_arguments: {
+                                DataConnectorArgumentName(
+                                    "where",
+                                ): Predicate {
+                                    object_type_name: ObjectTypeName(
+                                        TypeName(
+                                            "Album",
+                                        ),
+                                    ),
+                                },
+                            },
+                        },
+                    ),
+                    description: None,
+                },
+                permissions: CommandPermissions {
+                    by_role: {
+                        Role(
+                            "user",
+                        ): CommandPermission {
+                            allow_execution: true,
+                            argument_presets: {
+                                ArgumentName(
+                                    Identifier(
+                                        "where",
+                                    ),
+                                ): (
+                                    QualifiedTypeReference {
+                                        underlying_type: Named(
+                                            Custom(
+                                                Qualified {
+                                                    subgraph: SubgraphName(
+                                                        "subgraphs",
+                                                    ),
+                                                    name: CustomTypeName(
+                                                        Identifier(
+                                                            "Album_bool_exp",
+                                                        ),
+                                                    ),
+                                                },
+                                            ),
+                                        ),
+                                        nullable: false,
+                                    },
+                                    BooleanExpression(
+                                        BinaryFieldComparison {
+                                            field: FieldName(
+                                                Identifier(
+                                                    "AlbumId",
+                                                ),
+                                            ),
+                                            field_parent_type: Qualified {
+                                                subgraph: SubgraphName(
+                                                    "subgraphs",
+                                                ),
+                                                name: CustomTypeName(
+                                                    Identifier(
+                                                        "Album",
+                                                    ),
+                                                ),
+                                            },
+                                            ndc_column: DataConnectorColumnName(
+                                                "AlbumId",
+                                            ),
+                                            operator: ResolvedOperator {
+                                                data_connector_operator_name: DataConnectorOperatorName(
+                                                    "eq",
+                                                ),
+                                                comparison_operator: Equals,
+                                            },
+                                            column_path: [],
+                                            argument_type: QualifiedTypeReference {
+                                                underlying_type: Named(
+                                                    Inbuilt(
+                                                        Int,
+                                                    ),
+                                                ),
+                                                nullable: false,
+                                            },
+                                            value: SessionVariable(
+                                                SessionVariableReference {
+                                                    name: SessionVariableName(
+                                                        "x-hasura-album-id",
+                                                    ),
+                                                    passed_as_json: true,
+                                                    disallow_unknown_fields: false,
+                                                },
+                                            ),
+                                            deprecated: None,
+                                        },
+                                    ),
+                                ),
+                            },
+                        },
+                    },
+                    authorization_rules: [
+                        Access {
+                            condition: Some(
+                                ConditionHash(
+                                    9295230919520119376,
+                                ),
+                            ),
+                            allow_or_deny: Allow,
+                        },
+                        ArgumentAuthPredicate {
+                            condition: Some(
+                                ConditionHash(
+                                    9295230919520119376,
+                                ),
+                            ),
+                            argument_name: ArgumentName(
+                                Identifier(
+                                    "where",
+                                ),
+                            ),
+                            predicate: BinaryFieldComparison {
+                                field: FieldName(
+                                    Identifier(
+                                        "AlbumId",
+                                    ),
+                                ),
+                                field_parent_type: Qualified {
+                                    subgraph: SubgraphName(
+                                        "subgraphs",
+                                    ),
+                                    name: CustomTypeName(
+                                        Identifier(
+                                            "Album",
+                                        ),
+                                    ),
+                                },
+                                ndc_column: DataConnectorColumnName(
+                                    "AlbumId",
+                                ),
+                                operator: ResolvedOperator {
+                                    data_connector_operator_name: DataConnectorOperatorName(
+                                        "eq",
+                                    ),
+                                    comparison_operator: Equals,
+                                },
+                                column_path: [],
+                                argument_type: QualifiedTypeReference {
+                                    underlying_type: Named(
+                                        Inbuilt(
+                                            Int,
+                                        ),
+                                    ),
+                                    nullable: false,
+                                },
+                                value: SessionVariable(
+                                    SessionVariableReference {
+                                        name: SessionVariableName(
+                                            "x-hasura-album-id",
+                                        ),
+                                        passed_as_json: true,
+                                        disallow_unknown_fields: false,
+                                    },
+                                ),
+                                deprecated: None,
+                            },
+                        },
+                    ],
+                },
+            },
+        },
+        boolean_expression_types: BooleanExpressionTypes {
+            objects: {
+                Qualified {
+                    subgraph: SubgraphName(
+                        "subgraphs",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "Album_bool_exp",
+                        ),
+                    ),
+                }: ResolvedObjectBooleanExpressionType {
+                    name: Qualified {
+                        subgraph: SubgraphName(
+                            "subgraphs",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "Album_bool_exp",
+                            ),
+                        ),
+                    },
+                    object_type: Qualified {
+                        subgraph: SubgraphName(
+                            "subgraphs",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "Album",
+                            ),
+                        ),
+                    },
+                    graphql: Some(
+                        BooleanExpressionGraphqlConfig {
+                            type_name: TypeName(
+                                Name(
+                                    "Album_bool_exp",
+                                ),
+                            ),
+                            object_fields: {},
+                            scalar_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "AlbumId",
+                                    ),
+                                ): ScalarBooleanExpressionGraphqlConfig {
+                                    type_name: TypeName(
+                                        Name(
+                                            "Int_bool_exp",
+                                        ),
+                                    ),
+                                    is_null_operator_name: Some(
+                                        Name(
+                                            "_is_null",
+                                        ),
+                                    ),
+                                },
+                                FieldName(
+                                    Identifier(
+                                        "ArtistId",
+                                    ),
+                                ): ScalarBooleanExpressionGraphqlConfig {
+                                    type_name: TypeName(
+                                        Name(
+                                            "Int_bool_exp",
+                                        ),
+                                    ),
+                                    is_null_operator_name: Some(
+                                        Name(
+                                            "_is_null",
+                                        ),
+                                    ),
+                                },
+                                FieldName(
+                                    Identifier(
+                                        "Title",
+                                    ),
+                                ): ScalarBooleanExpressionGraphqlConfig {
+                                    type_name: TypeName(
+                                        Name(
+                                            "String_bool_exp",
+                                        ),
+                                    ),
+                                    is_null_operator_name: Some(
+                                        Name(
+                                            "_is_null",
+                                        ),
+                                    ),
+                                },
+                            },
+                            field_config: BooleanExpressionGraphqlFieldConfig {
+                                where_field_name: Name(
+                                    "where",
+                                ),
+                                logical_operators: LogicalOperatorsGraphqlConfig {
+                                    and_operator_name: Name(
+                                        "_and",
+                                    ),
+                                    or_operator_name: Name(
+                                        "_or",
+                                    ),
+                                    not_operator_name: Name(
+                                        "_not",
+                                    ),
+                                },
+                            },
+                        },
+                    ),
+                    fields: ResolvedObjectBooleanExpressionTypeFields {
+                        object_fields: {},
+                        scalar_fields: {
+                            FieldName(
+                                Identifier(
+                                    "AlbumId",
+                                ),
+                            ): ComparisonExpressionInfo {
+                                boolean_expression_type_name: FromBooleanExpressionType(
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "subgraphs",
+                                        ),
+                                        name: CustomTypeName(
+                                            Identifier(
+                                                "Int_bool_exp",
+                                            ),
+                                        ),
+                                    },
+                                ),
+                                operators: {
+                                    OperatorName(
+                                        "_eq",
+                                    ): QualifiedTypeReference {
+                                        underlying_type: Named(
+                                            Inbuilt(
+                                                Int,
+                                            ),
+                                        ),
+                                        nullable: false,
+                                    },
+                                },
+                                operator_mapping: {
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "subgraphs",
+                                        ),
+                                        name: DataConnectorName(
+                                            Identifier(
+                                                "myconnector",
+                                            ),
+                                        ),
+                                    }: OperatorMapping(
+                                        {
+                                            OperatorName(
+                                                "_eq",
+                                            ): DataConnectorOperatorName(
+                                                "eq",
+                                            ),
+                                        },
+                                    ),
+                                },
+                                logical_operators: Exclude,
+                                field_kind: Scalar,
+                            },
+                            FieldName(
+                                Identifier(
+                                    "ArtistId",
+                                ),
+                            ): ComparisonExpressionInfo {
+                                boolean_expression_type_name: FromBooleanExpressionType(
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "subgraphs",
+                                        ),
+                                        name: CustomTypeName(
+                                            Identifier(
+                                                "Int_bool_exp",
+                                            ),
+                                        ),
+                                    },
+                                ),
+                                operators: {
+                                    OperatorName(
+                                        "_eq",
+                                    ): QualifiedTypeReference {
+                                        underlying_type: Named(
+                                            Inbuilt(
+                                                Int,
+                                            ),
+                                        ),
+                                        nullable: false,
+                                    },
+                                },
+                                operator_mapping: {
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "subgraphs",
+                                        ),
+                                        name: DataConnectorName(
+                                            Identifier(
+                                                "myconnector",
+                                            ),
+                                        ),
+                                    }: OperatorMapping(
+                                        {
+                                            OperatorName(
+                                                "_eq",
+                                            ): DataConnectorOperatorName(
+                                                "eq",
+                                            ),
+                                        },
+                                    ),
+                                },
+                                logical_operators: Exclude,
+                                field_kind: Scalar,
+                            },
+                            FieldName(
+                                Identifier(
+                                    "Title",
+                                ),
+                            ): ComparisonExpressionInfo {
+                                boolean_expression_type_name: FromBooleanExpressionType(
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "subgraphs",
+                                        ),
+                                        name: CustomTypeName(
+                                            Identifier(
+                                                "String_bool_exp",
+                                            ),
+                                        ),
+                                    },
+                                ),
+                                operators: {
+                                    OperatorName(
+                                        "_eq",
+                                    ): QualifiedTypeReference {
+                                        underlying_type: Named(
+                                            Inbuilt(
+                                                String,
+                                            ),
+                                        ),
+                                        nullable: false,
+                                    },
+                                },
+                                operator_mapping: {
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "subgraphs",
+                                        ),
+                                        name: DataConnectorName(
+                                            Identifier(
+                                                "myconnector",
+                                            ),
+                                        ),
+                                    }: OperatorMapping(
+                                        {
+                                            OperatorName(
+                                                "_eq",
+                                            ): DataConnectorOperatorName(
+                                                "eq",
+                                            ),
+                                        },
+                                    ),
+                                },
+                                logical_operators: Exclude,
+                                field_kind: Scalar,
+                            },
+                        },
+                        relationship_fields: {},
+                    },
+                    include_logical_operators: Yes,
+                    data_connector: None,
+                },
+            },
+            scalars: {
+                FromBooleanExpressionType(
+                    Qualified {
+                        subgraph: SubgraphName(
+                            "subgraphs",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "Int_bool_exp",
+                            ),
+                        ),
+                    },
+                ): ResolvedScalarBooleanExpressionType {
+                    operand_type: Inbuilt(
+                        Int,
+                    ),
+                    comparison_operators: {
+                        OperatorName(
+                            "_eq",
+                        ): QualifiedTypeReference {
+                            underlying_type: Named(
+                                Inbuilt(
+                                    Int,
+                                ),
+                            ),
+                            nullable: false,
+                        },
+                    },
+                    data_connector_operator_mappings: {
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "subgraphs",
+                            ),
+                            name: DataConnectorName(
+                                Identifier(
+                                    "myconnector",
+                                ),
+                            ),
+                        }: DataConnectorOperatorMapping {
+                            data_connector_name: DataConnectorName(
+                                Identifier(
+                                    "myconnector",
+                                ),
+                            ),
+                            data_connector_scalar_type: DataConnectorScalarType(
+                                "Int",
+                            ),
+                            operator_mapping: {
+                                OperatorName(
+                                    "_eq",
+                                ): DataConnectorOperatorName(
+                                    "eq",
+                                ),
+                            },
+                        },
+                    },
+                    graphql_name: Some(
+                        GraphQlTypeName(
+                            "Int_bool_exp",
+                        ),
+                    ),
+                    logical_operators: Exclude,
+                    is_null_operator: Include {
+                        graphql: Some(
+                            IsNullOperatorGraphqlConfig {
+                                is_null_operator_name: Name(
+                                    "_is_null",
+                                ),
+                            },
+                        ),
+                    },
+                },
+                FromBooleanExpressionType(
+                    Qualified {
+                        subgraph: SubgraphName(
+                            "subgraphs",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "String_bool_exp",
+                            ),
+                        ),
+                    },
+                ): ResolvedScalarBooleanExpressionType {
+                    operand_type: Inbuilt(
+                        String,
+                    ),
+                    comparison_operators: {
+                        OperatorName(
+                            "_eq",
+                        ): QualifiedTypeReference {
+                            underlying_type: Named(
+                                Inbuilt(
+                                    String,
+                                ),
+                            ),
+                            nullable: false,
+                        },
+                    },
+                    data_connector_operator_mappings: {
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "subgraphs",
+                            ),
+                            name: DataConnectorName(
+                                Identifier(
+                                    "myconnector",
+                                ),
+                            ),
+                        }: DataConnectorOperatorMapping {
+                            data_connector_name: DataConnectorName(
+                                Identifier(
+                                    "myconnector",
+                                ),
+                            ),
+                            data_connector_scalar_type: DataConnectorScalarType(
+                                "String",
+                            ),
+                            operator_mapping: {
+                                OperatorName(
+                                    "_eq",
+                                ): DataConnectorOperatorName(
+                                    "eq",
+                                ),
+                            },
+                        },
+                    },
+                    graphql_name: Some(
+                        GraphQlTypeName(
+                            "String_bool_exp",
+                        ),
+                    ),
+                    logical_operators: Exclude,
+                    is_null_operator: Include {
+                        graphql: Some(
+                            IsNullOperatorGraphqlConfig {
+                                is_null_operator_name: Name(
+                                    "_is_null",
+                                ),
+                            },
+                        ),
+                    },
+                },
+            },
+            object_aggregates: {},
+            scalar_aggregates: {},
+        },
+        order_by_expressions: OrderByExpressions {
+            objects: {},
+            scalars: {},
+        },
+        aggregate_expressions: {},
+        graphql_config: GlobalGraphqlConfig {
+            query_root_type_name: TypeName(
+                Name(
+                    "Query",
+                ),
+            ),
+            mutation_root_type_name: TypeName(
+                Name(
+                    "Mutation",
+                ),
+            ),
+            subscription_root_type_name: None,
+            order_by_input: Some(
+                OrderByInputGraphqlConfig {
+                    asc_direction_field_value: Name(
+                        "Asc",
+                    ),
+                    desc_direction_field_value: Name(
+                        "Desc",
+                    ),
+                    enum_type_name: TypeName(
+                        Name(
+                            "OrderBy",
+                        ),
+                    ),
+                },
+            ),
+            enable_apollo_federation_fields: false,
+            bypass_relation_comparisons_ndc_capability: true,
+            propagate_boolean_expression_deprecation_status: true,
+            multiple_order_by_input_object_fields: Allow,
+        },
+        plugin_configs: LifecyclePluginConfigs {
+            pre_parse_plugins: [],
+            pre_response_plugins: ResolvedLifecyclePreResponsePluginHooks {
+                sync_hooks: [],
+                async_hooks: [],
+            },
+            pre_route_plugins: [],
+            pre_ndc_request_plugins: {},
+            pre_ndc_response_plugins: {},
+        },
+        roles: {
+            Role(
+                "user",
+            ),
+        },
+        conditions: Conditions {
+            conditions: {
+                ConditionHash(
+                    9295230919520119376,
+                ): BinaryOperation {
+                    op: Equals,
+                    left: SessionVariable(
+                        SessionVariableReference {
+                            name: SessionVariableName(
+                                "x-hasura-role",
+                            ),
+                            passed_as_json: true,
+                            disallow_unknown_fields: false,
+                        },
+                    ),
+                    right: Literal(
+                        String("user"),
+                    ),
+                },
+            },
+        },
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
+    },
+    [
+        ScalarBooleanExpressionIssue(
+            LogicalOperatorsUnavailable {
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "subgraphs",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "Int_bool_exp",
+                        ),
+                    ),
+                },
+            },
+        ),
+        ScalarBooleanExpressionIssue(
+            LogicalOperatorsUnavailable {
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "subgraphs",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "String_bool_exp",
+                        ),
+                    ),
+                },
+            },
+        ),
+    ],
+)

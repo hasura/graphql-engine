@@ -130,6 +130,7 @@ pub async fn execute_join_locations(
         if variable_sets.is_empty() {
             continue;
         }
+
         // patch the target/RHS IR with variable values
         let foreach_variables: Vec<BTreeMap<plan_types::VariableName, json::Value>> = variable_sets
             .iter()
@@ -205,6 +206,7 @@ pub async fn execute_join_locations(
                     &join_node,
                     &remote_alias,
                     lhs_response,
+                    lhs_response_type,
                     &rhs_response,
                 )
             },

@@ -18,6 +18,7 @@ pub struct SessionResponse {
 pub struct SessionInfo {
     pub token: String,
     pub expiry: String,
+    pub session_id: i32,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -106,6 +107,14 @@ pub(crate) fn definition_session_info() -> ndc_models::ObjectType {
                     r#type: ndc_models::Type::Named {
                         name: "String".into(),
                     },
+                    arguments: BTreeMap::new(),
+                },
+            ),
+            (
+                "session_id".into(),
+                ndc_models::ObjectField {
+                    description: Some("Session ID".into()),
+                    r#type: ndc_models::Type::Named { name: "Int".into() },
                     arguments: BTreeMap::new(),
                 },
             ),

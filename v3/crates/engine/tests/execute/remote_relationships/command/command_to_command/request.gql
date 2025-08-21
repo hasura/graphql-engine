@@ -1,0 +1,7 @@
+query MyQuery {
+  getSessionDetails(user_id: 1) {
+    getActorById {
+      name
+    }
+  }
+}

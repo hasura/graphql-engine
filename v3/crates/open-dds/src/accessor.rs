@@ -4,7 +4,7 @@ use std::collections::HashSet;
 use crate::identifier::SubgraphName;
 use crate::{
     Metadata, MetadataWithVersion, OpenDdSubgraphObject, OpenDdSupergraphObject, aggregates,
-    boolean_expression, commands, data_connector, flags, glossary, graphql_config, models,
+    boolean_expression, commands, data_connector, flags, graphql_config, models,
     order_by_expression, permissions, plugins, relationships, types,
 };
 
@@ -48,7 +48,6 @@ pub struct MetadataAccessor {
     // `graphql_config` is a vector because we want to do some validation depending on the presence of the object
     pub graphql_config: Vec<QualifiedObject<graphql_config::GraphqlConfig>>,
     pub plugins: Vec<QualifiedObject<plugins::LifecyclePluginHookV1>>,
-    pub glossaries: Vec<QualifiedObject<glossary::GlossaryV1>>,
 }
 
 fn load_metadata_objects(
@@ -175,13 +174,6 @@ fn load_metadata_objects(
                     plugin.value.upgrade(),
                 ));
             }
-            OpenDdSubgraphObject::Glossary(glossary) => {
-                accessor.glossaries.push(QualifiedObject::new(
-                    glossary.path,
-                    subgraph,
-                    glossary.value.upgrade(),
-                ));
-            }
         }
     }
 }
@@ -260,7 +252,6 @@ impl MetadataAccessor {
             flags: flags.unwrap_or_default(),
             graphql_config: vec![],
             plugins: vec![],
-            glossaries: vec![],
         }
     }
 }

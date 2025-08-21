@@ -1,0 +1,20 @@
+[
+  {
+    "data": {
+      "getSessionDetails": {
+        "getActorById": {
+          "name": "Leonardo DiCaprio"
+        }
+      }
+    }
+  },
+  {
+    "data": {
+      "getSessionDetails": {
+        "getActorById": {
+          "name": "Leonardo DiCaprio"
+        }
+      }
+    }
+  }
+]

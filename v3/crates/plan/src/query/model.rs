@@ -52,7 +52,6 @@ pub fn from_model_group_by(
     let model_object_type = crate::metadata_accessor::get_output_object_type(
         metadata,
         &model.model.data_type,
-        &session.role,
         &session.variables,
         plan_state,
     )?;
@@ -60,7 +59,6 @@ pub fn from_model_group_by(
     let model_view = crate::metadata_accessor::get_model(
         metadata,
         &model.model.name,
-        &session.role,
         &session.variables,
         plan_state,
     )?;
@@ -320,7 +318,6 @@ pub fn from_model_aggregate_selection(
     let model_object_type = crate::metadata_accessor::get_output_object_type(
         metadata,
         &model.model.data_type,
-        &session.role,
         &session.variables,
         plan_state,
     )?;
@@ -328,7 +325,6 @@ pub fn from_model_aggregate_selection(
     let model_view = crate::metadata_accessor::get_model(
         metadata,
         &model.model.name,
-        &session.role,
         &session.variables,
         plan_state,
     )?;
@@ -658,7 +654,6 @@ pub fn from_model_selection(
     let model_object_type = crate::metadata_accessor::get_output_object_type(
         metadata,
         &model.model.data_type,
-        &session.role,
         &session.variables,
         plan_state,
     )?;
@@ -666,7 +661,6 @@ pub fn from_model_selection(
     let model_view = crate::metadata_accessor::get_model(
         metadata,
         &model.model.name,
-        &session.role,
         &session.variables,
         plan_state,
     )?;
