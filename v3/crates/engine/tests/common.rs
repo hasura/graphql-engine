@@ -660,7 +660,6 @@ pub(crate) fn test_metadata_resolve_configuration() -> metadata_resolve::configu
 {
     metadata_resolve::configuration::Configuration {
         unstable_features: metadata_resolve::configuration::UnstableFeatures {
-            enable_authorization_rules: true,
             ..Default::default()
         },
     }

@@ -26,8 +26,8 @@ pub fn process_permissions<'s>(
     object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     usage_counts: &mut UsagesCounts,
 ) -> Result<Expression<'s>, PlanError> {
-    Ok(Expression::And {
-        expressions: permissions
+    Ok(Expression::mk_and(
+        permissions
             .iter()
             .map(|permission| {
                 process_model_predicate(
@@ -40,7 +40,7 @@ pub fn process_permissions<'s>(
                 )
             })
             .collect::<Result<Vec<_>, PlanError>>()?,
-    })
+    ))
 }
 
 pub fn process_model_predicate<'s>(
@@ -106,7 +106,7 @@ pub fn process_model_predicate<'s>(
                     )
                 })
                 .collect::<Result<Vec<_>, PlanError>>()?;
-            Ok(Expression::And { expressions: exprs })
+            Ok(Expression::mk_and(exprs))
         }
         metadata_resolve::ModelPredicate::Or(predicates) => {
             let exprs = predicates
@@ -122,7 +122,7 @@ pub fn process_model_predicate<'s>(
                     )
                 })
                 .collect::<Result<Vec<_>, PlanError>>()?;
-            Ok(Expression::Or { expressions: exprs })
+            Ok(Expression::mk_or(exprs))
         }
         metadata_resolve::ModelPredicate::Relationship {
             relationship_info,

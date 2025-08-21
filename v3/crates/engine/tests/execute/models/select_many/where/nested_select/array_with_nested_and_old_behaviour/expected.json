@@ -1,0 +1,24 @@
+[
+  {
+    "data": {
+      "where_does_koen_hughes_work": [
+        {
+          "id": 2,
+          "location": {
+            "city": "Gothenburg",
+            "campuses": ["Johanneberg", "Lindholmen"]
+          }
+        }
+      ],
+      "where_does_john_hughes_work": [
+        {
+          "id": 2,
+          "location": {
+            "city": "Gothenburg",
+            "campuses": ["Johanneberg", "Lindholmen"]
+          }
+        }
+      ]
+    }
+  }
+]

@@ -21,6 +21,9 @@ instance Hashable HeaderConf
 
 type HeaderName = Text
 
+-- This seems like it allows two different methods for taking the value from
+-- the environment, via 'value' (which can be a Template) or 'value_from_env'.
+-- Weird.
 data HeaderValue = HVValue Template | HVEnv Text
   deriving (Show, Eq, Generic)
 

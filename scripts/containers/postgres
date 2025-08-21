@@ -12,11 +12,11 @@
 if [ "$MODE" = "test" ]; then
   PG_PORT=35432
 else
-  PG_PORT=25432
+  PG_PORT=${PG_PORT-25432}
 fi
 
 PG_PASSWORD=postgres
-PG_VOLUME_NAME='hasura-dev-postgres'
+PG_VOLUME_NAME="hasura-dev-postgres-$PG_PORT"
 PG_CONTAINER_IMAGE='postgis/postgis:16-3.4'
 PG_CONTAINER_NAME="hasura-dev-postgres-$PG_PORT"
 PG_DB_URL="postgresql://postgres:$PG_PASSWORD@127.0.0.1:$PG_PORT/postgres"

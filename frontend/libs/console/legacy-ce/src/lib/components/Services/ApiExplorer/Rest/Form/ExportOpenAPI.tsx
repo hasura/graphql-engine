@@ -8,32 +8,6 @@ import { Analytics } from '../../../../../features/Analytics';
 import endpoints from '../../../../../Endpoints';
 import { downloadObjectAsJsonFile } from '../../../../Common/utils/export.utils';
 
-// Function to remove requestBody from GET operations in OpenAPI spec
-export const removeRequestBodyFromGetOperations = (openApiSpec: any) => {
-  const modifiedSpec = JSON.parse(JSON.stringify(openApiSpec));
-
-  // Check if paths exist in the spec
-  if (modifiedSpec.paths) {
-    // Iterate through all paths
-    Object.entries(modifiedSpec.paths).forEach(
-      ([_path, pathItem]: [string, any]) => {
-        // Check if there's a GET operation with requestBody
-        if (pathItem.get && pathItem.get.requestBody) {
-          // Remove the requestBody from GET operations
-          delete pathItem.get.requestBody;
-        }
-      }
-    );
-  }
-
-  return modifiedSpec;
-};
-
-// Export for testing
-export const __testExports = {
-  removeRequestBodyFromGetOperations,
-};
-
 const fetchData = async (httpClient: Axios) => {
   try {
     const response = await httpClient.get(endpoints?.exportOpenApi);
@@ -59,11 +33,7 @@ export const ExportOpenApiButton = () => {
       enabled: false,
       retry: 0,
       onSuccess: data => {
-        // Process the OpenAPI spec to remove requestBody from GET operations
-        const processedData = removeRequestBodyFromGetOperations(data);
-
-        // Download the modified OpenAPI spec
-        downloadObjectAsJsonFile('OpenAPISpec.json', processedData);
+        downloadObjectAsJsonFile('OpenAPISpec.json', data);
         hasuraToast({
           title: 'OpenApiSpec Exported Successfully!',
           type: 'success',

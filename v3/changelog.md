@@ -8,6 +8,66 @@
 
 ### Added
 
+- Version 2 of `ModelPermissions`, `CommandPermissions` and `TypePermissions`
+  that allows both role-based and rule-based permission definitions.
+
+## [v2025.08.18]
+
+### Fixed
+
+- Fixes to `_and` filters inside nested arrays.
+
+This filter means "return an item when there is a user inside 'users' with first
+name 'Bruce' and last name 'Willis'".
+
+```graphql
+where: { users: { _and: [
+  { first_name: { _eq: "Bruce" },
+  { last_name: { _eq: "Willis" }
+]}}
+```
+
+This filter means "return an item when there is a user inside 'users' with first
+name 'Bruce' and there is a user inside 'users' with last name 'Willis'".
+
+```graphql
+where: { _and: [
+  { users: { first_name: { _eq: "Bruce" } },
+  { users: { last_name: { _eq: "Willis" } }
+]}}
+```
+
+Previously both examples would be treated as the latter, which was incorrect,
+but now each is treated correctly once the OpenDD flag
+`fix_exists_in_nested_arrays` is enabled.
+
+## [v2025.08.14-1]
+
+- No changes
+
+## [v2025.08.14]
+
+### Fixed
+
+- Fixed an issue in remote joins where a command that returns headers on the
+  left hand side of the join wouldn't correctly pass arguments to the right hand
+  side.
+
+- Fix a bug where remote relationships from fields with aliases wouldn't work.
+
+### Added
+
+- Added `NDC_RESPONSE_SIZE_LIMIT` that allows limiting response sizes, set in
+  bytes. Defaults to 30MB.
+
+## [v2025.08.13]
+
+### Added
+
+- Add support for wildcard at leaf subdomain level in allowed CORS origins. Eg.
+  `https://*.example.com` will allow `https://api.example.com`,
+  `https://auth.example.com`, and so on.
+
 ## [v2025.07.29]
 
 No changes since last release.
@@ -1922,7 +1982,11 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.07.29...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.08.18...HEAD
+[v2025.08.18]: https://github.com/hasura/v3-engine/releases/tag/v2025.08.18
+[v2025.08.14-1]: https://github.com/hasura/v3-engine/releases/tag/v2025.08.14-1
+[v2025.08.14]: https://github.com/hasura/v3-engine/releases/tag/v2025.08.14
+[v2025.08.13]: https://github.com/hasura/v3-engine/releases/tag/v2025.08.13
 [v2025.07.29]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.29
 [v2025.07.28]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.28
 [v2025.07.22]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.22

@@ -54,12 +54,14 @@ import Data.ByteString.Lazy qualified as LBS
 import Data.CaseInsensitive qualified as CI
 import Data.Either
 import Data.Has
+import Data.HashSet qualified as HashSet
 import Data.Int (Int64)
 import Data.SerializableBlob qualified as SB
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
 import Data.Text.Encoding.Error qualified as TE
 import Data.URL.Template (mkPlainTemplate, printTemplate)
+import Hasura.Authentication.Headers (sensitiveHeaders)
 import Hasura.Authentication.Session (SessionVariables)
 import Hasura.HTTP
 import Hasura.Logging
@@ -168,6 +170,7 @@ data HTTPRespExtra (a :: TriggerTypes) = HTTPRespExtra
     _hreContext :: !ExtraLogContext,
     _hreRequest :: !RequestDetails,
     _hreWebhookVarName :: !Text,
+    -- | These contain sensitive headers that must not be logged!
     _hreLogHeaders :: ![HeaderConf]
   }
 
@@ -184,7 +187,7 @@ instance J.ToJSON (HTTPRespExtra a) where
       Right okResp ->
         J.object
           $ [ "response" J..= J.toJSON okResp,
-              "request" J..= J.toJSON req,
+              "request" J..= sanitiseReqJSON req,
               "event_id" J..= elEventId ctxt
             ]
           ++ eventName
@@ -192,12 +195,17 @@ instance J.ToJSON (HTTPRespExtra a) where
       eventName = case elEventName ctxt of
         Just name -> ["event_name" J..= name]
         Nothing -> []
-      getValue val = case val of
-        HVValue txt -> J.String (printTemplate txt)
-        HVEnv txt -> J.String txt
+      redactedValue name val = case val of
+        HVValue txt
+          | CI.mk (TE.encodeUtf8 name) `HashSet.member` sensitiveHeaders -> J.String "<REDACTED>"
+          | otherwise -> J.String (printTemplate txt)
+        HVEnv txt -> J.String ("<from_env: " <> txt <> ">")
+      -- This should remove sensitiveHeaders as well as any from_env headers,
+      -- which many users reasonably expect to stay secret (although we don't
+      -- seem to promise this currently)
       getRedactedHeaders =
         J.Object
-          $ foldr (\(HeaderConf name val) -> KM.insert (J.fromText name) (getValue val)) mempty logHeaders
+          $ foldr (\(HeaderConf name val) -> KM.insert (J.fromText name) (redactedValue name val)) mempty logHeaders
       updateReqDetail v reqType =
         let webhookRedactedReq = J.toJSON v & key reqType . key "url" .~ J.String webhookVarName
             redactedReq = webhookRedactedReq & key reqType . key "headers" .~ getRedactedHeaders

@@ -6,7 +6,7 @@ use nonempty::NonEmpty;
 use serde_json as json;
 use std::collections::HashMap;
 
-use plan_types::FUNCTION_IR_VALUE_COLUMN_NAME;
+use plan_types::{FUNCTION_IR_VALUE_COLUMN_NAME, ProcessResponseAs};
 
 use super::collect::LocationInfo;
 use super::{collect, error};
@@ -22,6 +22,7 @@ pub(crate) fn join_responses(
     join_node: &RemoteJoin,
     remote_alias: &str,
     lhs_response: &mut [ndc_models::RowSet],
+    lhs_response_type: &ProcessResponseAs,
     rhs_response: &HashMap<RemoteJoinVariableSet, ndc_models::RowSet>,
 ) -> Result<(), error::FieldError> {
     for row_set in lhs_response.iter_mut() {
@@ -35,6 +36,7 @@ pub(crate) fn join_responses(
                     // different
                     Some(row_field_value) => join_command_response(
                         location_path,
+                        lhs_response_type,
                         join_node,
                         remote_alias,
                         row_field_value,
@@ -65,12 +67,39 @@ pub(crate) fn join_responses(
 /// RHS response appropriately.
 fn join_command_response(
     location_path: &[LocationInfo],
+    lhs_response_type: &ProcessResponseAs,
     join_node: &RemoteJoin,
     remote_alias: &str,
     row_field_value: &mut ndc_models::RowFieldValue,
     rhs_response: &HashMap<RemoteJoinVariableSet, ndc_models::RowSet>,
 ) -> Result<(), error::FieldError> {
-    match &mut row_field_value.0 {
+    // we may need to unwrap the response to remove any headers
+    let target_field = match lhs_response_type {
+        plan_types::ProcessResponseAs::CommandResponse {
+            response_config: Some(commands_response_config),
+            ..
+        } => {
+            let response_field = commands_response_config.result_field.as_str();
+            let headers_field = commands_response_config.headers_field.as_str();
+
+            // if the response and headers fields are present, we need to unwrap
+            if row_field_value.0.get(response_field).is_some()
+                && row_field_value.0.get(headers_field).is_some()
+            {
+                row_field_value
+                .0
+                .get_mut(response_field)
+                .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
+                    summary: format!("While processing remote join response, expected a response field '{response_field}' in the response, but it was not found"),
+                })?
+            } else {
+                &mut row_field_value.0
+            }
+        }
+        _ => &mut row_field_value.0,
+    };
+
+    match target_field {
         json::Value::Array(arr) => {
             for command_row in arr.iter_mut() {
                 let new_val = command_row.clone();

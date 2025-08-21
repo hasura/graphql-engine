@@ -108,8 +108,10 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/predicate_ar
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                9295230919520119376,
+                            condition: Some(
+                                ConditionHash(
+                                    9295230919520119376,
+                                ),
                             ),
                         },
                     ],
@@ -136,10 +138,12 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/predicate_ar
                             },
                         },
                     },
+                    uses_rules_based_auth: false,
                 },
                 type_input_permissions: TypeInputPermissions {
                     authorization_rules: [],
                     by_role: {},
+                    uses_rules_based_auth: false,
                 },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
@@ -1877,7 +1881,6 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/predicate_ar
             propagate_boolean_expression_deprecation_status: true,
             multiple_order_by_input_object_fields: Allow,
         },
-        glossaries: {},
         plugin_configs: LifecyclePluginConfigs {
             pre_parse_plugins: [],
             pre_response_plugins: ResolvedLifecyclePreResponsePluginHooks {

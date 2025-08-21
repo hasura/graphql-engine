@@ -57,6 +57,7 @@ pub(crate) fn rows(
         response: SessionInfo {
             expiry: "2025-12-12T05:48:33+0000".to_string(),
             token: token.clone(),
+            session_id: 1,
         },
         headers: ResponseHeaders {
             cookie: format!("foo={cookie_val1:}; bar={cookie_val2:};"),

@@ -59,7 +59,7 @@ pub fn to_resolved_column(
     // Keep track of the rest of the tree to consider:
     let mut nested = operand.nested.clone();
 
-    let field_type = model_object_type.get_field(&operand.target.field_name, &session.role)?;
+    let field_type = model_object_type.get_field(&operand.target.field_name)?;
 
     // Keep track of the type of the current field under consideration
     // (this will be an object type until we reach the bottom of the tree):
@@ -109,12 +109,11 @@ pub fn to_resolved_column(
                 let object_type = crate::metadata_accessor::get_output_object_type(
                     metadata,
                     &object_type_name,
-                    &session.role,
                     &session.variables,
                     plan_state,
                 )?;
 
-                let field_defn = object_type.get_field(field_name, &session.role)?;
+                let field_defn = object_type.get_field(field_name)?;
 
                 let field_type = &field_defn.field_type.underlying_type;
 

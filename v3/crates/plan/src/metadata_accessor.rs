@@ -4,7 +4,7 @@ use authorization_rules::{
     evaluate_command_authorization_rules, evaluate_field_authorization_rules,
     evaluate_model_authorization_rules, evaluate_type_input_authorization_rules,
 };
-use hasura_authn_core::{Role, SessionVariables};
+use hasura_authn_core::SessionVariables;
 use indexmap::IndexMap;
 use metadata_resolve::{
     Conditions, FieldDefinition, Metadata, ObjectTypeWithRelationships, Qualified,
@@ -30,17 +30,12 @@ pub struct OutputObjectTypeView<'metadata> {
 }
 
 impl OutputObjectTypeView<'_> {
-    pub fn get_field(
-        &self,
-        field_name: &FieldName,
-        role: &Role,
-    ) -> Result<&FieldView, PermissionError> {
+    pub fn get_field(&self, field_name: &FieldName) -> Result<&FieldView, PermissionError> {
         self.fields
             .get(field_name)
             .ok_or_else(|| PermissionError::ObjectFieldNotFound {
                 object_type_name: self.object_type_name.clone(),
                 field_name: field_name.clone(),
-                role: role.clone(),
             })
     }
 }
@@ -56,7 +51,6 @@ pub struct FieldView<'metadata> {
 pub fn get_output_object_type<'metadata>(
     metadata: &'metadata Metadata,
     object_type_name: &'metadata Qualified<CustomTypeName>,
-    role: &'_ Role,
     session_variables: &'_ SessionVariables,
     plan_state: &mut PlanState,
 ) -> Result<OutputObjectTypeView<'metadata>, PermissionError> {
@@ -76,7 +70,6 @@ pub fn get_output_object_type<'metadata>(
     if accessible_fields.is_empty() {
         return Err(PermissionError::ObjectTypeNotAccessible {
             object_type_name: object_type_name.clone(),
-            role: role.clone(),
         });
     }
 
@@ -86,18 +79,12 @@ pub fn get_output_object_type<'metadata>(
         .filter(|(_relationship_name, relationship)| {
             // we only include a relationship if we're allowed to access it
             match &relationship.target {
-                RelationshipTarget::Model(model) => get_model(
-                    metadata,
-                    &model.model_name,
-                    role,
-                    session_variables,
-                    plan_state,
-                )
-                .is_ok(),
+                RelationshipTarget::Model(model) => {
+                    get_model(metadata, &model.model_name, session_variables, plan_state).is_ok()
+                }
                 RelationshipTarget::Command(command) => get_command(
                     metadata,
                     &command.command_name,
-                    role,
                     session_variables,
                     plan_state,
                 )
@@ -163,7 +150,6 @@ pub struct ModelView<'metadata> {
 pub fn get_model<'metadata>(
     metadata: &'metadata Metadata,
     model_name: &'_ Qualified<ModelName>,
-    role: &'_ Role,
     session_variables: &'_ SessionVariables,
     plan_state: &mut PlanState,
 ) -> Result<ModelView<'metadata>, PermissionError> {
@@ -201,7 +187,6 @@ pub fn get_model<'metadata>(
 
     Err(PermissionError::ModelNotAccessible {
         model_name: model_name.clone(),
-        role: role.clone(),
     })
 }
 
@@ -214,7 +199,6 @@ pub struct CommandView<'a> {
 pub fn get_command<'a>(
     metadata: &'a Metadata,
     command_name: &'_ Qualified<CommandName>,
-    role: &'_ Role,
     session_variables: &'_ SessionVariables,
     plan_state: &mut PlanState,
 ) -> Result<CommandView<'a>, PermissionError> {
@@ -260,7 +244,6 @@ pub fn get_command<'a>(
 
     Err(PermissionError::CommandNotAccessible {
         command_name: command_name.clone(),
-        role: role.clone(),
     })
 }
 

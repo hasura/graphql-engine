@@ -213,6 +213,7 @@ pub fn aggregate_query(
     let where_clause = match where_input {
         Some(where_input) => Some(filter::resolve_filter_expression_open_dd(
             where_input,
+            flags,
             usage_counts,
         )?),
         None => None,

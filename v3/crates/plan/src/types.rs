@@ -1,7 +1,6 @@
 use crate::error::InternalError;
 use crate::query::{ArgumentPresetExecutionError, RelationshipFieldMappingError};
 use authorization_rules::ConditionCache;
-use hasura_authn_core::Role;
 use metadata_resolve::Qualified;
 use open_dds::data_connector::DataConnectorOperatorName;
 use open_dds::{
@@ -56,38 +55,30 @@ pub enum PermissionError {
     CommandNotFound {
         command_name: Qualified<CommandName>,
     },
-    #[error("role {role:} does not have permission to select from command {command_name:}")]
+    #[error("no permission to select from command {command_name:}")]
     CommandNotAccessible {
         command_name: Qualified<CommandName>,
-        role: Role,
     },
     #[error("model {model_name:} could not be found")]
     ModelNotFound { model_name: Qualified<ModelName> },
     #[error("model {model_name:} has no source")]
     ModelHasNoSource { model_name: Qualified<ModelName> },
 
-    #[error("role {role:} does not have permission to select from model {model_name:}")]
-    ModelNotAccessible {
-        model_name: Qualified<ModelName>,
-        role: Role,
-    },
+    #[error("no permission to select from model {model_name:}")]
+    ModelNotAccessible { model_name: Qualified<ModelName> },
 
     #[error("object type {object_type_name:} could not be found")]
     ObjectTypeNotFound {
         object_type_name: Qualified<CustomTypeName>,
     },
-    #[error("role {role:} does not have permission to select from type {object_type_name:}")]
+    #[error("no permission to select from type {object_type_name:}")]
     ObjectTypeNotAccessible {
         object_type_name: Qualified<CustomTypeName>,
-        role: Role,
     },
-    #[error(
-        "role {role:} does not have permission to select from field {field_name:} in type {object_type_name:}"
-    )]
+    #[error("no permission to select from field {field_name:} in type {object_type_name:}")]
     ObjectFieldNotFound {
         object_type_name: Qualified<CustomTypeName>,
         field_name: FieldName,
-        role: Role,
     },
     #[error("Object boolean expression type {boolean_expression_type_name} could not be found")]
     ObjectBooleanExpressionTypeNotFound {
@@ -279,12 +270,19 @@ pub enum BooleanExpressionError {
         boolean_expression_type_name: metadata_resolve::BooleanExpressionTypeIdentifier,
         data_connector_name: Qualified<DataConnectorName>,
     },
+    #[error(
+        "Built-in operators require a boolean expression type. Could not find one for object type {object_type_name}"
+    )]
+    BuiltInOperatorsRequireABooleanExpressionType {
+        object_type_name: Qualified<CustomTypeName>,
+    },
 }
 
 impl TraceableError for BooleanExpressionError {
     fn visibility(&self) -> ErrorVisibility {
         match self {
-            Self::ComparisonOperatorNotFound { .. } => ErrorVisibility::User,
+            Self::ComparisonOperatorNotFound { .. }
+            | Self::BuiltInOperatorsRequireABooleanExpressionType { .. } => ErrorVisibility::User,
         }
     }
 }

@@ -273,7 +273,7 @@ pub fn get_argument_mappings<'a>(
 /// type to validate it against to ensure the fields it refers to
 /// exist etc
 pub(crate) fn resolve_value_expression_for_argument(
-    role: &Role,
+    role: Option<&Role>, // this is only applicable for role-based permissions
     flags: &open_dds::flags::OpenDdFlags,
     argument_name: &open_dds::arguments::ArgumentName,
     value_expression: &open_dds::permissions::ValueExpressionOrPredicate,
@@ -343,15 +343,20 @@ pub(crate) fn resolve_value_expression_for_argument(
                             })?;
 
                         // is there a preset for this role and this field?
-                        let has_preset = object_type_representation
-                            .type_input_permissions
-                            .by_role
-                            .get(role)
-                            .is_some_and(|type_input_permission| {
-                                type_input_permission.field_presets.contains_key(field_name)
-                            });
+                        let has_preset = role.is_some_and(|role| {
+                            object_type_representation
+                                .type_input_permissions
+                                .by_role
+                                .get(role)
+                                .is_some_and(|type_input_permission| {
+                                    type_input_permission.field_presets.contains_key(field_name)
+                                })
+                        });
 
                         // if the field has no preset, then keep the error as it's legitimate
+                        // TODO: consider making this a warning rather than than error when role ==
+                        // None as we don't have a solid way of knowing which presets will apply
+                        // with rules-based auth
                         !has_preset
                     }
                     _ => true,

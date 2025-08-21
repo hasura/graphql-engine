@@ -94,8 +94,8 @@ pub enum CommandsError {
         command_name: Qualified<CommandName>,
         type_name: CustomTypeName,
     },
-    #[error("command source is required for command '{command_name:}' to resolve predicate")]
-    CommandSourceRequiredForPredicate {
+    #[error("command source is required for command '{command_name:}' to resolve argument preset")]
+    CommandSourceRequiredForArgumentPreset {
         command_name: Qualified<CommandName>,
     },
     #[error(

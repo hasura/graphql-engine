@@ -124,8 +124,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/relati
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                5261800314210927403,
+                            condition: Some(
+                                ConditionHash(
+                                    5261800314210927403,
+                                ),
                             ),
                         },
                     ],
@@ -157,10 +159,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/relati
                             },
                         },
                     },
+                    uses_rules_based_auth: false,
                 },
                 type_input_permissions: TypeInputPermissions {
                     authorization_rules: [],
                     by_role: {},
+                    uses_rules_based_auth: false,
                 },
                 relationship_fields: {
                     RelationshipName(
@@ -644,8 +648,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/relati
                                     ),
                                 ),
                             ],
-                            condition: ConditionHash(
-                                5261800314210927403,
+                            condition: Some(
+                                ConditionHash(
+                                    5261800314210927403,
+                                ),
                             ),
                         },
                     ],
@@ -667,10 +673,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/relati
                             },
                         },
                     },
+                    uses_rules_based_auth: false,
                 },
                 type_input_permissions: TypeInputPermissions {
                     authorization_rules: [],
                     by_role: {},
+                    uses_rules_based_auth: false,
                 },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
@@ -2983,7 +2991,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/relati
             propagate_boolean_expression_deprecation_status: false,
             multiple_order_by_input_object_fields: Allow,
         },
-        glossaries: {},
         plugin_configs: LifecyclePluginConfigs {
             pre_parse_plugins: [],
             pre_response_plugins: ResolvedLifecyclePreResponsePluginHooks {

@@ -6,6 +6,7 @@
 
 use indexmap::IndexMap;
 use metadata_resolve::QualifiedTypeReference;
+use metadata_resolve::data_connectors::CommandsResponseConfig;
 use nonempty::NonEmpty;
 use serde_json as json;
 use std::collections::{BTreeMap, HashSet};
@@ -60,6 +61,7 @@ pub(crate) fn collect_next_join_nodes(
                     &join_fields,
                     path,
                 )?;
+
                 arguments_results.push(ExecutableJoinNode {
                     variable_sets: arguments,
                     location_path: path.to_owned(),
@@ -115,10 +117,14 @@ fn collect_argument_from_rows(
                         command_name: _,
                         is_nullable,
                         return_kind,
-                        response_config: _,
+                        response_config,
                     } => {
-                        let mut command_rows =
-                            resolve_command_response_row(row, *is_nullable, *return_kind)?;
+                        let mut command_rows = resolve_command_response_row(
+                            row,
+                            *is_nullable,
+                            *return_kind,
+                            response_config.as_deref(),
+                        )?;
                         for command_row in &mut command_rows {
                             collect_argument_from_row(
                                 command_row,
@@ -158,8 +164,9 @@ fn collect_argument_from_row(
             ) = nonempty_path.split_first();
             let nested_val = row.get(alias.as_str()).ok_or_else(|| {
                 error::FieldInternalError::InternalGeneric {
-                    description: "invalid NDC response; could not find {key} in response"
-                        .to_string(),
+                    description: format!(
+                        "invalid NDC response; could not find {alias} in response"
+                    ),
                 }
             })?;
             if let Some(parsed_rows) = rows_from_row_field_value(*location_kind, nested_val)? {
@@ -278,11 +285,32 @@ fn rows_from_row_field_value(
     Ok(rows)
 }
 
+// if the response is from a command, we may need to unwrap the response field first
+fn unwrap_command_response(
+    value: &serde_json::Value,
+    commands_response_config: &CommandsResponseConfig,
+) -> Result<serde_json::Value, error::FieldError> {
+    let response_field = commands_response_config.result_field.as_str();
+    let headers_field = commands_response_config.headers_field.as_str();
+
+    // if the response and headers fields are present, we need to unwrap
+    if value.get(response_field).is_some() && value.get(headers_field).is_some() {
+        return Ok(value
+            .get(response_field)
+            .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
+                summary: format!("While processing remote join response, expected a response field '{response_field}' in the response, but it was not found"),
+            })?.clone());
+    }
+
+    Ok(value.clone())
+}
+
 /// resolve/process the command response for remote join execution
 fn resolve_command_response_row(
     row: &IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue>,
     is_nullable: bool,
     return_kind: CommandReturnKind,
+    commands_response_config: Option<&CommandsResponseConfig>,
 ) -> Result<Vec<IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue>>, error::FieldError> {
     let field_value_result = row.get(FUNCTION_IR_VALUE_COLUMN_NAME).ok_or_else(|| {
         error::NDCUnexpectedError::BadNDCResponse {
@@ -290,11 +318,18 @@ fn resolve_command_response_row(
         }
     })?;
 
+    // we may need to unwrap the response itself if headers were also returned
+    let field_value = if let Some(commands_response_config) = commands_response_config {
+        unwrap_command_response(&field_value_result.0, commands_response_config)
+    } else {
+        Ok(field_value_result.0.clone())
+    }?;
+
     // If the command has a selection set, then the structure of the
     // response should either be a `Array <Object>` or `<Object>` or null,
     // where `<Object>` is the map of the selection set field and it's
     // value.
-    match &field_value_result.0 {
+    match field_value {
         json::Value::String(_) | json::Value::Bool(_) | json::Value::Number(_) => {
             Err(error::NDCUnexpectedError::BadNDCResponse {
                 summary: "Unable to parse response from NDC, object or array value expected for relationship".into(),
@@ -315,10 +350,11 @@ fn resolve_command_response_row(
                 Err(error::NDCUnexpectedError::BadNDCResponse {
                     summary: "Unable to parse response from NDC, object value expected".into(),
                 })?
-            } ,
+            },
             CommandReturnKind::Object => {
                 let index_map: IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue> =
-                    json::from_value(json::Value::Object(result_map.clone()))?;
+                    json::from_value(json::Value::Object(result_map))?;
+
                 Ok(vec![index_map])
             }}
         }
@@ -332,7 +368,7 @@ fn resolve_command_response_row(
             // the array and use that as the value for the relationship otherwise
             // we return the array of objects.
             let array_values: Vec<IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue>> =
-                    json::from_value(json::Value::Array(values.clone()))?;
+                    json::from_value(json::Value::Array(values))?;
 
             match return_kind {
                 CommandReturnKind::Array =>

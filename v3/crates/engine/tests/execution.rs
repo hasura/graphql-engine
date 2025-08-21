@@ -691,6 +691,43 @@ fn test_model_select_many_where_nested_select_array_is_null() -> anyhow::Result<
     )
 }
 
+#[test]
+fn test_model_select_many_where_nested_select_array_nested_and() -> anyhow::Result<()> {
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/models/select_many/where/nested_select/array_with_nested_and",
+        &["execute/models/select_many/where/nested_select/common-metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/postgres_connector_ndc_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
+            ),
+        ]),
+    )
+}
+
+#[test]
+fn test_model_select_many_where_nested_select_array_nested_and_old_behaviour() -> anyhow::Result<()>
+{
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/models/select_many/where/nested_select/array_with_nested_and_old_behaviour",
+        &["execute/models/select_many/where/nested_select/common-metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/postgres_connector_ndc_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
+            ),
+        ]),
+    )
+}
+
 // is_null tests
 
 // old boolean expressions

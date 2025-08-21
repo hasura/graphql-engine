@@ -6,7 +6,7 @@ use crate::helpers::http::{
 };
 use crate::helpers::ndc_validation::validate_ndc_argument_presets;
 use crate::ndc_migration;
-use crate::types::permission::ValueExpression;
+use crate::types::permission::{ValueExpression, resolve_value_expression};
 use crate::types::subgraph::Qualified;
 use indexmap::IndexMap;
 use lang_graphql::ast::common::OperationType;
@@ -362,7 +362,7 @@ impl HttpHeadersPreset {
             .iter()
             .map(|(header_name, header_val)| {
                 let key = SerializableHeaderName::new(header_name.to_string()).map_err(to_error)?;
-                let val = resolve_value_expression(metadata_accessor, header_val.clone());
+                let val = resolve_value_expression(&metadata_accessor.flags, header_val.clone());
                 Ok((key, val))
             })
             .collect::<Result<IndexMap<_, _>, DataConnectorError>>()?;
@@ -371,28 +371,6 @@ impl HttpHeadersPreset {
             forward,
             additional,
         })
-    }
-}
-
-fn resolve_value_expression(
-    metadata_accessor: &MetadataAccessor,
-    value_expression_input: open_dds::permissions::ValueExpression,
-) -> ValueExpression {
-    match value_expression_input {
-        open_dds::permissions::ValueExpression::SessionVariable(session_variable) => {
-            ValueExpression::SessionVariable(hasura_authn_core::SessionVariableReference {
-                name: session_variable,
-                passed_as_json: metadata_accessor
-                    .flags
-                    .contains(open_dds::flags::Flag::JsonSessionVariables),
-                disallow_unknown_fields: metadata_accessor
-                    .flags
-                    .contains(open_dds::flags::Flag::DisallowUnknownValuesInArguments),
-            })
-        }
-        open_dds::permissions::ValueExpression::Literal(json_value) => {
-            ValueExpression::Literal(json_value)
-        }
     }
 }
 
@@ -1453,12 +1431,16 @@ fn mk_relational_expression_capabilities(
                 supports_first_value: capabilities.aggregate.first_value.is_some(),
                 supports_last_value: capabilities.aggregate.last_value.is_some(),
                 supports_median: capabilities.aggregate.median.is_some(),
-                supports_string_agg: capabilities.aggregate.string_agg.as_ref().map(|c| {
-                    DataConnectorRelationalOrderedAggregateFunctionCapabilities {
-                        supports_distinct: c.distinct.is_some(),
-                        supports_order_by: c.order_by.is_some(),
-                    }
-                }),
+                supports_string_agg: capabilities
+                    .aggregate
+                    .string_agg_with_separator
+                    .as_ref()
+                    .map(
+                        |c| DataConnectorRelationalOrderedAggregateFunctionCapabilities {
+                            supports_distinct: c.distinct.is_some(),
+                            supports_order_by: c.order_by.is_some(),
+                        },
+                    ),
                 supports_var: capabilities.aggregate.var.is_some(),
                 supports_avg: capabilities.aggregate.avg.is_some(),
                 supports_sum: capabilities.aggregate.sum.is_some(),

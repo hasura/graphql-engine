@@ -92,7 +92,7 @@ fn process_single_query_response_row<T>(
     response_config: Option<&Arc<data_connectors::CommandsResponseConfig>>,
 ) -> Result<IndexMap<ast::Alias, json::Value>, execute::FieldError>
 where
-    T: KeyValueResponse,
+    T: KeyValueResponse + std::fmt::Debug,
 {
     selection_set.as_object_selection_set(
         |type_name, field: &normalized_ast::Field<GDS>, field_call| {
@@ -200,6 +200,7 @@ where
                             } else {
                                 CommandReturnKind::Object
                             };
+
                             let field_json_value_result = row
                                 .remove(field.alias.0.as_str())
                                 .ok_or_else(|| execute::NDCUnexpectedError::BadNDCResponse {
@@ -251,7 +252,7 @@ fn process_selection_set_as_list<T>(
     response_config: Option<&Arc<data_connectors::CommandsResponseConfig>>,
 ) -> Result<Option<Vec<IndexMap<ast::Alias, json::Value>>>, execute::FieldError>
 where
-    T: KeyValueResponse,
+    T: KeyValueResponse + std::fmt::Debug,
 {
     let processed_response = rows
         .map(|rows| {
@@ -269,7 +270,7 @@ fn process_selection_set_as_object<T>(
     response_config: Option<&Arc<data_connectors::CommandsResponseConfig>>,
 ) -> Result<Option<IndexMap<ast::Alias, json::Value>>, execute::FieldError>
 where
-    T: KeyValueResponse,
+    T: KeyValueResponse + std::fmt::Debug,
 {
     let processed_response = rows
         .and_then(|rows| rows.into_iter().next())
