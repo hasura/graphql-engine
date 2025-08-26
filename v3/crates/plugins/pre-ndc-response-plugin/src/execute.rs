@@ -75,7 +75,7 @@ impl TraceableError for Error {
 }
 
 /// Operation type determines the request and response types that are expected in the payload and optionally the response
-#[derive(Serialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum OperationType {
     Query,
@@ -84,8 +84,8 @@ pub enum OperationType {
     MutationExplain,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct PreNdcResponseSession {
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct PreNdcResponseSession {
     role: Role,
     variables: BTreeMap<SessionVariableName, serde_json::Value>,
 }
@@ -106,9 +106,9 @@ impl TryFrom<Session> for PreNdcResponseSession {
     }
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-struct PreNdcResponsePluginRequestBody<Req, Res> {
+pub struct PreNdcResponsePluginRequestBody<Req, Res> {
     pub session: Option<PreNdcResponseSession>,
     pub ndc_request: Option<Req>,
     pub ndc_response: Option<Res>,

@@ -20,6 +20,8 @@ services:
         condition: service_started
       pre_ndc_request_plugin_example:
         condition: service_started
+      pre_ndc_response_plugin_example:
+        condition: service_started
     extra_hosts:
       - local.hasura.dev=${LOCALHOST_GATEWAY:-host-gateway}
     volumes:
@@ -88,6 +90,20 @@ services:
       RUST_LOG: info
     ports:
       - "5001:5001"
+    depends_on:
+      jaeger:
+        condition: service_started
+
+  pre_ndc_response_plugin_example:
+    build:
+      dockerfile: pre-ndc-response-plugin-example.Dockerfile
+    # this tag will only be found on images built in CI,
+    # otherwise we build from Dockerfile
+    image: build.internal/pre-ndc-response-plugin-example-x86_64-linux:ci
+    environment:
+      RUST_LOG: info
+    ports:
+      - "5002:5002"
     depends_on:
       jaeger:
         condition: service_started

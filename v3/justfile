@@ -51,14 +51,21 @@ start-docker-test-deps:
       postgres_connector_ndc_v01 custom_connector \
       custom_connector_no_relationships custom_connector_ndc_v01 \
       postgres_promptql \
-      pre_ndc_request_plugin_example
+      pre_ndc_request_plugin_example \
+      pre_ndc_response_plugin_example
 
 # pull / build all docker deps
 docker-refresh: stop-docker
     docker compose -f ci.docker-compose.yaml pull \
-      postgres_connector postgres_connector_ndc_v01 postgres_promptql 
+      postgres_connector \
+      postgres_connector_ndc_v01 \
+      postgres_promptql
     docker compose -f ci.docker-compose.yaml build \
-      custom_connector custom_connector_no_relationships auth_hook pre_ndc_request_plugin_example
+      custom_connector \
+      custom_connector_no_relationships \
+      auth_hook \
+      pre_ndc_request_plugin_example \
+      pre_ndc_response_plugin_example
 
 alias refresh-docker := docker-refresh
 
