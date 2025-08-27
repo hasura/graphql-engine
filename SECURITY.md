@@ -37,3 +37,4 @@ This document is available in the following translations:
 - [French :fr:](translations/SECURITY.french.md)
 - [Hindi :india:](translations/SECURITY.hindi.md)
 - [Malayalam :india:](translations/SECURITY.malayalam.md)
+- [中文 :cn:](translations/SECURITY.chinese.md)
