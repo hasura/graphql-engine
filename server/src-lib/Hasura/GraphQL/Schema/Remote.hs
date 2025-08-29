@@ -455,7 +455,6 @@ remoteInputObjectParser schemaDoc defn@(G.InputObjectTypeDefinition desc name _ 
     else -- At least one field is not a preset, meaning we have the guarantee that there will be at least
     -- one field in the input object. We have to memoize this branch as we might recursively call
     -- the same parser.
-
       Right <$> P.memoizeOn 'remoteInputObjectParser defn do
         typename <- asks getter <&> \mkTypename -> runMkTypename mkTypename name
 
@@ -988,7 +987,7 @@ remoteField sdoc remoteRelationships parentTypeName fieldName description argsDe
       FieldParser n (IR.GraphQLField (IR.RemoteRelationshipField IR.UnpreparedValue) RemoteSchemaVariable)
     mkFieldParserWithSelectionSet customizedFieldName argsParser outputParser =
       P.rawSubselection customizedFieldName description argsParser outputParser
-        <&> \(alias, _, (_, args), selSet) -> mkField alias customizedFieldName args selSet
+        <&> \(alias, _, (_, args), selSet, _) -> mkField alias customizedFieldName args selSet
 
 -- | helper function to get a parser of an object with it's name
 --   This function is called from 'remoteSchemaInterface' and
