@@ -10,9 +10,9 @@ use super::migration;
 #[serde(tag = "version")]
 pub enum NdcQueryRequest {
     #[serde(rename = "v0.1.x")]
-    V01(ndc_models_v01::QueryRequest),
+    V01(Box<ndc_models_v01::QueryRequest>),
     #[serde(rename = "v0.2.x")]
-    V02(ndc_models_v02::QueryRequest),
+    V02(Box<ndc_models_v02::QueryRequest>),
 }
 
 #[derive(Serialize, Debug, Clone, PartialEq)]

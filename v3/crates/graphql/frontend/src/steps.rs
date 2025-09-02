@@ -173,7 +173,7 @@ pub fn generate_ir<'n, 's>(
                 request_headers,
                 &normalized_request.selection_set,
             )?;
-            Ok(graphql_ir::IR::Subscription(alias, field))
+            Ok(graphql_ir::IR::Subscription(alias, Box::new(field)))
         }
     }
 }

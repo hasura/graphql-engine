@@ -277,6 +277,7 @@ impl gql_schema::SchemaContext for GDS {
 }
 
 #[derive(Debug, thiserror::Error)]
+#[allow(clippy::large_enum_variant)]
 pub enum Error {
     #[error("metadata is not consistent: {error}")]
     ResolveError {

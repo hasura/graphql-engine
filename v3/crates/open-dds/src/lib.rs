@@ -86,6 +86,7 @@ enum EnvironmentValueImpl {
 )]
 #[serde(tag = "kind")]
 #[opendd(as_kind)]
+#[allow(clippy::large_enum_variant)]
 pub enum OpenDdSubgraphObject {
     // Data connector
     DataConnectorLink(Spanned<data_connector::DataConnectorLink>),

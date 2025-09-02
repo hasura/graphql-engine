@@ -225,8 +225,9 @@ fn test_request_setup(path: &Path) -> TestRequest {
 
     let mut query_params = std::fs::read_to_string(path).unwrap_or_else(|error| {
         panic!(
-            "{}: Could not read file {path:?}: {error}",
-            directory.display()
+            "{}: Could not read file {}: {error}",
+            directory.display(),
+            path.display(),
         )
     });
 

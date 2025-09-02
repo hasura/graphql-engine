@@ -65,7 +65,7 @@ pub(crate) fn collect_next_join_nodes(
                 arguments_results.push(ExecutableJoinNode {
                     variable_sets: arguments,
                     location_path: path.to_owned(),
-                    join_node: join_node.clone(),
+                    join_node: *join_node.clone(),
                     sub_tree: location.rest.clone(),
                     remote_alias: alias.clone(),
                 });

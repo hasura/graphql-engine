@@ -48,7 +48,7 @@ pub enum LocationKind {
 #[derive(Debug, PartialEq, Clone)]
 pub enum JoinNode {
     Local(LocationKind),
-    Remote(RemoteJoin),
+    Remote(Box<RemoteJoin>),
 }
 
 /// Location indicates if the current node/field is a join node.

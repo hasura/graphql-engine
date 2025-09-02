@@ -564,7 +564,7 @@ fn resolve_relationship(
     )?;
 
     Ok(ModelPredicate::Relationship {
-        relationship_info: annotation,
+        relationship_info: Box::new(annotation),
         column_path,
         predicate: Box::new(target_model_predicate),
     })

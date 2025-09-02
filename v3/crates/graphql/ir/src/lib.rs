@@ -45,5 +45,5 @@ pub enum IR<'n, 's> {
     Query(IndexMap<ast::Alias, root_field::QueryRootField<'n, 's>>),
     Mutation(IndexMap<ast::Alias, root_field::MutationRootField<'n, 's>>),
     /// Only one root field is allowed in a subscription
-    Subscription(ast::Alias, root_field::SubscriptionRootField<'n, 's>),
+    Subscription(ast::Alias, Box<root_field::SubscriptionRootField<'n, 's>>),
 }

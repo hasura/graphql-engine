@@ -76,7 +76,7 @@ pub enum MutationRootField<'n, 's> {
     },
     ProcedureBasedCommand {
         selection_set: &'n gql::normalized_ast::SelectionSet<'s, GDS>,
-        ir: commands::ProcedureBasedCommand<'s>,
+        ir: Box<commands::ProcedureBasedCommand<'s>>,
     },
 }
 

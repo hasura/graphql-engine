@@ -141,7 +141,7 @@ impl Default for ModelPermissions {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum FilterPermission {
     AllowAll,
-    Filter(ModelPredicate),
+    Filter(Box<ModelPredicate>),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -186,7 +186,7 @@ pub enum ModelPredicate {
         deprecated: Option<Deprecated>,
     },
     Relationship {
-        relationship_info: PredicateRelationshipInfo,
+        relationship_info: Box<PredicateRelationshipInfo>,
         column_path: Vec<DataConnectorColumnName>,
         predicate: Box<ModelPredicate>,
     },

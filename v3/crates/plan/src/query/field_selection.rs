@@ -512,7 +512,7 @@ fn from_model_relationship(
             remote_join_executions.locations.insert(
                 ndc_field_alias.to_string(),
                 Location {
-                    join_node: JoinNode::Remote(remote_join),
+                    join_node: JoinNode::Remote(Box::new(remote_join)),
                     rest: sub_join_locations,
                 },
             );
@@ -698,7 +698,7 @@ fn from_command_relationship(
                 mut query_execution_plan,
                 remote_predicates: new_remote_predicates,
                 remote_join_executions: new_remote_join_executions,
-            } = match from_command.command_plan {
+            } = *match from_command.command_plan {
                 CommandPlan::Function(execution_tree) => execution_tree,
                 CommandPlan::Procedure(_ndc_procedure) => {
                     // This shouldn't happen as we are already checking for procedure above
@@ -738,7 +738,7 @@ fn from_command_relationship(
             remote_join_executions.locations.insert(
                 ndc_field_alias.to_string(),
                 Location {
-                    join_node: JoinNode::Remote(rj_info),
+                    join_node: JoinNode::Remote(Box::new(rj_info)),
                     rest: new_remote_join_executions,
                 },
             );
@@ -778,7 +778,7 @@ fn from_command_relationship(
                     },
                 remote_predicates: new_remote_predicates,
                 remote_join_executions: new_remote_join_executions,
-            } = match from_command.command_plan {
+            } = *match from_command.command_plan {
                 CommandPlan::Function(execution_tree) => execution_tree,
                 CommandPlan::Procedure(_ndc_procedure) => {
                     // This shouldn't happen as we are already checking for procedure above
@@ -1004,7 +1004,7 @@ fn from_relationship_aggregate_selection(
                     remote_join_executions.locations.insert(
                         ndc_field_alias.to_string(),
                         Location {
-                            join_node: JoinNode::Remote(remote_join),
+                            join_node: JoinNode::Remote(Box::new(remote_join)),
                             rest: sub_join_locations,
                         },
                     );

@@ -432,7 +432,7 @@ mod tests {
 
         let one_predicate_rule = CommandAuthorizationRule::ArgumentAuthPredicate {
             argument_name: ArgumentName::new(Identifier::new("filter").unwrap()),
-            predicate: predicate.clone(),
+            predicate: Box::new(predicate.clone()),
             condition: Some(condition_id),
         };
 

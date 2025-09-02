@@ -1320,162 +1320,160 @@ fn mk_ndc_02_capabilities(
 fn mk_relational_expression_capabilities(
     capabilities: &ndc_models::RelationalExpressionCapabilities,
 ) -> DataConnectorRelationalExpressionCapabilities {
-    let data_connector_relational_expression_capabilities =
-        DataConnectorRelationalExpressionCapabilities {
-            supports_conditional: DataConnectorRelationalConditionalExpressionCapabilities {
-                supports_case: capabilities.conditional.case.as_ref().map(|c| {
-                    DataConnectorRelationalCaseExpressionCapabilities {
-                        supports_scrutinee: c.scrutinee.is_some(),
-                    }
-                }),
-                supports_nullif: capabilities.conditional.nullif.is_some(),
-            },
-            supports_comparison: DataConnectorRelationalComparisonExpressionCapabilities {
-                supports_like: capabilities.comparison.like.is_some(),
-                supports_ilike: capabilities.comparison.ilike.is_some(),
-                supports_between: capabilities.comparison.between.is_some(),
-                supports_contains: capabilities.comparison.contains.is_some(),
-                supports_is_distinct_from: capabilities.comparison.is_distinct_from.is_some(),
-                supports_is_nan: capabilities.comparison.is_nan.is_some(),
-                supports_is_zero: capabilities.comparison.is_zero.is_some(),
-                supports_greater_than_eq: capabilities.comparison.greater_than_eq.is_some(),
-                supports_greater_than: capabilities.comparison.greater_than.is_some(),
-                supports_in_list: capabilities.comparison.in_list.is_some(),
-                supports_is_false: capabilities.comparison.is_false.is_some(),
-                supports_is_null: capabilities.comparison.is_null.is_some(),
-                supports_is_true: capabilities.comparison.is_true.is_some(),
-                supports_less_than: capabilities.comparison.less_than.is_some(),
-                supports_less_than_eq: capabilities.comparison.less_than.is_some(),
-            },
-            supports_scalar: DataConnectorRelationalScalarExpressionCapabilities {
-                supports_abs: capabilities.scalar.abs.is_some(),
-                supports_array_element: capabilities.scalar.array_element.is_some(),
-                supports_binary_concat: capabilities.scalar.binary_concat.is_some(),
-                supports_btrim: capabilities.scalar.btrim.is_some(),
-                supports_ceil: capabilities.scalar.ceil.is_some(),
-                supports_character_length: capabilities.scalar.character_length.is_some(),
-                supports_concat: capabilities.scalar.concat.is_some(),
-                supports_cos: capabilities.scalar.cos.is_some(),
-                supports_current_date: capabilities.scalar.current_date.is_some(),
-                supports_current_time: capabilities.scalar.current_time.is_some(),
-                supports_current_timestamp: capabilities.scalar.current_timestamp.is_some(),
-                supports_date_part: capabilities.scalar.date_part.as_ref().map(|c| {
-                    DatePartScalarExpressionCapability {
-                        supports_year: c.year.is_some(),
-                        supports_quarter: c.quarter.is_some(),
-                        supports_month: c.month.is_some(),
-                        supports_week: c.week.is_some(),
-                        supports_day_of_week: c.day_of_week.is_some(),
-                        supports_day_of_year: c.day_of_year.is_some(),
-                        supports_day: c.day.is_some(),
-                        supports_hour: c.hour.is_some(),
-                        supports_minute: c.minute.is_some(),
-                        supports_second: c.second.is_some(),
-                        supports_microsecond: c.microsecond.is_some(),
-                        supports_millisecond: c.millisecond.is_some(),
-                        supports_nanosecond: c.nanosecond.is_some(),
-                        supports_epoch: c.epoch.is_some(),
-                    }
-                }),
-                supports_date_trunc: capabilities.scalar.date_trunc.is_some(),
-                supports_exp: capabilities.scalar.exp.is_some(),
-                supports_floor: capabilities.scalar.floor.is_some(),
-                supports_get_field: capabilities.scalar.get_field.is_some(),
-                supports_greatest: capabilities.scalar.greatest.is_some(),
-                supports_least: capabilities.scalar.least.is_some(),
-                supports_left: capabilities.scalar.left.is_some(),
-                supports_ln: capabilities.scalar.ln.is_some(),
-                supports_log: capabilities.scalar.log.is_some(),
-                supports_log10: capabilities.scalar.log10.is_some(),
-                supports_log2: capabilities.scalar.log2.is_some(),
-                supports_lpad: capabilities.scalar.lpad.is_some(),
-                supports_ltrim: capabilities.scalar.ltrim.is_some(),
-                supports_nvl: capabilities.scalar.nvl.is_some(),
-                supports_power: capabilities.scalar.power.is_some(),
-                supports_random: capabilities.scalar.random.is_some(),
-                supports_replace: capabilities.scalar.replace.is_some(),
-                supports_reverse: capabilities.scalar.reverse.is_some(),
-                supports_right: capabilities.scalar.right.is_some(),
-                supports_round: capabilities.scalar.round.is_some(),
-                supports_rpad: capabilities.scalar.rpad.is_some(),
-                supports_rtrim: capabilities.scalar.rtrim.is_some(),
-                supports_sqrt: capabilities.scalar.sqrt.is_some(),
-                supports_str_pos: capabilities.scalar.str_pos.is_some(),
-                supports_substr: capabilities.scalar.substr.is_some(),
-                supports_substr_index: capabilities.scalar.substr_index.is_some(),
-                supports_tan: capabilities.scalar.tan.is_some(),
-                supports_to_date: capabilities.scalar.to_date.is_some(),
-                supports_to_timestamp: capabilities.scalar.to_timestamp.is_some(),
-                supports_trunc: capabilities.scalar.trunc.is_some(),
-                supports_to_lower: capabilities.scalar.to_lower.is_some(),
-                supports_to_upper: capabilities.scalar.to_upper.is_some(),
-                supports_and: capabilities.scalar.and.is_some(),
-                supports_coalesce: capabilities.scalar.coalesce.is_some(),
-                supports_divide: capabilities.scalar.divide.is_some(),
-                supports_minus: capabilities.scalar.minus.is_some(),
-                supports_modulo: capabilities.scalar.modulo.is_some(),
-                supports_multiply: capabilities.scalar.multiply.is_some(),
-                supports_negate: capabilities.scalar.negate.is_some(),
-                supports_not: capabilities.scalar.not.is_some(),
-                supports_or: capabilities.scalar.or.is_some(),
-                supports_plus: capabilities.scalar.plus.is_some(),
-            },
-            supports_aggregate: DataConnectorRelationalAggregateExpressionCapabilities {
-                supports_bool_and: capabilities.aggregate.bool_and.is_some(),
-                supports_bool_or: capabilities.aggregate.bool_or.is_some(),
-                supports_count: capabilities.aggregate.count.as_ref().map(|c| {
-                    DataConnectorRelationalAggregateFunctionCapabilities {
-                        supports_distinct: c.distinct.is_some(),
-                    }
-                }),
-                supports_first_value: capabilities.aggregate.first_value.is_some(),
-                supports_last_value: capabilities.aggregate.last_value.is_some(),
-                supports_median: capabilities.aggregate.median.is_some(),
-                supports_string_agg: capabilities
-                    .aggregate
-                    .string_agg_with_separator
-                    .as_ref()
-                    .map(
-                        |c| DataConnectorRelationalOrderedAggregateFunctionCapabilities {
-                            supports_distinct: c.distinct.is_some(),
-                            supports_order_by: c.order_by.is_some(),
-                        },
-                    ),
-                supports_var: capabilities.aggregate.var.is_some(),
-                supports_avg: capabilities.aggregate.avg.is_some(),
-                supports_sum: capabilities.aggregate.sum.is_some(),
-                supports_min: capabilities.aggregate.min.is_some(),
-                supports_max: capabilities.aggregate.max.is_some(),
-                supports_stddev: capabilities.aggregate.stddev.is_some(),
-                supports_stddev_pop: capabilities.aggregate.stddev_pop.is_some(),
-                supports_approx_percentile_cont: capabilities
-                    .aggregate
-                    .approx_percentile_cont
-                    .is_some(),
-                supports_approx_distinct: capabilities.aggregate.approx_distinct.is_some(),
-                supports_array_agg: capabilities.aggregate.array_agg.as_ref().map(|c| {
-                    DataConnectorRelationalOrderedAggregateFunctionCapabilities {
-                        supports_distinct: c.distinct.is_some(),
-                        supports_order_by: c.order_by.is_some(),
-                    }
-                }),
-            },
-            supports_window: DataConnectorRelationalWindowExpressionCapabilities {
-                supports_row_number: capabilities.window.row_number.is_some(),
-                supports_dense_rank: capabilities.window.dense_rank.is_some(),
-                supports_ntile: capabilities.window.ntile.is_some(),
-                supports_rank: capabilities.window.rank.is_some(),
-                supports_cume_dist: capabilities.window.cume_dist.is_some(),
-                supports_percent_rank: capabilities.window.percent_rank.is_some(),
-            },
-            supports_scalar_types: capabilities.scalar_types.as_ref().map(|scalar_types| {
-                DataConnectorRelationalScalarTypeCapabilities {
-                    supports_interval: scalar_types.interval.is_some(),
-                    supports_from_type: scalar_types.from_type.is_some(),
+    DataConnectorRelationalExpressionCapabilities {
+        supports_conditional: DataConnectorRelationalConditionalExpressionCapabilities {
+            supports_case: capabilities.conditional.case.as_ref().map(|c| {
+                DataConnectorRelationalCaseExpressionCapabilities {
+                    supports_scrutinee: c.scrutinee.is_some(),
                 }
             }),
-        };
-    data_connector_relational_expression_capabilities
+            supports_nullif: capabilities.conditional.nullif.is_some(),
+        },
+        supports_comparison: DataConnectorRelationalComparisonExpressionCapabilities {
+            supports_like: capabilities.comparison.like.is_some(),
+            supports_ilike: capabilities.comparison.ilike.is_some(),
+            supports_between: capabilities.comparison.between.is_some(),
+            supports_contains: capabilities.comparison.contains.is_some(),
+            supports_is_distinct_from: capabilities.comparison.is_distinct_from.is_some(),
+            supports_is_nan: capabilities.comparison.is_nan.is_some(),
+            supports_is_zero: capabilities.comparison.is_zero.is_some(),
+            supports_greater_than_eq: capabilities.comparison.greater_than_eq.is_some(),
+            supports_greater_than: capabilities.comparison.greater_than.is_some(),
+            supports_in_list: capabilities.comparison.in_list.is_some(),
+            supports_is_false: capabilities.comparison.is_false.is_some(),
+            supports_is_null: capabilities.comparison.is_null.is_some(),
+            supports_is_true: capabilities.comparison.is_true.is_some(),
+            supports_less_than: capabilities.comparison.less_than.is_some(),
+            supports_less_than_eq: capabilities.comparison.less_than.is_some(),
+        },
+        supports_scalar: DataConnectorRelationalScalarExpressionCapabilities {
+            supports_abs: capabilities.scalar.abs.is_some(),
+            supports_array_element: capabilities.scalar.array_element.is_some(),
+            supports_binary_concat: capabilities.scalar.binary_concat.is_some(),
+            supports_btrim: capabilities.scalar.btrim.is_some(),
+            supports_ceil: capabilities.scalar.ceil.is_some(),
+            supports_character_length: capabilities.scalar.character_length.is_some(),
+            supports_concat: capabilities.scalar.concat.is_some(),
+            supports_cos: capabilities.scalar.cos.is_some(),
+            supports_current_date: capabilities.scalar.current_date.is_some(),
+            supports_current_time: capabilities.scalar.current_time.is_some(),
+            supports_current_timestamp: capabilities.scalar.current_timestamp.is_some(),
+            supports_date_part: capabilities.scalar.date_part.as_ref().map(|c| {
+                DatePartScalarExpressionCapability {
+                    supports_year: c.year.is_some(),
+                    supports_quarter: c.quarter.is_some(),
+                    supports_month: c.month.is_some(),
+                    supports_week: c.week.is_some(),
+                    supports_day_of_week: c.day_of_week.is_some(),
+                    supports_day_of_year: c.day_of_year.is_some(),
+                    supports_day: c.day.is_some(),
+                    supports_hour: c.hour.is_some(),
+                    supports_minute: c.minute.is_some(),
+                    supports_second: c.second.is_some(),
+                    supports_microsecond: c.microsecond.is_some(),
+                    supports_millisecond: c.millisecond.is_some(),
+                    supports_nanosecond: c.nanosecond.is_some(),
+                    supports_epoch: c.epoch.is_some(),
+                }
+            }),
+            supports_date_trunc: capabilities.scalar.date_trunc.is_some(),
+            supports_exp: capabilities.scalar.exp.is_some(),
+            supports_floor: capabilities.scalar.floor.is_some(),
+            supports_get_field: capabilities.scalar.get_field.is_some(),
+            supports_greatest: capabilities.scalar.greatest.is_some(),
+            supports_least: capabilities.scalar.least.is_some(),
+            supports_left: capabilities.scalar.left.is_some(),
+            supports_ln: capabilities.scalar.ln.is_some(),
+            supports_log: capabilities.scalar.log.is_some(),
+            supports_log10: capabilities.scalar.log10.is_some(),
+            supports_log2: capabilities.scalar.log2.is_some(),
+            supports_lpad: capabilities.scalar.lpad.is_some(),
+            supports_ltrim: capabilities.scalar.ltrim.is_some(),
+            supports_nvl: capabilities.scalar.nvl.is_some(),
+            supports_power: capabilities.scalar.power.is_some(),
+            supports_random: capabilities.scalar.random.is_some(),
+            supports_replace: capabilities.scalar.replace.is_some(),
+            supports_reverse: capabilities.scalar.reverse.is_some(),
+            supports_right: capabilities.scalar.right.is_some(),
+            supports_round: capabilities.scalar.round.is_some(),
+            supports_rpad: capabilities.scalar.rpad.is_some(),
+            supports_rtrim: capabilities.scalar.rtrim.is_some(),
+            supports_sqrt: capabilities.scalar.sqrt.is_some(),
+            supports_str_pos: capabilities.scalar.str_pos.is_some(),
+            supports_substr: capabilities.scalar.substr.is_some(),
+            supports_substr_index: capabilities.scalar.substr_index.is_some(),
+            supports_tan: capabilities.scalar.tan.is_some(),
+            supports_to_date: capabilities.scalar.to_date.is_some(),
+            supports_to_timestamp: capabilities.scalar.to_timestamp.is_some(),
+            supports_trunc: capabilities.scalar.trunc.is_some(),
+            supports_to_lower: capabilities.scalar.to_lower.is_some(),
+            supports_to_upper: capabilities.scalar.to_upper.is_some(),
+            supports_and: capabilities.scalar.and.is_some(),
+            supports_coalesce: capabilities.scalar.coalesce.is_some(),
+            supports_divide: capabilities.scalar.divide.is_some(),
+            supports_minus: capabilities.scalar.minus.is_some(),
+            supports_modulo: capabilities.scalar.modulo.is_some(),
+            supports_multiply: capabilities.scalar.multiply.is_some(),
+            supports_negate: capabilities.scalar.negate.is_some(),
+            supports_not: capabilities.scalar.not.is_some(),
+            supports_or: capabilities.scalar.or.is_some(),
+            supports_plus: capabilities.scalar.plus.is_some(),
+        },
+        supports_aggregate: DataConnectorRelationalAggregateExpressionCapabilities {
+            supports_bool_and: capabilities.aggregate.bool_and.is_some(),
+            supports_bool_or: capabilities.aggregate.bool_or.is_some(),
+            supports_count: capabilities.aggregate.count.as_ref().map(|c| {
+                DataConnectorRelationalAggregateFunctionCapabilities {
+                    supports_distinct: c.distinct.is_some(),
+                }
+            }),
+            supports_first_value: capabilities.aggregate.first_value.is_some(),
+            supports_last_value: capabilities.aggregate.last_value.is_some(),
+            supports_median: capabilities.aggregate.median.is_some(),
+            supports_string_agg: capabilities
+                .aggregate
+                .string_agg_with_separator
+                .as_ref()
+                .map(
+                    |c| DataConnectorRelationalOrderedAggregateFunctionCapabilities {
+                        supports_distinct: c.distinct.is_some(),
+                        supports_order_by: c.order_by.is_some(),
+                    },
+                ),
+            supports_var: capabilities.aggregate.var.is_some(),
+            supports_avg: capabilities.aggregate.avg.is_some(),
+            supports_sum: capabilities.aggregate.sum.is_some(),
+            supports_min: capabilities.aggregate.min.is_some(),
+            supports_max: capabilities.aggregate.max.is_some(),
+            supports_stddev: capabilities.aggregate.stddev.is_some(),
+            supports_stddev_pop: capabilities.aggregate.stddev_pop.is_some(),
+            supports_approx_percentile_cont: capabilities
+                .aggregate
+                .approx_percentile_cont
+                .is_some(),
+            supports_approx_distinct: capabilities.aggregate.approx_distinct.is_some(),
+            supports_array_agg: capabilities.aggregate.array_agg.as_ref().map(|c| {
+                DataConnectorRelationalOrderedAggregateFunctionCapabilities {
+                    supports_distinct: c.distinct.is_some(),
+                    supports_order_by: c.order_by.is_some(),
+                }
+            }),
+        },
+        supports_window: DataConnectorRelationalWindowExpressionCapabilities {
+            supports_row_number: capabilities.window.row_number.is_some(),
+            supports_dense_rank: capabilities.window.dense_rank.is_some(),
+            supports_ntile: capabilities.window.ntile.is_some(),
+            supports_rank: capabilities.window.rank.is_some(),
+            supports_cume_dist: capabilities.window.cume_dist.is_some(),
+            supports_percent_rank: capabilities.window.percent_rank.is_some(),
+        },
+        supports_scalar_types: capabilities.scalar_types.as_ref().map(|scalar_types| {
+            DataConnectorRelationalScalarTypeCapabilities {
+                supports_interval: scalar_types.interval.is_some(),
+                supports_from_type: scalar_types.from_type.is_some(),
+            }
+        }),
+    }
 }
 
 #[cfg(test)]

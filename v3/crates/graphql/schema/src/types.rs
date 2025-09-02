@@ -215,6 +215,7 @@ pub enum ModelInputAnnotation {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]
+#[allow(clippy::large_enum_variant)]
 /// Annotations of the input types/fields related to boolean expressions.
 pub enum BooleanExpressionAnnotation {
     /// Marks the field that contains the root of the boolean expression. eg. a "where" field
@@ -310,6 +311,7 @@ pub enum Annotation {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]
+#[allow(clippy::large_enum_variant)]
 pub enum NamespaceAnnotation {
     /// any arguments that we should prefill for a command or type
     /// Only used in query usage analytics

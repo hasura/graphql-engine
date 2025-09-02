@@ -210,7 +210,7 @@ pub(crate) async fn explain_query_plan(
                     alias.to_string(),
                     &process_response_as,
                     remote_join_executions,
-                    types::NDCRequest::Query(ndc_request),
+                    types::NDCRequest::Query(Box::new(ndc_request)),
                     &data_connector,
                 )
                 .await?;
@@ -253,7 +253,7 @@ pub(crate) async fn explain_query_plan(
                         alias.to_string(),
                         &process_response_as,
                         remote_join_executions,
-                        types::NDCRequest::Query(ndc_request),
+                        types::NDCRequest::Query(Box::new(ndc_request)),
                         &data_connector,
                     )
                     .await?;
@@ -486,7 +486,7 @@ async fn get_remote_predicate_steps(
             remote_predicate.target_model_name.to_string(),
             process_response_as,
             remote_predicate.query.remote_join_executions,
-            types::NDCRequest::Query(ndc_request),
+            types::NDCRequest::Query(Box::new(ndc_request)),
             &data_connector,
         )
         .await?;
@@ -581,7 +581,7 @@ async fn get_join_steps(
             let query_request = execute::make_ndc_query_request(resolved_execution_plan)
                 .map_err(|e| crate::RequestError::ExplainError(e.to_string()))?;
 
-            let ndc_request = types::NDCRequest::Query(query_request);
+            let ndc_request = types::NDCRequest::Query(Box::new(query_request));
 
             let data_connector_explain = fetch_explain_from_data_connector(
                 expose_internal_errors,

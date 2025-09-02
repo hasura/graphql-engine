@@ -45,7 +45,7 @@ pub(crate) fn get_select_one_namespace_annotations(
 ) -> HashMap<Role, Option<Box<types::NamespaceAnnotation>>> {
     let select_permissions = get_select_permissions_namespace_annotations(model);
 
-    let permissions = select_permissions
+    select_permissions
         .into_iter()
         .filter(|(role, _)| {
             unique_identifier.iter().all(|field| {
@@ -53,8 +53,7 @@ pub(crate) fn get_select_one_namespace_annotations(
                     .any(|allowed_role| role == allowed_role)
             })
         })
-        .collect();
-    permissions
+        .collect()
 }
 
 /// Build namespace annotation for model relationship permissions.
@@ -67,7 +66,8 @@ pub(crate) fn get_model_relationship_namespace_annotations(
     mappings: &[metadata_resolve::RelationshipModelMapping],
 ) -> HashMap<Role, Option<Box<types::NamespaceAnnotation>>> {
     let select_permissions = get_select_permissions_namespace_annotations(target_model);
-    let permissions = select_permissions
+
+    select_permissions
         .into_iter()
         .filter(|(role, _)| {
             mappings.iter().all(|mapping| {
@@ -93,8 +93,7 @@ pub(crate) fn get_model_relationship_namespace_annotations(
                 has_access_to_source_field && has_access_to_target
             })
         })
-        .collect();
-    permissions
+        .collect()
 }
 
 /// Build namespace annotation for commands

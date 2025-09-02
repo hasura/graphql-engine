@@ -23,8 +23,8 @@ use std::collections::BTreeMap;
 
 #[derive(Debug)]
 pub enum CommandPlan {
-    Function(QueryExecutionTree),
-    Procedure(MutationExecutionTree),
+    Function(Box<QueryExecutionTree>),
+    Procedure(Box<MutationExecutionTree>),
 }
 
 pub struct FromCommand {
@@ -223,7 +223,7 @@ pub(crate) fn from_command_selection(
 
     let command_plan = match &command_source.source {
         DataConnectorCommand::Function(function_name) => {
-            CommandPlan::Function(QueryExecutionTree {
+            CommandPlan::Function(Box::new(QueryExecutionTree {
                 remote_predicates,
                 remote_join_executions,
                 query_execution_plan: QueryExecutionPlan {
@@ -247,7 +247,7 @@ pub(crate) fn from_command_selection(
                     variables: None,
                     data_connector: command_source.data_connector.clone(),
                 },
-            })
+            }))
         }
         DataConnectorCommand::Procedure(procedure_name) => {
             let mutation_execution_plan = MutationExecutionPlan {
@@ -273,10 +273,10 @@ pub(crate) fn from_command_selection(
                 collection_relationships: relationships.clone(),
                 data_connector: command_source.data_connector.clone(),
             };
-            CommandPlan::Procedure(MutationExecutionTree {
+            CommandPlan::Procedure(Box::new(MutationExecutionTree {
                 mutation_execution_plan,
                 remote_join_executions,
-            })
+            }))
         }
     };
     Ok(FromCommand {

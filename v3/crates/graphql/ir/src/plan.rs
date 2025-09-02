@@ -75,7 +75,13 @@ pub fn generate_request_plan<'n, 's, 'ir>(
         }
         IR::Subscription(alias, ir) => Ok(RequestPlan::SubscriptionPlan(
             alias.clone(),
-            plan_subscription(ir, metadata, session, request_headers, &mut plan_state)?,
+            Box::new(plan_subscription(
+                ir,
+                metadata,
+                session,
+                request_headers,
+                &mut plan_state,
+            )?),
         )),
     }
 }
@@ -143,7 +149,7 @@ fn plan_subscription<'s, 'ir>(
                 }
             }?;
 
-            let query_execution_plan = reject_remote_joins(execution_tree)?;
+            let query_execution_plan = reject_remote_joins(*execution_tree)?;
             Ok(SubscriptionSelect {
                 selection_set,
                 subscription_execution: NDCSubscriptionExecution {
@@ -179,7 +185,7 @@ fn plan_subscription<'s, 'ir>(
                 }
             }?;
 
-            let query_execution_plan = reject_remote_joins(execution_tree)?;
+            let query_execution_plan = reject_remote_joins(*execution_tree)?;
             Ok(SubscriptionSelect {
                 selection_set,
                 subscription_execution: NDCSubscriptionExecution {
@@ -215,7 +221,7 @@ fn plan_subscription<'s, 'ir>(
                     Err(error::Error::PlanExpectedQueryGotMutation)
                 }
             }?;
-            let query_execution_plan = reject_remote_joins(execution_tree)?;
+            let query_execution_plan = reject_remote_joins(*execution_tree)?;
             Ok(SubscriptionSelect {
                 selection_set,
                 subscription_execution: NDCSubscriptionExecution {
@@ -290,7 +296,7 @@ fn plan_query<'n, 's, 'ir>(
             NodeQueryPlan::NDCQueryExecution {
                 selection_set,
                 query_execution: NDCQueryExecution {
-                    execution_tree,
+                    execution_tree: *execution_tree,
                     execution_span_attribute: "execute_model_select_one",
                     field_span_attribute: ir.field_name.to_string(),
                     process_response_as: ProcessResponseAs::Object {
@@ -321,7 +327,7 @@ fn plan_query<'n, 's, 'ir>(
             NodeQueryPlan::NDCQueryExecution {
                 selection_set,
                 query_execution: NDCQueryExecution {
-                    execution_tree,
+                    execution_tree: *execution_tree,
                     execution_span_attribute: "execute_model_select_many",
                     field_span_attribute: ir.field_name.to_string(),
                     process_response_as: ProcessResponseAs::Array {
@@ -349,7 +355,7 @@ fn plan_query<'n, 's, 'ir>(
             }?;
             NodeQueryPlan::NDCQueryExecution {
                 query_execution: NDCQueryExecution {
-                    execution_tree,
+                    execution_tree: *execution_tree,
                     execution_span_attribute: "execute_model_select_aggregate",
                     field_span_attribute: ir.field_name.to_string(),
                     process_response_as: ProcessResponseAs::Aggregates,
@@ -378,7 +384,7 @@ fn plan_query<'n, 's, 'ir>(
 
                 NodeQueryPlan::RelayNodeSelect(Some((
                     NDCQueryExecution {
-                        execution_tree,
+                        execution_tree: *execution_tree,
                         execution_span_attribute: "execute_node",
                         field_span_attribute: "node".into(),
                         process_response_as: ProcessResponseAs::Object { is_nullable: true }, // node(id: ID!): Node; the node field is nullable,
@@ -432,7 +438,7 @@ fn plan_query<'n, 's, 'ir>(
                 }?;
                 ndc_query_executions.push((
                     NDCQueryExecution {
-                        execution_tree,
+                        execution_tree: *execution_tree,
                         execution_span_attribute: "execute_entity",
                         field_span_attribute: "entity".into(),
                         process_response_as: ProcessResponseAs::Object { is_nullable: true },

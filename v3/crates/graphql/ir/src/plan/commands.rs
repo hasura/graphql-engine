@@ -21,7 +21,7 @@ pub(crate) fn plan_query_execution(
         plan_state,
     )?;
     match single_node_execution_plan {
-        plan::SingleNodeExecutionPlan::Query(execution_tree) => Ok(execution_tree),
+        plan::SingleNodeExecutionPlan::Query(execution_tree) => Ok(*execution_tree),
         plan::SingleNodeExecutionPlan::Mutation(_) => {
             // this may be unavoidable as we don't know ahead of time which kind of function we're
             // invoking yet
@@ -50,6 +50,6 @@ pub(crate) fn plan_mutation_execution(
             // invoking yet
             Err(error::Error::PlanExpectedMutationGotQuery)
         }
-        plan::SingleNodeExecutionPlan::Mutation(execution_tree) => Ok(execution_tree),
+        plan::SingleNodeExecutionPlan::Mutation(execution_tree) => Ok(*execution_tree),
     }
 }

@@ -19,6 +19,7 @@ impl ContextualError for NamedArgumentError {
 }
 
 #[derive(Debug, thiserror::Error)]
+#[allow(clippy::large_enum_variant)]
 pub enum ArgumentError {
     #[error("{0}")]
     BooleanExpressionError(#[from] boolean_expressions::BooleanExpressionError),

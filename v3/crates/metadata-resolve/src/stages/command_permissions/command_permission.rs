@@ -159,7 +159,7 @@ fn resolve_rules_based_command_permissions(
                     Err(boolean_expression) => CommandAuthorizationRule::ArgumentAuthPredicate {
                         condition: hash,
                         argument_name: argument_name.value.clone(),
-                        predicate: boolean_expression,
+                        predicate: Box::new(boolean_expression),
                     },
                 }
             }
@@ -405,7 +405,7 @@ fn authorization_rule_for_argument_preset(
     match value_expression_or_predicate.clone().split_predicate() {
         Err(model_predicate) => CommandAuthorizationRule::ArgumentAuthPredicate {
             argument_name: argument_name.clone(),
-            predicate: model_predicate,
+            predicate: Box::new(model_predicate),
             condition: Some(hash),
         },
         Ok(value_expression) => CommandAuthorizationRule::ArgumentPresetValue {

@@ -137,6 +137,6 @@ pub enum CommandAuthorizationRule {
     ArgumentAuthPredicate {
         condition: Option<ConditionHash>,
         argument_name: ArgumentName,
-        predicate: ModelPredicate,
+        predicate: Box<ModelPredicate>,
     },
 }

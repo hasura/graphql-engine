@@ -41,7 +41,7 @@ pub struct MutationSelect<'n, 's> {
 pub enum RequestPlan<'n, 's, 'ir> {
     QueryPlan(QueryPlan<'n, 's, 'ir>),
     MutationPlan(MutationPlan<'n, 's>),
-    SubscriptionPlan(ast::Alias, SubscriptionSelect<'s, 'ir>),
+    SubscriptionPlan(ast::Alias, Box<SubscriptionSelect<'s, 'ir>>),
 }
 
 #[derive(Debug, PartialEq)]

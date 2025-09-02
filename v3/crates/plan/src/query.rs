@@ -31,8 +31,8 @@ use plan_types::QueryExecutionTree;
 // these types should probably live in `plan-types`
 #[derive(Debug)]
 pub enum SingleNodeExecutionPlan {
-    Query(plan_types::QueryExecutionTree),
-    Mutation(plan_types::MutationExecutionTree),
+    Query(Box<plan_types::QueryExecutionTree>),
+    Mutation(Box<plan_types::MutationExecutionTree>),
 }
 
 #[derive(Debug)]
@@ -63,7 +63,7 @@ where
 
         match single_node {
             SingleNodeExecutionPlan::Query(execution_tree) => {
-                queries.insert(alias.clone(), execution_tree);
+                queries.insert(alias.clone(), *execution_tree);
             }
             SingleNodeExecutionPlan::Mutation(execution_tree) => {
                 if mutation.is_some() {
@@ -77,7 +77,7 @@ where
     }
     if let Some(mutation) = mutation {
         if queries.is_empty() {
-            Ok(ExecutionPlan::Mutation(mutation))
+            Ok(ExecutionPlan::Mutation(*mutation))
         } else {
             Err(PlanError::Internal(
                 "Mixture of queries and mutations is not supported in OpenDD pipeline".into(),
@@ -109,7 +109,7 @@ where
                 plan_state,
             )?;
 
-            Ok(SingleNodeExecutionPlan::Query(execution_tree))
+            Ok(SingleNodeExecutionPlan::Query(Box::new(execution_tree)))
         }
         open_dds::query::Query::ModelAggregate(model_aggregate) => {
             let execution_tree = model::from_model_aggregate_selection(
@@ -122,7 +122,7 @@ where
                 plan_state,
             )?;
 
-            Ok(SingleNodeExecutionPlan::Query(execution_tree))
+            Ok(SingleNodeExecutionPlan::Query(Box::new(execution_tree)))
         }
         open_dds::query::Query::ModelGroups(model_groups) => {
             let execution_tree = model::from_model_group_by(
@@ -135,7 +135,7 @@ where
                 plan_state,
             )?;
 
-            Ok(SingleNodeExecutionPlan::Query(execution_tree))
+            Ok(SingleNodeExecutionPlan::Query(Box::new(execution_tree)))
         }
         open_dds::query::Query::Command(command_selection) => {
             let command::FromCommand {

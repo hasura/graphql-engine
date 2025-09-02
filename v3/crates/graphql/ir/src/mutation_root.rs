@@ -68,7 +68,7 @@ pub fn generate_ir<'n, 's>(
 
                             Ok(root_field::MutationRootField::ProcedureBasedCommand {
                                 selection_set: &field.selection_set,
-                                ir: commands::generate_procedure_based_command_open_dd(
+                                ir: Box::new(commands::generate_procedure_based_command_open_dd(
                                     &metadata.models,
                                     &metadata.object_types,
                                     name,
@@ -81,7 +81,7 @@ pub fn generate_ir<'n, 's>(
                                     &session.variables,
                                     request_headers,
                                     &GraphqlIrFlags::from_runtime_flags(&metadata.runtime_flags),
-                                )?,
+                                )?),
                             })
                         }
                         annotation => Err(error::InternalEngineError::UnexpectedAnnotation {

@@ -111,10 +111,10 @@ fn ndc_schema_response_v02_schema_reference(
 pub enum VersionedSchemaAndCapabilities {
     #[serde(rename = "v0.1")]
     #[opendd(rename = "v0.1")]
-    V01(SchemaAndCapabilitiesV01),
+    V01(Box<SchemaAndCapabilitiesV01>),
     #[serde(rename = "v0.2")]
     #[opendd(rename = "v0.2")]
-    V02(SchemaAndCapabilitiesV02),
+    V02(Box<SchemaAndCapabilitiesV02>),
 }
 
 /// Version 0.1 of schema and capabilities for a data connector.

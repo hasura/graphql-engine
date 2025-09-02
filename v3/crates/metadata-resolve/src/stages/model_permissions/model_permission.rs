@@ -493,7 +493,7 @@ fn authorization_rules_for_role(
                 allow_rule,
                 allow_subscription_rule,
                 ModelAuthorizationRule::Filter {
-                    predicate: model_predicate.clone(),
+                    predicate: *model_predicate.clone(),
                     condition: Some(condition_hash),
                 },
             ]
@@ -620,6 +620,7 @@ fn resolve_model_select_permissions(
                     error,
                 })
             })
+            .map(Box::new)
             .map(FilterPermission::Filter)
         }
         NullableModelPredicate::Null(()) => Ok(FilterPermission::AllowAll),

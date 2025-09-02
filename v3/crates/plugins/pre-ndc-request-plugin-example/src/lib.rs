@@ -12,8 +12,8 @@ use tracing::info;
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(untagged)]
 pub enum NDCQuery {
-    V1(ndc_models_v01::QueryRequest),
-    V2(ndc_models::QueryRequest),
+    V1(Box<ndc_models_v01::QueryRequest>),
+    V2(Box<ndc_models::QueryRequest>),
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]

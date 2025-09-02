@@ -1,6 +1,6 @@
 # Build the plugin binary
 # Match Rust version used elsewhere (see rust-toolchain.toml and dev-auth-webhook.Dockerfile)
-FROM rust:1.86.0 AS builder
+FROM rust:1.88.0 AS builder
 
 WORKDIR /app
 COPY ./Cargo.toml ./Cargo.toml

@@ -13,12 +13,12 @@ pub fn make_ndc_query_request(
         .capabilities
         .supported_ndc_version
     {
-        NdcVersion::V01 => Ok(ndc::NdcQueryRequest::V01(v01::make_query_request(
-            query_execution_plan,
-        )?)),
-        NdcVersion::V02 => Ok(ndc::NdcQueryRequest::V02(v02::make_query_request(
-            query_execution_plan,
-        )?)),
+        NdcVersion::V01 => Ok(ndc::NdcQueryRequest::V01(Box::new(
+            v01::make_query_request(query_execution_plan)?,
+        ))),
+        NdcVersion::V02 => Ok(ndc::NdcQueryRequest::V02(Box::new(
+            v02::make_query_request(query_execution_plan)?,
+        ))),
     }
 }
 

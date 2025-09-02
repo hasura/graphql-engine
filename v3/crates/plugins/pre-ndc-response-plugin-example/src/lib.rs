@@ -12,8 +12,8 @@ use tracing::info;
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(untagged)]
 pub enum NDCQueryReq {
-    V1(ndc_models_v01::QueryRequest),
-    V2(ndc_models::QueryRequest),
+    V1(Box<ndc_models_v01::QueryRequest>),
+    V2(Box<ndc_models::QueryRequest>),
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -26,8 +26,8 @@ pub enum NDCMutationReq {
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(untagged)]
 pub enum NDCRequest {
-    Query(NDCQueryReq),
-    Mutation(NDCMutationReq),
+    Query(Box<NDCQueryReq>),
+    Mutation(Box<NDCMutationReq>),
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]

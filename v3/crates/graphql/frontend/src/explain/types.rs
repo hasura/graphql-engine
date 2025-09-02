@@ -110,7 +110,7 @@ pub(crate) enum NDCExplainResponse {
 #[serde(rename_all = "camelCase")]
 #[serde(tag = "type", content = "value")]
 pub(crate) enum NDCRequest {
-    Query(ndc::NdcQueryRequest),
+    Query(Box<ndc::NdcQueryRequest>),
     Mutation(ndc::NdcMutationRequest),
 }
 
