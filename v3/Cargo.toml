@@ -53,6 +53,7 @@ return_self_not_must_use = "allow"
 struct_field_names = "allow"
 wildcard_imports = "allow"
 trivially_copy_pass_by_ref = "allow"
+unnecessary_debug_formatting = "allow"
 used_underscore_items = "allow"
 # disable these for now, but we should probably fix them
 result_large_err = "allow"
