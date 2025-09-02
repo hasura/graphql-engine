@@ -155,7 +155,7 @@ pub enum ProcessedPreParsePluginResponse {
     Return(axum::response::Response),
 }
 
-#[derive(Serialize, Clone, Debug)]
+#[derive(Serialize, serde::Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct RawRequestBody {
     pub query: Option<String>,
@@ -163,7 +163,7 @@ pub struct RawRequestBody {
     pub operation_name: Option<ast::Name>,
 }
 
-#[derive(Serialize, Clone, Debug)]
+#[derive(Serialize, serde::Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct PreParsePluginRequestBody {
     pub session: Option<Session>,

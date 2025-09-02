@@ -44,6 +44,7 @@
           "dev-auth-webhook"
           "pre-ndc-request-plugin-example"
           "pre-ndc-response-plugin-example"
+          "pre-parse-plugin-example"
         ];
 
         binaryPackages = {

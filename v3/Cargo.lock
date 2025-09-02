@@ -4581,6 +4581,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "pre-parse-plugin-example"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "pre-parse-plugin",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "pre-response-plugin"
 version = "3.0.0"
 dependencies = [

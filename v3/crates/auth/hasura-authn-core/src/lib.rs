@@ -26,7 +26,9 @@ pub use open_dds::{
     session_variables::{SESSION_VARIABLE_ROLE, SessionVariableName, SessionVariableReference},
 };
 
-#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, derive_more::Display)]
+#[derive(
+    Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize, derive_more::Display,
+)]
 /// Value of a session variable, used to capture session variable input from parsed sources (jwt, webhook, etc)
 /// and unparsed sources (http headers)
 pub enum SessionVariableValue {
@@ -93,7 +95,7 @@ impl From<JsonSessionVariableValue> for SessionVariableValue {
 #[schemars(rename = "SessionVariableValue")] // Renamed to keep json schema compatibility
 pub struct JsonSessionVariableValue(pub serde_json::Value);
 
-#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct SessionVariables(BTreeMap<SessionVariableName, SessionVariableValue>);
 
 impl SessionVariables {
@@ -127,7 +129,7 @@ impl<'a> IntoIterator for &'a SessionVariables {
     }
 }
 // The privilege with which a request is executed
-#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Session {
     pub role: Role,
     pub variables: SessionVariables,
