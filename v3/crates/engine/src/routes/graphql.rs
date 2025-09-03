@@ -33,7 +33,6 @@ pub async fn handle_request(
                             &state.http_context,
                             &state.graphql_state,
                             &state.resolved_metadata,
-                            &state.resolved_metadata.plugin_configs,
                             &session,
                             &headers,
                             request,
@@ -75,7 +74,6 @@ pub async fn handle_explain_request(
                     graphql_frontend::execute_explain(
                         state.expose_internal_errors,
                         &state.http_context,
-                        &state.resolved_metadata.plugin_configs,
                         &state.graphql_state,
                         &state.resolved_metadata,
                         &session,

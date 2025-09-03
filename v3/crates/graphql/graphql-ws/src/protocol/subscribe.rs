@@ -366,6 +366,7 @@ async fn execute<M: WebSocketMetrics>(
                 http_context,
                 plugins,
                 &session,
+                &headers,
                 mutation_plan,
                 project_id,
             )
@@ -388,6 +389,7 @@ async fn execute<M: WebSocketMetrics>(
                 http_context,
                 plugins,
                 &session,
+                &headers,
                 query_plan,
                 project_id,
             )
@@ -442,6 +444,7 @@ async fn execute<M: WebSocketMetrics>(
                                             http_context,
                                             plugins,
                                             &session,
+                                            &headers,
                                             &query_request,
                                             &data_connector,
                                             None,

@@ -1,3 +1,4 @@
+use axum::http::HeaderMap;
 use core::time::Duration;
 use criterion::{BenchmarkId, Criterion, SamplingMode, criterion_group, criterion_main};
 use engine_types::{ExposeInternalErrors, HttpContext};
@@ -210,9 +211,15 @@ pub fn bench_execute(
                     .unwrap()
                 {
                     RequestPlan::QueryPlan(query_plan) => {
-                        let execute_query_result =
-                            execute_query_plan(&http_context, &plugins, &session, query_plan, None)
-                                .await;
+                        let execute_query_result = execute_query_plan(
+                            &http_context,
+                            &plugins,
+                            &session,
+                            &HeaderMap::new(),
+                            query_plan,
+                            None,
+                        )
+                        .await;
                         assert!(
                             !execute_query_result.root_fields.is_empty(),
                             "IndexMap is empty!"
@@ -223,6 +230,7 @@ pub fn bench_execute(
                             &http_context,
                             &plugins,
                             &session,
+                            &HeaderMap::new(),
                             mutation_plan,
                             None,
                         )
@@ -250,7 +258,6 @@ pub fn bench_execute(
                 execute_query_internal(
                     ExposeInternalErrors::Expose,
                     &http_context,
-                    &plugins,
                     schema,
                     &resolved_metadata.clone().into(),
                     &session,

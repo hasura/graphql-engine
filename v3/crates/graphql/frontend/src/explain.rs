@@ -24,17 +24,15 @@ use tracing_util::{AttributeVisibility, SpanVisibility};
 pub async fn execute_explain(
     expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
-    plugins: &LifecyclePluginConfigs,
     schema: &Schema<GDS>,
     metadata: &Arc<metadata_resolve::Metadata>,
     session: &Session,
-    request_headers: &reqwest::header::HeaderMap,
+    request_headers: &http::HeaderMap,
     request: RawRequest,
 ) -> (Option<ast::OperationType>, types::ExplainResponse) {
     explain_query_internal(
         expose_internal_errors,
         http_context,
-        plugins,
         schema,
         metadata,
         session,
@@ -57,11 +55,10 @@ pub async fn execute_explain(
 async fn explain_query_internal(
     expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
-    plugins: &LifecyclePluginConfigs,
     schema: &gql::schema::Schema<GDS>,
     metadata: &Arc<metadata_resolve::Metadata>,
     session: &Session,
-    request_headers: &reqwest::header::HeaderMap,
+    request_headers: &http::HeaderMap,
     raw_request: gql::http::RawRequest,
 ) -> Result<(ast::OperationType, types::ExplainResponse), crate::RequestError> {
     let tracer = tracing_util::global_tracer();
@@ -120,8 +117,9 @@ async fn explain_query_internal(
                                             explain_mutation_plan(
                                                 expose_internal_errors,
                                                 http_context,
-                                                plugins,
+                                                &metadata.plugin_configs,
                                                 session,
+                                                request_headers,
                                                 mutation_plan,
                                             )
                                             .await
@@ -130,8 +128,9 @@ async fn explain_query_internal(
                                             explain_query_plan(
                                                 expose_internal_errors,
                                                 http_context,
-                                                plugins,
+                                                &metadata.plugin_configs,
                                                 session,
+                                                request_headers,
                                                 query_plan,
                                             )
                                             .await
@@ -171,6 +170,7 @@ pub(crate) async fn explain_query_plan(
     http_context: &HttpContext,
     plugins: &LifecyclePluginConfigs,
     session: &Session,
+    request_headers: &axum::http::HeaderMap,
     query_plan: QueryPlan<'_, '_, '_>,
 ) -> Result<types::Step, crate::RequestError> {
     let mut parallel_root_steps = vec![];
@@ -197,6 +197,7 @@ pub(crate) async fn explain_query_plan(
                     http_context,
                     plugins,
                     session,
+                    request_headers,
                     alias.to_string(),
                     &process_response_as,
                 )
@@ -207,6 +208,7 @@ pub(crate) async fn explain_query_plan(
                     http_context,
                     plugins,
                     session,
+                    request_headers,
                     alias.to_string(),
                     &process_response_as,
                     remote_join_executions,
@@ -240,6 +242,7 @@ pub(crate) async fn explain_query_plan(
                             http_context,
                             plugins,
                             session,
+                            request_headers,
                             alias.to_string(),
                             &process_response_as,
                         )
@@ -250,6 +253,7 @@ pub(crate) async fn explain_query_plan(
                         http_context,
                         plugins,
                         session,
+                        request_headers,
                         alias.to_string(),
                         &process_response_as,
                         remote_join_executions,
@@ -305,6 +309,7 @@ pub(crate) async fn explain_mutation_plan(
     http_context: &HttpContext,
     plugins: &LifecyclePluginConfigs,
     session: &Session,
+    request_headers: &axum::http::HeaderMap,
     mutation_plan: MutationPlan<'_, '_>,
 ) -> Result<types::Step, crate::RequestError> {
     let mut root_steps = vec![];
@@ -334,6 +339,7 @@ pub(crate) async fn explain_mutation_plan(
                 http_context,
                 plugins,
                 session,
+                request_headers,
                 alias.to_string(),
                 &ndc_mutation_execution
                     .mutation_execution
@@ -372,6 +378,7 @@ async fn get_execution_steps(
     http_context: &HttpContext,
     plugins: &LifecyclePluginConfigs,
     session: &Session,
+    request_headers: &axum::http::HeaderMap,
     alias: String,
     process_response_as: &ProcessResponseAs,
     join_locations: JoinLocations,
@@ -386,6 +393,7 @@ async fn get_execution_steps(
                 http_context,
                 plugins,
                 session,
+                request_headers,
                 &ndc_request,
                 data_connector,
             )
@@ -407,6 +415,7 @@ async fn get_execution_steps(
                 http_context,
                 plugins,
                 session,
+                request_headers,
                 &ndc_request,
                 data_connector,
             )
@@ -425,6 +434,7 @@ async fn get_execution_steps(
         http_context,
         plugins,
         session,
+        request_headers,
     )
     .await?
     {
@@ -441,6 +451,7 @@ async fn get_remote_predicate_steps(
     http_context: &HttpContext,
     plugins: &LifecyclePluginConfigs,
     session: &Session,
+    request_headers: &axum::http::HeaderMap,
     alias: String,
     process_response_as: &ProcessResponseAs,
     filter_expressions: &BTreeMap<RemotePredicateKey, ResolvedFilterExpression>,
@@ -454,6 +465,7 @@ async fn get_remote_predicate_steps(
                 http_context,
                 plugins,
                 session,
+                request_headers,
                 alias.clone(),
                 process_response_as,
                 filter_expressions,
@@ -483,6 +495,7 @@ async fn get_remote_predicate_steps(
             http_context,
             plugins,
             session,
+            request_headers,
             remote_predicate.target_model_name.to_string(),
             process_response_as,
             remote_predicate.query.remote_join_executions,
@@ -504,6 +517,7 @@ async fn construct_ndc_query(
     http_context: &HttpContext,
     plugins: &LifecyclePluginConfigs,
     session: &Session,
+    request_headers: &axum::http::HeaderMap,
     alias: String,
     process_response_as: &ProcessResponseAs,
 ) -> Result<
@@ -522,6 +536,7 @@ async fn construct_ndc_query(
         http_context,
         plugins,
         session,
+        request_headers,
         "execute_remote_predicate",
         "execute_remote_predicate",
         process_response_as,
@@ -537,6 +552,7 @@ async fn construct_ndc_query(
         http_context,
         plugins,
         session,
+        request_headers,
         alias,
         process_response_as,
         &filter_expressions,
@@ -568,6 +584,7 @@ async fn get_join_steps(
     http_context: &HttpContext,
     plugins: &LifecyclePluginConfigs,
     session: &Session,
+    request_headers: &axum::http::HeaderMap,
 ) -> Result<Option<NonEmpty<Box<types::Step>>>, crate::RequestError> {
     let mut sequence_join_steps = vec![];
     for (alias, location) in join_locations.locations {
@@ -588,6 +605,7 @@ async fn get_join_steps(
                 http_context,
                 plugins,
                 session,
+                request_headers,
                 &ndc_request,
                 &target_data_connector,
             )
@@ -619,6 +637,7 @@ async fn get_join_steps(
             http_context,
             plugins,
             session,
+            request_headers,
         )
         .await?
         {
@@ -667,6 +686,7 @@ pub(crate) async fn fetch_explain_from_data_connector(
     http_context: &HttpContext,
     plugins: &LifecyclePluginConfigs,
     session: &Session,
+    request_headers: &axum::http::HeaderMap,
     ndc_request: &types::NDCRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
 ) -> types::NDCExplainResponse {
@@ -685,6 +705,7 @@ pub(crate) async fn fetch_explain_from_data_connector(
                                     http_context,
                                     plugins,
                                     session,
+                                    request_headers,
                                     query_request,
                                     data_connector,
                                     None,
@@ -702,6 +723,7 @@ pub(crate) async fn fetch_explain_from_data_connector(
                                     http_context,
                                     plugins,
                                     session,
+                                    request_headers,
                                     mutation_request,
                                     data_connector,
                                     None,

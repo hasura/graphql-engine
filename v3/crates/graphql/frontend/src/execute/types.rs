@@ -12,7 +12,7 @@ use execute::FieldError;
 pub struct RootFieldResult {
     pub is_nullable: bool,
     pub result: Result<json::Value, FieldError>,
-    pub headers: Option<reqwest::header::HeaderMap>,
+    pub headers: Option<http::HeaderMap>,
 }
 
 impl Traceable for RootFieldResult {
@@ -55,8 +55,7 @@ pub struct ExecuteQueryResult {
     pub root_fields: IndexMap<ast::Alias, RootFieldResult>,
 }
 
-const SET_COOKIE_HEADER_NAME: axum::http::HeaderName =
-    axum::http::HeaderName::from_static("set-cookie");
+const SET_COOKIE_HEADER_NAME: http::HeaderName = http::HeaderName::from_static("set-cookie");
 
 impl ExecuteQueryResult {
     /// Converts the result into a GraphQL response
@@ -100,16 +99,16 @@ impl ExecuteQueryResult {
     }
 
     // merge all the headers of all root fields
-    fn merge_headers(headers: Vec<axum::http::HeaderMap>) -> axum::http::HeaderMap {
-        let mut result_map = axum::http::HeaderMap::new();
+    fn merge_headers(headers: Vec<http::HeaderMap>) -> http::HeaderMap {
+        let mut result_map = http::HeaderMap::new();
         for header_map in headers {
             for (name, val) in header_map {
                 if let Some(name) = name {
                     match result_map.entry(&name) {
-                        axum::http::header::Entry::Vacant(vacant) => {
+                        http::header::Entry::Vacant(vacant) => {
                             vacant.insert(val);
                         }
-                        axum::http::header::Entry::Occupied(mut occupied) => {
+                        http::header::Entry::Occupied(mut occupied) => {
                             if name == SET_COOKIE_HEADER_NAME {
                                 let prev_val = occupied.get();
                                 if prev_val != val {

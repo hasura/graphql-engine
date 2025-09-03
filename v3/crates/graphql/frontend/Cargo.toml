@@ -30,6 +30,7 @@ async-recursion = { workspace = true }
 axum = { workspace = true }
 base64 = { workspace = true }
 futures-util = { workspace = true }
+http = { workspace = true }
 indexmap = { workspace = true }
 ndc-models = { workspace = true }
 ndc-models-v01 = { workspace = true }

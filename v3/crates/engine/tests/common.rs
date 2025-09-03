@@ -8,7 +8,6 @@ use hasura_authn_core::{
 use lang_graphql::ast::common as ast;
 use lang_graphql::{http::RawRequest, schema::Schema};
 use metadata_resolve::data_connectors::NdcVersion;
-use metadata_resolve::{LifecyclePluginConfigs, ResolvedLifecyclePreResponsePluginHooks};
 use open_dds::session_variables::{SESSION_VARIABLE_ROLE, SessionVariableName};
 use pretty_assertions::assert_eq;
 use serde_json as json;
@@ -22,11 +21,12 @@ use std::{
     path::PathBuf,
 };
 extern crate json_value_merge;
-use axum::http::{HeaderMap, Method, Uri};
+use axum::http::{HeaderMap, HeaderName, Method, Uri};
 use engine_types::{ExposeInternalErrors, HttpContext, ProjectId};
 use json_value_merge::Merge;
 use jsonapi_library::query::Query;
 use serde_json::Value;
+use std::str::FromStr;
 
 pub struct GoldenTestContext {
     pub(crate) http_context: HttpContext,
@@ -123,14 +123,6 @@ pub(crate) fn test_introspection_expectation(
             })
             .collect::<Result<_, _>>()?;
 
-        let plugins = LifecyclePluginConfigs {
-            pre_ndc_request_plugins: BTreeMap::new(),
-            pre_ndc_response_plugins: BTreeMap::new(),
-            pre_parse_plugins: Vec::new(),
-            pre_response_plugins: ResolvedLifecyclePreResponsePluginHooks::new(),
-            pre_route_plugins: Vec::new(),
-        };
-
         let raw_request = RawRequest {
             operation_name: None,
             query,
@@ -145,7 +137,6 @@ pub(crate) fn test_introspection_expectation(
                 &test_ctx.http_context,
                 &schema,
                 &arc_resolved_metadata,
-                &plugins,
                 session,
                 &request_headers,
                 raw_request.clone(),
@@ -316,6 +307,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
         let variables_path = test_path.join("variables.json");
         let response_path = test_path_string.to_string() + "/expected.json";
         let response_headers_path = test_path.join("expected_headers.json");
+        let headers_path = test_path.join("headers.json");
 
         let ndc_version_test_iterations = if common_metadata_paths_per_ndc_version.is_empty() {
             vec![(None, common_metadata_paths.to_vec())]
@@ -384,7 +376,6 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                     Err(_) => None,
                 };
 
-            let request_headers = reqwest::header::HeaderMap::new();
             let session_vars_path = &test_path.join("session_variables.json");
             let sessions: Vec<HashMap<SessionVariableName, JsonSessionVariableValue>> =
                 json::from_str(read_to_string(session_vars_path)?.as_ref())?;
@@ -400,12 +391,16 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                 })
                 .collect::<Result<_, _>>()?;
 
-            let plugins = LifecyclePluginConfigs {
-                pre_ndc_request_plugins: BTreeMap::new(),
-                pre_ndc_response_plugins: BTreeMap::new(),
-                pre_parse_plugins: Vec::new(),
-                pre_response_plugins: ResolvedLifecyclePreResponsePluginHooks::new(),
-                pre_route_plugins: Vec::new(),
+            let request_headers: Vec<HeaderMap> = match read_to_string(&headers_path) {
+                Ok(headers_str) => {
+                    let mut request_headers = vec![];
+                    let headers: Vec<BTreeMap<String, String>> = json::from_str(&headers_str)?;
+                    for headers_for_role in headers {
+                        request_headers.push(create_header_map(headers_for_role));
+                    }
+                    request_headers
+                }
+                Err(_) => sessions.iter().map(|_| HeaderMap::new()).collect(),
             };
 
             // expected response headers are a `Vec<String>`; one set for each
@@ -426,15 +421,14 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                         query: query.clone(),
                         variables: None,
                     };
-                    for session in &sessions {
+                    for (session, request_headers) in sessions.iter().zip(request_headers.iter()) {
                         let (_, response) = execute_query(
                             ExposeInternalErrors::Expose,
                             &test_ctx.http_context,
                             &schema,
                             &arc_resolved_metadata.clone(),
-                            &plugins,
                             session,
-                            &request_headers,
+                            request_headers,
                             raw_request.clone(),
                             None,
                         )
@@ -446,7 +440,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                             &schema,
                             arc_resolved_metadata.clone(),
                             session,
-                            &request_headers,
+                            request_headers,
                             raw_request.clone(),
                             None,
                         )
@@ -461,7 +455,9 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                     }
                 }
                 Some(vars) => {
-                    for (session, variables) in sessions.iter().zip(vars) {
+                    for ((session, variables), request_headers) in
+                        sessions.iter().zip(vars).zip(request_headers.iter())
+                    {
                         let raw_request = RawRequest {
                             operation_name: None,
                             query: query.clone(),
@@ -473,9 +469,8 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                             &test_ctx.http_context,
                             &schema,
                             &arc_resolved_metadata,
-                            &plugins,
                             session,
-                            &request_headers,
+                            request_headers,
                             raw_request.clone(),
                             None,
                         )
@@ -487,7 +482,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                             &schema,
                             arc_resolved_metadata.clone(),
                             session,
-                            &request_headers,
+                            request_headers,
                             raw_request.clone(),
                             None,
                         )
@@ -544,6 +539,16 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
 
         Ok(())
     })
+}
+
+fn create_header_map(headers: BTreeMap<String, String>) -> HeaderMap {
+    let mut header_map = HeaderMap::new();
+    for (k, v) in headers {
+        let header_name = HeaderName::from_str(&k).unwrap();
+
+        header_map.insert(header_name, v.parse().unwrap());
+    }
+    header_map
 }
 
 fn read_json(path: &Path) -> anyhow::Result<Value> {
@@ -611,13 +616,6 @@ pub fn test_execute_explain(
                 )]);
             resolve_session(session_variables)
         }?;
-        let plugins = LifecyclePluginConfigs {
-            pre_ndc_request_plugins: BTreeMap::new(),
-            pre_ndc_response_plugins: BTreeMap::new(),
-            pre_parse_plugins: Vec::new(),
-            pre_response_plugins: ResolvedLifecyclePreResponsePluginHooks::new(),
-            pre_route_plugins: Vec::new(),
-        };
         let query = read_to_string(&root_test_dir.join(gql_request_file_path))?;
         let raw_request = lang_graphql::http::RawRequest {
             operation_name: None,
@@ -627,7 +625,6 @@ pub fn test_execute_explain(
         let (_, raw_response) = graphql_frontend::execute_explain(
             ExposeInternalErrors::Expose,
             &test_ctx.http_context,
-            &plugins,
             &schema,
             &arc_resolved_metadata,
             &session,

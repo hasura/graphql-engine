@@ -8,9 +8,10 @@ name = "pre-ndc-request-plugin-example"
 path = "src/main.rs"
 
 [dependencies]
-pre-ndc-request-plugin = { path = "../pre-ndc-request-plugin" }
 ndc-models = { workspace = true }
 ndc-models-v01 = { workspace = true }
+open-dds = { path = "../../open-dds" }
+pre-ndc-request-plugin = { path = "../pre-ndc-request-plugin" }
 
 axum = { workspace = true }
 serde = { workspace = true } 

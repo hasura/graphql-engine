@@ -25,6 +25,7 @@ pub async fn execute_query_plan(
     http_context: &HttpContext,
     plugins: &LifecyclePluginConfigs,
     session: &Session,
+    request_headers: &http::HeaderMap,
     query_plan: QueryPlan<'_, '_, '_>,
     project_id: Option<&ProjectId>,
 ) -> ExecuteQueryResult {
@@ -39,6 +40,7 @@ pub async fn execute_query_plan(
                 http_context,
                 plugins,
                 session,
+                request_headers,
                 field_plan,
                 project_id,
             )
@@ -60,6 +62,7 @@ async fn execute_query_field_plan(
     http_context: &HttpContext,
     plugins: &LifecyclePluginConfigs,
     session: &Session,
+    request_headers: &http::HeaderMap,
     query_plan: NodeQueryPlan<'_, '_, '_>,
     project_id: Option<&ProjectId>,
 ) -> RootFieldResult {
@@ -124,6 +127,7 @@ async fn execute_query_field_plan(
                                 http_context,
                                 plugins,
                                 session,
+                                request_headers,
                                 ndc_query,
                                 project_id,
                             )
@@ -146,7 +150,7 @@ async fn execute_query_field_plan(
                             optional_query.as_ref().is_none_or( |(ndc_query,_selection_set)| {
                                 ndc_query.process_response_as.is_nullable()
                             }),
-                            resolve_optional_ndc_select(http_context, plugins, session, optional_query, project_id)
+                            resolve_optional_ndc_select(http_context, plugins, session, request_headers, optional_query, project_id)
                                 .await,
                         ),
                         NodeQueryPlan::ApolloFederationSelect(
@@ -162,6 +166,7 @@ async fn execute_query_field_plan(
                                         http_context,
                                         plugins,
                                         session,
+                                        request_headers,
                                         Some(query),
                                         project_id,
                                     )
@@ -223,6 +228,7 @@ async fn execute_mutation_field_plan(
     http_context: &HttpContext,
     plugins: &LifecyclePluginConfigs,
     session: &Session,
+    request_headers: &http::HeaderMap,
     mutation_plan: NDCMutationExecution,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     project_id: Option<&ProjectId>,
@@ -240,6 +246,7 @@ async fn execute_mutation_field_plan(
                         http_context,
                         plugins,
                         session,
+                        request_headers,
                         mutation_plan,
                         project_id,
                     )
@@ -269,6 +276,7 @@ pub async fn execute_mutation_plan(
     http_context: &HttpContext,
     plugins: &LifecyclePluginConfigs,
     session: &Session,
+    request_headers: &http::HeaderMap,
     mutation_plan: MutationPlan<'_, '_>,
     project_id: Option<&ProjectId>,
 ) -> ExecuteQueryResult {
@@ -295,6 +303,7 @@ pub async fn execute_mutation_plan(
                     http_context,
                     plugins,
                     session,
+                    request_headers,
                     field_plan.mutation_execution,
                     field_plan.selection_set,
                     project_id,
@@ -344,6 +353,7 @@ async fn resolve_optional_ndc_select(
     http_context: &HttpContext,
     plugins: &metadata_resolve::LifecyclePluginConfigs,
     session: &Session,
+    request_headers: &http::HeaderMap,
     optional_query: Option<(NDCQueryExecution, &normalized_ast::SelectionSet<'_, GDS>)>,
     project_id: Option<&ProjectId>,
 ) -> Result<ProcessedResponse, FieldError> {
@@ -354,9 +364,16 @@ async fn resolve_optional_ndc_select(
         }),
         Some((ndc_query, selection_set)) => {
             let process_response_as = &ndc_query.process_response_as.clone();
-            resolve_ndc_query_execution(http_context, plugins, session, ndc_query, project_id)
-                .await
-                .and_then(|row_sets| process_response(selection_set, row_sets, process_response_as))
+            resolve_ndc_query_execution(
+                http_context,
+                plugins,
+                session,
+                request_headers,
+                ndc_query,
+                project_id,
+            )
+            .await
+            .and_then(|row_sets| process_response(selection_set, row_sets, process_response_as))
         }
     }
 }

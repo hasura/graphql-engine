@@ -1,0 +1,6 @@
+[
+  {
+    "x-hasura-role": "admin",
+    "x-hasura-limit": 1
+  }
+]

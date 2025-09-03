@@ -6,6 +6,9 @@
 
 ### Changed
 
+- Allow `forward_headers` to be configured for `pre-ndc-request` plugins,
+  allowing forwarding request headers to the plugin.
+
 ### Fixed
 
 ## [v2025.08.27]

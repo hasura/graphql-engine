@@ -17,7 +17,7 @@ pub use types::*;
 use std::borrow::Cow;
 use std::sync::Arc;
 
-use axum::http::HeaderMap;
+use http::HeaderMap;
 
 use lang_graphql::ast::common as ast;
 use tracing_util::{AttributeVisibility, SpanVisibility, set_attribute_on_active_span};
@@ -30,6 +30,7 @@ pub async fn execute_ndc_query(
     http_context: &HttpContext,
     plugins: &LifecyclePluginConfigs,
     session: &Session,
+    request_headers: &http::HeaderMap,
     query: &NdcQueryRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
     execution_span_attribute: &'static str,
@@ -61,6 +62,7 @@ pub async fn execute_ndc_query(
                         http_context,
                         plugins,
                         session,
+                        request_headers,
                         query,
                         data_connector,
                         project_id,
@@ -77,6 +79,7 @@ pub async fn fetch_from_data_connector(
     http_context: &HttpContext,
     plugins: &LifecyclePluginConfigs,
     session: &Session,
+    request_headers: &http::HeaderMap,
     query_request: &NdcQueryRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
     project_id: Option<&ProjectId>,
@@ -88,6 +91,7 @@ pub async fn fetch_from_data_connector(
         data_connector,
         http_context,
         session,
+        request_headers,
         query_request,
     )
     .await?;
@@ -163,6 +167,7 @@ pub(crate) async fn execute_ndc_mutation(
     http_context: &HttpContext,
     plugins: &LifecyclePluginConfigs,
     session: &Session,
+    request_headers: &http::HeaderMap,
     query: &NdcMutationRequest,
     data_connector: &Arc<metadata_resolve::DataConnectorLink>,
     execution_span_attribute: &'static str,
@@ -194,6 +199,7 @@ pub(crate) async fn execute_ndc_mutation(
                         http_context,
                         plugins,
                         session,
+                        request_headers,
                         query,
                         data_connector,
                         project_id,
@@ -210,6 +216,7 @@ pub async fn fetch_from_data_connector_mutation(
     http_context: &HttpContext,
     plugins: &LifecyclePluginConfigs,
     session: &Session,
+    request_headers: &http::HeaderMap,
     query_request: &NdcMutationRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
     project_id: Option<&ProjectId>,
@@ -221,6 +228,7 @@ pub async fn fetch_from_data_connector_mutation(
         data_connector,
         http_context,
         session,
+        request_headers,
         query_request,
     )
     .await?;
@@ -276,6 +284,7 @@ pub async fn fetch_from_data_connector_explain(
     http_context: &HttpContext,
     plugins: &LifecyclePluginConfigs,
     session: &Session,
+    request_headers: &http::HeaderMap,
     query_request: &NdcQueryRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
     project_id: Option<&ProjectId>,
@@ -287,6 +296,7 @@ pub async fn fetch_from_data_connector_explain(
         data_connector,
         http_context,
         session,
+        request_headers,
         query_request,
     )
     .await?;
@@ -342,6 +352,7 @@ pub async fn fetch_from_data_connector_mutation_explain(
     http_context: &HttpContext,
     plugins: &LifecyclePluginConfigs,
     session: &Session,
+    request_headers: &http::HeaderMap,
     query_request: &NdcMutationRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
     project_id: Option<&ProjectId>,
@@ -353,6 +364,7 @@ pub async fn fetch_from_data_connector_mutation_explain(
         data_connector,
         http_context,
         session,
+        request_headers,
         query_request,
     )
     .await?;

@@ -22,6 +22,7 @@ tracing-util = { path = "../utils/tracing-util" }
 async-recursion = { workspace = true }
 axum = { workspace = true }
 bytes = { workspace = true }
+http = { workspace = true }
 indexmap = { workspace = true }
 ndc-models = { workspace = true }
 ndc-models-v01 = { workspace = true }

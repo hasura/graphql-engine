@@ -1,6 +1,5 @@
 use super::steps;
 use indexmap::IndexMap;
-use metadata_resolve::LifecyclePluginConfigs;
 
 use super::types::GraphQLResponse;
 use crate::execute::{
@@ -21,16 +20,14 @@ pub async fn execute_query(
     http_context: &HttpContext,
     schema: &Schema<GDS>,
     metadata: &Arc<metadata_resolve::Metadata>,
-    plugins: &LifecyclePluginConfigs,
     session: &Session,
-    request_headers: &reqwest::header::HeaderMap,
+    request_headers: &http::HeaderMap,
     request: RawRequest,
     project_id: Option<&ProjectId>,
 ) -> (Option<ast::OperationType>, GraphQLResponse) {
     execute_query_internal(
         expose_internal_errors,
         http_context,
-        plugins,
         schema,
         metadata,
         session,
@@ -54,11 +51,10 @@ pub async fn execute_query(
 pub async fn execute_query_internal(
     expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
-    plugins: &metadata_resolve::LifecyclePluginConfigs,
     schema: &gql::schema::Schema<GDS>,
     metadata: &Arc<metadata_resolve::Metadata>,
     session: &Session,
-    request_headers: &reqwest::header::HeaderMap,
+    request_headers: &http::HeaderMap,
     raw_request: gql::http::RawRequest,
     project_id: Option<&ProjectId>,
 ) -> Result<(ast::OperationType, GraphQLResponse), crate::RequestError> {
@@ -113,8 +109,9 @@ pub async fn execute_query_internal(
                                     graphql_ir::RequestPlan::MutationPlan(mutation_plan) => {
                                         execute_mutation_plan(
                                             http_context,
-                                            plugins,
+                                            &metadata.plugin_configs,
                                             session,
+                                            request_headers,
                                             mutation_plan,
                                             project_id,
                                         )
@@ -123,8 +120,9 @@ pub async fn execute_query_internal(
                                     graphql_ir::RequestPlan::QueryPlan(query_plan) => {
                                         execute_query_plan(
                                             http_context,
-                                            plugins,
+                                            &metadata.plugin_configs,
                                             session,
+                                            request_headers,
                                             query_plan,
                                             project_id,
                                         )

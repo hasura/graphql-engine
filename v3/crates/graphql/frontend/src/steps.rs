@@ -93,7 +93,7 @@ pub fn build_ir<'n, 's>(
     schema: &'s gql::schema::Schema<GDS>,
     metadata: &'s metadata_resolve::Metadata,
     session: &Session,
-    request_headers: &reqwest::header::HeaderMap,
+    request_headers: &http::HeaderMap,
     normalized_request: &'s Operation<'s, GDS>,
 ) -> Result<graphql_ir::IR<'n, 's>, graphql_ir::Error> {
     let tracer = tracing_util::global_tracer();
@@ -120,7 +120,7 @@ pub fn build_request_plan<'n, 's, 'ir>(
     ir: &'ir graphql_ir::IR<'n, 's>,
     metadata: &'s metadata_resolve::Metadata,
     session: &Session,
-    request_headers: &reqwest::header::HeaderMap,
+    request_headers: &http::HeaderMap,
 ) -> Result<graphql_ir::RequestPlan<'n, 's, 'ir>, graphql_ir::GraphqlIrPlanError> {
     let tracer = tracing_util::global_tracer();
     let plan = tracer.in_span(
@@ -143,7 +143,7 @@ pub fn generate_ir<'n, 's>(
     schema: &'s gql::schema::Schema<GDS>,
     metadata: &'s metadata_resolve::Metadata,
     session: &Session,
-    request_headers: &reqwest::header::HeaderMap,
+    request_headers: &http::HeaderMap,
     normalized_request: &'s Operation<'s, GDS>,
 ) -> Result<graphql_ir::IR<'n, 's>, graphql_ir::Error> {
     match &normalized_request.ty {

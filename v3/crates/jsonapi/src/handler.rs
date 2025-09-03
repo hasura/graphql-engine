@@ -127,6 +127,7 @@ async fn query_engine_execute(
                     http_context,
                     plugins,
                     session,
+                    &axum::http::HeaderMap::new(), // TODO: Pass actual request headers
                     ndc_query_execution,
                     None,
                 )

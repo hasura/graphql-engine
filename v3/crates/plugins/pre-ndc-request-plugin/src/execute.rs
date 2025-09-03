@@ -135,6 +135,7 @@ pub async fn execute_pre_ndc_request_plugins<Req, Res>(
     data_connector: &DataConnectorLink,
     http_context: &HttpContext,
     session: &Session,
+    request_headers: &HeaderMap,
     ndc_request: &Req,
     operation_type: OperationType,
     ndc_version: &str,
@@ -151,6 +152,7 @@ where
                 data_connector,
                 http_context,
                 session,
+                request_headers,
                 ndc_request,
                 operation_type,
                 ndc_version,
@@ -166,6 +168,7 @@ async fn handle_pre_ndc_request_plugin<Req, Res>(
     data_connector: &DataConnectorLink,
     http_context: &HttpContext,
     session: &Session,
+    request_headers: &HeaderMap,
     ndc_request: &Req,
     operation_type: OperationType,
     ndc_version: &str,
@@ -196,6 +199,7 @@ where
                         data_connector,
                         &http_client,
                         session,
+                        request_headers,
                         ndc_request,
                         operation_type,
                         ndc_version,
@@ -286,6 +290,7 @@ fn build_request<Req>(
     data_connector: &DataConnectorLink,
     http_client: &Client,
     session: &Session,
+    request_headers: &HeaderMap,
     ndc_request: Req,
     operation_type: OperationType,
     ndc_version: &str,
@@ -311,6 +316,18 @@ where
                         error,
                     })?;
             http_headers.insert(header_name, header_value);
+        }
+    }
+
+    // forward some headers from the request
+    if let Some(forward_headers) = &pre_ndc_request_plugin.config.request.forward_headers {
+        for header_name in forward_headers {
+            // lookup in request headers
+            if let Some(value) = request_headers.get(header_name).cloned() {
+                if let Ok(header_name) = HeaderName::from_str(header_name) {
+                    http_headers.insert(header_name, value);
+                }
+            }
         }
     }
 

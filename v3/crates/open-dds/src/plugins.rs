@@ -423,12 +423,14 @@ pub struct LifecyclePreNdcRequestPluginHookConfig {
 #[schemars(title = "LifecyclePreNdcRequestPluginHookConfigRequest")]
 /// Configuration for a lifecycle plugin hook request.
 pub struct LifecyclePreNdcRequestPluginHookConfigRequest {
-    /// Configuration for the headers.
+    /// Configuration for additional static header values to send to the plugin
     pub headers: Option<HttpHeaders>,
     /// Configuration for the session (includes roles and session variables).
     pub session: Option<LeafConfig>,
     /// Configuration for the request.
     pub ndc_request: Option<LeafConfig>,
+    /// Headers to be forwarded from the incoming request.
+    pub forward_headers: Option<Vec<String>>,
 }
 
 #[derive(

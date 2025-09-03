@@ -2764,7 +2764,7 @@
       "type": "object",
       "properties": {
         "headers": {
-          "description": "Configuration for the headers.",
+          "description": "Configuration for additional static header values to send to the plugin",
           "anyOf": [
             {
               "$ref": "#/definitions/HttpHeaders"
@@ -2795,6 +2795,16 @@
               "type": "null"
             }
           ]
+        },
+        "forwardHeaders": {
+          "description": "Headers to be forwarded from the incoming request.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
         }
       },
       "additionalProperties": false
