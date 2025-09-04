@@ -5791,6 +5791,93 @@
                   }
                 ]
               }
+            },
+            {
+              "kind": "TypePermissions",
+              "version": "v2",
+              "definition": {
+                "typeName": "article",
+                "roleBased": {
+                  "permissions": [
+                    {
+                      "role": "admin",
+                      "output": {
+                        "allowedFields": [
+                          "article_id",
+                          "author_id",
+                          "title"
+                        ]
+                      }
+                    },
+                    {
+                      "role": "user",
+                      "output": {
+                        "allowedFields": [
+                          "article_id",
+                          "author_id"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "kind": "TypePermissions",
+              "version": "v2",
+              "definition": {
+                "typeName": "movie",
+                "permissions": {
+                  "rulesBased": [
+                    {
+                      "allowFields": {
+                        "condition": {
+                          "contains": {
+                            "left": {
+                              "sessionVariable": "x-hasura-role"
+                            },
+                            "right": {
+                              "literal": [
+                                "admin",
+                                "user",
+                                "user_not",
+                                "user_and",
+                                "user_or",
+                                "limited_fields_user"
+                              ]
+                            }
+                          }
+                        },
+                        "fields": [
+                          "movie_id",
+                          "rating",
+                          "title",
+                          "release_date"
+                        ]
+                      }
+                    },
+                    {
+                      "denyFields": {
+                        "condition": {
+                          "contains": {
+                            "left": {
+                              "sessionVariable": "x-hasura-role"
+                            },
+                            "right": {
+                              "literal": [
+                                "limited_fields_user"
+                              ]
+                            }
+                          }
+                        },
+                        "fields": [
+                          "rating"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
             }
           ],
           "oneOf": [
@@ -5915,6 +6002,108 @@
                   }
                 ]
               }
+            },
+            {
+              "kind": "ModelPermissions",
+              "version": "v2",
+              "definition": {
+                "modelName": "actors_by_movie",
+                "permissions": {
+                  "rulesBased": [
+                    {
+                      "allow": {
+                        "condition": {
+                          "contains": {
+                            "left": {
+                              "sessionVariable": "x-hasura-role"
+                            },
+                            "right": {
+                              "literal": [
+                                "admin",
+                                "user_with_preset_movie_id"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "presetArgument": {
+                        "condition": {
+                          "equal": {
+                            "left": {
+                              "sessionVariable": "x-hasura-role"
+                            },
+                            "right": {
+                              "literal": "user_with_preset_movie_id"
+                            }
+                          }
+                        },
+                        "argumentName": "movie_id",
+                        "value": {
+                          "literal": 1
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "kind": "ModelPermissions",
+              "version": "v2",
+              "definition": {
+                "modelName": "actors",
+                "permissions": {
+                  "rulesBased": [
+                    {
+                      "allow": {
+                        "condition": {
+                          "contains": {
+                            "left": {
+                              "sessionVariable": "x-hasura-role"
+                            },
+                            "right": {
+                              "literal": [
+                                "admin",
+                                "object_relationship_user"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "filter": {
+                        "condition": {
+                          "equal": {
+                            "left": {
+                              "sessionVariable": "x-hasura-role"
+                            },
+                            "right": {
+                              "literal": "object_relationship_user"
+                            }
+                          }
+                        },
+                        "predicate": {
+                          "relationship": {
+                            "name": "Country",
+                            "predicate": {
+                              "fieldComparison": {
+                                "field": "name",
+                                "operator": "_eq",
+                                "value": {
+                                  "literal": "UK"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
             }
           ],
           "oneOf": [
@@ -5992,6 +6181,59 @@
                     "allowExecution": true
                   }
                 ]
+              }
+            },
+            {
+              "kind": "CommandPermissions",
+              "version": "v2",
+              "definition": {
+                "commandName": "get_actors_with_filter",
+                "permissions": {
+                  "rulesBased": [
+                    {
+                      "allow": {
+                        "condition": {
+                          "contains": {
+                            "left": {
+                              "sessionVariable": "x-hasura-role"
+                            },
+                            "right": {
+                              "literal": [
+                                "filter_user"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "presetArgument": {
+                        "condition": {
+                          "equal": {
+                            "left": {
+                              "sessionVariable": "x-hasura-role"
+                            },
+                            "right": {
+                              "literal": "filter_user"
+                            }
+                          }
+                        },
+                        "argumentName": "actor_bool_exp",
+                        "value": {
+                          "booleanExpression": {
+                            "fieldComparison": {
+                              "field": "actor_id",
+                              "operator": "_eq",
+                              "value": {
+                                "literal": 4
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
               }
             }
           ],

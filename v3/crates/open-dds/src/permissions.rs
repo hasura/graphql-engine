@@ -53,7 +53,12 @@ pub struct ArgumentPreset {
 #[serde(rename_all = "camelCase")]
 #[opendd(
     as_versioned_with_definition,
-    json_schema(title = "TypePermissions", example = "TypePermissions::example")
+    json_schema(
+        title = "TypePermissions",
+        example = "TypePermissions::example_v1",
+        example = "TypePermissions::example_v2_role_based",
+        example = "TypePermissions::example_v2_rules_based"
+    )
 )]
 /// Definition of permissions for an OpenDD type.
 pub enum TypePermissions {
@@ -62,7 +67,7 @@ pub enum TypePermissions {
 }
 
 impl TypePermissions {
-    fn example() -> serde_json::Value {
+    fn example_v1() -> serde_json::Value {
         serde_json::json!(
             {
                 "kind": "TypePermissions",
@@ -91,6 +96,94 @@ impl TypePermissions {
                         }
                     ]
                 }
+            }
+        )
+    }
+
+    fn example_v2_role_based() -> serde_json::Value {
+        serde_json::json!(
+            {
+                "kind": "TypePermissions",
+                "version": "v2",
+                "definition": {
+                    "typeName": "article",
+                    "roleBased": {
+                        "permissions": [
+                            {
+                                "role": "admin",
+                                "output": {
+                                    "allowedFields": [
+                                        "article_id",
+                                        "author_id",
+                                        "title"
+                                    ]
+                                }
+                            },
+                            {
+                                "role": "user",
+                                "output": {
+                                    "allowedFields": [
+                                        "article_id",
+                                        "author_id"
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        )
+    }
+
+    fn example_v2_rules_based() -> serde_json::Value {
+        serde_json::json!(
+        {
+            "kind": "TypePermissions",
+            "version": "v2",
+            "definition": {
+                "typeName": "movie",
+                "permissions": {
+                    "rulesBased": [
+                        {
+                            "allowFields": {
+                                "condition": {
+                                    "contains": {
+                                        "left": {
+                                            "sessionVariable": "x-hasura-role"
+                                        },
+                                        "right": {
+                                            "literal": [
+                                                "admin",
+                                                "user",
+                                                "user_not",
+                                                "user_and",
+                                                "user_or",
+                                                "limited_fields_user"
+                                            ]
+                                        }
+                                    }
+                                },
+                                "fields": ["movie_id", "rating", "title", "release_date"]
+                            }
+                        },
+                        {
+                            "denyFields": {
+                                "condition": {
+                                    "contains": {
+                                        "left": {
+                                            "sessionVariable": "x-hasura-role"
+                                        },
+                                        "right": {
+                                            "literal": ["limited_fields_user"]
+                                        }
+                                    }
+                                },
+                                "fields": ["rating"]
+                            }
+                        }
+                    ]
+                }
+            }
             }
         )
     }
@@ -222,8 +315,10 @@ pub struct FieldPreset {
     as_versioned_with_definition,
     json_schema(
         title = "ModelPermissions",
-        example = "ModelPermissions::field_comparison_example",
-        example = "ModelPermissions::relationship_comparison_example"
+        example = "ModelPermissions::v1_field_comparison_example",
+        example = "ModelPermissions::v1_relationship_comparison_example",
+        example = "ModelPermissions::v2_rules_based_argument_preset",
+        example = "ModelPermissions::v2_rules_based_filters",
     )
 )]
 /// Definition of permissions for an OpenDD model.
@@ -233,7 +328,7 @@ pub enum ModelPermissions {
 }
 
 impl ModelPermissions {
-    fn field_comparison_example() -> serde_json::Value {
+    fn v1_field_comparison_example() -> serde_json::Value {
         serde_json::json!(
             {
                 "kind": "ModelPermissions",
@@ -267,7 +362,7 @@ impl ModelPermissions {
         )
     }
 
-    fn relationship_comparison_example() -> serde_json::Value {
+    fn v1_relationship_comparison_example() -> serde_json::Value {
         serde_json::json!(
             {
                 "kind": "ModelPermissions",
@@ -303,6 +398,115 @@ impl ModelPermissions {
                     ]
                 }
             }
+        )
+    }
+
+    fn v2_rules_based_argument_preset() -> serde_json::Value {
+        serde_json::json!(
+        {
+          "kind": "ModelPermissions",
+          "version": "v2",
+          "definition": {
+            "modelName": "actors_by_movie",
+            "permissions": {
+              "rulesBased": [
+                {
+                  "allow": {
+                    "condition": {
+                      "contains": {
+                        "left": {
+                          "sessionVariable": "x-hasura-role"
+                        },
+                        "right": {
+                          "literal": ["admin", "user_with_preset_movie_id"]
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "presetArgument": {
+                    "condition": {
+                      "equal": {
+                        "left": {
+                          "sessionVariable": "x-hasura-role"
+                        },
+                        "right": {
+                          "literal": "user_with_preset_movie_id"
+                        }
+                      }
+                    },
+                    "argumentName": "movie_id",
+                    "value": {
+                      "literal": 1
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+        )
+    }
+
+    fn v2_rules_based_filters() -> serde_json::Value {
+        serde_json::json!(
+        {
+          "kind": "ModelPermissions",
+          "version": "v2",
+          "definition": {
+            "modelName": "actors",
+            "permissions": {
+              "rulesBased": [
+                {
+                  "allow": {
+                    "condition": {
+                      "contains": {
+                        "left": {
+                          "sessionVariable": "x-hasura-role"
+                        },
+                        "right": {
+                          "literal": [
+                            "admin",
+                            "object_relationship_user"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "filter": {
+                    "condition": {
+                      "equal": {
+                        "left": {
+                          "sessionVariable": "x-hasura-role"
+                        },
+                        "right": {
+                          "literal": "object_relationship_user"
+                        }
+                      }
+                    },
+                    "predicate": {
+                      "relationship": {
+                        "name": "Country",
+                        "predicate": {
+                          "fieldComparison": {
+                            "field": "name",
+                            "operator": "_eq",
+                            "value": {
+                              "literal": "UK"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
         )
     }
 
@@ -505,7 +709,11 @@ impl CommandPermission {
 #[serde(rename_all = "camelCase")]
 #[opendd(
     as_versioned_with_definition,
-    json_schema(title = "CommandPermissions", example = "CommandPermissions::example")
+    json_schema(
+        title = "CommandPermissions",
+        example = "CommandPermissions::v1_example",
+        example = "CommandPermissions::v2_example",
+    )
 )]
 /// Definition of permissions for an OpenDD command.
 pub enum CommandPermissions {
@@ -514,7 +722,7 @@ pub enum CommandPermissions {
 }
 
 impl CommandPermissions {
-    fn example() -> serde_json::Value {
+    fn v1_example() -> serde_json::Value {
         serde_json::json!(
             {
                 "kind": "CommandPermissions",
@@ -533,6 +741,62 @@ impl CommandPermissions {
                     ]
                 }
             }
+        )
+    }
+
+    fn v2_example() -> serde_json::Value {
+        serde_json::json!(
+        {
+          "kind": "CommandPermissions",
+          "version": "v2",
+          "definition": {
+            "commandName": "get_actors_with_filter",
+            "permissions": {
+              "rulesBased": [
+                {
+                  "allow": {
+                    "condition": {
+                      "contains": {
+                        "left": {
+                          "sessionVariable": "x-hasura-role"
+                        },
+                        "right": {
+                          "literal": ["filter_user"]
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "presetArgument": {
+                    "condition": {
+                      "equal": {
+                        "left": {
+                          "sessionVariable": "x-hasura-role"
+                        },
+                        "right": {
+                          "literal": "filter_user"
+                        }
+                      }
+                    },
+                    "argumentName": "actor_bool_exp",
+                    "value": {
+                      "booleanExpression": {
+                        "fieldComparison": {
+                          "field": "actor_id",
+                          "operator": "_eq",
+                          "value": {
+                            "literal": 4
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
         )
     }
 
