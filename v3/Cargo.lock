@@ -2159,7 +2159,7 @@ dependencies = [
  "lang-graphql",
  "metadata-resolve",
  "mockito",
- "ndc-models 0.1.6",
+ "ndc-models 0.1.7",
  "ndc-models 0.2.9",
  "nonempty",
  "open-dds",
@@ -2465,7 +2465,7 @@ dependencies = [
  "json-ext",
  "lang-graphql",
  "metadata-resolve",
- "ndc-models 0.1.6",
+ "ndc-models 0.1.7",
  "ndc-models 0.2.9",
  "nonempty",
  "open-dds",
@@ -3636,7 +3636,7 @@ dependencies = [
  "json-annotation-parse",
  "jsonpath",
  "lang-graphql",
- "ndc-models 0.1.6",
+ "ndc-models 0.1.7",
  "ndc-models 0.2.9",
  "nonempty",
  "open-dds",
@@ -3752,8 +3752,8 @@ dependencies = [
 
 [[package]]
 name = "ndc-models"
-version = "0.1.6"
-source = "git+https://github.com/hasura/ndc-spec.git?tag=v0.1.6#d1be19e9cdd86ac7b6ad003ff82b7e5b4e96b84f"
+version = "0.1.7"
+source = "git+https://github.com/hasura/ndc-spec.git?tag=v0.1.7#0c1a63c6217633a1e79f15ffbafa199793e95326"
 dependencies = [
  "indexmap 2.11.0",
  "ref-cast",
@@ -3984,7 +3984,7 @@ dependencies = [
  "indexmap 2.11.0",
  "jsonpath",
  "jsonschema-tidying",
- "ndc-models 0.1.6",
+ "ndc-models 0.1.7",
  "ndc-models 0.2.9",
  "opendds-derive",
  "pretty_assertions",
@@ -4524,7 +4524,7 @@ name = "pre-ndc-request-plugin-example"
 version = "0.1.0"
 dependencies = [
  "axum",
- "ndc-models 0.1.6",
+ "ndc-models 0.1.7",
  "ndc-models 0.2.9",
  "open-dds",
  "pre-ndc-request-plugin",
@@ -4556,7 +4556,7 @@ name = "pre-ndc-response-plugin-example"
 version = "0.1.0"
 dependencies = [
  "axum",
- "ndc-models 0.1.6",
+ "ndc-models 0.1.7",
  "ndc-models 0.2.9",
  "pre-ndc-response-plugin",
  "serde",

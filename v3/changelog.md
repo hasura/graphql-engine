@@ -6,6 +6,9 @@
 
 ### Changed
 
+- Update `ndc-models` to use `v0.1.7` when interfacing with `v0.1.x` data
+  connectors.
+
 - Allow `forward_headers` to be configured for `pre-ndc-request` plugins,
   allowing forwarding request headers to the plugin.
 

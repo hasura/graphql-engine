@@ -39,6 +39,7 @@ pub fn make_query_request(
             query_execution_plan.collection_relationships,
         ),
         variables: make_variables(query_execution_plan.variables),
+        request_arguments: None,
     };
     Ok(query_request)
 }
@@ -62,6 +63,7 @@ pub fn make_mutation_request(
         collection_relationships: make_collection_relationships(
             mutation_execution_plan.collection_relationships,
         ),
+        request_arguments: None,
     };
 
     Ok(mutation_request)
