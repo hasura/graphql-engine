@@ -1,0 +1,170 @@
+---
+sidebar_label: RSA Key Pair Authentication
+sidebar_position: 3
+description: Configure RSA key pair authentication for Snowflake with Hasura
+keywords:
+  - hasura
+  - docs
+  - databases
+  - snowflake
+  - rsa
+  - authentication
+  - key pair
+  - jdbc
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+
+# RSA Key Pair Authentication for Snowflake
+
+## Introduction
+
+RSA key pair authentication provides a secure method to connect to Snowflake without using traditional username/password
+authentication. This guide walks you through setting up RSA key pair authentication for use with Hasura's Snowflake
+connector.
+
+For detailed information about RSA key pair authentication, refer to the
+[Snowflake documentation](https://docs.snowflake.com/en/user-guide/key-pair-auth.html).
+
+:::info Cloud Provider Compatibility
+
+RSA key pair authentication for Snowflake is supported across all Hasura Cloud providers starting with version
+**v2.48.4-cloud.1**. The only exception is Azure East US, where the necessary Java configuration is already set at the
+infrastructure level.
+
+If you're using an earlier version of Hasura Cloud or experiencing connection issues, we recommend testing your JDBC
+connection string with a database client like DBeaver first to verify the connection works before configuring it in
+Hasura.
+
+:::
+
+## Prerequisites
+
+- Access to a Snowflake account with appropriate privileges
+- OpenSSL installed on your system
+- A Snowflake user account that you can modify
+
+## Step 1: Generate RSA Private Key
+
+Generate a 2048-bit RSA private key with PKCS#8 encryption. You'll need to provide a passphrase for the private key:
+
+```bash
+openssl genrsa 2048 | openssl pkcs8 -topk8 -v2 des3 -inform PEM -out rsa_key.p8
+```
+
+:::info Passphrase Security
+
+Choose a strong passphrase for your private key. You'll need this passphrase later when configuring the JDBC connection
+string.
+
+:::
+
+## Step 2: Extract Public Key
+
+Extract the public key from the private key you just created:
+
+```bash
+openssl rsa -in rsa_key.p8 -pubout -out rsa_key.pub
+```
+
+You can view the public key contents with:
+
+```bash
+cat rsa_key.pub
+```
+
+## Step 3: Grant Privileges in Snowflake
+
+Ensure your Snowflake user has the necessary privileges. Refer to the
+[Snowflake documentation](https://docs.snowflake.com/en/user-guide/key-pair-auth.html#configuring-key-pair-authentication)
+for specific privilege requirements.
+
+## Step 4: Assign RSA Public Key to Snowflake User
+
+Log into your Snowflake account and run the following command to assign the RSA public key to your user account:
+
+```sql
+ALTER USER <your_snowflake_user> SET RSA_PUBLIC_KEY='<contents_of_rsa_key.pub>';
+```
+
+Replace `<your_snowflake_user>` with your actual Snowflake username and `<contents_of_rsa_key.pub>` with the contents of
+the public key file (excluding the `-----BEGIN PUBLIC KEY-----` and `-----END PUBLIC KEY-----` lines).
+
+## Step 5: Convert Private Key to Base64
+
+Convert the private key to a single-line base64 format for use in the JDBC connection string:
+
+```bash
+base64 -w 0 --input rsa_key.p8 --output snowflake_private_key_base64.txt
+```
+
+You can view the base64-encoded private key with:
+
+```bash
+cat snowflake_private_key_base64.txt
+```
+
+## Step 6: Create JDBC Connection String
+
+Create your JDBC connection string using the following format:
+
+```
+jdbc:snowflake://account.snowflakecomputing.com/?user=<username>&warehouse=<sf_warehouse>&db=<dbname>&schema=<schemaname>&private_key_base64=<base64_of_private_key>&private_key_pwd=<passphrase_used_to_create_private_key>
+```
+
+### Parameters
+
+- `account`: Your Snowflake account identifier
+- `username`: Your Snowflake username
+- `sf_warehouse`: Your Snowflake warehouse name
+- `dbname`: Your database name
+- `schemaname`: Your schema name
+- `base64_of_private_key`: The base64-encoded private key from Step 5
+- `passphrase_used_to_create_private_key`: The passphrase you used in Step 1
+
+### Example
+
+```
+jdbc:snowflake://MYCOMPANY-PROD.snowflakecomputing.com/?user=myuser&warehouse=ANALYST_WH&db=mydatabase&schema=public&private_key_pwd=mypassphrase&private_key_base64=MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC...
+```
+
+## Step 7: Test the Connection
+
+Before configuring Hasura, test your JDBC connection string using a database client like DBeaver:
+
+1. Open DBeaver
+2. Go to "Database Navigator" → "New Database Connection"
+3. Select "Snowflake" as the database type
+4. In the connection settings, go to "Driver Settings"
+5. Add your JDBC connection string to the "URL Template" field
+6. Test the connection
+
+## Step 8: Configure Hasura
+
+### Using Environment Variables (Recommended)
+
+Set up your JDBC connection string as an environment variable for better security:
+
+1. Create an environment variable (e.g., `SNOWFLAKE_JDBC_URL`) with your complete JDBC connection string
+2. In the Hasura Console, add your Snowflake data source
+3. Use the environment variable in your connection configuration
+
+### Direct Configuration
+
+Alternatively, you can directly paste the JDBC connection string in the Hasura Console when adding your Snowflake data
+source.
+
+:::info Environment Variable Best Practice
+
+Using environment variables for connection strings is recommended as it keeps sensitive information like private keys
+and passphrases out of your metadata and provides better security.
+
+:::
+
+## Verification
+
+Once configured, verify that Hasura can successfully connect to your Snowflake database by:
+
+1. Checking the connection status in the Hasura Console
+2. Attempting to track tables from your Snowflake database
+3. Running a test GraphQL query
