@@ -6,13 +6,17 @@
 
 ### Changed
 
+### Fixed
+
+## [v2025.09.05]
+
+### Changed
+
 - Update `ndc-models` to use `v0.1.7` when interfacing with `v0.1.x` data
   connectors.
 
 - Allow `forward_headers` to be configured for `pre-ndc-request` plugins,
   allowing forwarding request headers to the plugin.
-
-### Fixed
 
 ## [v2025.08.27]
 
@@ -1996,7 +2000,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.08.27...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.09.05...HEAD
+[v2025.09.05]: https://github.com/hasura/v3-engine/releases/tag/v2025.09.05
 [v2025.08.27]: https://github.com/hasura/v3-engine/releases/tag/v2025.08.27
 [v2025.08.26]: https://github.com/hasura/v3-engine/releases/tag/v2025.08.26
 [v2025.08.18]: https://github.com/hasura/v3-engine/releases/tag/v2025.08.18
