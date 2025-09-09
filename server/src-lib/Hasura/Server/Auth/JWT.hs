@@ -435,9 +435,11 @@ canonicalizeJWKJson = over (JL.key "keys" . JL._Array) (fmap canonicalizeTargets
     -- us. Otherwise we'll get an error from jose. Incidentally filters out
     -- some other weird or malformed data.
     --
+    -- We also allow "use" to be omitted which is apparently common.
+    --
     -- See: https://www.rfc-editor.org/rfc/rfc7517.html#section-4.2
     knownKeyType :: J.Value -> Bool
-    knownKeyType v = v ^? JL.key "use" . JL._String `elem` [Just "enc", Just "sig"]
+    knownKeyType v = v ^? JL.key "use" . JL._String `elem` [Just "enc", Just "sig", Nothing]
 
     canonicalizeTargets :: J.Value -> J.Value
     canonicalizeTargets = foldr (\k f -> over (JL.key k . JL._String) (stripLeadingZeros . canonicalizeBase64) . f) id targets
