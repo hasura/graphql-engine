@@ -4,6 +4,9 @@
 
 ### Added
 
+- Added `contextWindowLimit` to `PromptQlConfigV2` to allow configuring the
+  maximum number of tokens to be used for the context window for threads.
+
 ### Changed
 
 ### Fixed
