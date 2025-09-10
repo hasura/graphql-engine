@@ -11,7 +11,7 @@ RUN set -ex; \
     else \
       rpm -i https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-x86_64/pgdg-redhat-repo-latest.noarch.rpm; \
     fi; \
-    microdnf install -y postgresql16-server
+    microdnf install -y postgresql17-server
 
 FROM registry.access.redhat.com/ubi9-minimal:9.6-1751286687
 

@@ -54,7 +54,11 @@ execPGDump b ci = do
 
     execProcess = do
       connString <- T.unpack . bsToTxt <$> PG.pgConnString (PG.ciDetails ci)
-      let opts = connString : "--encoding=utf8" : prbOpts b
+      -- Without `restrict-key` a random key will be used which makes testing
+      -- difficult and might be a nuisance for users for the same reason. This
+      -- option is available on all "supported" PG versions (>=13). This became
+      -- necessary when pg17 started adding /restrict without a way to disable.
+      let opts = connString : "--encoding=utf8" : "--restrict-key=hasura" : prbOpts b
       (exitCode, stdOut, stdErr) <- readProcessWithExitCode "pg_dump" opts ""
       return $ case exitCode of
         ExitSuccess -> Right $ unUTF8 $ convertText (clean stdOut)
