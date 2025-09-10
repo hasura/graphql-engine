@@ -120,6 +120,7 @@
       get_user_by_email:
         __typename: UserId
         id: 1
-        articles:
-          - name: bar
-          - name: foo
+        articles_aggregate:
+          aggregate:
+            max:
+              name: foo
