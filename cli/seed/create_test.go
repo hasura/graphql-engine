@@ -50,7 +50,9 @@ func TestDriver_ExportDatadump(t *testing.T) {
 				tableNames: []string{"articles", "authors"},
 				sourceName: "default",
 			},
-			`SET check_function_bodies = false;
+			`\restrict hasura
+SET transaction_timeout = 0;
+SET check_function_bodies = false;
 INSERT INTO public.articles (id, title, content, rating, author_id) VALUES (1, 'test1', 'test1', 1, 4);
 INSERT INTO public.articles (id, title, content, rating, author_id) VALUES (2, 'test2', 'test1', 1, 4);
 INSERT INTO public.articles (id, title, content, rating, author_id) VALUES (3, 'test3', 'test1', 1, 4);
@@ -59,6 +61,7 @@ INSERT INTO public.authors (id, name) VALUES (4, 'test2');
 SELECT pg_catalog.setval('public.articles_author_id_seq', 1, false);
 SELECT pg_catalog.setval('public.articles_id_seq', 1, false);
 SELECT pg_catalog.setval('public.authors_id_seq', 1, false);
+\unrestrict hasura
 `,
 			false,
 			func(t *testing.T) {

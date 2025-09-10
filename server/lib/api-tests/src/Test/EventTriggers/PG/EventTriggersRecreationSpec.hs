@@ -263,9 +263,12 @@ message: success
           - hdb_catalog.hdb_source_catalog_version
         - - CREATE INDEX
           - hdb_catalog.hdb_source_catalog_version_one_row
-        - - CREATE FUNCTION
-          - hdb_catalog.insert_event_log(pg_catalog.text,pg_catalog.text,pg_catalog.text,pg_catalog.text,pg_catalog.json)
       |]
+    -- NOTE: we omit below, because of differences in behavior of PG16 and
+    -- PG17 in how types are qualified when printed:
+    --
+    --  - - CREATE FUNCTION
+    --    - hdb_catalog.insert_event_log(pg_catalog.text,pg_catalog.text,pg_catalog.text,pg_catalog.text,pg_catalog.json)
 
     getResult result `shouldContain` getResult expected
 
