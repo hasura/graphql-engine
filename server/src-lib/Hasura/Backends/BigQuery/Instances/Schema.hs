@@ -429,7 +429,7 @@ bqComputedField ComputedFieldInfo {..} tableName tableInfo = runMaybeT do
       let fieldArgsParser = liftA2 (,) functionArgsParser selectArgsParser
       pure
         $ P.subselection fieldName fieldDescription fieldArgsParser selectionSetParser
-        <&> \((functionArgs', args), fields) ->
+        <&> \((functionArgs', args), fields, directives) ->
           IR.AFComputedField _cfiXComputedFieldInfo _cfiName
             $ IR.CFSTable JASMultipleRows
             $ IR.AnnSelectG
@@ -437,6 +437,7 @@ bqComputedField ComputedFieldInfo {..} tableName tableInfo = runMaybeT do
                 IR._asnFrom = IR.FromFunction (_cffName _cfiFunction) functionArgs' Nothing,
                 IR._asnPerm = tablePermissionsInfo returnTablePermissions,
                 IR._asnArgs = args,
+                IR._asnDirectives = (Just directives),
                 IR._asnStrfyNum = stringifyNumbers,
                 IR._asnNamingConvention = Nothing
               }
@@ -456,7 +457,7 @@ bqComputedField ComputedFieldInfo {..} tableName tableInfo = runMaybeT do
           <&> parsedSelectionsToFields IR.AFExpression
       pure
         $ P.subselection fieldName fieldDescription functionArgsParser selectionSetParser
-        <&> \(functionArgs', fields) ->
+        <&> \(functionArgs', fields, directives) ->
           IR.AFComputedField _cfiXComputedFieldInfo _cfiName
             $ IR.CFSTable JASMultipleRows
             $ IR.AnnSelectG
@@ -464,6 +465,7 @@ bqComputedField ComputedFieldInfo {..} tableName tableInfo = runMaybeT do
                 IR._asnFrom = IR.FromFunction (_cffName _cfiFunction) functionArgs' Nothing,
                 IR._asnPerm = IR.noTablePermissions,
                 IR._asnArgs = IR.noSelectArgs,
+                IR._asnDirectives = (Just directives),
                 IR._asnStrfyNum = stringifyNumbers,
                 IR._asnNamingConvention = Nothing
               }
