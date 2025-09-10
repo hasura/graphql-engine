@@ -27,7 +27,7 @@
 --   curl 'https://drive.usercontent.google.com/download?id=1ZYKOwmwINRNzo9M2PkdpDX7htgQ98oMG&export=download&confirm=t' --output 9.10.1-fork-bindist.tar.xz
 --   ghcup install ghc -u file:///9.10.1-fork-bindist.tar.xz
 -- 
-with-compiler: ghc-9.10.1
+with-compiler: ghc-9.10.2
 
 -- package-level parallelism:
 jobs: $ncpus
@@ -65,6 +65,7 @@ allow-newer: morpheus-graphql-app:text
 allow-newer: morpheus-graphql-app:vector
 allow-newer: morpheus-graphql-app:transformers
 allow-newer: morpheus-graphql-code-gen:text
+allow-newer: morpheus-graphql-code-gen:filepath
 allow-newer: morpheus-graphql-code-gen:optparse-applicative
 allow-newer: morpheus-graphql-code-gen-utils:text
 allow-newer: morpheus-graphql-core:text
@@ -250,12 +251,4 @@ source-repository-package
   type: git
   location: https://github.com/testcontainers/testcontainers-hs
   tag: fe0d6bbce6ce74d5843a964ac231929ea37025e8
-
--- while we wait for 9.10 support to be released, see:
--- https://gitlab.haskell.org/ghc/ghc-debug/-/merge_requests/60 
-source-repository-package
-  type: git
-  location: https://gitlab.haskell.org/ghc/ghc-debug.git
-  tag: 2541e77d2687b8b3b0c1a52bb4790a602ce17d7d
-  subdir: stub
 
