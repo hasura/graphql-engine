@@ -206,6 +206,7 @@ input_file: crates/metadata-resolve/tests/passing/scalar_types/scalar_extraction
             scalars: {},
         },
         aggregate_expressions: {},
+        views: {},
         graphql_config: GlobalGraphqlConfig {
             query_root_type_name: TypeName(
                 Name(

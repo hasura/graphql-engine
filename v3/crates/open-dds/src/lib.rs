@@ -6,6 +6,8 @@ use open_dds::spanned::Spanned;
 use schemars::{JsonSchema, schema::Schema::Object as SchemaObjectVariant};
 use serde::{Deserialize, Serialize};
 
+use crate::views::View;
+
 pub mod accessor;
 pub mod aggregates;
 pub mod arguments;
@@ -27,6 +29,7 @@ pub mod spanned;
 pub mod test_utils;
 pub mod traits;
 pub mod types;
+pub mod views;
 
 // In the user facing configuration, the connection string can either be a literal or a reference
 // to a secret, so we advertize either in the JSON schema. However, when building the configuration,
@@ -127,6 +130,9 @@ pub enum OpenDdSubgraphObject {
 
     // Plugin
     LifecyclePluginHook(Spanned<plugins::LifecyclePluginHook>),
+
+    // View
+    View(Spanned<View>),
 }
 
 /// All of the metadata required to run Hasura v3 engine.

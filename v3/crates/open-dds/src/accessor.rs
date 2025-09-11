@@ -5,7 +5,7 @@ use crate::identifier::SubgraphName;
 use crate::{
     Metadata, MetadataWithVersion, OpenDdSubgraphObject, OpenDdSupergraphObject, aggregates,
     boolean_expression, commands, data_connector, flags, graphql_config, models,
-    order_by_expression, permissions, plugins, relationships, types,
+    order_by_expression, permissions, plugins, relationships, types, views,
 };
 
 const GLOBALS_SUBGRAPH: SubgraphName = SubgraphName::new_inline_static("__globals");
@@ -48,6 +48,7 @@ pub struct MetadataAccessor {
     // `graphql_config` is a vector because we want to do some validation depending on the presence of the object
     pub graphql_config: Vec<QualifiedObject<graphql_config::GraphqlConfig>>,
     pub plugins: Vec<QualifiedObject<plugins::LifecyclePluginHookV1>>,
+    pub views: Vec<QualifiedObject<views::ViewV1>>,
 }
 
 fn load_metadata_objects(
@@ -174,6 +175,13 @@ fn load_metadata_objects(
                     plugin.value.upgrade(),
                 ));
             }
+            OpenDdSubgraphObject::View(view) => {
+                accessor.views.push(QualifiedObject::new(
+                    view.path,
+                    subgraph,
+                    view.value.upgrade(),
+                ));
+            }
         }
     }
 }
@@ -252,6 +260,7 @@ impl MetadataAccessor {
             flags: flags.unwrap_or_default(),
             graphql_config: vec![],
             plugins: vec![],
+            views: vec![],
         }
     }
 }

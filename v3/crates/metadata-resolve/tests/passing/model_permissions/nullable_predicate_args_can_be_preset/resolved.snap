@@ -1851,6 +1851,7 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
             scalars: {},
         },
         aggregate_expressions: {},
+        views: {},
         graphql_config: GlobalGraphqlConfig {
             query_root_type_name: TypeName(
                 Name(

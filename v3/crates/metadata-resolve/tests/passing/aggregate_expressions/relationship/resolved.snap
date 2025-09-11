@@ -5912,6 +5912,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                 description: None,
             },
         },
+        views: {},
         graphql_config: GlobalGraphqlConfig {
             query_root_type_name: TypeName(
                 Name(

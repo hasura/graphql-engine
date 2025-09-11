@@ -1340,6 +1340,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/string
             },
         },
         aggregate_expressions: {},
+        views: {},
         graphql_config: GlobalGraphqlConfig {
             query_root_type_name: TypeName(
                 Name(

@@ -20,6 +20,7 @@ input_file: crates/metadata-resolve/tests/passing/data_connector_link/invalid_nd
             scalars: {},
         },
         aggregate_expressions: {},
+        views: {},
         graphql_config: GlobalGraphqlConfig {
             query_root_type_name: TypeName(
                 Name(

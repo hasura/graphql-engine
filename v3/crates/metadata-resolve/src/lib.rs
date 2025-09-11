@@ -83,6 +83,7 @@ pub use stages::scalar_type_representations::ScalarTypeRepresentation;
 pub use stages::type_permissions::{
     FieldAuthorizationRule, FieldPresetInfo, TypeInputAuthorizationRule, TypeInputPermission,
 };
+pub use stages::views::ResolvedView;
 pub use stages::{Metadata, resolve};
 pub use stages::{
     command_permissions::{AllowOrDeny, Command, CommandAuthorizationRule, CommandWithPermissions},

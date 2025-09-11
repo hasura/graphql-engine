@@ -8,7 +8,7 @@ use crate::stages::{
     boolean_expressions, commands, data_connector_scalar_types, data_connectors, graphql_config,
     model_permissions, models, models_graphql, object_relationships, object_types,
     order_by_expressions, plugins, relationships, relay, scalar_boolean_expressions, scalar_types,
-    type_permissions,
+    type_permissions, views,
 };
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 use error_context::{Context, Step};
@@ -284,6 +284,10 @@ pub enum Error {
     CompatibilityError { warning_as_error: crate::Warning },
     #[error("{0}")]
     LifecyclePuginError(#[from] plugins::PluginValidationError),
+
+    #[error("{0}")]
+    ViewError(#[from] views::Error),
+
     #[error("{errors}")]
     MultipleErrors {
         errors: SeparatedBy<WithContext<Error>>,

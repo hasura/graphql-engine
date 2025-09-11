@@ -287,6 +287,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/all_args_ar
             scalars: {},
         },
         aggregate_expressions: {},
+        views: {},
         graphql_config: GlobalGraphqlConfig {
             query_root_type_name: TypeName(
                 Name(

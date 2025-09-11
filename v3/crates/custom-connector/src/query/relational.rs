@@ -226,7 +226,8 @@ fn convert_relation_to_logical_plan(
             let mut schema_builder = SchemaBuilder::new();
 
             for (i, expr) in exprs.iter().enumerate() {
-                let name = format!("column_{i}");
+                // add a random number to the column name to avoid collisions
+                let name = format!("column_{i}_{rand}", rand = rand::random::<u32>());
                 let logical_expr: datafusion::logical_expr::Expr =
                     convert_expression_to_logical_expr(expr, input_plan.schema())?;
 
@@ -372,9 +373,12 @@ fn convert_relation_to_logical_plan(
                 .iter()
                 .map(|relation| Ok(Arc::new(convert_relation_to_logical_plan(relation, state)?)))
                 .collect::<datafusion::error::Result<Vec<_>>>()?;
-            let union_plan = datafusion::logical_expr::LogicalPlan::Union(
-                datafusion::logical_expr::Union::try_new_by_name(input_plans)?,
-            );
+            let schema = input_plans[0].schema().as_ref().clone();
+            let union_plan =
+                datafusion::logical_expr::LogicalPlan::Union(datafusion::logical_expr::Union {
+                    inputs: input_plans,
+                    schema: Arc::new(schema),
+                });
             Ok(union_plan)
         }
     }

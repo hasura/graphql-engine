@@ -698,6 +698,7 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_types_not_co
             scalars: {},
         },
         aggregate_expressions: {},
+        views: {},
         graphql_config: GlobalGraphqlConfig {
             query_root_type_name: TypeName(
                 Name(

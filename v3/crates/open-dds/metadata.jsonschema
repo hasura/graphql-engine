@@ -6353,6 +6353,50 @@
               "additionalProperties": false
             }
           ]
+        },
+        {
+          "$id": "https://hasura.io/jsonschemas/metadata/View",
+          "title": "View",
+          "description": "Definition of a SQL view that can be created in the data layer",
+          "examples": [
+            {
+              "kind": "View",
+              "version": "v1",
+              "definition": {
+                "name": "customer_summary",
+                "sqlExpression": "SELECT customer_id, COUNT(*) as order_count FROM orders GROUP BY customer_id",
+                "description": "Summary of customer orders"
+              }
+            }
+          ],
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "definition",
+                "kind",
+                "version"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "View"
+                  ]
+                },
+                "version": {
+                  "type": "string",
+                  "enum": [
+                    "v1"
+                  ]
+                },
+                "definition": {
+                  "$ref": "#/definitions/ViewV1"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
         }
       ]
     },
@@ -8102,6 +8146,45 @@
           "additionalProperties": false
         }
       ]
+    },
+    "ViewName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ViewName",
+      "title": "ViewName",
+      "description": "The name of a SQL view.",
+      "type": "string",
+      "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
+    },
+    "ViewV1": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ViewV1",
+      "title": "ViewV1",
+      "description": "Definition of a SQL view that can be created in the data layer",
+      "type": "object",
+      "required": [
+        "name",
+        "sqlExpression"
+      ],
+      "properties": {
+        "name": {
+          "description": "The name of the view",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ViewName"
+            }
+          ]
+        },
+        "sqlExpression": {
+          "description": "SQL query that defines the view",
+          "type": "string"
+        },
+        "description": {
+          "description": "Optional description",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
     }
   }
 }

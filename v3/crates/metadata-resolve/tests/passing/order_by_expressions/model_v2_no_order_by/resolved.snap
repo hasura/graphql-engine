@@ -448,6 +448,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
             scalars: {},
         },
         aggregate_expressions: {},
+        views: {},
         graphql_config: GlobalGraphqlConfig {
             query_root_type_name: TypeName(
                 Name(

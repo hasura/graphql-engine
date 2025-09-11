@@ -3325,6 +3325,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/warning_
             scalars: {},
         },
         aggregate_expressions: {},
+        views: {},
         graphql_config: GlobalGraphqlConfig {
             query_root_type_name: TypeName(
                 Name(
