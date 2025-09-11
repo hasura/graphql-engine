@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: graphql-engine
-          image: hasura/graphql-engine:v2.48.4
+          image: hasura/graphql-engine:v2.48.5
           ports:
             - containerPort: 8080
           readinessProbe:

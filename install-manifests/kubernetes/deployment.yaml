@@ -18,7 +18,7 @@ spec:
         app: hasura
     spec:
       containers:
-      - image: hasura/graphql-engine:v2.48.4
+      - image: hasura/graphql-engine:v2.48.5
         imagePullPolicy: IfNotPresent
         name: hasura
         env:
