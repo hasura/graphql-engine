@@ -83,13 +83,16 @@ ALTER TABLE public.test OWNER TO test;
 					CleanOutput: true,
 				},
 			},
-			`SET check_function_bodies = false;
+			`\restrict hasura
+SET transaction_timeout = 0;
+SET check_function_bodies = false;
 CREATE TABLE public.test (
     section numeric NOT NULL,
     id1 numeric NOT NULL,
     id2 numeric NOT NULL
 );
 ALTER TABLE public.test OWNER TO test;
+\unrestrict hasura
 `,
 			false,
 			require.NoError,
