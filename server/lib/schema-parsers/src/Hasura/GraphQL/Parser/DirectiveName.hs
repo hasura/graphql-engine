@@ -8,6 +8,9 @@ module Hasura.GraphQL.Parser.DirectiveName
     _skip,
     _ttl,
     __multiple_top_level_fields,
+    _overrideTo,
+    _lateral,
+    _nullable,
   )
 where
 
@@ -34,3 +37,12 @@ _ttl = [G.name|ttl|]
 
 __multiple_top_level_fields :: G.Name
 __multiple_top_level_fields = [G.name|_multiple_top_level_fields|]
+
+_overrideTo :: G.Name
+_overrideTo = [G.name|override_to|]
+
+_lateral :: G.Name
+_lateral = [G.name|lateral|]
+
+_nullable :: G.Name
+_nullable = [G.name|nullable|]

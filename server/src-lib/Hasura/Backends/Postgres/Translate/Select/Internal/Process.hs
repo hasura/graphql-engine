@@ -273,7 +273,7 @@ processAnnAggregateSelect userInfo sourcePrefixes fieldAlias annAggSel = do
 
   pure (selectSource, nodeExtractors, topLevelExtractor)
   where
-    AnnSelectG aggSelFields tableFrom tablePermissions tableArgs strfyNum tCase = annAggSel
+    AnnSelectG aggSelFields tableFrom tablePermissions tableArgs _ strfyNum tCase = annAggSel
     permLimit = _tpLimit tablePermissions
     orderBy = _saOrderBy tableArgs
     permLimitSubQuery = mkPermissionLimitSubQuery permLimit aggSelFields orderBy
@@ -335,7 +335,7 @@ processAnnFields userInfo sourcePrefix fieldAlias annFields tCase = do
         AFNodeId _ sn tn pKeys -> pure $ mkNodeId sn tn pKeys
         AFColumn c -> toSQLCol c
         AFObjectRelation objSel -> withWriteObjectRelation $ do
-          let AnnRelationSelectG relName relMapping nullable annObjSel = objSel
+          let AnnRelationSelectG relName relMapping nullable directives annObjSel = objSel
               AnnObjectSelectG objAnnFields target targetFilter = annObjSel
           (objRelSourcePrefix, ident, filterExp) <- case target of
             FromNativeQuery nq -> do
@@ -367,7 +367,7 @@ processAnnFields userInfo sourcePrefix fieldAlias annFields tCase = do
             other -> error $ "processAnnFields: " <> show other
           let sourcePrefixes = mkSourcePrefixes objRelSourcePrefix
               selectSource = ObjectSelectSource (_pfThis sourcePrefixes) ident filterExp
-              objRelSource = ObjectRelationSource relName relMapping selectSource nullable
+              objRelSource = ObjectRelationSource relName relMapping selectSource nullable directives
           annFieldsExtr <- processAnnFields userInfo (identifierToTableIdentifier $ _pfThis sourcePrefixes) fieldName objAnnFields tCase
           pure
             ( objRelSource,
@@ -510,7 +510,7 @@ processArrayRelation ::
 processArrayRelation userInfo sourcePrefixes fieldAlias relAlias arrSel _tCase =
   case arrSel of
     ASSimple annArrRel -> withWriteArrayRelation $ do
-      let AnnRelationSelectG _ colMapping _ sel = annArrRel
+      let AnnRelationSelectG _ colMapping nullable directives sel = annArrRel
           permLimitSubQuery =
             maybe PLSQNotRequired PLSQRequired $ _tpLimit $ _asnPerm sel
       (source, nodeExtractors) <-
@@ -522,23 +522,23 @@ processArrayRelation userInfo sourcePrefixes fieldAlias relAlias arrSel _tCase =
               permLimitSubQuery
               $ orderByForJsonAgg source
       pure
-        ( ArrayRelationSource relAlias colMapping source,
+        ( ArrayRelationSource relAlias colMapping source nullable directives,
           topExtr,
           nodeExtractors,
           ()
         )
     ASAggregate aggSel -> withWriteArrayRelation $ do
-      let AnnRelationSelectG _ colMapping _ sel = aggSel
+      let AnnRelationSelectG _ colMapping nullable directives sel = aggSel
       (source, nodeExtractors, topExtr) <-
         processAnnAggregateSelect userInfo sourcePrefixes fieldAlias sel
       pure
-        ( ArrayRelationSource relAlias colMapping source,
+        ( ArrayRelationSource relAlias colMapping source nullable directives,
           topExtr,
           nodeExtractors,
           ()
         )
     ASConnection connSel -> withWriteArrayConnection $ do
-      let AnnRelationSelectG _ colMapping _ sel = connSel
+      let AnnRelationSelectG _ colMapping _ _ sel = connSel
       (source, topExtractor, nodeExtractors) <-
         processConnectionSelect userInfo sourcePrefixes fieldAlias relAlias colMapping sel
       pure
@@ -634,7 +634,7 @@ processAnnSimpleSelect userInfo sourcePrefixes fieldAlias permLimitSubQuery annS
   let allExtractors = InsOrdHashMap.fromList $ annFieldsExtr : orderByAndDistinctExtrs
   pure (selectSource, allExtractors)
   where
-    AnnSelectG annSelFields tableFrom tablePermissions tableArgs _ tCase = annSimpleSel
+    AnnSelectG annSelFields tableFrom tablePermissions tableArgs _ _ tCase = annSimpleSel
     similarArrayFields =
       mkSimilarArrayFields annSelFields $ _saOrderBy tableArgs
 
@@ -695,7 +695,7 @@ processConnectionSelect userInfo sourcePrefixes fieldAlias relAlias colMapping c
     )
   where
     ConnectionSelect _ primaryKeyColumns maybeSplit maybeSlice select = connectionSelect
-    AnnSelectG fields selectFrom tablePermissions tableArgs _ tCase = select
+    AnnSelectG fields selectFrom tablePermissions tableArgs _ _ tCase = select
     fieldIdentifier = toIdentifier fieldAlias
     thisPrefix = identifierToTableIdentifier $ _pfThis sourcePrefixes
     permLimitSubQuery = PLSQNotRequired

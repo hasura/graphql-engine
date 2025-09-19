@@ -11,6 +11,7 @@ where
 
 import Data.Bifoldable
 import Data.Kind (Type)
+import Hasura.GraphQL.Parser.Directives (ParsedDirectives)
 import Hasura.Prelude
 import Hasura.RQL.IR.Select.Args
 import Hasura.RQL.IR.Select.From
@@ -28,6 +29,7 @@ data AnnSelectG (b :: BackendType) (f :: Type -> Type) (v :: Type) = AnnSelectG
     _asnFrom :: SelectFromG b v,
     _asnPerm :: TablePermG b v,
     _asnArgs :: SelectArgsG b v,
+    _asnDirectives :: Maybe ParsedDirectives,
     _asnStrfyNum :: StringifyNumbers,
     _asnNamingConvention :: Maybe NamingCase
   }
@@ -52,7 +54,8 @@ data
   AnnSelectStreamG
     (b :: BackendType)
     (f :: Type -> Type)
-    (v :: Type) = AnnSelectStreamG
+    (v :: Type)
+  = AnnSelectStreamG
   { -- | type to indicate if streaming subscription has been enabled in the `BackendType`.
     --   This type helps avoiding missing case match patterns for backends where it's disabled.
     _assnXStreamingSubscription :: XStreamingSubscription b,

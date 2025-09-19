@@ -205,6 +205,7 @@ fromRemoteRelationFieldsG existingJoins joinColumns (IR.FieldName name, field) =
         (IR.RelName $ mkNonEmptyTextUnsafe name)
         joinColumns
         IR.Nullable
+        Nothing
         annotatedRelationship
 
 -- | Top/root-level 'Select'. All descendent/sub-translations are collected to produce a root TSQL.Select.
@@ -280,7 +281,7 @@ mkNodesSelect Args {..} foreignKeyConditions filterExpression permissionBasedTop
             aliasedAlias = IR.getFieldNameTxt fieldName
           }
     )
-    | (index, (fieldName, fieldSources)) <- nodes
+  | (index, (fieldName, fieldSources)) <- nodes
   ]
 
 --
@@ -335,7 +336,7 @@ mkAggregateSelect Args {..} foreignKeyConditions filterExpression selectFrom agg
             aliasedAlias = IR.getFieldNameTxt fieldName
           }
     )
-    | (index, (fieldName, projections)) <- aggregates
+  | (index, (fieldName, projections)) <- aggregates
   ]
 
 fromNativeQuery :: IR.NativeQuery 'MSSQL Expression -> FromIr TSQL.From

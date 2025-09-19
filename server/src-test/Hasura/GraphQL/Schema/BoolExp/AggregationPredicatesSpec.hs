@@ -310,7 +310,8 @@ spec = do
           riMapping = RelMapping $ HashMap.fromList [("id", "album_id")],
           riTarget = RelTargetTable (mkTable "track"),
           riIsManual = False,
-          riInsertOrder = AfterParent
+          riInsertOrder = AfterParent,
+          riManualNullable = True
         }
 
     sourceInfo :: SourceInfo ('Postgres 'Vanilla)

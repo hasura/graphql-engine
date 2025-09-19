@@ -80,12 +80,13 @@ selectFunction mkRootFieldName fi@FunctionInfo {..} description = runMaybeT do
         functionFieldName = runMkRootFieldName mkRootFieldName _fiGQLName
     pure
       $ P.subselection functionFieldName description argsParser selectionSetParser
-      <&> \((funcArgs, tableArgs'), fields) ->
+      <&> \((funcArgs, tableArgs'), fields, directives) ->
         IR.AnnSelectG
           { IR._asnFields = fields,
             IR._asnFrom = IR.FromFunction _fiSQLName funcArgs Nothing,
             IR._asnPerm = tablePermissionsInfo selectPermissions,
             IR._asnArgs = tableArgs',
+            IR._asnDirectives = (Just directives),
             IR._asnStrfyNum = stringifyNumbers,
             IR._asnNamingConvention = Just tCase
           }
@@ -134,17 +135,18 @@ selectFunctionAggregate mkRootFieldName fi@FunctionInfo {..} description = runMa
             $ P.selectionSet
               selectionName
               Nothing
-              [ IR.TAFNodes xNodesAgg <$> P.subselection_ Name._nodes Nothing nodesParser,
-                IR.TAFAgg <$> P.subselection_ Name._aggregate Nothing aggregateParser
+              [ IR.TAFNodes xNodesAgg <$> (fst <$> P.subselection_ Name._nodes Nothing nodesParser),
+                IR.TAFAgg <$> (fst <$> P.subselection_ Name._aggregate Nothing aggregateParser)
               ]
     pure
       $ P.subselection aggregateFieldName description argsParser aggregationParser
-      <&> \((funcArgs, tableArgs'), fields) ->
+      <&> \((funcArgs, tableArgs'), fields, directives) ->
         IR.AnnSelectG
           { IR._asnFields = fields,
             IR._asnFrom = IR.FromFunction _fiSQLName funcArgs Nothing,
             IR._asnPerm = tablePermissionsInfo selectPermissions,
             IR._asnArgs = tableArgs',
+            IR._asnDirectives = (Just directives),
             IR._asnStrfyNum = stringifyNumbers,
             IR._asnNamingConvention = Just tCase
           }
@@ -181,7 +183,7 @@ selectFunctionConnection mkRootFieldName fi@FunctionInfo {..} description pkeyCo
     let argsParser = liftA2 (,) functionArgsParser tableConnectionArgsParser
     pure
       $ P.subselection fieldName description argsParser selectionSetParser
-      <&> \((funcArgs, (args, split, slice)), fields) ->
+      <&> \((funcArgs, (args, split, slice)), fields, directives) ->
         IR.ConnectionSelect
           { IR._csXRelay = xRelayInfo,
             IR._csPrimaryKeyColumns = pkeyColumns,
@@ -193,6 +195,7 @@ selectFunctionConnection mkRootFieldName fi@FunctionInfo {..} description pkeyCo
                   IR._asnFrom = IR.FromFunction _fiSQLName funcArgs Nothing,
                   IR._asnPerm = tablePermissionsInfo selectPermissions,
                   IR._asnArgs = args,
+                  IR._asnDirectives = (Just directives),
                   IR._asnStrfyNum = stringifyNumbers,
                   IR._asnNamingConvention = Just tCase
                 }
@@ -248,7 +251,7 @@ computedFieldPG ComputedFieldInfo {..} parentTable tableInfo = runMaybeT do
       let fieldArgsParser = liftA2 (,) functionArgsParser selectArgsParser
       pure
         $ P.subselection fieldName fieldDescription fieldArgsParser selectionSetParser
-        <&> \((functionArgs', args), fields) ->
+        <&> \((functionArgs', args), fields, directives) ->
           IR.AFComputedField _cfiXComputedFieldInfo _cfiName
             $ IR.CFSTable JASMultipleRows
             $ IR.AnnSelectG
@@ -256,6 +259,7 @@ computedFieldPG ComputedFieldInfo {..} parentTable tableInfo = runMaybeT do
                 IR._asnFrom = IR.FromFunction (_cffName _cfiFunction) functionArgs' Nothing,
                 IR._asnPerm = tablePermissionsInfo remotePerms,
                 IR._asnArgs = args,
+                IR._asnDirectives = (Just directives),
                 IR._asnStrfyNum = stringifyNumbers,
                 IR._asnNamingConvention = Just tCase
               }

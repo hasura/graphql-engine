@@ -76,10 +76,10 @@ actionExecute customTypes actionInfo = runMaybeT do
       pure $ P.subselection fieldName description inputArguments selectionSet
     AOTScalar ast -> do
       let selectionSet = customScalarParser ast
-      pure $ P.selection fieldName description inputArguments selectionSet <&> (,[])
+      pure $ P.selection fieldName description inputArguments selectionSet <&> (,[],mempty)
   pure
     $ parserOutput
-    <&> \(argsJson, fields) ->
+    <&> \(argsJson, fields, _) ->
       IR.AnnActionExecution
         { _aaeName = actionName,
           _aaeType = _adType definition,
@@ -170,7 +170,7 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
                 Name._output
                 (Just "the output fields of this action")
                 actionOutputParser
-                <&> IR.AsyncOutput
+                <&> \(fields, _) -> IR.AsyncOutput fields
          in [idField, createdAtField, errorsField, outputField]
   parserOutput <- case outputObject of
     AOTObject aot -> do
@@ -184,13 +184,13 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
       pure $ P.subselection fieldName description actionIdInputField selectionSet
     AOTScalar ast -> do
       let selectionSet = customScalarParser ast
-      pure $ P.selection fieldName description actionIdInputField selectionSet <&> (,[])
+      pure $ P.selection fieldName description actionIdInputField selectionSet <&> (,[],mempty)
 
   stringifyNumbers <- retrieve Options.soStringifyNumbers
   definitionsList <- lift $ mkDefinitionList outputObject
   pure
     $ parserOutput
-    <&> \(idArg, fields) ->
+    <&> \(idArg, fields, _) ->
       IR.AnnActionAsyncQuery
         { _aaaqName = actionName,
           _aaaqActionId = idArg,
@@ -302,7 +302,7 @@ actionOutputFields outputType annotatedObject objectTypes = do
         AOFTObject objectName -> do
           def <- HashMap.lookup objectName objectTypes `onNothing` throw500 ("Custom type " <> objectName <<> " not found")
           parser <- fmap (IR.ACFNestedObject fieldName) <$> actionOutputFields gType def objectTypes
-          pure $ P.subselection_ fieldName description parser
+          pure $ P.subselection_ fieldName description parser <&> fst
       where
         fieldName = unObjectFieldName name
         wrapScalar parser =

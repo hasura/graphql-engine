@@ -109,7 +109,7 @@ mkStreamSQLSelect userInfo (AnnSelectStreamG () fields from perm args strfyNum) 
             _saOffset = Nothing,
             _saDistinct = Nothing
           }
-      sqlSelect = AnnSelectG fields from perm selectArgs strfyNum Nothing
+      sqlSelect = AnnSelectG fields from perm selectArgs Nothing strfyNum Nothing
       permLimitSubQuery = PLSQNotRequired
   ((selectSource, nodeExtractors), SelectWriter {_swJoinTree = joinTree, _swCustomSQLCTEs = customSQLCTEs}) <-
     runWriterT

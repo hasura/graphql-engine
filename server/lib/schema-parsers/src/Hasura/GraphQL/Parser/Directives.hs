@@ -6,12 +6,17 @@ module Hasura.GraphQL.Parser.Directives
     customDirectives,
     -- Custom Directive Types
     CachedDirective (..),
+    extractDirectives,
+    getDirective,
     DirectiveMap,
+    ParsedDirectives,
     -- lookup keys for directives
     include,
     skip,
     cached,
     multipleRootFields,
+    nullableJoin,
+    lateralJoin,
     -- parsing utilities
     parseDirectives,
     withDirective,
@@ -22,6 +27,8 @@ module Hasura.GraphQL.Parser.Directives
     includeDirective,
     cachedDirective,
     multipleRootFieldsDirective,
+    nullableDirective,
+    lateralDirective,
   )
 where
 
@@ -35,9 +42,12 @@ import Data.Functor.Identity (Identity (..))
 import Data.GADT.Compare.Extended
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as S
+import Data.Hashable (Hashable)
 import Data.List qualified as L
+import Data.Maybe (mapMaybe)
 import Data.Traversable (for)
-import Data.Typeable (eqT)
+import Data.Typeable (Typeable, cast, eqT)
+import GHC.Generics (Generic)
 import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.DirectiveName qualified as Name
@@ -46,7 +56,7 @@ import Hasura.GraphQL.Parser.Internal.Scalars
 import Hasura.GraphQL.Parser.Schema
 import Hasura.GraphQL.Parser.Variable
 import Language.GraphQL.Draft.Syntax qualified as G
-import Type.Reflection (Typeable, typeRep, (:~:) (Refl))
+import Type.Reflection (typeRep, (:~:) (Refl))
 import Witherable (catMaybes)
 import Prelude
 
@@ -91,7 +101,7 @@ inclusionDirectives :: forall m origin. (MonadParse m) => [Directive origin m]
 inclusionDirectives = [includeDirective @m, skipDirective @m]
 
 customDirectives :: forall m origin. (MonadParse m) => [Directive origin m]
-customDirectives = [cachedDirective @m, multipleRootFieldsDirective @m]
+customDirectives = [cachedDirective @m, multipleRootFieldsDirective @m, nullableDirective @m, lateralDirective @m]
 
 -- | Parses directives, given a location. Ensures that all directives are known
 -- and match the location; subsequently builds a dependent map of the results,
@@ -241,6 +251,36 @@ include = DirectiveKey Name._include
 ifArgument :: (MonadParse m) => InputFieldsParser origin m Bool
 ifArgument = field Name._if Nothing boolean
 
+-- Table relationships customization
+nullableDirective :: forall m origin. (MonadParse m) => Directive origin m
+nullableDirective =
+  mkDirective
+    Name._nullable -- Directive name
+    (Just "whether the JOIN allows null values (LEFT JOIN) or not (INNER JOIN)") -- Description
+    True -- Advertised in schema
+    [G.DLExecutable G.EDLFIELD]
+    (overrideToArgument False)
+    False -- Not repeatable
+
+lateralDirective :: forall m origin. (MonadParse m) => Directive origin m
+lateralDirective =
+  mkDirective
+    Name._lateral -- Directive name
+    (Just "whether the JOIN is LATERAL. Only works on Object Relationships") -- Description
+    True -- Advertised in schema
+    [G.DLExecutable G.EDLFIELD]
+    (overrideToArgument False)
+    False -- Not repeatable
+
+nullableJoin :: DirectiveKey Bool
+nullableJoin = DirectiveKey Name._nullable
+
+lateralJoin :: DirectiveKey Bool
+lateralJoin = DirectiveKey Name._lateral
+
+overrideToArgument :: (MonadParse m) => Bool -> InputFieldsParser origin m Bool
+overrideToArgument defaultValue = fieldWithDefault Name._overrideTo Nothing (G.VBoolean defaultValue) boolean
+
 -- Parser type for directives.
 
 data Directive origin m where
@@ -274,6 +314,34 @@ instance GCompare DirectiveKey where
         `extendGOrdering` GEQ
 
 type DirectiveMap = DM.DMap DirectiveKey Identity
+
+type ParsedDirectives = HashMap.HashMap G.Name DirectiveData
+
+data DirectiveData
+  = NullableData Bool
+  | LateralData Bool
+  deriving (Generic, Show)
+
+instance Hashable DirectiveData
+
+deriving instance Eq DirectiveData
+
+extractDirectives :: DirectiveMap -> ParsedDirectives
+extractDirectives dmap = HashMap.fromList $ mapMaybe extractPair $ DM.toList dmap
+  where
+    extractPair :: DSum DirectiveKey Identity -> Maybe (G.Name, DirectiveData)
+    extractPair (DirectiveKey name :=> Identity value) =
+      case cast value of
+        Just nullableVal | name == Name._nullable -> Just (name, NullableData nullableVal)
+        Just lateralVal | name == Name._lateral -> Just (name, LateralData lateralVal)
+        _ -> Nothing
+
+getDirective :: (Typeable a) => G.Name -> ParsedDirectives -> Maybe a
+getDirective name directives = do
+  directiveData <- HashMap.lookup name directives
+  case directiveData of
+    NullableData val -> cast val
+    LateralData val -> cast val
 
 mkDirective ::
   (MonadParse m, Typeable a) =>

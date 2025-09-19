@@ -239,7 +239,7 @@ typeIntrospection ::
 typeIntrospection = do
   let nameArg :: P.InputFieldsParser n Text
       nameArg = P.field GName._name Nothing P.string
-  ~(nameText, printer) <- P.subselection GName.___type Nothing nameArg typeField
+  ~(nameText, printer, _) <- P.subselection GName.___type Nothing nameArg typeField
   -- We pass around the GraphQL schema information under the name `partialSchema`,
   -- because the GraphQL spec forces us to expose a hybrid between the
   -- specification of valid queries (including introspection) and an
@@ -255,7 +255,7 @@ schema ::
   (MonadParse n) =>
   FieldParser n (Schema -> J.Value)
 {-# INLINE schema #-}
-schema = P.subselection_ GName.___schema Nothing schemaSet
+schema = fmap fst $ P.subselection_ GName.___schema Nothing schemaSet
 
 {-
 type __Type {
@@ -337,7 +337,7 @@ typeField =
       fields :: FieldParser n (SomeType -> J.Value)
       fields = do
         -- TODO handle the value of includeDeprecated
-        ~(_includeDeprecated, printer) <- P.subselection GName._fields Nothing includeDeprecated fieldField
+        ~(_includeDeprecated, printer, _) <- P.subselection GName._fields Nothing includeDeprecated fieldField
         return
           $ \case
             SomeType tp ->
@@ -349,7 +349,7 @@ typeField =
                 _ -> J.Null
       interfaces :: FieldParser n (SomeType -> J.Value)
       interfaces = do
-        printer <- P.subselection_ GName._interfaces Nothing typeField
+        printer <- fmap fst $ P.subselection_ GName._interfaces Nothing typeField
         return
           $ \case
             SomeType tp ->
@@ -359,7 +359,7 @@ typeField =
                 _ -> J.Null
       possibleTypes :: FieldParser n (SomeType -> J.Value)
       possibleTypes = do
-        printer <- P.subselection_ GName._possibleTypes Nothing typeField
+        printer <- fmap fst $ P.subselection_ GName._possibleTypes Nothing typeField
         return
           $ \case
             SomeType tp ->
@@ -372,7 +372,7 @@ typeField =
       enumValues :: FieldParser n (SomeType -> J.Value)
       enumValues = do
         -- TODO handle the value of includeDeprecated
-        ~(_includeDeprecated, printer) <- P.subselection GName._enumValues Nothing includeDeprecated enumValue
+        ~(_includeDeprecated, printer, _) <- P.subselection GName._enumValues Nothing includeDeprecated enumValue
         return
           $ \case
             SomeType tp ->
@@ -382,7 +382,7 @@ typeField =
                 _ -> J.Null
       inputFields :: FieldParser n (SomeType -> J.Value)
       inputFields = do
-        printer <- P.subselection_ GName._inputFields Nothing inputValue
+        printer <- fmap fst $ P.subselection_ GName._inputFields Nothing inputValue
         return
           $ \case
             SomeType tp ->
@@ -393,7 +393,7 @@ typeField =
       -- ofType peels modalities off of types
       ofType :: FieldParser n (SomeType -> J.Value)
       ofType = do
-        printer <- P.subselection_ GName._ofType Nothing typeField
+        printer <- fmap fst $ P.subselection_ GName._ofType Nothing typeField
         return $ \case
           -- kind = "NON_NULL": !a -> a
           SomeType (P.TNamed P.NonNullable x) ->
@@ -445,7 +445,7 @@ inputValue =
           . P.dDescription
       typeF :: FieldParser n (P.Definition P.InputFieldInfo -> J.Value)
       typeF = do
-        printer <- P.subselection_ GName._type Nothing typeField
+        printer <- fmap fst $ P.subselection_ GName._type Nothing typeField
         return $ \defInfo -> case P.dInfo defInfo of
           P.InputFieldInfo tp _ -> printer $ SomeType tp
       defaultValue :: FieldParser n (P.Definition P.InputFieldInfo -> J.Value)
@@ -568,11 +568,11 @@ fieldField =
             Just desc -> J.String (G.unDescription desc)
       args :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
       args = do
-        printer <- P.subselection_ GName._args Nothing inputValue
+        printer <- fmap fst $ P.subselection_ GName._args Nothing inputValue
         return $ J.Array . V.fromList . map printer . sortOn P.dName . P.fArguments . P.dInfo
       typeF :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
       typeF = do
-        printer <- P.subselection_ GName._type Nothing typeField
+        printer <- fmap fst $ P.subselection_ GName._type Nothing typeField
         return $ printer . (\case P.FieldInfo _ tp -> SomeType tp) . P.dInfo
       -- TODO We don't seem to track deprecation info
       isDeprecated :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
@@ -624,7 +624,7 @@ directiveSet =
           $> (J.toOrdered . map showDirLoc . P.diLocations)
       args :: FieldParser n (P.DirectiveInfo -> J.Value)
       args = do
-        printer <- P.subselection_ GName._args Nothing inputValue
+        printer <- fmap fst $ P.subselection_ GName._args Nothing inputValue
         pure $ J.array . map printer . P.diArguments
       isRepeatable :: FieldParser n (P.DirectiveInfo -> J.Value)
       isRepeatable =
@@ -670,7 +670,7 @@ schemaSet =
             Just s -> J.String $ G.unDescription s
       types :: FieldParser n (Schema -> J.Value)
       types = do
-        printer <- P.subselection_ GName._types Nothing typeField
+        printer <- fmap fst $ P.subselection_ GName._types Nothing typeField
         return
           $ \partialSchema ->
             J.Array
@@ -685,23 +685,23 @@ schemaSet =
             SomeType $ P.TNamed P.Nullable def
       queryType :: FieldParser n (Schema -> J.Value)
       queryType = do
-        printer <- P.subselection_ GName._queryType Nothing typeField
+        printer <- fmap fst $ P.subselection_ GName._queryType Nothing typeField
         return $ \partialSchema -> printer $ SomeType $ sQueryType partialSchema
       mutationType :: FieldParser n (Schema -> J.Value)
       mutationType = do
-        printer <- P.subselection_ GName._mutationType Nothing typeField
+        printer <- fmap fst $ P.subselection_ GName._mutationType Nothing typeField
         return $ \partialSchema -> case sMutationType partialSchema of
           Nothing -> J.Null
           Just tp -> printer $ SomeType tp
       subscriptionType :: FieldParser n (Schema -> J.Value)
       subscriptionType = do
-        printer <- P.subselection_ GName._subscriptionType Nothing typeField
+        printer <- fmap fst $ P.subselection_ GName._subscriptionType Nothing typeField
         return $ \partialSchema -> case sSubscriptionType partialSchema of
           Nothing -> J.Null
           Just tp -> printer $ SomeType tp
       directives :: FieldParser n (Schema -> J.Value)
       directives = do
-        printer <- P.subselection_ GName._directives Nothing directiveSet
+        printer <- fmap fst $ P.subselection_ GName._directives Nothing directiveSet
         return $ \partialSchema -> J.array $ map printer $ sDirectives partialSchema
    in applyPrinter
         <$> P.selectionSet

@@ -416,7 +416,7 @@ resolveAsyncActionQuery userInfo annAction responseErrorsConfig =
                       { RS._saWhere = Just tableBoolExpression
                       }
                   tablePermissions = RS.TablePerm annBoolExpTrue Nothing
-               in RS.AnnSelectG annotatedFields tableFromExp tablePermissions tableArguments stringifyNumerics Nothing
+               in RS.AnnSelectG annotatedFields tableFromExp tablePermissions tableArguments Nothing stringifyNumerics Nothing
   where
     mkQErrFromErrorValue :: J.Value -> QErr
     mkQErrFromErrorValue actionLogResponseError =
@@ -799,7 +799,7 @@ processOutputSelectionSet ::
   Options.StringifyNumbers ->
   RS.AnnSimpleSelectG ('Postgres 'Vanilla) Void v
 processOutputSelectionSet tableRowInput actionOutputType definitionList actionFields strfyNum =
-  RS.AnnSelectG annotatedFields selectFrom RS.noTablePermissions RS.noSelectArgs strfyNum Nothing
+  RS.AnnSelectG annotatedFields selectFrom RS.noTablePermissions RS.noSelectArgs Nothing strfyNum Nothing
   where
     annotatedFields = fmap actionFieldToAnnField <$> actionFields
     jsonbToPostgresRecordFunction =

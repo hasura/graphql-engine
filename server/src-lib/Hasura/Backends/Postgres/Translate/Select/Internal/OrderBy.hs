@@ -133,9 +133,11 @@ processOrderByItems userInfo sourcePrefix' selectSourceQual fieldAlias' similarA
             $ S.mkQIdenExp baseTableIdentifier
             $ ciColumn pgColInfo
         AOCObjectRelation relInfo relFilter rest -> withWriteObjectRelation $ do
-          let RelInfo {riName = relName, riMapping = RelMapping colMapping, riTarget = relTarget} = relInfo
+          let RelInfo {riName = relName, riMapping = RelMapping colMapping, riTarget = relTarget, riManualNullable = manualNullable, riIsManual = isManual} = relInfo
               relSourcePrefix = mkObjectRelationTableAlias sourcePrefix relName
               fieldName = mkOrderByFieldName relName
+              -- Determine nullability based on manual relationship settings
+              nullable = if isManual && not manualNullable then NotNullable else Nullable
           case relTarget of
             RelTargetNativeQuery _ -> error "processAnnotatedOrderByElement RelTargetNativeQuery (AOCObjectRelation)"
             RelTargetTable relTable -> do
@@ -147,14 +149,16 @@ processOrderByItems userInfo sourcePrefix' selectSourceQual fieldAlias' similarA
                       (tableIdentifierToIdentifier relSourcePrefix)
                       (S.FISimple relTable Nothing)
                       boolExp
-                  relSource = ObjectRelationSource relName colMapping selectSource Nullable
+                  relSource = ObjectRelationSource relName colMapping selectSource nullable Nothing
               pure
                 ( relSource,
                   InsOrdHashMap.singleton relOrderByAlias relOrdByExp,
                   S.mkQIdenExp relSourcePrefix relOrderByAlias
                 )
         AOCArrayAggregation relInfo relFilter aggOrderBy -> withWriteArrayRelation $ do
-          let RelInfo {riName = relName, riMapping = RelMapping colMapping, riTarget = relTarget} = relInfo
+          let RelInfo {riName = relName, riMapping = RelMapping colMapping, riTarget = relTarget, riManualNullable = manualNullable, riIsManual = isManual} = relInfo
+              -- Determine nullability based on manual relationship settings
+              nullable = if isManual && not manualNullable then NotNullable else Nullable
           case relTarget of
             RelTargetNativeQuery _ -> error "processAnnotatedOrderByElement RelTargetNativeQuery (AOCArrayAggregation)"
             RelTargetTable relTable -> do
@@ -174,7 +178,7 @@ processOrderByItems userInfo sourcePrefix' selectSourceQual fieldAlias' similarA
                       (S.FISimple relTable Nothing)
                       boolExp
                       noSortingAndSlicing
-                  relSource = ArrayRelationSource relAlias colMapping selectSource
+                  relSource = ArrayRelationSource relAlias colMapping selectSource nullable Nothing
               extractorExps <- aggregateFieldsToExtractorExps relSourcePrefix userInfo fields
               pure
                 ( relSource,
