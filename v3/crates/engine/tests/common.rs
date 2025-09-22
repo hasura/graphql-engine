@@ -242,7 +242,7 @@ async fn test_jsonapi(
                 &catalog,
                 resolved_metadata.clone(),
                 request.to_method(),
-                Uri::try_from(&path).map_err(|e| anyhow::anyhow!("Invalid URI: {}", e))?,
+                Uri::try_from(&path).map_err(|e| anyhow::anyhow!("Invalid URI: {e}"))?,
                 Query::from_params(&query_params),
             )
             .await;
