@@ -11,6 +11,10 @@
 
 ### Fixed
 
+- Headers returned from commands were not being being returned when the command
+  was the source of a remote relationship, now they are returned correctly. As
+  before, no headers are returned from the target of a remote relationship.
+
 ## [v2025.09.05]
 
 ### Changed

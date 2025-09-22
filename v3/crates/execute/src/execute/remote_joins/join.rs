@@ -118,8 +118,9 @@ fn join_command_response(
             }
         }
         json::Value::Object(obj) => {
-            let mut command_row = obj
-                .into_iter()
+            // Build a mutable row map from the current object without moving out of it
+            let mut command_row: IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue> = obj
+                .iter()
                 .map(|(k, v)| {
                     (
                         ndc_models::FieldName::from(k.as_str()),
@@ -127,6 +128,8 @@ fn join_command_response(
                     )
                 })
                 .collect();
+
+            // Insert the RHS value into this row
             insert_value_into_row(
                 location_path,
                 join_node,
@@ -134,7 +137,21 @@ fn join_command_response(
                 ndc_models::FieldName::from(remote_alias),
                 rhs_response,
             )?;
-            *row_field_value = ndc_models::RowFieldValue(json::to_value(command_row)?);
+
+            let command_row_json = json::to_value(command_row)?;
+
+            // Write the updated row back into the target field (preserving any outer wrapper like headers)
+            if let json::Value::Object(new_obj) = command_row_json {
+                *obj = new_obj;
+            } else {
+                return Err(error::FieldError::from(
+                    error::FieldInternalError::InternalGeneric {
+                        description: format!(
+                            "unexpected command response: {command_row_json}; Object"
+                        ),
+                    },
+                ));
+            }
         }
         command_json_val => {
             return Err(error::FieldError::from(
