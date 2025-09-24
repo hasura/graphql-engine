@@ -263,6 +263,7 @@ uSelect (S.Select ctes distinctM extrs fromM whereM groupByM havingM orderByM li
     uExtractor (S.Extractor expr alias) =
       S.Extractor <$> uSqlExp expr <*> pure (fmap prefixHashColumnAlias alias)
     uLimit (S.LimitExp expr) = S.LimitExp <$> uSqlExp expr
+    uLimit (S.FetchFirstWithTiesExp expr) = S.FetchFirstWithTiesExp <$> uSqlExp expr
     uOffset (S.OffsetExp expr) = S.OffsetExp <$> uSqlExp expr
 
 -- | Transform every @from_item@.

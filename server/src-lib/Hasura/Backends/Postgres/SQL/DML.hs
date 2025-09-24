@@ -25,7 +25,7 @@ module Hasura.Backends.Postgres.SQL.DML
     JoinExpr (JoinExpr),
     JoinType (Inner, LeftOuter),
     Lateral (Lateral),
-    LimitExp (LimitExp),
+    LimitExp (LimitExp, FetchFirstWithTiesExp),
     NullsOrder (NullsFirst, NullsLast),
     OffsetExp (OffsetExp),
     OrderByExp (..),
@@ -107,9 +107,11 @@ module Hasura.Backends.Postgres.SQL.DML
   )
 where
 
+import Control.DeepSeq (NFData (rnf))
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
 import Data.HashMap.Strict qualified as HashMap
+import Data.Hashable (Hashable (hashWithSalt))
 import Data.Int (Int64)
 import Data.String (fromString)
 import Data.Text (pack)
@@ -163,13 +165,26 @@ mkSelect =
 dummySelectList :: [Extractor]
 dummySelectList = [Extractor (SEUnsafe "1") Nothing]
 
-newtype LimitExp
+-- | https://www.postgresql.org/docs/current/sql-select.html#SQL-LIMIT
+data LimitExp
   = LimitExp SQLExp
-  deriving (Show, Eq, NFData, Data, Hashable)
+  | -- | `FETCH FIRST n WITH TIES`
+    FetchFirstWithTiesExp SQLExp
+  deriving (Show, Eq, Data)
+
+instance NFData LimitExp where
+  rnf (LimitExp se) = rnf se
+  rnf (FetchFirstWithTiesExp se) = rnf se
+
+instance Hashable LimitExp where
+  hashWithSalt salt (LimitExp se) = hashWithSalt salt (0 :: Int, se)
+  hashWithSalt salt (FetchFirstWithTiesExp se) = hashWithSalt salt (1 :: Int, se)
 
 instance ToSQL LimitExp where
   toSQL (LimitExp se) =
     "LIMIT" <~> toSQL se
+  toSQL (FetchFirstWithTiesExp se) =
+    "FETCH FIRST" <~> toSQL se <~> "ROWS WITH TIES"
 
 newtype OffsetExp
   = OffsetExp SQLExp

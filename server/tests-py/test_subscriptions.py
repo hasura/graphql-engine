@@ -909,3 +909,118 @@ class TestSubscriptionMSSQLChunkedResults:
         ev = ws_client.get_ws_query_event('1',15)
         assert ev['type'] == 'data' and ev['id'] == '1', ev
         assert not "errors" in ev['payload'], ev
+
+
+@usefixtures('per_method_tests_db_state', 'ws_conn_init')
+@pytest.mark.hge_env('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES', 'streaming_subscriptions')
+# Only citus and vanilla PG have this bugfix/behavior:
+@pytest.mark.backend('citus', 'postgres')
+class TestStreamingSubscriptionWithTies:
+    """
+    Test the WITH TIES functionality for streaming subscriptions with duplicate
+    cursor values.
+
+    This addresses the issue where formerly non-unique cursor columns can cause
+    data loss in streaming subscriptions due to the 
+
+        WHERE col > last_cursor_value LIMIT batch_size
+
+    pattern skipping rows with duplicate cursor values when they can't all fit in
+    batch_size.
+    """
+
+    @classmethod
+    def dir(cls):
+        return 'queries/subscriptions/streaming'
+
+    def test_streaming_subscription_with_duplicate_cursor_values(self, hge_ctx, hge_key, ws_client):
+        """
+        Test that streaming subscriptions with duplicate cursor values return all rows
+        using WITH TIES functionality on Postgres and Citus.
+
+        This test:
+        1. Uses existing articles table but adds priority column for testing
+        2. Inserts data with duplicate cursor values on priority column
+        3. Verifies that WITH TIES returns all rows with duplicate cursor values
+        """
+        # Add priority column to existing articles table for our test. Existing
+        # teardown should still work fine.
+        #
+        # Note that while in theory the engine could be using `id` as a
+        # tiebreaker here, implementing things this way would have been much
+        # more difficult and furthermore we can't always be sure that a table
+        # (that the customer has already tracked) has any unique columns
+        setup_sql = '''
+            ALTER TABLE hge_tests.articles ADD COLUMN IF NOT EXISTS priority INT;
+
+            -- Clear existing data and insert test data with duplicate priority values
+            DELETE FROM hge_tests.articles;
+            INSERT INTO hge_tests.articles (id, priority) VALUES
+                -- batch 1 (oversized, excercising WITH TIES)
+                (7, 1),
+                (6, 2),
+                (5, 2),
+                (4, 2),
+                -- batch 2 (full batch)
+                (1, 3),
+                (2, 4),
+                -- batch 3 (undersized, not enough data to fill batch)
+                (3, 5);
+        '''
+
+        hge_ctx.v1q({
+            'type': 'run_sql',
+            'args': {'sql': setup_sql}
+        })
+
+        ## Debugging:
+        # verify_result = hge_ctx.v1q({
+        #     'type': 'run_sql',
+        #     'args': {'sql': 'SELECT id, priority FROM hge_tests.articles ORDER BY priority, id;'}
+        # })
+        # print(f"Inserted data: {verify_result}")
+
+        # Initialize WebSocket connection
+        ws_client.init_as_admin()
+
+        # Start streaming subscription with batch_size=2 and cursor on priority column
+        query = """
+        subscription ($batch_size: Int!) {
+          stream_data: hge_tests_articles_stream(
+            cursor: [{initial_value: {priority: 0}, ordering: ASC}],
+            batch_size: $batch_size
+          ) {
+            id
+            priority
+          }
+        }
+        """
+
+        subscrPayload = {'query': query, 'variables': {'batch_size': 2}}
+        respLive = ws_client.send_query(subscrPayload, query_id='stream_test', timeout=15)
+
+        # Test WITH TIES functionality: With batch_size=2, we should get more than 2 rows
+        # when there are duplicate cursor values due to WITH TIES
+        ev = next(respLive)
+        assert ev['type'] == 'data', f"Expected data event, got {ev['type']}. Full event: {ev}"
+        assert ev['id'] == 'stream_test', ev
+
+        first_batch = ev['payload']['data']['stream_data']
+        # With batch size 2 we return [1,2] plus all remaining "ties" of priority 2
+        assert [row['priority'] for row in first_batch] == [1, 2, 2, 2], first_batch
+        # The order wrt id is undefined
+        assert sorted([row['id'] for row in first_batch]) == [4, 5, 6, 7], first_batch
+
+        ev = next(respLive)
+        second_batch = ev['payload']['data']['stream_data']
+        assert [row['priority'] for row in second_batch] == [3, 4], second_batch
+        assert sorted([row['id'] for row in second_batch]) == [1, 2], second_batch
+         
+        ev = next(respLive)
+        third_batch = ev['payload']['data']['stream_data']
+        assert [row['priority'] for row in third_batch] == [5], third_batch
+        assert sorted([row['id'] for row in third_batch]) == [3], third_batch
+
+        # Clean stop
+        frame = {'id': 'stream_test', 'type': 'stop'}
+        ws_client.send(frame)
