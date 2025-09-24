@@ -49,3 +49,18 @@ In the case of streaming subscriptions, the multiplexed batch size can be config
 ## Use cases
 
 - [Subscribe to the undelivered messages in a chat application](/subscriptions/postgres/streaming/use-cases.mdx)
+
+## Bugs and limitations
+
+Care needs to be taken when a streaming subscription query uses a cursor on a
+non-UNIQUE column. On Postgres and Citus, data will be returned correctly,
+however some responses may be larger than the requested batch size (this is
+because we use `FETCH FIRST n WITH TIES` internally). 
+
+:::caution Warning
+
+On other Postgres-like databases where streaming subscriptions are supported
+but `WITH TIES` is not, like Cockroach, a cursor on a non-unique column may
+lead to some rows being skipped when the column data contains duplicates.
+
+:::
