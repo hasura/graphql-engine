@@ -25,10 +25,14 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (selectToSelec
 import Hasura.Backends.Postgres.Translate.Select.Internal.Process (processAnnSimpleSelect)
 import Hasura.Backends.Postgres.Translate.Types
   ( CustomSQLCTEs,
+    LimitArg (LimitArg),
     MultiRowSelectNode (MultiRowSelectNode),
     PermissionLimitSubQuery (PLSQNotRequired),
     SelectNode (SelectNode),
+    SelectSlicing (SelectSlicing),
+    SelectSource (SelectSource),
     SelectWriter (..),
+    SortingAndSlicing (SortingAndSlicing),
     SourcePrefixes (SourcePrefixes),
     initialNativeQueryFreshIdStore,
     orderByForJsonAgg,
@@ -116,10 +120,12 @@ mkStreamSQLSelect userInfo (AnnSelectStreamG () fields from perm args strfyNum) 
       $ flip runReaderT strfyNum
       $ flip evalStateT initialNativeQueryFreshIdStore
       $ processAnnSimpleSelect userInfo sourcePrefixes rootFldName permLimitSubQuery sqlSelect
-  let selectNode = SelectNode nodeExtractors joinTree
+  let -- Enable WITH TIES for streaming subscriptions to handle non-unique cursor values
+      selectSourceWithTies = enableWithTiesInSelectSource selectSource
+      selectNode = SelectNode nodeExtractors joinTree
       topExtractor =
         asJsonAggExtr JASMultipleRows rootFldAls permLimitSubQuery
-          $ orderByForJsonAgg selectSource
+          $ orderByForJsonAgg selectSourceWithTies
       cursorLatestValueExp :: S.SQLExp =
         let columnAlias = ciName cursorColInfo
             pgColumn = ciColumn cursorColInfo
@@ -145,7 +151,7 @@ mkStreamSQLSelect userInfo (AnnSelectStreamG () fields from perm args strfyNum) 
       arrayNode = MultiRowSelectNode [topExtractor, cursorLatestValueExtractor] selectNode
   tell customSQLCTEs
 
-  pure $ generateSQLSelectFromArrayNode @pgKind selectSource arrayNode $ S.BELit True
+  pure $ generateSQLSelectFromArrayNode @pgKind selectSourceWithTies arrayNode $ S.BELit True
   where
     rootFldIdentifier = TableIdentifier $ getFieldNameTxt rootFldName
     sourcePrefixes = SourcePrefixes (tableIdentifierToIdentifier rootFldIdentifier) (tableIdentifierToIdentifier rootFldIdentifier)
@@ -164,3 +170,19 @@ mkStreamSQLSelect userInfo (AnnSelectStreamG () fields from perm args strfyNum) 
       flip S.SETyAnn (S.mkTypeAnn pgType) . case pgType of
         CollectableTypeScalar scalarType -> withConstructorFn scalarType
         CollectableTypeArray _ -> id
+
+-- | Enable WITH TIES in a SelectSource for streaming subscriptions
+--
+-- TODO this is ugly. What we might really want is for _saLimit to be a type
+-- family instance, a function of the Backend parameter, and either just an
+-- @Maybe Int@ or a @Maybe LimitArg@ for Postgres. Then we'd have something
+-- like this in 'mkStreamSQLSelect':
+--
+-- >  _saLimit = Just $ LimitArg True (_ssaBatchSize args),
+--
+-- This refactoring looked like more work than it was worth for now.
+enableWithTiesInSelectSource :: SelectSource -> SelectSource
+enableWithTiesInSelectSource (SelectSource prefix fromItem whereExp (SortingAndSlicing sorting (SelectSlicing limitArg offset))) =
+  SelectSource prefix fromItem whereExp (SortingAndSlicing sorting (SelectSlicing (fmap enableWithTies limitArg) offset))
+  where
+    enableWithTies (LimitArg _ limit) = LimitArg True limit

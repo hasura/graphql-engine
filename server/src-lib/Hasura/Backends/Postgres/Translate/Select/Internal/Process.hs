@@ -144,14 +144,15 @@ processSelectParams
       thisSourcePrefix = _pfThis sourcePrefixes
       SelectArgs whereM orderByM inpLimitM offsetM distM = tableArgs
       TablePerm permFilter permLimit = tablePermissions
-      selectSlicing = SelectSlicing finalLimit offsetM
-      finalLimit =
+      selectSlicing = SelectSlicing finalLimitArg offsetM
+      finalLimitArg =
         -- if sub query is required, then only use input limit
         --    because permission limit is being applied in subquery
         -- else compare input and permission limits
         case permLimitSubQ of
-          PLSQRequired _ -> inpLimitM
-          PLSQNotRequired -> compareLimits
+          -- Currently the only place LimitArg is created (see TODO in this commit)
+          PLSQRequired _ -> LimitArg False <$> inpLimitM
+          PLSQNotRequired -> LimitArg False <$> compareLimits
 
       compareLimits =
         case (inpLimitM, permLimit) of

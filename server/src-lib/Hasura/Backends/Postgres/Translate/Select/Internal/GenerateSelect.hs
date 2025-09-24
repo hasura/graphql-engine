@@ -34,7 +34,8 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
 import Hasura.Backends.Postgres.Translate.Types
 import Hasura.Prelude
 import Hasura.RQL.IR.Select (ConnectionSlice (SliceFirst, SliceLast))
-import Hasura.RQL.Types.BackendType (PostgresKind (..))
+import Hasura.RQL.Types.BackendTag (HasTag, backendTag, reify)
+import Hasura.RQL.Types.BackendType (BackendType (..), PostgresKind (..))
 import Hasura.RQL.Types.Relationships.Local (Nullable (..))
 
 class PostgresGenerateSQLSelect (pgKind :: PostgresKind) where
@@ -48,6 +49,20 @@ instance PostgresGenerateSQLSelect 'Citus where
 
 instance PostgresGenerateSQLSelect 'Cockroach where
   generateSQLSelect = defaultGenerateSQLSelect @('Cockroach) applyCockroachDistinctOnWorkaround
+
+-- | Convert LimitArg to LimitExp, handling WITH TIES for PostgreSQL variants that support it
+limitArgToLimitExp :: BackendType -> LimitArg -> S.LimitExp
+limitArgToLimitExp backendType (LimitArg withTies limit) =
+  -- `withTies && not (supportsWithTies backendType)` represents an existing
+  -- bug not solved in initial ENG-1888 work
+  if withTies && supportsWithTies backendType
+    then S.FetchFirstWithTiesExp (S.intToSQLExp limit)
+    else S.LimitExp (S.intToSQLExp limit)
+  where
+    supportsWithTies (Postgres Vanilla) = True
+    supportsWithTies (Postgres Citus) = True
+    -- note: only Postgres Cockroach is reachable here at time of writeing:
+    supportsWithTies _ = False
 
 -- This function rewrites a select statement that uses DISTINCT ON where
 -- the DISTINCT ON references CASE ... END expressions to a nested select
@@ -158,7 +173,7 @@ applyCockroachDistinctOnWorkaround select =
 
 defaultGenerateSQLSelect ::
   forall pgKind.
-  (PostgresGenerateSQLSelect pgKind) =>
+  (HasTag ('Postgres pgKind), PostgresGenerateSQLSelect pgKind) =>
   -- Function to post-process the SelectNode SELECT and the base table SELECT
   (S.Select -> S.Select) ->
   -- | Pre join condition for lateral joins
@@ -179,11 +194,12 @@ defaultGenerateSQLSelect selectRewriter joinCondition selectSource selectNode =
             exts -> exts,
         S.selFrom = Just $ S.FromExp [joinedFrom],
         S.selOrderBy = nodeOrderBy,
-        S.selLimit = S.LimitExp . S.intToSQLExp <$> _ssLimit nodeSlicing,
+        S.selLimit = limitArgToLimitExp backendType <$> _ssLimit nodeSlicing,
         S.selOffset = S.OffsetExp . S.int64ToSQLExp <$> _ssOffset nodeSlicing,
         S.selDistinct = nodeDistinctOn
       }
   where
+    backendType = reify $ backendTag @('Postgres pgKind)
     SelectSource sourcePrefix fromItem whereExp sortAndSlice = selectSource
     SelectNode extractors joinTree = selectNode
     JoinTree objectRelations arrayRelations arrayConnections computedFields = joinTree
@@ -199,7 +215,7 @@ defaultGenerateSQLSelect selectRewriter joinCondition selectSource selectNode =
             S.selFrom = Just $ S.FromExp [fromItem],
             S.selWhere = Just $ injectJoinCond joinCondition whereExp,
             S.selOrderBy = baseOrderBy,
-            S.selLimit = S.LimitExp . S.intToSQLExp <$> _ssLimit baseSlicing,
+            S.selLimit = limitArgToLimitExp backendType <$> _ssLimit baseSlicing,
             S.selOffset = S.OffsetExp . S.int64ToSQLExp <$> _ssOffset baseSlicing,
             S.selDistinct = baseDistinctOn
           }
