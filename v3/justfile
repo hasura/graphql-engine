@@ -53,7 +53,8 @@ start-docker-test-deps:
       postgres_promptql \
       pre_ndc_request_plugin_example \
       pre_ndc_response_plugin_example \
-      pre_parse_plugin_example
+      pre_parse_plugin_example \
+      test_data_server
 
 # pull / build all docker deps
 docker-refresh: stop-docker
