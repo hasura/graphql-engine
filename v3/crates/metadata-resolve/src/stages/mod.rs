@@ -24,6 +24,7 @@ pub mod scalar_type_representations;
 pub mod scalar_types;
 pub mod type_permissions;
 mod types;
+pub mod view_permissions;
 pub mod views;
 
 use command_permissions::CommandPermissionsOutput;
@@ -69,9 +70,7 @@ fn resolve_internal(
         graphql_config::resolve(&metadata_accessor.graphql_config, &metadata_accessor.flags)?;
 
     // Resolve SQL views and their dependencies
-    let views::ViewsOutput { views, issues } = views::resolve(&metadata_accessor.views)?;
-
-    all_issues.extend(issues);
+    let views::ViewsOutput { views } = views::resolve(&metadata_accessor.views)?;
 
     // Fetch and check schema information for all our data connectors
     let data_connectors::DataConnectorsOutput {
@@ -345,6 +344,11 @@ fn resolve_internal(
 
     all_issues.extend(model_permission_issues.into_iter().map(Warning::from));
 
+    let view_permissions::ViewPermissionsOutput {
+        permissions: views_with_permissions,
+    } = view_permissions::resolve(&metadata_accessor, &views, &mut conditions)
+        .map_err(flatten_multiple_errors)?;
+
     let roles = roles::resolve(
         &object_types_with_relationships,
         &models_with_permissions,
@@ -382,7 +386,7 @@ fn resolve_internal(
             plugin_configs,
             conditions,
             runtime_flags,
-            views,
+            views: views_with_permissions,
         },
         all_warnings,
     ))

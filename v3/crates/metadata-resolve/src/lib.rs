@@ -83,12 +83,13 @@ pub use stages::scalar_type_representations::ScalarTypeRepresentation;
 pub use stages::type_permissions::{
     FieldAuthorizationRule, FieldPresetInfo, TypeInputAuthorizationRule, TypeInputPermission,
 };
+pub use stages::view_permissions::{ViewAuthorizationRule, ViewPermissions, ViewWithPermissions};
 pub use stages::views::ResolvedView;
-pub use stages::{Metadata, resolve};
 pub use stages::{
+    Metadata,
     command_permissions::{AllowOrDeny, Command, CommandAuthorizationRule, CommandWithPermissions},
     commands::CommandSource,
-    data_connectors,
+    data_connectors, resolve,
 };
 pub use types::condition::{BinaryOperation, Condition, ConditionHash, Conditions, UnaryOperation};
 pub use types::configuration;

@@ -6397,6 +6397,39 @@
               "additionalProperties": false
             }
           ]
+        },
+        {
+          "$id": "https://hasura.io/jsonschemas/metadata/ViewPermissions",
+          "title": "ViewPermissions",
+          "description": "Definition of permissions for an OpenDD view.",
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "definition",
+                "kind",
+                "version"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "ViewPermissions"
+                  ]
+                },
+                "version": {
+                  "type": "string",
+                  "enum": [
+                    "v1"
+                  ]
+                },
+                "definition": {
+                  "$ref": "#/definitions/ViewPermissionsV1"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
         }
       ]
     },
@@ -8147,12 +8180,138 @@
         }
       ]
     },
+    "ViewAuthorizationRule": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ViewAuthorizationRule",
+      "title": "ViewAuthorizationRule",
+      "description": "A rule that determines whether a view is accessible to a user",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "allow"
+          ],
+          "properties": {
+            "allow": {
+              "$ref": "#/definitions/Allow"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "deny"
+          ],
+          "properties": {
+            "deny": {
+              "$ref": "#/definitions/Deny"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
     "ViewName": {
       "$id": "https://hasura.io/jsonschemas/metadata/ViewName",
       "title": "ViewName",
       "description": "The name of a SQL view.",
       "type": "string",
       "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
+    },
+    "ViewPermission": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ViewPermission",
+      "title": "ViewPermission",
+      "description": "Defines the permissions for a view for a role.",
+      "type": "object",
+      "required": [
+        "allow",
+        "role"
+      ],
+      "properties": {
+        "role": {
+          "description": "The role for which permissions are being defined.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Role"
+            }
+          ]
+        },
+        "allow": {
+          "description": "Whether access is allowed or denied for this role.",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ViewPermissionOperand": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ViewPermissionOperand",
+      "title": "ViewPermissionOperand",
+      "description": "Configuration for view permissions",
+      "oneOf": [
+        {
+          "title": "RoleBased",
+          "description": "Definition of role-based view permissions on an OpenDD view",
+          "type": "object",
+          "required": [
+            "roleBased"
+          ],
+          "properties": {
+            "roleBased": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ViewPermission"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "RulesBased",
+          "description": "Definition of rules-based view permissions on an OpenDD view",
+          "type": "object",
+          "required": [
+            "rulesBased"
+          ],
+          "properties": {
+            "rulesBased": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ViewAuthorizationRule"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ViewPermissionsV1": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ViewPermissionsV1",
+      "title": "ViewPermissionsV1",
+      "description": "Definition of permissions for an OpenDD view.",
+      "type": "object",
+      "required": [
+        "permissions",
+        "viewName"
+      ],
+      "properties": {
+        "viewName": {
+          "description": "The name of the view for which permissions are being defined.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ViewName"
+            }
+          ]
+        },
+        "permissions": {
+          "description": "View permissions definitions",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ViewPermissionOperand"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
     },
     "ViewV1": {
       "$id": "https://hasura.io/jsonschemas/metadata/ViewV1",

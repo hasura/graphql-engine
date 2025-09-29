@@ -3,6 +3,7 @@ use authorization_rules::{
     ArgumentPolicy, ConditionCache, ModelPermission, ObjectInputPolicy,
     evaluate_command_authorization_rules, evaluate_field_authorization_rules,
     evaluate_model_authorization_rules, evaluate_type_input_authorization_rules,
+    evaluate_view_authorization_rules,
 };
 use hasura_authn_core::SessionVariables;
 use indexmap::IndexMap;
@@ -16,6 +17,7 @@ use open_dds::{
     query::ArgumentName,
     relationships::RelationshipName,
     types::{CustomTypeName, FieldName},
+    views::ViewName,
 };
 use std::collections::BTreeMap;
 
@@ -292,4 +294,24 @@ fn get_accessible_fields_for_object<'a>(
         conditions,
         condition_cache,
     )?)
+}
+
+pub fn can_access_view(
+    metadata: &Metadata,
+    view_name: &Qualified<ViewName>,
+    session_variables: &SessionVariables,
+    conditions: &Conditions,
+    condition_cache: &mut ConditionCache,
+) -> Result<bool, PermissionError> {
+    match metadata.views.get(view_name) {
+        Some(view_with_permissions) => Ok(evaluate_view_authorization_rules(
+            &view_with_permissions.permissions.authorization_rules,
+            session_variables,
+            conditions,
+            condition_cache,
+        )?),
+        None => Err(PermissionError::ViewNotFound {
+            view_name: view_name.clone(),
+        }),
+    }
 }

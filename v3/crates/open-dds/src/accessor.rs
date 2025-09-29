@@ -49,6 +49,7 @@ pub struct MetadataAccessor {
     pub graphql_config: Vec<QualifiedObject<graphql_config::GraphqlConfig>>,
     pub plugins: Vec<QualifiedObject<plugins::LifecyclePluginHookV1>>,
     pub views: Vec<QualifiedObject<views::ViewV1>>,
+    pub view_permissions: Vec<QualifiedObject<permissions::ViewPermissions>>,
 }
 
 fn load_metadata_objects(
@@ -182,6 +183,13 @@ fn load_metadata_objects(
                     view.value.upgrade(),
                 ));
             }
+            OpenDdSubgraphObject::ViewPermissions(view_permissions) => {
+                accessor.view_permissions.push(QualifiedObject {
+                    path: view_permissions.path.clone(),
+                    subgraph: subgraph.clone(),
+                    object: view_permissions.value.clone(),
+                });
+            }
         }
     }
 }
@@ -261,6 +269,7 @@ impl MetadataAccessor {
             graphql_config: vec![],
             plugins: vec![],
             views: vec![],
+            view_permissions: Vec::new(),
         }
     }
 }

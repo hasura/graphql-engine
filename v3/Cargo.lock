@@ -3672,7 +3672,6 @@ dependencies = [
  "serde-ext",
  "serde_json",
  "serde_with",
- "sqlparser",
  "strum",
  "strum_macros",
  "thiserror 2.0.17",

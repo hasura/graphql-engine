@@ -118,6 +118,11 @@ pub enum PermissionError {
         data_connector_name: Qualified<DataConnectorName>,
     },
 
+    #[error("View {view_name} could not be found")]
+    ViewNotFound {
+        view_name: Qualified<open_dds::views::ViewName>,
+    },
+
     #[error("{0}")]
     Other(String),
 }
@@ -140,6 +145,7 @@ impl TraceableError for PermissionError {
             | Self::ObjectTypeNotAccessible { .. }
             | Self::CommandNotAccessible { .. }
             | Self::ModelNotAccessible { .. }
+            | Self::ViewNotFound { .. }
             | Self::Other(_) => ErrorVisibility::User,
         }
     }

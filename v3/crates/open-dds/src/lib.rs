@@ -133,6 +133,7 @@ pub enum OpenDdSubgraphObject {
 
     // View
     View(Spanned<View>),
+    ViewPermissions(Spanned<permissions::ViewPermissions>),
 }
 
 /// All of the metadata required to run Hasura v3 engine.

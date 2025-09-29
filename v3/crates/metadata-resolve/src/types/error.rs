@@ -13,6 +13,7 @@ use crate::stages::{
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 use error_context::{Context, Step};
 use hasura_authn_core::Role;
+use open_dds::views::ViewName;
 use open_dds::{
     arguments::ArgumentName,
     commands::CommandName,
@@ -287,6 +288,8 @@ pub enum Error {
 
     #[error("{0}")]
     ViewError(#[from] views::Error),
+    #[error("unknown view '{view_name}' in view permissions")]
+    UnknownView { view_name: Qualified<ViewName> },
 
     #[error("{errors}")]
     MultipleErrors {

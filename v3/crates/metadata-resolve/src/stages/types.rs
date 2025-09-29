@@ -1,3 +1,4 @@
+use open_dds::views::ViewName;
 use serde_with::serde_as;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -16,7 +17,7 @@ use crate::types::subgraph::Qualified;
 
 use crate::stages::{
     aggregates, boolean_expressions, command_permissions, graphql_config, model_permissions,
-    object_relationships, order_by_expressions, scalar_type_representations, views,
+    object_relationships, order_by_expressions, scalar_type_representations,
 };
 
 use super::plugins::LifecyclePluginConfigs;
@@ -41,7 +42,7 @@ pub struct Metadata {
     pub aggregate_expressions:
         BTreeMap<Qualified<AggregateExpressionName>, aggregates::AggregateExpression>,
     #[serde_as(as = "Vec<(_, _)>")]
-    pub views: IndexMap<Qualified<open_dds::views::ViewName>, views::ResolvedView>,
+    pub views: IndexMap<Qualified<ViewName>, crate::stages::view_permissions::ViewWithPermissions>,
     pub graphql_config: graphql_config::GlobalGraphqlConfig,
     pub plugin_configs: LifecyclePluginConfigs,
     pub roles: BTreeSet<Role>,

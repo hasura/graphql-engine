@@ -202,3 +202,15 @@ pub struct DenyRelationalOperations {
     pub condition: Condition,
     pub operations: Vec<RelationalOperation>,
 }
+
+#[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[opendd(externally_tagged, json_schema(title = "ViewAuthorizationRule"))]
+/// A rule that determines whether a view is accessible to a user
+pub enum ViewAuthorizationRule {
+    // If a condition is provided, it must evaluate to 'true' for
+    // this View to be available to the user
+    Allow(Allow),
+    // If the provided condition evaluates to 'true' this View will not be available to the user
+    Deny(Deny),
+}
