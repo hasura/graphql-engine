@@ -445,7 +445,10 @@ remoteInputObjectParser ::
         (InputFieldsParser n (Altered, G.Value RemoteSchemaVariable))
         (Parser 'Input n (Altered, G.Value RemoteSchemaVariable))
     )
-remoteInputObjectParser schemaDoc defn@(G.InputObjectTypeDefinition desc name _ valueDefns) =
+remoteInputObjectParser schemaDoc defn@(G.InputObjectTypeDefinition desc name _ valueDefns) = do
+  -- NOTE!: prefixed/altered typename must be part of the memo key everywhere in this module,
+  -- else types from different remotes may become intermixed (see ENG-1823):
+  typename <- asks getter <&> \mkTypename -> runMkTypename mkTypename name
   if all (isJust . _rsitdPresetArgument) valueDefns
     then -- All the fields are preset: we can't create a parser, that would result in an invalid type in
     -- the schema (an input object with no field). We therefore forward the InputFieldsParser
@@ -456,9 +459,7 @@ remoteInputObjectParser schemaDoc defn@(G.InputObjectTypeDefinition desc name _ 
     -- one field in the input object. We have to memoize this branch as we might recursively call
     -- the same parser.
 
-      Right <$> P.memoizeOn 'remoteInputObjectParser defn do
-        typename <- asks getter <&> \mkTypename -> runMkTypename mkTypename name
-
+      Right <$> P.memoizeOn 'remoteInputObjectParser (typename, defn) do
         -- Disallow short-circuit optimisation if the type name has been changed by remote schema customization
         let altered = Altered $ typename /= name
         argsParser <- fmap (first (<> altered)) <$> argumentsParser valueDefns schemaDoc
@@ -598,15 +599,16 @@ remoteSchemaObject ::
   RemoteSchemaRelationships ->
   G.ObjectTypeDefinition RemoteSchemaInputValueDefinition ->
   SchemaT r m (Parser 'Output n (IR.ObjectSelectionSet (IR.RemoteRelationshipField IR.UnpreparedValue) RemoteSchemaVariable))
-remoteSchemaObject schemaDoc remoteRelationships defn@(G.ObjectTypeDefinition description name interfaces _directives subFields) =
-  P.memoizeOn 'remoteSchemaObject defn do
+remoteSchemaObject schemaDoc remoteRelationships defn@(G.ObjectTypeDefinition description name interfaces _directives subFields) = do
+  -- see ENG-1823:
+  typename <- asks getter <&> \mkTypename -> runMkTypename mkTypename name
+  P.memoizeOn 'remoteSchemaObject (typename, defn) do
     subFieldParsers <- traverse (remoteFieldFromDefinition schemaDoc name remoteRelationships) subFields
     remoteJoinParsers <- remoteSchemaRelationships remoteRelationships name
     interfaceDefs <- traverse getInterface interfaces
     implements <- traverse (remoteSchemaInterface schemaDoc remoteRelationships) interfaceDefs
     -- TODO: also check sub-interfaces, when these are supported in a future graphql spec
     traverse_ validateImplementsFields interfaceDefs
-    typename <- asks getter <&> \mkTypename -> runMkTypename mkTypename name
     let allFields = map (fmap IR.FieldGraphQL) subFieldParsers <> map (fmap IR.FieldRemote) remoteJoinParsers
     pure
       $ P.selectionSetObject typename description allFields implements
@@ -798,8 +800,10 @@ remoteSchemaInterface ::
   RemoteSchemaRelationships ->
   G.InterfaceTypeDefinition [G.Name] RemoteSchemaInputValueDefinition ->
   SchemaT r m (Parser 'Output n (IR.DeduplicatedSelectionSet (IR.RemoteRelationshipField IR.UnpreparedValue) RemoteSchemaVariable))
-remoteSchemaInterface schemaDoc remoteRelationships defn@(G.InterfaceTypeDefinition description name _directives fields possibleTypes) =
-  P.memoizeOn 'remoteSchemaObject defn do
+remoteSchemaInterface schemaDoc remoteRelationships defn@(G.InterfaceTypeDefinition description name _directives fields possibleTypes) = do
+  -- see ENG-1823:
+  typename <- asks getter <&> \mkTypename -> runMkTypename mkTypename name
+  P.memoizeOn 'remoteSchemaObject (typename, defn) do
     subFieldParsers <- traverse (remoteFieldFromDefinition schemaDoc name remoteRelationships) fields
     objs <- traverse (getObjectParser schemaDoc remoteRelationships getObject) possibleTypes
     -- In the Draft GraphQL spec (> June 2018), interfaces can themselves
@@ -813,7 +817,6 @@ remoteSchemaInterface schemaDoc remoteRelationships defn@(G.InterfaceTypeDefinit
     -- types in the schema document that claim to implement this interface.  We
     -- should have a check that expresses that that collection of objects is equal
     -- to 'possibleTypes'.
-    typename <- asks getter <&> \mkTypename -> runMkTypename mkTypename name
     let allFields = map (fmap IR.FieldGraphQL) subFieldParsers
     pure
       $ P.selectionSetInterface typename description allFields objs
@@ -844,14 +847,15 @@ remoteSchemaUnion ::
   RemoteSchemaRelationships ->
   G.UnionTypeDefinition ->
   SchemaT r m (Parser 'Output n (IR.DeduplicatedSelectionSet (IR.RemoteRelationshipField IR.UnpreparedValue) RemoteSchemaVariable))
-remoteSchemaUnion schemaDoc remoteRelationships defn@(G.UnionTypeDefinition description name _directives objectNames) =
-  P.memoizeOn 'remoteSchemaObject defn do
+remoteSchemaUnion schemaDoc remoteRelationships defn@(G.UnionTypeDefinition description name _directives objectNames) = do
+  -- see ENG-1823:
+  typename <- asks getter <&> \mkTypename -> runMkTypename mkTypename name
+  P.memoizeOn 'remoteSchemaObject (typename, defn) do
     objs <- traverse (getObjectParser schemaDoc remoteRelationships getObject) objectNames
     when (null objs)
       $ throw400 RemoteSchemaError
       $ "List of member types cannot be empty for union type "
       <> squote name
-    typename <- asks getter <&> \mkTypename -> runMkTypename mkTypename name
     pure $ P.selectionSetUnion typename description objs <&> IR.mkUnionSelectionSet
   where
     getObject :: G.Name -> SchemaT r m (G.ObjectTypeDefinition RemoteSchemaInputValueDefinition)
