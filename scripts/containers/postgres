@@ -12,7 +12,7 @@
 if [ "$MODE" = "test" ]; then
   PG_PORT=35432
 else
-  PG_PORT=${PG_PORT-25432}
+  PG_PORT="${PG_PORT:-25432}"
 fi
 
 PG_PASSWORD=postgres
