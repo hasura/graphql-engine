@@ -15,7 +15,7 @@ pub struct ViewsOutput {
 
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum Error {
-    #[error("Circular dependency detected for view {view_name}")]
+    #[error("Duplicate definitions for view: {view_name}")]
     DuplicateViewDefinition {
         view_name: Qualified<open_dds::views::ViewName>,
     },
