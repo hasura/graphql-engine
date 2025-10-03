@@ -5,6 +5,7 @@ use reqwest::header::{HeaderMap, HeaderValue};
 use serde::de::DeserializeOwned;
 use thiserror::Error;
 
+use tokio_util::io::StreamReader;
 use tracing_util::{SpanVisibility, Successful};
 
 use super::{
@@ -18,6 +19,9 @@ use ndc_models::{
     RelationalInsertResponse, RelationalUpdateRequest, RelationalUpdateResponse,
 };
 
+use futures::TryStreamExt;
+use tokio_stream::Stream;
+
 /// Error type for the NDC API client interactions
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -29,6 +33,12 @@ pub enum Error {
 
     #[error("unable to decode JSON response from connector: {0}")]
     Serde(#[from] serde_json::Error),
+
+    #[error("UTF-8 error: {0}")]
+    Utf8Error(#[from] std::string::FromUtf8Error),
+
+    #[error("IO error: {0}")]
+    IOError(#[from] std::io::Error),
 
     #[error("invalid connector base URL")]
     InvalidBaseURL,
@@ -463,6 +473,52 @@ pub async fn mutation_relational_delete_post(
                         execute_request(request, response_size_limit, NdcErrorResponse::V02)
                             .await?;
                     Ok(response)
+                })
+            },
+        )
+        .await
+}
+
+pub async fn query_relational_stream(
+    configuration: Configuration<'_>,
+    request: &ndc_models::RelationalQuery,
+) -> Result<impl Stream<Item = Result<Vec<serde_json::Value>, std::io::Error>> + use<>, Error> {
+    let tracer = tracing_util::global_tracer();
+
+    tracer
+        .in_span_async(
+            "query_rel_stream",
+            "Stream relational query",
+            SpanVisibility::Internal,
+            move || {
+                Box::pin(async move {
+                    let url =
+                        append_path(configuration.base_path, &["query", "relational", "stream"])?;
+
+                    let request_builder = construct_request(
+                        configuration,
+                        NdcVersion::V02,
+                        reqwest::Method::POST,
+                        url,
+                        |r| r.json(request),
+                    );
+
+                    let response = request_builder.send().await.map_err(Error::Reqwest)?;
+
+                    if !response.status().is_success() {
+                        return Err(Error::Connector(ConnectorError {
+                            status: response.status(),
+                            error_response: NdcErrorResponse::V02(response.json().await?),
+                        }));
+                    }
+                    let reader = StreamReader::new(
+                        response
+                            .error_for_status()
+                            .map_err(Error::Reqwest)?
+                            .bytes_stream()
+                            .map_err(std::io::Error::other),
+                    );
+                    Ok(serde_jsonlines::AsyncJsonLinesReader::new(reader).read_all())
                 })
             },
         )

@@ -1187,10 +1187,11 @@ dependencies = [
  "axum-ext",
  "datafusion",
  "env_logger",
+ "futures",
  "indexmap 2.11.4",
  "iso8601",
  "itertools 0.14.0",
- "ndc-models 0.2.9",
+ "ndc-models 0.2.11",
  "rand 0.9.2",
  "regex",
  "serde",
@@ -2181,6 +2182,7 @@ dependencies = [
  "axum",
  "bytes",
  "engine-types",
+ "futures",
  "graphql-schema",
  "hasura-authn-core",
  "http 1.3.1",
@@ -2189,7 +2191,7 @@ dependencies = [
  "metadata-resolve",
  "mockito",
  "ndc-models 0.1.7",
- "ndc-models 0.2.9",
+ "ndc-models 0.2.11",
  "nonempty",
  "open-dds",
  "plan-types",
@@ -2198,9 +2200,12 @@ dependencies = [
  "pretty_assertions",
  "reqwest",
  "serde",
+ "serde-jsonlines",
  "serde_json",
  "thiserror 2.0.17",
  "tokio",
+ "tokio-stream",
+ "tokio-util",
  "tracing-util",
  "transitive",
 ]
@@ -2495,7 +2500,7 @@ dependencies = [
  "lang-graphql",
  "metadata-resolve",
  "ndc-models 0.1.7",
- "ndc-models 0.2.9",
+ "ndc-models 0.2.11",
  "nonempty",
  "open-dds",
  "plan-types",
@@ -3355,7 +3360,7 @@ dependencies = [
  "jsonapi 0.7.0",
  "jsonpath",
  "metadata-resolve",
- "ndc-models 0.2.9",
+ "ndc-models 0.2.11",
  "oas3",
  "open-dds",
  "plan",
@@ -3660,7 +3665,7 @@ dependencies = [
  "jsonpath",
  "lang-graphql",
  "ndc-models 0.1.7",
- "ndc-models 0.2.9",
+ "ndc-models 0.2.11",
  "nonempty",
  "open-dds",
  "partition_eithers",
@@ -3789,8 +3794,8 @@ dependencies = [
 
 [[package]]
 name = "ndc-models"
-version = "0.2.9"
-source = "git+https://github.com/hasura/ndc-spec.git?rev=f8036879ce75b31d94d5f08d15fa93e319af00f7#f8036879ce75b31d94d5f08d15fa93e319af00f7"
+version = "0.2.11"
+source = "git+https://github.com/hasura/ndc-spec.git?tag=v0.2.11#c28e719754e55a7c086e0cc2682dabd97d9b405f"
 dependencies = [
  "indexmap 2.11.4",
  "ref-cast",
@@ -4008,7 +4013,7 @@ dependencies = [
  "jsonpath",
  "jsonschema-tidying",
  "ndc-models 0.1.7",
- "ndc-models 0.2.9",
+ "ndc-models 0.2.11",
  "opendds-derive",
  "pretty_assertions",
  "ref-cast",
@@ -4548,7 +4553,7 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "ndc-models 0.1.7",
- "ndc-models 0.2.9",
+ "ndc-models 0.2.11",
  "open-dds",
  "pre-ndc-request-plugin",
  "serde",
@@ -4580,7 +4585,7 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "ndc-models 0.1.7",
- "ndc-models 0.2.9",
+ "ndc-models 0.2.11",
  "pre-ndc-response-plugin",
  "serde",
  "serde_json",
@@ -5267,6 +5272,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde-jsonlines"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "013e069239d98648ea43a9c01845b381445e88de08b5a895ef9302e3bffde03d"
+dependencies = [
+ "futures-core",
+ "futures-sink",
+ "pin-project-lite",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "serde_arrow"
 version = "0.13.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5910,6 +5929,7 @@ checksum = "14307c986784f72ef81c89db7d9e28d6ac26d16213b109ea501696195e6e3ce5"
 dependencies = [
  "bytes",
  "futures-core",
+ "futures-io",
  "futures-sink",
  "pin-project-lite",
  "tokio",

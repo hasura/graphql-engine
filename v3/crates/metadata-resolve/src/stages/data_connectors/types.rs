@@ -557,6 +557,10 @@ pub struct DataConnectorRelationalQueryCapabilities {
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_union: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_streaming: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -1257,6 +1261,7 @@ fn mk_ndc_02_capabilities(
         }),
         supports_relational_queries: capabilities.relational_query.as_ref().map(|r| {
             DataConnectorRelationalQueryCapabilities {
+                supports_streaming: r.streaming.is_some(),
                 supports_project: DataConnectorRelationalProjectionCapabilities {
                     expression_capabilities: mk_relational_expression_capabilities(
                         &r.project.expression,

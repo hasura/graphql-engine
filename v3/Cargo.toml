@@ -67,7 +67,7 @@ used_underscore_binding = "allow"
 private_intra_doc_links = "allow"
 
 [workspace.dependencies]
-ndc-models = { package = "ndc-models", git = "https://github.com/hasura/ndc-spec.git", rev = "f8036879ce75b31d94d5f08d15fa93e319af00f7", features = ["arc-relation"]} # When you update this tag, also update the schema references in crates/open-dds/src/data_connector.rs
+ndc-models = { package = "ndc-models", git = "https://github.com/hasura/ndc-spec.git", tag = "v0.2.11", features = ["arc-relation"]} # When you update this tag, also update the schema references in crates/open-dds/src/data_connector.rs
 ndc-models-v01 = { package = "ndc-models", git = "https://github.com/hasura/ndc-spec.git", tag = "v0.1.7" } # When you update this tag, also update the schema references in crates/open-dds/src/data_connector.rs
 
 anyhow = "1"
@@ -149,6 +149,7 @@ schemars = { version = "0.8", features = ["preserve_order", "smol_str", "url"] }
 serde = { version = "1", features = ["derive", "rc"] }
 serde_arrow = { version = "0.13.6", features = ["arrow-55"] }
 serde_json = { version = "1", features = ["preserve_order"] }
+serde-jsonlines = { version = "0.7.0", features = ["async"] }
 serde_path_to_error = "0.1"
 serde_with = { version = "3", features = ["indexmap_2"] }
 sha2 = "0.10"
@@ -161,8 +162,10 @@ sqlparser = { version = "0.55", features = ["visitor"] }
 syn = "2"
 thiserror = "2"
 tokio = { version = "1", features = ["macros", "parking_lot", "rt-multi-thread", "signal", "time"] }
+tokio-stream = "0.1"
 tokio-test = "0.4"
 tokio-tungstenite = "0.24.0"
+tokio-util = { version = "0.7", features = ["compat", "io", "io-util"] }
 tower = "0.5"
 # Prefer zstd-encoded request bodies, but also support gzip in case a client can't do that
 tower-http = { version = "0.6", features = ["cors", "fs", "decompression-gzip", "decompression-zstd", "compression-gzip", "compression-zstd", "trace" ] }

@@ -70,6 +70,7 @@ pub fn get_capabilities(state: &AppState) -> ndc_models::CapabilitiesResponse {
                 None
             },
             relational_query: Some(ndc_models::RelationalQueryCapabilities {
+                streaming: Some(ndc_models::LeafCapability {}),
                 project: ndc_models::RelationalProjectionCapabilities {
                     expression: expression_capabilities(),
                 },

@@ -22,6 +22,7 @@ tracing-util = { path = "../utils/tracing-util" }
 async-recursion = { workspace = true }
 axum = { workspace = true }
 bytes = { workspace = true }
+futures = { workspace = true }
 http = { workspace = true }
 indexmap = { workspace = true }
 ndc-models = { workspace = true }
@@ -30,9 +31,12 @@ nonempty = { workspace = true }
 reqwest = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+serde-jsonlines = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true }
 transitive = { workspace = true }
+tokio-stream = { workspace = true }
+tokio-util.workspace = true
 
 [dev-dependencies]
 mockito = { workspace = true }

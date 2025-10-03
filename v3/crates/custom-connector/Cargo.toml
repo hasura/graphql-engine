@@ -19,6 +19,7 @@ anyhow = { workspace = true }
 axum = { workspace = true }
 datafusion = { workspace = true }
 env_logger = { workspace = true }
+futures = { workspace = true }
 indexmap = { workspace = true }
 iso8601 = { workspace = true }
 itertools = { workspace = true }

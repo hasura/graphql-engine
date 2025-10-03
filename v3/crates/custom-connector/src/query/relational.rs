@@ -31,14 +31,11 @@ use std::sync::Arc;
 
 pub type Result<A> = std::result::Result<A, (StatusCode, Json<ndc_models::ErrorResponse>)>;
 
-#[allow(clippy::print_stdout)]
-pub async fn execute_relational_query(
-    state: &AppState,
+async fn create_physical_plan(
     query: &RelationalQuery,
-) -> Result<Vec<Vec<serde_json::Value>>> {
-    println!("[SELECT]: query={query:?}");
-
-    let logical_plan: datafusion::logical_expr::LogicalPlan =
+    state: &AppState,
+) -> Result<Arc<dyn datafusion::physical_plan::ExecutionPlan>> {
+    let logical_plan =
         convert_relation_to_logical_plan(&query.root_relation, state).map_err(|err| {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -49,16 +46,13 @@ pub async fn execute_relational_query(
             )
         })?;
 
-    let state = SessionStateBuilder::new()
+    let session_state = SessionStateBuilder::new()
         .with_config(SessionConfig::new())
         .with_runtime_env(Arc::new(RuntimeEnv::default()))
         .with_default_features()
         .build();
 
-    let session_ctx = SessionContext::new();
-    let task_ctx = session_ctx.task_ctx();
-
-    let physical_plan = state
+    session_state
         .create_physical_plan(&logical_plan)
         .await
         .map_err(|err| {
@@ -69,7 +63,20 @@ pub async fn execute_relational_query(
                     details: serde_json::Value::Null,
                 }),
             )
-        })?;
+        })
+}
+
+#[allow(clippy::print_stdout)]
+pub async fn execute_relational_query(
+    state: &AppState,
+    query: &RelationalQuery,
+) -> Result<Vec<Vec<serde_json::Value>>> {
+    println!("[SELECT]: query={query:?}");
+
+    let physical_plan = create_physical_plan(query, state).await?;
+
+    let session_ctx = SessionContext::new();
+    let task_ctx = session_ctx.task_ctx();
 
     let results = datafusion::physical_plan::collect(physical_plan, task_ctx)
         .await
@@ -83,7 +90,6 @@ pub async fn execute_relational_query(
             )
         })?;
 
-    // unimplemented: stream the records back
     let mut rows: Vec<Vec<serde_json::Value>> = vec![];
 
     for batch in results {
@@ -105,6 +111,61 @@ pub async fn execute_relational_query(
     }
 
     Ok(rows)
+}
+
+#[allow(clippy::print_stdout)]
+pub async fn execute_relational_query_stream(
+    state: &AppState,
+    request: &RelationalQuery,
+) -> Result<impl futures::Stream<Item = std::result::Result<String, std::io::Error>> + use<>> {
+    use futures::{StreamExt, TryStreamExt};
+
+    println!("[SELECT STREAM]: query={request:?}");
+
+    let physical_plan = create_physical_plan(request, state).await?;
+
+    let session_ctx = SessionContext::new();
+    let task_ctx = session_ctx.task_ctx();
+
+    let stream =
+        datafusion::physical_plan::execute_stream(physical_plan, task_ctx).map_err(|err| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ndc_models::ErrorResponse {
+                    message: err.to_string(),
+                    details: serde_json::Value::Null,
+                }),
+            )
+        })?;
+
+    let row_stream = stream
+        .map_err(|err| std::io::Error::other(err.to_string()))
+        .map(move |batch_result| {
+            let batch = batch_result?;
+            let schema = batch.schema();
+
+            let new_rows =
+                from_record_batch::<Vec<serde_json::Map<String, serde_json::Value>>>(&batch)
+                    .map_err(|err| std::io::Error::other(err.to_string()))?;
+
+            let rows: std::result::Result<Vec<_>, std::io::Error> = new_rows
+                .into_iter()
+                .map(|new_row| {
+                    let row = convert_fields_object_to_row_vec(schema.fields(), &new_row)
+                        .map_err(|_| std::io::Error::other("conversion error"))?;
+
+                    let json_line = serde_json::to_string(&row)
+                        .map_err(|e| std::io::Error::other(e.to_string()))?;
+
+                    Ok(format!("{json_line}\n"))
+                })
+                .collect();
+
+            Ok::<_, std::io::Error>(futures::stream::iter(rows?.into_iter().map(Ok)))
+        })
+        .try_flatten();
+
+    Ok(row_stream)
 }
 
 fn convert_fields_object_to_row_vec(

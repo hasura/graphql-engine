@@ -1363,6 +1363,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                 },
                                             ),
                                             supports_union: true,
+                                            supports_streaming: false,
                                         },
                                     ),
                                     supports_relational_mutations: Some(

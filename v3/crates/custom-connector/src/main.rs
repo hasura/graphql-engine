@@ -2,6 +2,8 @@ use std::borrow::Borrow;
 use std::net;
 use std::sync::Arc;
 
+use axum::body::Body;
+use axum::response::Response;
 use axum::{
     Json, Router,
     extract::State,
@@ -27,6 +29,10 @@ async fn main() -> anyhow::Result<()> {
         .route("/schema", get(get_schema))
         .route("/query", post(post_query))
         .route("/query/relational", post(post_query_relational))
+        .route(
+            "/query/relational/stream",
+            post(post_query_relational_stream),
+        )
         .route("/mutation", post(post_mutation))
         .route("/explain", post(post_explain))
         .route("/mutation/rel/insert", post(post_mutation_rel_insert))
@@ -101,6 +107,24 @@ async fn post_query_relational(
     custom_connector::query::relational::execute_relational_query(state.borrow(), &request)
         .await
         .map(|rows| Json(RelationalQueryResponse { rows }))
+}
+
+async fn post_query_relational_stream(
+    State(state): State<Arc<AppState>>,
+    Json(request): Json<RelationalQuery>,
+) -> Result<Response<Body>> {
+    let stream = custom_connector::query::relational::execute_relational_query_stream(
+        state.borrow(),
+        &request,
+    )
+    .await?;
+
+    let body = Body::from_stream(stream);
+
+    Ok(Response::builder()
+        .header("content-type", "application/x-ndjson")
+        .body(body)
+        .unwrap())
 }
 
 async fn post_mutation_rel_insert(
