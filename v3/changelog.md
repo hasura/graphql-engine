@@ -8,6 +8,10 @@
 
 ### Fixed
 
+## [v2025.10.03]
+
+- No changes
+
 ## [v2025.09.22]
 
 ### Added
@@ -2013,7 +2017,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.09.22...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.10.03...HEAD
+[v2025.10.03]: https://github.com/hasura/v3-engine/releases/tag/v2025.10.03
 [v2025.09.22]: https://github.com/hasura/v3-engine/releases/tag/v2025.09.22
 [v2025.09.05]: https://github.com/hasura/v3-engine/releases/tag/v2025.09.05
 [v2025.08.27]: https://github.com/hasura/v3-engine/releases/tag/v2025.08.27
