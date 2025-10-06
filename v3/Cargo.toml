@@ -75,6 +75,7 @@ apollo-parser = "0.7"
 ariadne = { version = "0.5", features = ["auto-color"] }
 async-graphql-parser = "7"
 async-recursion = "1"
+async-stream = "0.3.6"
 async-trait = "0.1"
 axum = { version = "0.7", features = ["http2", "ws"] }
 axum-core = "0.4"
