@@ -4032,7 +4032,7 @@ name = "opendds-derive"
 version = "3.0.0"
 dependencies = [
  "convert_case",
- "darling 0.20.11",
+ "darling 0.21.3",
  "proc-macro2",
  "quote",
  "regex",
