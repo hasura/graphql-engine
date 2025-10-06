@@ -263,7 +263,7 @@ FROM pg_proc p
 JOIN pg_type rt ON rt.oid = p.prorettype
 JOIN pg_namespace rtn ON rtn.oid = rt.typnamespace
 JOIN pg_language plang ON p.prolang = plang.oid
-LEFT JOIN pg_description pd ON p.oid = pd.objoid
+LEFT JOIN pg_description pd ON p.oid = pd.objoid AND pd.classoid = 'pg_proc'::regclass
 WHERE
 plang.lanname = 'plpgsql' AND 
 pn.nspname::text !~~ 'pg_%'::text

@@ -874,7 +874,7 @@ FROM pg_proc p
  JOIN pg_namespace pn ON pn.oid = p.pronamespace
 JOIN pg_type rt ON rt.oid = p.prorettype
 JOIN pg_namespace rtn ON rtn.oid = rt.typnamespace
-LEFT JOIN pg_description pd ON p.oid = pd.objoid
+LEFT JOIN pg_description pd ON p.oid = pd.objoid AND pd.classoid = 'pg_proc'::regclass
 WHERE
 pn.nspname::text NOT LIKE 'pg_%'::text
 AND(pn.nspname::text <> ALL (ARRAY ['information_schema'::text]))

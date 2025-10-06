@@ -112,7 +112,7 @@ FROM (
                      AND "function".function_schema = tracked.schema
         JOIN pg_type rt ON (rt.oid = "function".prorettype)
         JOIN pg_namespace rtn ON (rtn.oid = rt.typnamespace)
-        LEFT JOIN pg_description pd ON "function".function_oid = pd.objoid
+        LEFT JOIN pg_description pd ON "function".function_oid = pd.objoid AND pd.classoid = 'pg_proc'::regclass
       WHERE
         -- Do not fetch some default functions in public schema
         "function".function_name NOT LIKE 'pgp_%'
