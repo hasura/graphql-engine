@@ -298,7 +298,8 @@ fn build_request<Req>(
 where
     Req: Serialize + std::fmt::Debug,
 {
-    let mut http_headers = HeaderMap::new();
+    // Start with trace headers to ensure OTEL context propagation
+    let mut http_headers = tracing_util::get_trace_headers();
 
     if let Some(headers) = &pre_ndc_request_plugin.config.request.headers {
         for (key, value) in &headers.0 {

@@ -1,4 +1,4 @@
-use axum::http::{HeaderMap, HeaderName};
+use axum::http::HeaderName;
 use engine_types::HttpContext;
 use hasura_authn_core::{Role, Session, SessionVariableName};
 use metadata_resolve::{DataConnectorLink, Qualified, ResolvedLifecyclePreNdcResponsePluginHook};
@@ -292,7 +292,8 @@ where
     Req: Serialize,
     Res: Serialize,
 {
-    let mut http_headers = HeaderMap::new();
+    // Start with trace headers to ensure OTEL context propagation
+    let mut http_headers = tracing_util::get_trace_headers();
 
     if let Some(headers) = &pre_ndc_response_plugin.config.request.headers {
         for (key, value) in &headers.0 {
