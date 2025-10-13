@@ -32,10 +32,10 @@ pub fn deduplicate_definitions(schema: &mut schema::RootSchema) {
     // * If the second version of a type just ends up being called `MyStruct2` as a successor to
     //   `MyStruct`, we'll only deduplicate them if there was no semantic change.
     possible_duplicates.retain(|alias, original| {
-        if let Some(check) = schema.definitions.get(alias) {
-            if let Some(current) = schema.definitions.get(original) {
-                return schema_similarity::schemas(current, check);
-            }
+        if let Some(check) = schema.definitions.get(alias)
+            && let Some(current) = schema.definitions.get(original)
+        {
+            return schema_similarity::schemas(current, check);
         }
 
         false

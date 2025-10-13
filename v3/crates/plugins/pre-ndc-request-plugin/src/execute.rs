@@ -324,10 +324,10 @@ where
     if let Some(forward_headers) = &pre_ndc_request_plugin.config.request.forward_headers {
         for header_name in forward_headers {
             // lookup in request headers
-            if let Some(value) = request_headers.get(header_name).cloned() {
-                if let Ok(header_name) = HeaderName::from_str(header_name) {
-                    http_headers.insert(header_name, value);
-                }
+            if let Some(value) = request_headers.get(header_name).cloned()
+                && let Ok(header_name) = HeaderName::from_str(header_name)
+            {
+                http_headers.insert(header_name, value);
             }
         }
     }

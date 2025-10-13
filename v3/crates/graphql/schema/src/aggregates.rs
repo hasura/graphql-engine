@@ -196,86 +196,84 @@ fn add_count_aggregation_fields(
     aggregate_expression: &AggregateExpression,
 ) -> Result<(), Error> {
     // Add the _count aggregation, if enabled and a graphql name has been specified
-    if aggregate_expression.count.enable {
-        if let Some(count_field_name) = aggregate_expression
+    if aggregate_expression.count.enable
+        && let Some(count_field_name) = aggregate_expression
             .graphql
             .as_ref()
             .map(|graphql| &graphql.count_field_name)
+    {
+        let field = gql_schema::Field::<GDS>::new(
+            count_field_name.clone(),
+            aggregate_expression.count.description.clone(),
+            Annotation::Output(super::OutputAnnotation::Aggregate(
+                AggregateOutputAnnotation::AggregationFunctionField(
+                    AggregationFunctionAnnotation::Count,
+                ),
+            )),
+            ast::TypeContainer {
+                base: output_type::get_base_type_container(
+                    gds,
+                    builder,
+                    &aggregate_expression.count.result_type,
+                )?,
+                nullable: false,
+            },
+            BTreeMap::new(), // Arguments
+            mk_deprecation_status(None),
+        );
+
+        // All roles can use the count aggregation
+        let namespaced_field = builder.allow_all_namespaced(field);
+
+        if type_fields
+            .insert(count_field_name.clone(), namespaced_field)
+            .is_some()
         {
-            let field = gql_schema::Field::<GDS>::new(
-                count_field_name.clone(),
-                aggregate_expression.count.description.clone(),
-                Annotation::Output(super::OutputAnnotation::Aggregate(
-                    AggregateOutputAnnotation::AggregationFunctionField(
-                        AggregationFunctionAnnotation::Count,
-                    ),
-                )),
-                ast::TypeContainer {
-                    base: output_type::get_base_type_container(
-                        gds,
-                        builder,
-                        &aggregate_expression.count.result_type,
-                    )?,
-                    nullable: false,
-                },
-                BTreeMap::new(), // Arguments
-                mk_deprecation_status(None),
-            );
-
-            // All roles can use the count aggregation
-            let namespaced_field = builder.allow_all_namespaced(field);
-
-            if type_fields
-                .insert(count_field_name.clone(), namespaced_field)
-                .is_some()
-            {
-                return Err(Error::AggregationFunctionFieldNameConflict {
-                    aggregate_expression: aggregate_expression.name.clone(),
-                    field_name: count_field_name.clone(),
-                });
-            }
+            return Err(Error::AggregationFunctionFieldNameConflict {
+                aggregate_expression: aggregate_expression.name.clone(),
+                field_name: count_field_name.clone(),
+            });
         }
     }
 
     // Add the _count_distinct aggregation, if enabled and a graphql name has been specified
-    if aggregate_expression.count_distinct.enable {
-        if let Some(count_distinct_field_name) = aggregate_expression
+    if aggregate_expression.count_distinct.enable
+        && let Some(count_distinct_field_name) = aggregate_expression
             .graphql
             .as_ref()
             .map(|graphql| &graphql.count_distinct_field_name)
+    {
+        let field = gql_schema::Field::<GDS>::new(
+            count_distinct_field_name.clone(),
+            aggregate_expression.count_distinct.description.clone(),
+            Annotation::Output(super::OutputAnnotation::Aggregate(
+                AggregateOutputAnnotation::AggregationFunctionField(
+                    AggregationFunctionAnnotation::CountDistinct,
+                ),
+            )),
+            ast::TypeContainer {
+                base: output_type::get_base_type_container(
+                    gds,
+                    builder,
+                    &aggregate_expression.count_distinct.result_type,
+                )?,
+                nullable: false,
+            },
+            BTreeMap::new(), // Arguments
+            mk_deprecation_status(None),
+        );
+
+        // All roles can use the count distinct aggregation
+        let namespaced_field = builder.allow_all_namespaced(field);
+
+        if type_fields
+            .insert(count_distinct_field_name.clone(), namespaced_field)
+            .is_some()
         {
-            let field = gql_schema::Field::<GDS>::new(
-                count_distinct_field_name.clone(),
-                aggregate_expression.count_distinct.description.clone(),
-                Annotation::Output(super::OutputAnnotation::Aggregate(
-                    AggregateOutputAnnotation::AggregationFunctionField(
-                        AggregationFunctionAnnotation::CountDistinct,
-                    ),
-                )),
-                ast::TypeContainer {
-                    base: output_type::get_base_type_container(
-                        gds,
-                        builder,
-                        &aggregate_expression.count_distinct.result_type,
-                    )?,
-                    nullable: false,
-                },
-                BTreeMap::new(), // Arguments
-                mk_deprecation_status(None),
-            );
-
-            // All roles can use the count distinct aggregation
-            let namespaced_field = builder.allow_all_namespaced(field);
-
-            if type_fields
-                .insert(count_distinct_field_name.clone(), namespaced_field)
-                .is_some()
-            {
-                return Err(Error::AggregationFunctionFieldNameConflict {
-                    aggregate_expression: aggregate_expression.name.clone(),
-                    field_name: count_distinct_field_name.clone(),
-                });
-            }
+            return Err(Error::AggregationFunctionFieldNameConflict {
+                aggregate_expression: aggregate_expression.name.clone(),
+                field_name: count_distinct_field_name.clone(),
+            });
         }
     }
 

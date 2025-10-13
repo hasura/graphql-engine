@@ -217,27 +217,26 @@ pub(crate) fn build_input_field_presets_annotation(
 ) -> Option<NamespaceAnnotation> {
     let mut annotation = None;
     // If the field type is a custom object type, build the field presets annotation
-    if let QualifiedTypeName::Custom(field_type_name) = field_type.get_underlying_type_name() {
-        if let Some(field_object_type_representation) =
+    if let QualifiedTypeName::Custom(field_type_name) = field_type.get_underlying_type_name()
+        && let Some(field_object_type_representation) =
             gds.metadata.object_types.get(field_type_name)
-        {
-            annotation = field_object_type_representation
-                .type_input_permissions
-                .by_role
-                .get(role)
-                .map(|input_permissions| {
-                    let presets_fields = input_permissions
-                        .field_presets
-                        .clone()
-                        .into_iter()
-                        .map(|(name, field_preset)| (name, field_preset.deprecated))
-                        .collect::<BTreeMap<_, _>>();
-                    NamespaceAnnotation::InputFieldPresets {
-                        presets_fields,
-                        type_name: field_type_name.clone(),
-                    }
-                });
-        }
+    {
+        annotation = field_object_type_representation
+            .type_input_permissions
+            .by_role
+            .get(role)
+            .map(|input_permissions| {
+                let presets_fields = input_permissions
+                    .field_presets
+                    .clone()
+                    .into_iter()
+                    .map(|(name, field_preset)| (name, field_preset.deprecated))
+                    .collect::<BTreeMap<_, _>>();
+                NamespaceAnnotation::InputFieldPresets {
+                    presets_fields,
+                    type_name: field_type_name.clone(),
+                }
+            });
     }
     annotation
 }

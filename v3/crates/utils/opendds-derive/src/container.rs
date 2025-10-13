@@ -392,12 +392,12 @@ impl<'a> EnumVariant<'a> {
 
 /// Check whether the type is `Option<T>`
 fn is_option_type(ty: &syn::Type) -> bool {
-    if let syn::Type::Path(syn::TypePath { path, .. }) = ty {
-        if path.segments.len() == 1 {
-            let segment = &path.segments[0];
-            if segment.ident == "Option" {
-                return true;
-            }
+    if let syn::Type::Path(syn::TypePath { path, .. }) = ty
+        && path.segments.len() == 1
+    {
+        let segment = &path.segments[0];
+        if segment.ident == "Option" {
+            return true;
         }
     }
     false

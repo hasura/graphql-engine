@@ -73,32 +73,32 @@ fn check_recursive_object_type(
         let field_type = field.field_type.get_underlying_type_name();
 
         // Only check fields whose type is a custom object type
-        if let Some(field_type_name) = field_type.get_custom_type_name() {
-            if let Some(field_object_type) = object_types.get(field_type_name) {
-                // If the field is nullable or an array, we can skip it
-                // as recursion can be broken by null value or empty array
-                if field.field_type.nullable || field.field_type.is_array_type() {
-                    continue;
-                }
-
-                // Update the path
-                path.push(FieldPathEntry {
-                    type_name: current_type.clone(),
-                    field_name: field_name.clone(),
-                });
-
-                // Recursively check the field's type
-                check_recursive_object_type(
-                    object_types,
-                    field_type_name,
-                    &field_object_type.object_type,
-                    path,
-                    visited,
-                    issues,
-                );
-
-                path.pop();
+        if let Some(field_type_name) = field_type.get_custom_type_name()
+            && let Some(field_object_type) = object_types.get(field_type_name)
+        {
+            // If the field is nullable or an array, we can skip it
+            // as recursion can be broken by null value or empty array
+            if field.field_type.nullable || field.field_type.is_array_type() {
+                continue;
             }
+
+            // Update the path
+            path.push(FieldPathEntry {
+                type_name: current_type.clone(),
+                field_name: field_name.clone(),
+            });
+
+            // Recursively check the field's type
+            check_recursive_object_type(
+                object_types,
+                field_type_name,
+                &field_object_type.object_type,
+                path,
+                visited,
+                issues,
+            );
+
+            path.pop();
         }
     }
 }

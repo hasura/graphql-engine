@@ -338,15 +338,15 @@ fn include_field(
     field_name: &FieldName,
     object_type_name: &CustomTypeName,
 ) -> bool {
-    if let Some(fields) = &query_string.fields {
-        if let Some(object_fields) = fields.get(object_type_name.0.as_str()) {
-            for object_field in object_fields {
-                if object_field == field_name.as_str() {
-                    return true;
-                }
+    if let Some(fields) = &query_string.fields
+        && let Some(object_fields) = fields.get(object_type_name.0.as_str())
+    {
+        for object_field in object_fields {
+            if object_field == field_name.as_str() {
+                return true;
             }
-            return false;
         }
+        return false;
     }
     // if no sparse fields provided for our model, return everything
     true

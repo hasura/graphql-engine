@@ -153,34 +153,31 @@ pub(crate) fn resolve_object_boolean_expression_type(
         if let Ok(scalar_type_info) = data_connector_scalar_types::get_simple_scalar(
             field_mapping.column_type.clone(),
             scalar_types,
-        ) {
-            if let Some(representation) = &scalar_type_info.representation {
-                // As of now, only `"enableAll": true` is allowed for field operators
-                match &comparable_field.operators {
-                    open_dds::models::EnableAllOrSpecific::EnableAll(true) => {}
-                    _ => {
-                        return Err(
-                            BooleanExpressionError::FieldLevelComparisonOperatorConfigurationNotSupported,
-                        )
-                    }
-                }
-
-                let qualified_type_name =
-                    mk_qualified_type_name(representation, &qualified_data_connector_name.subgraph);
-
-                let data_connector_type = DataConnectorType {
-                    data_connector_name: qualified_data_connector_name.clone(),
-                    type_name: qualified_type_name.clone(),
-                };
-
-                generated_comparable_fields.push(object::ComparableField {
-                    field_name: comparable_field.field_name.clone(),
-                    boolean_expression_type:
-                        BooleanExpressionTypeIdentifier::FromDataConnectorScalarRepresentation(
-                            data_connector_type,
-                        ),
-                });
+        ) && let Some(representation) = &scalar_type_info.representation
+        {
+            // As of now, only `"enableAll": true` is allowed for field operators
+            match &comparable_field.operators {
+                open_dds::models::EnableAllOrSpecific::EnableAll(true) => {}
+                _ => return Err(
+                    BooleanExpressionError::FieldLevelComparisonOperatorConfigurationNotSupported,
+                ),
             }
+
+            let qualified_type_name =
+                mk_qualified_type_name(representation, &qualified_data_connector_name.subgraph);
+
+            let data_connector_type = DataConnectorType {
+                data_connector_name: qualified_data_connector_name.clone(),
+                type_name: qualified_type_name.clone(),
+            };
+
+            generated_comparable_fields.push(object::ComparableField {
+                field_name: comparable_field.field_name.clone(),
+                boolean_expression_type:
+                    BooleanExpressionTypeIdentifier::FromDataConnectorScalarRepresentation(
+                        data_connector_type,
+                    ),
+            });
         }
     }
 

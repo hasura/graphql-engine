@@ -44,33 +44,33 @@ pub fn subscription_root_schema(
         }
 
         // Add select_many fields to the subscription root
-        if let Some(select_many) = &model.graphql_api.select_many {
-            if let Some(subscription) = &select_many.subscription {
-                let (field_name, field) = select_many_field(
-                    gds,
-                    builder,
-                    model,
-                    subscription,
-                    subscription_root_type_name,
-                )?;
-                fields.insert(field_name, field);
-            }
+        if let Some(select_many) = &model.graphql_api.select_many
+            && let Some(subscription) = &select_many.subscription
+        {
+            let (field_name, field) = select_many_field(
+                gds,
+                builder,
+                model,
+                subscription,
+                subscription_root_type_name,
+            )?;
+            fields.insert(field_name, field);
         }
 
         // Add select_aggregate fields to the subscription root
-        if let Some(select_aggregate) = &model.graphql_api.select_aggregate {
-            if let Some(subscription) = &select_aggregate.subscription {
-                let (field_name, field) = select_aggregate_field(
-                    gds,
-                    builder,
-                    model,
-                    &select_aggregate.aggregate_expression_name,
-                    &select_aggregate.filter_input_field_name,
-                    subscription,
-                    subscription_root_type_name,
-                )?;
-                fields.insert(field_name, field);
-            }
+        if let Some(select_aggregate) = &model.graphql_api.select_aggregate
+            && let Some(subscription) = &select_aggregate.subscription
+        {
+            let (field_name, field) = select_aggregate_field(
+                gds,
+                builder,
+                model,
+                &select_aggregate.aggregate_expression_name,
+                &select_aggregate.filter_input_field_name,
+                subscription,
+                subscription_root_type_name,
+            )?;
+            fields.insert(field_name, field);
         }
     }
     Ok(gql_schema::Object::new(

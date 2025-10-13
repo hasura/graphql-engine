@@ -207,17 +207,16 @@ fn resolve_field(
         mk_qualified_type_reference(&field.field_type, &qualified_type_name.subgraph);
 
     // let's check that any object, scalar or object boolean expression types used in this field exist
-    if let Some(custom_type_name) = unwrap_custom_type_name(&qualified_type_reference) {
-        if raw_object_types.get(custom_type_name).is_none()
-            && scalar_types.get(custom_type_name).is_none()
-            && !object_boolean_expression_type_names.contains(custom_type_name)
-        {
-            issues.push(ObjectTypesIssue::FieldTypeNotFound {
-                field_name: field.name.clone(),
-                object_type_name: qualified_type_name.clone(),
-                field_type: custom_type_name.clone(),
-            });
-        }
+    if let Some(custom_type_name) = unwrap_custom_type_name(&qualified_type_reference)
+        && raw_object_types.get(custom_type_name).is_none()
+        && scalar_types.get(custom_type_name).is_none()
+        && !object_boolean_expression_type_names.contains(custom_type_name)
+    {
+        issues.push(ObjectTypesIssue::FieldTypeNotFound {
+            field_name: field.name.clone(),
+            object_type_name: qualified_type_name.clone(),
+            field_type: custom_type_name.clone(),
+        });
     }
 
     let mut field_arguments = IndexMap::new();

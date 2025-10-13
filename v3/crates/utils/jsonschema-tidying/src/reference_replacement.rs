@@ -26,10 +26,10 @@ pub fn in_schema_object(schema_object: &mut SchemaObject, search: &str, replace:
     }
 
     // This is the whole reason this module exists.
-    if let Some(reference) = &schema_object.reference {
-        if reference == search {
-            schema_object.reference = Some(replace.to_string());
-        }
+    if let Some(reference) = &schema_object.reference
+        && reference == search
+    {
+        schema_object.reference = Some(replace.to_string());
     }
 }
 

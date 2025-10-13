@@ -32,7 +32,7 @@ pub struct OutputObjectTypeView<'metadata> {
 }
 
 impl OutputObjectTypeView<'_> {
-    pub fn get_field(&self, field_name: &FieldName) -> Result<&FieldView, PermissionError> {
+    pub fn get_field(&self, field_name: &FieldName) -> Result<&FieldView<'_>, PermissionError> {
         self.fields
             .get(field_name)
             .ok_or_else(|| PermissionError::ObjectFieldNotFound {
@@ -167,24 +167,22 @@ pub fn get_model<'metadata>(
         session_variables,
         &metadata.conditions,
         &mut plan_state.condition_cache,
+    )? && is_allowed_access_to_object_type(
+        metadata,
+        &model.model.data_type,
+        session_variables,
+        &mut plan_state.condition_cache,
     )? {
-        if is_allowed_access_to_object_type(
-            metadata,
-            &model.model.data_type,
-            session_variables,
-            &mut plan_state.condition_cache,
-        )? {
-            if let Some(model_source) = &model.model.source {
-                return Ok(ModelView {
-                    data_type: &model.model.data_type,
-                    source: model_source,
-                    permission,
-                });
-            }
-            return Err(PermissionError::ModelHasNoSource {
-                model_name: model_name.clone(),
+        if let Some(model_source) = &model.model.source {
+            return Ok(ModelView {
+                data_type: &model.model.data_type,
+                source: model_source,
+                permission,
             });
         }
+        return Err(PermissionError::ModelHasNoSource {
+            model_name: model_name.clone(),
+        });
     }
 
     Err(PermissionError::ModelNotAccessible {
@@ -236,12 +234,11 @@ pub fn get_command<'a>(
         session_variables,
         &metadata.conditions,
         &mut plan_state.condition_cache,
-    )? {
-        if is_allowed_access_to_return_type {
-            return Ok(CommandView {
-                argument_presets: command_permission.argument_presets,
-            });
-        }
+    )? && is_allowed_access_to_return_type
+    {
+        return Ok(CommandView {
+            argument_presets: command_permission.argument_presets,
+        });
     }
 
     Err(PermissionError::CommandNotAccessible {

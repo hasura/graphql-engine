@@ -126,25 +126,24 @@ pub(crate) fn collect_type_mapping_for_source(
 
                 if let Some(object_type_name) =
                     unwrap_custom_type_name(&field_definition.field_type)
+                    && object_type_exists(object_type_name, object_types).is_ok()
                 {
-                    if object_type_exists(object_type_name, object_types).is_ok() {
-                        let underlying_ndc_field_named_type =
-                            get_underlying_named_type(&field_mapping.column_type);
+                    let underlying_ndc_field_named_type =
+                        get_underlying_named_type(&field_mapping.column_type);
 
-                        let field_type_mapping_to_collect = TypeMappingToCollect {
-                            type_name: object_type_name,
-                            ndc_object_type_name: underlying_ndc_field_named_type,
-                        };
+                    let field_type_mapping_to_collect = TypeMappingToCollect {
+                        type_name: object_type_name,
+                        ndc_object_type_name: underlying_ndc_field_named_type,
+                    };
 
-                        collect_type_mapping_for_source(
-                            &field_type_mapping_to_collect,
-                            data_connector_name,
-                            object_types,
-                            scalar_types,
-                            collected_mappings,
-                            special_case,
-                        )?;
-                    }
+                    collect_type_mapping_for_source(
+                        &field_type_mapping_to_collect,
+                        data_connector_name,
+                        object_types,
+                        scalar_types,
+                        collected_mappings,
+                        special_case,
+                    )?;
                 }
             }
             Ok(())

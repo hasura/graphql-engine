@@ -207,8 +207,7 @@ pub fn make_order_by_expression(
             // Build relationship field in filter expression only when the target_model is backed by a source, we have a
             // check for the source model during the runtime
             if let (Some(target_source), Some(model_source)) = (&target_model.source, &model_source)
-            {
-                if order_by_expressions::validate_orderable_relationship(
+                && order_by_expressions::validate_orderable_relationship(
                     &model.data_type,
                     relationship_name,
                     order_by_expressions::OrderableFieldNestedness::NotNested, // we don't support nested fields in legacy OrderByExpressions
@@ -216,18 +215,17 @@ pub fn make_order_by_expression(
                     &target_source.data_connector.name,
                 )
                 .is_ok()
-                {
-                    // TODO(naveen): Support Array relationships in order_by when the support for aggregates is implemented
-                    if open_dds::relationships::RelationshipType::Object == *relationship_type {
-                        // If the relationship target model does not have orderByExpressionType do not include
-                        // it in the source model order_by input type.
-                        orderable_relationships.insert(
-                            relationship_name.clone(),
-                            order_by_expressions::OrderableRelationship {
-                                order_by_expression: None,
-                            },
-                        );
-                    }
+            {
+                // TODO(naveen): Support Array relationships in order_by when the support for aggregates is implemented
+                if open_dds::relationships::RelationshipType::Object == *relationship_type {
+                    // If the relationship target model does not have orderByExpressionType do not include
+                    // it in the source model order_by input type.
+                    orderable_relationships.insert(
+                        relationship_name.clone(),
+                        order_by_expressions::OrderableRelationship {
+                            order_by_expression: None,
+                        },
+                    );
                 }
             }
         }

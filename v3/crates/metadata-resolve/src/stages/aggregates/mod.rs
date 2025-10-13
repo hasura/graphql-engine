@@ -413,18 +413,17 @@ fn resolve_aggregation_function(
     let return_type_name = unwrap_qualified_type_name(&return_type);
 
     // Check that the return type actually exists (only if it is a custom type, built-in ones obviously exist)
-    if let QualifiedTypeName::Custom(custom_type_name) = return_type_name {
-        if !scalar_types.contains_key(custom_type_name)
-            && !object_types.contains_key(custom_type_name)
-        {
-            return Err(
-                AggregateExpressionError::AggregateOperandFunctionUnknownReturnType {
-                    name: aggregate_expression_name.clone(),
-                    function_name: aggregation_function_def.name.clone(),
-                    type_name: custom_type_name.name.clone(),
-                },
-            );
-        }
+    if let QualifiedTypeName::Custom(custom_type_name) = return_type_name
+        && !scalar_types.contains_key(custom_type_name)
+        && !object_types.contains_key(custom_type_name)
+    {
+        return Err(
+            AggregateExpressionError::AggregateOperandFunctionUnknownReturnType {
+                name: aggregate_expression_name.clone(),
+                function_name: aggregation_function_def.name.clone(),
+                type_name: custom_type_name.name.clone(),
+            },
+        );
     }
 
     // Resolve mappings to all specified data connector functions

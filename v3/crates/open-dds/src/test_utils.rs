@@ -85,16 +85,16 @@ fn is_top_level_metadata_object_variant(schema: &Schema) -> bool {
             return false;
         }
         // Further validate that kind and version are just enums.
-        if let Some(property_schema) = object.properties.get("version") {
-            if !is_fixed_enum_value(property_schema) {
-                return false;
-            }
+        if let Some(property_schema) = object.properties.get("version")
+            && !is_fixed_enum_value(property_schema)
+        {
+            return false;
         }
 
-        if let Some(property_schema) = object.properties.get("kind") {
-            if !is_fixed_enum_value(property_schema) {
-                return false;
-            }
+        if let Some(property_schema) = object.properties.get("kind")
+            && !is_fixed_enum_value(property_schema)
+        {
+            return false;
         }
 
         true
@@ -108,24 +108,21 @@ fn is_nullable_wrapper(schema: &Schema) -> bool {
         subschemas: Some(subschemas),
         ..
     }) = schema
-    {
-        if let Some(any_of) = &subschemas.any_of {
-            if any_of.len() == 2
-                && any_of.iter().any(|subschema| {
-                    if let Schema::Object(SchemaObject {
-                        instance_type: Some(SingleOrVec::Single(instance_type)),
-                        ..
-                    }) = subschema
-                    {
-                        **instance_type == InstanceType::Null
-                    } else {
-                        false
-                    }
-                })
+        && let Some(any_of) = &subschemas.any_of
+        && any_of.len() == 2
+        && any_of.iter().any(|subschema| {
+            if let Schema::Object(SchemaObject {
+                instance_type: Some(SingleOrVec::Single(instance_type)),
+                ..
+            }) = subschema
             {
-                return true;
+                **instance_type == InstanceType::Null
+            } else {
+                false
             }
-        }
+        })
+    {
+        return true;
     }
     false
 }
@@ -135,10 +132,9 @@ fn is_all_of_wrapper(schema: &Schema) -> bool {
         subschemas: Some(subschemas),
         ..
     }) = schema
+        && let Some(all_of) = &subschemas.all_of
     {
-        if let Some(all_of) = &subschemas.all_of {
-            return all_of.len() == 1;
-        }
+        return all_of.len() == 1;
     }
     false
 }
@@ -277,27 +273,27 @@ fn check_titles(schema: &Schema, is_externally_tagged_enum_variant: bool) {
 }
 
 fn check_no_arbitrary_additional_properties(schema: &Schema, config: &JsonSchemaValidationConfig) {
-    if let Schema::Object(schema_object) = schema {
-        if let Some(object) = &schema_object.object {
-            let has_arbitrary_additional_properties: bool = object.additional_properties.is_none()
-                || object
-                    .additional_properties
-                    .as_ref()
-                    .is_some_and(|property_schema| matches!(**property_schema, Schema::Bool(true)));
+    if let Schema::Object(schema_object) = schema
+        && let Some(object) = &schema_object.object
+    {
+        let has_arbitrary_additional_properties: bool = object.additional_properties.is_none()
+            || object
+                .additional_properties
+                .as_ref()
+                .is_some_and(|property_schema| matches!(**property_schema, Schema::Bool(true)));
 
-            let is_allowed = schema_object.metadata.as_ref().is_some_and(|metadata| {
-                metadata.title.as_ref().is_some_and(|title| {
-                    config
-                        .schemas_with_arbitrary_additional_properties_allowed
-                        .contains(&title.as_str())
-                })
-            });
+        let is_allowed = schema_object.metadata.as_ref().is_some_and(|metadata| {
+            metadata.title.as_ref().is_some_and(|title| {
+                config
+                    .schemas_with_arbitrary_additional_properties_allowed
+                    .contains(&title.as_str())
+            })
+        });
 
-            assert!(
-                !has_arbitrary_additional_properties || is_allowed,
-                "Schema has arbitrary additional properties: {}",
-                serde_json::to_string_pretty(schema).unwrap()
-            );
-        }
+        assert!(
+            !has_arbitrary_additional_properties || is_allowed,
+            "Schema has arbitrary additional properties: {}",
+            serde_json::to_string_pretty(schema).unwrap()
+        );
     }
 }

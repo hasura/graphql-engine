@@ -1097,10 +1097,10 @@ impl traits::OpenDd for ValueExpression {
     }
     fn json_schema(generator: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         let mut s = ValueExpressionImpl::json_schema(generator);
-        if let schemars::schema::Schema::Object(o) = &mut s {
-            if let Some(m) = &mut o.metadata {
-                m.id = Some("https://hasura.io/jsonschemas/metadata/ValueExpression".into());
-            }
+        if let schemars::schema::Schema::Object(o) = &mut s
+            && let Some(m) = &mut o.metadata
+        {
+            m.id = Some("https://hasura.io/jsonschemas/metadata/ValueExpression".into());
         }
         s
     }
@@ -1137,12 +1137,10 @@ impl traits::OpenDd for ValueExpressionOrPredicate {
     }
     fn json_schema(generator: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         let mut s = ValueExpressionOrPredicateImpl::json_schema(generator);
-        if let schemars::schema::Schema::Object(o) = &mut s {
-            if let Some(m) = &mut o.metadata {
-                m.id = Some(
-                    "https://hasura.io/jsonschemas/metadata/ValueExpressionOrPredicate".into(),
-                );
-            }
+        if let schemars::schema::Schema::Object(o) = &mut s
+            && let Some(m) = &mut o.metadata
+        {
+            m.id = Some("https://hasura.io/jsonschemas/metadata/ValueExpressionOrPredicate".into());
         }
         s
     }

@@ -109,22 +109,19 @@ pub(crate) fn resolve_object_boolean_graphql(
                             _,
                         ) => None,
                     }
-                {
-                    if let Some(graphql_name) = raw_boolean_expression_type
+                    && let Some(graphql_name) = raw_boolean_expression_type
                         .graphql
                         .as_ref()
                         .map(|gql| gql.type_name.clone())
-                    {
-                        let graphql_type_name =
-                            mk_name(graphql_name.as_str()).map(ast::TypeName)?;
+                {
+                    let graphql_type_name = mk_name(graphql_name.as_str()).map(ast::TypeName)?;
 
-                        object_fields.insert(
-                            comparable_field_name.clone(),
-                            ObjectBooleanExpressionGraphqlConfig {
-                                graphql_type_name: graphql_type_name.clone(),
-                            },
-                        );
-                    }
+                    object_fields.insert(
+                        comparable_field_name.clone(),
+                        ObjectBooleanExpressionGraphqlConfig {
+                            graphql_type_name: graphql_type_name.clone(),
+                        },
+                    );
                 }
             }
         }

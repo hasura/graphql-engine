@@ -2,9 +2,8 @@ use super::container::JsonSchemaMetadata;
 use quote::quote;
 
 pub fn get_title_and_desc_from_doc(attrs: &[syn::Attribute]) -> (Option<String>, Option<String>) {
-    let doc = match get_doc(attrs) {
-        None => return (None, None),
-        Some(doc) => doc,
+    let Some(doc) = get_doc(attrs) else {
+        return (None, None);
     };
 
     if doc.starts_with('#') {

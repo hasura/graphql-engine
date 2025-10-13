@@ -304,25 +304,25 @@ pub async fn execute_plugin(
             let response_headers = response.headers().clone();
             let body = response.bytes().await.map_err(Error::ReqwestError)?;
             let mut headers = HeaderMap::new();
-            if let Some(response_config) = &plugin.config.response {
-                if let Some(header_config) = &response_config.headers {
-                    if let Some(additional_headers) = &header_config.additional {
-                        for (key, value) in &additional_headers.0 {
-                            let header_name = HeaderName::from_str(key)
-                                .map_err(|_| Error::InvalidHeaderName(key.clone()))?;
-                            let header_value = value
-                                .value
-                                .parse()
-                                .map_err(|_| Error::InvalidHeaderValue(value.value.clone()))?;
-                            headers.insert(header_name, header_value);
-                        }
+            if let Some(response_config) = &plugin.config.response
+                && let Some(header_config) = &response_config.headers
+            {
+                if let Some(additional_headers) = &header_config.additional {
+                    for (key, value) in &additional_headers.0 {
+                        let header_name = HeaderName::from_str(key)
+                            .map_err(|_| Error::InvalidHeaderName(key.clone()))?;
+                        let header_value = value
+                            .value
+                            .parse()
+                            .map_err(|_| Error::InvalidHeaderValue(value.value.clone()))?;
+                        headers.insert(header_name, header_value);
                     }
-                    for header in &header_config.forward {
-                        if let Some(header_value) = response_headers.get(header) {
-                            let header_name = HeaderName::from_str(header)
-                                .map_err(|_| Error::InvalidHeaderName(header.to_string()))?;
-                            headers.insert(header_name, header_value.clone());
-                        }
+                }
+                for header in &header_config.forward {
+                    if let Some(header_value) = response_headers.get(header) {
+                        let header_name = HeaderName::from_str(header)
+                            .map_err(|_| Error::InvalidHeaderName(header.to_string()))?;
+                        headers.insert(header_name, header_value.clone());
                     }
                 }
             }

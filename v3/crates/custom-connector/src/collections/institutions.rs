@@ -83,42 +83,39 @@ fn check_institution_query<'a>(
     institution_data: &'a Institution<'a>,
 ) -> bool {
     // check name
-    if let Some(query_name) = institution_query.name {
-        if let Some(data_name) = institution_data.name {
-            if data_name == query_name {
-                return true;
-            }
-        }
+    if let Some(query_name) = institution_query.name
+        && let Some(data_name) = institution_data.name
+        && data_name == query_name
+    {
+        return true;
     }
 
     // check location
-    if let Some(query_location) = &institution_query.location {
-        if let Some(data_location) = &institution_data.location {
-            // location -> city
-            if let Some(query_city) = query_location.city {
-                if let Some(data_city) = data_location.city {
-                    if data_city == query_city {
+    if let Some(query_location) = &institution_query.location
+        && let Some(data_location) = &institution_data.location
+    {
+        // location -> city
+        if let Some(query_city) = query_location.city
+            && let Some(data_city) = data_location.city
+            && data_city == query_city
+        {
+            return true;
+        }
+        // location -> country
+        if let Some(query_country) = query_location.country
+            && let Some(data_country) = data_location.country
+            && data_country == query_country
+        {
+            return true;
+        }
+        // location -> campuses
+        if let Some(query_campuses) = &query_location.campuses
+            && let Some(data_campuses) = &data_location.campuses
+        {
+            for query_campus in query_campuses {
+                for data_campus in data_campuses {
+                    if query_campus == data_campus {
                         return true;
-                    }
-                }
-            }
-            // location -> country
-            if let Some(query_country) = query_location.country {
-                if let Some(data_country) = data_location.country {
-                    if data_country == query_country {
-                        return true;
-                    }
-                }
-            }
-            // location -> campuses
-            if let Some(query_campuses) = &query_location.campuses {
-                if let Some(data_campuses) = &data_location.campuses {
-                    for query_campus in query_campuses {
-                        for data_campus in data_campuses {
-                            if query_campus == data_campus {
-                                return true;
-                            }
-                        }
                     }
                 }
             }
@@ -170,7 +167,7 @@ pub fn parse_institution_query(
     })
 }
 
-fn parse_location(location: &serde_json::Value) -> Option<Location> {
+fn parse_location(location: &serde_json::Value) -> Option<Location<'_>> {
     if *location == serde_json::Value::Null {
         return None;
     }
@@ -194,7 +191,7 @@ fn parse_location(location: &serde_json::Value) -> Option<Location> {
     }
 }
 
-fn parse_staff_members(value: &serde_json::Value) -> Option<Vec<Staff>> {
+fn parse_staff_members(value: &serde_json::Value) -> Option<Vec<Staff<'_>>> {
     if *value == serde_json::Value::Null {
         None
     } else {
@@ -220,7 +217,7 @@ fn parse_departments(value: &serde_json::Value) -> Option<Vec<&str>> {
     }
 }
 
-fn parse_staff_member(staff: &serde_json::Value) -> Option<Staff> {
+fn parse_staff_member(staff: &serde_json::Value) -> Option<Staff<'_>> {
     if *staff == serde_json::Value::Null {
         return None;
     }

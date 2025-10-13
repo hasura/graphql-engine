@@ -73,12 +73,11 @@ fn validate_type_structure(
                             &data_connector_scalar_type.scalar_type.representation;
                         if let Some(mapped_inbuilt_type) =
                             map_ndc_type_representation_to_inbuilt_type(ndc_scalar_representation)
+                            && mapped_inbuilt_type != *inbuilt_type
                         {
-                            if mapped_inbuilt_type != *inbuilt_type {
-                                issue = Some(format!(
-                                    "Inbuilt type '{inbuilt_type:}' is not compatible with the data connector's type representation '{ndc_scalar_representation:?}'"
-                                ));
-                            }
+                            issue = Some(format!(
+                                "Inbuilt type '{inbuilt_type:}' is not compatible with the data connector's type representation '{ndc_scalar_representation:?}'"
+                            ));
                         }
                     }
                     issue

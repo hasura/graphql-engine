@@ -59,7 +59,7 @@ impl<'s, S: schema::SchemaContext> SelectableType<'s, S> {
 }
 
 impl<S: schema::SchemaContext> schema::Object<S> {
-    fn to_selectable_type(&self) -> SelectableType<S> {
+    fn to_selectable_type(&self) -> SelectableType<'_, S> {
         SelectableType {
             type_name: &self.name,
             fields: Some(&self.fields),
@@ -69,7 +69,7 @@ impl<S: schema::SchemaContext> schema::Object<S> {
 }
 
 impl<S: schema::SchemaContext> schema::Interface<S> {
-    fn to_selectable_type(&self) -> SelectableType<S> {
+    fn to_selectable_type(&self) -> SelectableType<'_, S> {
         SelectableType {
             type_name: &self.name,
             fields: Some(&self.fields),
@@ -79,7 +79,7 @@ impl<S: schema::SchemaContext> schema::Interface<S> {
 }
 
 impl<S: schema::SchemaContext> schema::Union<S> {
-    fn to_selectable_type(&self) -> SelectableType<S> {
+    fn to_selectable_type(&self) -> SelectableType<'_, S> {
         SelectableType {
             type_name: &self.name,
             fields: Some(self.get_fields()),
@@ -89,7 +89,7 @@ impl<S: schema::SchemaContext> schema::Union<S> {
 }
 
 impl<S: schema::SchemaContext> schema::TypeInfo<S> {
-    pub(super) fn to_selectable_type(&self) -> Option<SelectableType<S>> {
+    pub(super) fn to_selectable_type(&self) -> Option<SelectableType<'_, S>> {
         match self {
             schema::TypeInfo::Interface(interface) => Some(interface.to_selectable_type()),
             schema::TypeInfo::Object(object) => Some(object.to_selectable_type()),

@@ -285,11 +285,11 @@ impl<S: SchemaContext> Schema<S> {
             .iter()
             .fold(schema_sdl, |mut acc, (type_name, type_info)| {
                 // Ignore schema related types
-                if !type_name.as_str().starts_with("__") {
-                    if let Some(type_sdl) = type_info.generate_sdl(namespaced_getter) {
-                        acc.push_str("\n\n");
-                        acc.push_str(&type_sdl);
-                    }
+                if !type_name.as_str().starts_with("__")
+                    && let Some(type_sdl) = type_info.generate_sdl(namespaced_getter)
+                {
+                    acc.push_str("\n\n");
+                    acc.push_str(&type_sdl);
                 }
                 acc
             })
@@ -407,19 +407,19 @@ fn generate_fields_sdl<S: SchemaContext, NSGet: NamespacedGetter<S>>(
     let mut fields_sdl = Vec::new();
     for (field_name, field) in fields {
         // Ignore schema related fields
-        if !field_name.as_str().starts_with("__") {
-            if let Some((data, _)) = namespaced_getter.get(field) {
-                fields_sdl.push(with_description(
-                    data.description.as_ref(),
-                    format_field_with_type(
-                        field_name,
-                        &data.arguments,
-                        &data.field_type,
-                        &data.deprecation_status,
-                        namespaced_getter,
-                    ),
-                ));
-            }
+        if !field_name.as_str().starts_with("__")
+            && let Some((data, _)) = namespaced_getter.get(field)
+        {
+            fields_sdl.push(with_description(
+                data.description.as_ref(),
+                format_field_with_type(
+                    field_name,
+                    &data.arguments,
+                    &data.field_type,
+                    &data.deprecation_status,
+                    namespaced_getter,
+                ),
+            ));
         }
     }
     fields_sdl

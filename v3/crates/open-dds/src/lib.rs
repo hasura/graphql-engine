@@ -55,10 +55,10 @@ impl traits::OpenDd for EnvironmentValue {
     fn json_schema(generator: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         // This is copied from ndc-sdk to avoid establishing a dependency.
         let mut s = EnvironmentValueImpl::json_schema(generator);
-        if let SchemaObjectVariant(o) = &mut s {
-            if let Some(m) = &mut o.metadata {
-                m.id = Some("https://hasura.io/jsonschemas/EnvironmentValue".into());
-            }
+        if let SchemaObjectVariant(o) = &mut s
+            && let Some(m) = &mut o.metadata
+        {
+            m.id = Some("https://hasura.io/jsonschemas/EnvironmentValue".into());
         }
         s
     }
@@ -223,7 +223,7 @@ impl Metadata {
         }
     }
 
-    pub fn get_flags(&self) -> Cow<flags::OpenDdFlags> {
+    pub fn get_flags(&self) -> Cow<'_, flags::OpenDdFlags> {
         match self {
             Metadata::WithoutNamespaces(_) => Cow::Owned(flags::OpenDdFlags::default()),
             Metadata::Versioned(metadata) => match metadata {

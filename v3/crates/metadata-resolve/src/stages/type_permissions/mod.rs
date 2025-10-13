@@ -644,15 +644,15 @@ fn types_that_use_fancy_auth_inner(
         types.insert(data_type.clone(), uses_rules_based_auth);
 
         for field in object_type.object_type.fields.values() {
-            if let Some(custom_type_name) = unwrap_custom_type_name(&field.field_type) {
-                if !types.contains_key(custom_type_name) {
-                    types_that_use_fancy_auth_inner(
-                        object_types,
-                        custom_type_name,
-                        object_type_to_check,
-                        types,
-                    );
-                }
+            if let Some(custom_type_name) = unwrap_custom_type_name(&field.field_type)
+                && !types.contains_key(custom_type_name)
+            {
+                types_that_use_fancy_auth_inner(
+                    object_types,
+                    custom_type_name,
+                    object_type_to_check,
+                    types,
+                );
             }
         }
     }

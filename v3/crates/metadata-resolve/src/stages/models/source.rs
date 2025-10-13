@@ -179,28 +179,27 @@ pub(crate) fn resolve_model_source(
         }
     }
 
-    if let Some(apollo_federation_key_source) = &mut model.apollo_federation_key_source {
-        if let Some(apollo_federation_config) =
+    if let Some(apollo_federation_key_source) = &mut model.apollo_federation_key_source
+        && let Some(apollo_federation_config) =
             &model_object_type.object_type.apollo_federation_config
-        {
-            for key in &apollo_federation_config.keys {
-                for field in &key.fields {
-                    apollo_federation_key_source.ndc_mapping.insert(
-                        field.clone(),
-                        helpers::get_ndc_column_for_comparison(
-                            &model.name,
-                            &model.data_type,
-                            &resolved_model_source,
-                            field,
-                            || {
-                                format!(
-                                    "the apollo federation key fields of type {}",
-                                    model.data_type
-                                )
-                            },
-                        )?,
-                    );
-                }
+    {
+        for key in &apollo_federation_config.keys {
+            for field in &key.fields {
+                apollo_federation_key_source.ndc_mapping.insert(
+                    field.clone(),
+                    helpers::get_ndc_column_for_comparison(
+                        &model.name,
+                        &model.data_type,
+                        &resolved_model_source,
+                        field,
+                        || {
+                            format!(
+                                "the apollo federation key fields of type {}",
+                                model.data_type
+                            )
+                        },
+                    )?,
+                );
             }
         }
     }

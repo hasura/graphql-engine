@@ -92,23 +92,23 @@ pub(crate) fn execute(
         .map(|(k, v)| (ndc_models::FieldName::from(k.as_str()), v.clone()))
         .collect::<BTreeMap<_, _>>();
 
-    if let Some(pre_check) = pre_check {
-        if !eval_expression(
+    if let Some(pre_check) = pre_check
+        && !eval_expression(
             collection_relationships,
             &BTreeMap::new(),
             state,
             &pre_check,
             &new_row,
             &new_row,
-        )? {
-            return Err((
-                StatusCode::CONFLICT,
-                Json(ndc_models::ErrorResponse {
-                    message: "pre_check failed".into(),
-                    details: serde_json::Value::Null,
-                }),
-            ));
-        }
+        )?
+    {
+        return Err((
+            StatusCode::CONFLICT,
+            Json(ndc_models::ErrorResponse {
+                message: "pre_check failed".into(),
+                details: serde_json::Value::Null,
+            }),
+        ));
     }
 
     let old_row = state.actors.insert(id_int, new_row);

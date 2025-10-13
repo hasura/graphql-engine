@@ -60,24 +60,24 @@ pub fn query_root_schema(
     // Add node field for only the commands which have a query root field
     // defined, that is, they are based on functions.
     for command in gds.metadata.commands.values() {
-        if let Some(command_graphql_api) = &command.command.graphql_api {
-            if matches!(
+        if let Some(command_graphql_api) = &command.command.graphql_api
+            && matches!(
                 command_graphql_api.root_field_kind,
                 GraphQlRootFieldKind::Query
-            ) {
-                let command_field_name = command_graphql_api.root_field_name.clone();
-                let deprecation_status =
-                    super::mk_deprecation_status(command_graphql_api.deprecated.as_ref());
-                let (field_name, field) = commands::function_command_field(
-                    gds,
-                    builder,
-                    command,
-                    command_field_name,
-                    deprecation_status,
-                )?;
+            )
+        {
+            let command_field_name = command_graphql_api.root_field_name.clone();
+            let deprecation_status =
+                super::mk_deprecation_status(command_graphql_api.deprecated.as_ref());
+            let (field_name, field) = commands::function_command_field(
+                gds,
+                builder,
+                command,
+                command_field_name,
+                deprecation_status,
+            )?;
 
-                fields.insert(field_name, field);
-            }
+            fields.insert(field_name, field);
         }
     }
 

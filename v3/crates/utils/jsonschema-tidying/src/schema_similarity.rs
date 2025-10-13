@@ -151,10 +151,10 @@ pub fn schema_maps(this: &Map<String, Schema>, that: &Map<String, Schema>) -> bo
     }
 
     for (k, v) in this {
-        if let Some(v_) = that.get(k) {
-            if !schemas(v, v_) {
-                return false;
-            }
+        if let Some(v_) = that.get(k)
+            && !schemas(v, v_)
+        {
+            return false;
         }
     }
 

@@ -198,7 +198,7 @@ impl Identity {
     pub fn get_role_authorization(
         &self,
         role: Option<&Role>,
-    ) -> Result<Cow<RoleAuthorization>, SessionError> {
+    ) -> Result<Cow<'_, RoleAuthorization>, SessionError> {
         match self {
             Identity::RoleEmulationEnabled(admin_role) => Ok(Cow::Owned(RoleAuthorization {
                 role: role.cloned().unwrap_or(admin_role.clone()),

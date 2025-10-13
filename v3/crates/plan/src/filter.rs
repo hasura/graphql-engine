@@ -346,111 +346,106 @@ fn to_relationship_expression<'metadata>(
         .fields
         .relationship_fields
         .get(&field_name)
-    {
-        if let Some(target_boolean_expression_type_name) =
+        && let Some(target_boolean_expression_type_name) =
             &relationship_field.boolean_expression_type
-        {
-            let target_boolean_expression_type = metadata
-                .boolean_expression_types
-                .objects
-                .get(target_boolean_expression_type_name)
-                .ok_or_else(|| {
-                    PlanError::Permission(PermissionError::ObjectBooleanExpressionTypeNotFound {
-                        boolean_expression_type_name: target_boolean_expression_type_name.clone(),
-                    })
-                })?;
+    {
+        let target_boolean_expression_type = metadata
+            .boolean_expression_types
+            .objects
+            .get(target_boolean_expression_type_name)
+            .ok_or_else(|| {
+                PlanError::Permission(PermissionError::ObjectBooleanExpressionTypeNotFound {
+                    boolean_expression_type_name: target_boolean_expression_type_name.clone(),
+                })
+            })?;
 
-            let target_model_object_type = crate::metadata_accessor::get_output_object_type(
-                metadata,
-                &target_boolean_expression_type.object_type,
-                &session.variables,
-                plan_state,
-            )?;
+        let target_model_object_type = crate::metadata_accessor::get_output_object_type(
+            metadata,
+            &target_boolean_expression_type.object_type,
+            &session.variables,
+            plan_state,
+        )?;
 
-            // look up relationship on the source model
-            let relationship = source_object_type
-                .relationship_fields
-                .get(&relationship_field.relationship_name)
-                .ok_or_else(|| PermissionError::RelationshipNotFound {
-                    object_type_name: target_boolean_expression_type.object_type.clone(),
-                    relationship_name: relationship_field.relationship_name.clone(),
-                })?;
+        // look up relationship on the source model
+        let relationship = source_object_type
+            .relationship_fields
+            .get(&relationship_field.relationship_name)
+            .ok_or_else(|| PermissionError::RelationshipNotFound {
+                object_type_name: target_boolean_expression_type.object_type.clone(),
+                relationship_name: relationship_field.relationship_name.clone(),
+            })?;
 
-            match &relationship.target {
-                metadata_resolve::RelationshipTarget::Command(_) => {
-                    todo!("command target not supported")
-                }
-                metadata_resolve::RelationshipTarget::Model(model_target) => {
-                    let target_model_source = crate::metadata_accessor::get_model(
-                        metadata,
-                        &model_target.model_name,
-                        &session.variables,
-                        plan_state,
-                    )?;
+        match &relationship.target {
+            metadata_resolve::RelationshipTarget::Command(_) => {
+                todo!("command target not supported")
+            }
+            metadata_resolve::RelationshipTarget::Model(model_target) => {
+                let target_model_source = crate::metadata_accessor::get_model(
+                    metadata,
+                    &model_target.model_name,
+                    &session.variables,
+                    plan_state,
+                )?;
 
-                    // build expression for any model permissions for the target model
-                    let model_expression = model_permission_filter_to_expression(
-                        session,
-                        &target_model_source,
-                        &metadata.object_types,
-                        usage_counts,
-                    )?;
+                // build expression for any model permissions for the target model
+                let model_expression = model_permission_filter_to_expression(
+                    session,
+                    &target_model_source,
+                    &metadata.object_types,
+                    usage_counts,
+                )?;
 
-                    // resolve predicate inside the relationship
-                    let inner = to_filter_expression_internal(
-                        metadata,
-                        session,
-                        &target_model_source.source.type_mappings,
-                        &target_model_object_type,
-                        Some(target_boolean_expression_type),
-                        predicate,
-                        &target_model_source.source.data_connector,
-                        Nesting::Relationship,
-                        plan_state,
-                        usage_counts,
-                    )?;
+                // resolve predicate inside the relationship
+                let inner = to_filter_expression_internal(
+                    metadata,
+                    session,
+                    &target_model_source.source.type_mappings,
+                    &target_model_object_type,
+                    Some(target_boolean_expression_type),
+                    predicate,
+                    &target_model_source.source.data_connector,
+                    Nesting::Relationship,
+                    plan_state,
+                    usage_counts,
+                )?;
 
-                    // include any predicates from model permissions
-                    let predicate = match model_expression
-                        .and_then(Expression::remove_always_true_expression)
-                    {
+                // include any predicates from model permissions
+                let predicate =
+                    match model_expression.and_then(Expression::remove_always_true_expression) {
                         Some(model_expression) => {
                             Expression::mk_and([model_expression, inner].to_vec())
                         }
                         None => inner,
                     };
 
-                    // work out path of any nesting before the relationship
-                    let column_path = column_path_for_operand(
-                        operand,
-                        metadata,
-                        session,
-                        type_mappings,
-                        model_object_type,
-                        plan_state,
-                    )?;
+                // work out path of any nesting before the relationship
+                let column_path = column_path_for_operand(
+                    operand,
+                    metadata,
+                    session,
+                    type_mappings,
+                    model_object_type,
+                    plan_state,
+                )?;
 
-                    return Ok(crate::build_relationship_comparison_expression(
-                        type_mappings,
-                        column_path,
-                        data_connector,
-                        &relationship.relationship_name,
-                        &model_target.relationship_type,
-                        &source_boolean_expression_type.object_type,
-                        &model_target.model_name,
-                        target_model_source.source,
-                        relationship.target_capabilities.as_ref().ok_or_else(|| {
-                            PermissionError::InternalMissingRelationshipCapabilities {
-                                relationship_name: relationship.relationship_name.clone(),
-                                object_type_name: target_boolean_expression_type
-                                    .object_type
-                                    .clone(),
-                            }
-                        })?,
-                        &model_target.mappings,
-                        predicate,
-                    )?);
-                }
+                return Ok(crate::build_relationship_comparison_expression(
+                    type_mappings,
+                    column_path,
+                    data_connector,
+                    &relationship.relationship_name,
+                    &model_target.relationship_type,
+                    &source_boolean_expression_type.object_type,
+                    &model_target.model_name,
+                    target_model_source.source,
+                    relationship.target_capabilities.as_ref().ok_or_else(|| {
+                        PermissionError::InternalMissingRelationshipCapabilities {
+                            relationship_name: relationship.relationship_name.clone(),
+                            object_type_name: target_boolean_expression_type.object_type.clone(),
+                        }
+                    })?,
+                    &model_target.mappings,
+                    predicate,
+                )?);
             }
         }
     }
