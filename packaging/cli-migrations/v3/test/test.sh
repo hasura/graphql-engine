@@ -38,5 +38,27 @@ wait_for_server
 docker run --rm --network container:graphql-engine curlimages/curl -s -f -d'{"type" : "export_metadata", "args" : {} }' localhost:8080/v1/metadata | jq -j '.' | diff validation/metadata.json -
 # get list of migrations applied from graphql-engine server
 docker run --rm --network container:graphql-engine curlimages/curl -s -f -d'{"type" : "get_catalog_state", "args" : {} }' localhost:8080/v1/metadata | jq .cli_state | diff validation/catalog_cli_state.json -
+
+# stop the graphql-engine container
+docker compose stop graphql-engine
+
+# overwrite existing metadata with intentionally inconsistent metadata 
+docker cp bad_metadata/public_test.yaml graphql-engine:/hasura-metadata/databases/default/tables/public_test.yaml
+# start the container with new, inconsistent metadata
+docker compose up -d --no-recreate graphql-engine
+# confirm that the service does not become available for at least 10 seconds
+for _ in $(seq 1 10); do
+    if docker run --rm --network container:graphql-engine curlimages/curl -s -f http://127.0.0.1:8080/v1/version > /dev/null 2>&1; then
+        echo "Server became available when it should not have"
+        exit 1
+    fi
+    sleep 1
+done
+# confirm that the service's log contain the expected error
+if ! docker compose logs graphql-engine | grep -qi "error applying metadata"; then
+    echo "Expected error message not found in logs"
+    exit 1
+fi
+
 # delete postgres and graphql-engine
 docker compose down -v
