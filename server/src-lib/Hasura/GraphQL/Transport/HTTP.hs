@@ -339,8 +339,9 @@ runGQ env sqlGenCtx sc enableAL readOnlyMode remoteSchemaResponsePriority header
   modelInfoLogStatus <- liftIO getModelInfoLogStatus'
   let gqlMetrics = pmGraphQLRequestMetrics prometheusMetrics
 
-  (totalTime, (response, parameterizedQueryHash, gqlOpType, gqlOperationName, modelInfoListForLogging, queryCachedStatus)) <- withElapsedTime $ do
-    (reqParsed, runLimits, queryParts) <- Tracing.newSpan "Parse GraphQL" Tracing.SKInternal $ observeGQLQueryError granularPrometheusMetricsState gqlMetrics Nothing (_grOperationName reqUnparsed) Nothing $ do
+  getTimeElapsed <- liftIO startTimer
+  (response, parameterizedQueryHash, gqlOpType, gqlOperationName, modelInfoListForLogging, queryCachedStatus) <- do
+    (reqParsed, runLimits, queryParts) <- Tracing.newSpan "Parse GraphQL" Tracing.SKInternal $ observeGQLQueryError granularPrometheusMetricsState gqlMetrics Nothing Nothing (_grOperationName reqUnparsed) Nothing $ do
       -- 1. Run system authorization on the 'reqUnparsed :: GQLReqUnparsed' query.
       reqParsed <-
         E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed reqId
@@ -355,7 +356,7 @@ runGQ env sqlGenCtx sc enableAL readOnlyMode remoteSchemaResponsePriority header
 
     let gqlOpType = G._todType queryParts
     let gqlOperationName = getOpNameFromParsedReq reqParsed
-    observeGQLQueryError granularPrometheusMetricsState gqlMetrics (Just gqlOpType) gqlOperationName Nothing $ do
+    observeGQLQueryError granularPrometheusMetricsState gqlMetrics (Just gqlOpType) (Just getTimeElapsed) gqlOperationName Nothing $ do
       -- 3. Construct the remainder of the execution plan.
       let maybeOperationName = _unOperationName <$> getOpNameFromParsedReq reqParsed
       for_ maybeOperationName $ \nm ->
@@ -385,6 +386,8 @@ runGQ env sqlGenCtx sc enableAL readOnlyMode remoteSchemaResponsePriority header
       -- 4. Execute the execution plan producing a 'AnnotatedResponse'.
       (response, queryCachedStatus, modelInfoFromExecution) <- executePlan reqParsed runLimits execPlan
       return (response, parameterizedQueryHash, gqlOpType, gqlOperationName, ((modelInfoList <> (modelInfoFromExecution))), queryCachedStatus)
+
+  totalTime <- liftIO getTimeElapsed
 
   -- 5. Record telemetry
   recordTimings totalTime response
@@ -617,11 +620,12 @@ runGQ env sqlGenCtx sc enableAL readOnlyMode remoteSchemaResponsePriority header
       IO GranularPrometheusMetricsState ->
       GraphQLRequestMetrics ->
       Maybe G.OperationType ->
+      Maybe (IO DiffTime) ->
       Maybe OperationName ->
       Maybe ParameterizedQueryHash ->
       n a ->
       n a
-    observeGQLQueryError granularPrometheusMetricsState gqlMetrics mOpType mOpName mQHash action =
+    observeGQLQueryError granularPrometheusMetricsState gqlMetrics mOpType mGetTimeElapsed mOpName mQHash action =
       catchError (fmap Right action) (pure . Left) >>= \case
         Right result ->
           pure result
@@ -633,6 +637,14 @@ runGQ env sqlGenCtx sc enableAL readOnlyMode remoteSchemaResponsePriority header
             mOpName
             mQHash
             (Prometheus.CounterVector.inc $ gqlRequests gqlMetrics)
+          -- Make a best effort to record latency timings, like in recordGQLQuerySuccess,
+          -- even in the event of failure. Important for monitoring.
+          case (mOpType, mGetTimeElapsed) of
+            (Just G.OperationTypeQuery, Just getTimeElapsed) ->
+              liftIO $ getTimeElapsed >>= Prometheus.Histogram.observe (gqlExecutionTimeSecondsQuery gqlMetrics) . realToFrac
+            (Just G.OperationTypeMutation, Just getTimeElapsed) ->
+              liftIO $ getTimeElapsed >>= Prometheus.Histogram.observe (gqlExecutionTimeSecondsMutation gqlMetrics) . realToFrac
+            _ -> pure () -- we failed before opType was available
           throwError err
 
     -- Tally and record execution times for successful GraphQL requests.
