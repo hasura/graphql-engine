@@ -156,7 +156,8 @@ macro_rules! impl_JsonSchema_with_OpenDd_for {
 /// Macro to implement newtype wrappers for string identifiers
 #[macro_export]
 macro_rules! str_newtype {
-    ($name:ident over $oldtype:ty | doc $doc:expr) => {
+    // Internal: common implementation for all variants
+    (@base $name:ident over $oldtype:ty | doc $doc:expr) => {
         #[derive(
             Clone,
             Debug,
@@ -205,12 +206,6 @@ macro_rules! str_newtype {
             }
         }
 
-        impl From<$name> for String {
-            fn from(value: $name) -> Self {
-                value.0.into()
-            }
-        }
-
         impl $name {
             pub fn new(value: $oldtype) -> Self {
                 $name(value)
@@ -231,8 +226,20 @@ macro_rules! str_newtype {
 
         $crate::impl_JsonSchema_with_OpenDd_for!($name);
     };
-    ($name:ident | doc $doc:expr) => {
-        str_newtype! {$name over smol_str::SmolStr | doc $doc}
+
+    // Case 1: over String
+    ($name:ident over String | doc $doc:expr) => {
+        str_newtype! {@base $name over String | doc $doc}
+        impl From<&str> for $name {
+            fn from(value: &str) -> Self {
+                $name(value.into())
+            }
+        }
+    };
+
+    // Case 2: over SmolStr
+    ($name:ident over smol_str::SmolStr | doc $doc:expr) => {
+        str_newtype! {@base $name over smol_str::SmolStr | doc $doc}
 
         impl From<&str> for $name {
             fn from(value: &str) -> Self {
@@ -245,5 +252,27 @@ macro_rules! str_newtype {
                 $name(value.into())
             }
         }
+
+        impl From<$name> for String {
+            fn from(value: $name) -> Self {
+                value.0.into()
+            }
+        }
+    };
+
+    // Case 3: over $oldtype (not String or SmolStr)
+    ($name:ident over $oldtype:ty | doc $doc:expr) => {
+        str_newtype! {@base $name over $oldtype | doc $doc}
+
+        impl From<$name> for String {
+            fn from(value: $name) -> Self {
+                value.0.into()
+            }
+        }
+    };
+
+    // Case 4: no over clause - default to SmolStr
+    ($name:ident | doc $doc:expr) => {
+        str_newtype! {$name over smol_str::SmolStr | doc $doc}
     };
 }
