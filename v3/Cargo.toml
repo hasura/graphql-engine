@@ -89,7 +89,7 @@ chrono = "0.4"
 clap = { version = "4", features = ["derive", "env"] }
 convert_case = "0.8"
 cookie = "0.18"
-criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
+criterion = { version = "0.7", features = ["html_reports", "async_tokio"] }
 darling = "0.21"
 # Keep this in sync with sqlparser
 datafusion = { version = "48", features = ["serde"] }
