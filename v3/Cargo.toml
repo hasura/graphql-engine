@@ -156,7 +156,7 @@ serde_with = { version = "3", features = ["indexmap_2"] }
 sha2 = "0.10"
 similar-asserts = "1.7"
 smol_str = "0.1"
-strum = "0.26"
+strum = "0.27"
 strum_macros = "0.26"
 # Keep this in sync with datafusion
 sqlparser = { version = "0.55", features = ["visitor"] }
