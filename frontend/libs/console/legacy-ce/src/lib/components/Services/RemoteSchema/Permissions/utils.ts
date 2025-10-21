@@ -627,13 +627,15 @@ const formatArg = ({ argName, arg }: FormatParamArgs): string | undefined => {
  * Builds the SDL string for each field / type.
  * @param type - Data source object containing a schema field.
  * @param argTree - Arguments tree in case of types with argument presets.
+ * @param forceInclude - If true, include the type even if no children are checked (for enums/scalars)
  * @returns SDL string for passed field.
  */
 const getSDLField = (
   type: RemoteSchemaFields,
-  argTree: Record<string, any> | null
+  argTree: Record<string, any> | null,
+  forceInclude = false
 ): string => {
-  if (!checkEmptyType(type)) return ''; // check if no child is selected for a type
+  if (!forceInclude && !checkEmptyType(type)) return ''; // check if no child is selected for a type
 
   let result = ``;
   const typeName: string = type.name;
@@ -644,6 +646,27 @@ const getSDLField = (
       return result; // if default GQL scalar type, return empty string
     result = `${typeName}`;
     return `${result}\n`;
+  }
+
+  // add enum fields to SDL - include all values when forceInclude is true
+  if (typeName.startsWith('enum') && type.children) {
+    result = `${typeName}{`;
+    if (forceInclude) {
+      // Include all enum values when forced
+      type.children.forEach(val => {
+        result = `${result}
+      ${val.name}`;
+      });
+    } else {
+      // Include only checked enum values
+      type.children.forEach(val => {
+        if (val.checked) {
+          result = `${result}
+      ${val.name}`;
+        }
+      });
+    }
+    return `${result}\n}`;
   }
 
   // add union fields to SDL
@@ -719,6 +742,81 @@ const getSDLField = (
 };
 
 /**
+ * Collects all types that are referenced by checked fields in the schema.
+ * This includes return types and argument types, recursively collecting transitive dependencies.
+ * @param types - Array of all types in the schema
+ * @returns Set of type names that are referenced by checked fields
+ */
+const collectReferencedTypes = (
+  types: RemoteSchemaFields[] | FieldType[]
+): Set<string> => {
+  const referencedTypes = new Set<string>();
+  const typesMap = new Map<string, RemoteSchemaFields | FieldType>();
+
+  // Build a map of all types for quick lookup
+  types.forEach(type => {
+    if ('typeName' in type && type.typeName) {
+      typesMap.set(type.typeName, type);
+    }
+  });
+
+  const collectFromField = (field: FieldType | CustomFieldType) => {
+    if (!field.checked) return;
+
+    // Add return type
+    if ('return' in field && field.return) {
+      const returnType = getTrimmedReturnType(field.return);
+      if (!referencedTypes.has(returnType)) {
+        referencedTypes.add(returnType);
+        // Recursively collect from the referenced type
+        const refType = typesMap.get(returnType);
+        if (refType && 'children' in refType && refType.children) {
+          refType.children.forEach(child => {
+            collectFromField(child);
+          });
+        }
+      }
+    }
+
+    // Add argument types
+    if ('args' in field && field.args) {
+      Object.values(field.args).forEach((arg: GraphQLInputField) => {
+        if (!(arg.type instanceof GraphQLScalarType)) {
+          const subType = getTrimmedReturnType(arg.type.inspect());
+          if (!referencedTypes.has(subType)) {
+            referencedTypes.add(subType);
+            // Recursively collect from the referenced type
+            const refType = typesMap.get(subType);
+            if (refType && 'children' in refType && refType.children) {
+              refType.children.forEach(child => {
+                collectFromField(child);
+              });
+            }
+          }
+        }
+      });
+    }
+
+    // Recursively collect from children
+    if (field.children) {
+      field.children.forEach(child => {
+        collectFromField(child);
+      });
+    }
+  };
+
+  types.forEach(type => {
+    if ('children' in type && type.children) {
+      type.children.forEach(child => {
+        collectFromField(child);
+      });
+    }
+  });
+
+  return referencedTypes;
+};
+
+/**
  * Generate SDL string having input types and object types.
  * @param types - Remote schema introspection schema.
  * @returns String having all enum types and scalar types.
@@ -730,8 +828,19 @@ export const generateSDL = (
   let prefix = `schema{`;
   let result = '';
 
+  // Collect all referenced types from checked fields
+  const referencedTypes = collectReferencedTypes(types);
+
   types.forEach(type => {
-    const fieldDef = getSDLField(type, argTree);
+    // Check if this type is referenced by checked fields
+    const isReferenced = type.typeName && referencedTypes.has(type.typeName);
+    const shouldForceInclude = !!(
+      isReferenced &&
+      type.name &&
+      (type.name.startsWith('enum') || type.name.startsWith('scalar'))
+    );
+
+    const fieldDef = getSDLField(type, argTree, shouldForceInclude);
 
     if (!isEmpty(fieldDef) && type.typeName === '__query_root' && type.name) {
       const name = type.name.split(' ')[1];

@@ -141,4 +141,37 @@ describe('Utils.ts', () => {
     const sdl = generateSDL(schemaFields, {});
     expect(sdl).toMatchSnapshot();
   });
+
+  it('REGRESSION TEST: generateSDL should include referenced enum types (ALBUM_select_column issue)', () => {
+    // This test reproduces the bug reported in the issue:
+    // When a field has an argument that references an enum type (like ALBUM_select_column),
+    // the enum must be included in the SDL, otherwise the server will reject it with:
+    // "Could not find type with name 'ALBUM_select_column'"
+
+    const def = addPresetDefinition(userPreset);
+    const permissionsSchema = buildSchema(def);
+    const schemaFields = getRemoteSchemaFields(
+      clientSchema1,
+      permissionsSchema
+    );
+
+    const sdl = generateSDL(schemaFields, {});
+
+    // The SDL should include the type that references the enum
+    expect(sdl).toContain('type users');
+
+    // The SDL should include the field with the argument that references the enum
+    expect(sdl).toContain('books(');
+    expect(sdl).toContain('distinct_on : [books_select_column!]');
+
+    // CRITICAL: The SDL must include the referenced enum definition
+    // This is what was missing before the fix, causing the error:
+    // "Could not find type with name 'books_select_column'"
+    expect(sdl).toContain('enum books_select_column');
+
+    // Verify the enum has all its values
+    expect(sdl).toContain('author');
+    expect(sdl).toContain('book_name');
+    expect(sdl).toContain('id');
+  });
 });

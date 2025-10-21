@@ -215,6 +215,12 @@ input users_bool_exp{
       name : String_comparison_exp
 }
 
+enum books_select_column{
+      author
+      book_name
+      id
+}
+
 enum order_by{
       asc
       asc_nulls_first
@@ -444,6 +450,12 @@ input users_bool_exp{
       books : books_bool_exp
       id : Int_comparison_exp
       name : String_comparison_exp
+}
+
+enum books_select_column{
+      author
+      book_name
+      id
 }
 
 enum order_by{
@@ -782,6 +794,12 @@ input users_bool_exp{
       books : books_bool_exp
       id : Int_comparison_exp
       name : String_comparison_exp
+}
+
+enum books_select_column{
+      author
+      book_name
+      id
 }
 
 enum order_by{
