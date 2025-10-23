@@ -205,7 +205,7 @@ pub(crate) async fn expect_text_message(
     let tungstenite::Message::Text(text_message) = message else {
         panic!("Expected text message");
     };
-    text_message
+    text_message.to_string()
 }
 
 #[allow(dead_code)]
@@ -269,7 +269,7 @@ pub(crate) async fn assert_graphql_ws_connection_init(
     // Send connection init with required headers for authentication.
     let json_message = serde_json::to_string(&init_payload).unwrap();
     socket
-        .send(tungstenite::Message::Text(json_message))
+        .send(tungstenite::Message::Text(json_message.into()))
         .await
         .unwrap();
     // Wait for a text message

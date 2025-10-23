@@ -102,7 +102,7 @@ async fn test_graphql_ws_connection_init_no_headers() {
     });
     let json_message = serde_json::to_string(&connection_init_no_headers).unwrap();
     socket
-        .send(tungstenite::Message::Text(json_message))
+        .send(tungstenite::Message::Text(json_message.into()))
         .await
         .unwrap();
     // Wait for a close message
@@ -157,7 +157,7 @@ async fn test_graphql_ws_too_many_connection_inits() {
     // Sending connection_init again results in connection closure
     let json_message = serde_json::to_string(&connection_init_admin()).unwrap();
     socket
-        .send(tungstenite::Message::Text(json_message))
+        .send(tungstenite::Message::Text(json_message.into()))
         .await
         .unwrap();
 
@@ -189,7 +189,7 @@ async fn test_graphql_ws_subscribe_admin() {
     let operation_id = "some-operation-id";
     let json_message = serde_json::to_string(&subscribe_article_by_id(operation_id)).unwrap();
     socket
-        .send(tungstenite::Message::Text(json_message))
+        .send(tungstenite::Message::Text(json_message.into()))
         .await
         .unwrap();
 
@@ -223,7 +223,7 @@ async fn test_graphql_ws_subscribe_admin() {
     // Send another subscription with same operation_id
     let json_message = serde_json::to_string(&subscribe_article_by_id(operation_id)).unwrap();
     socket
-        .send(tungstenite::Message::Text(json_message))
+        .send(tungstenite::Message::Text(json_message.into()))
         .await
         .unwrap();
 
@@ -275,7 +275,7 @@ async fn test_graphql_ws_subscribe_user_1() {
 
     let json_message = serde_json::to_string(&subscribe_message).unwrap();
     socket
-        .send(tungstenite::Message::Text(json_message))
+        .send(tungstenite::Message::Text(json_message.into()))
         .await
         .unwrap();
 
@@ -319,7 +319,7 @@ async fn test_graphql_ws_subscribe_user_1() {
     });
     socket
         .send(tungstenite::Message::Text(
-            serde_json::to_string(&stop_message).unwrap(),
+            serde_json::to_string(&stop_message).unwrap().into(),
         ))
         .await
         .unwrap();
@@ -371,7 +371,7 @@ async fn test_graphql_ws_subscribe_user_1_validation_error() {
     });
     let json_message = serde_json::to_string(&subscribe_message).unwrap();
     socket
-        .send(tungstenite::Message::Text(json_message))
+        .send(tungstenite::Message::Text(json_message.into()))
         .await
         .unwrap();
 

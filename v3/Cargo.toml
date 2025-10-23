@@ -165,7 +165,7 @@ thiserror = "2"
 tokio = { version = "1", features = ["macros", "parking_lot", "rt-multi-thread", "signal", "time"] }
 tokio-stream = "0.1"
 tokio-test = "0.4"
-tokio-tungstenite = "0.24.0"
+tokio-tungstenite = "0.28.0"
 tokio-util = { version = "0.7", features = ["compat", "io", "io-util"] }
 tower = "0.5"
 # Prefer zstd-encoded request bodies, but also support gzip in case a client can't do that
