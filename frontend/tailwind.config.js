@@ -74,8 +74,8 @@ module.exports = {
   darkMode: 'class',
   theme: {
     fontFamily: {
-      sans: ['Gudea', 'ui-sans-serif', 'system-ui'],
-      mono: ['"Overpass Mono"', 'ui-monospace', 'monospace'],
+      sans: ['ui-sans-serif', 'system-ui', 'Gudea'],
+      mono: ['ui-monospace', 'monospace', '"Overpass Mono"'],
     },
     extend: {
       boxShadow: {
