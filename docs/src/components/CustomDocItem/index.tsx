@@ -6,7 +6,6 @@ import styles from './styles.module.scss';
 import { Redirect } from '@docusaurus/router';
 import { AiChatBot } from '@site/src/components/AiChatBot/AiChatBot';
 import BrowserOnly from '@docusaurus/BrowserOnly';
-import { NewVersionModal } from '@site/src/components/NewVersionModal/NewVersionModal';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
 const CustomDocItem = props => {
@@ -78,7 +77,6 @@ const CustomDocItem = props => {
         }
       >
         <BrowserOnly fallback={<div>Loading...</div>}>{() => <AiChatBot style={{}} />}</BrowserOnly>
-        <BrowserOnly fallback={<div>Loading...</div>}>{() => <NewVersionModal />}</BrowserOnly>
         <CustomFooter />
       </div>
     </div>
