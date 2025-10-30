@@ -182,13 +182,13 @@ const config = {
         // Optional: Algolia search parameters
         // searchParameters: {},
       },
-      announcementBar: {
-        id: 'announcementBar-1', // Increment on change
-        content: `The new version of Hasura has launched. <a target="_blank" rel="noopener" href="https://hasura.io/docs/3.0/getting-started/quickstart/?utm_source=hasura&utm_medium=v2_docs">Get started with Hasura DDN here.</a>`,
-        isCloseable: false,
-        // backgroundColor: '#478BCA',
-        // textColor: '#091E42',
-      },
+      // announcementBar: {
+      //   id: 'announcementBar-1', // Increment on change
+      //   content: `The new version of Hasura has launched. <a target="_blank" rel="noopener" href="https://hasura.io/docs/3.0/getting-started/quickstart/?utm_source=hasura&utm_medium=v2_docs">Get started with Hasura DDN here.</a>`,
+      //   isCloseable: false,
+      //   // backgroundColor: '#478BCA',
+      //   // textColor: '#091E42',
+      // },
       // announcementBar: {
       //   id: 'announcement-bar-3',
       //   content:
