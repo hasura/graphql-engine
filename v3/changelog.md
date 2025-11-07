@@ -8,6 +8,10 @@
 
 ### Fixed
 
+## [v2025.11.07]
+
+- No changes
+
 ## [v2025.10.28]
 
 - No changes
@@ -2029,7 +2033,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.10.28...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.11.07...HEAD
+[v2025.11.07]: https://github.com/hasura/v3-engine/releases/tag/v2025.11.07
 [v2025.10.28]: https://github.com/hasura/v3-engine/releases/tag/v2025.10.28
 [v2025.10.20]: https://github.com/hasura/v3-engine/releases/tag/v2025.10.20
 [v2025.10.09]: https://github.com/hasura/v3-engine/releases/tag/v2025.10.09
