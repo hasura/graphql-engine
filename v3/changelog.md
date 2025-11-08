@@ -6,6 +6,8 @@
 
 ### Changed
 
+- `pre/post-ndc-request` plugins enabled for Relational API
+
 ### Fixed
 
 ## [v2025.11.07]

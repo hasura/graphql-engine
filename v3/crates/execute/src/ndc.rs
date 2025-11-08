@@ -1,6 +1,6 @@
 pub mod client;
 pub mod migration;
-mod plugins;
+pub mod plugins;
 pub mod types;
 use hasura_authn_core::Session;
 use metadata_resolve::LifecyclePluginConfigs;

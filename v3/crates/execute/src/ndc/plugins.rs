@@ -462,3 +462,60 @@ pub async fn execute_pre_ndc_mutation_explain_response_plugins(
         _ => Ok(None), // Version mismatch, return original response
     }
 }
+
+/// Wrapper for execute_pre_ndc_request_plugins for relational queries (v0.2 only)
+pub async fn execute_pre_ndc_relational_request_plugins(
+    plugins: &BTreeMap<Qualified<DataConnectorName>, Arc<ResolvedLifecyclePreNdcRequestPluginHook>>,
+    data_connector: &metadata_resolve::DataConnectorLink,
+    http_context: &HttpContext,
+    session: &Session,
+    request_headers: &axum::http::HeaderMap,
+    relational_request: &ndc_models::RelationalQuery,
+) -> Result<
+    Option<
+        PreNdcRequestPluginResponse<
+            ndc_models::RelationalQuery,
+            ndc_models::RelationalQueryResponse,
+        >,
+    >,
+    client::Error,
+> {
+    execute_pre_ndc_request_plugins(
+        plugins,
+        data_connector,
+        http_context,
+        session,
+        request_headers,
+        relational_request,
+        pre_ndc_request_plugin::execute::OperationType::Query,
+        "v0.2.x",
+    )
+    .await
+    .map_err(client::Error::from)
+}
+
+/// Wrapper for execute_pre_ndc_response_plugins for relational queries (v0.2 only)
+pub async fn execute_pre_ndc_relational_response_plugins(
+    plugins: &BTreeMap<
+        Qualified<DataConnectorName>,
+        Arc<ResolvedLifecyclePreNdcResponsePluginHook>,
+    >,
+    data_connector: &metadata_resolve::DataConnectorLink,
+    http_context: &HttpContext,
+    session: &Session,
+    relational_request: &ndc_models::RelationalQuery,
+    response: &ndc_models::RelationalQueryResponse,
+) -> Result<Option<ndc_models::RelationalQueryResponse>, client::Error> {
+    execute_pre_ndc_response_plugins(
+        plugins,
+        data_connector,
+        http_context,
+        session,
+        relational_request,
+        response,
+        pre_ndc_response_plugin::execute::OperationType::Query,
+        "v0.2.x",
+    )
+    .await
+    .map_err(client::Error::from)
+}

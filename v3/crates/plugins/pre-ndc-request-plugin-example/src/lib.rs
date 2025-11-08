@@ -30,15 +30,17 @@ pub enum NDCMutation {
 pub enum NDCRequest {
     Query(NDCQuery),
     Mutation(NDCMutation),
+    // Relational (v0.2) request
+    Relational(Box<ndc_models::RelationalQuery>),
 }
 
-// handle a query request and do nothing with it
-// later we'll do something more interesting
+// handle a pre-ndc request using the typed request body
 pub async fn handle(
     headers: axum::http::header::HeaderMap,
     body: axum::Json<PreNdcRequestPluginRequestBody<NDCRequest>>,
 ) -> Result<(axum::http::StatusCode, axum::Json<Value>), axum::http::StatusCode> {
     let body = body.0;
+
     info!(
         operation = format!("{:?}", body.operation_type),
         ndc_version = %body.ndc_version,
@@ -89,6 +91,17 @@ fn set_limit_in_query(body: NDCRequest, limit: u64) -> NDCRequest {
             })))
         }
         NDCRequest::Mutation(mutation) => NDCRequest::Mutation(mutation.clone()),
+        NDCRequest::Relational(rel) => {
+            let new_root = ndc_models::Relation::Paginate {
+                input: std::sync::Arc::new(rel.root_relation.clone()),
+                fetch: Some(limit),
+                skip: 0,
+            };
+            NDCRequest::Relational(Box::new(ndc_models::RelationalQuery {
+                root_relation: new_root,
+                ..*rel
+            }))
+        }
     }
 }
 
