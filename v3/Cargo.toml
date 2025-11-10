@@ -121,7 +121,7 @@ lexical-core = "1"
 log = "0.4"
 mimalloc = "0.1"
 mockito = { version = "~1.4", default-features = false } # v1.5+ depends on http v1
-nonempty = { version = "0.10", features = ["serialize"] }
+nonempty = { version = "0.12", features = ["serialize"] }
 oas3 = "0.12.1"
 openssl = "0.10"
 opentelemetry = "0.24"

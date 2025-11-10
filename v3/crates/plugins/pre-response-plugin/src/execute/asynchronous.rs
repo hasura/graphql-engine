@@ -92,7 +92,7 @@ async fn execute_all_async_plugins(
     headers_map: &HeaderMap,
 ) {
     let tracer = tracing_util::global_tracer();
-    let mut async_executions = Vec::with_capacity(pre_response_plugins_config.capacity());
+    let mut async_executions = Vec::with_capacity(pre_response_plugins_config.capacity().into());
     // Execute each pre-response plugin asynchronously without await.
     for pre_plugin_config in pre_response_plugins_config {
         let async_execution = async {
