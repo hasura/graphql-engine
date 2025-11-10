@@ -142,7 +142,7 @@ pub struct OrderByDirectionValues {
     JsonSchema,
     Eq,
     Hash,
-    derive_more::Display,
+    derive_more::with_trait::Display,
     opendds_derive::OpenDd,
 )]
 #[serde(deny_unknown_fields)]

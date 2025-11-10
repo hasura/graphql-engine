@@ -46,7 +46,7 @@ pub enum ModelWarning {
     NoModelSource,
 }
 
-#[derive(Debug, derive_more::Display)]
+#[derive(Debug, derive_more::with_trait::Display)]
 pub enum RequestError {
     NotFound,
     BadRequest(String),
@@ -101,7 +101,7 @@ impl RequestError {
     }
 }
 
-#[derive(Debug, derive_more::Display)]
+#[derive(Debug, derive_more::with_trait::Display)]
 pub enum InternalError {
     EmptyQuerySet,
 }

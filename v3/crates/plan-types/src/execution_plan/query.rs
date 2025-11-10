@@ -64,7 +64,9 @@ impl Default for PredicateQueryTrees {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, derive_more::Display, Ord, Hash, Clone, Copy)]
+#[derive(
+    Debug, PartialEq, Eq, PartialOrd, derive_more::with_trait::Display, Ord, Hash, Clone, Copy,
+)]
 pub struct RemotePredicateKey(pub u64);
 
 // we need to generate unique identifiers for remote predicates

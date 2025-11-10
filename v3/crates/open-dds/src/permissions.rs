@@ -28,7 +28,7 @@ use crate::{
     Ord,
     JsonSchema,
     Hash,
-    derive_more::Display,
+    derive_more::with_trait::Display,
     opendds_derive::OpenDd,
 )]
 pub struct Role(pub String);

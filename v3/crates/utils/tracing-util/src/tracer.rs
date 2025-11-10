@@ -15,7 +15,7 @@ use crate::traceable::{ErrorVisibility, Traceable, TraceableError};
 
 pub static GLOBAL_TRACER_NAME: &str = "engine-tracing-util";
 
-#[derive(Clone, Copy, derive_more::Display)]
+#[derive(Clone, Copy, derive_more::with_trait::Display)]
 pub enum SpanVisibility {
     #[display("internal")]
     Internal,

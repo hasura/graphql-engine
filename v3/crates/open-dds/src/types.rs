@@ -30,7 +30,7 @@ use serde::{
     PartialOrd,
     Ord,
     JsonSchema,
-    derive_more::Display,
+    derive_more::with_trait::Display,
     opendds_derive::OpenDd,
 )]
 #[serde(untagged)]
@@ -50,7 +50,7 @@ pub enum TypeName {
     PartialEq,
     Eq,
     Hash,
-    derive_more::Display,
+    derive_more::with_trait::Display,
     PartialOrd,
     Ord,
     opendds_derive::OpenDd,
@@ -163,7 +163,7 @@ impl JsonSchema for TypeReference {
     }
 }
 
-#[derive(Hash, Clone, Debug, PartialEq, Eq, derive_more::Display)]
+#[derive(Hash, Clone, Debug, PartialEq, Eq, derive_more::with_trait::Display)]
 pub enum BaseType {
     #[display("{_0}")]
     Named(TypeName),
@@ -223,7 +223,7 @@ impl<'de> Deserialize<'de> for BaseType {
     Ord,
     JsonSchema,
     strum_macros::EnumIter,
-    derive_more::Display,
+    derive_more::with_trait::Display,
 )]
 #[schemars(title = "InbuiltType")]
 /// An inbuilt primitive OpenDD type.

@@ -198,8 +198,8 @@ fn evaluate_value_expression(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use derive_more::FromStr;
     use std::collections::BTreeMap;
+    use std::str::FromStr;
 
     use hasura_authn_core::{Identity, Role, SessionVariableName, SessionVariableReference};
     use metadata_resolve::{BinaryOperation, Condition, ValueExpression};

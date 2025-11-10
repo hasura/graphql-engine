@@ -169,7 +169,7 @@ macro_rules! str_newtype {
             serde::Serialize,
             serde::Deserialize,
             ref_cast::RefCast,
-            derive_more::Display,
+            derive_more::with_trait::Display,
             opendds_derive::OpenDd,
         )]
         #[repr(transparent)]

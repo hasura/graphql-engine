@@ -9,7 +9,6 @@ metadata-resolve = { path = "../../metadata-resolve" }
 hasura-authn-core = { path = "../hasura-authn-core" }
 open-dds = { path = "../../open-dds" }
 
-derive_more = { workspace = true }
 indexmap = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }

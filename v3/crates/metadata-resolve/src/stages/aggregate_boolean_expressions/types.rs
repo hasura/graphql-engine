@@ -386,7 +386,7 @@ pub enum AggregateBooleanExpressionError {
     },
 }
 
-#[derive(Debug, Eq, PartialEq, Copy, Clone, derive_more::Display)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, derive_more::with_trait::Display)]
 pub enum AggregateOperandType {
     #[display("object aggregate")]
     ObjectAggregate,
@@ -394,7 +394,7 @@ pub enum AggregateOperandType {
     ScalarAggregate,
 }
 
-#[derive(Debug, Eq, PartialEq, Copy, Clone, derive_more::Display)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, derive_more::with_trait::Display)]
 pub enum NameSource {
     #[display("comparable aggregation function")]
     ComparableAggregationFunction,

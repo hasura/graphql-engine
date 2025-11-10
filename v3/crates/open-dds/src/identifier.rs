@@ -24,7 +24,15 @@ macro_rules! identifier {
 /// - starts with an alphabet or underscore
 /// - all characters are either alphanumeric or underscore
 #[derive(
-    Clone, Debug, derive_more::Display, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize,
+    Clone,
+    Debug,
+    derive_more::with_trait::Display,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
 )]
 pub struct Identifier(SmolStr);
 
@@ -130,7 +138,15 @@ impl<'de> Deserialize<'de> for Identifier {
 /// - starts with an alphabet or underscore
 /// - all characters are either alphanumeric or underscore
 #[derive(
-    Clone, Debug, derive_more::Display, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize,
+    Clone,
+    Debug,
+    derive_more::with_trait::Display,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
 )]
 pub struct SubgraphNameInput(SmolStr);
 
@@ -234,7 +250,7 @@ impl_JsonSchema_with_OpenDd_for!(SubgraphNameInput);
 #[derive(
     Clone,
     Debug,
-    derive_more::Display,
+    derive_more::with_trait::Display,
     PartialEq,
     Eq,
     PartialOrd,

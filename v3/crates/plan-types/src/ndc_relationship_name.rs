@@ -19,7 +19,7 @@ use smol_str::SmolStr;
     PartialEq,
     Eq,
     Hash,
-    derive_more::Display,
+    derive_more::with_trait::Display,
     JsonSchema,
     PartialOrd,
     Ord,

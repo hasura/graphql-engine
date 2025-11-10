@@ -24,7 +24,7 @@ enum JsonApiFilter {
     },
 }
 
-#[derive(Debug, derive_more::Display, Serialize, Deserialize)]
+#[derive(Debug, derive_more::with_trait::Display, Serialize, Deserialize)]
 pub enum FilterError {
     NoBooleanExpressionDefined(Qualified<ModelName>),
 }

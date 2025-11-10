@@ -35,7 +35,7 @@ pub mod views;
 // to a secret, so we advertize either in the JSON schema. However, when building the configuration,
 // we expect the metadata build service to have resolved the secret reference so we deserialize
 // only to a literal value.
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::with_trait::Display)]
 pub struct EnvironmentValue {
     pub value: String,
 }

@@ -122,7 +122,7 @@ impl ShouldBeAnError for BooleanExpressionIssue {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Copy, Clone, derive_more::Display)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, derive_more::with_trait::Display)]
 pub enum FieldNameSource {
     #[display("comparable field")]
     ComparableField,
@@ -274,7 +274,15 @@ impl Display for DataConnectorType {
 // When converting `ObjectBooleanExpressionType` to `BooleanExpressionType`, we need
 // a way to identify auto-generated scalar boolean expression types
 #[derive(
-    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, derive_more::Display,
+    Serialize,
+    Deserialize,
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    derive_more::with_trait::Display,
 )]
 pub enum BooleanExpressionTypeIdentifier {
     FromBooleanExpressionType(Qualified<CustomTypeName>),

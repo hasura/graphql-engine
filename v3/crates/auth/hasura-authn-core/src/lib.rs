@@ -27,7 +27,13 @@ pub use open_dds::{
 };
 
 #[derive(
-    Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize, derive_more::Display,
+    Clone,
+    Debug,
+    Eq,
+    PartialEq,
+    serde::Serialize,
+    serde::Deserialize,
+    derive_more::with_trait::Display,
 )]
 /// Value of a session variable, used to capture session variable input from parsed sources (jwt, webhook, etc)
 /// and unparsed sources (http headers)

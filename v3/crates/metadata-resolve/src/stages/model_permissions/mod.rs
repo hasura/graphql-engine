@@ -135,7 +135,7 @@ fn resolve_model_permissions(
         let boolean_expression = model
             .filter_expression_type
             .as_ref()
-            .map(derive_more::AsRef::as_ref);
+            .map(derive_more::with_trait::AsRef::as_ref);
 
         let permissions = model_permission::resolve_all_model_permissions(
             &metadata_accessor.flags,

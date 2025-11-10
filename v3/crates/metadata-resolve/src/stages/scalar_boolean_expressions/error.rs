@@ -188,7 +188,7 @@ pub enum StringOperatorReason {
     },
 }
 
-#[derive(Debug, Eq, PartialEq, Copy, Clone, derive_more::Display)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, derive_more::with_trait::Display)]
 #[allow(clippy::enum_variant_names)] // It's fine that they all end with "Operator" :/
 pub enum FieldNameSource {
     #[display("comparable operator")]

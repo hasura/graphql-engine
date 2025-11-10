@@ -29,7 +29,7 @@ pub struct Context<M> {
 }
 
 /// Represents a WebSocket connection ID.
-#[derive(Clone, Serialize, PartialEq, Eq, Hash, derive_more::Display)]
+#[derive(Clone, Serialize, PartialEq, Eq, Hash, derive_more::with_trait::Display)]
 pub struct WebSocketId(SmolStr);
 
 impl WebSocketId {

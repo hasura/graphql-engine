@@ -4,7 +4,9 @@ use std::borrow::Borrow;
 
 /// A NDC field alias. Not quite the same as an OpenDD FieldName since there are
 /// no character restrictions on the string itself
-#[derive(Serialize, Clone, Debug, PartialEq, Eq, Hash, derive_more::Display, PartialOrd, Ord)]
+#[derive(
+    Serialize, Clone, Debug, PartialEq, Eq, Hash, derive_more::with_trait::Display, PartialOrd, Ord,
+)]
 pub struct NdcFieldAlias(SmolStr);
 
 impl NdcFieldAlias {

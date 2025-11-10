@@ -20,7 +20,7 @@ use crate::catalog::{Model, ObjectType, RelationshipTarget, Type};
 use metadata_resolve::{Qualified, unwrap_custom_type_name};
 use std::collections::BTreeMap;
 
-#[derive(Debug, derive_more::Display, Serialize, Deserialize)]
+#[derive(Debug, derive_more::with_trait::Display, Serialize, Deserialize)]
 pub enum ParseError {
     Filter(filter::FilterError),
     InvalidFieldName(String),

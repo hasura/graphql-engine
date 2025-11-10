@@ -53,7 +53,7 @@ impl<T, N: Into<Cow<'static, str>>> TraceableHttpResponse<T, N> {
 
 /// Error type for `TraceableHttpResponse`.
 /// Only used as an associated type when implementing [`Traceable`] trait for [`TraceableHttpResponse`].
-#[derive(Debug, derive_more::Display)]
+#[derive(Debug, derive_more::with_trait::Display)]
 #[display("{error}")]
 pub struct ResponseError {
     error: String,
@@ -67,7 +67,7 @@ impl TraceableError for ResponseError {
 }
 
 /// Implement `Traceable` for `TraceableHttpResponse` so that it can be used in spans.
-impl<T, N: Into<Cow<'static, str>> + derive_more::Display> Traceable
+impl<T, N: Into<Cow<'static, str>> + derive_more::with_trait::Display> Traceable
     for TraceableHttpResponse<T, N>
 {
     type ErrorType<'a>

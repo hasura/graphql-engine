@@ -401,7 +401,7 @@ fn flatten_multiple_errors<E: Into<Error>>(errors: Vec<E>) -> Error {
             errors: SeparatedBy {
                 lines_of: errors
                     .into_iter()
-                    .map(derive_more::Into::into)
+                    .map(derive_more::with_trait::Into::into)
                     .map(ContextualError::add_context_if_exists)
                     .collect(),
             },
