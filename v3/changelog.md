@@ -4,6 +4,9 @@
 
 ### Added
 
+- Added `fastLlm` config option in `PromptQlConfigV2` to allow configuring a
+  separate LLM to be used for fast queries.
+
 ### Changed
 
 ### Fixed
