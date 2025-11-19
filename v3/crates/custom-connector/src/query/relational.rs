@@ -248,7 +248,7 @@ fn convert_relation_to_logical_plan(
                     table_schema
                         .as_ref()
                         .index_of(column.as_str())
-                        .map_err(|e| DataFusionError::ArrowError(e, None))
+                        .map_err(|e| DataFusionError::ArrowError(Box::new(e), None))
                 })
                 .collect::<datafusion::error::Result<Vec<_>>>()?;
 
@@ -388,7 +388,7 @@ fn convert_relation_to_logical_plan(
                     join_type,
                     join_constraint: datafusion::common::JoinConstraint::On,
                     schema: Arc::new(join_schema),
-                    null_equals_null: false,
+                    null_equality: datafusion::common::NullEquality::NullEqualsNothing,
                 });
             Ok(logical_plan)
         }
@@ -648,8 +648,9 @@ fn get_table_provider(
     }
 
     let schema = schema_builder.finish();
-    let records = serde_arrow::to_record_batch(schema.fields(), &rows)
-        .map_err(|e| DataFusionError::Internal(e.to_string()))?;
+    let records =
+        serde_arrow::to_record_batch(&schema.fields().iter().cloned().collect::<Vec<_>>(), &rows)
+            .map_err(|e| DataFusionError::Internal(e.to_string()))?;
 
     let mem_table = MemTable::try_new(Arc::new(schema), vec![vec![records]])?;
 
@@ -1226,7 +1227,7 @@ fn convert_expression_to_logical_expr(
                         args: vec![convert_expression_to_logical_expr(expr, schema)?],
                         distinct: false,
                         filter: None,
-                        order_by: None,
+                        order_by: vec![],
                         null_treatment: None,
                     },
                 },
@@ -1242,7 +1243,7 @@ fn convert_expression_to_logical_expr(
                         args: vec![convert_expression_to_logical_expr(expr, schema)?],
                         distinct: *distinct,
                         filter: None,
-                        order_by: None,
+                        order_by: vec![],
                         null_treatment: None,
                     },
                 },
@@ -1257,7 +1258,7 @@ fn convert_expression_to_logical_expr(
                     args: vec![convert_expression_to_logical_expr(expr, schema)?],
                     distinct: false,
                     filter: None,
-                    order_by: None,
+                    order_by: vec![],
                     null_treatment: None,
                 },
             },
@@ -1270,20 +1271,20 @@ fn convert_expression_to_logical_expr(
                     args: vec![convert_expression_to_logical_expr(expr, schema)?],
                     distinct: false,
                     filter: None,
-                    order_by: None,
+                    order_by: vec![],
                     null_treatment: None,
                 },
             },
         )),
         RelationalExpression::StringAgg { expr, separator, distinct, order_by } => {
-            let order_by = order_by.as_ref()
-                .map(|order_by| {
-                    order_by
-                        .iter()
-                        .map(|s| convert_sort_to_logical_sort(s, schema))
-                        .collect::<datafusion::error::Result<Vec<_>>>()
-                })
-                .transpose()?;
+            let order_by = if let Some(order_by) = order_by.as_ref() {
+                order_by
+                    .iter()
+                    .map(|s| convert_sort_to_logical_sort(s, schema))
+                    .collect::<datafusion::error::Result<Vec<_>>>()?
+            } else {
+                vec![]
+            };
             Ok(datafusion::prelude::Expr::AggregateFunction(
                 datafusion::logical_expr::expr::AggregateFunction {
                     func: datafusion::functions_aggregate::string_agg::string_agg_udaf(),
@@ -1304,7 +1305,7 @@ fn convert_expression_to_logical_expr(
                     args: vec![convert_expression_to_logical_expr(expr, schema)?],
                     distinct: false,
                     filter: None,
-                    order_by: None,
+                    order_by: vec![],
                     null_treatment: None,
                 },
             },
@@ -1317,7 +1318,7 @@ fn convert_expression_to_logical_expr(
                     args: vec![convert_expression_to_logical_expr(expr, schema)?],
                     distinct: false,
                     filter: None,
-                    order_by: None,
+                    order_by: vec![],
                     null_treatment: None,
                 },
             },
@@ -1329,7 +1330,7 @@ fn convert_expression_to_logical_expr(
                     args: vec![convert_expression_to_logical_expr(expr, schema)?],
                     distinct: false,
                     filter: None,
-                    order_by: None,
+                    order_by: vec![],
                     null_treatment: None,
                 },
             },
@@ -1345,7 +1346,7 @@ fn convert_expression_to_logical_expr(
                         ],
                         distinct: false,
                         filter: None,
-                        order_by: None,
+                        order_by: vec![],
                         null_treatment: None,
                     },
                 },
@@ -1359,21 +1360,21 @@ fn convert_expression_to_logical_expr(
                         args: vec![convert_expression_to_logical_expr(expr, schema)?],
                         distinct: false,
                         filter: None,
-                        order_by: None,
+                        order_by: vec![],
                         null_treatment: None,
                     },
                 },
             ))
         },
         RelationalExpression::ArrayAgg { expr, distinct, order_by } => {
-            let order_by = order_by.as_ref()
-                .map(|order_by| {
-                    order_by
-                        .iter()
-                        .map(|s| convert_sort_to_logical_sort(s, schema))
-                        .collect::<datafusion::error::Result<Vec<_>>>()
-                })
-                .transpose()?;
+            let order_by = if let Some(order_by) = order_by.as_ref() {
+                order_by
+                    .iter()
+                    .map(|s| convert_sort_to_logical_sort(s, schema))
+                    .collect::<datafusion::error::Result<Vec<_>>>()?
+            } else {
+                vec![]
+            };
             Ok(datafusion::prelude::Expr::AggregateFunction(
                 datafusion::logical_expr::expr::AggregateFunction {
                     func: datafusion::functions_aggregate::array_agg::array_agg_udaf(),
