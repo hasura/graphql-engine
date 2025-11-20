@@ -46,7 +46,7 @@ services:
       POSTGRES_PASSWORD: "hasura"
       POSTGRES_DB: "hasura"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql
       - ./docker-compose/postgres/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
 
   citus:
@@ -60,7 +60,7 @@ services:
       POSTGRES_PASSWORD: "hasura"
       POSTGRES_DB: "hasura"
     volumes:
-      - citus-data:/var/lib/postgresql/data
+      - citus-data:/var/lib/postgresql
       - ./docker-compose/postgres/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
 
   cockroach:
