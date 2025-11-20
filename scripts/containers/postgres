@@ -65,7 +65,7 @@ function pg_launch_container {
     --name "$PG_CONTAINER_NAME" \
     --publish "127.0.0.1:${PG_PORT}:${PG_PORT}" \
     --expose="$PG_PORT" \
-    --volume="${PG_VOLUME_NAME}:/var/lib/postgresql/data" \
+    --volume="${PG_VOLUME_NAME}:/var/lib/postgresql" \
     --env=POSTGRES_PASSWORD="$PG_PASSWORD" \
     --detach \
     "$PG_CONTAINER_IMAGE" \

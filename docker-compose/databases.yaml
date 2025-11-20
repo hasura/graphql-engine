@@ -10,7 +10,7 @@ services:
     environment:
       POSTGRES_PASSWORD: "password" # you probably want to override this
     volumes:
-      - /var/lib/postgresql/data
+      - /var/lib/postgresql
     healthcheck:
       test:
         - CMD-SHELL
@@ -109,7 +109,7 @@ services:
     environment:
       POSTGRES_PASSWORD: "password" # you probably want to override this
     volumes:
-      - /var/lib/postgresql/data
+      - /var/lib/postgresql
     healthcheck:
       test:
         - CMD-SHELL
@@ -153,7 +153,7 @@ services:
       YSQL_PASSWORD: "hasura"
       YSQL_DB: "hasura"
     volumes:
-      - /var/lib/postgresql/data
+      - /var/lib/postgresql
 
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2019-latest
