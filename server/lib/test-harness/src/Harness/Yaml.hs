@@ -1,6 +1,7 @@
 -- | Utility functions related to yaml
 module Harness.Yaml
   ( mapObject,
+    jsonSubsetOf,
     sortArray,
     shouldReturnYaml,
     shouldReturnYamlF,

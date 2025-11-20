@@ -16,9 +16,9 @@ import Harness.Schema qualified as Schema
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig)
-import Harness.Yaml (shouldAtLeastBe, shouldReturnYaml)
+import Harness.Yaml (Visual (..), jsonSubsetOf, shouldReturnYaml)
 import Hasura.Prelude
-import Test.Hspec (SpecWith, it)
+import Test.Hspec (SpecWith, expectationFailure, it)
 
 spec :: SpecWith GlobalTestEnvironment
 spec = do
@@ -238,10 +238,48 @@ tests = do
                 type: table
                 updatable: true
               |]
+        -- Postgres18 seems to result in a different order for 'columns' here.
+        -- There's no documentation for pg_get_table_info so we'll assume this
+        -- is okay.
+        expectedPG18 :: Value
+        expectedPG18 =
+          [interpolateYaml|
+            columns:
+            - insertable: true
+              name: author
+              nullable: false
+              type: integer
+              updatable: true
+            - insertable: true
+              name: id
+              nullable: false
+              type: integer
+              updatable: true
+            - insertable: true
+              name: title
+              nullable: false
+              type: text
+              updatable: true
+            deletable: true
+            insertable: true
+            name:
+              name: articles
+              schema: #{schemaName}
+            primary_key:
+            - id
+            type: table
+            updatable: true
+          |]
 
-    unless (backendType `elem` ["cockroach", "mssql", "bigquery"])
-      $ actual
-      >>= \result -> result `shouldAtLeastBe` expected
+    unless (backendType `elem` ["cockroach", "mssql", "bigquery"]) $ do
+      result <- actual
+      -- for postgres try the alternative expected value for postgres 18.
+      -- Unfortunately we don't have access to the version under test here
+      unless (expected `jsonSubsetOf` result)
+        $ unless (backendType == "pg" && expectedPG18 `jsonSubsetOf` result)
+        $ expectationFailure
+        $ "Got a actual value:\n\n"
+        <> show (Visual result)
 
   it "Returns null for an invalid table" \testEnvironment -> do
     let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment

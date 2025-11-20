@@ -32,7 +32,7 @@ function citus_launch_container {
     --name "$CITUS_CONTAINER_NAME" \
     -p "127.0.0.1:$CITUS_PORT:5432" \
     --expose="$CITUS_PORT" \
-    --volume="${CITUS_VOLUME_NAME}:/var/lib/postgresql/data" \
+    --volume="${CITUS_VOLUME_NAME}:/var/lib/postgresql" \
     --env=POSTGRES_PASSWORD="$CITUS_PASSWORD" \
     --detach \
     citusdata/citus:11.3.0
