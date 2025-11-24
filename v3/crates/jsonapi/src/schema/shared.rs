@@ -31,7 +31,10 @@ pub fn int_schema() -> ObjectSchema {
 // schema for a string that matches one of a list of values
 pub fn enum_schema(enum_values: Vec<String>) -> ObjectSchema {
     ObjectSchema {
-        enum_values,
+        enum_values: enum_values
+            .into_iter()
+            .map(serde_json::Value::String)
+            .collect(),
         ..ObjectSchema::default()
     }
 }
@@ -66,7 +69,7 @@ pub fn object_schema(
 pub fn array_schema(items: ObjectOrReference<ObjectSchema>) -> ObjectSchema {
     ObjectSchema {
         schema_type: Some(SchemaTypeSet::Single(SchemaType::Array)),
-        items: Some(Box::new(items)),
+        items: Some(Box::new(oas3::spec::Schema::Object(Box::new(items)))),
         ..ObjectSchema::default()
     }
 }

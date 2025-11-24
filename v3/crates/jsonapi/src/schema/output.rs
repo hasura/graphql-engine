@@ -48,6 +48,8 @@ fn type_schema(ty: &Type) -> ObjectOrReference<ObjectSchema> {
         Type::List(field_type) => ObjectOrReference::Object(array_schema(type_schema(field_type))),
         Type::Object(object_type_name) => ObjectOrReference::Ref {
             ref_path: pretty_typename(object_type_name),
+            summary: None,
+            description: None,
         },
     }
 }

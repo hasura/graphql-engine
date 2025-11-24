@@ -56,10 +56,10 @@ expression: generated_openapi
               "in": "query",
               "description": "Optional list of relationships from Actors to include in the response. Use dot-separated names to include nested relationships.",
               "schema": {
-                "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "type": "array"
               },
               "example": "MovieFromCommand"
             },
@@ -97,20 +97,9 @@ expression: generated_openapi
               "content": {
                 "application/json": {
                   "schema": {
-                    "type": "object",
-                    "required": [
-                      "data"
-                    ],
                     "properties": {
                       "data": {
-                        "type": "array",
                         "items": {
-                          "type": "object",
-                          "required": [
-                            "id",
-                            "_type",
-                            "attributes"
-                          ],
                           "properties": {
                             "_type": {
                               "enum": [
@@ -118,7 +107,6 @@ expression: generated_openapi
                               ]
                             },
                             "attributes": {
-                              "type": "object",
                               "properties": {
                                 "actor_id": {
                                   "type": "integer"
@@ -129,26 +117,17 @@ expression: generated_openapi
                                 "name": {
                                   "type": "string"
                                 }
-                              }
+                              },
+                              "type": "object"
                             },
                             "id": {
                               "type": "string"
                             },
                             "relationships": {
-                              "type": "object",
                               "properties": {
                                 "MovieFromCommand": {
-                                  "type": "object",
-                                  "required": [
-                                    "data"
-                                  ],
                                   "properties": {
                                     "data": {
-                                      "type": "object",
-                                      "required": [
-                                        "id",
-                                        "_type"
-                                      ],
                                       "properties": {
                                         "_type": {
                                           "enum": [
@@ -158,27 +137,36 @@ expression: generated_openapi
                                         "id": {
                                           "type": "string"
                                         }
-                                      }
+                                      },
+                                      "type": "object",
+                                      "required": [
+                                        "id",
+                                        "_type"
+                                      ]
                                     }
-                                  }
+                                  },
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ]
                                 }
-                              }
+                              },
+                              "type": "object"
                             }
-                          }
-                        }
+                          },
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "_type",
+                            "attributes"
+                          ]
+                        },
+                        "type": "array"
                       },
                       "included": {
-                        "type": "array",
                         "items": {
-                          "type": "object",
                           "anyOf": [
                             {
-                              "type": "object",
-                              "required": [
-                                "id",
-                                "_type",
-                                "attributes"
-                              ],
                               "properties": {
                                 "_type": {
                                   "enum": [
@@ -186,7 +174,6 @@ expression: generated_openapi
                                   ]
                                 },
                                 "attributes": {
-                                  "type": "object",
                                   "properties": {
                                     "movie_id": {
                                       "type": "integer"
@@ -194,17 +181,30 @@ expression: generated_openapi
                                     "title": {
                                       "type": "string"
                                     }
-                                  }
+                                  },
+                                  "type": "object"
                                 },
                                 "id": {
                                   "type": "string"
                                 }
-                              }
+                              },
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ]
                             }
-                          ]
-                        }
+                          ],
+                          "type": "object"
+                        },
+                        "type": "array"
                       }
-                    }
+                    },
+                    "type": "object",
+                    "required": [
+                      "data"
+                    ]
                   }
                 }
               }
@@ -255,10 +255,10 @@ expression: generated_openapi
               "in": "query",
               "description": "Optional list of relationships from Album to include in the response. Use dot-separated names to include nested relationships.",
               "schema": {
-                "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "type": "array"
               },
               "example": "Artist,Tracks"
             },
@@ -295,20 +295,9 @@ expression: generated_openapi
               "content": {
                 "application/json": {
                   "schema": {
-                    "type": "object",
-                    "required": [
-                      "data"
-                    ],
                     "properties": {
                       "data": {
-                        "type": "array",
                         "items": {
-                          "type": "object",
-                          "required": [
-                            "id",
-                            "_type",
-                            "attributes"
-                          ],
                           "properties": {
                             "_type": {
                               "enum": [
@@ -316,7 +305,6 @@ expression: generated_openapi
                               ]
                             },
                             "attributes": {
-                              "type": "object",
                               "properties": {
                                 "AlbumId": {
                                   "type": "object"
@@ -324,26 +312,17 @@ expression: generated_openapi
                                 "Title": {
                                   "type": "object"
                                 }
-                              }
+                              },
+                              "type": "object"
                             },
                             "id": {
                               "type": "string"
                             },
                             "relationships": {
-                              "type": "object",
                               "properties": {
                                 "Artist": {
-                                  "type": "object",
-                                  "required": [
-                                    "data"
-                                  ],
                                   "properties": {
                                     "data": {
-                                      "type": "object",
-                                      "required": [
-                                        "id",
-                                        "_type"
-                                      ],
                                       "properties": {
                                         "_type": {
                                           "enum": [
@@ -353,24 +332,23 @@ expression: generated_openapi
                                         "id": {
                                           "type": "string"
                                         }
-                                      }
+                                      },
+                                      "type": "object",
+                                      "required": [
+                                        "id",
+                                        "_type"
+                                      ]
                                     }
-                                  }
-                                },
-                                "Tracks": {
+                                  },
                                   "type": "object",
                                   "required": [
                                     "data"
-                                  ],
+                                  ]
+                                },
+                                "Tracks": {
                                   "properties": {
                                     "data": {
-                                      "type": "array",
                                       "items": {
-                                        "type": "object",
-                                        "required": [
-                                          "id",
-                                          "_type"
-                                        ],
                                         "properties": {
                                           "_type": {
                                             "enum": [
@@ -380,28 +358,38 @@ expression: generated_openapi
                                           "id": {
                                             "type": "string"
                                           }
-                                        }
-                                      }
+                                        },
+                                        "type": "object",
+                                        "required": [
+                                          "id",
+                                          "_type"
+                                        ]
+                                      },
+                                      "type": "array"
                                     }
-                                  }
+                                  },
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ]
                                 }
-                              }
+                              },
+                              "type": "object"
                             }
-                          }
-                        }
+                          },
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "_type",
+                            "attributes"
+                          ]
+                        },
+                        "type": "array"
                       },
                       "included": {
-                        "type": "array",
                         "items": {
-                          "type": "object",
                           "anyOf": [
                             {
-                              "type": "object",
-                              "required": [
-                                "id",
-                                "_type",
-                                "attributes"
-                              ],
                               "properties": {
                                 "_type": {
                                   "enum": [
@@ -409,33 +397,22 @@ expression: generated_openapi
                                   ]
                                 },
                                 "attributes": {
-                                  "type": "object",
                                   "properties": {
                                     "Name": {
                                       "type": "object"
                                     }
-                                  }
+                                  },
+                                  "type": "object"
                                 },
                                 "id": {
                                   "type": "string"
                                 },
                                 "relationships": {
-                                  "type": "object",
                                   "properties": {
                                     "Albums": {
-                                      "type": "object",
-                                      "required": [
-                                        "data"
-                                      ],
                                       "properties": {
                                         "data": {
-                                          "type": "array",
                                           "items": {
-                                            "type": "object",
-                                            "required": [
-                                              "id",
-                                              "_type"
-                                            ],
                                             "properties": {
                                               "_type": {
                                                 "enum": [
@@ -445,22 +422,33 @@ expression: generated_openapi
                                               "id": {
                                                 "type": "string"
                                               }
-                                            }
-                                          }
+                                            },
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ]
+                                          },
+                                          "type": "array"
                                         }
-                                      }
+                                      },
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ]
                                     }
-                                  }
+                                  },
+                                  "type": "object"
                                 }
-                              }
-                            },
-                            {
+                              },
                               "type": "object",
                               "required": [
                                 "id",
                                 "_type",
                                 "attributes"
-                              ],
+                              ]
+                            },
+                            {
                               "properties": {
                                 "_type": {
                                   "enum": [
@@ -468,7 +456,6 @@ expression: generated_openapi
                                   ]
                                 },
                                 "attributes": {
-                                  "type": "object",
                                   "properties": {
                                     "AlbumId": {
                                       "type": "object"
@@ -482,26 +469,17 @@ expression: generated_openapi
                                     "TrackId": {
                                       "type": "object"
                                     }
-                                  }
+                                  },
+                                  "type": "object"
                                 },
                                 "id": {
                                   "type": "string"
                                 },
                                 "relationships": {
-                                  "type": "object",
                                   "properties": {
                                     "Album": {
-                                      "type": "object",
-                                      "required": [
-                                        "data"
-                                      ],
                                       "properties": {
                                         "data": {
-                                          "type": "object",
-                                          "required": [
-                                            "id",
-                                            "_type"
-                                          ],
                                           "properties": {
                                             "_type": {
                                               "enum": [
@@ -511,18 +489,40 @@ expression: generated_openapi
                                             "id": {
                                               "type": "string"
                                             }
-                                          }
+                                          },
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ]
                                         }
-                                      }
+                                      },
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ]
                                     }
-                                  }
+                                  },
+                                  "type": "object"
                                 }
-                              }
+                              },
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ]
                             }
-                          ]
-                        }
+                          ],
+                          "type": "object"
+                        },
+                        "type": "array"
                       }
-                    }
+                    },
+                    "type": "object",
+                    "required": [
+                      "data"
+                    ]
                   }
                 }
               }
@@ -573,10 +573,10 @@ expression: generated_openapi
               "in": "query",
               "description": "Optional list of relationships from Articles to include in the response. Use dot-separated names to include nested relationships.",
               "schema": {
-                "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "type": "array"
               },
               "example": "Author,AuthorFromCommand"
             },
@@ -613,20 +613,9 @@ expression: generated_openapi
               "content": {
                 "application/json": {
                   "schema": {
-                    "type": "object",
-                    "required": [
-                      "data"
-                    ],
                     "properties": {
                       "data": {
-                        "type": "array",
                         "items": {
-                          "type": "object",
-                          "required": [
-                            "id",
-                            "_type",
-                            "attributes"
-                          ],
                           "properties": {
                             "_type": {
                               "enum": [
@@ -634,7 +623,6 @@ expression: generated_openapi
                               ]
                             },
                             "attributes": {
-                              "type": "object",
                               "properties": {
                                 "article_id": {
                                   "type": "integer"
@@ -642,26 +630,17 @@ expression: generated_openapi
                                 "author_id": {
                                   "type": "object"
                                 }
-                              }
+                              },
+                              "type": "object"
                             },
                             "id": {
                               "type": "string"
                             },
                             "relationships": {
-                              "type": "object",
                               "properties": {
                                 "Author": {
-                                  "type": "object",
-                                  "required": [
-                                    "data"
-                                  ],
                                   "properties": {
                                     "data": {
-                                      "type": "object",
-                                      "required": [
-                                        "id",
-                                        "_type"
-                                      ],
                                       "properties": {
                                         "_type": {
                                           "enum": [
@@ -671,22 +650,22 @@ expression: generated_openapi
                                         "id": {
                                           "type": "string"
                                         }
-                                      }
-                                    }
-                                  }
-                                },
-                                "AuthorFromCommand": {
-                                  "type": "object",
-                                  "required": [
-                                    "data"
-                                  ],
-                                  "properties": {
-                                    "data": {
+                                      },
                                       "type": "object",
                                       "required": [
                                         "id",
                                         "_type"
-                                      ],
+                                      ]
+                                    }
+                                  },
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ]
+                                },
+                                "AuthorFromCommand": {
+                                  "properties": {
+                                    "data": {
                                       "properties": {
                                         "_type": {
                                           "enum": [
@@ -696,27 +675,36 @@ expression: generated_openapi
                                         "id": {
                                           "type": "string"
                                         }
-                                      }
+                                      },
+                                      "type": "object",
+                                      "required": [
+                                        "id",
+                                        "_type"
+                                      ]
                                     }
-                                  }
+                                  },
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ]
                                 }
-                              }
+                              },
+                              "type": "object"
                             }
-                          }
-                        }
+                          },
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "_type",
+                            "attributes"
+                          ]
+                        },
+                        "type": "array"
                       },
                       "included": {
-                        "type": "array",
                         "items": {
-                          "type": "object",
                           "anyOf": [
                             {
-                              "type": "object",
-                              "required": [
-                                "id",
-                                "_type",
-                                "attributes"
-                              ],
                               "properties": {
                                 "_type": {
                                   "enum": [
@@ -724,7 +712,6 @@ expression: generated_openapi
                                   ]
                                 },
                                 "attributes": {
-                                  "type": "object",
                                   "properties": {
                                     "author_id": {
                                       "type": "object"
@@ -732,28 +719,18 @@ expression: generated_openapi
                                     "last_name": {
                                       "type": "string"
                                     }
-                                  }
+                                  },
+                                  "type": "object"
                                 },
                                 "id": {
                                   "type": "string"
                                 },
                                 "relationships": {
-                                  "type": "object",
                                   "properties": {
                                     "articles": {
-                                      "type": "object",
-                                      "required": [
-                                        "data"
-                                      ],
                                       "properties": {
                                         "data": {
-                                          "type": "array",
                                           "items": {
-                                            "type": "object",
-                                            "required": [
-                                              "id",
-                                              "_type"
-                                            ],
                                             "properties": {
                                               "_type": {
                                                 "enum": [
@@ -763,25 +740,25 @@ expression: generated_openapi
                                               "id": {
                                                 "type": "string"
                                               }
-                                            }
-                                          }
+                                            },
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ]
+                                          },
+                                          "type": "array"
                                         }
-                                      }
+                                      },
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ]
                                     },
                                     "articles_remote": {
-                                      "type": "object",
-                                      "required": [
-                                        "data"
-                                      ],
                                       "properties": {
                                         "data": {
-                                          "type": "array",
                                           "items": {
-                                            "type": "object",
-                                            "required": [
-                                              "id",
-                                              "_type"
-                                            ],
                                             "properties": {
                                               "_type": {
                                                 "enum": [
@@ -791,22 +768,33 @@ expression: generated_openapi
                                               "id": {
                                                 "type": "string"
                                               }
-                                            }
-                                          }
+                                            },
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ]
+                                          },
+                                          "type": "array"
                                         }
-                                      }
+                                      },
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ]
                                     }
-                                  }
+                                  },
+                                  "type": "object"
                                 }
-                              }
-                            },
-                            {
+                              },
                               "type": "object",
                               "required": [
                                 "id",
                                 "_type",
                                 "attributes"
-                              ],
+                              ]
+                            },
+                            {
                               "properties": {
                                 "_type": {
                                   "enum": [
@@ -814,7 +802,6 @@ expression: generated_openapi
                                   ]
                                 },
                                 "attributes": {
-                                  "type": "object",
                                   "properties": {
                                     "first_name": {
                                       "type": "string"
@@ -825,17 +812,30 @@ expression: generated_openapi
                                     "last_name": {
                                       "type": "string"
                                     }
-                                  }
+                                  },
+                                  "type": "object"
                                 },
                                 "id": {
                                   "type": "string"
                                 }
-                              }
+                              },
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ]
                             }
-                          ]
-                        }
+                          ],
+                          "type": "object"
+                        },
+                        "type": "array"
                       }
-                    }
+                    },
+                    "type": "object",
+                    "required": [
+                      "data"
+                    ]
                   }
                 }
               }
@@ -886,10 +886,10 @@ expression: generated_openapi
               "in": "query",
               "description": "Optional list of relationships from ArticlesRemote to include in the response. Use dot-separated names to include nested relationships.",
               "schema": {
-                "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "type": "array"
               },
               "example": "Author,AuthorFromCommand"
             },
@@ -926,20 +926,9 @@ expression: generated_openapi
               "content": {
                 "application/json": {
                   "schema": {
-                    "type": "object",
-                    "required": [
-                      "data"
-                    ],
                     "properties": {
                       "data": {
-                        "type": "array",
                         "items": {
-                          "type": "object",
-                          "required": [
-                            "id",
-                            "_type",
-                            "attributes"
-                          ],
                           "properties": {
                             "_type": {
                               "enum": [
@@ -947,7 +936,6 @@ expression: generated_openapi
                               ]
                             },
                             "attributes": {
-                              "type": "object",
                               "properties": {
                                 "article_id": {
                                   "type": "integer"
@@ -955,26 +943,17 @@ expression: generated_openapi
                                 "author_id": {
                                   "type": "object"
                                 }
-                              }
+                              },
+                              "type": "object"
                             },
                             "id": {
                               "type": "string"
                             },
                             "relationships": {
-                              "type": "object",
                               "properties": {
                                 "Author": {
-                                  "type": "object",
-                                  "required": [
-                                    "data"
-                                  ],
                                   "properties": {
                                     "data": {
-                                      "type": "object",
-                                      "required": [
-                                        "id",
-                                        "_type"
-                                      ],
                                       "properties": {
                                         "_type": {
                                           "enum": [
@@ -984,22 +963,22 @@ expression: generated_openapi
                                         "id": {
                                           "type": "string"
                                         }
-                                      }
-                                    }
-                                  }
-                                },
-                                "AuthorFromCommand": {
-                                  "type": "object",
-                                  "required": [
-                                    "data"
-                                  ],
-                                  "properties": {
-                                    "data": {
+                                      },
                                       "type": "object",
                                       "required": [
                                         "id",
                                         "_type"
-                                      ],
+                                      ]
+                                    }
+                                  },
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ]
+                                },
+                                "AuthorFromCommand": {
+                                  "properties": {
+                                    "data": {
                                       "properties": {
                                         "_type": {
                                           "enum": [
@@ -1009,27 +988,36 @@ expression: generated_openapi
                                         "id": {
                                           "type": "string"
                                         }
-                                      }
+                                      },
+                                      "type": "object",
+                                      "required": [
+                                        "id",
+                                        "_type"
+                                      ]
                                     }
-                                  }
+                                  },
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ]
                                 }
-                              }
+                              },
+                              "type": "object"
                             }
-                          }
-                        }
+                          },
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "_type",
+                            "attributes"
+                          ]
+                        },
+                        "type": "array"
                       },
                       "included": {
-                        "type": "array",
                         "items": {
-                          "type": "object",
                           "anyOf": [
                             {
-                              "type": "object",
-                              "required": [
-                                "id",
-                                "_type",
-                                "attributes"
-                              ],
                               "properties": {
                                 "_type": {
                                   "enum": [
@@ -1037,7 +1025,6 @@ expression: generated_openapi
                                   ]
                                 },
                                 "attributes": {
-                                  "type": "object",
                                   "properties": {
                                     "author_id": {
                                       "type": "object"
@@ -1045,28 +1032,18 @@ expression: generated_openapi
                                     "last_name": {
                                       "type": "string"
                                     }
-                                  }
+                                  },
+                                  "type": "object"
                                 },
                                 "id": {
                                   "type": "string"
                                 },
                                 "relationships": {
-                                  "type": "object",
                                   "properties": {
                                     "articles": {
-                                      "type": "object",
-                                      "required": [
-                                        "data"
-                                      ],
                                       "properties": {
                                         "data": {
-                                          "type": "array",
                                           "items": {
-                                            "type": "object",
-                                            "required": [
-                                              "id",
-                                              "_type"
-                                            ],
                                             "properties": {
                                               "_type": {
                                                 "enum": [
@@ -1076,25 +1053,25 @@ expression: generated_openapi
                                               "id": {
                                                 "type": "string"
                                               }
-                                            }
-                                          }
+                                            },
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ]
+                                          },
+                                          "type": "array"
                                         }
-                                      }
+                                      },
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ]
                                     },
                                     "articles_remote": {
-                                      "type": "object",
-                                      "required": [
-                                        "data"
-                                      ],
                                       "properties": {
                                         "data": {
-                                          "type": "array",
                                           "items": {
-                                            "type": "object",
-                                            "required": [
-                                              "id",
-                                              "_type"
-                                            ],
                                             "properties": {
                                               "_type": {
                                                 "enum": [
@@ -1104,22 +1081,33 @@ expression: generated_openapi
                                               "id": {
                                                 "type": "string"
                                               }
-                                            }
-                                          }
+                                            },
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ]
+                                          },
+                                          "type": "array"
                                         }
-                                      }
+                                      },
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ]
                                     }
-                                  }
+                                  },
+                                  "type": "object"
                                 }
-                              }
-                            },
-                            {
+                              },
                               "type": "object",
                               "required": [
                                 "id",
                                 "_type",
                                 "attributes"
-                              ],
+                              ]
+                            },
+                            {
                               "properties": {
                                 "_type": {
                                   "enum": [
@@ -1127,7 +1115,6 @@ expression: generated_openapi
                                   ]
                                 },
                                 "attributes": {
-                                  "type": "object",
                                   "properties": {
                                     "first_name": {
                                       "type": "string"
@@ -1138,17 +1125,30 @@ expression: generated_openapi
                                     "last_name": {
                                       "type": "string"
                                     }
-                                  }
+                                  },
+                                  "type": "object"
                                 },
                                 "id": {
                                   "type": "string"
                                 }
-                              }
+                              },
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ]
                             }
-                          ]
-                        }
+                          ],
+                          "type": "object"
+                        },
+                        "type": "array"
                       }
-                    }
+                    },
+                    "type": "object",
+                    "required": [
+                      "data"
+                    ]
                   }
                 }
               }
@@ -1160,7 +1160,6 @@ expression: generated_openapi
     "components": {
       "schemas": {
         "default_Album": {
-          "type": "object",
           "properties": {
             "AlbumId": {
               "type": "object"
@@ -1168,10 +1167,10 @@ expression: generated_openapi
             "Title": {
               "type": "object"
             }
-          }
+          },
+          "type": "object"
         },
         "default_Article": {
-          "type": "object",
           "properties": {
             "article_id": {
               "type": "integer"
@@ -1179,18 +1178,18 @@ expression: generated_openapi
             "author_id": {
               "type": "object"
             }
-          }
+          },
+          "type": "object"
         },
         "default_Artist": {
-          "type": "object",
           "properties": {
             "Name": {
               "type": "object"
             }
-          }
+          },
+          "type": "object"
         },
         "default_Author": {
-          "type": "object",
           "properties": {
             "author_id": {
               "type": "object"
@@ -1198,10 +1197,10 @@ expression: generated_openapi
             "last_name": {
               "type": "string"
             }
-          }
+          },
+          "type": "object"
         },
         "default_Track": {
-          "type": "object",
           "properties": {
             "AlbumId": {
               "type": "object"
@@ -1215,10 +1214,10 @@ expression: generated_openapi
             "TrackId": {
               "type": "object"
             }
-          }
+          },
+          "type": "object"
         },
         "default_actor": {
-          "type": "object",
           "properties": {
             "actor_id": {
               "type": "integer"
@@ -1229,36 +1228,10 @@ expression: generated_openapi
             "name": {
               "type": "string"
             }
-          }
+          },
+          "type": "object"
         },
         "default_actor_boolexp": {
-          "title": "default_actor_boolexp",
-          "description": "Filter expression for Actors",
-          "type": "object",
-          "properties": {
-            "$and": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/default_actor_boolexp"
-              }
-            },
-            "$or": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/default_actor_boolexp"
-              }
-            },
-            "actor_id": {
-              "title": "actor_id",
-              "description": "Filter expression for filtering on actor_id",
-              "type": "object",
-              "properties": {
-                "$_eq": {
-                  "type": "integer"
-                }
-              }
-            }
-          },
           "oneOf": [
             {
               "required": [
@@ -1275,51 +1248,36 @@ expression: generated_openapi
                 "$or"
               ]
             }
-          ]
-        },
-        "default_album_bool_exp": {
-          "title": "default_album_bool_exp",
-          "description": "Filter expression for Album",
-          "type": "object",
+          ],
           "properties": {
             "$and": {
-              "type": "array",
               "items": {
-                "$ref": "#/components/schemas/default_album_bool_exp"
-              }
+                "$ref": "#/components/schemas/default_actor_boolexp"
+              },
+              "type": "array"
             },
             "$or": {
-              "type": "array",
               "items": {
-                "$ref": "#/components/schemas/default_album_bool_exp"
-              }
+                "$ref": "#/components/schemas/default_actor_boolexp"
+              },
+              "type": "array"
             },
-            "AlbumId": {
-              "title": "AlbumId",
-              "description": "Filter expression for filtering on AlbumId",
-              "type": "object",
+            "actor_id": {
               "properties": {
-                "$eq": {}
-              }
-            },
-            "ArtistId": {
-              "title": "ArtistId",
-              "description": "Filter expression for filtering on ArtistId",
+                "$_eq": {
+                  "type": "integer"
+                }
+              },
               "type": "object",
-              "properties": {
-                "$eq": {}
-              }
-            },
-            "Title": {
-              "title": "Title",
-              "description": "Filter expression for filtering on Title",
-              "type": "object",
-              "properties": {
-                "$eq": {},
-                "$like": {}
-              }
+              "title": "actor_id",
+              "description": "Filter expression for filtering on actor_id"
             }
           },
+          "type": "object",
+          "title": "default_actor_boolexp",
+          "description": "Filter expression for Actors"
+        },
+        "default_album_bool_exp": {
           "oneOf": [
             {
               "required": [
@@ -1346,49 +1304,51 @@ expression: generated_openapi
                 "$or"
               ]
             }
-          ]
-        },
-        "default_article_bool_exp": {
-          "title": "default_article_bool_exp",
-          "description": "Filter expression for Articles",
-          "type": "object",
+          ],
           "properties": {
             "$and": {
-              "type": "array",
               "items": {
-                "$ref": "#/components/schemas/default_article_bool_exp"
-              }
+                "$ref": "#/components/schemas/default_album_bool_exp"
+              },
+              "type": "array"
             },
             "$or": {
-              "type": "array",
               "items": {
-                "$ref": "#/components/schemas/default_article_bool_exp"
-              }
+                "$ref": "#/components/schemas/default_album_bool_exp"
+              },
+              "type": "array"
             },
-            "article_id": {
-              "title": "article_id",
-              "description": "Filter expression for filtering on article_id",
-              "type": "object"
-            },
-            "author_id": {
-              "title": "author_id",
-              "description": "Filter expression for filtering on author_id",
-              "type": "object",
+            "AlbumId": {
               "properties": {
-                "$_eq": {}
-              }
-            },
-            "title": {
-              "title": "title",
-              "description": "Filter expression for filtering on title",
+                "$eq": {}
+              },
               "type": "object",
+              "title": "AlbumId",
+              "description": "Filter expression for filtering on AlbumId"
+            },
+            "ArtistId": {
               "properties": {
-                "$_like": {
-                  "type": "string"
-                }
-              }
+                "$eq": {}
+              },
+              "type": "object",
+              "title": "ArtistId",
+              "description": "Filter expression for filtering on ArtistId"
+            },
+            "Title": {
+              "properties": {
+                "$eq": {},
+                "$like": {}
+              },
+              "type": "object",
+              "title": "Title",
+              "description": "Filter expression for filtering on Title"
             }
           },
+          "type": "object",
+          "title": "default_album_bool_exp",
+          "description": "Filter expression for Album"
+        },
+        "default_article_bool_exp": {
           "oneOf": [
             {
               "required": [
@@ -1415,10 +1375,49 @@ expression: generated_openapi
                 "$or"
               ]
             }
-          ]
+          ],
+          "properties": {
+            "$and": {
+              "items": {
+                "$ref": "#/components/schemas/default_article_bool_exp"
+              },
+              "type": "array"
+            },
+            "$or": {
+              "items": {
+                "$ref": "#/components/schemas/default_article_bool_exp"
+              },
+              "type": "array"
+            },
+            "article_id": {
+              "type": "object",
+              "title": "article_id",
+              "description": "Filter expression for filtering on article_id"
+            },
+            "author_id": {
+              "properties": {
+                "$_eq": {}
+              },
+              "type": "object",
+              "title": "author_id",
+              "description": "Filter expression for filtering on author_id"
+            },
+            "title": {
+              "properties": {
+                "$_like": {
+                  "type": "string"
+                }
+              },
+              "type": "object",
+              "title": "title",
+              "description": "Filter expression for filtering on title"
+            }
+          },
+          "type": "object",
+          "title": "default_article_bool_exp",
+          "description": "Filter expression for Articles"
         },
         "default_commandArticle": {
-          "type": "object",
           "properties": {
             "article_id": {
               "type": "integer"
@@ -1429,10 +1428,10 @@ expression: generated_openapi
             "title": {
               "type": "string"
             }
-          }
+          },
+          "type": "object"
         },
         "default_commandAuthor": {
-          "type": "object",
           "properties": {
             "first_name": {
               "type": "string"
@@ -1443,10 +1442,10 @@ expression: generated_openapi
             "last_name": {
               "type": "string"
             }
-          }
+          },
+          "type": "object"
         },
         "default_commandMovie": {
-          "type": "object",
           "properties": {
             "movie_id": {
               "type": "integer"
@@ -1454,7 +1453,8 @@ expression: generated_openapi
             "title": {
               "type": "string"
             }
-          }
+          },
+          "type": "object"
         }
       }
     }

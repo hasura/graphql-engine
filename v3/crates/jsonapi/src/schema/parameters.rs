@@ -120,15 +120,15 @@ fn build_fields_parameter(
     object_type: &ObjectType,
 ) -> oas3::spec::Parameter {
     let schema = oas3::spec::ObjectOrReference::Object(oas3::spec::ObjectSchema {
-        items: Some(Box::new(oas3::spec::ObjectOrReference::Object(
-            enum_schema(
+        items: Some(Box::new(oas3::spec::Schema::Object(Box::new(
+            oas3::spec::ObjectOrReference::Object(enum_schema(
                 object_type
                     .type_fields
                     .keys()
                     .map(ToString::to_string)
                     .collect(),
-            ),
-        ))),
+            )),
+        )))),
         ..oas3::spec::ObjectSchema::default()
     });
 
@@ -171,9 +171,9 @@ pub fn ordering_parameter(model: &Model, object_type: &ObjectType) -> oas3::spec
     }
 
     let schema = oas3::spec::ObjectOrReference::Object(oas3::spec::ObjectSchema {
-        items: Some(Box::new(oas3::spec::ObjectOrReference::Object(
-            enum_schema(sort_keys.clone()),
-        ))),
+        items: Some(Box::new(oas3::spec::Schema::Object(Box::new(
+            oas3::spec::ObjectOrReference::Object(enum_schema(sort_keys.clone())),
+        )))),
         ..oas3::spec::ObjectSchema::default()
     });
 
@@ -349,6 +349,8 @@ pub fn filter_parameters(
                                 "#/components/schemas/{}",
                                 pretty_typename(&boolean_expression_type.name)
                             ),
+                            summary: None,
+                            description: None,
                         },
                     )),
                 );
@@ -363,6 +365,8 @@ pub fn filter_parameters(
                                 "#/components/schemas/{}",
                                 pretty_typename(&boolean_expression_type.name)
                             ),
+                            summary: None,
+                            description: None,
                         },
                     )),
                 );
@@ -398,7 +402,10 @@ pub fn filter_parameters(
                             "#/components/schemas/{}",
                             pretty_typename(&boolean_expression_type.name)
                         ),
+                        summary: None,
+                        description: None,
                     }),
+                    extensions: BTreeMap::new(),
                 },
             );
             Some(oas3::spec::Parameter {
@@ -428,9 +435,9 @@ fn type_schema(ty: &QualifiedTypeReference) -> oas3::spec::ObjectSchema {
     let mut schema = oas3::spec::ObjectSchema::default();
     match &ty.underlying_type {
         QualifiedBaseType::List(type_reference) => {
-            schema.items = Some(Box::new(oas3::spec::ObjectOrReference::Object(
-                type_schema(type_reference),
-            )));
+            schema.items = Some(Box::new(oas3::spec::Schema::Object(Box::new(
+                oas3::spec::ObjectOrReference::Object(type_schema(type_reference)),
+            ))));
             schema.schema_type = Some(oas3::spec::SchemaTypeSet::Single(
                 oas3::spec::SchemaType::Array,
             ));
