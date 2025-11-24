@@ -163,7 +163,7 @@ mod tests {
     ) -> anyhow::Result<String> {
         let claims: Claims = get_claims(
             &serde_json::to_value(hasura_claims)?,
-            jsonptr::Pointer::new([DEFAULT_HASURA_CLAIMS_NAMESPACE]).as_str(),
+            jsonptr::PointerBuf::from_tokens([DEFAULT_HASURA_CLAIMS_NAMESPACE]).as_str(),
         )?;
         let jwt_header = jwt::Header {
             alg,
@@ -210,7 +210,7 @@ mod tests {
             "claimsConfig": {
                 "namespace": {
                     "claimsFormat": "Json",
-                    "location": jsonptr::Pointer::new([DEFAULT_HASURA_CLAIMS_NAMESPACE]),
+                    "location": jsonptr::PointerBuf::from_tokens([DEFAULT_HASURA_CLAIMS_NAMESPACE]),
                 },
             },
         });
@@ -308,7 +308,7 @@ mod tests {
             "claimsConfig": {
                 "namespace": {
                     "claimsFormat": "Json",
-                    "location": jsonptr::Pointer::new([DEFAULT_HASURA_CLAIMS_NAMESPACE]),
+                    "location": jsonptr::PointerBuf::from_tokens([DEFAULT_HASURA_CLAIMS_NAMESPACE]),
                 },
             },
         });

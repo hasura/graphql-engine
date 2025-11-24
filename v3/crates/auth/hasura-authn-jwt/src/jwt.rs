@@ -4,7 +4,7 @@ use std::time::Duration;
 use axum::http::{HeaderMap, HeaderValue};
 use cookie::{self, Cookie};
 use hasura_authn_core::{JsonSessionVariableValue, Role};
-use jsonptr::Pointer;
+use jsonptr::PointerBuf;
 use jsonwebtoken::{self as jwt, DecodingKey, Validation, decode};
 use jwt::decode_header;
 use open_dds::session_variables::SessionVariableName;
@@ -248,7 +248,7 @@ pub struct JWTClaimsMappingPathEntry<T> {
     /// JSON pointer to find the particular claim in the decoded
     /// JWT token.
     #[schemars(schema_with = "json_pointer_schema")]
-    path: Pointer,
+    path: PointerBuf,
     /// Default value to be used when no value is found when
     /// looking up the value using the `path`.
     default: Option<T>,
@@ -296,7 +296,7 @@ pub struct JWTClaimsNamespace {
     pub claims_format: JWTClaimsFormat,
     /// Pointer to lookup the Hasura claims within the decoded claims.
     #[schemars(schema_with = "json_pointer_schema")]
-    pub location: Pointer,
+    pub location: PointerBuf,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, JsonSchema, Debug)]
@@ -383,7 +383,7 @@ impl JWTConfig {
                 "claimsConfig": {
                     "namespace": {
                         "claimsFormat": "Json",
-                        "location": jsonptr::Pointer::new([DEFAULT_HASURA_CLAIMS_NAMESPACE]),
+                        "location": jsonptr::PointerBuf::from_tokens([DEFAULT_HASURA_CLAIMS_NAMESPACE]),
                     }
                 }
             }
@@ -538,7 +538,7 @@ fn get_claims_mapping_entry_value<T: for<'de> serde::Deserialize<'de> + Clone>(
     match claims_mapping_entry {
         JWTClaimsMappingEntry::Literal(literal_value) => Ok(Some(literal_value.clone())),
         JWTClaimsMappingEntry::Path(JWTClaimsMappingPathEntry { path, default }) => {
-            Ok(match json_value.pointer(path) {
+            Ok(match json_value.pointer(path.as_str()) {
                 Some(v) => Some(
                     serde_json::from_value(v.clone())
                         .map_err(|e| Error::ParseClaimsMapEntryError { claim_name, err: e })?,
@@ -646,7 +646,7 @@ pub(crate) async fn decode_and_parse_hasura_claims(
             claims_format,
             location: claims_namespace_path,
         }) => {
-            let unprocessed_hasura_claims = claims.pointer(claims_namespace_path).ok_or(
+            let unprocessed_hasura_claims = claims.pointer(claims_namespace_path.as_str()).ok_or(
                 InternalError::HasuraClaimsNotFound {
                     path: claims_namespace_path.to_string(),
                 },
@@ -823,7 +823,7 @@ mod tests {
         let hasura_claims = get_default_hasura_claims();
         let claims: Claims = get_claims(
             &serde_json::to_value(hasura_claims)?,
-            jsonptr::Pointer::new([DEFAULT_HASURA_CLAIMS_NAMESPACE]).as_str(),
+            jsonptr::PointerBuf::from_tokens([DEFAULT_HASURA_CLAIMS_NAMESPACE]).as_str(),
         )?;
         let jwt_header = jwt::Header {
             alg,
@@ -951,7 +951,7 @@ mod tests {
                "claimsConfig": {
                   "namespace": {
                      "claimsFormat": "Json",
-                     "location": jsonptr::Pointer::new([DEFAULT_HASURA_CLAIMS_NAMESPACE]),
+                     "location": jsonptr::PointerBuf::from_tokens([DEFAULT_HASURA_CLAIMS_NAMESPACE]),
                   }
                }
             }
@@ -991,7 +991,7 @@ mod tests {
                "claimsConfig": {
                   "namespace": {
                      "claimsFormat": "StringifiedJson",
-                     "location": jsonptr::Pointer::new([DEFAULT_HASURA_CLAIMS_NAMESPACE]),
+                     "location": jsonptr::PointerBuf::from_tokens([DEFAULT_HASURA_CLAIMS_NAMESPACE]),
                   }
                }
             }
@@ -1003,7 +1003,7 @@ mod tests {
         let stringified_hasura_claims = serde_json::to_string(&hasura_claims)?;
         let claims = get_claims(
             &serde_json::to_value(stringified_hasura_claims)?,
-            jsonptr::Pointer::new([DEFAULT_HASURA_CLAIMS_NAMESPACE]).as_str(),
+            jsonptr::PointerBuf::from_tokens([DEFAULT_HASURA_CLAIMS_NAMESPACE]).as_str(),
         )?;
         let alg = jwt::Algorithm::HS256;
         let jwt_header = jwt::Header {
@@ -1303,7 +1303,7 @@ mod tests {
         );
         assert_eq!(
             jwt_config_result.unwrap_err().to_string(),
-            "json pointer \"custom_claims/user_id\" is malformed due to missing starting slash"
+            "json pointer failed to parse; does not start with a slash ('/') and is not empty"
         );
         Ok(())
     }
@@ -1360,7 +1360,7 @@ mod tests {
 
         let claims: Claims = get_claims(
             &serde_json::to_value(&hasura_claims)?,
-            jsonptr::Pointer::new([DEFAULT_HASURA_CLAIMS_NAMESPACE]).as_str(),
+            jsonptr::PointerBuf::from_tokens([DEFAULT_HASURA_CLAIMS_NAMESPACE]).as_str(),
         )?;
 
         let mut jwt_header = jwt::Header::new(jwt::Algorithm::ES256);
@@ -1384,7 +1384,7 @@ mod tests {
             "claimsConfig": {
                 "namespace": {
                     "claimsFormat": "Json",
-                    "location": jsonptr::Pointer::new([DEFAULT_HASURA_CLAIMS_NAMESPACE]),
+                    "location": jsonptr::PointerBuf::from_tokens([DEFAULT_HASURA_CLAIMS_NAMESPACE]),
                 },
             },
         }
@@ -1477,7 +1477,7 @@ mod tests {
                "claimsConfig": {
                   "namespace": {
                      "claimsFormat": "Json",
-                     "location": jsonptr::Pointer::new([DEFAULT_HASURA_CLAIMS_NAMESPACE]),
+                     "location": jsonptr::PointerBuf::from_tokens([DEFAULT_HASURA_CLAIMS_NAMESPACE]),
                   }
                }
             }
@@ -1675,7 +1675,7 @@ mod tests {
         let hasura_claims = get_default_hasura_claims();
         let claims: Claims = get_claims(
             &serde_json::to_value(hasura_claims.clone())?,
-            jsonptr::Pointer::new([DEFAULT_HASURA_CLAIMS_NAMESPACE]).as_str(),
+            jsonptr::PointerBuf::from_tokens([DEFAULT_HASURA_CLAIMS_NAMESPACE]).as_str(),
         )?;
         let encoded_claims = encode(&jwt_header, &claims, &encoding_key)?;
         let jwt_secret_config_json = json!({
@@ -1686,7 +1686,7 @@ mod tests {
             "claimsConfig": {
                 "namespace": {
                     "claimsFormat": "Json",
-                    "location": jsonptr::Pointer::new([DEFAULT_HASURA_CLAIMS_NAMESPACE]),
+                    "location": jsonptr::PointerBuf::from_tokens([DEFAULT_HASURA_CLAIMS_NAMESPACE]),
                 },
             },
         });
