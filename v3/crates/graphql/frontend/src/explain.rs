@@ -76,7 +76,7 @@ async fn explain_query_internal(
                 tracing_util::set_attribute_on_active_span(
                     AttributeVisibility::Default,
                     "request.graphql_query",
-                    raw_request.query.to_string(),
+                    raw_request.query.clone(),
                 );
                 Box::pin(async {
                     // parse the raw request into a GQL query
@@ -400,7 +400,7 @@ async fn get_execution_steps(
             .await;
             NonEmpty::new(Box::new(types::Step::CommandSelect(
                 types::CommandSelectIR {
-                    command_name: alias.to_string(),
+                    command_name: alias.clone(),
                     ndc_request,
                     ndc_explain: data_connector_explain,
                 },
@@ -421,7 +421,7 @@ async fn get_execution_steps(
             )
             .await;
             NonEmpty::new(Box::new(types::Step::ModelSelect(types::ModelSelectIR {
-                model_name: alias.to_string(),
+                model_name: alias.clone(),
                 ndc_request,
                 ndc_explain: data_connector_explain,
             })))

@@ -354,14 +354,14 @@ impl HttpHeadersPreset {
         let forward = headers_preset
             .forward
             .iter()
-            .map(|header| SerializableHeaderName::new(header.to_string()).map_err(to_error))
+            .map(|header| SerializableHeaderName::new(header.clone()).map_err(to_error))
             .collect::<Result<Vec<_>, DataConnectorError>>()?;
 
         let additional = headers_preset
             .additional
             .iter()
             .map(|(header_name, header_val)| {
-                let key = SerializableHeaderName::new(header_name.to_string()).map_err(to_error)?;
+                let key = SerializableHeaderName::new(header_name.clone()).map_err(to_error)?;
                 let val = resolve_value_expression(&metadata_accessor.flags, header_val.clone());
                 Ok((key, val))
             })
@@ -401,7 +401,7 @@ impl CommandsResponseConfig {
         let forward_headers = response_headers
             .forward_headers
             .iter()
-            .map(|header| SerializableHeaderName::new(header.to_string()).map_err(to_error))
+            .map(|header| SerializableHeaderName::new(header.clone()).map_err(to_error))
             .collect::<Result<Vec<_>, DataConnectorError>>()?;
         Ok(Self {
             headers_field: response_headers.headers_field.clone(),
@@ -651,13 +651,6 @@ pub struct DataConnectorRelationalScalarTypeCapabilities {
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_interval: bool,
 
-    #[serde(default = "serde_ext::ser_default")]
-    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
-    pub supports_from_type: bool,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct DataConnectorRelationalCastCapabilities {
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_from_type: bool,

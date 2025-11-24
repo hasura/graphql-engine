@@ -316,7 +316,7 @@ fn validate_relationships_in_included(document_data: &DocumentData) -> Result<()
         let resources_with_relationships: Vec<String> = all_resources
             .iter()
             .filter(|r| r.relationships.is_some())
-            .map(|r| r._type.to_string())
+            .map(|r| r._type.clone())
             .collect();
 
         return if resources_with_relationships.is_empty() {

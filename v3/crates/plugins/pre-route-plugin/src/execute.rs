@@ -321,7 +321,7 @@ pub async fn execute_plugin(
                 for header in &header_config.forward {
                     if let Some(header_value) = response_headers.get(header) {
                         let header_name = HeaderName::from_str(header)
-                            .map_err(|_| Error::InvalidHeaderName(header.to_string()))?;
+                            .map_err(|_| Error::InvalidHeaderName(header.clone()))?;
                         headers.insert(header_name, header_value.clone());
                     }
                 }

@@ -31,7 +31,7 @@ impl EnumTagType {
     fn generate_tag(&self) -> Option<String> {
         match self {
             EnumTagType::Internal { tag } | EnumTagType::Adjacent { tag, content: _ } => {
-                Some(tag.to_string())
+                Some(tag.clone())
             }
             EnumTagType::External => None,
         }
@@ -200,7 +200,7 @@ fn impl_deserialize_as_tagged(
             if var.hidden {
                 None
             } else {
-                Some(var.renamed_variant.to_string())
+                Some(var.renamed_variant.clone())
             }
         })
         .collect::<Vec<String>>();
@@ -223,7 +223,7 @@ fn generate_enum_variants(
     let deserialize_from = gen_deserialize_from(tag_type);
     let variants: Vec<proc_macro2::TokenStream> = variants.iter().map(|variant| {
         let variant_name = &variant.name;
-        let variant_name_string = variant.renamed_variant.to_string();
+        let variant_name_string = variant.renamed_variant.clone();
         let variant_name_str = variant_name_string.as_str();
         let parsed_variant = match tag_type {
             EnumTagType::External => quote! {
@@ -326,7 +326,7 @@ fn impl_json_schema_tagged(
                         return None;
                     }
 
-                    unique_names.insert(variant.renamed_variant.to_string());
+                    unique_names.insert(variant.renamed_variant.clone());
                     count += 1;
 
                     let name = &variant.renamed_variant;
@@ -399,7 +399,7 @@ fn impl_json_schema_tagged(
                         return None;
                     }
 
-                    unique_names.insert(variant.renamed_variant.to_string());
+                    unique_names.insert(variant.renamed_variant.clone());
                     count += 1;
 
                     let name = &variant.renamed_variant;
@@ -450,7 +450,7 @@ fn impl_json_schema_tagged(
                         return None;
                     }
 
-                    unique_names.insert(variant.renamed_variant.to_string());
+                    unique_names.insert(variant.renamed_variant.clone());
                     count += 1;
 
                     let name = &variant.renamed_variant;

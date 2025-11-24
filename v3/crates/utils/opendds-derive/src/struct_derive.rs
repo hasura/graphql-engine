@@ -37,7 +37,7 @@ fn impl_deserialize_named_fields<'a>(
 ) -> proc_macro2::TokenStream {
     let expected_fields = named_fields
         .iter()
-        .map(|field| field.renamed_field.to_string())
+        .map(|field| field.renamed_field.clone())
         .collect::<Vec<String>>();
     let named_fields_value = generate_named_fields_value(name, named_fields);
     let unexpected_fields_error = if expected_fields.is_empty() {

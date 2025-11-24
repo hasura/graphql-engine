@@ -60,11 +60,6 @@ pub struct ModelWithPermissions {
     pub description: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct SelectPermissions {
-    pub by_role: BTreeMap<Role, SelectPermission>,
-}
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum ModelAuthorizationRule {
     Access {

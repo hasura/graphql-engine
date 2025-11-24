@@ -59,18 +59,6 @@ pub struct ComparableCountGraphqlConfig {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct CustomFilterInput {
-    pub filter_boolean_expression_type: Qualified<CustomTypeName>,
-    pub order_by_expression: Qualified<OrderByExpressionName>,
-    pub graphql: Option<CustomFilterInputGraphqlConfig>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct CustomFilterInputGraphqlConfig {
-    pub type_name: ast::TypeName,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct AggregateBooleanExpressionGraphqlConfig {
     pub type_name: ast::TypeName,
 }

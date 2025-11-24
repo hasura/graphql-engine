@@ -184,7 +184,7 @@ pub fn ordering_parameter(model: &Model, object_type: &ObjectType) -> oas3::spec
             if i > 0 && i < sort_keys.len() {
                 example.push(',');
             }
-            example.push_str(&field.to_string());
+            example.push_str(&field.clone());
         }
     }
 

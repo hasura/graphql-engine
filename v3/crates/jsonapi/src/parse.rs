@@ -299,7 +299,7 @@ fn resolve_include_relationships(
             };
             relationship_tree
                 .relationships
-                .insert(relationship.to_string(), relationship_node);
+                .insert(relationship.clone(), relationship_node);
             let sub_selection = ObjectSubSelection::Relationship(RelationshipSelection {
                 target: build_relationship_target(relationship_name.clone()),
                 selection: Some(selection),
@@ -359,14 +359,14 @@ fn create_field_name(field_name: &str) -> Result<FieldName, ParseError> {
 }
 
 // Sorting spec: <https://jsonapi.org/format/#fetching-sorting>
-fn build_order_by_element(elem: &String) -> Result<open_dds::query::OrderByElement, ParseError> {
+fn build_order_by_element(elem: &str) -> Result<open_dds::query::OrderByElement, ParseError> {
     let (field_name, direction) = if elem.starts_with('-') {
         (
             elem.split_at(1).1.to_string(),
             open_dds::models::OrderByDirection::Desc,
         )
     } else {
-        (elem.to_string(), open_dds::models::OrderByDirection::Asc)
+        (elem.to_owned(), open_dds::models::OrderByDirection::Asc)
     };
 
     let operand = open_dds::query::Operand::Field(open_dds::query::ObjectFieldOperand {

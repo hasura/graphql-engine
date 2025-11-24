@@ -745,12 +745,12 @@ pub(crate) fn get_authorization_token(
         JWTTokenLocation::Header(JWTHeaderLocation { name }) => headers
             .get(name)
             .ok_or(Error::AuthorizationHeaderSourceNotFound {
-                header_name: name.to_string(),
+                header_name: name.clone(),
             })?
             .to_str()
             .map_err(|e| Error::AuthorizationHeaderParseError {
                 err: e.to_string(),
-                header_name: name.to_string(),
+                header_name: name.clone(),
             })?
             .to_string(),
 
@@ -772,12 +772,12 @@ pub(crate) fn get_authorization_token(
             if cookie_name == Some(name) {
                 cookie_value
                     .ok_or(Error::MissingCookieValue {
-                        cookie_name: name.to_string(),
+                        cookie_name: name.clone(),
                     })?
                     .to_string()
             } else {
                 return Err(Error::CookieNameNotFound {
-                    cookie_name: name.to_string(),
+                    cookie_name: name.clone(),
                 });
             }
         }

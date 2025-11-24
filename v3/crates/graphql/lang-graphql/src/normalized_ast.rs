@@ -190,7 +190,7 @@ impl<'s, S: SchemaContext> Value<'s, S> {
 
     pub fn as_id(&self) -> Result<String> {
         match self {
-            Value::SimpleValue(SimpleValue::Id(s)) => Ok(s.to_string()),
+            Value::SimpleValue(SimpleValue::Id(s)) => Ok(s.clone()),
             _ => Err(Error::UnexpectedValue {
                 expected_kind: "ID",
                 found: self.as_json(),

@@ -33,7 +33,7 @@ fn impl_opendd(input: &DeriveInput) -> MacroResult<proc_macro2::TokenStream> {
         Data::Struct(struct_data) => struct_derive::impl_opendd_struct(name, &struct_data),
     };
     let json_schema_metadata = cont.json_schema_metadata;
-    let schema_name = json_schema_metadata.schema_name.to_string();
+    let schema_name = json_schema_metadata.schema_name.clone();
     let impl_json_schema = helpers::apply_schema_metadata(&json_schema, json_schema_metadata);
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
     Ok(quote! {

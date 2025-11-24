@@ -441,18 +441,18 @@ fn validate_header_config(header_config: &webhook::AuthHookConfigV3Headers) -> V
     if let AllOrList::List(list) = &header_config.forward {
         for header_name in list {
             if let Err(_e) = axum::http::header::HeaderName::from_str(header_name.as_str()) {
-                warnings.push(Warning::InvalidHeaderName(header_name.to_string()));
+                warnings.push(Warning::InvalidHeaderName(header_name.clone()));
             }
         }
     }
     for (header_name, header_value) in &header_config.additional {
         if let Err(_e) = axum::http::header::HeaderName::from_str(header_name.as_str()) {
-            warnings.push(Warning::InvalidHeaderName(header_name.to_string()));
+            warnings.push(Warning::InvalidHeaderName(header_name.clone()));
         }
         if let Err(_e) = axum::http::header::HeaderValue::from_str(header_value.as_str()) {
             warnings.push(Warning::InvalidHeaderValue(
-                header_value.to_string(),
-                header_name.to_string(),
+                header_value.clone(),
+                header_name.clone(),
             ));
         }
     }

@@ -1034,7 +1034,7 @@ fn convert_expression_to_logical_expr(
         RelationalExpression::GetField { column, field } => Ok(get_field(
             convert_expression_to_logical_expr(column, schema)?,
             convert_literal_to_logical_expr(&RelationalLiteral::String {
-                value: field.to_string(),
+                value: field.clone(),
             }),
         )),
         RelationalExpression::Greatest { exprs } => Ok(greatest(

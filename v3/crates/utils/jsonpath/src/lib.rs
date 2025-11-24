@@ -90,10 +90,10 @@ impl JSONPath {
                         Some(JSONPathElement::Index(*index))
                     }
                     serde_path_to_error::Segment::Map { key } => {
-                        Some(JSONPathElement::Key(key.to_string()))
+                        Some(JSONPathElement::Key(key.clone()))
                     }
                     serde_path_to_error::Segment::Enum { variant } => {
-                        Some(JSONPathElement::Key(variant.to_string()))
+                        Some(JSONPathElement::Key(variant.clone()))
                     }
                     serde_path_to_error::Segment::Unknown => None,
                 })

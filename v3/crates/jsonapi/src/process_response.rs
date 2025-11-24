@@ -139,7 +139,7 @@ fn row_to_resource(
                 data: Some(relationship_identifier_data),
                 links: None,
             };
-            relationships.insert(key.to_string(), relationship);
+            relationships.insert(key.clone(), relationship);
         } else {
             let object_type =
                 get_object_type(object_types, row_type).map_err(RequestError::ParseError)?;
@@ -147,7 +147,7 @@ fn row_to_resource(
             let field_name = open_dds::types::FieldName::new(identifier);
 
             if object_type.type_fields.contains_key(&field_name) {
-                attributes.insert(key.to_string(), value);
+                attributes.insert(key.clone(), value);
             }
         }
     }
