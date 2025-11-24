@@ -124,14 +124,14 @@ mockito = { version = "~1.4", default-features = false } # v1.5+ depends on http
 nonempty = { version = "0.12", features = ["serialize"] }
 oas3 = "0.12.1"
 openssl = "0.10"
-opentelemetry = "0.24"
-opentelemetry-contrib = "0.16"
-opentelemetry-http = "0.13"
-opentelemetry-otlp = "0.17"
-opentelemetry-semantic-conventions = "0.16"
-opentelemetry-stdout = { version = "0.5", default-features = false, features = ["trace"] }
-opentelemetry-zipkin = "0.22"
-opentelemetry_sdk = { version = "0.24", features = ["rt-tokio"] }
+opentelemetry = "0.31"
+opentelemetry-contrib = "0.23"
+opentelemetry-http = "0.31"
+opentelemetry-otlp = { version = "0.31", features = ["grpc-tonic", "trace"] }
+opentelemetry-semantic-conventions = "0.31"
+opentelemetry-stdout = { version = "0.31", default-features = false, features = ["trace"] }
+opentelemetry-zipkin = "0.31"
+opentelemetry_sdk = { version = "0.31", features = ["rt-tokio"] }
 partition_eithers = "0.1.0"
 postcard = { version = "1", features = ["use-std"] }
 pretty_assertions = "1"

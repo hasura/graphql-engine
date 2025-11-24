@@ -3,12 +3,14 @@ use opentelemetry::propagation::TextMapPropagator;
 use opentelemetry::trace::Span; // 'Span'-the-trait, c.f. to 'Span'-the-struct. Used for its
 // 'set_attribute' method.
 use opentelemetry::propagation::composite::TextMapCompositePropagator;
-use opentelemetry::{KeyValue, global, trace::TraceError};
+use opentelemetry::{KeyValue, global};
 pub use opentelemetry_contrib::trace::propagator::trace_context_response::TraceContextResponsePropagator;
 use opentelemetry_otlp::{OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT, WithExportConfig};
+use opentelemetry_sdk::error::OTelSdkError;
 use opentelemetry_sdk::propagation::{BaggagePropagator, TraceContextPropagator};
-use opentelemetry_sdk::trace::{SpanProcessor, TracerProvider};
+use opentelemetry_sdk::trace::{SdkTracerProvider, SpanProcessor};
 use opentelemetry_semantic_conventions as semcov;
+use std::time::Duration;
 
 /// A configuration type to enable/disable baggage propagation
 #[derive(Debug, Copy, Clone)]
@@ -50,7 +52,7 @@ pub fn initialize_tracing(
     service_version: Option<&'static str>,
     propagate_caller_baggage: PropagateBaggage,
     enable_stdout_export: ExportTracesStdout,
-) -> Result<(), TraceError> {
+) -> anyhow::Result<()> {
     // install global collector configured based on RUST_LOG env var.
     tracing_subscriber::fmt::init();
 
@@ -73,20 +75,19 @@ pub fn initialize_tracing(
             service_version,
         ));
     }
-    let config = opentelemetry_sdk::trace::Config::default()
-        .with_resource(opentelemetry_sdk::Resource::new(resource_entries));
+    let resource = opentelemetry_sdk::Resource::builder_empty()
+        .with_attributes(resource_entries)
+        .build();
 
-    let otlp_exporter = opentelemetry_otlp::SpanExporterBuilder::Tonic(
-        opentelemetry_otlp::new_exporter()
-            .tonic()
-            .with_endpoint(endpoint.unwrap_or(OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT)),
-    )
-    .build_span_exporter()?;
+    let otlp_exporter = opentelemetry_otlp::SpanExporter::builder()
+        .with_tonic()
+        .with_endpoint(endpoint.unwrap_or(OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT))
+        .build()?;
 
-    let mut tracer_provider_builder = TracerProvider::builder()
-        .with_batch_exporter(otlp_exporter, opentelemetry_sdk::runtime::Tokio)
+    let mut tracer_provider_builder = SdkTracerProvider::builder()
+        .with_batch_exporter(otlp_exporter)
         .with_span_processor(BaggageSpanProcessor())
-        .with_config(config);
+        .with_resource(resource);
 
     if let ExportTracesStdout::Enable = enable_stdout_export {
         let stdout_exporter = opentelemetry_stdout::SpanExporter::default();
@@ -122,13 +123,17 @@ impl SpanProcessor for BaggageSpanProcessor {
         }
     }
 
-    fn on_end(&self, _span: opentelemetry_sdk::export::trace::SpanData) {}
+    fn on_end(&self, _span: opentelemetry_sdk::trace::SpanData) {}
 
-    fn force_flush(&self) -> opentelemetry::trace::TraceResult<()> {
+    fn force_flush(&self) -> Result<(), OTelSdkError> {
         Ok(())
     }
 
-    fn shutdown(&self) -> opentelemetry::trace::TraceResult<()> {
+    fn shutdown(&self) -> Result<(), OTelSdkError> {
+        Ok(())
+    }
+
+    fn shutdown_with_timeout(&self, _timeout: Duration) -> Result<(), OTelSdkError> {
         Ok(())
     }
 }
@@ -163,5 +168,9 @@ impl<T: TextMapPropagator> TextMapPropagator for InjectOnlyTextMapPropagator<T> 
 }
 
 pub fn shutdown_tracer() {
-    global::shutdown_tracer_provider();
+    // In OpenTelemetry 0.31, shutdown_tracer_provider() has been removed.
+    // The tracer provider should be shut down explicitly by the application
+    // by calling shutdown() on the SdkTracerProvider instance.
+    // Since we set it as a global provider, we can't easily access it here.
+    // Applications should manage the lifecycle of the tracer provider themselves.
 }

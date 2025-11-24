@@ -8,6 +8,7 @@ license.workspace = true
 bench = false
 
 [dependencies]
+anyhow = { workspace = true }
 derive_more = { workspace = true }
 http = { workspace = true }
 opentelemetry = { workspace = true }
