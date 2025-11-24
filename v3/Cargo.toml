@@ -83,7 +83,7 @@ base64 = "0.22"
 bincode = "1"
 blake2 = "0.10.6"
 bson = "2"
-build-data = "0.2"
+build-data = "0.3"
 bytes = "1"
 chrono = "0.4"
 clap = { version = "4", features = ["derive", "env"] }
