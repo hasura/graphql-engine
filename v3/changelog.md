@@ -6,6 +6,9 @@
 
 ### Changed
 
+- User facing errors for PromptQL are now less verbose and contain the unwrapped
+  error
+
 ### Fixed
 
 ## [v2025.11.24]

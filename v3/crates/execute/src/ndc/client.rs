@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, fmt};
 
 use metadata_resolve::data_connectors::NdcVersion;
 use reqwest::header::{HeaderMap, HeaderValue};
@@ -49,7 +49,7 @@ pub enum Error {
     #[error("response received from connector is too large: {0}")]
     ResponseTooLarge(String),
 
-    #[error("connector error: {0}")]
+    #[error("{0}")]
     Connector(ConnectorError),
 
     #[error("invalid connector error: {0}")]
@@ -81,12 +81,42 @@ impl tracing_util::TraceableError for Error {
     }
 }
 
-#[derive(Debug, Clone, Error)]
-#[error("connector returned status code {status} with message: {}, details: {}", error_response.message(), error_response.details())]
+#[derive(Debug, Clone)]
 pub struct ConnectorError {
     pub status: reqwest::StatusCode,
     pub error_response: NdcErrorResponse,
 }
+
+impl ConnectorError {
+    fn display_message(&self) -> Option<String> {
+        let details = self.error_response.details();
+        if let Some(cause) = details.get("cause").and_then(|v| v.as_str()) {
+            return Some(cause.to_string());
+        }
+        if let Some(msg) = details.as_str() {
+            return Some(msg.to_string());
+        }
+        None
+    }
+}
+
+impl fmt::Display for ConnectorError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if let Some(msg) = self.display_message() {
+            write!(f, "{msg}")
+        } else {
+            write!(
+                f,
+                "connector error: connector returned status code {status} with message: {}, details: {}",
+                self.error_response.message(),
+                self.error_response.details(),
+                status = self.status
+            )
+        }
+    }
+}
+
+impl std::error::Error for ConnectorError {}
 
 #[derive(Debug, Clone, Error)]
 #[error("invalid connector error with status {status} and {content}")]
