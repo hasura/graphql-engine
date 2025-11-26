@@ -6,10 +6,11 @@
 
 ### Changed
 
-- User facing errors for PromptQL are now less verbose and contain the unwrapped
-  error
-
 ### Fixed
+
+## [v2025.11.26]
+
+- No changes
 
 ## [v2025.11.24]
 
@@ -2050,7 +2051,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.11.24...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.11.26...HEAD
+[v2025.11.26]: https://github.com/hasura/v3-engine/releases/tag/v2025.11.26
 [v2025.11.24]: https://github.com/hasura/v3-engine/releases/tag/v2025.11.24
 [v2025.11.17]: https://github.com/hasura/v3-engine/releases/tag/v2025.11.17
 [v2025.11.10]: https://github.com/hasura/v3-engine/releases/tag/v2025.11.10
