@@ -172,7 +172,7 @@ tower = "0.5"
 tower-http = { version = "0.6", features = ["cors", "fs", "decompression-gzip", "decompression-zstd", "compression-gzip", "compression-zstd", "trace" ] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["json"] }
-transitive = "0.5"
+transitive = "1.2"
 unicode-normalization = "0.1"
 url = { version = "2", features = ["serde"] }
 uuid = { version = "1", features = ["v4", "serde"] }
