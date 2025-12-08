@@ -150,23 +150,21 @@ setPostgresPoolSettings =
       ppsConnectionLifetime = dppsConnectionLifetime defaultPostgresPoolSettings
     }
 
--- PG Pool Settings are not given by the user, set defaults
-getDefaultPGPoolSettingIfNotExists :: Maybe PostgresPoolSettings -> DefaultPostgresPoolSettings -> (Int, Int, Int)
-getDefaultPGPoolSettingIfNotExists connSettings defaultPgPoolSettings =
+-- | Return the settings we should use, for the subset that we can default
+-- (i.e. the ones in DefaultPostgresPoolSettings)
+getDefaultPGPoolSettingIfNotExists :: Maybe PostgresPoolSettings -> DefaultPostgresPoolSettings -> (Int, Int, Int, Maybe NominalDiffTime)
+getDefaultPGPoolSettingIfNotExists connSettings DefaultPostgresPoolSettings {..} =
   case connSettings of
     -- Atleast one of the postgres pool settings is set, then set default values to other settings
     Just connSettings' ->
-      (maxConnections connSettings', idleTimeout connSettings', retries connSettings')
+      (maxConnections connSettings', idleTimeout connSettings', retries connSettings', connectionLifetime connSettings')
     -- No PG Pool settings provided by user, set default values for all
-    Nothing -> (defMaxConnections, defIdleTimeout, defRetries)
+    Nothing -> (dppsMaxConnections, dppsIdleTimeout, dppsRetries, dppsConnectionLifetime)
   where
-    defMaxConnections = dppsMaxConnections defaultPgPoolSettings
-    defIdleTimeout = dppsIdleTimeout defaultPgPoolSettings
-    defRetries = dppsRetries defaultPgPoolSettings
-
-    maxConnections = fromMaybe defMaxConnections . ppsMaxConnections
-    idleTimeout = fromMaybe defIdleTimeout . ppsIdleTimeout
-    retries = fromMaybe defRetries . ppsRetries
+    maxConnections = fromMaybe dppsMaxConnections . ppsMaxConnections
+    idleTimeout = fromMaybe dppsIdleTimeout . ppsIdleTimeout
+    retries = fromMaybe dppsRetries . ppsRetries
+    connectionLifetime s = ppsConnectionLifetime s <|> dppsConnectionLifetime
 
 data SSLMode
   = Disable
