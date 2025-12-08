@@ -894,7 +894,9 @@ connections until a new connection becomes available, even if there is capacity 
 
 :::warning Notice
 
-**Deprecated in versions > `v2.0.0`: [see details](/resources/upgrade-hasura-v2.mdx#hasura-v2-env-changes).**
+In versions > `v2.0.0` this affects only connections to the postgres database used for the metadata catalog.
+The equivalent setting for data sources is now `connection_info > pool_settings > connection_lifetime` in the
+metadata.
 
 :::
 
