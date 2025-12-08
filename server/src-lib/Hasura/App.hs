@@ -1514,7 +1514,7 @@ mkPgSourceResolver :: PG.PGLogger -> SourceResolver ('Postgres 'Vanilla)
 mkPgSourceResolver pgLogger env sourceName config = runExceptT do
   let PostgresSourceConnInfo urlConf poolSettings allowPrepare isoLevel _ = pccConnectionInfo config
   -- If the user does not provide values for the pool settings, then use the default values
-  let (maxConns, idleTimeout, retries) = getDefaultPGPoolSettingIfNotExists poolSettings defaultPostgresPoolSettings
+  let (maxConns, idleTimeout, retries, connLifetime) = getDefaultPGPoolSettingIfNotExists poolSettings defaultPostgresPoolSettings
   connDetails <- resolveUrlConf env urlConf
   let connInfo = PG.ConnInfo retries connDetails
       connParams =
@@ -1522,7 +1522,7 @@ mkPgSourceResolver pgLogger env sourceName config = runExceptT do
           { PG.cpIdleTime = idleTimeout,
             PG.cpConns = maxConns,
             PG.cpAllowPrepare = allowPrepare,
-            PG.cpMbLifetime = ppsConnectionLifetime =<< poolSettings,
+            PG.cpMbLifetime = connLifetime,
             PG.cpTimeout = ppsPoolTimeout =<< poolSettings
           }
   let context = J.object [("source" J..= sourceName)]
