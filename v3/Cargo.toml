@@ -93,7 +93,7 @@ criterion = { version = "0.8", features = ["html_reports", "async_tokio"] }
 darling = "0.21"
 # Keep this in sync with sqlparser
 datafusion = { version = "50.3.0", features = ["serde"] }
-derive_more = { version = "2.0", features = ["full"] }
+derive_more = { version = "2.1", features = ["full"] }
 diffy = "0.4"
 env_logger = "0.11"
 expect-test = "1"
