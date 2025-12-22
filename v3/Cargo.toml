@@ -92,7 +92,7 @@ cookie = "0.18"
 criterion = { version = "0.8", features = ["html_reports", "async_tokio"] }
 darling = "0.21"
 # Keep this in sync with sqlparser
-datafusion = { version = "50.3.0", features = ["serde"] }
+datafusion = { version = "51.0.0", features = ["serde"] }
 derive_more = { version = "2.1", features = ["full"] }
 diffy = "0.4"
 env_logger = "0.11"
@@ -148,7 +148,7 @@ rmp-serde = "1"
 semver = "1.0"
 schemars = { version = "0.8", features = ["preserve_order", "smol_str", "url"] }
 serde = { version = "1", features = ["derive", "rc"] }
-serde_arrow = { version = "0.13.7", features = ["arrow-56"] }
+serde_arrow = { version = "0.13.7", features = ["arrow-57"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 serde-jsonlines = { version = "0.7.0", features = ["async"] }
 serde_path_to_error = "0.1"
