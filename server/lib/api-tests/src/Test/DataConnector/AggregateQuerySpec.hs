@@ -132,6 +132,7 @@ nodeTests = describe "Nodes Tests" $ do
                     Name: Accept
         |]
 
+  -- NOTE: Ordering is required due to datasets non-matching orders
   it "works with array relations" $ \(testEnvironment, _) -> do
     let sortYamlArray :: J.Value -> IO J.Value
         sortYamlArray (J.Array a) = pure $ J.Array (Vector.fromList (sort (Vector.toList a)))
@@ -144,7 +145,7 @@ nodeTests = describe "Nodes Tests" $ do
           testEnvironment
           [graphql|
             query getArtist {
-              Artist_aggregate(limit: 2) {
+              Artist_aggregate(order_by: {ArtistId: asc}, limit: 2) {
                 nodes {
                   ArtistId
                   Albums: Albums_aggregate {
