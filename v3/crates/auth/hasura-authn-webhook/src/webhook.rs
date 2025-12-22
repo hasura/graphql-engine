@@ -24,7 +24,7 @@ pub enum Error {
         error: ToStrError,
     },
     #[error("The Authentication hook has denied to execute the request.")]
-    AuthenticationFailed,
+    AuthenticationFailed { status: reqwest::StatusCode },
     #[error("Internal Error - {0}")]
     Internal(#[from] InternalError),
 }
@@ -65,16 +65,18 @@ impl Error {
     pub fn to_status_code(&self) -> StatusCode {
         match self {
             Error::ErrorInConvertingHeaderValueToString { .. } => StatusCode::BAD_REQUEST,
-            Error::AuthenticationFailed => StatusCode::FORBIDDEN,
+            Error::AuthenticationFailed { status } => {
+                // Convert reqwest::StatusCode to axum::http::StatusCode
+                StatusCode::from_str(status.as_str()).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR)
+            }
             Error::Internal(_e) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 
     pub fn into_middleware_error(self) -> engine_types::MiddlewareError {
         let is_internal = match &self {
-            Error::ErrorInConvertingHeaderValueToString { .. } | Error::AuthenticationFailed => {
-                false
-            }
+            Error::ErrorInConvertingHeaderValueToString { .. }
+            | Error::AuthenticationFailed { .. } => false,
             Error::Internal(_e) => true,
         };
         engine_types::MiddlewareError {
@@ -451,7 +453,6 @@ async fn make_auth_hook_request(
         .await?;
 
     match response.status() {
-        reqwest::StatusCode::UNAUTHORIZED => Err(Error::AuthenticationFailed),
         reqwest::StatusCode::OK => {
             let auth_hook_response: HashMap<String, serde_json::Value> =
                 response.json().await.map_err(InternalError::ReqwestError)?;
@@ -499,7 +500,9 @@ async fn make_auth_hook_request(
                 },
             })
         }
-        status_code => Err(InternalError::AuthHookUnexpectedStatus(status_code))?,
+        status_code => Err(Error::AuthenticationFailed {
+            status: status_code,
+        }),
     }
 }
 
@@ -1156,15 +1159,17 @@ mod tests {
 
         mock.assert(); // Make sure the webhook has been called.
 
+        let error = auth_response.unwrap_err();
         assert_eq!(
-            auth_response.unwrap_err().to_string(),
+            error.to_string(),
             "The Authentication hook has denied to execute the request."
         );
+        // Verify that the original 401 status code is preserved
+        assert_eq!(error.to_status_code(), axum::http::StatusCode::UNAUTHORIZED);
     }
 
     #[tokio::test]
-    /// Test HTTP status codes returned by the webhook,
-    /// other than 200 and 401 are not recognized.
+    /// Test HTTP status codes returned by the webhook are preserved.
     async fn test_webhook_returning_arbitrary_status() {
         // Request a new server from the pool
         let mut server = mockito::Server::new_async().await;
@@ -1173,13 +1178,12 @@ mod tests {
 
         let mut rng = rng();
 
-        // Generate a random HTTP status code
-        let mut http_status_code: usize = rng.random_range(100..600);
-
-        // Make sure that it's not either 200/401.
-        while http_status_code == 200 || http_status_code == 401 {
-            http_status_code = rng.random_range(100..600);
-        }
+        // Use a list of common valid HTTP status codes (excluding 200 and 401)
+        let valid_status_codes = vec![
+            400, 403, 404, 405, 408, 409, 410, 429, 500, 501, 502, 503, 504,
+        ];
+        let random_index = rng.random_range(0..valid_status_codes.len());
+        let http_status_code = valid_status_codes[random_index];
 
         // Create a mock
         let mock = server
@@ -1208,15 +1212,54 @@ mod tests {
 
         mock.assert(); // Make sure the webhook has been called.
 
+        let error = auth_response.unwrap_err();
         assert_eq!(
-            auth_response
-                .unwrap_err()
-                .to_string()
-                .split('.')
-                .collect::<Vec<&str>>()[1]
-                .trim(),
-            "Only 200 and 401 response status are recognized"
+            error.to_string(),
+            "The Authentication hook has denied to execute the request."
         );
+        // Verify that the original status code is preserved
+        assert_eq!(
+            error.to_status_code(),
+            axum::http::StatusCode::from_str(&http_status_code.to_string()).unwrap()
+        );
+    }
+
+    #[tokio::test]
+    /// Test that 403 Forbidden status code is preserved (not converted to 500).
+    async fn test_webhook_returns_403_forbidden() {
+        let mut server = mockito::Server::new_async().await;
+        let url = server.url();
+
+        // Create a mock that returns 403 Forbidden
+        let mock = server
+            .mock("POST", "/validate-request")
+            .with_status(403)
+            .with_header("content-type", "application/json")
+            .create();
+
+        let http_client = reqwest::Client::new();
+        let webhook_url = url + "/validate-request";
+        let auth_hook_config_str =
+            format!("{{ \"url\": \"{webhook_url}\", \"method\": \"Post\"  }}");
+        let auth_hook_config: AuthHookConfig = serde_json::from_str(&auth_hook_config_str).unwrap();
+
+        let mut client_headers = HeaderMap::new();
+        client_headers.insert("foo", "baz".parse().unwrap());
+        client_headers.insert(CONTENT_TYPE, "application/json".parse().unwrap());
+
+        let request = get_auth_hook_request_v1(&auth_hook_config.method, &client_headers);
+        let auth_response =
+            make_auth_hook_request(&http_client, &auth_hook_config.url, request, None).await;
+
+        mock.assert();
+
+        let error = auth_response.unwrap_err();
+        assert_eq!(
+            error.to_string(),
+            "The Authentication hook has denied to execute the request."
+        );
+        // Verify that 403 is preserved (not converted to 500)
+        assert_eq!(error.to_status_code(), axum::http::StatusCode::FORBIDDEN);
     }
 
     #[test]

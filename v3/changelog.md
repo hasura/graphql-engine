@@ -6,6 +6,8 @@
 
 ### Changed
 
+- Webhook responses preserve original HTTP status code
+
 ### Fixed
 
 ## [v2025.11.26]
