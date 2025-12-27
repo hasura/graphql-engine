@@ -637,6 +637,7 @@ const HasuraNotifications: React.FC<
     }
   };
 
+
   const onClickOutside = () => {
     updateOpenState(false);
     closeDropDown();
