@@ -74,3 +74,4 @@ node_modules
 *.ticky.modules
 
 yarn-error.log
+frontend/package-lock.json
