@@ -87,7 +87,7 @@ build-data = "0.3"
 bytes = "1"
 chrono = "0.4"
 clap = { version = "4", features = ["derive", "env"] }
-convert_case = "0.8"
+convert_case = "0.10"
 cookie = "0.18"
 criterion = { version = "0.8", features = ["html_reports", "async_tokio"] }
 darling = "0.21"
