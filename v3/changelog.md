@@ -4,6 +4,27 @@
 
 ### Added
 
+- Updated Azure LLM configuration to support client-secret authentication.
+
+Client-secret authentication is an alternative to API key authentication. It
+requires setting a tenant ID, client ID, and client secret in the configuration.
+For example:
+
+```yaml
+kind: PromptQlConfig
+version: v2
+definition:
+  llm:
+    provider: azure
+    endpoint: "https://jessehallett-2555-resource.cognitiveservices.azure.com/openai/deployments/gpt-5.1-chat"
+    clientId:
+      value: 23f55411-d226-4c8b-928d-1376a788dec3
+    clientSecret:
+      value: <redacted>
+    tenantId:
+      value: 24b7b3cd-ce05-4a20-b1c8-472f8ad2edbf
+```
+
 ### Changed
 
 ### Fixed
