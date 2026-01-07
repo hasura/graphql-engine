@@ -4,6 +4,14 @@
 
 ### Added
 
+### Changed
+
+### Fixed
+
+## [v2026-01-07]
+
+### Added
+
 - Updated Azure LLM configuration to support client-secret authentication.
 
 Client-secret authentication is an alternative to API key authentication. It
@@ -2078,7 +2086,7 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.12.22...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2026.01.07...HEAD
 [v2025.12.22]: https://github.com/hasura/v3-engine/releases/tag/v2025.12.22
 [v2025.11.26]: https://github.com/hasura/v3-engine/releases/tag/v2025.11.26
 [v2025.11.24]: https://github.com/hasura/v3-engine/releases/tag/v2025.11.24
