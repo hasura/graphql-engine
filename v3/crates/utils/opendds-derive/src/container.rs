@@ -1,3 +1,6 @@
+#![allow(clippy::needless_continue)]
+/// There are a lot of `continue` statements in `darling` proc macros
+/// so suppress the warning for the whole file.
 use convert_case::{Case, Casing};
 use std::sync::OnceLock;
 
