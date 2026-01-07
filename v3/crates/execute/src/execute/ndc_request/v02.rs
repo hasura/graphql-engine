@@ -363,7 +363,7 @@ fn make_field(field: Field) -> Result<ndc_models_v02::Field, FieldError> {
             fields,
             arguments,
         } => {
-            let nested_fields = fields.map(make_nested_field).transpose()?;
+            let nested_fields = fields.map(make_nested_field).transpose()?.map(Box::new);
 
             Ok(ndc_models_v02::Field::Column {
                 column: ndc_models_v02::FieldName::new(column.into_inner()),

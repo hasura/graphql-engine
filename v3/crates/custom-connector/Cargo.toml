@@ -18,6 +18,7 @@ axum-ext = { path = "../utils/axum-ext" }
 anyhow = { workspace = true }
 axum = { workspace = true }
 datafusion = { workspace = true }
+datafusion-functions-json = { workspace = true }
 env_logger = { workspace = true }
 futures = { workspace = true }
 indexmap = { workspace = true }

@@ -957,6 +957,42 @@ pub struct DataConnectorRelationalScalarExpressionCapabilities {
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_plus: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_json_contains: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_json_get: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_json_get_str: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_json_get_int: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_json_get_float: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_json_get_bool: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_json_get_json: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_json_as_text: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_json_length: bool,
 }
 
 #[allow(clippy::struct_excessive_bools)]
@@ -1416,6 +1452,15 @@ fn mk_relational_expression_capabilities(
             supports_not: capabilities.scalar.not.is_some(),
             supports_or: capabilities.scalar.or.is_some(),
             supports_plus: capabilities.scalar.plus.is_some(),
+            supports_json_contains: capabilities.scalar.json_contains.is_some(),
+            supports_json_get: capabilities.scalar.json_get.is_some(),
+            supports_json_get_str: capabilities.scalar.json_get_str.is_some(),
+            supports_json_get_int: capabilities.scalar.json_get_int.is_some(),
+            supports_json_get_float: capabilities.scalar.json_get_float.is_some(),
+            supports_json_get_bool: capabilities.scalar.json_get_bool.is_some(),
+            supports_json_get_json: capabilities.scalar.json_get_json.is_some(),
+            supports_json_as_text: capabilities.scalar.json_as_text.is_some(),
+            supports_json_length: capabilities.scalar.json_length.is_some(),
         },
         supports_aggregate: DataConnectorRelationalAggregateExpressionCapabilities {
             supports_bool_and: capabilities.aggregate.bool_and.is_some(),
