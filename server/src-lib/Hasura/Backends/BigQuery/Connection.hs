@@ -31,7 +31,8 @@ import Hasura.Backends.MSSQL.Connection qualified as MSSQLConn (getEnv)
 import Hasura.Base.Error
 import Hasura.Prelude
 import Network.HTTP.Client
-import Network.HTTP.Simple
+import Network.HTTP.Client.TLS (tlsManagerSettings)
+import Network.HTTP.Simple hiding (httpLbs)
 import Network.HTTP.Types
 
 newtype Scope = Scope {unScope :: T.Text}
@@ -107,6 +108,7 @@ resolveConfigurationInputs env = \case
 initConnection :: (MonadIO m) => ServiceAccount -> BigQueryProjectId -> Maybe RetryOptions -> m BigQueryConnection
 initConnection _bqServiceAccount _bqProjectId _bqRetryOptions = do
   _bqAccessTokenMVar <- liftIO $ newMVar Nothing -- `runBigQuery` initializes the token
+  _bqHttpManager <- liftIO $ newManager tlsManagerSettings -- TODO tune
   pure BigQueryConnection {..}
 
 getAccessToken :: (MonadIO m) => ServiceAccount -> m (Either TokenProblem TokenResp)
@@ -220,8 +222,8 @@ runBigQuery conn req = do
       let req' = setRequestHeader "Authorization" ["Bearer " <> (TE.encodeUtf8 . coerce) _trAccessToken] req
       -- TODO: Make this catch the HTTP exceptions
       Right <$> case _bqRetryOptions conn of
-        Just opts -> withGoogleApiRetries opts (httpLBS req')
-        Nothing -> httpLBS req'
+        Just opts -> withGoogleApiRetries opts (liftIO $ httpLbs req' (_bqHttpManager conn))
+        Nothing -> liftIO $ httpLbs req' (_bqHttpManager conn)
 
 -- | Uses up to specified number retries for Google API requests with the specified base delay, uses full jitter backoff,
 -- see https://aws.amazon.com/ru/blogs/architecture/exponential-backoff-and-jitter/
