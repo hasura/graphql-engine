@@ -15,6 +15,9 @@ verify_bigquery_pytest_env() {
     fi
 }
 
+# Note: HASURA_DEBUGGING_ASSERT_CORRECT_BIGQUERY_INTROSPECTION=true is automatically set in CI
+# to enable BigQuery introspection assertions. Set it manually for local testing if needed.
+
 # === functions to test BigQuery in CI with ephemeral Google Cloud projects
 
 # checks that the optional bigquery environment variables are available to run tests against a temporary project

@@ -22,6 +22,7 @@ import Hasura.Backends.BigQuery.Source
 import Hasura.Backends.BigQuery.Types
 import Hasura.Base.Error
 import Hasura.Function.Cache (FunctionOverloads (..))
+import Hasura.Logging (Hasura, Logger)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (BackendConfig)
 import Hasura.RQL.Types.BackendType
@@ -87,13 +88,15 @@ readNonNegative i paramName =
       when (i' < 0) $ throw400 Unexpected $ "Need the integer for the " <> paramName <> " to be non-negative"
       pure i'
 
+-- | Introspect a BQ datasource, powering 'resolveDatabaseMetadata'
 resolveSource ::
   (MonadIO m) =>
+  Logger Hasura ->
   BigQuerySourceConfig ->
   m (Either QErr (DBObjectsIntrospection 'BigQuery))
-resolveSource sourceConfig =
+resolveSource logger sourceConfig =
   runExceptT $ do
-    tables <- getTables sourceConfig
+    tables <- getTables logger sourceConfig
     routines <- getRoutines sourceConfig
     let result = (,) <$> tables <*> routines
     case result of

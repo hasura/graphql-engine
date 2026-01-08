@@ -20,7 +20,7 @@ instance BackendMetadata 'BigQuery where
   buildComputedFieldInfo = BigQuery.buildComputedFieldInfo
   fetchAndValidateEnumValues = BigQuery.fetchAndValidateEnumValues
   resolveSourceConfig = BigQuery.resolveSourceConfig
-  resolveDatabaseMetadata _ _ = BigQuery.resolveSource
+  resolveDatabaseMetadata logger _ = BigQuery.resolveSource logger
   parseBoolExpOperations = BigQuery.parseBoolExpOperations
   buildArrayRelationshipInfo _ = defaultBuildArrayRelationshipInfo
   buildObjectRelationshipInfo _ = defaultBuildObjectRelationshipInfo

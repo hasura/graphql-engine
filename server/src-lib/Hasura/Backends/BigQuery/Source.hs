@@ -34,6 +34,7 @@ import Data.Text.Encoding qualified as TE
 import Data.X509 qualified as X509
 import Data.X509.Memory qualified as X509
 import Hasura.Prelude
+import Network.HTTP.Client (Manager)
 
 newtype BigQueryProjectId = BigQueryProjectId {getBigQueryProjectId :: Text}
   deriving newtype (Eq, Show, NFData, Hashable, J.FromJSON, J.ToJSON)
@@ -305,9 +306,21 @@ data BigQueryConnection = BigQueryConnection
   { _bqServiceAccount :: ServiceAccount,
     _bqProjectId :: BigQueryProjectId, -- we use this projectId instead of the one from the service account as a service account may have access to multiple projects and we wish to choose which one to use
     _bqRetryOptions :: Maybe RetryOptions,
-    _bqAccessTokenMVar :: MVar (Maybe TokenResp)
+    -- | this must only be manipulated by getUsableToken
+    -- TODO make this an modifyMVar_ action, for safety
+    _bqAccessTokenMVar :: MVar (Maybe TokenResp),
+    _bqHttpManager :: Manager
   }
-  deriving (Eq)
+
+-- Custom Eq instance that ignores runtime resources (MVar and Manager)
+instance Eq BigQueryConnection where
+  a == b =
+    _bqServiceAccount a
+      == _bqServiceAccount b
+      && _bqProjectId a
+      == _bqProjectId b
+      && _bqRetryOptions a
+      == _bqRetryOptions b
 
 data BigQuerySourceConfig = BigQuerySourceConfig
   { _scConnection :: BigQueryConnection,

@@ -433,6 +433,7 @@ jobs:
       GRAPHQL_ENGINE_TESTS: /build/_server_output/graphql-engine-tests
       MIX_FILES_FOLDER: /build/_server_output/mix
       HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE: gcloud-service-key.json
+      HASURA_DEBUGGING_ASSERT_CORRECT_BIGQUERY_INTROSPECTION: "true"
     working_directory: ~/graphql-engine
     steps:
       - attach_workspace:
