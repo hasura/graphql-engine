@@ -1101,6 +1101,30 @@ The path to a shared CA store to use to connect to both (caching and rate-limiti
 | **Default**         | `null`                                                       |
 | **Supported in**    | Enterprise Edition only                                      |
 
+### Caching Redis Pool Size
+
+Maximum number of connections in the caching Redis connection pool. For high-traffic production environments, you may want to increase this value. For development or low-traffic environments, you can decrease it to conserve resources.
+
+|                     |                                             |
+| ------------------- | ------------------------------------------- |
+| **Flag**            | `--caching-redis-pool-size`                 |
+| **Env var**         | `HASURA_GRAPHQL_CACHING_REDIS_POOL_SIZE`    |
+| **Accepted values** | Integer                                     |
+| **Default**         | `500`                                       |
+| **Supported in**    | Enterprise Edition only                     |
+
+### Rate Limit Redis Pool Size
+
+Maximum number of connections in the rate-limiting Redis connection pool. For high-traffic production environments with heavy rate-limiting usage, you may want to increase this value. For development or low-traffic environments, you can decrease it to conserve resources.
+
+|                     |                                             |
+| ------------------- | ------------------------------------------- |
+| **Flag**            | `--rate-limit-redis-pool-size`              |
+| **Env var**         | `HASURA_GRAPHQL_RATE_LIMIT_REDIS_POOL_SIZE` |
+| **Accepted values** | Integer                                     |
+| **Default**         | `500`                                       |
+| **Supported in**    | Enterprise Edition only                     |
+
 ### Redis URL
 
 The Redis URL to use for [query caching](/caching/enterprise-caching.mdx) and
