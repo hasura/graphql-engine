@@ -45,8 +45,6 @@ const TableColumn = props => {
 
   const areArrayTypesSupported = isFeatureSupported('tables.create.arrayTypes');
 
-  const [colTypeIdentifier, setColTypeIdentifier] = useState(i);
-
   const [colTypeValue, setColTypeValue] = useState(column.type || '');
 
   useEffect(() => {
@@ -60,9 +58,7 @@ const TableColumn = props => {
 
     const newType = getNewType({ oldType: selectedOption.value, isArray });
 
-    onColTypeChange(selectedOption.colIdentifier, newType);
-
-    setColTypeIdentifier(selectedOption.colIdentifier);
+    onColTypeChange(i, newType);
     setColTypeValue(newType);
   };
 
@@ -73,7 +69,7 @@ const TableColumn = props => {
     if (colTypeValue) {
       const newType = getNewType({ oldType: colTypeValue, isArray });
 
-      onColTypeChange(colTypeIdentifier, newType);
+      onColTypeChange(i, newType);
       setColTypeValue(newType);
     }
   };
