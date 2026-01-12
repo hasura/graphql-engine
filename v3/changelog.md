@@ -4,6 +4,12 @@
 
 ### Added
 
+- Added optional field `useFullSchema` to `PromptQlConfigV2` to allow
+  configuring whether to use the full schema in the agent. Set to true when the
+  schema is small.
+
+### Added
+
 ### Changed
 
 ### Fixed
