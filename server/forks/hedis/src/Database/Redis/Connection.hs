@@ -107,7 +107,7 @@ instance Exception ConnectError
 --  connectPort           = PortNumber 6379 -- Redis default port
 --  connectAuth           = Nothing         -- No password
 --  connectDatabase       = 0               -- SELECT database 0
---  connectMaxConnections = 50              -- Up to 50 connections
+--  connectMaxConnections = 500             -- Up to 500 connections
 --  connectMaxIdleTime    = 30              -- Keep open for 30 seconds
 --  connectTimeout        = Nothing         -- Don't add timeout logic
 --  connectTLSParams      = Nothing         -- Do not use TLS
@@ -120,7 +120,10 @@ defaultConnectInfo = ConnInfo
     , connectAuth           = Nothing
     , connectReadOnly       = False
     , connectDatabase       = 0
-    , connectMaxConnections = 50
+    -- This keeps us several orders of magnitude below default limit, and
+    -- typical limits of managed services AFAICT.  Also see:
+    -- https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/benchmarks/?utm_source=chatgpt.com#factors-impacting-redis-performance
+    , connectMaxConnections = 500
     , connectMaxIdleTime    = 30
     , connectTimeout        = Nothing
     , connectTLSParams      = Nothing

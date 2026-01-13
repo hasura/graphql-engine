@@ -1442,6 +1442,114 @@ fn convert_expression_to_logical_expr(
             order_by: _,
             partition_by: _,
         } => unimplemented!(),
+        RelationalExpression::JsonContains { json, keys } => {
+            let mut args = vec![convert_expression_to_logical_expr(json, schema)?];
+            for key in keys {
+                args.push(convert_expression_to_logical_expr(key, schema)?);
+            }
+            Ok(datafusion::prelude::Expr::ScalarFunction(
+                datafusion::logical_expr::expr::ScalarFunction {
+                    func: datafusion_functions_json::udfs::json_contains_udf(),
+                    args,
+                },
+            ))
+        }
+        RelationalExpression::JsonGet { json, keys } => {
+            let mut args = vec![convert_expression_to_logical_expr(json, schema)?];
+            for key in keys {
+                args.push(convert_expression_to_logical_expr(key, schema)?);
+            }
+            Ok(datafusion::prelude::Expr::ScalarFunction(
+                datafusion::logical_expr::expr::ScalarFunction {
+                    func: datafusion_functions_json::udfs::json_get_udf(),
+                    args,
+                },
+            ))
+        }
+        RelationalExpression::JsonGetStr { json, keys } => {
+            let mut args = vec![convert_expression_to_logical_expr(json, schema)?];
+            for key in keys {
+                args.push(convert_expression_to_logical_expr(key, schema)?);
+            }
+            Ok(datafusion::prelude::Expr::ScalarFunction(
+                datafusion::logical_expr::expr::ScalarFunction {
+                    func: datafusion_functions_json::udfs::json_get_str_udf(),
+                    args,
+                },
+            ))
+        }
+        RelationalExpression::JsonGetInt { json, keys } => {
+            let mut args = vec![convert_expression_to_logical_expr(json, schema)?];
+            for key in keys {
+                args.push(convert_expression_to_logical_expr(key, schema)?);
+            }
+            Ok(datafusion::prelude::Expr::ScalarFunction(
+                datafusion::logical_expr::expr::ScalarFunction {
+                    func: datafusion_functions_json::udfs::json_get_int_udf(),
+                    args,
+                },
+            ))
+        }
+        RelationalExpression::JsonGetFloat { json, keys } => {
+            let mut args = vec![convert_expression_to_logical_expr(json, schema)?];
+            for key in keys {
+                args.push(convert_expression_to_logical_expr(key, schema)?);
+            }
+            Ok(datafusion::prelude::Expr::ScalarFunction(
+                datafusion::logical_expr::expr::ScalarFunction {
+                    func: datafusion_functions_json::udfs::json_get_float_udf(),
+                    args,
+                },
+            ))
+        }
+        RelationalExpression::JsonGetBool { json, keys } => {
+            let mut args = vec![convert_expression_to_logical_expr(json, schema)?];
+            for key in keys {
+                args.push(convert_expression_to_logical_expr(key, schema)?);
+            }
+            Ok(datafusion::prelude::Expr::ScalarFunction(
+                datafusion::logical_expr::expr::ScalarFunction {
+                    func: datafusion_functions_json::udfs::json_get_bool_udf(),
+                    args,
+                },
+            ))
+        }
+        RelationalExpression::JsonGetJson { json, keys } => {
+            let mut args = vec![convert_expression_to_logical_expr(json, schema)?];
+            for key in keys {
+                args.push(convert_expression_to_logical_expr(key, schema)?);
+            }
+            Ok(datafusion::prelude::Expr::ScalarFunction(
+                datafusion::logical_expr::expr::ScalarFunction {
+                    func: datafusion_functions_json::udfs::json_get_json_udf(),
+                    args,
+                },
+            ))
+        }
+        RelationalExpression::JsonAsText { json, keys } => {
+            let mut args = vec![convert_expression_to_logical_expr(json, schema)?];
+            for key in keys {
+                args.push(convert_expression_to_logical_expr(key, schema)?);
+            }
+            Ok(datafusion::prelude::Expr::ScalarFunction(
+                datafusion::logical_expr::expr::ScalarFunction {
+                    func: datafusion_functions_json::udfs::json_as_text_udf(),
+                    args,
+                },
+            ))
+        }
+        RelationalExpression::JsonLength { json, keys } => {
+            let mut args = vec![convert_expression_to_logical_expr(json, schema)?];
+            for key in keys {
+                args.push(convert_expression_to_logical_expr(key, schema)?);
+            }
+            Ok(datafusion::prelude::Expr::ScalarFunction(
+                datafusion::logical_expr::expr::ScalarFunction {
+                    func: datafusion_functions_json::udfs::json_length_udf(),
+                    args,
+                },
+            ))
+        }
     }
 }
 

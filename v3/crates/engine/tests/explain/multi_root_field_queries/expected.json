@@ -21,8 +21,7 @@
                       "fields": {
                         "name": {
                           "type": "column",
-                          "column": "name",
-                          "fields": null
+                          "column": "name"
                         }
                       }
                     }
@@ -106,13 +105,11 @@
                 "fields": {
                   "title": {
                     "type": "column",
-                    "column": "title",
-                    "fields": null
+                    "column": "title"
                   },
                   "rating": {
                     "type": "column",
-                    "column": "rating",
-                    "fields": null
+                    "column": "rating"
                   }
                 }
               },

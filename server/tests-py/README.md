@@ -197,6 +197,10 @@ Before running the test suite:
 scripts/dev.sh test --integration --backend bigquery -k TestGraphQLQueryBasicBigquery
 ```
 
+#### Optional Debugging Environment Variables
+
+- `HASURA_DEBUGGING_ASSERT_CORRECT_BIGQUERY_INTROSPECTION=true` - Enables assertions to verify correct BigQuery introspection behavior. This is automatically set in CI tests. Set it manually for local debugging if needed.
+
 _Note to Hasura team: a service account is already setup for internal use, please check the wiki for further details._
 
 ## Tests structure

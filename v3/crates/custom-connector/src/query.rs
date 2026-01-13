@@ -1581,13 +1581,16 @@ pub(crate) fn eval_nested_field(
                 })?,
             ))
         }
-        ndc_models::NestedField::Collection(ndc_models::NestedCollection { .. }) => Err((
-            StatusCode::NOT_IMPLEMENTED,
-            Json(ndc_models::ErrorResponse {
-                message: "Nested field collections are not supported".into(),
-                details: serde_json::Value::Null,
-            }),
-        )),
+        ndc_models::NestedField::Collection(nested_collection) => {
+            let ndc_models::NestedCollection { .. } = nested_collection.as_ref();
+            Err((
+                StatusCode::NOT_IMPLEMENTED,
+                Json(ndc_models::ErrorResponse {
+                    message: "Nested field collections are not supported".into(),
+                    details: serde_json::Value::Null,
+                }),
+            ))
+        }
     }
 }
 

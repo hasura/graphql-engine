@@ -4,6 +4,41 @@
 
 ### Added
 
+- Added optional field `useFullSchema` to `PromptQlConfigV2` to allow
+  configuring whether to use the full schema in the agent. Set to true when the
+  schema is small.
+
+### Added
+
+### Changed
+
+### Fixed
+
+## [v2026.01.07]
+
+### Added
+
+- Updated Azure LLM configuration to support client-secret authentication.
+
+Client-secret authentication is an alternative to API key authentication. It
+requires setting a tenant ID, client ID, and client secret in the configuration.
+For example:
+
+```yaml
+kind: PromptQlConfig
+version: v2
+definition:
+  llm:
+    provider: azure
+    endpoint: "https://jessehallett-2555-resource.cognitiveservices.azure.com/openai/deployments/gpt-5.1-chat"
+    clientId:
+      value: 23f55411-d226-4c8b-928d-1376a788dec3
+    clientSecret:
+      value: <redacted>
+    tenantId:
+      value: 24b7b3cd-ce05-4a20-b1c8-472f8ad2edbf
+```
+
 ### Changed
 
 ### Fixed
@@ -2057,7 +2092,7 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.12.22...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2026.01.07...HEAD
 [v2025.12.22]: https://github.com/hasura/v3-engine/releases/tag/v2025.12.22
 [v2025.11.26]: https://github.com/hasura/v3-engine/releases/tag/v2025.11.26
 [v2025.11.24]: https://github.com/hasura/v3-engine/releases/tag/v2025.11.24
@@ -2112,7 +2147,6 @@ Initial release.
 [v2025.01.09]: https://github.com/hasura/v3-engine/releases/tag/v2025.01.09
 [v2025.01.06]: https://github.com/hasura/v3-engine/releases/tag/v2025.01.06
 [v2024.12.17]: https://github.com/hasura/v3-engine/releases/tag/v2024.12.17
-[v2024.12.03]: https://github.com/hasura/v3-engine/releases/tag/v2024.12.03
 [v2024.11.25]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.25
 [v2024.11.18]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.18
 [v2024.11.13]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.13

@@ -15,6 +15,7 @@ module Control.Concurrent.Extended
     -- * Concurrency in MonadError
     forConcurrentlyEIO,
     concurrentlyEIO,
+    forLimitedConcurrentlyEIO,
 
     -- * Deprecated
     ImmortalThreadLog (..),
@@ -266,12 +267,14 @@ type ForkableMonadIO m = (MonadIO m, MC.MonadBaseControl IO m, LA.Forall (LA.Pur
 -- IO effects (i.e. when the IO has no real side effects we care about).
 --
 -- This also takes a @chunkSize@ argument so you can manipulate the amount of
--- work given to each thread.
+-- work given to each thread. This will be clamped to >= 1
 forConcurrentlyEIO :: (MonadIO m, MonadError e m) => Int -> [a] -> (a -> ExceptT e IO b) -> m [b]
-forConcurrentlyEIO chunkSize xs f = do
+forConcurrentlyEIO chunkSize_dirty xs f = do
   let fIO a = runExceptT (f a) >>= evaluate
   xs' <- liftIO $ fmap concat $ A.forConcurrently (chunksOf chunkSize xs) $ traverse fIO
   for xs' (either throwError pure)
+  where
+    chunkSize = max 1 chunkSize_dirty
 
 concurrentlyEIO :: (MonadIO m, MonadError e m) => ExceptT e IO a -> ExceptT e IO b -> m (a, b)
 concurrentlyEIO left right = do
@@ -279,3 +282,18 @@ concurrentlyEIO left right = do
   x <- leftE `onLeft` throwError
   y <- rightE `onLeft` throwError
   pure (x, y)
+
+-- | @forLimitedConcurrentlyEIO n xs f@ distributes the work of @f@ over @xs@
+-- concurrently across @n@ threads. Like 'forConcurrentlyEIO' this is
+-- equivalent to @for xs f@ modulo the IO effects, i.e. on an error, the error
+-- from the first erroring @x@ will be returned, but other @f x@ will likely
+-- have run meantime and any errors from those will have been swallowed.
+--
+-- @n@ will be clamped to >= 1
+forLimitedConcurrentlyEIO :: (MonadIO m, MonadError e m) => Int -> [a] -> (a -> ExceptT e IO b) -> m [b]
+forLimitedConcurrentlyEIO numThreads_dirty xs =
+  let (q, r) = length xs `quotRem` numThreads
+      chunkSize = q + signum r
+   in forConcurrentlyEIO chunkSize xs
+  where
+    numThreads = max 1 numThreads_dirty

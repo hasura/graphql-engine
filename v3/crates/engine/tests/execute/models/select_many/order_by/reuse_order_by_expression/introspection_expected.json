@@ -73,7 +73,6 @@
             "kind": "INPUT_OBJECT",
             "name": "AuthorOrderBy",
             "description": null,
-            "fields": null,
             "inputFields": [
               {
                 "name": "author_id",
@@ -114,7 +113,6 @@
             "kind": "SCALAR",
             "name": "Boolean",
             "description": null,
-            "fields": null,
             "inputFields": null,
             "interfaces": null,
             "enumValues": null,
@@ -124,7 +122,6 @@
             "kind": "SCALAR",
             "name": "Float",
             "description": null,
-            "fields": null,
             "inputFields": null,
             "interfaces": null,
             "enumValues": null,
@@ -134,7 +131,6 @@
             "kind": "SCALAR",
             "name": "ID",
             "description": null,
-            "fields": null,
             "inputFields": null,
             "interfaces": null,
             "enumValues": null,
@@ -144,7 +140,6 @@
             "kind": "SCALAR",
             "name": "Int",
             "description": null,
-            "fields": null,
             "inputFields": null,
             "interfaces": null,
             "enumValues": null,
@@ -306,7 +301,6 @@
             "kind": "SCALAR",
             "name": "String",
             "description": null,
-            "fields": null,
             "inputFields": null,
             "interfaces": null,
             "enumValues": null,
@@ -428,7 +422,6 @@
             "kind": "ENUM",
             "name": "__DirectiveLocation",
             "description": null,
-            "fields": null,
             "inputFields": null,
             "interfaces": null,
             "enumValues": [
@@ -1149,7 +1142,6 @@
             "kind": "ENUM",
             "name": "__TypeKind",
             "description": null,
-            "fields": null,
             "inputFields": null,
             "interfaces": null,
             "enumValues": [
@@ -1208,7 +1200,6 @@
             "kind": "ENUM",
             "name": "order_by",
             "description": null,
-            "fields": null,
             "inputFields": null,
             "interfaces": null,
             "enumValues": [
