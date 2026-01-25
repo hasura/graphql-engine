@@ -32,7 +32,7 @@ const RequestOptionsTransforms: React.FC<RequestOptionsTransformsProps> = ({
   requestQueryParamsOnChange,
   requestAddHeadersOnChange,
 }) => {
-  const showRequestHeaders = false;
+  const showRequestHeaders = true;
   const requestMethodOptions: RequestTransformMethod[] = [
     'GET',
     'POST',
