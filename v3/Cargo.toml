@@ -90,7 +90,7 @@ clap = { version = "4", features = ["derive", "env"] }
 convert_case = "0.10"
 cookie = "0.18"
 criterion = { version = "0.8", features = ["html_reports", "async_tokio"] }
-darling = "0.21"
+darling = "0.23"
 # Keep this in sync with sqlparser
 datafusion = { version = "51.0.0", features = ["serde"] }
 datafusion-functions-json = "0.51.1"
