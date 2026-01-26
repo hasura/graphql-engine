@@ -4,15 +4,17 @@
 
 ### Added
 
-- Added optional field `useFullSchema` to `PromptQlConfigV2` to allow
-  configuring whether to use the full schema in the agent. Set to true when the
-  schema is small.
-
-### Added
-
 ### Changed
 
 ### Fixed
+
+## [v2026.01.26]
+
+### Added
+
+- Added optional field `useFullSchema` to `PromptQlConfigV2` to allow
+  configuring whether to use the full schema in the agent. Set to true when the
+  schema is small.
 
 ## [v2026.01.07]
 
@@ -2093,6 +2095,8 @@ Initial release.
 <!-- end -->
 
 [Unreleased]: https://github.com/hasura/v3-engine/compare/v2026.01.07...HEAD
+[v2026.01.26]: https://github.com/hasura/v3-engine/releases/tag/v2026.01.26
+[v2026.01.07]: https://github.com/hasura/v3-engine/releases/tag/v2026.01.07
 [v2025.12.22]: https://github.com/hasura/v3-engine/releases/tag/v2025.12.22
 [v2025.11.26]: https://github.com/hasura/v3-engine/releases/tag/v2025.11.26
 [v2025.11.24]: https://github.com/hasura/v3-engine/releases/tag/v2025.11.24
