@@ -50,7 +50,7 @@ This project contains scripts for installing project dependencies automatically 
 
 ## Development workflow
 
-You should fork the repo on github and then `git clone https://github.com/<your-username>/graphql-engine`.
+You should fork the repo on GitHub and then `git clone https://github.com/<your-username>/graphql-engine`.
 After making your changes
 
 ### Compile
@@ -75,7 +75,7 @@ To set up the project configuration to coincide with the testing scripts below, 
 
 #### Compiling on MacOS
 
-If you are on MacOS, or experiencing any errors related to missing dependencies on MacOS, please try [this alternative setup guide](COMPILING-ON-MACOS.md), or try Nix (as above).
+If you are on macOS, or experiencing any errors related to missing dependencies on macOS, please try [this alternative setup guide](COMPILING-ON-MACOS.md), or try Nix (as above).
 
 ### IDE Support
 

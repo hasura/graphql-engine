@@ -102,7 +102,7 @@ but it's not a solution because other permissions exposed by the inherited role 
 
 1. How to explicitly set permission to "no permission" when there is a conflict while deriving
    permissions for an inherited role? See "Conflicts while inheriting permissions" - product team
-2. What happens when an inherited role is dropped? We'll need to track all the dependent roles of a role, the problem is that roles are an implicit part of the metadata and tracking dependencies for explicit things are easier. For example
+2. What happens when an inherited role is dropped? We'll need to track all the dependent roles of a role, the problem is that roles are an implicit part of the metadata and tracking dependencies for explicit things are easier. For
    example: a remote relationship is dependent on its remote schema, so we know that when the remote schema is dropped, if the remote relationship exists then we need to make the metadata inconsistent, in this case the dropping of
    the remote schema being the trigger to check its dependencies but it's not the case with roles because a role will be deleted only when no permission (table/remote/function/action) uses the role.
 3. Currently, the select permission of an inherited role cannot be expressed in the current select permission metadata syntax because it doesn't account for the column(s) being conditionally present depending on the row filter. TODO (future work) - product team
