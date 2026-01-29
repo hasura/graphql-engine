@@ -36,11 +36,15 @@ RUN set -ex; \
     fi
 
 # Install pg_dump
+# NOTE!: this should always track the latest supported version
+# You must also update:
+#   - server-builder.dockerfile in this repo
+#   - the 'hasura/lux' repo, for AMI building scripts
 RUN set -ex; \
     curl -s https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -; \
     echo 'deb http://apt.postgresql.org/pub/repos/apt jammy-pgdg main' > /etc/apt/sources.list.d/pgdg.list; \
     apt-get -y update; \
-    apt-get install -y postgresql-client-17; \
+    apt-get install -y postgresql-client-18; \
     # delete all pg tools except pg_dump to keep the image minimal
     find /usr/bin -name 'pg*' -not -path '/usr/bin/pg_dump' -delete
 
