@@ -24,7 +24,7 @@ ndc-models-v01 = { workspace = true }
 nonempty = { workspace = true }
 partition_eithers = { workspace = true }
 ref-cast = { workspace = true }
-reqwest = { workspace = true }
+http = { workspace = true }
 semver = { workspace = true }
 schemars = { workspace = true }
 serde = { workspace = true }

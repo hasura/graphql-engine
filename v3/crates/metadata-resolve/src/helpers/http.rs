@@ -1,7 +1,7 @@
 //! Wrapper over HTTP types which can serialized/deserialized
 
+use http::header::{HeaderMap, HeaderName, HeaderValue};
 use indexmap::IndexMap;
-use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use serde::{Deserialize, Serialize};
 use serde::{
     de::Error as DeError,
@@ -29,11 +29,11 @@ impl Display for HeaderError {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SerializableUrl(pub reqwest::Url);
+pub struct SerializableUrl(pub url::Url);
 
 impl SerializableUrl {
-    pub fn new(url: &str) -> Result<Self, url::ParseError> {
-        let url = reqwest::Url::parse(url)?;
+    pub fn new(url_str: &str) -> Result<Self, url::ParseError> {
+        let url = url::Url::parse(url_str)?;
         Ok(Self(url))
     }
 }
@@ -53,7 +53,7 @@ impl<'de> Deserialize<'de> for SerializableUrl {
         D: serde::Deserializer<'de>,
     {
         let url_str = String::deserialize(deserializer)?;
-        let url = reqwest::Url::parse(&url_str)
+        let url = url::Url::parse(&url_str)
             .map_err(|_| D::Error::custom(format!("Invalid URL: {url_str}")))?;
         Ok(SerializableUrl(url))
     }

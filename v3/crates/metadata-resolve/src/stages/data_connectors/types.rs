@@ -313,7 +313,7 @@ pub enum ResolvedDataConnectorUrl {
 }
 
 impl ResolvedDataConnectorUrl {
-    pub fn get_url(&self, operation: OperationType) -> &reqwest::Url {
+    pub fn get_url(&self, operation: OperationType) -> &url::Url {
         match self {
             ResolvedDataConnectorUrl::SingleUrl(url) => &url.0,
             ResolvedDataConnectorUrl::ReadWriteUrls(ResolvedReadWriteUrls { read, write }) => {
