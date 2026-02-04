@@ -36,7 +36,7 @@ RUN ln -s /usr/lib64/libpcre.so.1 /usr/lib64/libpcre.so.3
 
 RUN set -ex; \
   # deps needed for graphql-engine
-  microdnf install -y krb5-libs libpq-13.20-1.el9_5 numactl-libs; \
+  microdnf install -y krb5-libs 'libpq-13.23-1.el9_7.*' numactl-libs; \
   # deps for cli-migrations
   microdnf install -y nc
 
