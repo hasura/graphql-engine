@@ -6,6 +6,10 @@ LEGACY_TESTS_VENV = $(LEGACY_TESTS)/.hasura-dev-python-venv
 # https://cryptography.io/en/3.4.8/faq.html#installing-cryptography-fails-with-error-can-not-find-rust-compiler
 export CRYPTOGRAPHY_DONT_BUILD_RUST = 1
 
+# PyYAML 6.0 has compatibility issues with Python 3.12 and Cython 3.0+
+# Skip building the C extension to avoid build errors
+export PYYAML_FORCE_LIBYAML = 0
+
 # Make's automatic variables such as `$<` and `$@` can be confusing.
 # If you are unsure what they do, please consult the documentation.
 # https://www.gnu.org/software/make/manual/html_node/Automatic-Variables.html
