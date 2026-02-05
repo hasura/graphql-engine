@@ -294,7 +294,8 @@ if command -v pyenv >/dev/null; then
   # like 1.20.3 to a number like 001020003000 (every section becomes a
   # three-digit number) and we compare them instead.
   formatted="$(printf "%03d%03d%03d%03d" $(echo $v | tr '.' ' '))"
-  if [[ "$formatted" -lt "003009000000" ]]; then
+  # Use (( )) for arithmetic comparison to avoid octal interpretation issues
+  if (( 10#$formatted < 3009000000 )); then
     # shellcheck disable=SC2016
     echo_error 'Please `pyenv install` a version of python >= 3.9 (found '$v')'
     exit 2
