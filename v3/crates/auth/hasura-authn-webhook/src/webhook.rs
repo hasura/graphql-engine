@@ -771,7 +771,7 @@ mod tests {
     use all_or_list::All;
     use auth_base::Role;
     use mockito;
-    use rand::{Rng, rng};
+    use rand::{RngExt, rng};
     use reqwest::header::CONTENT_TYPE;
     use serde_json::json;
 

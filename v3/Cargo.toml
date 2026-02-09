@@ -138,7 +138,7 @@ postcard = { version = "1", features = ["use-std"] }
 pretty_assertions = "1"
 proc-macro2 = "1"
 quote = "1"
-rand = "0.9"
+rand = "0.10"
 ref-cast = "1"
 regex = "1"
 # Adding the gzip/zstd features have the library send appropriate
