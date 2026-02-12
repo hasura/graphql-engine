@@ -19,6 +19,7 @@ module Hasura.RQL.DDL.EventTrigger
     getSourceTableAndTriggers,
     getTriggerNames,
     getTriggersMap,
+    getTriggerTableMap,
     getTableNameFromTrigger,
     cetqSource,
     cetqName,
@@ -639,6 +640,19 @@ getTriggersMap ::
   SourceMetadata b ->
   InsOrdHashMap TriggerName (EventTriggerConf b)
 getTriggersMap = InsOrdHashMap.unions . map _tmEventTriggers . InsOrdHashMap.elems . _smTables
+
+-- | Get a map from trigger name to the table it is defined on
+getTriggerTableMap ::
+  SourceMetadata b ->
+  InsOrdHashMap TriggerName (TableName b)
+getTriggerTableMap sourceMetadata =
+  InsOrdHashMap.fromList
+    $ concatMap mkKeyValue
+    $ InsOrdHashMap.toList
+    $ _smTables sourceMetadata
+  where
+    mkKeyValue (tableName, tableMetadata) =
+      map (,tableName) $ InsOrdHashMap.keys (_tmEventTriggers tableMetadata)
 
 getSourceTableAndTriggers ::
   SourceMetadata b ->
