@@ -162,11 +162,12 @@ library
     Test.EventTriggers.MSSQL.EventTriggersNameQuotingSpec
     Test.EventTriggers.MSSQL.EventTriggersUniqueNameSpec
     Test.EventTriggers.MSSQL.EventTriggersUntrackTableCleanupSpec
+    Test.EventTriggers.PG.EventTriggersClearMetadataSpec
     Test.EventTriggers.PG.EventTriggersExtensionSchemaSpec
     Test.EventTriggers.PG.EventTriggersForReplicationSpec
+    Test.EventTriggers.PG.EventTriggersMoveTableSpec
     Test.EventTriggers.PG.EventTriggersRecreationSpec
     Test.EventTriggers.PG.EventTriggersReplaceMetadataCleanupSpec
-    Test.EventTriggers.PG.EventTriggersClearMetadataSpec
     Test.EventTriggers.PG.EventTriggersRunSQLSpec
     Test.EventTriggers.PG.EventTriggersUniqueNameSpec
     Test.EventTriggers.PG.EventTriggersUntrackTableCleanupSpec

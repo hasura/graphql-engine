@@ -466,8 +466,17 @@ runReplaceMetadataV2' ReplaceMetadataV2 {..} = do
             dispatch oldBackendSourceMetadata \oldSourceMetadata -> do
               let oldTriggersMap = getTriggersMap oldSourceMetadata
                   newTriggersMap = getTriggersMap newSourceMetadata
+                  -- Get table mapping for new triggers (we use schema cache for old tables)
+                  newTriggerTableMap = getTriggerTableMap newSourceMetadata
                   droppedEventTriggers = InsOrdHashMap.keys $ oldTriggersMap `InsOrdHashMap.difference` newTriggersMap
                   retainedNewTriggers = newTriggersMap `InsOrdHashMap.intersection` oldTriggersMap
+                  -- Helper to check if a retained trigger has moved to a different table
+                  -- We compare the old table (from schema cache) with the new table (from new metadata)
+                  hasTriggerMoved :: TriggerName -> Bool
+                  hasTriggerMoved triggerName =
+                    case (getTableNameFromTrigger @b oldSchemaCache source triggerName, InsOrdHashMap.lookup triggerName newTriggerTableMap) of
+                      (Just oldTable, Just newTable) -> oldTable /= newTable
+                      _ -> False
                   catcher e@QErr {qeCode}
                     | qeCode == Unexpected = pure () -- NOTE: This information should be returned by the inconsistent_metadata response, so doesn't need additional logging.
                     | otherwise = throwError e -- rethrow other errors
@@ -496,6 +505,7 @@ runReplaceMetadataV2' ReplaceMetadataV2 {..} = do
                         warn $ MetadataWarning WCSourceCleanupFailed sourceObjID message
                         logger $ MetadataLog HL.LevelWarn message J.Null
                     Just sourceConfig -> do
+                      -- First, drop triggers that have been completely removed
                       for_ droppedEventTriggers \triggerName -> do
                         -- TODO: The `tableName` parameter could be computed while building
                         -- the triggers map and avoid the cache lookup.
@@ -506,28 +516,45 @@ runReplaceMetadataV2' ReplaceMetadataV2 {..} = do
                             logger $ MetadataLog HL.LevelWarn message J.Null
                           Just tableName ->
                             dropTriggerAndArchiveEvents @b sourceConfig triggerName tableName
-                      for_ (InsOrdHashMap.toList retainedNewTriggers) $ \(retainedNewTriggerName, retainedNewTriggerConf) ->
-                        case InsOrdHashMap.lookup retainedNewTriggerName oldTriggersMap of
+
+                      -- Second, drop triggers that have moved to a different table
+                      -- We need to drop the SQL triggers from the OLD table, but NOT archive the events
+                      -- (since the trigger still exists, just on a different table)
+                      for_ (filter hasTriggerMoved $ InsOrdHashMap.keys retainedNewTriggers) \triggerName -> do
+                        case getTableNameFromTrigger @b oldSchemaCache source triggerName of
                           Nothing -> do
-                            let message = sqlTriggerError retainedNewTriggerName
+                            let message = sqlTriggerError triggerName
                             warn $ MetadataWarning WCSourceCleanupFailed sourceObjID message
                             logger $ MetadataLog HL.LevelWarn message J.Null
-                          Just oldTriggerConf -> do
-                            let newTriggerOps = etcDefinition retainedNewTriggerConf
-                                oldTriggerOps = etcDefinition oldTriggerConf
-                                isDroppedOp old new = isJust old && isNothing new
-                                droppedOps =
-                                  [ (bool Nothing (Just INSERT) (isDroppedOp (tdInsert oldTriggerOps) (tdInsert newTriggerOps))),
-                                    (bool Nothing (Just UPDATE) (isDroppedOp (tdUpdate oldTriggerOps) (tdUpdate newTriggerOps))),
-                                    (bool Nothing (Just ET.DELETE) (isDroppedOp (tdDelete oldTriggerOps) (tdDelete newTriggerOps)))
-                                  ]
-                            case getTableNameFromTrigger @b oldSchemaCache source retainedNewTriggerName of
-                              Nothing -> do
-                                let message = sqlTriggerError retainedNewTriggerName
-                                warn $ MetadataWarning WCSourceCleanupFailed sourceObjID message
-                                logger $ MetadataLog HL.LevelWarn message J.Null
-                              Just tableName ->
-                                dropDanglingSQLTrigger @b sourceConfig retainedNewTriggerName tableName (HS.fromList $ catMaybes droppedOps)
+                          Just oldTableName ->
+                            -- Drop all operations from the old table since the trigger is moving
+                            dropDanglingSQLTrigger @b sourceConfig triggerName oldTableName (HS.fromList [INSERT, UPDATE, ET.DELETE])
+
+                      -- Third, handle retained triggers where operations were dropped (but table stayed same)
+                      for_ (InsOrdHashMap.toList retainedNewTriggers) $ \(retainedNewTriggerName, retainedNewTriggerConf) ->
+                        -- Skip triggers that moved tables (already handled above)
+                        unless (hasTriggerMoved retainedNewTriggerName)
+                          $ case InsOrdHashMap.lookup retainedNewTriggerName oldTriggersMap of
+                            Nothing -> do
+                              let message = sqlTriggerError retainedNewTriggerName
+                              warn $ MetadataWarning WCSourceCleanupFailed sourceObjID message
+                              logger $ MetadataLog HL.LevelWarn message J.Null
+                            Just oldTriggerConf -> do
+                              let newTriggerOps = etcDefinition retainedNewTriggerConf
+                                  oldTriggerOps = etcDefinition oldTriggerConf
+                                  isDroppedOp old new = isJust old && isNothing new
+                                  droppedOps =
+                                    [ (bool Nothing (Just INSERT) (isDroppedOp (tdInsert oldTriggerOps) (tdInsert newTriggerOps))),
+                                      (bool Nothing (Just UPDATE) (isDroppedOp (tdUpdate oldTriggerOps) (tdUpdate newTriggerOps))),
+                                      (bool Nothing (Just ET.DELETE) (isDroppedOp (tdDelete oldTriggerOps) (tdDelete newTriggerOps)))
+                                    ]
+                              case getTableNameFromTrigger @b oldSchemaCache source retainedNewTriggerName of
+                                Nothing -> do
+                                  let message = sqlTriggerError retainedNewTriggerName
+                                  warn $ MetadataWarning WCSourceCleanupFailed sourceObjID message
+                                  logger $ MetadataLog HL.LevelWarn message J.Null
+                                Just tableName ->
+                                  dropDanglingSQLTrigger @b sourceConfig retainedNewTriggerName tableName (HS.fromList $ catMaybes droppedOps)
       where
         compose ::
           SourceName ->
