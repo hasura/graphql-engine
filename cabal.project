@@ -244,7 +244,7 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/hasura/libdeflate-hs.git
-  tag: e6f020a1a24d07516d753fbb6f30758774f76372
+  tag: 0715562e5393acfa5dde66b79c2bfbd05c1828b7
 
 -- waiting on release:
 source-repository-package
