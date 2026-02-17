@@ -207,6 +207,15 @@ spec = do
               "value": 10,
               "value_type": "number" }
           |]
+    describe "SetColumnRowUpdate with null value"
+      $ testToFromJSONToSchema
+        (SetColumn $ RowColumnOperatorValue (ColumnName "my_column") Null (ScalarType "string"))
+        [aesonQQ|
+            { "type": "set",
+              "column": "my_column",
+              "value": null,
+              "value_type": "string" }
+          |]
     describe "CustomUpdateColumnOperator"
       $ testToFromJSONToSchema
         (CustomUpdateColumnOperator (UpdateColumnOperatorName [G.name|increment|]) (RowColumnOperatorValue (ColumnName "my_column") (Number 10) (ScalarType "number")))
