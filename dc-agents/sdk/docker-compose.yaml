@@ -1,4 +1,4 @@
-# Based on the template from https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/docker-compose/docker-compose.yaml
+# Based on the template from https://raw.githubusercontent.com/hasura/graphql-engine/main/install-manifests/docker-compose/docker-compose.yaml
 
 services:
   reference-agent:
