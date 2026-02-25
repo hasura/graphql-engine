@@ -26,7 +26,7 @@ use super::types::RequestType;
 
 const MB: usize = 1_048_576;
 
-pub fn get_base_routes(state: EngineState) -> Router {
+pub fn get_base_routes(state: EngineState, request_body_size_limit: usize) -> Router {
     let graphql_ws_route = Router::new()
         .route("/graphql", get(handle_websocket_request))
         .layer(axum::middleware::from_fn(|request, next| {
@@ -104,8 +104,8 @@ pub fn get_base_routes(state: EngineState) -> Router {
         .merge(health_route)
         // The '/*path' route
         .merge(pre_route_router)
-        // Set request payload limit to 10 MB
-        .layer(DefaultBodyLimit::max(10 * MB))
+        // Set request payload limit (configurable via REQUEST_BODY_SIZE_LIMIT env var)
+        .layer(DefaultBodyLimit::max(request_body_size_limit))
 }
 
 /// Serve the introspection metadata file and its hash at `/metadata` and `/metadata-hash` respectively.
