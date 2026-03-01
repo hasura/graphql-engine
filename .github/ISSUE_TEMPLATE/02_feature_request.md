@@ -1,7 +1,10 @@
 ---
-name: 🚀 Feature request (V2)
+name: "\U0001F680 Feature request (V2)"
 about: Suggest an idea for improving Hasura, for version 2.x only
-labels: "k/enhancement"
+title: ''
+labels: ''
+assignees: ''
+
 ---
 
 ### Is your proposal related to a problem?

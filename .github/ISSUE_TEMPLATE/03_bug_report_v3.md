@@ -1,7 +1,10 @@
 ---
-name: 🐜 Bug report (V3)
-about: If something isn't working for Hasura DDN or V3 engine 🔧
-labels: "k/v3-bug"
+name: "\U0001F41C Bug report (V3)"
+about: "If something isn't working for Hasura DDN or V3 engine \U0001F527"
+title: ''
+labels: ''
+assignees: ''
+
 ---
 
 ### Component

@@ -1,7 +1,10 @@
 ---
-name: 🐜 Bug report (V2)
-about: If something isn't working for Hasura, for version 2.x only 🔧
-labels: "k/bug"
+name: "\U0001F41C Bug report (V2)"
+about: "If something isn't working for Hasura, for version 2.x only \U0001F527"
+title: ''
+labels: ''
+assignees: ''
+
 ---
 
 ### Version Information
