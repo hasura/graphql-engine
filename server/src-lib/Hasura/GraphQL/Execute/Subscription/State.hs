@@ -418,25 +418,28 @@ removeLiveQuery ::
   Maybe OperationName ->
   IO ()
 removeLiveQuery logger serverMetrics prometheusMetrics lqState lqId@(SubscriberDetails handlerId cohortId sinkId) granularPrometheusMetricsState maybeOperationName = mask_ $ do
-  join
-    $ STM.atomically
-    $ do
-      detM <- getQueryDet lqMap
-      case detM of
-        Nothing -> return (pure ())
-        Just (Poller cohorts pollerState ioState parameterizedQueryHash operationNamesMap, cohort) -> do
-          TMap.lookup maybeOperationName operationNamesMap >>= \case
-            -- If only one operation name is present in the map, delete it
-            Just 1 -> TMap.delete maybeOperationName operationNamesMap
-            -- If the count of a operation name is more than 1, then it means there
-            -- are more subscriptions with the same name and we should keep emitting
-            -- the metrics until the all the subscription with that operaion name are
-            -- removed
-            Just _ -> TMap.adjust (\v -> v - 1) maybeOperationName operationNamesMap
-            Nothing -> return ()
-          cleanHandlerC cohorts pollerState ioState cohort parameterizedQueryHash
-  liftIO $ EKG.Gauge.dec $ smActiveSubscriptions serverMetrics
-  liftIO $ EKG.Gauge.dec $ smActiveLiveQueries serverMetrics
+  subscriberFound <-
+    join
+      $ STM.atomically
+      $ do
+        detM <- getQueryDet lqMap
+        case detM of
+          Nothing -> return (pure False)
+          Just (Poller cohorts pollerState ioState parameterizedQueryHash operationNamesMap, cohort) -> do
+            TMap.lookup maybeOperationName operationNamesMap >>= \case
+              -- If only one operation name is present in the map, delete it
+              Just 1 -> TMap.delete maybeOperationName operationNamesMap
+              -- If the count of a operation name is more than 1, then it means there
+              -- are more subscriptions with the same name and we should keep emitting
+              -- the metrics until the all the subscription with that operaion name are
+              -- removed
+              Just _ -> TMap.adjust (\v -> v - 1) maybeOperationName operationNamesMap
+              Nothing -> return ()
+            cleanAction <- cleanHandlerC cohorts pollerState ioState cohort parameterizedQueryHash
+            return (cleanAction >> pure True)
+  when subscriberFound $ liftIO $ do
+    EKG.Gauge.dec $ smActiveSubscriptions serverMetrics
+    EKG.Gauge.dec $ smActiveLiveQueries serverMetrics
   where
     lqMap = _ssLiveQueryMap lqState
 
@@ -517,27 +520,28 @@ removeStreamingQuery logger serverMetrics prometheusMetrics subscriptionState (S
   -- We disregard the cohort key in the subscriber details because it is not
   -- updated atomically, and on certain race conditions may be incorrect.
   -- Instead, we recalculate it in this function.
-  join
-    $ STM.atomically
-    $ do
-      detM <- getQueryDet streamQMap
-      case detM of
-        Nothing -> return (pure ())
-        Just (Poller cohorts pollerState ioState parameterizedQueryHash operationNamesMap, allCohorts) -> do
-          actions <- for allCohorts \cohort -> do
-            TMap.lookup maybeOperationName operationNamesMap >>= \case
-              -- If only one operation name is present in the map, delete it
-              Just 1 -> TMap.delete maybeOperationName operationNamesMap
-              -- If the count of a operation name is more than 1, then it means there
-              -- are more subscriptions with the same name and we should keep emitting
-              -- the metrics until the all the subscription with the operaion name are
-              -- removed
-              Just _ -> TMap.adjust (\v -> v - 1) maybeOperationName operationNamesMap
-              Nothing -> return ()
+  subscriberFound <-
+    join
+      $ STM.atomically
+      $ do
+        detM <- getQueryDet streamQMap
+        case detM of
+          Nothing -> return (pure False)
+          Just (Poller cohorts pollerState ioState parameterizedQueryHash operationNamesMap, allCohorts) -> do
+            actions <- for allCohorts \cohort -> do
+              TMap.lookup maybeOperationName operationNamesMap >>= \case
+                -- If only one operation name is present in the map, delete it
+                Just 1 -> TMap.delete maybeOperationName operationNamesMap
+                -- If the count of a operation name is more than 1, then it means there
+                -- are more subscriptions with the same name and we should keep emitting
+                -- the metrics until the all the subscription with the operaion name are
+                -- removed
+                Just _ -> TMap.adjust (\v -> v - 1) maybeOperationName operationNamesMap
+                Nothing -> return ()
 
-            cleanHandlerC cohorts pollerState ioState cohort parameterizedQueryHash
-          pure (mconcat actions)
-  liftIO $ do
+              cleanHandlerC cohorts pollerState ioState cohort parameterizedQueryHash
+            pure (mconcat actions >> pure True)
+  when subscriberFound $ liftIO $ do
     EKG.Gauge.dec $ smActiveSubscriptions serverMetrics
     EKG.Gauge.dec $ smActiveStreamingSubscriptions serverMetrics
   where
