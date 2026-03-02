@@ -95,7 +95,6 @@ import {
   ConsoleDevTools,
   isFeatureFlagEnabled,
   availableFeatureFlagIds,
-  DDNBanner,
 } from '@hasura/console-legacy-ce';
 import { getAdminSecret } from '../AppState';
 
@@ -730,7 +729,6 @@ class Main extends React.Component {
               </div>
             </div>
           </div>
-          {globals.consoleType === 'pro-lite' && <DDNBanner />}
 
           <div className={styles.main + ' container-fluid'}>
             {getMainContent()}
