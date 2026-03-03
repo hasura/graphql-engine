@@ -6,6 +6,14 @@
 
 ### Changed
 
+### Fixed
+
+## [v2026.03.03]
+
+### Added
+
+### Changed
+
 - OTEL baggage items from the auth webhook are added to OTEL baggage. Items
   already in baggage take precedence to stop user code overwriting
   `x-ddn-project-id` etc.
@@ -2128,7 +2136,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2026.02.27...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2026.03.03...HEAD
+[v2026.03.03]: https://github.com/hasura/v3-engine/releases/tag/v2026.03.03
 [v2026.02.27]: https://github.com/hasura/v3-engine/releases/tag/v2026.02.27
 [v2026.02.26]: https://github.com/hasura/v3-engine/releases/tag/v2026.02.26
 [v2026.02.25]: https://github.com/hasura/v3-engine/releases/tag/v2026.02.25
