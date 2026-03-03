@@ -533,7 +533,14 @@ pub async fn query_relational_stream(
                         |r| r.json(request),
                     );
 
-                    let response = request_builder.send().await.map_err(Error::Reqwest)?;
+                    // Inject trace headers so streaming requests propagate the active trace
+                    // context to connectors, same as non-streaming requests.
+                    let trace_headers = tracing_util::get_trace_headers();
+                    let response = request_builder
+                        .headers(trace_headers)
+                        .send()
+                        .await
+                        .map_err(Error::Reqwest)?;
 
                     if !response.status().is_success() {
                         return Err(Error::Connector(ConnectorError {
