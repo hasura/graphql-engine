@@ -95,6 +95,9 @@ pub async fn explain_request_tracing_middleware(
 /// authentication configuration present in the `auth_config` of `EngineState`. The
 /// result of the authentication is `hasura-authn-core::Identity`, which is then
 /// made available to the GraphQL request handler.
+///
+/// If the authentication webhook returns baggage in the response headers, it will
+/// be attached to the OpenTelemetry context and propagated to subsequent spans.
 pub async fn authentication_middleware(
     State(state): State<engine_types::WithMiddlewareErrorConverter<EngineState>>,
     headers_map: HeaderMap,
@@ -104,7 +107,7 @@ pub async fn authentication_middleware(
     let tracer = tracing_util::global_tracer();
 
     let engine_state = &state.state;
-    let resolved_identity = tracer
+    let auth_response = tracer
         .in_span_async(
             "authentication_middleware",
             "Authentication middleware",
@@ -121,8 +124,20 @@ pub async fn authentication_middleware(
         .await
         .map_err(|err| state.handle_error(err.into_middleware_error()))?;
 
-    request.extensions_mut().insert(resolved_identity);
-    Ok(next.run(request).await)
+    request.extensions_mut().insert(auth_response.identity);
+
+    // If baggage was returned from the auth webhook, attach it to the context
+    // so it propagates to all subsequent spans.
+    // We use merged baggage to ensure existing baggage items (like ddn-project-id)
+    // cannot be overridden by user-provided values from the auth webhook.
+    if auth_response.baggage.is_empty() {
+        Ok(next.run(request).await)
+    } else {
+        use tracing_util::FutureExt;
+        let context =
+            tracing_util::current_context_with_merged_baggage(auth_response.baggage.into_iter());
+        Ok(next.run(request).with_context(context).await)
+    }
 }
 
 pub async fn plugins_middleware(

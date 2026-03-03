@@ -2,7 +2,7 @@ use std::{fmt::Display, str::FromStr};
 
 use all_or_list::AllOrList;
 use axum::http::HeaderMap;
-use hasura_authn_core::{Identity, Role};
+use hasura_authn_core::{AuthenticateResponse, Role};
 use hasura_authn_jwt::{auth as jwt_auth, jwt};
 use hasura_authn_noauth as noauth;
 use hasura_authn_webhook::webhook;
@@ -505,7 +505,7 @@ pub async fn authenticate(
     client: &reqwest::Client,
     resolved_auth_config: &ResolvedAuthConfig,
     auth_mode_header: &str,
-) -> Result<Identity, AuthError> {
+) -> Result<AuthenticateResponse, AuthError> {
     // We are still supporting AuthConfig::V1, hence we need to
     // support role emulation
     let (auth_mode, allow_role_emulation_by) = match &resolved_auth_config.auth_config {
@@ -536,9 +536,9 @@ pub async fn authenticate(
     };
     match &auth_mode {
         PossibleAuthModeConfig::V1V2(AuthModeConfig::NoAuth(no_auth_config))
-        | PossibleAuthModeConfig::V3V4(AuthModeConfigV3::NoAuth(no_auth_config)) => {
-            Ok(noauth::identity_from_config(no_auth_config))
-        }
+        | PossibleAuthModeConfig::V3V4(AuthModeConfigV3::NoAuth(no_auth_config)) => Ok(
+            AuthenticateResponse::new(noauth::identity_from_config(no_auth_config)),
+        ),
         PossibleAuthModeConfig::V1V2(AuthModeConfig::Webhook(webhook_config)) => {
             webhook::authenticate_request(
                 client,
@@ -571,6 +571,7 @@ pub async fn authenticate(
                     .require_audience_validation,
             )
             .await
+            .map(AuthenticateResponse::new)
             .map_err(AuthError::from)
         }
     }

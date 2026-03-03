@@ -232,6 +232,35 @@ impl Identity {
     }
 }
 
+/// Response from authentication containing the identity and optional baggage
+/// to be propagated in the OpenTelemetry context.
+///
+/// Baggage items returned from auth webhooks will be attached to the current
+/// context and automatically added as attributes to all subsequent spans
+/// via the `BaggageSpanProcessor`.
+#[derive(Clone, Debug)]
+pub struct AuthenticateResponse {
+    pub identity: Identity,
+    /// Baggage key-value pairs to be added to the OpenTelemetry context.
+    /// These will be propagated to downstream services and added as span attributes.
+    pub baggage: Vec<tracing_util::KeyValue>,
+}
+
+impl AuthenticateResponse {
+    /// Create a new AuthenticateResponse with the given identity and no baggage.
+    pub fn new(identity: Identity) -> Self {
+        Self {
+            identity,
+            baggage: Vec::new(),
+        }
+    }
+
+    /// Create a new AuthenticateResponse with the given identity and baggage.
+    pub fn with_baggage(identity: Identity, baggage: Vec<tracing_util::KeyValue>) -> Self {
+        Self { identity, baggage }
+    }
+}
+
 // Error when resolving a session
 #[derive(Debug, thiserror::Error)]
 pub enum SessionError {

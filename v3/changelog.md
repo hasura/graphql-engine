@@ -6,6 +6,10 @@
 
 ### Changed
 
+- OTEL baggage items from the auth webhook are added to OTEL baggage. Items
+  already in baggage take precedence to stop user code overwriting
+  `x-ddn-project-id` etc.
+
 ### Fixed
 
 ## [v2026.02.27]

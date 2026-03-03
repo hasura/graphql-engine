@@ -3,7 +3,10 @@ use std::str::FromStr;
 use std::sync::OnceLock;
 use std::time::Duration;
 
-use auth_base::{Identity, Role, RoleAuthorization, SessionVariableName, SessionVariableValue};
+use auth_base::{
+    AuthenticateResponse, Identity, Role, RoleAuthorization, SessionVariableName,
+    SessionVariableValue,
+};
 use axum::http::{HeaderMap, HeaderName, StatusCode};
 use reqwest::{Url, header::ToStrError};
 use serde::{Deserialize, Deserializer, Serialize, Serializer, de::Error as SerdeDeError};
@@ -407,7 +410,7 @@ async fn make_auth_hook_request(
     auth_hook_url: &Url,
     request: AuthHookRequest,
     allow_role_emulation_for: Option<&Role>,
-) -> Result<auth_base::Identity, Error> {
+) -> Result<AuthenticateResponse, Error> {
     let tracer = tracing_util::global_tracer();
     let http_request_builder = match request {
         AuthHookRequest::Get { headers } => {
@@ -454,6 +457,10 @@ async fn make_auth_hook_request(
 
     match response.status() {
         reqwest::StatusCode::OK => {
+            // Extract baggage from response headers before consuming the response body
+            let response_headers = response.headers().clone();
+            let baggage = tracing_util::extract_baggage_from_headers(&response_headers);
+
             let auth_hook_response: HashMap<String, serde_json::Value> =
                 response.json().await.map_err(InternalError::ReqwestError)?;
             let mut session_variables = HashMap::new();
@@ -483,7 +490,7 @@ async fn make_auth_hook_request(
             let mut allowed_roles = HashMap::new();
             allowed_roles.insert(role.clone(), role_authorization);
 
-            Ok(match allow_role_emulation_for {
+            let identity = match allow_role_emulation_for {
                 Some(emulation_role) => {
                     if role == *emulation_role {
                         Identity::RoleEmulationEnabled(role)
@@ -498,7 +505,9 @@ async fn make_auth_hook_request(
                     default_role: role,
                     allowed_roles,
                 },
-            })
+            };
+
+            Ok(AuthenticateResponse::with_baggage(identity, baggage))
         }
         status_code => Err(Error::AuthenticationFailed {
             status: status_code,
@@ -515,7 +524,7 @@ pub async fn authenticate_request(
     auth_hook_config: &AuthHookConfig,
     client_headers: &HeaderMap,
     allow_role_emulation_for: Option<&Role>,
-) -> Result<auth_base::Identity, Error> {
+) -> Result<AuthenticateResponse, Error> {
     let tracer = tracing_util::global_tracer();
     tracer
         .in_span_async(
@@ -547,7 +556,7 @@ pub async fn authenticate_request_v2(
     auth_hook_config: &AuthHookConfigV3,
     client_headers: &HeaderMap,
     allow_role_emulation_for: Option<&Role>,
-) -> Result<auth_base::Identity, Error> {
+) -> Result<AuthenticateResponse, Error> {
     let tracer = tracing_util::global_tracer();
     tracer
         .in_span_async(
@@ -836,7 +845,7 @@ mod tests {
             },
         );
         assert_eq!(
-            auth_response,
+            auth_response.identity,
             Identity::Specific {
                 default_role: Role::new("test-role"),
                 allowed_roles: expected_allowed_roles
@@ -909,12 +918,113 @@ mod tests {
             },
         );
         assert_eq!(
-            auth_response,
+            auth_response.identity,
             Identity::Specific {
                 default_role: Role::new("test-role"),
                 allowed_roles: expected_allowed_roles
             }
         );
+    }
+
+    #[tokio::test]
+    // This test verifies that baggage from the webhook response headers is extracted
+    async fn test_webhook_response_baggage_is_extracted() {
+        // Request a new server from the pool
+        let mut server = mockito::Server::new_async().await;
+
+        let url = server.url();
+
+        // Create a mock that returns a baggage header
+        let mock = server
+            .mock("POST", "/validate-request")
+            .match_body(r#"{"headers":{"foo":"baz"}}"#)
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_header("baggage", "user-id=123,org-id=456")
+            .with_body(
+                r#"{
+                      "x-hasura-role": "test-role",
+                      "x-hasura-test-role-id": "1"
+                   }"#,
+            )
+            .create();
+
+        let http_client = reqwest::Client::new();
+
+        let webhook_url = url + "/validate-request";
+
+        let auth_hook_config_str =
+            format!("{{ \"url\": \"{webhook_url}\", \"method\": \"Post\"  }}");
+
+        let auth_hook_config: AuthHookConfig = serde_json::from_str(&auth_hook_config_str).unwrap();
+
+        let mut client_headers = HeaderMap::new();
+        client_headers.insert("foo", "baz".parse().unwrap());
+
+        let request = get_auth_hook_request_v1(&auth_hook_config.method, &client_headers);
+
+        let auth_response =
+            make_auth_hook_request(&http_client, &auth_hook_config.url, request, None)
+                .await
+                .unwrap();
+
+        mock.assert(); // Make sure the webhook has been called.
+
+        // Verify baggage was extracted from the response
+        assert_eq!(auth_response.baggage.len(), 2);
+
+        let baggage_map: HashMap<String, String> = auth_response
+            .baggage
+            .iter()
+            .map(|kv| (kv.key.to_string(), kv.value.to_string()))
+            .collect();
+        assert_eq!(baggage_map.get("user-id").unwrap(), "123");
+        assert_eq!(baggage_map.get("org-id").unwrap(), "456");
+    }
+
+    #[tokio::test]
+    // This test verifies that no baggage is returned when the webhook doesn't include a baggage header
+    async fn test_webhook_response_without_baggage() {
+        let mut server = mockito::Server::new_async().await;
+
+        let url = server.url();
+
+        let mock = server
+            .mock("POST", "/validate-request")
+            .match_body(r#"{"headers":{"foo":"baz"}}"#)
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(
+                r#"{
+                      "x-hasura-role": "test-role",
+                      "x-hasura-test-role-id": "1"
+                   }"#,
+            )
+            .create();
+
+        let http_client = reqwest::Client::new();
+
+        let webhook_url = url + "/validate-request";
+
+        let auth_hook_config_str =
+            format!("{{ \"url\": \"{webhook_url}\", \"method\": \"Post\"  }}");
+
+        let auth_hook_config: AuthHookConfig = serde_json::from_str(&auth_hook_config_str).unwrap();
+
+        let mut client_headers = HeaderMap::new();
+        client_headers.insert("foo", "baz".parse().unwrap());
+
+        let request = get_auth_hook_request_v1(&auth_hook_config.method, &client_headers);
+
+        let auth_response =
+            make_auth_hook_request(&http_client, &auth_hook_config.url, request, None)
+                .await
+                .unwrap();
+
+        mock.assert();
+
+        // Verify no baggage was extracted
+        assert!(auth_response.baggage.is_empty());
     }
 
     #[tokio::test]
@@ -987,7 +1097,7 @@ mod tests {
             },
         );
         assert_eq!(
-            auth_response,
+            auth_response.identity,
             Identity::Specific {
                 default_role: Role::new("test-role"),
                 allowed_roles: expected_allowed_roles
@@ -1043,7 +1153,10 @@ mod tests {
         mock.assert(); // Make sure the webhook has been called.
 
         let test_role = Role::new("test-admin-role");
-        assert_eq!(auth_response, Identity::RoleEmulationEnabled(test_role));
+        assert_eq!(
+            auth_response.identity,
+            Identity::RoleEmulationEnabled(test_role)
+        );
     }
 
     #[tokio::test]
@@ -1115,7 +1228,7 @@ mod tests {
             },
         );
         assert_eq!(
-            auth_response,
+            auth_response.identity,
             Identity::Specific {
                 default_role: test_role,
                 allowed_roles: expected_allowed_roles

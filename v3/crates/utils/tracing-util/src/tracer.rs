@@ -117,6 +117,53 @@ pub fn run_with_baggage<I: Into<KeyValueMetadata>, T>(baggage: Vec<I>, f: impl F
     f()
 }
 
+/// Creates a new context with merged baggage, where existing baggage items are preserved
+/// and new items are only added if they don't already exist.
+///
+/// This is important for security: it prevents user-provided baggage from external sources
+/// (like auth webhooks or plugins) from overriding internal baggage items like `ddn-project-id`.
+///
+/// The OpenTelemetry `Context::current_with_baggage` method overrides existing items,
+/// so this function provides a safe alternative that favors existing items.
+pub fn current_context_with_merged_baggage<I>(new_baggage: I) -> Context
+where
+    I: IntoIterator<Item = opentelemetry::KeyValue>,
+{
+    use opentelemetry::StringValue;
+    use opentelemetry::baggage::BaggageMetadata;
+    use std::collections::HashSet;
+
+    let current_context = Context::current();
+    let current_baggage = current_context.baggage();
+
+    // Collect the keys from existing baggage
+    let existing_keys: HashSet<_> = current_baggage.iter().map(|(key, _)| key.clone()).collect();
+
+    // Start with current baggage items
+    let mut merged_baggage: Vec<KeyValueMetadata> = current_baggage
+        .iter()
+        .map(|(key, (value, metadata))| {
+            KeyValueMetadata::new(key.clone(), value.clone(), metadata.clone())
+        })
+        .collect();
+
+    // Only add new items if their key doesn't already exist
+    for kv in new_baggage {
+        let key_str = kv.key.as_str().to_string();
+        let key: Key = key_str.into();
+        if !existing_keys.contains(&key) {
+            let value: StringValue = kv.value.as_str().to_string().into();
+            merged_baggage.push(KeyValueMetadata::new(
+                key,
+                value,
+                BaggageMetadata::default(),
+            ));
+        }
+    }
+
+    current_context.with_baggage(merged_baggage)
+}
+
 /// A link to a span.
 /// Contains the context of the span to link to, and the baggage items to propagate across the link.
 #[derive(Clone)]
@@ -290,4 +337,147 @@ impl Tracer {
 /// Util for accessing the globally installed tracer
 pub fn global_tracer() -> Tracer {
     Tracer::new(opentelemetry::global::tracer(GLOBAL_TRACER_NAME))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use opentelemetry::KeyValue;
+    use opentelemetry::baggage::BaggageExt;
+
+    #[test]
+    fn test_merged_baggage_adds_new_items() {
+        // Start with a fresh context that has no baggage
+        let new_baggage = vec![
+            KeyValue::new("user-id", "123"),
+            KeyValue::new("tenant", "abc"),
+        ];
+
+        let context = current_context_with_merged_baggage(new_baggage);
+
+        // Verify the new items were added
+        let baggage_items: Vec<_> = context.baggage().iter().collect();
+        assert_eq!(baggage_items.len(), 2);
+    }
+
+    #[test]
+    fn test_merged_baggage_preserves_existing_items() {
+        // Create a context with existing baggage
+        let existing_baggage = vec![KeyValueMetadata::new(
+            "ddn-project-id",
+            "original-value",
+            opentelemetry::baggage::BaggageMetadata::default(),
+        )];
+        let existing_context = Context::new().with_baggage(existing_baggage);
+        let _guard = existing_context.attach();
+
+        // Try to add baggage with the same key
+        let new_baggage = vec![KeyValue::new("ddn-project-id", "hacked-value")];
+
+        let merged_context = current_context_with_merged_baggage(new_baggage);
+
+        // Verify the original value is preserved
+        let baggage = merged_context.baggage();
+        let value = baggage
+            .get("ddn-project-id")
+            .map(std::string::ToString::to_string);
+        assert_eq!(value, Some("original-value".to_string()));
+    }
+
+    #[test]
+    fn test_merged_baggage_adds_non_conflicting_items() {
+        // Create a context with existing baggage
+        let existing_baggage = vec![KeyValueMetadata::new(
+            "ddn-project-id",
+            "project-123",
+            opentelemetry::baggage::BaggageMetadata::default(),
+        )];
+        let existing_context = Context::new().with_baggage(existing_baggage);
+        let _guard = existing_context.attach();
+
+        // Add new baggage with different keys
+        let new_baggage = vec![
+            KeyValue::new("user-custom-key", "user-value"),
+            KeyValue::new("another-key", "another-value"),
+        ];
+
+        let merged_context = current_context_with_merged_baggage(new_baggage);
+
+        // Verify all items are present
+        let baggage = merged_context.baggage();
+        let baggage_items: Vec<_> = baggage.iter().collect();
+        assert_eq!(baggage_items.len(), 3);
+
+        // Existing item is preserved
+        assert_eq!(
+            baggage
+                .get("ddn-project-id")
+                .map(std::string::ToString::to_string),
+            Some("project-123".to_string())
+        );
+
+        // New items are added
+        assert_eq!(
+            baggage
+                .get("user-custom-key")
+                .map(std::string::ToString::to_string),
+            Some("user-value".to_string())
+        );
+        assert_eq!(
+            baggage
+                .get("another-key")
+                .map(std::string::ToString::to_string),
+            Some("another-value".to_string())
+        );
+    }
+
+    #[test]
+    fn test_merged_baggage_prevents_override_of_multiple_existing_keys() {
+        // Create a context with multiple existing baggage items
+        let existing_baggage = vec![
+            KeyValueMetadata::new(
+                "ddn-project-id",
+                "project-original",
+                opentelemetry::baggage::BaggageMetadata::default(),
+            ),
+            KeyValueMetadata::new(
+                "ddn-build-id",
+                "build-original",
+                opentelemetry::baggage::BaggageMetadata::default(),
+            ),
+        ];
+        let existing_context = Context::new().with_baggage(existing_baggage);
+        let _guard = existing_context.attach();
+
+        // Try to override both keys and add a new one
+        let new_baggage = vec![
+            KeyValue::new("ddn-project-id", "hacked-project"),
+            KeyValue::new("ddn-build-id", "hacked-build"),
+            KeyValue::new("new-key", "new-value"),
+        ];
+
+        let merged_context = current_context_with_merged_baggage(new_baggage);
+
+        let baggage = merged_context.baggage();
+
+        // Existing values are preserved
+        assert_eq!(
+            baggage
+                .get("ddn-project-id")
+                .map(std::string::ToString::to_string),
+            Some("project-original".to_string())
+        );
+        assert_eq!(
+            baggage
+                .get("ddn-build-id")
+                .map(std::string::ToString::to_string),
+            Some("build-original".to_string())
+        );
+
+        // New item is added
+        assert_eq!(
+            baggage.get("new-key").map(std::string::ToString::to_string),
+            Some("new-value".to_string())
+        );
+    }
 }

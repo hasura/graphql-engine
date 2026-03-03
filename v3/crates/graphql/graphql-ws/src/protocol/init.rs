@@ -93,7 +93,7 @@ async fn initialize(
                             // dynamically injected authentication or routing information remains intact.
                             headers.extend(client_headers.clone());
                             // Authenticate the client based on headers and context
-                            let identity = authenticate(
+                            let auth_response = authenticate(
                                 &headers,
                                 &http_context.client,
                                 auth_config,
@@ -101,7 +101,7 @@ async fn initialize(
                             )
                             .await?;
                             // Authorize the authenticated identity
-                            let session = authorize_identity(&identity, &headers)?;
+                            let session = authorize_identity(&auth_response.identity, &headers)?;
                             Ok((session, headers))
                         }
                         ConnectionInitState::Initialized { .. } => {

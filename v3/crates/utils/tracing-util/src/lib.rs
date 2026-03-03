@@ -6,12 +6,13 @@ mod tracer;
 
 // Avoid conflicts with `http` crate
 pub use crate::http::TraceableHttpResponse;
-pub use request::get_trace_headers;
+pub use request::{extract_baggage_from_headers, get_trace_headers};
 pub use setup::{ExportTracesStdout, PropagateBaggage, initialize_tracing, shutdown_tracer};
 pub use traceable::{ErrorVisibility, Successful, Traceable, TraceableError};
 pub use tracer::{
     AttributeValue, AttributeVisibility, SpanLink, SpanVisibility, add_event_on_active_span,
-    global_tracer, run_with_baggage, set_attribute_on_active_span, set_status_on_current_span,
+    current_context_with_merged_baggage, global_tracer, run_with_baggage,
+    set_attribute_on_active_span, set_status_on_current_span,
 };
 
 // re-export things from OpenTelemetry to avoid library users importing their own version and

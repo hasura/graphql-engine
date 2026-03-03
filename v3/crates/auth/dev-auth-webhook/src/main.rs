@@ -75,14 +75,20 @@ async fn main() -> anyhow::Result<()> {
 async fn validate_request(
     headers: HeaderMap,
     Json(payload): Json<HashMap<String, HashMap<String, String>>>,
-) -> Json<Value> {
+) -> (HeaderMap, Json<Value>) {
     debug!(
         headers = format!("{:?}", headers),
         body = format!("{:?}", payload),
         "receiving request"
     );
 
-    Json(serde_json::to_value(payload.get("headers").unwrap()).unwrap())
+    let mut response_headers = HeaderMap::new();
+    response_headers.insert("baggage", "user-id=123,org-id=456".parse().unwrap());
+
+    (
+        response_headers,
+        Json(serde_json::to_value(payload.get("headers").unwrap()).unwrap()),
+    )
 }
 
 async fn graphql_request_tracing_middleware(
