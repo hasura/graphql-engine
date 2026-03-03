@@ -25,7 +25,7 @@ When deploying Hasura Migrations to production, certain SQL statements can acqui
 reads and writes for the duration of the operation. On large tables, this can cause downtime or cascading lock queue
 failures.
 
-[pgfence](https://pgfence.dev) is an open-source CLI that analyzes your migration SQL files **before deployment** and
+[pgfence](https://pgfence.com) is an open-source CLI that analyzes your migration SQL files **before deployment** and
 reports which lock modes each statement acquires, the associated risk level, and safe rewrite alternatives when a
 dangerous pattern is detected.
 
@@ -62,7 +62,7 @@ that applies migrations:
 
 ```yaml
 - name: Check migration safety
-  run: npx --yes @flvmnt/pgfence@0.2.1 analyze --ci hasura/migrations/**/*.sql
+  run: npx --yes @flvmnt/pgfence@0.2.3 analyze --ci hasura/migrations/**/*.sql
 ```
 
 The `--ci` flag causes pgfence to exit with code 1 if any check exceeds the default risk threshold, which will fail the
@@ -87,7 +87,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Check migration safety
-        run: npx --yes @flvmnt/pgfence@0.2.1 analyze --ci hasura/migrations/**/*.sql
+        run: npx --yes @flvmnt/pgfence@0.2.3 analyze --ci hasura/migrations/**/*.sql
 
       - name: Apply migrations
         run: hasura migrate apply --endpoint ${{ secrets.HASURA_ENDPOINT }} --admin-secret ${{ secrets.HASURA_ADMIN_SECRET }}
@@ -102,7 +102,7 @@ By default, `--ci` fails the build on `HIGH` risk or above. You can adjust this 
 
 ```yaml
 - name: Check migration safety
-  run: npx --yes @flvmnt/pgfence@0.2.1 analyze --ci --max-risk medium hasura/migrations/**/*.sql
+  run: npx --yes @flvmnt/pgfence@0.2.3 analyze --ci --max-risk medium hasura/migrations/**/*.sql
 ```
 
 This will fail the build on `MEDIUM` risk or above, catching issues like non-concurrent index creation.
@@ -113,7 +113,7 @@ To integrate pgfence results into other tools or dashboards, use the `--output j
 
 ```yaml
 - name: Check migration safety
-  run: npx --yes @flvmnt/pgfence@0.2.1 analyze --output json hasura/migrations/**/*.sql > pgfence-report.json
+  run: npx --yes @flvmnt/pgfence@0.2.3 analyze --output json hasura/migrations/**/*.sql > pgfence-report.json
 ```
 
 ## Adjusting migration paths
@@ -123,15 +123,15 @@ pattern to match your project structure:
 
 ```yaml
 # Single data source named "default"
-run: npx --yes @flvmnt/pgfence@0.2.1 analyze --ci hasura/migrations/default/**/up.sql
+run: npx --yes @flvmnt/pgfence@0.2.3 analyze --ci hasura/migrations/default/**/up.sql
 
 # All data sources
-run: npx --yes @flvmnt/pgfence@0.2.1 analyze --ci hasura/migrations/**/up.sql
+run: npx --yes @flvmnt/pgfence@0.2.3 analyze --ci hasura/migrations/**/up.sql
 ```
 
 ## Further resources
 
-- [pgfence documentation](https://pgfence.dev)
+- [pgfence documentation](https://pgfence.com)
 - [pgfence on npm](https://www.npmjs.com/package/@flvmnt/pgfence)
 - [pgfence on GitHub](https://github.com/flvmnt/pgfence)
 - [PostgreSQL explicit locking documentation](https://www.postgresql.org/docs/current/explicit-locking.html)
