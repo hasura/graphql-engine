@@ -1,6 +1,6 @@
 use crate::stages::{commands, graphql_config, models};
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
-use lang_graphql::ast::common as ast;
+use graphql_types as ast;
 use open_dds::{
     arguments::ArgumentName,
     commands::CommandName,

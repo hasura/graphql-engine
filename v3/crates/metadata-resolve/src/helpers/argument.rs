@@ -19,13 +19,13 @@ use crate::types::error::{Error, TypeError};
 use crate::types::permission::ValueExpressionOrPredicate;
 use crate::types::subgraph::{ArgumentInfo, ArgumentKind, Qualified, QualifiedTypeReference};
 
-use hasura_authn_core::Role;
 use indexmap::IndexMap;
 use ndc_models;
 use open_dds::arguments::ArgumentName;
 use open_dds::data_connector::DataConnectorName;
 use open_dds::identifier::SubgraphName;
 use open_dds::models::ModelName;
+use open_dds::permissions::Role;
 use open_dds::types::DataConnectorArgumentName;
 use open_dds::types::{BaseType, CustomTypeName, TypeName, TypeReference};
 use std::collections::BTreeMap;
@@ -297,7 +297,7 @@ pub(crate) fn resolve_value_expression_for_argument(
         open_dds::permissions::ValueExpressionOrPredicate::SessionVariable(session_variable) => {
             Ok::<(ValueExpressionOrPredicate, Vec<TypecheckIssue>), Error>((
                 ValueExpressionOrPredicate::SessionVariable(
-                    hasura_authn_core::SessionVariableReference {
+                    open_dds::session_variables::SessionVariableReference {
                         name: session_variable.clone(),
                         passed_as_json: flags.contains(open_dds::flags::Flag::JsonSessionVariables),
                         disallow_unknown_fields: flags

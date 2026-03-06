@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
+use graphql_types as ast;
 use indexmap::IndexMap;
-use lang_graphql::ast::common as ast;
 use open_dds::data_connector::DataConnectorName;
 use open_dds::identifier::SubgraphName;
 use open_dds::models::EnableAllOrSpecific;

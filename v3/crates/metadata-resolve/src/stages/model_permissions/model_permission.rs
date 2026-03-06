@@ -18,10 +18,11 @@ use crate::{
     ValueExpression, ValueExpressionOrPredicate, data_connectors, unwrap_custom_type_name,
 };
 
-use hasura_authn_core::{Role, SESSION_VARIABLE_ROLE, SessionVariableReference};
 use indexmap::IndexMap;
+use open_dds::permissions::Role;
 use open_dds::permissions::{ModelPermissionOperand, ModelPermissionsV2, NullableModelPredicate};
 use open_dds::query::ArgumentName;
+use open_dds::session_variables::{SESSION_VARIABLE_ROLE, SessionVariableReference};
 use open_dds::spanned::Spanned;
 use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
 use std::collections::{BTreeMap, BTreeSet};

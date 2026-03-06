@@ -1,4 +1,4 @@
-use super::Parser;
+use super::{NameExt, Parser};
 use crate::{
     ast::{
         common::{BaseType, OperationType, Type, TypeName},

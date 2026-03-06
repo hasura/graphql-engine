@@ -6,7 +6,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use indexmap::IndexMap;
 
-use lang_graphql::ast::common::{self as ast};
+use graphql_types::{self as ast};
 use open_dds::aggregates::AggregateExpressionName;
 use open_dds::commands::DataConnectorCommand;
 use open_dds::query::ArgumentName;

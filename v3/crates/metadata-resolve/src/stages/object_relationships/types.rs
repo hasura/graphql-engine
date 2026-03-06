@@ -8,7 +8,7 @@ use open_dds::{commands::CommandName, models::ModelName, types::CustomTypeName};
 use serde::{Deserialize, Serialize};
 
 use crate::helpers::types::NdcColumnForComparison;
-use lang_graphql::ast::common as ast;
+use graphql_types as ast;
 use open_dds::arguments::ArgumentName;
 use std::collections::BTreeMap;
 

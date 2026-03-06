@@ -6,7 +6,7 @@ mod types;
 use std::collections::HashSet;
 use std::sync::OnceLock;
 
-use lang_graphql::ast::common as ast;
+use graphql_types as ast;
 use open_dds::accessor::QualifiedObject;
 use open_dds::graphql_config::{self, OrderByDirection};
 use open_dds::types::{GraphQlFieldName, GraphQlTypeName};

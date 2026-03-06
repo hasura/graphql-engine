@@ -1,3 +1,4 @@
+pub use graphql_types::mk_name;
 pub mod ast;
 pub mod generate_graphql_schema;
 pub mod generate_sdl;

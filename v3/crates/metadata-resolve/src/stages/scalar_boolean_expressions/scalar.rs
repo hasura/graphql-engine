@@ -13,7 +13,7 @@ use crate::stages::{
 };
 use crate::types::subgraph::{mk_qualified_type_name, mk_qualified_type_reference};
 use crate::{Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference};
-use lang_graphql::ast::common as ast;
+use graphql_types as ast;
 use open_dds::data_connector::DataConnectorName;
 use open_dds::identifier::SubgraphName;
 use open_dds::{

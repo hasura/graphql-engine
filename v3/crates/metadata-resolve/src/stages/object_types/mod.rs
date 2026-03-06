@@ -32,8 +32,8 @@ use crate::stages::{
 
 use crate::types::subgraph::{Qualified, mk_qualified_type_name, mk_qualified_type_reference};
 
+use graphql_types as ast;
 use indexmap::IndexMap;
-use lang_graphql::ast::common as ast;
 
 /// resolve object types, matching them to that in the data connectors
 pub(crate) fn resolve(

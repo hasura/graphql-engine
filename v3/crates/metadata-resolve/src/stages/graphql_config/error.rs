@@ -1,4 +1,4 @@
-use lang_graphql::ast::common as ast;
+use graphql_types as ast;
 
 use crate::types::error::ContextualError;
 

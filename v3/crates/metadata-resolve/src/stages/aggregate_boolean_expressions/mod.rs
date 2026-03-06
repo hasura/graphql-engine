@@ -14,7 +14,7 @@ use crate::{
     configuration::UnstableFeatures, helpers::check_for_duplicates, mk_name,
     types::subgraph::mk_qualified_type_name,
 };
-use lang_graphql::ast::common as ast;
+use graphql_types as ast;
 use open_dds::{
     accessor::QualifiedObject,
     aggregates::AggregateExpressionName,

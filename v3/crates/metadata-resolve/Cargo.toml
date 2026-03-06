@@ -13,10 +13,9 @@ harness = false
 
 [dependencies]
 error-context = { path = "../utils/error-context" }
-hasura-authn-core = { path = "../auth/hasura-authn-core" }
+graphql-types = { path = "../graphql/graphql-types" }
 jsonpath = { path = "../utils/jsonpath" }
 json-annotation-parse = { path = "../utils/json-annotation-parse/" }
-lang-graphql = { path = "../graphql/lang-graphql" }
 open-dds = { path = "../open-dds" }
 serde-ext = { path = "../utils/serde-ext" }
 

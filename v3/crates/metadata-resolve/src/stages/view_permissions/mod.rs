@@ -1,6 +1,6 @@
 mod types;
-use hasura_authn_core::SESSION_VARIABLE_ROLE;
 use indexmap::IndexMap;
+use open_dds::session_variables::SESSION_VARIABLE_ROLE;
 
 use open_dds::authorization::{Comparison, Condition};
 use open_dds::identifier::SubgraphName;

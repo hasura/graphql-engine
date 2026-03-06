@@ -32,12 +32,14 @@ pub fn resolve_value_expression(
 ) -> ValueExpression {
     match value_expression_input {
         open_dds::permissions::ValueExpression::SessionVariable(session_variable) => {
-            ValueExpression::SessionVariable(hasura_authn_core::SessionVariableReference {
-                name: session_variable,
-                passed_as_json: flags.contains(open_dds::flags::Flag::JsonSessionVariables),
-                disallow_unknown_fields: flags
-                    .contains(open_dds::flags::Flag::DisallowUnknownValuesInArguments),
-            })
+            ValueExpression::SessionVariable(
+                open_dds::session_variables::SessionVariableReference {
+                    name: session_variable,
+                    passed_as_json: flags.contains(open_dds::flags::Flag::JsonSessionVariables),
+                    disallow_unknown_fields: flags
+                        .contains(open_dds::flags::Flag::DisallowUnknownValuesInArguments),
+                },
+            )
         }
         open_dds::permissions::ValueExpression::Literal(json_value) => {
             ValueExpression::Literal(json_value)

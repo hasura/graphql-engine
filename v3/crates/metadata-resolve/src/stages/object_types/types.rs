@@ -19,7 +19,7 @@ use std::sync::Arc;
 
 use crate::types::subgraph::Qualified;
 
-use lang_graphql::ast::common as ast;
+use graphql_types as ast;
 use open_dds::data_connector::{
     DataConnectorColumnName, DataConnectorName, DataConnectorObjectType, DataConnectorOperatorName,
 };

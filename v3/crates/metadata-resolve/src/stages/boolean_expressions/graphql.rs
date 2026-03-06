@@ -15,7 +15,7 @@ use crate::stages::{
     graphql_config,
     scalar_boolean_expressions::{self, LogicalOperatorsGraphqlConfig},
 };
-use lang_graphql::ast::common::{self as ast};
+use graphql_types::{self as ast};
 use open_dds::types::{CustomTypeName, FieldName, GraphQlTypeName};
 use std::collections::BTreeMap;
 

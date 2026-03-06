@@ -804,12 +804,14 @@ fn resolve_field_comparison(
             ValueExpression::Literal(json_value.clone())
         }
         open_dds::permissions::ValueExpression::SessionVariable(session_variable) => {
-            ValueExpression::SessionVariable(hasura_authn_core::SessionVariableReference {
-                name: session_variable.clone(),
-                passed_as_json: flags.contains(open_dds::flags::Flag::JsonSessionVariables),
-                disallow_unknown_fields: flags
-                    .contains(open_dds::flags::Flag::DisallowUnknownValuesInArguments),
-            })
+            ValueExpression::SessionVariable(
+                open_dds::session_variables::SessionVariableReference {
+                    name: session_variable.clone(),
+                    passed_as_json: flags.contains(open_dds::flags::Flag::JsonSessionVariables),
+                    disallow_unknown_fields: flags
+                        .contains(open_dds::flags::Flag::DisallowUnknownValuesInArguments),
+                },
+            )
         }
     };
 

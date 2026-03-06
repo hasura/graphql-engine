@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use hasura_authn_core::Role;
 use indexmap::IndexMap;
+use open_dds::permissions::Role;
 
 use open_dds::{commands::CommandName, models::ModelName, types::CustomTypeName};
 

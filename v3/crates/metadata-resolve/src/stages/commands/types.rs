@@ -10,8 +10,8 @@ use crate::types::subgraph::{
     serialize_qualified_btreemap,
 };
 
+use graphql_types as ast;
 use indexmap::IndexMap;
-use lang_graphql::ast::common as ast;
 use open_dds::arguments::ArgumentName;
 use open_dds::commands::{
     CommandName, DataConnectorCommand, FunctionName, GraphQlRootFieldKind, ProcedureName,

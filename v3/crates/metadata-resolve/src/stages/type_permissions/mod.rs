@@ -8,11 +8,11 @@ use crate::types::subgraph::Qualified;
 pub use error::{
     TypeInputPermissionError, TypeOutputPermissionError, TypePermissionError, TypePermissionIssue,
 };
-use hasura_authn_core::SESSION_VARIABLE_ROLE;
 use indexmap::IndexSet;
 use open_dds::authorization::{Fields, InputTypeFieldPreset};
 use open_dds::identifier::SubgraphName;
 use open_dds::permissions::{FieldPreset, Role, TypePermissionOperand, TypePermissionsV2};
+use open_dds::session_variables::SESSION_VARIABLE_ROLE;
 use open_dds::session_variables::SessionVariableReference;
 use open_dds::types::{CustomTypeName, FieldName};
 pub use types::{
@@ -515,12 +515,14 @@ fn resolve_field_preset<'a>(
             ValueExpression::Literal(literal.clone())
         }
         open_dds::permissions::ValueExpression::SessionVariable(session_variable) => {
-            ValueExpression::SessionVariable(hasura_authn_core::SessionVariableReference {
-                name: session_variable.clone(),
-                passed_as_json: flags.contains(open_dds::flags::Flag::JsonSessionVariables),
-                disallow_unknown_fields: flags
-                    .contains(open_dds::flags::Flag::DisallowUnknownValuesInArguments),
-            })
+            ValueExpression::SessionVariable(
+                open_dds::session_variables::SessionVariableReference {
+                    name: session_variable.clone(),
+                    passed_as_json: flags.contains(open_dds::flags::Flag::JsonSessionVariables),
+                    disallow_unknown_fields: flags
+                        .contains(open_dds::flags::Flag::DisallowUnknownValuesInArguments),
+                },
+            )
         }
     };
 

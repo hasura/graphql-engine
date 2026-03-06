@@ -7,7 +7,7 @@ use open_dds::types::{GraphQlTypeName, OperatorName};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-use lang_graphql::ast::common as ast;
+use graphql_types as ast;
 use serde_with::serde_as;
 
 #[derive(Debug)]

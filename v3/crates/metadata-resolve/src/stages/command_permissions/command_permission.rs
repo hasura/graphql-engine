@@ -1,5 +1,6 @@
-use hasura_authn_core::{Role, SESSION_VARIABLE_ROLE, SessionVariableReference};
 use indexmap::IndexMap;
+use open_dds::permissions::Role;
+use open_dds::session_variables::{SESSION_VARIABLE_ROLE, SessionVariableReference};
 
 use open_dds::authorization::{Allow, Deny, PresetArgument};
 use open_dds::query::ArgumentName;

@@ -1,5 +1,5 @@
 use super::error::GraphqlConfigError;
-use lang_graphql::ast::common as ast;
+use graphql_types as ast;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 

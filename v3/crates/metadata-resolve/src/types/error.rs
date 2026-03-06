@@ -12,7 +12,7 @@ use crate::stages::{
 };
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 use error_context::{Context, Step};
-use hasura_authn_core::Role;
+use open_dds::permissions::Role;
 use open_dds::views::ViewName;
 use open_dds::{
     arguments::ArgumentName,

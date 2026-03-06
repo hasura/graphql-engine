@@ -7,7 +7,7 @@ use crate::{
     },
     types::error::ContextualError,
 };
-use lang_graphql::ast::common as ast;
+use graphql_types as ast;
 use open_dds::models::ModelName;
 use open_dds::{
     data_connector::{DataConnectorName, DataConnectorObjectType, DataConnectorOperatorName},

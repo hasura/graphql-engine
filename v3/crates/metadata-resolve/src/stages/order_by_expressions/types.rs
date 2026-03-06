@@ -1,5 +1,5 @@
 use crate::types::error::ShouldBeAnError;
-use lang_graphql::ast::common::{self as ast};
+use graphql_types::{self as ast};
 use open_dds::{
     models::{EnableAllOrSpecific, ModelName, OrderByDirection},
     order_by_expression::OrderByExpressionName,

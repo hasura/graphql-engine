@@ -2702,6 +2702,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "graphql-types"
+version = "3.0.0"
+dependencies = [
+ "schemars 0.8.22",
+ "serde",
+ "serde_json",
+ "smol_str",
+ "thiserror 2.0.17",
+]
+
+[[package]]
 name = "graphql-ws"
 version = "3.0.0"
 dependencies = [
@@ -3536,7 +3547,6 @@ dependencies = [
 name = "lang-graphql"
 version = "3.0.0"
 dependencies = [
- "anyhow",
  "apollo-parser",
  "async-graphql-parser",
  "axum",
@@ -3544,6 +3554,7 @@ dependencies = [
  "diffy",
  "expect-test",
  "graphql-parser",
+ "graphql-types",
  "http",
  "indexmap 2.12.1",
  "json-ext",
@@ -3551,11 +3562,9 @@ dependencies = [
  "nonempty",
  "pretty_assertions",
  "recursion_limit_macro",
- "schemars 0.8.22",
  "serde",
  "serde-ext",
  "serde_json",
- "smol_str",
  "thiserror 2.0.17",
  "tracing-util",
 ]
@@ -3767,13 +3776,12 @@ dependencies = [
  "criterion",
  "derive_more",
  "error-context",
- "hasura-authn-core",
+ "graphql-types",
  "http",
  "indexmap 2.12.1",
  "insta",
  "json-annotation-parse",
  "jsonpath",
- "lang-graphql",
  "ndc-models 0.1.7",
  "ndc-models 0.2.12",
  "nonempty",

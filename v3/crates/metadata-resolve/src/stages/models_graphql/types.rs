@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use crate::{ArgumentInfo, helpers::types::DuplicateRootFieldError, types::warning::Warning};
+use graphql_types::{self as ast};
 use indexmap::IndexMap;
-use lang_graphql::ast::common::{self as ast};
 use open_dds::{
     aggregates::AggregateExpressionName,
     data_connector::{DataConnectorColumnName, DataConnectorName},

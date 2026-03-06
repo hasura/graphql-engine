@@ -2,8 +2,8 @@ use open_dds::views::ViewName;
 use serde_with::serde_as;
 use std::collections::{BTreeMap, BTreeSet};
 
-use hasura_authn_core::Role;
 use indexmap::IndexMap;
+use open_dds::permissions::Role;
 use serde::{Deserialize, Serialize};
 
 use open_dds::{

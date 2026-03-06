@@ -1,6 +1,6 @@
 use crate::helpers::types::mk_name;
 use crate::types::subgraph::Qualified;
-use lang_graphql::ast::common as ast;
+use graphql_types as ast;
 use open_dds::types::InbuiltType;
 use std::collections::BTreeMap;
 mod error;

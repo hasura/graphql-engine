@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use lang_graphql::ast::common as ast;
+use graphql_types as ast;
 use open_dds::aggregates::{AggregateExpressionName, AggregationFunctionName};
 use open_dds::data_connector::{DataConnectorName, DataConnectorObjectType};
 use open_dds::identifier::SubgraphName;

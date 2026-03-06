@@ -1,5 +1,5 @@
 use crate::types::subgraph::Qualified;
-use lang_graphql::ast::common as ast;
+use graphql_types as ast;
 use ndc_models;
 use open_dds::data_connector::DataConnectorScalarType;
 use open_dds::types::{CustomTypeName, TypeName};

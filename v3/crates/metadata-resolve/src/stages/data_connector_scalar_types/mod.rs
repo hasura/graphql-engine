@@ -5,7 +5,7 @@ use open_dds::identifier::SubgraphName;
 use std::collections::BTreeMap;
 pub use types::{DataConnectorScalars, ScalarTypeWithRepresentationInfo};
 
-use lang_graphql::ast::common as ast;
+use graphql_types as ast;
 
 use open_dds::types::{CustomTypeName, DataConnectorScalarRepresentationV1, TypeName};
 

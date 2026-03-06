@@ -1,7 +1,7 @@
 use error_context::Context;
-use hasura_authn_core::Role;
 use indexmap::IndexMap;
 use open_dds::commands::CommandName;
+use open_dds::permissions::Role;
 use open_dds::types::CustomTypeName;
 use serde::{Deserialize, Serialize};
 

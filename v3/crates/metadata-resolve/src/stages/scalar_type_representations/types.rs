@@ -1,5 +1,5 @@
 use crate::{Qualified, deserialize_non_string_key_btreemap, serialize_non_string_key_btreemap};
-use lang_graphql::ast::common as ast;
+use graphql_types as ast;
 use open_dds::data_connector::DataConnectorName;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;

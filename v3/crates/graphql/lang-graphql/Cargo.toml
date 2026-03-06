@@ -20,6 +20,7 @@ name = "validation"
 harness = false
 
 [dependencies]
+graphql-types = { path = "../graphql-types" }
 recursion_limit_macro = { path = "../../utils/recursion_limit_macro" }
 serde-ext = { path = "../../utils/serde-ext" }
 
@@ -28,16 +29,13 @@ http = { workspace = true }
 indexmap = { workspace = true }
 lexical-core = { workspace = true }
 nonempty = { workspace = true }
-schemars = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-smol_str = { workspace = true }
 thiserror = { workspace = true }
 tracing-util = { path = "../../utils/tracing-util" }
 json-ext = { path = "../../utils/json-ext" }
 
 [dev-dependencies]
-anyhow = { workspace = true }
 apollo-parser = { workspace = true }
 async-graphql-parser = { workspace = true }
 criterion = { workspace = true }

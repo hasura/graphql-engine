@@ -1,0 +1,17 @@
+[package]
+name = "graphql-types"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+schemars = { workspace = true }
+serde = { workspace = true }
+smol_str = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+
+[lints]
+workspace = true

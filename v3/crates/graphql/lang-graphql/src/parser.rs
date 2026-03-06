@@ -185,9 +185,13 @@ impl Keyword {
     }
 }
 
-impl Name {
-    pub fn is_keyword(&self, keyword: &Keyword) -> bool {
-        matches!(self, name if name.get() == keyword.as_str())
+trait NameExt {
+    fn is_keyword(&self, keyword: &Keyword) -> bool;
+}
+
+impl NameExt for Name {
+    fn is_keyword(&self, keyword: &Keyword) -> bool {
+        self.get() == keyword.as_str()
     }
 }
 
