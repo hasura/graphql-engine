@@ -84,6 +84,10 @@ struct ServerOptions {
     /// Maximum size of response for NDC responses in bytes
     #[arg(long, value_name = "NDC_RESPONSE_SIZE_LIMIT in bytes", env = "NDC_RESPONSE_SIZE_LIMIT", default_value_t = 30 * MB)]
     ndc_response_size_limit: usize,
+
+    /// Maximum size of request body in bytes
+    #[arg(long, value_name = "REQUEST_BODY_LIMIT in bytes", env = "REQUEST_BODY_LIMIT", default_value_t = 10 * MB)]
+    request_body_limit: usize,
 }
 
 #[tokio::main]
@@ -158,7 +162,7 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
     )
     .map_err(StartupError::ReadSchema)?;
 
-    let mut app = get_base_routes(state.clone());
+    let mut app = get_base_routes(state.clone(), server.request_body_limit);
 
     app = app.merge(get_jsonapi_route(state.clone()));
 

@@ -4,6 +4,9 @@
 
 ### Added
 
+- The request body size limit in bytes can now be configured via the
+  `REQUEST_BODY_LIMIT` environment variable (default: 10 MB).
+
 ### Changed
 
 ### Fixed
