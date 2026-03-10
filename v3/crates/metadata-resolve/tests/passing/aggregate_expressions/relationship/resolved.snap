@@ -3965,6 +3965,43 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             ),
                         },
                     ),
+                    unique_identifiers: [
+                        {
+                            FieldName(
+                                Identifier(
+                                    "invoiceId",
+                                ),
+                            ): UniqueIdentifierField {
+                                field_type: QualifiedTypeReference {
+                                    underlying_type: Named(
+                                        Custom(
+                                            Qualified {
+                                                subgraph: SubgraphName(
+                                                    "default",
+                                                ),
+                                                name: CustomTypeName(
+                                                    Identifier(
+                                                        "Int4",
+                                                    ),
+                                                ),
+                                            },
+                                        ),
+                                    ),
+                                    nullable: false,
+                                },
+                                ndc_column: Some(
+                                    NdcColumnForComparison {
+                                        column: DataConnectorColumnName(
+                                            "InvoiceId",
+                                        ),
+                                        equal_operator: DataConnectorOperatorName(
+                                            "_eq",
+                                        ),
+                                    },
+                                ),
+                            },
+                        },
+                    ],
                 },
                 arguments: {},
                 permissions: ModelPermissions {
@@ -5012,6 +5049,43 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             ),
                         },
                     ),
+                    unique_identifiers: [
+                        {
+                            FieldName(
+                                Identifier(
+                                    "invoiceLineId",
+                                ),
+                            ): UniqueIdentifierField {
+                                field_type: QualifiedTypeReference {
+                                    underlying_type: Named(
+                                        Custom(
+                                            Qualified {
+                                                subgraph: SubgraphName(
+                                                    "default",
+                                                ),
+                                                name: CustomTypeName(
+                                                    Identifier(
+                                                        "Int4",
+                                                    ),
+                                                ),
+                                            },
+                                        ),
+                                    ),
+                                    nullable: false,
+                                },
+                                ndc_column: Some(
+                                    NdcColumnForComparison {
+                                        column: DataConnectorColumnName(
+                                            "InvoiceLineId",
+                                        ),
+                                        equal_operator: DataConnectorOperatorName(
+                                            "_eq",
+                                        ),
+                                    },
+                                ),
+                            },
+                        },
+                    ],
                 },
                 arguments: {},
                 permissions: ModelPermissions {

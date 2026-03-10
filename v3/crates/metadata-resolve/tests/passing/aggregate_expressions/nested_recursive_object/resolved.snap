@@ -536,6 +536,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/nested_r
                             ),
                         },
                     ),
+                    unique_identifiers: [],
                 },
                 arguments: {},
                 permissions: ModelPermissions {

@@ -1017,6 +1017,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                     global_id_source: None,
                     apollo_federation_key_source: None,
                     aggregate_expression: None,
+                    unique_identifiers: [],
                 },
                 arguments: {},
                 permissions: ModelPermissions {
@@ -1464,6 +1465,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                     global_id_source: None,
                     apollo_federation_key_source: None,
                     aggregate_expression: None,
+                    unique_identifiers: [],
                 },
                 arguments: {},
                 permissions: ModelPermissions {

@@ -814,6 +814,7 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                     global_id_source: None,
                     apollo_federation_key_source: None,
                     aggregate_expression: None,
+                    unique_identifiers: [],
                 },
                 arguments: {
                     ArgumentName(

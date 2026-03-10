@@ -4,6 +4,9 @@
 
 ### Added
 
+- Added `uniqueIdentifiers` to `Model` used for hold uniqueness constraints for
+  grouping operations
+
 ### Changed
 
 ### Fixed

@@ -4124,6 +4124,19 @@
             }
           ]
         },
+        "uniqueIdentifiers": {
+          "description": "Sets of fields that uniquely identify an object in this model. Each inner list is a set of fields that, together, form a unique constraint.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/FieldName"
+            }
+          }
+        },
         "graphql": {
           "description": "Configuration for how this model should appear in the GraphQL schema.",
           "anyOf": [
@@ -4227,6 +4240,19 @@
               "type": "null"
             }
           ]
+        },
+        "uniqueIdentifiers": {
+          "description": "Sets of fields that uniquely identify an object in this model. Each inner list is a set of fields that, together, form a unique constraint.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/FieldName"
+            }
+          }
         },
         "graphql": {
           "description": "Configuration for how this model should appear in the GraphQL schema.",

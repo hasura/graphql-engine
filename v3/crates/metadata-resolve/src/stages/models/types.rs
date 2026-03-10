@@ -61,6 +61,9 @@ pub struct Model {
     pub global_id_source: Option<NDCFieldSourceMapping>,
     pub apollo_federation_key_source: Option<NDCFieldSourceMapping>,
     pub aggregate_expression: Option<Qualified<AggregateExpressionName>>,
+    /// Sets of fields that uniquely identify an object in this model,
+    /// as declared on the model definition (not derived from GraphQL config).
+    pub unique_identifiers: Option<Vec<Vec<FieldName>>>,
     pub raw: ModelRaw,
 }
 

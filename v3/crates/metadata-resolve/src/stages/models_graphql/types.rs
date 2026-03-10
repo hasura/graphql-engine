@@ -45,6 +45,7 @@ pub struct Model {
     pub global_id_source: Option<models::NDCFieldSourceMapping>,
     pub apollo_federation_key_source: Option<models::NDCFieldSourceMapping>,
     pub aggregate_expression: Option<Qualified<AggregateExpressionName>>,
+    pub unique_identifiers: Vec<IndexMap<FieldName, UniqueIdentifierField>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

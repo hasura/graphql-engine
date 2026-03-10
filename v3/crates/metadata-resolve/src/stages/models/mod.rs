@@ -366,6 +366,7 @@ fn resolve_model(
         source: None,
         global_id_source,
         apollo_federation_key_source,
+        unique_identifiers: model.unique_identifiers().clone(),
         raw: model_raw,
     })
 }
