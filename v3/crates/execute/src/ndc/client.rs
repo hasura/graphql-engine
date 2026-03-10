@@ -43,8 +43,8 @@ pub enum Error {
     #[error("invalid connector base URL")]
     InvalidBaseURL,
 
-    #[error("invalid header value characters in project_id: {0}")]
-    ProjectIdHeaderValueConversion(#[from] reqwest::header::InvalidHeaderValue),
+    #[error("invalid header value characters: {0}")]
+    InvalidHeaderValue(#[from] reqwest::header::InvalidHeaderValue),
 
     #[error("response received from connector is too large: {0}")]
     ResponseTooLarge(String),
