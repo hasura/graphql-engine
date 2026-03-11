@@ -41,10 +41,9 @@ pub fn deserialize_key<T: OpenDd>(
     path: jsonpath::JSONPath,
     key: String,
 ) -> Result<T, OpenDdDeserializeError> {
-    OpenDd::deserialize(json, path.append_key(key.clone())).map_err(|e| OpenDdDeserializeError {
-        error: e.error,
-        path: e.path.prepend_key(key),
-    })
+    // The forward path already contains the full path from root.
+    // No need for backward prepend on error - errors carry absolute paths.
+    OpenDd::deserialize(json, path.append_key(key))
 }
 
 pub fn deserialize_index<T: OpenDd>(
@@ -52,10 +51,7 @@ pub fn deserialize_index<T: OpenDd>(
     path: jsonpath::JSONPath,
     index: usize,
 ) -> Result<T, OpenDdDeserializeError> {
-    OpenDd::deserialize(json, path.append_index(index)).map_err(|e| OpenDdDeserializeError {
-        error: e.error,
-        path: e.path.prepend_index(index),
-    })
+    OpenDd::deserialize(json, path.append_index(index))
 }
 
 impl_OpenDd_default_for!(String);

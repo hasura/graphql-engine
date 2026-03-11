@@ -80,16 +80,16 @@ impl From<Identifier> for String {
 impl OpenDd for Identifier {
     fn deserialize(
         json: serde_json::Value,
-        _path: jsonpath::JSONPath,
+        path: jsonpath::JSONPath,
     ) -> Result<Self, OpenDdDeserializeError> {
         let string: String =
             serde_json::from_value(json).map_err(|error| OpenDdDeserializeError {
                 error,
-                path: jsonpath::JSONPath::default(),
+                path: path.clone(),
             })?;
         Identifier::new(string).map_err(|e| OpenDdDeserializeError {
             error: serde_json::Error::custom(e),
-            path: jsonpath::JSONPath::default(),
+            path,
         })
     }
 
@@ -182,16 +182,16 @@ impl std::borrow::Borrow<str> for SubgraphNameInput {
 impl OpenDd for SubgraphNameInput {
     fn deserialize(
         json: serde_json::Value,
-        _path: jsonpath::JSONPath,
+        path: jsonpath::JSONPath,
     ) -> Result<Self, OpenDdDeserializeError> {
         let string: String =
             serde_json::from_value(json).map_err(|error| OpenDdDeserializeError {
                 error,
-                path: jsonpath::JSONPath::default(),
+                path: path.clone(),
             })?;
         SubgraphNameInput::new(string).map_err(|e| OpenDdDeserializeError {
             error: serde_json::Error::custom(e),
-            path: jsonpath::JSONPath::default(),
+            path,
         })
     }
 

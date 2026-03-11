@@ -1,18 +1,17 @@
-/// Macro to use serde's deserialize and schamars' JsonSchema impl OpenDd for any type using serde_path_to_error with path information
+/// Macro to use serde's deserialize and schemars' JsonSchema impl OpenDd for any type.
+/// For simple leaf types (String, bool, i32, etc.), serde_path_to_error is not needed
+/// since the error path would always be empty. We use serde_json::from_value directly
+/// to avoid the TrackedSeed/Wrap overhead.
 #[macro_export]
 macro_rules! impl_OpenDd_default_for {
     ($ty: ty) => {
         impl open_dds::traits::OpenDd for $ty {
             fn deserialize(
                 json: serde_json::Value,
-                _path: jsonpath::JSONPath,
+                path: jsonpath::JSONPath,
             ) -> Result<Self, open_dds::traits::OpenDdDeserializeError> {
-                ::serde_path_to_error::deserialize(json).map_err(|e| {
-                    open_dds::traits::OpenDdDeserializeError {
-                        path: jsonpath::JSONPath::from_serde_path(e.path()),
-                        error: e.into_inner(),
-                    }
-                })
+                serde_json::from_value(json)
+                    .map_err(|e| open_dds::traits::OpenDdDeserializeError { path, error: e })
             }
 
             fn json_schema(
@@ -53,7 +52,7 @@ macro_rules! seq_impl {
                             serde::de::Unexpected::Other("not an array"),
                             &"array",
                         ),
-                        path: jsonpath::JSONPath::new(),
+                        path,
                     }),
                 }
             }
@@ -106,7 +105,7 @@ macro_rules! map_impl {
                             serde::de::Unexpected::Other("not an object"),
                             &"object",
                         ),
-                        path: jsonpath::JSONPath::new(),
+                        path,
                     }),
                 }
             }

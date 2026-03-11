@@ -64,7 +64,7 @@ pub fn impl_opendd_enum(impl_style: EnumImplStyle, variants: &[EnumVariant<'_>])
                         serde::de::Unexpected::Other("not an object"),
                         &"object",
                     ),
-                    path: jsonpath::JSONPath::new(),
+                    path: path.clone(),
                 })
             }
         };
@@ -91,7 +91,7 @@ fn impl_read_tag_value_str(
             let __tag_value = __object_map.remove(#tag)
             .ok_or_else(|| open_dds::traits::OpenDdDeserializeError {
                 error: serde::de::Error::missing_field(#tag),
-                path: jsonpath::JSONPath::new(),
+                path: path.clone(),
             })?;
             let __tag_value_str = __tag_value
                 .as_str()
@@ -100,7 +100,7 @@ fn impl_read_tag_value_str(
                         serde::de::Unexpected::Other("not a string"),
                         &"string",
                     ),
-                    path: jsonpath::JSONPath::new_key(#tag),
+                    path: path.clone().append_key(#tag.to_string()),
                 })?;
         }
     }
@@ -127,7 +127,7 @@ fn impl_read_tag_value_str(
                         serde::de::Unexpected::Other("found empty object"),
                         &#expected_variants_error,
                     ),
-                    path: jsonpath::JSONPath::new(),
+                    path: path.clone(),
                 }
             )?;
             if let Some(_) = __object_map_iter.next() {
@@ -136,7 +136,7 @@ fn impl_read_tag_value_str(
                         serde::de::Unexpected::Other("found multiple object properties"),
                         &#expected_variants_error,
                     ),
-                    path: jsonpath::JSONPath::new(),
+                    path: path.clone(),
                 });
             }
             let __tag_value_str = __tag_value_string.as_str();
@@ -167,7 +167,7 @@ fn impl_deserialize_as_untagged<'a>(variants: &'a [EnumVariant<'a>]) -> proc_mac
                     __tag_value_str,
                 __known_variants.join(", ")
             )),
-            path: jsonpath::JSONPath::new_key("kind"),
+            path: path.clone().append_key("kind".to_string()),
         })
     }
 }
@@ -269,7 +269,7 @@ fn gen_deserialize_from(tag_type: &EnumTagType) -> proc_macro2::TokenStream {
         EnumTagType::Adjacent { tag: _, content } => quote! {
             __object_map.remove(#content).ok_or_else(|| open_dds::traits::OpenDdDeserializeError {
                 error: serde::de::Error::missing_field(#content),
-                path: jsonpath::JSONPath::new(),
+                path: path.clone(),
             })?
         },
     }
@@ -282,9 +282,9 @@ fn unexpected_variant_error(
     let known_variants = known_variants.join(", ");
 
     let path_exp = if let Some(tag) = tag {
-        quote! { jsonpath::JSONPath::new_key(#tag) }
+        quote! { path.clone().append_key(#tag.to_string()) }
     } else {
-        quote! { jsonpath::JSONPath::new() }
+        quote! { path.clone() }
     };
 
     quote! {

@@ -46,9 +46,9 @@ impl traits::OpenDd for EnvironmentValue {
         json: serde_json::Value,
         _path: jsonpath::JSONPath,
     ) -> Result<Self, traits::OpenDdDeserializeError> {
-        serde_path_to_error::deserialize(json).map_err(|e| traits::OpenDdDeserializeError {
-            path: jsonpath::JSONPath::from_serde_path(e.path()),
-            error: e.into_inner(),
+        serde_json::from_value(json).map_err(|e| traits::OpenDdDeserializeError {
+            path: _path,
+            error: e,
         })
     }
 
