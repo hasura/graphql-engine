@@ -12,7 +12,7 @@ async fn main() {
     let port = std::env::var("PORT")
         .ok()
         .and_then(|p| p.parse::<u16>().ok())
-        .unwrap_or(5002);
+        .unwrap_or(5004);
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
 
     info!(%addr, "Starting pre-ndc-response sample plugin on");

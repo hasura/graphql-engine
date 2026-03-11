@@ -105,7 +105,7 @@ services:
     environment:
       RUST_LOG: info
     ports:
-      - "5002:5002"
+      - "5004:5004"
     depends_on:
       jaeger:
         condition: service_started
