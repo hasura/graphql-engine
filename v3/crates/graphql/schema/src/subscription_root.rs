@@ -88,7 +88,7 @@ fn select_one_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
     model: &metadata_resolve::ModelWithPermissions,
-    unique_identifier: &IndexMap<FieldName, metadata_resolve::UniqueIdentifierField>,
+    unique_identifier: &IndexMap<FieldName, metadata_resolve::QualifiedTypeReference>,
     subscription: &metadata_resolve::SubscriptionGraphQlDefinition,
     parent_type: &ast::TypeName,
 ) -> Result<
@@ -246,7 +246,7 @@ fn select_aggregate_field(
 fn get_select_one_namespace_annotations(
     model: &metadata_resolve::ModelWithPermissions,
     object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
-    unique_identifier: &IndexMap<FieldName, metadata_resolve::UniqueIdentifierField>,
+    unique_identifier: &IndexMap<FieldName, metadata_resolve::QualifiedTypeReference>,
 ) -> HashMap<Role, Option<Box<types::NamespaceAnnotation>>> {
     let annotations = super::permissions::get_select_one_namespace_annotations(
         model,

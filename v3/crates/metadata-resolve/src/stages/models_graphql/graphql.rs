@@ -5,7 +5,7 @@ use super::types::{
     LimitFieldGraphqlConfig, ModelGraphQlApi, ModelGraphqlApiArgumentsConfig, ModelGraphqlIssue,
     ModelOrderByExpression, OffsetFieldGraphqlConfig, OrderByExpressionInfo,
     SelectAggregateGraphQlDefinition, SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition,
-    SubscriptionGraphQlDefinition, UniqueIdentifierField,
+    SubscriptionGraphQlDefinition,
 };
 use crate::Warning;
 use crate::helpers::types::{TrackGraphQLRootFields, mk_name};
@@ -39,35 +39,18 @@ pub(crate) fn resolve_model_graphql_api(
     for select_unique in &model_graphql_definition.select_uniques {
         let mut unique_identifier_fields = IndexMap::new();
         for field_name in &select_unique.unique_identifier {
-            let field_type = &model
+            let field_type = model
                 .type_fields
                 .get(field_name)
                 .ok_or_else(|| ModelGraphqlError::UnknownFieldInUniqueIdentifier {
                     model_name: model_name.clone(),
                     field_name: field_name.clone(),
                 })?
-                .field_type;
+                .field_type
+                .clone();
 
-            let ndc_column = model
-                .source
-                .as_ref()
-                .map(|model_source| {
-                    models::get_ndc_column_for_comparison(
-                        &model.name,
-                        &model.data_type,
-                        model_source,
-                        field_name,
-                        || "the unique identifier for select unique".to_string(),
-                    )
-                })
-                .transpose()?;
-
-            let unique_identifier_field = UniqueIdentifierField {
-                field_type: field_type.clone(),
-                ndc_column,
-            };
             if unique_identifier_fields
-                .insert(field_name.clone(), unique_identifier_field)
+                .insert(field_name.clone(), field_type)
                 .is_some()
             {
                 return Err(ModelGraphqlError::DuplicateFieldInUniqueIdentifier {

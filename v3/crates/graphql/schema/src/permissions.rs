@@ -41,7 +41,7 @@ pub(crate) fn get_select_permissions_namespace_annotations(
 pub(crate) fn get_select_one_namespace_annotations(
     model: &metadata_resolve::ModelWithPermissions,
     object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
-    unique_identifier: &IndexMap<FieldName, metadata_resolve::UniqueIdentifierField>,
+    unique_identifier: &IndexMap<FieldName, metadata_resolve::QualifiedTypeReference>,
 ) -> HashMap<Role, Option<Box<types::NamespaceAnnotation>>> {
     let select_permissions = get_select_permissions_namespace_annotations(model);
 

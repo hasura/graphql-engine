@@ -5670,25 +5670,13 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 Identifier(
                                     "ArtistId",
                                 ),
-                            ): UniqueIdentifierField {
-                                field_type: QualifiedTypeReference {
-                                    underlying_type: Named(
-                                        Inbuilt(
-                                            Int,
-                                        ),
+                            ): QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
                                     ),
-                                    nullable: false,
-                                },
-                                ndc_column: Some(
-                                    NdcColumnForComparison {
-                                        column: DataConnectorColumnName(
-                                            "ArtistId",
-                                        ),
-                                        equal_operator: DataConnectorOperatorName(
-                                            "_eq",
-                                        ),
-                                    },
                                 ),
+                                nullable: false,
                             },
                         },
                     ],
@@ -7848,25 +7836,13 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     Identifier(
                                         "ArtistId",
                                     ),
-                                ): UniqueIdentifierField {
-                                    field_type: QualifiedTypeReference {
-                                        underlying_type: Named(
-                                            Inbuilt(
-                                                Int,
-                                            ),
+                                ): QualifiedTypeReference {
+                                    underlying_type: Named(
+                                        Inbuilt(
+                                            Int,
                                         ),
-                                        nullable: false,
-                                    },
-                                    ndc_column: Some(
-                                        NdcColumnForComparison {
-                                            column: DataConnectorColumnName(
-                                                "ArtistId",
-                                            ),
-                                            equal_operator: DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        },
                                     ),
+                                    nullable: false,
                                 },
                             },
                             description: None,
@@ -8442,25 +8418,13 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 Identifier(
                                     "AlbumId",
                                 ),
-                            ): UniqueIdentifierField {
-                                field_type: QualifiedTypeReference {
-                                    underlying_type: Named(
-                                        Inbuilt(
-                                            Int,
-                                        ),
+                            ): QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
                                     ),
-                                    nullable: false,
-                                },
-                                ndc_column: Some(
-                                    NdcColumnForComparison {
-                                        column: DataConnectorColumnName(
-                                            "AlbumId",
-                                        ),
-                                        equal_operator: DataConnectorOperatorName(
-                                            "_eq",
-                                        ),
-                                    },
                                 ),
+                                nullable: false,
                             },
                         },
                     ],
@@ -9114,25 +9078,13 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     Identifier(
                                         "AlbumId",
                                     ),
-                                ): UniqueIdentifierField {
-                                    field_type: QualifiedTypeReference {
-                                        underlying_type: Named(
-                                            Inbuilt(
-                                                Int,
-                                            ),
+                                ): QualifiedTypeReference {
+                                    underlying_type: Named(
+                                        Inbuilt(
+                                            Int,
                                         ),
-                                        nullable: false,
-                                    },
-                                    ndc_column: Some(
-                                        NdcColumnForComparison {
-                                            column: DataConnectorColumnName(
-                                                "AlbumId",
-                                            ),
-                                            equal_operator: DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        },
                                     ),
+                                    nullable: false,
                                 },
                             },
                             description: None,
@@ -9708,25 +9660,13 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 Identifier(
                                     "TrackId",
                                 ),
-                            ): UniqueIdentifierField {
-                                field_type: QualifiedTypeReference {
-                                    underlying_type: Named(
-                                        Inbuilt(
-                                            Int,
-                                        ),
+                            ): QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
                                     ),
-                                    nullable: false,
-                                },
-                                ndc_column: Some(
-                                    NdcColumnForComparison {
-                                        column: DataConnectorColumnName(
-                                            "TrackId",
-                                        ),
-                                        equal_operator: DataConnectorOperatorName(
-                                            "_eq",
-                                        ),
-                                    },
                                 ),
+                                nullable: false,
                             },
                         },
                     ],
@@ -10357,25 +10297,13 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     Identifier(
                                         "TrackId",
                                     ),
-                                ): UniqueIdentifierField {
-                                    field_type: QualifiedTypeReference {
-                                        underlying_type: Named(
-                                            Inbuilt(
-                                                Int,
-                                            ),
+                                ): QualifiedTypeReference {
+                                    underlying_type: Named(
+                                        Inbuilt(
+                                            Int,
                                         ),
-                                        nullable: false,
-                                    },
-                                    ndc_column: Some(
-                                        NdcColumnForComparison {
-                                            column: DataConnectorColumnName(
-                                                "TrackId",
-                                            ),
-                                            equal_operator: DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        },
                                     ),
+                                    nullable: false,
                                 },
                             },
                             description: None,
@@ -10853,49 +10781,25 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 Identifier(
                                     "PlaylistId",
                                 ),
-                            ): UniqueIdentifierField {
-                                field_type: QualifiedTypeReference {
-                                    underlying_type: Named(
-                                        Inbuilt(
-                                            Int,
-                                        ),
+                            ): QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
                                     ),
-                                    nullable: false,
-                                },
-                                ndc_column: Some(
-                                    NdcColumnForComparison {
-                                        column: DataConnectorColumnName(
-                                            "PlaylistId",
-                                        ),
-                                        equal_operator: DataConnectorOperatorName(
-                                            "_eq",
-                                        ),
-                                    },
                                 ),
+                                nullable: false,
                             },
                             FieldName(
                                 Identifier(
                                     "TrackId",
                                 ),
-                            ): UniqueIdentifierField {
-                                field_type: QualifiedTypeReference {
-                                    underlying_type: Named(
-                                        Inbuilt(
-                                            Int,
-                                        ),
+                            ): QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
                                     ),
-                                    nullable: false,
-                                },
-                                ndc_column: Some(
-                                    NdcColumnForComparison {
-                                        column: DataConnectorColumnName(
-                                            "TrackId",
-                                        ),
-                                        equal_operator: DataConnectorOperatorName(
-                                            "_eq",
-                                        ),
-                                    },
                                 ),
+                                nullable: false,
                             },
                         },
                     ],
@@ -11290,49 +11194,25 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     Identifier(
                                         "PlaylistId",
                                     ),
-                                ): UniqueIdentifierField {
-                                    field_type: QualifiedTypeReference {
-                                        underlying_type: Named(
-                                            Inbuilt(
-                                                Int,
-                                            ),
+                                ): QualifiedTypeReference {
+                                    underlying_type: Named(
+                                        Inbuilt(
+                                            Int,
                                         ),
-                                        nullable: false,
-                                    },
-                                    ndc_column: Some(
-                                        NdcColumnForComparison {
-                                            column: DataConnectorColumnName(
-                                                "PlaylistId",
-                                            ),
-                                            equal_operator: DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        },
                                     ),
+                                    nullable: false,
                                 },
                                 FieldName(
                                     Identifier(
                                         "TrackId",
                                     ),
-                                ): UniqueIdentifierField {
-                                    field_type: QualifiedTypeReference {
-                                        underlying_type: Named(
-                                            Inbuilt(
-                                                Int,
-                                            ),
+                                ): QualifiedTypeReference {
+                                    underlying_type: Named(
+                                        Inbuilt(
+                                            Int,
                                         ),
-                                        nullable: false,
-                                    },
-                                    ndc_column: Some(
-                                        NdcColumnForComparison {
-                                            column: DataConnectorColumnName(
-                                                "TrackId",
-                                            ),
-                                            equal_operator: DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        },
                                     ),
+                                    nullable: false,
                                 },
                             },
                             description: None,
@@ -12868,25 +12748,13 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 Identifier(
                                     "SongId",
                                 ),
-                            ): UniqueIdentifierField {
-                                field_type: QualifiedTypeReference {
-                                    underlying_type: Named(
-                                        Inbuilt(
-                                            Int,
-                                        ),
+                            ): QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
                                     ),
-                                    nullable: false,
-                                },
-                                ndc_column: Some(
-                                    NdcColumnForComparison {
-                                        column: DataConnectorColumnName(
-                                            "TrackId",
-                                        ),
-                                        equal_operator: DataConnectorOperatorName(
-                                            "_eq",
-                                        ),
-                                    },
                                 ),
+                                nullable: false,
                             },
                         },
                     ],
@@ -15077,25 +14945,13 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     Identifier(
                                         "SongId",
                                     ),
-                                ): UniqueIdentifierField {
-                                    field_type: QualifiedTypeReference {
-                                        underlying_type: Named(
-                                            Inbuilt(
-                                                Int,
-                                            ),
+                                ): QualifiedTypeReference {
+                                    underlying_type: Named(
+                                        Inbuilt(
+                                            Int,
                                         ),
-                                        nullable: false,
-                                    },
-                                    ndc_column: Some(
-                                        NdcColumnForComparison {
-                                            column: DataConnectorColumnName(
-                                                "TrackId",
-                                            ),
-                                            equal_operator: DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        },
                                     ),
+                                    nullable: false,
                                 },
                             },
                             description: None,

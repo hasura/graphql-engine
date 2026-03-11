@@ -48,7 +48,6 @@ pub use stages::models::{ModelSource, ModelsError};
 pub use stages::models_graphql::{
     Model, ModelGraphqlError, ModelOrderByExpression, SelectAggregateGraphQlDefinition,
     SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition, SubscriptionGraphQlDefinition,
-    UniqueIdentifierField,
 };
 pub use stages::object_relationships::{
     AggregateRelationship, CommandRelationshipTarget, FieldNestedness, ModelRelationshipTarget,

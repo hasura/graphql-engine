@@ -8,7 +8,6 @@ use crate::{ArgumentInfo, Warning};
 pub use error::ModelGraphqlError;
 use indexmap::IndexMap;
 use open_dds::query::ArgumentName;
-use open_dds::types::FieldName;
 use open_dds::{commands::CommandName, models::ModelName, types::CustomTypeName};
 use std::collections::BTreeMap;
 
@@ -23,7 +22,7 @@ pub(crate) use types::ModelWithGraphql;
 pub use types::{
     Model, ModelGraphQlApi, ModelGraphqlIssue, ModelOrderByExpression, ModelsWithGraphqlOutput,
     SelectAggregateGraphQlDefinition, SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition,
-    SubscriptionGraphQlDefinition, UniqueIdentifierField,
+    SubscriptionGraphQlDefinition,
 };
 
 use super::order_by_expressions;
@@ -161,18 +160,9 @@ fn resolve_model_with_graphql(
         .cloned()
         .unwrap_or_default();
 
-    // If the model declares unique_identifiers at the model level, use those.
-    // Otherwise, fall back to deriving them from graphql selectUniques.
-    let unique_identifiers = match &model.unique_identifiers {
-        Some(unique_identifiers) if !unique_identifiers.is_empty() => {
-            resolve_unique_identifiers(&model)?
-        }
-        _ => graphql_api
-            .select_uniques
-            .iter()
-            .map(|su| su.unique_identifier.clone())
-            .collect(),
-    };
+    // unique_identifiers are already resolved in the models stage
+    // (with fallback to graphql selectUniques if none declared)
+    let unique_identifiers = model.unique_identifiers.clone();
 
     let description = model.raw.description;
 
@@ -201,56 +191,4 @@ fn resolve_model_with_graphql(
     );
 
     Ok(())
-}
-
-/// Resolve model-level unique identifiers (`Vec<Vec<FieldName>>`) into
-/// Vec<IndexMap<FieldName, UniqueIdentifierField>> by looking up field types
-/// and NDC column mappings.
-fn resolve_unique_identifiers(
-    model: &models::Model,
-) -> Result<Vec<IndexMap<FieldName, types::UniqueIdentifierField>>, ModelGraphqlError> {
-    let mut result = Vec::new();
-    for unique_fields in model.unique_identifiers.iter().flatten() {
-        let mut identifier = IndexMap::new();
-        for field_name in unique_fields {
-            let field_type = &model
-                .type_fields
-                .get(field_name)
-                .ok_or_else(|| ModelGraphqlError::UnknownFieldInUniqueIdentifier {
-                    model_name: model.name.clone(),
-                    field_name: field_name.clone(),
-                })?
-                .field_type;
-
-            let ndc_column = model
-                .source
-                .as_ref()
-                .map(|model_source| {
-                    models::get_ndc_column_for_comparison(
-                        &model.name,
-                        &model.data_type,
-                        model_source,
-                        field_name,
-                        || "the unique identifier for model".to_string(),
-                    )
-                })
-                .transpose()?;
-
-            let unique_identifier_field = types::UniqueIdentifierField {
-                field_type: field_type.clone(),
-                ndc_column,
-            };
-            if identifier
-                .insert(field_name.clone(), unique_identifier_field)
-                .is_some()
-            {
-                return Err(ModelGraphqlError::DuplicateFieldInUniqueIdentifier {
-                    model_name: model.name.clone(),
-                    field_name: field_name.clone(),
-                });
-            }
-        }
-        result.push(identifier);
-    }
-    Ok(result)
 }

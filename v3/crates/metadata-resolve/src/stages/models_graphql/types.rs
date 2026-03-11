@@ -12,10 +12,10 @@ use open_dds::{
 };
 use serde::{Deserialize, Serialize};
 
+use crate::OrderByExpressionIdentifier;
 use crate::stages::{boolean_expressions, models, object_types};
 use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
-use crate::{OrderByExpressionIdentifier, helpers::types::NdcColumnForComparison};
 
 #[derive(Debug)]
 pub struct ModelsWithGraphqlOutput {
@@ -45,19 +45,13 @@ pub struct Model {
     pub global_id_source: Option<models::NDCFieldSourceMapping>,
     pub apollo_federation_key_source: Option<models::NDCFieldSourceMapping>,
     pub aggregate_expression: Option<Qualified<AggregateExpressionName>>,
-    pub unique_identifiers: Vec<IndexMap<FieldName, UniqueIdentifierField>>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct UniqueIdentifierField {
-    pub field_type: QualifiedTypeReference,
-    pub ndc_column: Option<NdcColumnForComparison>,
+    pub unique_identifiers: Vec<IndexMap<FieldName, QualifiedTypeReference>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct SelectUniqueGraphQlDefinition {
     pub query_root_field: ast::Name,
-    pub unique_identifier: IndexMap<FieldName, UniqueIdentifierField>,
+    pub unique_identifier: IndexMap<FieldName, QualifiedTypeReference>,
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,

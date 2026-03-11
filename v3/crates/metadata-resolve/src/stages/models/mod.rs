@@ -15,14 +15,18 @@ pub use aggregation::resolve_aggregate_expression;
 pub use helpers::get_ndc_column_for_comparison;
 
 use crate::stages::{
-    aggregates, apollo, boolean_expressions, data_connector_scalar_types, data_connectors, relay,
-    scalar_types, type_permissions,
+    aggregates, apollo, boolean_expressions, data_connector_scalar_types, data_connectors,
+    object_types, relay, scalar_types, type_permissions,
 };
-use crate::types::subgraph::{ArgumentInfo, Qualified, mk_qualified_type_reference};
+use crate::types::subgraph::{
+    ArgumentInfo, Qualified, QualifiedTypeReference, mk_qualified_type_reference,
+};
 use indexmap::IndexMap;
 use open_dds::{
-    aggregates::AggregateExpressionName, data_connector::DataConnectorName, models::ModelName,
-    types::CustomTypeName,
+    aggregates::AggregateExpressionName,
+    data_connector::DataConnectorName,
+    models::ModelName,
+    types::{CustomTypeName, FieldName},
 };
 use std::collections::BTreeMap;
 
@@ -341,6 +345,27 @@ fn resolve_model(
         }
     };
 
+    // If the model declares unique_identifiers, use those. Otherwise, fall back
+    // to the graphql selectUniques definitions.
+    let raw_unique_identifiers = match model.unique_identifiers() {
+        Some(ids) if !ids.is_empty() => ids.clone(),
+        _ => graphql
+            .as_ref()
+            .map(|g| {
+                g.select_uniques
+                    .iter()
+                    .map(|su| su.unique_identifier.clone())
+                    .collect()
+            })
+            .unwrap_or_default(),
+    };
+
+    let unique_identifiers = resolve_unique_identifiers(
+        &qualified_model_name,
+        &raw_unique_identifiers,
+        &object_type_representation.object_type.fields,
+    )?;
+
     let model_raw = ModelRaw {
         description: model.description().clone(),
         filter_expression_type: model
@@ -366,7 +391,39 @@ fn resolve_model(
         source: None,
         global_id_source,
         apollo_federation_key_source,
-        unique_identifiers: model.unique_identifiers().clone(),
+        unique_identifiers,
         raw: model_raw,
     })
+}
+
+/// Resolve unique identifiers by looking up field types and validating that
+/// all referenced fields exist.
+fn resolve_unique_identifiers(
+    model_name: &Qualified<ModelName>,
+    unique_identifiers: &[Vec<FieldName>],
+    type_fields: &IndexMap<FieldName, object_types::FieldDefinition>,
+) -> Result<Vec<IndexMap<FieldName, QualifiedTypeReference>>, ModelsError> {
+    let mut result = Vec::new();
+    for unique_fields in unique_identifiers {
+        let mut identifier = IndexMap::new();
+        for field_name in unique_fields {
+            let field_type = type_fields
+                .get(field_name)
+                .ok_or_else(|| ModelsError::UnknownFieldInUniqueIdentifier {
+                    model_name: model_name.clone(),
+                    field_name: field_name.clone(),
+                })?
+                .field_type
+                .clone();
+
+            if identifier.insert(field_name.clone(), field_type).is_some() {
+                return Err(ModelsError::DuplicateFieldInUniqueIdentifier {
+                    model_name: model_name.clone(),
+                    field_name: field_name.clone(),
+                });
+            }
+        }
+        result.push(identifier);
+    }
+    Ok(result)
 }

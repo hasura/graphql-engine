@@ -105,6 +105,16 @@ pub enum ModelsError {
         model_name: Qualified<ModelName>,
         field_name: FieldName,
     },
+    #[error("unknown field {field_name:} in unique identifier defined for model {model_name:}")]
+    UnknownFieldInUniqueIdentifier {
+        model_name: Qualified<ModelName>,
+        field_name: FieldName,
+    },
+    #[error("duplicate field {field_name:} in unique identifier defined for model {model_name:}")]
+    DuplicateFieldInUniqueIdentifier {
+        model_name: Qualified<ModelName>,
+        field_name: FieldName,
+    },
     #[error("the following model is defined more than once: {name:}")]
     DuplicateModelDefinition { name: Qualified<ModelName> },
     #[error("Error in order by expression {order_by_expression_identifier}: {error}")]

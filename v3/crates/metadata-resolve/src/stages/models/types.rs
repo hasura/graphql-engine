@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use crate::QualifiedTypeReference;
 use crate::data_connectors::ArgumentPresetValue;
 use crate::helpers::argument::ArgumentMappingIssue;
 use crate::helpers::types::NdcColumnForComparison;
@@ -8,7 +7,8 @@ use crate::stages::order_by_expressions::OrderByExpressionIdentifier;
 use crate::stages::{data_connectors, object_types, order_by_expressions};
 use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::{
-    ArgumentInfo, Qualified, deserialize_qualified_btreemap, serialize_qualified_btreemap,
+    ArgumentInfo, Qualified, QualifiedTypeReference, deserialize_qualified_btreemap,
+    serialize_qualified_btreemap,
 };
 
 use indexmap::IndexMap;
@@ -61,9 +61,11 @@ pub struct Model {
     pub global_id_source: Option<NDCFieldSourceMapping>,
     pub apollo_federation_key_source: Option<NDCFieldSourceMapping>,
     pub aggregate_expression: Option<Qualified<AggregateExpressionName>>,
-    /// Sets of fields that uniquely identify an object in this model,
-    /// as declared on the model definition (not derived from GraphQL config).
-    pub unique_identifiers: Option<Vec<Vec<FieldName>>>,
+    /// Sets of fields that uniquely identify an object in this model.
+    /// Each entry maps field names to their resolved types.
+    /// Sourced from model-level `uniqueIdentifiers` if declared,
+    /// otherwise from graphql `selectUniques`.
+    pub unique_identifiers: Vec<IndexMap<FieldName, QualifiedTypeReference>>,
     pub raw: ModelRaw,
 }
 
