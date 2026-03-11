@@ -38,22 +38,22 @@ fn test_walk_path() {
     let tests = vec![
         (
             "[ true, false ]",
-            JSONPath(vec![JSONPathElement::Index(1)]),
+            JSONPath::from_vec(vec![JSONPathElement::Index(1)]),
             "false",
         ),
         (
             "[ true, false ]",
-            JSONPath(vec![JSONPathElement::Index(0)]),
+            JSONPath::from_vec(vec![JSONPathElement::Index(0)]),
             "true",
         ),
         (
             "{ \"dogs\": true }",
-            JSONPath(vec![JSONPathElement::Key("dogs".into())]),
+            JSONPath::from_vec(vec![JSONPathElement::Key("dogs".into())]),
             "true",
         ),
         (
             "{ \"horse\": [ true, false ] }",
-            JSONPath(vec![
+            JSONPath::from_vec(vec![
                 JSONPathElement::Key("horse".into()),
                 JSONPathElement::Index(0),
             ]),
@@ -61,7 +61,7 @@ fn test_walk_path() {
         ),
         (
             "{ \"norse\": { \"horse\": [ true, false ] } }",
-            JSONPath(vec![
+            JSONPath::from_vec(vec![
                 JSONPathElement::Key("norse".into()),
                 JSONPathElement::Key("horse".into()),
                 JSONPathElement::Index(0),

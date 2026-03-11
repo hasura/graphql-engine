@@ -12,7 +12,12 @@ fn load_metadata(test_path: &str) -> (open_dds::Metadata, Configuration, usize) 
         .join(test_path)
         .join("metadata.json");
 
-    let metadata_json_text = fs::read_to_string(&metadata_path)
+    load_metadata_from_path(&metadata_path)
+}
+
+/// Helper function to load and parse metadata from an absolute path
+fn load_metadata_from_path(metadata_path: &PathBuf) -> (open_dds::Metadata, Configuration, usize) {
+    let metadata_json_text = fs::read_to_string(metadata_path)
         .unwrap_or_else(|error| panic!("Could not read file {metadata_path:?}: {error}"));
 
     let file_size = metadata_json_text.len();
@@ -202,11 +207,71 @@ fn bench_detailed_stages(c: &mut Criterion) {
     group.finish();
 }
 
+fn benchmark_data_path(filename: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("..")
+        .join("cloud")
+        .join("build-artifacts")
+        .join("benchmark-data")
+        .join(filename)
+}
+
+/// Benchmark with a large real-world metadata file
+fn bench_resolve_real_metadata(group_name: &str, filename: &str, c: &mut Criterion) {
+    let mut group = c.benchmark_group(group_name);
+
+    let metadata_path = benchmark_data_path(filename);
+
+    let metadata_json_text = fs::read_to_string(&metadata_path)
+        .unwrap_or_else(|error| panic!("Could not read file {metadata_path:?}: {error}"));
+    let file_size = metadata_json_text.len();
+    group.throughput(Throughput::Bytes(file_size as u64));
+
+    group.bench_function("metadata_accessor_creation", |b| {
+        let json_value = serde_json::from_str::<serde_json::Value>(&metadata_json_text).unwrap();
+        let metadata =
+            open_dds::Metadata::deserialize(json_value, jsonpath::JSONPath::new()).unwrap();
+        b.iter_batched(
+            || metadata.clone(),
+            open_dds::accessor::MetadataAccessor::new,
+            BatchSize::LargeInput,
+        );
+    });
+
+    group.bench_function("full_resolve", |b| {
+        let (metadata, configuration, _) = load_metadata_from_path(&metadata_path);
+        b.iter_batched(
+            || (metadata.clone(), configuration.clone()),
+            |(metadata, configuration)| {
+                metadata_resolve::resolve(metadata, &configuration)
+                    .expect("Metadata resolution should succeed")
+            },
+            BatchSize::LargeInput,
+        );
+    });
+
+    group.finish();
+}
+
+fn bench_medium_metadata(c: &mut Criterion) {
+    bench_resolve_real_metadata("medium_metadata", "medium-metadata.json", c);
+}
+
+fn bench_medium_no_graphql_metadata(c: &mut Criterion) {
+    bench_resolve_real_metadata(
+        "medium_no_graphql_metadata",
+        "medium-no-graphql-metadata.json",
+        c,
+    );
+}
+
 criterion_group!(
     benches,
     bench_metadata_resolve,
     bench_metadata_resolve_stages,
     bench_parsing_vs_resolution,
-    bench_detailed_stages
+    bench_detailed_stages,
+    bench_medium_metadata,
+    bench_medium_no_graphql_metadata
 );
 criterion_main!(benches);

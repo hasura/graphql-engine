@@ -6,6 +6,7 @@ use crate::{
 use open_dds::types::{GraphQlTypeName, OperatorName};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use graphql_types as ast;
 use serde_with::serde_as;
@@ -26,7 +27,7 @@ pub struct ResolvedScalarBooleanExpressionType {
     pub operand_type: QualifiedTypeName,
 
     /// The list of comparison operators that can used on this scalar type
-    pub comparison_operators: BTreeMap<OperatorName, QualifiedTypeReference>,
+    pub comparison_operators: Arc<BTreeMap<OperatorName, QualifiedTypeReference>>,
 
     /// The list of mappings between OpenDD operator names and the names used in the data
     /// connector schema

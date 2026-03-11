@@ -8,27 +8,28 @@ pub enum WalkError<Ann> {
     MissingKey(String, Value<Ann>),
 }
 
-// reverse the path then walk it
+// walk the path elements from root to leaf
 pub fn walk<'a, Ann: Clone>(
     value: &'a Value<Ann>,
     path: &mut JSONPath,
 ) -> Result<&'a Ann, WalkError<Ann>> {
-    let mut reversed_path = JSONPath(path.0.iter().rev().cloned().collect());
-    walk_inner(value, &mut reversed_path)
+    let elements = path.to_vec();
+    walk_inner(value, &elements, 0)
 }
 
 fn walk_inner<'a, Ann: Clone>(
     value: &'a Value<Ann>,
-    path: &mut JSONPath,
+    elements: &[JSONPathElement],
+    index: usize,
 ) -> Result<&'a Ann, WalkError<Ann>> {
-    match path.0.pop() {
-        Some(tail) => {
-            match (value, &tail) {
+    match elements.get(index) {
+        Some(element) => {
+            match (value, element) {
                 (Value::Array(_, items), JSONPathElement::Index(i)) => {
                     match items.get(*i) {
                         Some(item) => {
                             // got it!
-                            walk_inner(item, path)
+                            walk_inner(item, elements, index + 1)
                         }
                         None => Err(WalkError::MissingIndex(*i, value.clone())),
                     }
@@ -37,12 +38,12 @@ fn walk_inner<'a, Ann: Clone>(
                     match items.get(s) {
                         Some(item) => {
                             // got it!
-                            walk_inner(item, path)
+                            walk_inner(item, elements, index + 1)
                         }
                         None => Err(WalkError::MissingKey(s.to_string(), value.clone())),
                     }
                 }
-                _ => Err(WalkError::PathValueMismatch(tail.clone(), value.clone())),
+                _ => Err(WalkError::PathValueMismatch(element.clone(), value.clone())),
             }
         }
         None => {

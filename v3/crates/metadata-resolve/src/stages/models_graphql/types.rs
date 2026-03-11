@@ -8,12 +8,12 @@ use open_dds::{
     data_connector::{DataConnectorColumnName, DataConnectorName},
     models::ModelName,
     query::ArgumentName,
-    types::{CustomTypeName, Deprecated, FieldName},
+    types::{Deprecated, FieldName},
 };
 use serde::{Deserialize, Serialize};
 
 use crate::OrderByExpressionIdentifier;
-use crate::stages::{boolean_expressions, models, object_types};
+use crate::stages::{boolean_expressions, models};
 use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 
@@ -26,26 +26,12 @@ pub struct ModelsWithGraphqlOutput {
 /// A Model resolved with regards to it's data source
 #[derive(Debug)]
 pub(crate) struct ModelWithGraphql {
-    pub inner: Model,
+    pub inner: Arc<models::Model>,
     pub filter_expression_type:
         Option<Arc<boolean_expressions::ResolvedObjectBooleanExpressionType>>,
     pub graphql_api: ModelGraphQlApi,
     pub arguments: IndexMap<ArgumentName, ArgumentInfo>,
     pub description: Option<String>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct Model {
-    pub path: jsonpath::JSONPath,
-    pub name: Qualified<ModelName>,
-    pub data_type: Qualified<CustomTypeName>,
-    pub type_fields: IndexMap<FieldName, object_types::FieldDefinition>,
-    pub global_id_fields: Vec<FieldName>,
-    pub source: Option<Arc<models::ModelSource>>, // wrapped in Arc because we include these in our `Plan`
-    pub global_id_source: Option<models::NDCFieldSourceMapping>,
-    pub apollo_federation_key_source: Option<models::NDCFieldSourceMapping>,
-    pub aggregate_expression: Option<Qualified<AggregateExpressionName>>,
-    pub unique_identifiers: Vec<IndexMap<FieldName, QualifiedTypeReference>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

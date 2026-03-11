@@ -728,6 +728,28 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                             ),
                         ),
                     },
+                    data_type_path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                12,
+                            ),
+                            Key(
+                                "definition",
+                            ),
+                            Key(
+                                "objectType",
+                            ),
+                        ],
+                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -769,6 +791,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                         },
                     },
                     global_id_fields: [],
+                    arguments: {},
                     source: Some(
                         ModelSource {
                             data_connector: DataConnectorLink {
@@ -1018,6 +1041,36 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                     apollo_federation_key_source: None,
                     aggregate_expression: None,
                     unique_identifiers: [],
+                    raw: ModelRaw {
+                        filter_expression_type: None,
+                        graphql: None,
+                        description: None,
+                        order_by: ModelV1 {
+                            graphql_type_name: None,
+                            orderable_fields: [
+                                OrderableField {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "artist_id",
+                                        ),
+                                    ),
+                                    order_by_directions: EnableAll(
+                                        true,
+                                    ),
+                                },
+                                OrderableField {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "name",
+                                        ),
+                                    ),
+                                    order_by_directions: EnableAll(
+                                        true,
+                                    ),
+                                },
+                            ],
+                        },
+                    },
                 },
                 arguments: {},
                 permissions: ModelPermissions {
@@ -1084,6 +1137,28 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                             ),
                         ),
                     },
+                    data_type_path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                13,
+                            ),
+                            Key(
+                                "definition",
+                            ),
+                            Key(
+                                "objectType",
+                            ),
+                        ],
+                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -1144,6 +1219,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                         },
                     },
                     global_id_fields: [],
+                    arguments: {},
                     source: Some(
                         ModelSource {
                             data_connector: DataConnectorLink {
@@ -1466,6 +1542,46 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                     apollo_federation_key_source: None,
                     aggregate_expression: None,
                     unique_identifiers: [],
+                    raw: ModelRaw {
+                        filter_expression_type: None,
+                        graphql: None,
+                        description: None,
+                        order_by: ModelV1 {
+                            graphql_type_name: None,
+                            orderable_fields: [
+                                OrderableField {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "album_id",
+                                        ),
+                                    ),
+                                    order_by_directions: EnableAll(
+                                        true,
+                                    ),
+                                },
+                                OrderableField {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "artist_id",
+                                        ),
+                                    ),
+                                    order_by_directions: EnableAll(
+                                        true,
+                                    ),
+                                },
+                                OrderableField {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "title",
+                                        ),
+                                    ),
+                                    order_by_directions: EnableAll(
+                                        true,
+                                    ),
+                                },
+                            ],
+                        },
+                    },
                 },
                 arguments: {},
                 permissions: ModelPermissions {

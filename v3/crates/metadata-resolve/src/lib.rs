@@ -44,9 +44,10 @@ pub use stages::model_permissions::{
     RelationalInsertPermission, RelationalOperation, RelationalUpdatePermission, SelectPermission,
     UnaryComparisonOperator,
 };
+pub use stages::models::Model;
 pub use stages::models::{ModelSource, ModelsError};
 pub use stages::models_graphql::{
-    Model, ModelGraphqlError, ModelOrderByExpression, SelectAggregateGraphQlDefinition,
+    ModelGraphqlError, ModelOrderByExpression, SelectAggregateGraphQlDefinition,
     SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition, SubscriptionGraphQlDefinition,
 };
 pub use stages::object_relationships::{

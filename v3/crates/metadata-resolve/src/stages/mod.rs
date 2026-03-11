@@ -336,7 +336,7 @@ fn resolve_internal(
         &data_connector_scalars,
         &object_types_with_relationships,
         &scalar_types,
-        &models_with_graphql,
+        models_with_graphql,
         &boolean_expression_types,
         &mut conditions,
     )

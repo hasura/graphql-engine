@@ -290,7 +290,7 @@ pub fn filter_parameters(
                     };
 
                     // Add the operators
-                    for (operator_name, operator_type) in &field_comparison.operators {
+                    for (operator_name, operator_type) in field_comparison.operators.as_ref() {
                         field_schema.properties.insert(
                             format!("${operator_name}"),
                             oas3::spec::ObjectOrReference::Object(type_schema(operator_type)),

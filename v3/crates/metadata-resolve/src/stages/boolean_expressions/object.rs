@@ -24,6 +24,7 @@ use open_dds::{
 };
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::sync::Arc;
 
 pub(crate) type RawBooleanExpressionTypes<'a> = BTreeMap<
     Qualified<CustomTypeName>,
@@ -441,6 +442,7 @@ pub fn resolve_comparable_fields(
     if graphql.is_some()
         || flags.contains(open_dds::flags::Flag::AllowBooleanExpressionFieldsWithoutGraphql)
     {
+        let mut operator_mapping_cache = BTreeMap::new();
         for (comparable_field_name, (comparable_field_kind, comparable_field_type_name)) in
             &resolved_comparable_fields
         {
@@ -449,10 +451,6 @@ pub fn resolve_comparable_fields(
                     if let Some(scalar_boolean_expression_type) =
                         scalar_boolean_expression_types.get(comparable_field_type_name)
                     {
-                        let operator_mapping = resolve_operator_mapping_for_scalar_type(
-                            &scalar_boolean_expression_type.data_connector_operator_mappings,
-                        );
-
                         // Register scalar comparison field only if it contains non-zero operators.
                         if !scalar_boolean_expression_type
                             .comparison_operators
@@ -462,6 +460,17 @@ pub fn resolve_comparable_fields(
                                 scalar_boolean_expressions::IsNullOperator::Include { graphql: _ }
                             )
                         {
+                            // Cache the operator mapping per scalar boolean expression type
+                            let operator_mapping = operator_mapping_cache
+                                .entry(comparable_field_type_name.clone())
+                                .or_insert_with(|| {
+                                    Arc::new(resolve_operator_mapping_for_scalar_type(
+                                        &scalar_boolean_expression_type
+                                            .data_connector_operator_mappings,
+                                    ))
+                                })
+                                .clone();
+
                             scalar_fields.insert(
                                 comparable_field_name.clone(),
                                 ComparisonExpressionInfo {

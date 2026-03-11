@@ -888,6 +888,28 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                             ),
                         ),
                     },
+                    data_type_path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                4,
+                            ),
+                            Key(
+                                "definition",
+                            ),
+                            Key(
+                                "objectType",
+                            ),
+                        ],
+                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -959,6 +981,7 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                         },
                     },
                     global_id_fields: [],
+                    arguments: {},
                     source: Some(
                         ModelSource {
                             data_connector: DataConnectorLink {
@@ -1335,6 +1358,48 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                             },
                         },
                     ],
+                    raw: ModelRaw {
+                        filter_expression_type: None,
+                        graphql: Some(
+                            ModelGraphQlDefinitionV2 {
+                                select_uniques: [
+                                    SelectUniqueGraphQlDefinition {
+                                        query_root_field: GraphQlFieldName(
+                                            "AlbumByID",
+                                        ),
+                                        unique_identifier: [
+                                            FieldName(
+                                                Identifier(
+                                                    "AlbumId",
+                                                ),
+                                            ),
+                                        ],
+                                        description: None,
+                                        deprecated: None,
+                                        subscription: None,
+                                    },
+                                ],
+                                select_many: Some(
+                                    SelectManyGraphQlDefinition {
+                                        query_root_field: GraphQlFieldName(
+                                            "Album",
+                                        ),
+                                        description: None,
+                                        deprecated: None,
+                                        subscription: None,
+                                    },
+                                ),
+                                arguments_input_type: None,
+                                apollo_federation: None,
+                                filter_input_type_name: None,
+                                aggregate: None,
+                            },
+                        ),
+                        description: None,
+                        order_by: ModelV2(
+                            None,
+                        ),
+                    },
                 },
                 arguments: {},
                 permissions: ModelPermissions {
@@ -1478,6 +1543,28 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                             ),
                         ),
                     },
+                    data_type_path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                6,
+                            ),
+                            Key(
+                                "definition",
+                            ),
+                            Key(
+                                "objectType",
+                            ),
+                        ],
+                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -1515,6 +1602,52 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                         },
                     },
                     global_id_fields: [],
+                    arguments: {
+                        ArgumentName(
+                            Identifier(
+                                "tenantId",
+                            ),
+                        ): ArgumentInfo {
+                            argument_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            argument_kind: Other,
+                            path: JSONPath(
+                                [
+                                    Key(
+                                        "subgraphs",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "objects",
+                                    ),
+                                    Index(
+                                        6,
+                                    ),
+                                    Key(
+                                        "definition",
+                                    ),
+                                    Key(
+                                        "arguments",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "name",
+                                    ),
+                                ],
+                            ),
+                        },
+                    },
                     source: Some(
                         ModelSource {
                             data_connector: DataConnectorLink {
@@ -1775,6 +1908,48 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                             },
                         },
                     ],
+                    raw: ModelRaw {
+                        filter_expression_type: None,
+                        graphql: Some(
+                            ModelGraphQlDefinitionV2 {
+                                select_uniques: [
+                                    SelectUniqueGraphQlDefinition {
+                                        query_root_field: GraphQlFieldName(
+                                            "ArtistByID",
+                                        ),
+                                        unique_identifier: [
+                                            FieldName(
+                                                Identifier(
+                                                    "ArtistId",
+                                                ),
+                                            ),
+                                        ],
+                                        description: None,
+                                        deprecated: None,
+                                        subscription: None,
+                                    },
+                                ],
+                                select_many: Some(
+                                    SelectManyGraphQlDefinition {
+                                        query_root_field: GraphQlFieldName(
+                                            "Artist",
+                                        ),
+                                        description: None,
+                                        deprecated: None,
+                                        subscription: None,
+                                    },
+                                ),
+                                arguments_input_type: None,
+                                apollo_federation: None,
+                                filter_input_type_name: None,
+                                aggregate: None,
+                            },
+                        ),
+                        description: None,
+                        order_by: ModelV2(
+                            None,
+                        ),
+                    },
                 },
                 arguments: {
                     ArgumentName(

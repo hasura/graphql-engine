@@ -8,7 +8,7 @@ use crate::stages::type_permissions::{
     ObjectTypeToCheck, resolve_condition, types_that_use_fancy_auth,
 };
 use crate::stages::{
-    boolean_expressions, data_connector_scalar_types, models_graphql, object_relationships,
+    boolean_expressions, data_connector_scalar_types, models, models_graphql, object_relationships,
     scalar_types,
 };
 use crate::types::error::Error;
@@ -590,7 +590,7 @@ fn resolve_model_select_permissions(
     select_perms: &open_dds::permissions::SelectPermission,
     role: &Spanned<open_dds::permissions::Role>,
     flags: &open_dds::flags::OpenDdFlags,
-    model: &models_graphql::Model,
+    model: &models::Model,
     boolean_expression: Option<&boolean_expressions::ResolvedObjectBooleanExpressionType>,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,

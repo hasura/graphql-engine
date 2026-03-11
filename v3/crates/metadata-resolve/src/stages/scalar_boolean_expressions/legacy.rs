@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use open_dds::{
     data_connector::{DataConnectorName, DataConnectorScalarType},
@@ -185,7 +186,7 @@ pub fn resolve_data_connector_scalar_representation(
     };
 
     let scalar_boolean_expression_type = ResolvedScalarBooleanExpressionType {
-        comparison_operators,
+        comparison_operators: Arc::new(comparison_operators),
         graphql_name: graphql_name.cloned(),
         is_null_operator,
         logical_operators: LogicalOperators::Exclude,

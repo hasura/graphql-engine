@@ -954,6 +954,28 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             ),
                         ),
                     },
+                    data_type_path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                3,
+                            ),
+                            Key(
+                                "definition",
+                            ),
+                            Key(
+                                "objectType",
+                            ),
+                        ],
+                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -1091,6 +1113,61 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                         },
                     },
                     global_id_fields: [],
+                    arguments: {
+                        ArgumentName(
+                            Identifier(
+                                "folderId",
+                            ),
+                        ): ArgumentInfo {
+                            argument_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "app",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "ObjectId",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            argument_kind: Other,
+                            path: JSONPath(
+                                [
+                                    Key(
+                                        "subgraphs",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "objects",
+                                    ),
+                                    Index(
+                                        3,
+                                    ),
+                                    Key(
+                                        "definition",
+                                    ),
+                                    Key(
+                                        "arguments",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "name",
+                                    ),
+                                ],
+                            ),
+                        },
+                    },
                     source: Some(
                         ModelSource {
                             data_connector: DataConnectorLink {
@@ -1783,6 +1860,101 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             },
                         },
                     ],
+                    raw: ModelRaw {
+                        filter_expression_type: Some(
+                            Qualified {
+                                subgraph: SubgraphName(
+                                    "app",
+                                ),
+                                name: CustomTypeName(
+                                    Identifier(
+                                        "FolderBoolExp",
+                                    ),
+                                ),
+                            },
+                        ),
+                        graphql: Some(
+                            ModelGraphQlDefinitionV2 {
+                                select_uniques: [
+                                    SelectUniqueGraphQlDefinition {
+                                        query_root_field: GraphQlFieldName(
+                                            "getFolderTreeById",
+                                        ),
+                                        unique_identifier: [
+                                            FieldName(
+                                                Identifier(
+                                                    "id",
+                                                ),
+                                            ),
+                                        ],
+                                        description: None,
+                                        deprecated: None,
+                                        subscription: Some(
+                                            SubscriptionGraphQlDefinition {
+                                                root_field: GraphQlFieldName(
+                                                    "getFolderTreeById",
+                                                ),
+                                                description: None,
+                                                deprecated: None,
+                                                polling_interval_ms: 1000,
+                                            },
+                                        ),
+                                    },
+                                ],
+                                select_many: Some(
+                                    SelectManyGraphQlDefinition {
+                                        query_root_field: GraphQlFieldName(
+                                            "getFolderTree",
+                                        ),
+                                        description: None,
+                                        deprecated: None,
+                                        subscription: Some(
+                                            SubscriptionGraphQlDefinition {
+                                                root_field: GraphQlFieldName(
+                                                    "getFolderTree",
+                                                ),
+                                                description: None,
+                                                deprecated: None,
+                                                polling_interval_ms: 1000,
+                                            },
+                                        ),
+                                    },
+                                ),
+                                arguments_input_type: Some(
+                                    GraphQlTypeName(
+                                        "GetFolderTreeArguments",
+                                    ),
+                                ),
+                                apollo_federation: None,
+                                filter_input_type_name: None,
+                                aggregate: Some(
+                                    ModelAggregateGraphQlDefinition {
+                                        query_root_field: GraphQlFieldName(
+                                            "getFolderTreeAggregate",
+                                        ),
+                                        description: None,
+                                        deprecated: None,
+                                        subscription: Some(
+                                            SubscriptionGraphQlDefinition {
+                                                root_field: GraphQlFieldName(
+                                                    "getFolderTreeAggregate",
+                                                ),
+                                                description: None,
+                                                deprecated: None,
+                                                polling_interval_ms: 1000,
+                                            },
+                                        ),
+                                    },
+                                ),
+                            },
+                        ),
+                        description: Some(
+                            "Get a folder and its children recursively",
+                        ),
+                        order_by: ModelV2(
+                            None,
+                        ),
+                    },
                 },
                 arguments: {
                     ArgumentName(

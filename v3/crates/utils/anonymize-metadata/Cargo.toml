@@ -1,0 +1,12 @@
+[package]
+name = "anonymize-metadata"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "anonymize-metadata"
+path = "src/main.rs"
+
+[dependencies]
+serde_json = "1"

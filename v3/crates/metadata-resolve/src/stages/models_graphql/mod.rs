@@ -4,6 +4,8 @@ mod graphql;
 mod order_by;
 mod types;
 
+use std::sync::Arc;
+
 use crate::{ArgumentInfo, Warning};
 pub use error::ModelGraphqlError;
 use indexmap::IndexMap;
@@ -20,7 +22,7 @@ use crate::types::subgraph::Qualified;
 
 pub(crate) use types::ModelWithGraphql;
 pub use types::{
-    Model, ModelGraphQlApi, ModelGraphqlIssue, ModelOrderByExpression, ModelsWithGraphqlOutput,
+    ModelGraphQlApi, ModelGraphqlIssue, ModelOrderByExpression, ModelsWithGraphqlOutput,
     SelectAggregateGraphQlDefinition, SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition,
     SubscriptionGraphQlDefinition,
 };
@@ -48,7 +50,7 @@ pub fn resolve(
 
     let mut results = vec![];
 
-    for (model_name, model) in models.clone() {
+    for (model_name, model) in models {
         results.push(resolve_model_with_graphql(
             model_name,
             model,
@@ -75,8 +77,8 @@ pub fn resolve(
 }
 
 fn resolve_model_with_graphql(
-    model_name: Qualified<ModelName>,
-    model: models::Model,
+    model_name: &Qualified<ModelName>,
+    model: &models::Model,
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     object_types: &BTreeMap<
         Qualified<CustomTypeName>,
@@ -98,8 +100,8 @@ fn resolve_model_with_graphql(
         Some(filter_expression_type_name) => {
             // We can only create a boolean expression if a source is attached to a model,
             // throw an error if this is not the case
-            let model_source = match model.source {
-                Some(ref source) => Ok(source),
+            let model_source = match &model.source {
+                Some(source) => Ok(source),
                 None => Err(
                     boolean_expressions::BooleanExpressionError::CannotUseFilterExpressionsWithoutSource {
                         model: model.name.clone(),
@@ -126,7 +128,7 @@ fn resolve_model_with_graphql(
     };
 
     let order_by_expression = order_by::resolve_order_by_expression(
-        &model,
+        model,
         model.source.as_ref().map(AsRef::as_ref),
         object_types,
         models,
@@ -137,11 +139,11 @@ fn resolve_model_with_graphql(
         issues,
     )?;
 
-    let graphql_api = match model.raw.graphql {
-        Some(ref model_graphql_definition) => graphql::resolve_model_graphql_api(
+    let graphql_api = match &model.raw.graphql {
+        Some(model_graphql_definition) => graphql::resolve_model_graphql_api(
             metadata_accessor,
             model_graphql_definition,
-            &model,
+            model,
             track_root_fields,
             model.raw.description.as_ref(),
             model.aggregate_expression.as_ref(),
@@ -160,29 +162,12 @@ fn resolve_model_with_graphql(
         .cloned()
         .unwrap_or_default();
 
-    // unique_identifiers are already resolved in the models stage
-    // (with fallback to graphql selectUniques if none declared)
-    let unique_identifiers = model.unique_identifiers.clone();
-
-    let description = model.raw.description;
-
-    let model = types::Model {
-        path: model.path,
-        name: model.name,
-        data_type: model.data_type,
-        type_fields: model.type_fields,
-        aggregate_expression: model.aggregate_expression,
-        source: model.source,
-        apollo_federation_key_source: model.apollo_federation_key_source,
-        global_id_source: model.global_id_source,
-        global_id_fields: model.global_id_fields,
-        unique_identifiers,
-    };
+    let description = model.raw.description.clone();
 
     models_with_graphql.insert(
-        model_name,
+        model_name.clone(),
         types::ModelWithGraphql {
-            inner: model,
+            inner: Arc::new(model.clone()),
             arguments,
             description,
             graphql_api,

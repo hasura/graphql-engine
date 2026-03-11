@@ -293,9 +293,8 @@ pub enum BooleanExpressionTypeIdentifier {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ComparisonExpressionInfo {
     pub boolean_expression_type_name: BooleanExpressionTypeIdentifier,
-    pub operators: BTreeMap<OperatorName, QualifiedTypeReference>,
-    #[serde_as(as = "Vec<(_, _)>")]
-    pub operator_mapping: BTreeMap<Qualified<DataConnectorName>, OperatorMapping>,
+    pub operators: Arc<BTreeMap<OperatorName, QualifiedTypeReference>>,
+    pub operator_mapping: Arc<BTreeMap<Qualified<DataConnectorName>, OperatorMapping>>,
     pub logical_operators: LogicalOperators,
     pub field_kind: ScalarComparisonKind,
 }

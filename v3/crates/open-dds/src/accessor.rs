@@ -52,6 +52,87 @@ pub struct MetadataAccessor {
     pub view_permissions: Vec<QualifiedObject<permissions::ViewPermissions>>,
 }
 
+/// Counts of each metadata object variant, used for preallocating Vec capacity.
+#[derive(Default)]
+struct ObjectCounts {
+    data_connectors: usize,
+    graphql_config: usize,
+    object_types: usize,
+    scalar_types: usize,
+    object_boolean_expression_types: usize,
+    boolean_expression_types: usize,
+    order_by_expressions: usize,
+    data_connector_scalar_representations: usize,
+    aggregate_expressions: usize,
+    models: usize,
+    type_permissions: usize,
+    model_permissions: usize,
+    relationships: usize,
+    commands: usize,
+    command_permissions: usize,
+    plugins: usize,
+    views: usize,
+    view_permissions: usize,
+}
+
+impl ObjectCounts {
+    fn count_objects(objects: &[OpenDdSubgraphObject]) -> Self {
+        let mut counts = Self::default();
+        for object in objects {
+            match object {
+                OpenDdSubgraphObject::DataConnectorLink(_) => counts.data_connectors += 1,
+                OpenDdSubgraphObject::GraphqlConfig(_) => counts.graphql_config += 1,
+                OpenDdSubgraphObject::ObjectType(_) => counts.object_types += 1,
+                OpenDdSubgraphObject::ScalarType(_) => counts.scalar_types += 1,
+                OpenDdSubgraphObject::ObjectBooleanExpressionType(_) => {
+                    counts.object_boolean_expression_types += 1;
+                }
+                OpenDdSubgraphObject::BooleanExpressionType(_) => {
+                    counts.boolean_expression_types += 1;
+                }
+                OpenDdSubgraphObject::OrderByExpression(_) => counts.order_by_expressions += 1,
+                OpenDdSubgraphObject::DataConnectorScalarRepresentation(_) => {
+                    counts.data_connector_scalar_representations += 1;
+                }
+                OpenDdSubgraphObject::AggregateExpression(_) => {
+                    counts.aggregate_expressions += 1;
+                }
+                OpenDdSubgraphObject::Model(_) => counts.models += 1,
+                OpenDdSubgraphObject::TypePermissions(_) => counts.type_permissions += 1,
+                OpenDdSubgraphObject::ModelPermissions(_) => counts.model_permissions += 1,
+                OpenDdSubgraphObject::Relationship(_) => counts.relationships += 1,
+                OpenDdSubgraphObject::Command(_) => counts.commands += 1,
+                OpenDdSubgraphObject::CommandPermissions(_) => counts.command_permissions += 1,
+                OpenDdSubgraphObject::LifecyclePluginHook(_) => counts.plugins += 1,
+                OpenDdSubgraphObject::View(_) => counts.views += 1,
+                OpenDdSubgraphObject::ViewPermissions(_) => counts.view_permissions += 1,
+            }
+        }
+        counts
+    }
+
+    fn add(&mut self, other: &Self) {
+        self.data_connectors += other.data_connectors;
+        self.graphql_config += other.graphql_config;
+        self.object_types += other.object_types;
+        self.scalar_types += other.scalar_types;
+        self.object_boolean_expression_types += other.object_boolean_expression_types;
+        self.boolean_expression_types += other.boolean_expression_types;
+        self.order_by_expressions += other.order_by_expressions;
+        self.data_connector_scalar_representations += other.data_connector_scalar_representations;
+        self.aggregate_expressions += other.aggregate_expressions;
+        self.models += other.models;
+        self.type_permissions += other.type_permissions;
+        self.model_permissions += other.model_permissions;
+        self.relationships += other.relationships;
+        self.commands += other.commands;
+        self.command_permissions += other.command_permissions;
+        self.plugins += other.plugins;
+        self.views += other.views;
+        self.view_permissions += other.view_permissions;
+    }
+}
+
 fn load_metadata_objects(
     metadata_objects: Vec<OpenDdSubgraphObject>,
     subgraph: &SubgraphName,
@@ -213,13 +294,17 @@ impl MetadataAccessor {
     pub fn new(metadata: Metadata) -> MetadataAccessor {
         match metadata {
             Metadata::WithoutNamespaces(metadata) => {
-                let mut accessor: MetadataAccessor = MetadataAccessor::new_empty(None);
+                let counts = ObjectCounts::count_objects(&metadata);
+                let mut accessor = MetadataAccessor::new_empty(None, &counts);
                 load_metadata_objects(metadata, &UNKNOWN_SUBGRAPH, &mut accessor);
                 accessor
             }
             Metadata::Versioned(MetadataWithVersion::V1(metadata)) => {
-                let mut accessor: MetadataAccessor =
-                    MetadataAccessor::new_empty(Some(metadata.flags));
+                let mut counts = ObjectCounts::default();
+                for ns in &metadata.namespaces {
+                    counts.add(&ObjectCounts::count_objects(&ns.objects));
+                }
+                let mut accessor = MetadataAccessor::new_empty(Some(metadata.flags), &counts);
                 for namespaced_metadata in metadata.namespaces {
                     let subgraph = SubgraphName::new_without_validation(&namespaced_metadata.name);
                     load_metadata_objects(namespaced_metadata.objects, &subgraph, &mut accessor);
@@ -227,8 +312,11 @@ impl MetadataAccessor {
                 accessor
             }
             Metadata::Versioned(MetadataWithVersion::V2(metadata)) => {
-                let mut accessor: MetadataAccessor =
-                    MetadataAccessor::new_empty(Some(metadata.flags));
+                let mut counts = ObjectCounts::default();
+                for subgraph in &metadata.subgraphs {
+                    counts.add(&ObjectCounts::count_objects(&subgraph.objects));
+                }
+                let mut accessor = MetadataAccessor::new_empty(Some(metadata.flags), &counts);
                 for supergraph_object in metadata.supergraph.objects {
                     load_metadata_supergraph_object(supergraph_object, &mut accessor);
                 }
@@ -238,8 +326,11 @@ impl MetadataAccessor {
                 accessor
             }
             Metadata::Versioned(MetadataWithVersion::V3(metadata)) => {
-                let mut accessor: MetadataAccessor =
-                    MetadataAccessor::new_empty(Some(metadata.flags));
+                let mut counts = ObjectCounts::default();
+                for subgraph in &metadata.subgraphs {
+                    counts.add(&ObjectCounts::count_objects(&subgraph.objects));
+                }
+                let mut accessor = MetadataAccessor::new_empty(Some(metadata.flags), &counts);
                 for subgraph in metadata.subgraphs {
                     load_metadata_objects(subgraph.objects, &subgraph.name.into(), &mut accessor);
                 }
@@ -248,28 +339,32 @@ impl MetadataAccessor {
         }
     }
 
-    fn new_empty(flags: Option<flags::OpenDdFlags>) -> MetadataAccessor {
+    fn new_empty(flags: Option<flags::OpenDdFlags>, counts: &ObjectCounts) -> MetadataAccessor {
         MetadataAccessor {
             subgraphs: HashSet::new(),
-            data_connectors: vec![],
-            object_types: vec![],
-            scalar_types: vec![],
-            object_boolean_expression_types: vec![],
-            boolean_expression_types: vec![],
-            order_by_expressions: vec![],
-            data_connector_scalar_representations: vec![],
-            aggregate_expressions: vec![],
-            models: vec![],
-            type_permissions: vec![],
-            model_permissions: vec![],
-            relationships: vec![],
-            commands: vec![],
-            command_permissions: vec![],
+            data_connectors: Vec::with_capacity(counts.data_connectors),
+            object_types: Vec::with_capacity(counts.object_types),
+            scalar_types: Vec::with_capacity(counts.scalar_types),
+            object_boolean_expression_types: Vec::with_capacity(
+                counts.object_boolean_expression_types,
+            ),
+            boolean_expression_types: Vec::with_capacity(counts.boolean_expression_types),
+            order_by_expressions: Vec::with_capacity(counts.order_by_expressions),
+            data_connector_scalar_representations: Vec::with_capacity(
+                counts.data_connector_scalar_representations,
+            ),
+            aggregate_expressions: Vec::with_capacity(counts.aggregate_expressions),
+            models: Vec::with_capacity(counts.models),
+            type_permissions: Vec::with_capacity(counts.type_permissions),
+            model_permissions: Vec::with_capacity(counts.model_permissions),
+            relationships: Vec::with_capacity(counts.relationships),
+            commands: Vec::with_capacity(counts.commands),
+            command_permissions: Vec::with_capacity(counts.command_permissions),
             flags: flags.unwrap_or_default(),
-            graphql_config: vec![],
-            plugins: vec![],
-            views: vec![],
-            view_permissions: Vec::new(),
+            graphql_config: Vec::with_capacity(counts.graphql_config),
+            plugins: Vec::with_capacity(counts.plugins),
+            views: Vec::with_capacity(counts.views),
+            view_permissions: Vec::with_capacity(counts.view_permissions),
         }
     }
 }

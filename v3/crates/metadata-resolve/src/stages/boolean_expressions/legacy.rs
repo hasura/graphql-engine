@@ -17,6 +17,7 @@ use open_dds::{
     types::{CustomTypeName, FieldName, GraphQlTypeName},
 };
 use std::collections::{BTreeMap, BTreeSet};
+use std::sync::Arc;
 
 pub(crate) type RawBooleanExpressionTypes<'a> = BTreeMap<
     Qualified<CustomTypeName>,
@@ -334,6 +335,7 @@ fn resolve_comparable_fields(
     if graphql.is_some()
         || flags.contains(open_dds::flags::Flag::AllowBooleanExpressionFieldsWithoutGraphql)
     {
+        let mut operator_mapping_cache = BTreeMap::new();
         for (comparable_field_name, (_comparable_field_kind, comparable_field_type_name)) in
             &resolved_comparable_fields
         {
@@ -345,22 +347,33 @@ fn resolve_comparable_fields(
                     .comparison_operators
                     .is_empty()
                 {
+                    let operator_mapping = operator_mapping_cache
+                        .entry(comparable_field_type_name.clone())
+                        .or_insert_with(|| {
+                            Arc::new(
+                                scalar_boolean_expression_type
+                                    .data_connector_operator_mappings
+                                    .iter()
+                                    .map(|(data_connector_name, mappings)| {
+                                        (
+                                            data_connector_name.clone(),
+                                            crate::OperatorMapping(
+                                                mappings.operator_mapping.clone(),
+                                            ),
+                                        )
+                                    })
+                                    .collect::<BTreeMap<_, _>>(),
+                            )
+                        })
+                        .clone();
+
                     scalar_fields.insert(
                         comparable_field_name.clone(),
                         ComparisonExpressionInfo {
                             field_kind: ScalarComparisonKind::Scalar,
                             boolean_expression_type_name: comparable_field_type_name.clone(),
                             operators: scalar_boolean_expression_type.comparison_operators.clone(),
-                            operator_mapping: scalar_boolean_expression_type
-                                .data_connector_operator_mappings
-                                .iter()
-                                .map(|(data_connector_name, mappings)| {
-                                    (
-                                        data_connector_name.clone(),
-                                        crate::OperatorMapping(mappings.operator_mapping.clone()),
-                                    )
-                                })
-                                .collect(),
+                            operator_mapping,
                             logical_operators: scalar_boolean_expression_type
                                 .logical_operators
                                 .clone(),

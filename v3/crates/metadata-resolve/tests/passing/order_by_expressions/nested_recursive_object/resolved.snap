@@ -287,6 +287,28 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested_re
                             ),
                         ),
                     },
+                    data_type_path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                4,
+                            ),
+                            Key(
+                                "definition",
+                            ),
+                            Key(
+                                "objectType",
+                            ),
+                        ],
+                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -333,6 +355,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested_re
                         },
                     },
                     global_id_fields: [],
+                    arguments: {},
                     source: Some(
                         ModelSource {
                             data_connector: DataConnectorLink {
@@ -526,6 +549,47 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested_re
                     apollo_federation_key_source: None,
                     aggregate_expression: None,
                     unique_identifiers: [],
+                    raw: ModelRaw {
+                        filter_expression_type: None,
+                        graphql: Some(
+                            ModelGraphQlDefinitionV2 {
+                                select_uniques: [],
+                                select_many: Some(
+                                    SelectManyGraphQlDefinition {
+                                        query_root_field: GraphQlFieldName(
+                                            "Employees",
+                                        ),
+                                        description: None,
+                                        deprecated: None,
+                                        subscription: None,
+                                    },
+                                ),
+                                arguments_input_type: None,
+                                apollo_federation: None,
+                                filter_input_type_name: None,
+                                aggregate: Some(
+                                    ModelAggregateGraphQlDefinition {
+                                        query_root_field: GraphQlFieldName(
+                                            "Employees_aggregate",
+                                        ),
+                                        description: None,
+                                        deprecated: None,
+                                        subscription: None,
+                                    },
+                                ),
+                            },
+                        ),
+                        description: None,
+                        order_by: ModelV2(
+                            Some(
+                                OrderByExpressionName(
+                                    Identifier(
+                                        "Employee_order_by_exp",
+                                    ),
+                                ),
+                            ),
+                        ),
+                    },
                 },
                 arguments: {},
                 permissions: ModelPermissions {

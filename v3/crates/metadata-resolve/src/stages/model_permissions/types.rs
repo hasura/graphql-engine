@@ -51,7 +51,7 @@ pub struct RelationalDeletePermission {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct ModelWithPermissions {
-    pub model: models_graphql::Model,
+    pub model: Arc<models::Model>,
     pub arguments: IndexMap<ArgumentName, ArgumentInfo>,
     pub permissions: ModelPermissions,
     pub filter_expression_type:

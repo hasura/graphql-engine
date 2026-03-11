@@ -533,7 +533,7 @@ fn get_scalar_boolean_expression_type(
 ) -> Result<gql_schema::RegisteredTypeName, Error> {
     let graphql_type_name = scalar_boolean_expression_graphql.type_name.clone();
     let mut operators = Vec::new();
-    for (op_name, input_type) in &comparison_expression.operators {
+    for (op_name, input_type) in comparison_expression.operators.as_ref() {
         let op_name = mk_name(op_name.as_str())
             .map_err(metadata_resolve::Error::from)
             .map_err(metadata_resolve::WithContext::from)?;
