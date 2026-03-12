@@ -701,6 +701,7 @@ instance MonadTrace AppM where
   newTraceWith c p n (AppM a) = AppM $ newTraceWith c p n a
   newSpanWith i n k (AppM a) = AppM $ newSpanWith i n k a
   attachMetadata = AppM . attachMetadata
+  setSpanStatus = AppM . setSpanStatus
 
 instance MonadTraceContext AppM where
   currentContext = AppM currentContext

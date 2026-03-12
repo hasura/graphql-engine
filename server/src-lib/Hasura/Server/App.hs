@@ -450,6 +450,7 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
           allHeaders = [contentLength, jsonHeader]
       -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/http/#common-attributes
       lift $ Tracing.attachMetadata [("http.response_content_length", bsToTxt $ snd contentLength)]
+      lift $ Tracing.setSpanError (qeError qErr)
       lift $ logHttpError (_lsLogger appEnvLoggers) appEnvLoggingSettings userInfo reqId waiReq req qErr qTime Nothing headers httpLogMetadata True
       mapM_ setHeader allHeaders
       Spock.setStatus $ qeStatus qErr
@@ -679,7 +680,7 @@ v1Alpha1PGDumpHandler b = do
   return $ RawResp $ HttpResponse output [sqlHeader]
 
 consoleAssetsHandler ::
-  (MonadIO m, HttpLog m) =>
+  (MonadIO m, HttpLog m, MonadTrace m) =>
   L.Logger L.Hasura ->
   LoggingSettings ->
   Text ->
@@ -703,7 +704,7 @@ consoleAssetsHandler logger loggingSettings dir path = do
     onSuccess c = do
       mapM_ setHeader headers
       Spock.lazyBytes c
-    onError :: (MonadIO m, HttpLog m) => [HTTP.Header] -> a -> Spock.ActionT m ()
+    onError :: (MonadTrace m, MonadIO m, HttpLog m) => [HTTP.Header] -> a -> Spock.ActionT m ()
     onError hdrs _ = raiseGenericApiError logger loggingSettings hdrs $ err404 NotFound $ "Couldn't find console asset " <> path
     -- set gzip header if the filename ends with .gz
     (fileName, encHeader) = case splitExtension (takeFileName pathStr) of
@@ -1177,6 +1178,7 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore closeWebsocketsOn
       reqBody <- liftIO $ Wai.strictRequestBody req
       let headers = Wai.requestHeaders req
       (reqId, _newHeaders) <- getRequestId headers
+      lift $ Tracing.setSpanError (qeError err)
       -- setting the bool flag countDataTransferBytes to False here since we don't want to count the data
       -- transfer bytes for requests to `/heatlhz` and `/v1/version` endpoints
       lift $ logHttpError logger appEnvLoggingSettings Nothing reqId req (reqBody, Nothing) err Nothing Nothing headers (emptyHttpLogMetadata @m) False
@@ -1232,7 +1234,7 @@ onlyWhenApiEnabled isEnabled appStateRef endpointAction = do
 
 raiseGenericApiError ::
   forall m.
-  (MonadIO m, HttpLog m) =>
+  (MonadIO m, HttpLog m, MonadTrace m) =>
   L.Logger L.Hasura ->
   LoggingSettings ->
   [HTTP.Header] ->
@@ -1242,6 +1244,7 @@ raiseGenericApiError logger loggingSetting headers qErr = do
   req <- Spock.request
   reqBody <- liftIO $ Wai.strictRequestBody req
   (reqId, _newHeaders) <- getRequestId $ Wai.requestHeaders req
+  lift $ Tracing.setSpanError (qeError qErr)
   -- setting the bool flag countDataTransferBytes to False here since we don't want to count the data
   -- transfer bytes for requests to undefined resources
   lift $ logHttpError logger loggingSetting Nothing reqId req (reqBody, Nothing) qErr Nothing Nothing headers (emptyHttpLogMetadata @m) False
