@@ -35,6 +35,18 @@ use crate::types::subgraph::{Qualified, mk_qualified_type_name, mk_qualified_typ
 use graphql_types as ast;
 use indexmap::IndexMap;
 
+/// Cached scalar type information to avoid recomputing comparison operators,
+/// aggregate functions, and extraction functions for each field with the same
+/// underlying scalar type on the same data connector.
+pub(crate) struct CachedScalarTypeInfo {
+    comparison_operators: ComparisonOperators,
+    aggregate_functions: AggregateFunctions,
+    extraction_functions: ExtractionFunctions,
+    column_type_representation: ndc_models::TypeRepresentation,
+}
+
+type ScalarTypeInfoCache = BTreeMap<ndc_models::ScalarTypeName, CachedScalarTypeInfo>;
+
 /// resolve object types, matching them to that in the data connectors
 pub(crate) fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
@@ -52,6 +64,11 @@ pub(crate) fn resolve(
     let mut issues = Vec::new();
     let mut raw_object_types = BTreeMap::new();
     let mut results = vec![];
+    // Cache scalar type info per data connector to avoid redundant computation.
+    // Keyed by (data_connector_name, scalar_type_name), populated lazily during
+    // type mapping resolution.
+    let mut scalar_type_info_caches: BTreeMap<Qualified<DataConnectorName>, ScalarTypeInfoCache> =
+        BTreeMap::new();
     for open_dds::accessor::QualifiedObject {
         path: _,
         subgraph,
@@ -95,6 +112,7 @@ pub(crate) fn resolve(
             &mut apollo_federation_entity_enabled_types,
             &mut issues,
             &mut object_types,
+            &mut scalar_type_info_caches,
         ));
     }
 
@@ -132,6 +150,7 @@ fn resolve_object_type(
     >,
     issues: &mut Vec<ObjectTypesIssue>,
     object_types: &mut BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithTypeMappings>,
+    scalar_type_info_caches: &mut BTreeMap<Qualified<DataConnectorName>, ScalarTypeInfoCache>,
 ) -> Result<(), ObjectTypesError> {
     let resolved_object_type = resolve_object_type_representation(
         object_type_definition,
@@ -153,12 +172,16 @@ fn resolve_object_type(
             qualified_object_type_name.subgraph.clone(),
             dc_type_mapping.data_connector_name.clone(),
         );
+        let scalar_type_info_cache = scalar_type_info_caches
+            .entry(qualified_data_connector_name.clone())
+            .or_default();
         let (type_mapping, new_issues) = resolve_data_connector_type_mapping(
             dc_type_mapping,
             qualified_object_type_name,
             &resolved_object_type,
             data_connectors,
             data_connector_scalar_types,
+            scalar_type_info_cache,
         )
         .map_err(|type_validation_error| {
             ObjectTypesError::DataConnectorTypeMappingValidationError {
@@ -407,6 +430,7 @@ pub fn resolve_data_connector_type_mapping(
         Qualified<DataConnectorName>,
         data_connector_scalar_types::DataConnectorScalars,
     >,
+    scalar_type_info_cache: &mut ScalarTypeInfoCache,
 ) -> Result<(TypeMapping, Vec<ObjectTypesIssue>), TypeMappingValidationError> {
     let mut issues = Vec::new();
     let qualified_data_connector_name = Qualified::new(
@@ -523,33 +547,48 @@ pub fn resolve_data_connector_type_mapping(
             }
         }
 
-        let column_type_representation = scalar_type.map(|ty| ty.representation.clone());
-
         let scalar_type_name = ndc_models::ScalarTypeName::new(underlying_column_type.clone());
 
-        let comparison_operators = scalar_type.map(|ty| {
-            let (c, new_issues) =
-                get_comparison_operators(&scalar_type_name, ty, &qualified_data_connector_name);
-
-            issues.extend(new_issues);
-            c
+        // Use the cache to avoid recomputing operators/functions for the same
+        // scalar type on the same data connector. This is a big win because
+        // many fields across many object types share the same underlying scalar type.
+        let cached_info = scalar_type.map(|ty| {
+            scalar_type_info_cache
+                .entry(scalar_type_name.clone())
+                .or_insert_with(|| {
+                    let (comparison_operators, comp_issues) = get_comparison_operators(
+                        &scalar_type_name,
+                        ty,
+                        &qualified_data_connector_name,
+                    );
+                    let (aggregate_functions, agg_issues) = make_aggregate_functions(
+                        &scalar_type_name,
+                        ty,
+                        &qualified_data_connector_name,
+                    );
+                    let (extraction_functions, ext_issues) = make_extraction_functions(
+                        &scalar_type_name,
+                        ty,
+                        &qualified_data_connector_name,
+                    );
+                    issues.extend(comp_issues);
+                    issues.extend(agg_issues);
+                    issues.extend(ext_issues);
+                    CachedScalarTypeInfo {
+                        comparison_operators,
+                        aggregate_functions,
+                        extraction_functions,
+                        column_type_representation: ty.representation.clone(),
+                    }
+                })
         });
 
-        let aggregate_functions = scalar_type.map(|ty| {
-            let (c, new_issues) =
-                make_aggregate_functions(&scalar_type_name, ty, &qualified_data_connector_name);
-
-            issues.extend(new_issues);
-            c
-        });
-
-        let extraction_functions = scalar_type.map(|ty| {
-            let (c, new_issues) =
-                make_extraction_functions(&scalar_type_name, ty, &qualified_data_connector_name);
-
-            issues.extend(new_issues);
-            c
-        });
+        let column_type_representation = cached_info
+            .as_ref()
+            .map(|c| c.column_type_representation.clone());
+        let comparison_operators = cached_info.as_ref().map(|c| c.comparison_operators.clone());
+        let aggregate_functions = cached_info.as_ref().map(|c| c.aggregate_functions.clone());
+        let extraction_functions = cached_info.map(|c| c.extraction_functions.clone());
 
         let resolved_field_mapping = FieldMapping {
             column: resolved_field_mapping_column.into_owned(),

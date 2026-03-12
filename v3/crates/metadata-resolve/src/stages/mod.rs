@@ -294,7 +294,7 @@ fn resolve_internal(
         issues,
     } = models_graphql::resolve(
         &metadata_accessor,
-        &models,
+        models,
         &commands,
         &object_types_with_relationships,
         &arguments,

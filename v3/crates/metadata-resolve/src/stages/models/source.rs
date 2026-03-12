@@ -71,10 +71,14 @@ pub(crate) fn resolve_model_source(
         DataConnectorObjectType::from(source_collection.collection_type.as_str());
 
     let source_arguments = source_collection
-        .clone()
         .arguments
-        .into_iter()
-        .map(|(k, v)| (DataConnectorArgumentName::from(k.as_str()), v.argument_type))
+        .iter()
+        .map(|(k, v)| {
+            (
+                DataConnectorArgumentName::from(k.as_str()),
+                v.argument_type.clone(),
+            )
+        })
         .collect();
 
     let data_connector_scalar_types = data_connector_scalars

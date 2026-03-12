@@ -29,9 +29,18 @@ pub use types::{
 
 use super::order_by_expressions;
 
+/// Intermediate struct holding the resolved graphql parts for a model,
+/// before combining with the owned Model wrapped in Arc.
+struct ResolvedGraphqlParts {
+    filter_expression_type: Option<Arc<boolean_expressions::ResolvedObjectBooleanExpressionType>>,
+    graphql_api: types::ModelGraphQlApi,
+    arguments: IndexMap<ArgumentName, ArgumentInfo>,
+    description: Option<String>,
+}
+
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    models: &IndexMap<Qualified<ModelName>, models::Model>,
+    models: IndexMap<Qualified<ModelName>, models::Model>,
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
     object_types: &BTreeMap<
         Qualified<CustomTypeName>,
@@ -45,38 +54,60 @@ pub fn resolve(
     order_by_expressions: &mut order_by_expressions::OrderByExpressions,
     graphql_types: &mut graphql_config::GraphqlTypeNames,
 ) -> Result<ModelsWithGraphqlOutput, Vec<ModelGraphqlError>> {
-    let mut models_with_graphql = IndexMap::new();
+    let mut graphql_parts: IndexMap<Qualified<ModelName>, ResolvedGraphqlParts> = IndexMap::new();
     let mut issues = vec![];
 
     let mut results = vec![];
 
-    for (model_name, model) in models {
-        results.push(resolve_model_with_graphql(
+    // First pass: resolve graphql settings for each model (borrowing)
+    for (model_name, model) in &models {
+        results.push(resolve_model_graphql_parts(
             model_name,
             model,
             metadata_accessor,
             object_types,
             arguments,
             boolean_expression_types,
-            models,
+            &models,
             commands,
             track_root_fields,
             graphql_config,
             scalar_types,
             order_by_expressions,
             graphql_types,
-            &mut models_with_graphql,
+            &mut graphql_parts,
             &mut issues,
         ));
     }
 
-    partition_eithers::collect_any_errors(results).map(|_| types::ModelsWithGraphqlOutput {
+    partition_eithers::collect_any_errors(results)?;
+
+    // Second pass: move models into Arc (avoids cloning each Model)
+    let models_with_graphql = models
+        .into_iter()
+        .filter_map(|(model_name, model)| {
+            graphql_parts.swap_remove(&model_name).map(|parts| {
+                (
+                    model_name,
+                    types::ModelWithGraphql {
+                        inner: Arc::new(model),
+                        filter_expression_type: parts.filter_expression_type,
+                        graphql_api: parts.graphql_api,
+                        arguments: parts.arguments,
+                        description: parts.description,
+                    },
+                )
+            })
+        })
+        .collect();
+
+    Ok(types::ModelsWithGraphqlOutput {
         models_with_graphql,
         issues,
     })
 }
 
-fn resolve_model_with_graphql(
+fn resolve_model_graphql_parts(
     model_name: &Qualified<ModelName>,
     model: &models::Model,
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
@@ -93,7 +124,7 @@ fn resolve_model_with_graphql(
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     order_by_expressions: &mut order_by_expressions::OrderByExpressions,
     graphql_types: &mut graphql_config::GraphqlTypeNames,
-    models_with_graphql: &mut IndexMap<Qualified<ModelName>, ModelWithGraphql>,
+    graphql_parts: &mut IndexMap<Qualified<ModelName>, ResolvedGraphqlParts>,
     issues: &mut Vec<Warning>,
 ) -> Result<(), ModelGraphqlError> {
     let filter_expression_type = match &model.raw.filter_expression_type {
@@ -164,14 +195,13 @@ fn resolve_model_with_graphql(
 
     let description = model.raw.description.clone();
 
-    models_with_graphql.insert(
+    graphql_parts.insert(
         model_name.clone(),
-        types::ModelWithGraphql {
-            inner: Arc::new(model.clone()),
+        ResolvedGraphqlParts {
+            filter_expression_type,
+            graphql_api,
             arguments,
             description,
-            graphql_api,
-            filter_expression_type,
         },
     );
 
