@@ -20,7 +20,6 @@ ref-cast = { workspace = true }
 schemars = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-serde_path_to_error = { workspace = true }
 smol_str = { workspace = true }
 strum = { workspace = true }
 strum_macros = { workspace = true }

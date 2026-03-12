@@ -4123,7 +4123,6 @@ dependencies = [
  "schemars 0.8.22",
  "serde",
  "serde_json",
- "serde_path_to_error",
  "smol_str",
  "strum 0.27.2",
  "strum_macros",

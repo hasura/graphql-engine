@@ -202,25 +202,17 @@ impl traits::OpenDd for Metadata {
 
 impl Metadata {
     pub fn from_json_str(s: &str) -> Result<Self, traits::OpenDdDeserializeError> {
-        // First deserialize the JSON string into a serde_json::Value using serde_path_to_error
-        // to record the path to the error in case of a parse error.
-
-        let json_deserializer = &mut serde_json::Deserializer::from_str(s);
-
-        let mut track = serde_path_to_error::Track::new();
-        let json_deserializer_with_path =
-            serde_path_to_error::Deserializer::new(json_deserializer, &mut track);
-
-        match serde_json::Value::deserialize(json_deserializer_with_path) {
-            Ok(json) => {
-                // Then deserialize the serde_json::Value into the OpenDd type using the OpenDd trait.
-                <Metadata as traits::OpenDd>::deserialize(json, jsonpath::JSONPath::new())
-            }
-            Err(e) => Err(traits::OpenDdDeserializeError {
-                path: jsonpath::JSONPath::from_serde_path(&track.path()),
+        // First deserialize the JSON string into a serde_json::Value.
+        // serde_path_to_error is not needed here since serde_json::Value always
+        // deserializes successfully from valid JSON, and syntax errors already
+        // include line/column information.
+        let json: serde_json::Value =
+            serde_json::from_str(s).map_err(|e| traits::OpenDdDeserializeError {
+                path: jsonpath::JSONPath::new(),
                 error: e,
-            }),
-        }
+            })?;
+        // Then deserialize the serde_json::Value into the OpenDd type using the OpenDd trait.
+        <Metadata as traits::OpenDd>::deserialize(json, jsonpath::JSONPath::new())
     }
 
     pub fn get_flags(&self) -> Cow<'_, flags::OpenDdFlags> {

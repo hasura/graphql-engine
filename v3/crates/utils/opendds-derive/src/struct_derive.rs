@@ -76,9 +76,9 @@ fn impl_deserialize_named_fields<'a>(
             },
         };
         let __value = #named_fields_value;
-        let __remaining_keys = __object_map.keys().cloned().collect::<Vec<_>>();
         // Check for unexpected keys
-        if !__remaining_keys.is_empty() {
+        if !__object_map.is_empty() {
+            let __remaining_keys = __object_map.keys().cloned().collect::<Vec<_>>();
             #unexpected_fields_error
         }
         Ok(__value)

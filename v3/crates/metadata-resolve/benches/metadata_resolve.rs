@@ -135,6 +135,17 @@ fn bench_parsing_vs_resolution(c: &mut Criterion) {
         );
     });
 
+    // Benchmark from_json_str (end-to-end parsing)
+    group.bench_function("from_json_str", |b| {
+        b.iter_batched(
+            || metadata_json_text.clone(),
+            |json_text| {
+                open_dds::Metadata::from_json_str(&json_text).expect("from_json_str should succeed")
+            },
+            BatchSize::SmallInput,
+        );
+    });
+
     // Benchmark OpenDDS deserialization
     group.bench_function("opendds_deserialize", |b| {
         b.iter_batched(
@@ -226,6 +237,29 @@ fn bench_resolve_real_metadata(group_name: &str, filename: &str, c: &mut Criteri
         .unwrap_or_else(|error| panic!("Could not read file {metadata_path:?}: {error}"));
     let file_size = metadata_json_text.len();
     group.throughput(Throughput::Bytes(file_size as u64));
+
+    // Benchmark end-to-end from_json_str
+    group.bench_function("from_json_str", |b| {
+        b.iter_batched(
+            || metadata_json_text.clone(),
+            |json_text| {
+                open_dds::Metadata::from_json_str(&json_text).expect("from_json_str should succeed")
+            },
+            BatchSize::LargeInput,
+        );
+    });
+
+    // Benchmark OpenDDS deserialization only (from pre-parsed JSON Value)
+    group.bench_function("opendds_deserialize", |b| {
+        b.iter_batched(
+            || serde_json::from_str::<serde_json::Value>(&metadata_json_text).unwrap(),
+            |json_value| {
+                open_dds::Metadata::deserialize(json_value, jsonpath::JSONPath::new())
+                    .expect("OpenDDS deserialization should succeed")
+            },
+            BatchSize::LargeInput,
+        );
+    });
 
     group.bench_function("metadata_accessor_creation", |b| {
         let json_value = serde_json::from_str::<serde_json::Value>(&metadata_json_text).unwrap();
