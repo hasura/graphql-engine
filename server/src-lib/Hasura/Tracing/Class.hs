@@ -7,6 +7,7 @@ module Hasura.Tracing.Class
     runNoMonadTraceContext,
     newTrace,
     newSpan,
+    setSpanError,
   )
 where
 
@@ -48,25 +49,33 @@ class (MonadTraceContext m) => MonadTrace m where
   -- | Log some arbitrary metadata to be attached to the current span, if any.
   attachMetadata :: TraceMetadata -> m ()
 
+  -- | Set the status of the current span. No-op if there is no current span.
+  -- See 'SpanStatus' for the available status values.
+  setSpanStatus :: SpanStatus -> m ()
+
 instance (MonadTrace m) => MonadTrace (ReaderT r m) where
   newTraceWith c p n = mapReaderT (newTraceWith c p n)
   newSpanWith i n kind = mapReaderT (newSpanWith i n kind)
   attachMetadata = lift . attachMetadata
+  setSpanStatus = lift . setSpanStatus
 
 instance (MonadTrace m) => MonadTrace (StateT e m) where
   newTraceWith c p n = mapStateT (newTraceWith c p n)
   newSpanWith i n k = mapStateT (newSpanWith i n k)
   attachMetadata = lift . attachMetadata
+  setSpanStatus = lift . setSpanStatus
 
 instance (MonadTrace m) => MonadTrace (ExceptT e m) where
   newTraceWith c p n = mapExceptT (newTraceWith c p n)
   newSpanWith i n k = mapExceptT (newSpanWith i n k)
   attachMetadata = lift . attachMetadata
+  setSpanStatus = lift . setSpanStatus
 
 instance (MonadTrace m) => MonadTrace (MaybeT m) where
   newTraceWith c p n = mapMaybeT (newTraceWith c p n)
   newSpanWith i n k = mapMaybeT (newSpanWith i n k)
   attachMetadata = lift . attachMetadata
+  setSpanStatus = lift . setSpanStatus
 
 -- | Access to the current tracing context, factored out of 'MonadTrace' so we
 -- can use it separately and dispatch the constraint in cases outside of a
@@ -115,3 +124,8 @@ newSpan :: (MonadIO m, MonadTrace m) => Text -> SpanKind -> m a -> m a
 newSpan name kind body = do
   spanId <- randomSpanId
   newSpanWith spanId name kind body
+
+-- | Mark the current span as having errored, with the given description.
+-- No-op if there is no current span.
+setSpanError :: (MonadTrace m) => Text -> m ()
+setSpanError = setSpanStatus . SpanStatusError

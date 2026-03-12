@@ -22,10 +22,12 @@ newtype Reporter = Reporter
       -- \| IO action that retrieves the metadata associated with the
       -- current span.
       IO TraceMetadata ->
+      -- \| IO action that retrieves the status of the current span.
+      IO SpanStatus ->
       -- \| The monadic action to report
       m a ->
       m a
   }
 
 noReporter :: Reporter
-noReporter = Reporter \_ _ _ _ -> id
+noReporter = Reporter \_ _ _ _ _ -> id
