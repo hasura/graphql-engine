@@ -74,14 +74,15 @@ instance (MonadIO m, MonadBaseControl IO m) => MonadTrace (TraceT m) where
     reporter <- asks fst
     samplingDecision <- decideSampling (tcSamplingState context) policy
     metadataRef <- liftIO $ newIORef []
+    statusRef <- liftIO $ newIORef SpanStatusUnset
     let report = case samplingDecision of
           SampleNever -> id
-          SampleAlways -> runReporter reporter context name SKServer (readIORef metadataRef)
+          SampleAlways -> runReporter reporter context name SKServer (readIORef metadataRef) (readIORef statusRef)
         updatedContext =
           context
             { tcSamplingState = updateSamplingState samplingDecision (tcSamplingState context)
             }
-        traceEnv = TraceEnv updatedContext metadataRef samplingDecision
+        traceEnv = TraceEnv updatedContext metadataRef statusRef samplingDecision
     report $ local (_2 .~ Just traceEnv) body
 
   newSpanWith spanId name kind (TraceT body) = TraceT do
@@ -94,6 +95,7 @@ instance (MonadIO m, MonadBaseControl IO m) => MonadTrace (TraceT m) where
         SampleNever -> body
         SampleAlways -> do
           metadataRef <- liftIO $ newIORef []
+          statusRef <- liftIO $ newIORef SpanStatusUnset
           let subContext =
                 (teTraceContext env)
                   { tcCurrentSpan = spanId,
@@ -102,15 +104,21 @@ instance (MonadIO m, MonadBaseControl IO m) => MonadTrace (TraceT m) where
               subTraceEnv =
                 env
                   { teTraceContext = subContext,
-                    teMetadataRef = metadataRef
+                    teMetadataRef = metadataRef,
+                    teSpanStatusRef = statusRef
                   }
-          runReporter reporter subContext name kind (readIORef metadataRef)
+          runReporter reporter subContext name kind (readIORef metadataRef) (readIORef statusRef)
             $ local (_2 .~ Just subTraceEnv) body
 
   attachMetadata metadata = TraceT do
     asks (fmap teMetadataRef . snd) >>= \case
       Nothing -> pure ()
       Just ref -> liftIO $ modifyIORef' ref (metadata ++)
+
+  setSpanStatus status = TraceT do
+    asks (fmap teSpanStatusRef . snd) >>= \case
+      Nothing -> pure ()
+      Just ref -> liftIO $ writeIORef ref status
 
 instance (MonadIO m, MonadBaseControl IO m) => MonadTraceContext (TraceT m) where
   currentContext = TraceT $ asks $ fmap teTraceContext . snd
@@ -130,6 +138,7 @@ instance (MonadGetPolicies m) => MonadGetPolicies (TraceT m) where
 data TraceEnv = TraceEnv
   { teTraceContext :: TraceContext,
     teMetadataRef :: IORef TraceMetadata,
+    teSpanStatusRef :: IORef SpanStatus,
     teSamplingDecision :: SamplingDecision
   }
 
