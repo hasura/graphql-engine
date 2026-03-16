@@ -1,0 +1,293 @@
+---
+description: Guide on using Django migrations with Hasura GraphQL Engine
+keywords:
+  - hasura
+  - docs
+  - guide
+  - django
+  - migrations
+  - python
+  - integration
+sidebar_label: Django Migrations
+sidebar_position: 14
+---
+
+# Using Django Migrations with Hasura
+
+## Introduction
+
+If you are using [Django](https://www.djangoproject.com/) as your application framework, you can use Django's built-in
+migration system to manage your database schema while using Hasura to provide an instant GraphQL API on top of the same
+database.
+
+This guide covers how to set up Django alongside Hasura so that Django manages schema changes through its ORM migrations
+and Hasura tracks those changes to expose them via GraphQL.
+
+## Prerequisites
+
+- A running Hasura GraphQL Engine instance connected to a Postgres database
+- A Django project configured to use the same Postgres database
+- The [Hasura CLI](/hasura-cli/overview.mdx) installed (for metadata management)
+
+## How it works
+
+In this setup, Django is the **owner of the database schema**. You define models in Django, generate migrations with
+`makemigrations`, and apply them with `migrate`. Hasura connects to the same database and provides a GraphQL API over the
+tables and relationships that Django creates.
+
+```text
+Django App ──(migrations)──▶ Postgres ◀──(tracks tables)── Hasura GraphQL Engine
+```
+
+Because Hasura reads the database schema directly, any tables or columns created by Django migrations are immediately
+available for Hasura to track. You do not need to duplicate schema definitions.
+
+## Step 1: Point Django and Hasura at the same database
+
+Configure your Django project's `DATABASES` setting to use the same Postgres instance that Hasura is connected to:
+
+```python
+# settings.py
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "hasura_db",
+        "USER": "postgres",
+        "PASSWORD": "postgrespassword",
+        "HOST": "localhost",
+        "PORT": "5432",
+    }
+}
+```
+
+Ensure that Hasura's `HASURA_GRAPHQL_DATABASE_URL` environment variable points to the same database:
+
+```bash
+HASURA_GRAPHQL_DATABASE_URL=postgres://postgres:postgrespassword@localhost:5432/hasura_db
+```
+
+## Step 2: Create Django models and generate migrations
+
+Define your models as you normally would in Django:
+
+```python
+# myapp/models.py
+from django.db import models
+
+class Author(models.Model):
+    name = models.CharField(max_length=200)
+    email = models.EmailField(unique=True)
+
+    class Meta:
+        db_table = "author"
+
+class Article(models.Model):
+    title = models.CharField(max_length=300)
+    content = models.TextField()
+    author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name="articles")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "article"
+```
+
+Generate and apply the migrations:
+
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+This creates the `author` and `article` tables in Postgres.
+
+:::info Setting explicit table names
+
+Using `db_table` in the model's `Meta` class gives you control over the actual table name in Postgres. Without it,
+Django will use the format `appname_modelname`, which still works with Hasura but may be less intuitive in your GraphQL
+schema.
+
+:::
+
+## Step 3: Track the new tables in Hasura
+
+After Django applies its migrations, the tables exist in Postgres but Hasura does not yet know about them. You need to
+tell Hasura to track them.
+
+**Using the Hasura Console:**
+
+Navigate to the `Data` tab in the Hasura Console. You will see the newly created tables listed under `Untracked tables`.
+Click `Track All` to add them to your GraphQL schema.
+
+**Using the Hasura CLI:**
+
+If you manage Hasura Metadata with the CLI, you can track a table by adding it to your metadata files and applying:
+
+```bash
+hasura metadata apply
+```
+
+Or use the Hasura API directly:
+
+```bash
+curl -X POST http://localhost:8080/v1/metadata \
+  -H "Content-Type: application/json" \
+  -H "X-Hasura-Admin-Secret: <your-admin-secret>" \
+  -d '{
+    "type": "pg_track_table",
+    "args": {
+      "source": "default",
+      "table": {
+        "schema": "public",
+        "name": "author"
+      }
+    }
+  }'
+```
+
+Hasura will also detect foreign key relationships. After tracking both tables, navigate to the `Relationships` section
+for each table in the Console and add the suggested relationships.
+
+## Step 4: Evolve the schema with Django migrations
+
+When you need to make schema changes, continue using Django's migration workflow:
+
+```python
+# Add a new field to Article
+class Article(models.Model):
+    title = models.CharField(max_length=300)
+    content = models.TextField()
+    author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name="articles")
+    created_at = models.DateTimeField(auto_now_add=True)
+    published = models.BooleanField(default=False)  # new field
+
+    class Meta:
+        db_table = "article"
+```
+
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+Hasura will automatically detect the new `published` column on the already-tracked `article` table. No additional
+Hasura configuration is needed for new columns on tracked tables.
+
+:::info New tables require tracking
+
+While new **columns** on already-tracked tables are picked up automatically, new **tables** created by Django
+migrations must be explicitly tracked in Hasura. Check the Console's `Data` tab for untracked tables after adding new
+models.
+
+:::
+
+## Recommended workflow
+
+For teams using both Django and Hasura in development and CI/CD, the following workflow keeps everything in sync:
+
+**1. Make schema changes in Django**
+
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+**2. Track any new tables in Hasura and configure relationships**
+
+Use the Hasura Console or CLI to track new tables and set up relationships.
+
+**3. Export Hasura Metadata**
+
+```bash
+hasura metadata export
+```
+
+**4. Commit both Django migrations and Hasura Metadata to version control**
+
+```text
+git add myapp/migrations/ hasura/metadata/
+git commit -m "Add published field to articles"
+```
+
+**5. In CI/CD, apply in order**
+
+```bash
+# Apply Django migrations first (schema changes)
+python manage.py migrate
+
+# Then apply Hasura Metadata (tracking, relationships, permissions)
+hasura metadata apply
+```
+
+This ordering matters because Hasura Metadata references database objects that must already exist.
+
+## Common patterns and gotchas
+
+### Django's default primary key
+
+Django automatically adds an `id` integer primary key to every model unless you specify otherwise. Hasura will use this
+as the primary key for GraphQL queries and mutations. If you want to use UUIDs instead:
+
+```python
+import uuid
+from django.db import models
+
+class Article(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    title = models.CharField(max_length=300)
+
+    class Meta:
+        db_table = "article"
+```
+
+### Enum fields
+
+Django's `choices` parameter on model fields does not create a Postgres enum type. If you want to use Hasura's
+[enum table](/schema/postgres/enums.mdx) feature, create a separate Django model for the enum values and
+use a foreign key.
+
+### Hasura permissions and Django auth
+
+Hasura's permission system is independent of Django's authentication. If your Django app handles user authentication,
+you can pass the authenticated user's role and ID to Hasura via
+[session variables](/auth/authentication/index.mdx) in request headers (e.g., `X-Hasura-Role`,
+`X-Hasura-User-Id`). This allows you to define row-level and column-level permissions in Hasura that complement
+Django's own authorization logic.
+
+### Avoiding migration conflicts
+
+Since Django owns the schema, avoid making direct schema changes through the Hasura Console's SQL editor or through
+Hasura's own migration system. Doing so can cause Django's migration state to fall out of sync with the actual database
+schema, leading to errors when running future Django migrations.
+
+If you need to add database objects that are not represented as Django models (e.g., Postgres functions, views, or
+triggers), use Django's `RunSQL` migration operation to keep everything tracked in one migration system:
+
+```python
+from django.db import migrations
+
+class Migration(migrations.Migration):
+    dependencies = [
+        ("myapp", "0003_article_published"),
+    ]
+
+    operations = [
+        migrations.RunSQL(
+            sql="CREATE INDEX idx_article_created ON article (created_at DESC);",
+            reverse_sql="DROP INDEX IF EXISTS idx_article_created;",
+        ),
+    ]
+```
+
+### Using Hasura without Hasura CLI Migrations
+
+When Django is managing your schema, you typically do **not** need Hasura's own SQL migration system (the `migrations/`
+directory created by `hasura migrate create`). Hasura Metadata (tracking info, permissions, relationships) is still
+managed by the Hasura CLI, but the database schema itself is Django's responsibility.
+
+You can disable the Hasura Console's migration mode by setting:
+
+```bash
+HASURA_GRAPHQL_ENABLE_CONSOLE=false
+```
+
+And use the CLI Console instead (`hasura console`) to make Metadata changes that are tracked in version control.
