@@ -348,6 +348,7 @@
     "disallow_invalid_headers_in_auth_config": true,
     "require_jwt_audience_validation_if_aud_claim_present": true,
     "disallow_procedure_command_relationships": true,
-    "disallow_duplicate_model_permissions_roles": true
+    "disallow_duplicate_model_permissions_roles": true,
+    "allow_switching_role_in_jwt_auth": true
   }
 }

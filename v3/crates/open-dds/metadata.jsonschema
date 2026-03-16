@@ -4785,6 +4785,10 @@
           "default": false,
           "type": "boolean"
         },
+        "allow_switching_role_in_jwt_auth": {
+          "default": false,
+          "type": "boolean"
+        },
         "disallow_procedure_command_relationships": {
           "default": false,
           "type": "boolean"

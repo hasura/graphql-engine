@@ -5,7 +5,10 @@
 ### Added
 
 - Added `uniqueIdentifiers` to `Model` used for hold uniqueness constraints for
-  grouping operations
+  grouping operations.
+- Prefer the specified role from client when the optional `x-hasura-role` header
+  is passed. Make the behavior consistent with
+  [JWT auth in GraphQL Engine v2](https://hasura.io/docs/2.0/auth/authentication/jwt/#hasura-jwt-format).
 
 ### Changed
 

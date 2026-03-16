@@ -302,13 +302,17 @@ pub struct AuthConfigFlags {
     /// the audienced configured in the AuthConfig. If the audience is missing in the AuthConfig,
     /// the JWT will be rejected.
     pub require_audience_validation: hasura_authn_jwt::jwt::AudienceValidationMode,
+    /// If true, the client is allowed to indicate a role in the x-hasura-allowed-roles
+    /// session variable by adding the x-hasura-role header to HTTP requests.
+    pub allow_switching_role: bool,
 }
 
 impl Default for AuthConfigFlags {
     fn default() -> Self {
         Self {
-            // Legacy behaviour for backwards compatiblity
+            // Legacy behaviour for backwards compatibility
             require_audience_validation: hasura_authn_jwt::jwt::AudienceValidationMode::Optional,
+            allow_switching_role: false,
         }
     }
 }
@@ -347,6 +351,7 @@ fn resolve_auth_config_flags(flags: &open_dds::flags::OpenDdFlags) -> AuthConfig
         } else {
             hasura_authn_jwt::jwt::AudienceValidationMode::Optional
         },
+        allow_switching_role: flags.contains(open_dds::flags::Flag::AllowSwitchingRoleInJWTAuth),
     }
 }
 
@@ -569,6 +574,7 @@ pub async fn authenticate(
                 resolved_auth_config
                     .auth_config_flags
                     .require_audience_validation,
+                resolved_auth_config.auth_config_flags.allow_switching_role,
             )
             .await
             .map(AuthenticateResponse::new)

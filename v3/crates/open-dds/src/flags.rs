@@ -50,6 +50,7 @@ pub enum Flag {
     ValidateArgumentMappingTypes,
     DisallowInvalidHeadersInAuthConfig,
     RequireJwtAudienceValidationIfAudClaimPresent,
+    AllowSwitchingRoleInJWTAuth,
     DisallowProcedureCommandRelationships,
     DisallowDuplicateModelPermissionsRoles,
     ValidateScalarBooleanExpressionOperators,
@@ -143,6 +144,7 @@ impl Flag {
             Flag::RequireJwtAudienceValidationIfAudClaimPresent => {
                 "require_jwt_audience_validation_if_aud_claim_present"
             }
+            Flag::AllowSwitchingRoleInJWTAuth => "allow_switching_role_in_jwt_auth",
             Flag::DisallowProcedureCommandRelationships => {
                 "disallow_procedure_command_relationships"
             }

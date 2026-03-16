@@ -34,6 +34,8 @@ pub enum Error {
     ExpectedStringifiedJson,
     #[error("The default role is not present in the allowed roles")]
     DisallowedDefaultRole,
+    #[error("The specified role is not present in the allowed roles")]
+    DisallowedRole,
     #[error("Error while parsing the claims map entry: {claim_name} - {err}")]
     ParseClaimsMapEntryError {
         claim_name: String,
@@ -104,6 +106,7 @@ impl Error {
             | Error::KidHeaderNotFound
             | Error::ExpectedStringifiedJson
             | Error::DisallowedDefaultRole
+            | Error::DisallowedRole
             | Error::ParseClaimsMapEntryError {
                 claim_name: _,
                 err: _,
@@ -130,6 +133,7 @@ impl Error {
             | Error::KidHeaderNotFound
             | Error::ExpectedStringifiedJson
             | Error::DisallowedDefaultRole
+            | Error::DisallowedRole
             | Error::ParseClaimsMapEntryError {
                 claim_name: _,
                 err: _,

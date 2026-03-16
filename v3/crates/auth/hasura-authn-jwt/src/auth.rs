@@ -1,10 +1,9 @@
 use axum::http::HeaderMap;
-use hasura_authn_core::{self as auth_base, Identity, Role};
+use hasura_authn_core::{self as auth_base, Identity, Role, SESSION_VARIABLE_ROLE};
 use std::collections::{HashMap, HashSet};
 use tracing_util::SpanVisibility;
 
 use crate::jwt::*;
-use auth_base::SESSION_VARIABLE_ROLE;
 
 fn build_allowed_roles(
     hasura_claims: &HasuraClaims,
@@ -19,6 +18,7 @@ fn build_allowed_roles(
             session_variables: hasura_claims
                 .custom_claims
                 .iter()
+                .filter(|(k, _)| !SESSION_VARIABLE_ROLE.eq(k))
                 .map(|(k, v)| (k.clone(), v.clone().into()))
                 .collect(),
             allowed_session_variables_from_request: auth_base::SessionVariableList::Some(
@@ -43,6 +43,7 @@ pub async fn authenticate_request(
     headers: &HeaderMap,
     allow_role_emulation_for: Option<&Role>,
     audience_validation_mode: AudienceValidationMode,
+    allow_switching_role: bool,
 ) -> Result<Identity, Error> {
     let tracer = tracing_util::global_tracer();
     tracer
@@ -70,48 +71,53 @@ pub async fn authenticate_request(
                                 },
                             )
                             .await?;
-                        Ok(match allow_role_emulation_for {
-                            // No emulation role found, so build the specific identity.
-                            None => Identity::Specific {
-                                default_role: hasura_claims.default_role.clone(),
-                                allowed_roles: build_allowed_roles(&hasura_claims)?,
-                            },
-                            Some(emulation_role) => {
-                                // Look for the `x-hasura-role` in the decoded claims.
-                                let role = hasura_claims
-                                    .custom_claims
-                                    .get(&SESSION_VARIABLE_ROLE)
-                                    .map(|v| {
-                                        Ok::<_, Error>(Role::new(v.0.as_str().ok_or_else(
-                                            || Error::ClaimMustBeAString {
-                                                claim_name: SESSION_VARIABLE_ROLE.to_string(),
-                                            },
-                                        )?))
-                                    })
-                                    .transpose()?;
-                                match role {
-                                    // `x-hasura-role` is found, check if it's the
-                                    // role that can emulate by comparing it to
-                                    // `allow_role_emulation_for`, otherwise
-                                    // return the specific identity.
-                                    Some(role) => {
-                                        if role == *emulation_role {
-                                            Identity::RoleEmulationEnabled(role)
-                                        } else {
-                                            Identity::Specific {
-                                                default_role: hasura_claims.default_role.clone(),
-                                                allowed_roles: build_allowed_roles(&hasura_claims)?,
-                                            }
-                                        }
+
+                        // Look for the `x-hasura-role` in the decoded claims.
+                        let desired_role = hasura_claims
+                            .custom_claims
+                            .get(&SESSION_VARIABLE_ROLE)
+                            .map(|v| {
+                                Ok::<_, Error>(Role::new(v.0.as_str().ok_or_else(|| {
+                                    Error::ClaimMustBeAString {
+                                        claim_name: SESSION_VARIABLE_ROLE.to_string(),
                                     }
-                                    // `x-hasura-role` is not found, so build the specific identity.
-                                    None => Identity::Specific {
+                                })?))
+                            })
+                            .transpose()?;
+
+                        match desired_role {
+                            Some(role) => {
+                                // `x-hasura-role` is found, check if it's the
+                                // role that can emulate by comparing it to
+                                // `allow_role_emulation_for`, otherwise
+                                // return the specific identity.
+                                if Some(&role) == allow_role_emulation_for {
+                                    Ok(Identity::RoleEmulationEnabled(role))
+                                } else if allow_switching_role {
+                                    if (hasura_claims.allowed_roles).contains(&role) {
+                                        // Returns the specified `x-hasura-role` if it exists in the list of allowed roles.
+                                        Ok(Identity::Specific {
+                                            default_role: role,
+                                            allowed_roles: build_allowed_roles(&hasura_claims)?,
+                                        })
+                                    } else {
+                                        Err(Error::DisallowedRole)
+                                    }
+                                } else {
+                                    // If the allow_switching_role flag is false,
+                                    // keep the old behavior for backward compatibility.
+                                    Ok(Identity::Specific {
                                         default_role: hasura_claims.default_role.clone(),
                                         allowed_roles: build_allowed_roles(&hasura_claims)?,
-                                    },
+                                    })
                                 }
                             }
-                        })
+                            // `x-hasura-role` is not found, so build the specific identity.
+                            None => Ok(Identity::Specific {
+                                default_role: hasura_claims.default_role.clone(),
+                                allowed_roles: build_allowed_roles(&hasura_claims)?,
+                            }),
+                        }
                     }
                 })
             },
@@ -191,50 +197,7 @@ mod tests {
         }
     }
 
-    #[tokio::test]
-    async fn test_unsuccessful_role_emulation() -> anyhow::Result<()> {
-        let encoded_claims = get_encoded_claims(Algorithm::HS256, &get_default_hasura_claims())?;
-
-        let jwt_secret_config_json = json!({
-            "key": {
-                "fixed": {
-                    "algorithm": "HS256",
-                    "key": {
-                        "value": "token"
-                    },
-                },
-            },
-            "tokenLocation": {
-                "type": "BearerAuthorization",
-            },
-            "claimsConfig": {
-                "namespace": {
-                    "claimsFormat": "Json",
-                    "location": jsonptr::PointerBuf::from_tokens([DEFAULT_HASURA_CLAIMS_NAMESPACE]),
-                },
-            },
-        });
-
-        let jwt_config: JWTConfig = serde_json::from_value(jwt_secret_config_json)?;
-
-        let http_client = reqwest::Client::new();
-
-        let mut header_map = HeaderMap::new();
-        header_map.insert(
-            AUTHORIZATION,
-            ("Bearer ".to_owned() + &encoded_claims).parse()?,
-        );
-
-        let authenticated_identity = authenticate_request(
-            &http_client,
-            &jwt_config,
-            &header_map,
-            Some(&Role::new("admin")),
-            AudienceValidationMode::Required,
-        )
-        .await?;
-
-        let test_role = Role::new("user");
+    fn get_specific_identity(test_role: Role) -> Identity {
         let mut expected_allowed_roles = HashMap::new();
         let mut role_authorization_session_variables = HashMap::new();
 
@@ -243,9 +206,9 @@ mod tests {
             SessionVariableValue::Parsed(json!("1")),
         );
         expected_allowed_roles.insert(
-            test_role.clone(),
+            Role::new("user"),
             RoleAuthorization {
-                role: test_role.clone(),
+                role: Role::new("user"),
                 session_variables: role_authorization_session_variables.clone(),
                 allowed_session_variables_from_request: auth_base::SessionVariableList::Some(
                     HashSet::new(),
@@ -274,25 +237,13 @@ mod tests {
             },
         );
 
-        assert_eq!(
-            authenticated_identity,
-            Identity::Specific {
-                default_role: test_role,
-                allowed_roles: expected_allowed_roles
-            }
-        );
-        Ok(())
+        Identity::Specific {
+            default_role: test_role,
+            allowed_roles: expected_allowed_roles,
+        }
     }
 
-    #[tokio::test]
-    async fn test_successful_role_emulation() -> anyhow::Result<()> {
-        let mut hasura_claims = get_default_hasura_claims();
-        hasura_claims.custom_claims.insert(
-            SessionVariableName::from_str("x-hasura-role").unwrap(),
-            JsonSessionVariableValue(json!("admin")),
-        );
-        let encoded_claims = get_encoded_claims(Algorithm::HS256, &hasura_claims)?;
-
+    fn get_default_jwt_config() -> JWTConfig {
         let jwt_secret_config_json = json!({
             "key": {
                 "fixed": {
@@ -313,7 +264,14 @@ mod tests {
             },
         });
 
-        let jwt_config: JWTConfig = serde_json::from_value(jwt_secret_config_json)?;
+        serde_json::from_value(jwt_secret_config_json).unwrap()
+    }
+
+    #[tokio::test]
+    async fn test_unsuccessful_role_emulation() -> anyhow::Result<()> {
+        let encoded_claims = get_encoded_claims(Algorithm::HS256, &get_default_hasura_claims())?;
+
+        let jwt_config: JWTConfig = get_default_jwt_config();
 
         let http_client = reqwest::Client::new();
 
@@ -329,6 +287,43 @@ mod tests {
             &header_map,
             Some(&Role::new("admin")),
             AudienceValidationMode::Required,
+            false,
+        )
+        .await?;
+
+        let expected_identity = get_specific_identity(Role::new("user"));
+
+        assert_eq!(authenticated_identity, expected_identity);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_successful_role_emulation() -> anyhow::Result<()> {
+        let mut hasura_claims = get_default_hasura_claims();
+        hasura_claims.custom_claims.insert(
+            SessionVariableName::from_str("x-hasura-role").unwrap(),
+            JsonSessionVariableValue(json!("admin")),
+        );
+        let encoded_claims = get_encoded_claims(Algorithm::HS256, &hasura_claims)?;
+
+        let jwt_config: JWTConfig = get_default_jwt_config();
+
+        let http_client = reqwest::Client::new();
+
+        let mut header_map = HeaderMap::new();
+        header_map.insert(
+            AUTHORIZATION,
+            ("Bearer ".to_owned() + &encoded_claims).parse()?,
+        );
+
+        let authenticated_identity = authenticate_request(
+            &http_client,
+            &jwt_config,
+            &header_map,
+            Some(&Role::new("admin")),
+            AudienceValidationMode::Required,
+            false,
         )
         .await?;
 
@@ -336,6 +331,77 @@ mod tests {
             authenticated_identity,
             Identity::RoleEmulationEnabled(Role::new("admin"))
         );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_successful_specified_role() -> anyhow::Result<()> {
+        let test_role = Role::new("bar");
+        let mut hasura_claims = get_default_hasura_claims();
+        hasura_claims.custom_claims.insert(
+            SessionVariableName::from_str("x-hasura-role").unwrap(),
+            JsonSessionVariableValue(json!(test_role)),
+        );
+        let encoded_claims = get_encoded_claims(Algorithm::HS256, &hasura_claims)?;
+
+        let jwt_config: JWTConfig = get_default_jwt_config();
+
+        let http_client = reqwest::Client::new();
+
+        let mut header_map = HeaderMap::new();
+        header_map.insert(
+            AUTHORIZATION,
+            ("Bearer ".to_owned() + &encoded_claims).parse()?,
+        );
+
+        let authenticated_identity = authenticate_request(
+            &http_client,
+            &jwt_config,
+            &header_map,
+            None,
+            AudienceValidationMode::Required,
+            true,
+        )
+        .await?;
+
+        let expected_identity = get_specific_identity(Role::new("bar"));
+
+        assert_eq!(authenticated_identity, expected_identity);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_disallowed_specified_role() -> anyhow::Result<()> {
+        let test_role = Role::new("admin");
+        let mut hasura_claims = get_default_hasura_claims();
+        hasura_claims.custom_claims.insert(
+            SessionVariableName::from_str("x-hasura-role").unwrap(),
+            JsonSessionVariableValue(json!(test_role)),
+        );
+        let encoded_claims = get_encoded_claims(Algorithm::HS256, &hasura_claims)?;
+
+        let jwt_config: JWTConfig = get_default_jwt_config();
+
+        let http_client = reqwest::Client::new();
+
+        let mut header_map = HeaderMap::new();
+        header_map.insert(
+            AUTHORIZATION,
+            ("Bearer ".to_owned() + &encoded_claims).parse()?,
+        );
+
+        let authenticated_identity = authenticate_request(
+            &http_client,
+            &jwt_config,
+            &header_map,
+            None,
+            AudienceValidationMode::Required,
+            true,
+        )
+        .await;
+
+        assert!(authenticated_identity.is_err_and(|err| matches!(err, Error::DisallowedRole)));
+
         Ok(())
     }
 }
