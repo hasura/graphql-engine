@@ -11,7 +11,6 @@ where
 
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as JC
-import Data.Typeable (Typeable)
 import Hasura.Prelude
 import Hasura.RQL.Types.Source.Table (SourceTableType)
 
@@ -19,7 +18,7 @@ data ExtraTableMetadata
   = Local {tableType :: SourceTableType}
   | Reference {tableType :: SourceTableType}
   | Distributed {_distributionColumn :: Text, tableType :: SourceTableType}
-  deriving stock (Show, Eq, Generic, Typeable)
+  deriving stock (Show, Eq, Generic)
 
 instance Hashable ExtraTableMetadata
 

@@ -702,7 +702,7 @@ instance (NFData a) => NFData (EnvRecord a)
 
 instance (Hashable a) => Hashable (EnvRecord a)
 
-instance (ToJSON a) => ToJSON (EnvRecord a) where
+instance ToJSON (EnvRecord a) where
   toJSON (EnvRecord envVar _envValue) = object ["env_var" .= envVar]
 
 instance (FromJSON a) => FromJSON (EnvRecord a)

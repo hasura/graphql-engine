@@ -17,7 +17,6 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.List (sort, sortOn)
 import Data.Set qualified as Set
 import Data.Text qualified as Text
-import GHC.Stack (HasCallStack)
 import Hasura.Backends.DataConnector.API
 import Hasura.Backends.DataConnector.API qualified as API
 import Test.AgentAPI (getSchemaGuarded, getSchemaGuarded', queryGuarded)
@@ -202,5 +201,5 @@ agentSchemaLabel = Label
 
 type HasPreloadedAgentSchema context = HasLabel context "agent-schema" API.SchemaResponse
 
-getPreloadedAgentSchema :: (HasCallStack, HasPreloadedAgentSchema context, MonadReader context m) => m API.SchemaResponse
+getPreloadedAgentSchema :: (HasPreloadedAgentSchema context, MonadReader context m) => m API.SchemaResponse
 getPreloadedAgentSchema = getContext agentSchemaLabel

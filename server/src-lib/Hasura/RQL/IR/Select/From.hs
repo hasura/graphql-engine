@@ -38,7 +38,6 @@ deriving stock instance (Backend b) => Traversable (SelectFromG b)
 
 deriving stock instance
   ( Backend b,
-    Eq v,
     Eq (FunctionArgumentExp b v),
     Eq (NativeQuery b v),
     Eq (StoredProcedure b v)
@@ -47,7 +46,6 @@ deriving stock instance
 
 deriving stock instance
   ( Backend b,
-    Show v,
     Show (FunctionArgumentExp b v),
     Show (NativeQuery b v),
     Show (StoredProcedure b v)

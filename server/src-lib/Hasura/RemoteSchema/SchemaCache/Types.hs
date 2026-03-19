@@ -413,7 +413,7 @@ $(J.deriveJSON hasuraJSON ''ValidatedRemoteSchemaDef)
 $(J.deriveJSON hasuraJSON ''RemoteSchemaCustomizer)
 $(J.deriveJSON hasuraJSON ''RemoteSchemaInfo)
 
-instance (J.ToJSON remoteFieldInfo) => J.ToJSON (RemoteSchemaCtxG remoteFieldInfo) where
+instance J.ToJSON (RemoteSchemaCtxG remoteFieldInfo) where
   toJSON RemoteSchemaCtx {..} =
     J.object
       $ [ "name" J..= _rscName,

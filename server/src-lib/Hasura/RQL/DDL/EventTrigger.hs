@@ -184,7 +184,7 @@ data InvokeEventTriggerQuery (b :: BackendType) = InvokeEventTriggerQuery
     _ietqPayload :: Value
   }
 
-instance (Backend b) => FromJSON (InvokeEventTriggerQuery b) where
+instance FromJSON (InvokeEventTriggerQuery b) where
   parseJSON = withObject "InvokeEventTriggerQuery" $ \o ->
     InvokeEventTriggerQuery
       <$> o

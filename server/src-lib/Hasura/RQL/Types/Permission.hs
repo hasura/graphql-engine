@@ -159,7 +159,7 @@ instance (Backend b) => ToJSON (PermDefPermission b perm) where
     UpdPerm' p -> toJSON p
     DelPerm' p -> toJSON p
 
-instance (Backend b, HasCodec (perm b), IsPerm perm) => HasCodec (PermDefPermission b perm) where
+instance (HasCodec (perm b), IsPerm perm) => HasCodec (PermDefPermission b perm) where
   codec = dimapCodec mkPermDefPermission unPermDefPermission codec
 
 deriving stock instance (Backend b) => Show (PermDefPermission b perm)
@@ -202,7 +202,7 @@ reflectPermDefPermission = \case
   UpdPerm' _ -> PTUpdate
   DelPerm' _ -> PTDelete
 
-instance (Backend b, ToJSON (perm b)) => ToJSON (PermDef b perm) where
+instance (Backend b) => ToJSON (PermDef b perm) where
   toJSON = object . toAesonPairs
 
 instance (Backend b) => ToAesonPairs (PermDef b perm) where

@@ -193,10 +193,8 @@ common common-all
       -- This is for performance, and works in combination with '-fspecialise-aggressively'
       -- in the graphql-engine 'executable' stanza below, and in any other dependent
       -- executables (See mono #2610):
-      -fexpose-all-unfoldings
+      -fexpose-overloaded-unfoldings
       -O2
-      -- This is lowered to limit compile time and binary size (default 80)
-      -funfolding-use-threshold=40
   else
     -- we just want to build fast:
     ghc-options: -O0
@@ -1057,6 +1055,7 @@ executable graphql-engine
     ghc-options:
       -- This is for performance (See mono #2610):
       -fspecialise-aggressively
+      -fpolymorphic-specialisation
 
   hs-source-dirs:    src-exec
   main-is:           Main.hs

@@ -138,7 +138,7 @@ library
   if flag(profiling)
     cpp-options: -DPROFILING
   if flag(optimize-hasura)
-    ghc-options: -fexpose-all-unfoldings -O2
+    ghc-options: -fexpose-overloaded-unfoldings -O2
   else
     ghc-options: -O0
 
@@ -195,7 +195,7 @@ test-suite schema-parsers-tests
   if flag(profiling)
     cpp-options: -DPROFILING
   if flag(optimize-hasura)
-    ghc-options: -fexpose-all-unfoldings -O2
+    ghc-options: -fexpose-overloaded-unfoldings -O2
   else
     ghc-options: -O0
   if true

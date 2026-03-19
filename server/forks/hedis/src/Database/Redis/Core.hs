@@ -86,14 +86,20 @@ setLastReply r = do
 
 recv :: (MonadRedis m) => m Reply
 recv = liftRedis $ Redis $ do
-  conn <- asks envConn
+  e <- ask
+  let conn = case e of
+               ClusteredEnv{} -> error "TODO: implement"
+               _ -> envConn e
   r <- liftIO (PP.recv conn)
   setLastReply r
   return r
 
 send :: (MonadRedis m) => [B.ByteString] -> m ()
 send req = liftRedis $ Redis $ do
-    conn <- asks envConn
+    e <- ask
+    let conn = case e of
+                 ClusteredEnv{} -> error "TODO: implement"
+                 _ -> envConn e
     liftIO $ PP.send conn (renderRequest req)
 
 -- |'sendRequest' can be used to implement commands from experimental

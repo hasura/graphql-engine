@@ -26,9 +26,9 @@ deriving stock instance (Backend ('Postgres pgKind)) => Foldable (CountAggregate
 deriving stock instance (Backend ('Postgres pgKind)) => Traversable (CountAggregate pgKind)
 
 deriving stock instance
-  (Backend ('Postgres pgKind), Show (AnnRedactionExp ('Postgres pgKind) v), Show v) =>
+  (Show (AnnRedactionExp ('Postgres pgKind) v)) =>
   Show (CountAggregate pgKind v)
 
 deriving stock instance
-  (Backend ('Postgres pgKind), Eq (AnnRedactionExp ('Postgres pgKind) v), Eq v) =>
+  (Eq (AnnRedactionExp ('Postgres pgKind) v)) =>
   Eq (CountAggregate pgKind v)

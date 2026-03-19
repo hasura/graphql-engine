@@ -1,4 +1,5 @@
 {-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE ExplicitNamespaces #-}
 
 -- | Definition of backend types and a few helper functions.
 module Harness.Test.BackendType
@@ -7,9 +8,9 @@ module Harness.Test.BackendType
     isDataConnector,
     parseCapabilities,
     postgresishGraphQLType,
-    pattern DataConnectorMock,
-    pattern DataConnectorReference,
-    pattern DataConnectorSqlite,
+    data DataConnectorMock,
+    data DataConnectorReference,
+    data DataConnectorSqlite,
   )
 where
 

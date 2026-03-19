@@ -8,7 +8,7 @@
 -- cached library dependencies and don't accidentally rebuild:
 package *
   ghc-options:
-    -j2
+    -j
     -- For performance, with `-j`:
     +RTS -A64m -n2m -RTS
 

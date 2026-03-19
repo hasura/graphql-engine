@@ -5,8 +5,7 @@
 -- to the Schema Cache.
 module Hasura.Backends.DataConnector.Adapter.SchemaCache () where
 
-import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType (BackendType (DataConnector))
 import Hasura.RQL.Types.SchemaCacheTypes (GetAggregationPredicatesDeps)
 
-instance (Backend 'DataConnector) => GetAggregationPredicatesDeps 'DataConnector
+instance GetAggregationPredicatesDeps 'DataConnector

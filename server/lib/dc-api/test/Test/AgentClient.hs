@@ -33,7 +33,6 @@ import Data.Proxy (Proxy (..))
 import Data.Set qualified as Set
 import Data.Text (Text)
 import Data.Text qualified as Text
-import GHC.Stack (HasCallStack)
 import Hasura.Backends.DataConnector.API qualified as API
 import Network.HTTP.Client qualified as HttpClient
 import Network.HTTP.Client.Internal qualified as HttpClient
@@ -114,7 +113,7 @@ agentClientLabel = Label
 
 type HasAgentClient context = HasLabel context "agent-client" AgentClientConfig
 
-getAgentClientConfig :: (HasCallStack, HasAgentClient context, MonadReader context m) => m AgentClientConfig
+getAgentClientConfig :: (HasAgentClient context, MonadReader context m) => m AgentClientConfig
 getAgentClientConfig = getContext agentClientLabel
 
 -------------------------------------------------------------------------------

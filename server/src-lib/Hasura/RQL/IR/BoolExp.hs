@@ -491,11 +491,11 @@ data RemoteRelPermBoolExp b field = RemoteRelPermBoolExp
   }
   deriving (Generic)
 
-deriving instance (Backend b) => Functor (RemoteRelPermBoolExp b)
+deriving instance Functor (RemoteRelPermBoolExp b)
 
-deriving instance (Backend b) => Foldable (RemoteRelPermBoolExp b)
+deriving instance Foldable (RemoteRelPermBoolExp b)
 
-deriving instance (Backend b) => Traversable (RemoteRelPermBoolExp b)
+deriving instance Traversable (RemoteRelPermBoolExp b)
 
 instance Eq (RemoteRelPermBoolExp b f) where
   (RemoteRelPermBoolExp rawBoolExp1 _ _) == (RemoteRelPermBoolExp rawBoolExp2 _ _) = rawBoolExp1 == rawBoolExp2

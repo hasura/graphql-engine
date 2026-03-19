@@ -15,7 +15,6 @@ where
 import Control.Exception
 import Data.Default
 import Data.Maybe
-import Data.Typeable
 import Hasura.Prelude (onNothing)
 import Network.BSD (getProtocolNumber)
 import Network.Connection qualified as NC
@@ -34,7 +33,7 @@ data ConnectionRestricted = ConnectionRestricted
   { crHostName :: String,
     crAddress :: AddrInfo
   }
-  deriving (Show, Typeable)
+  deriving (Show)
 
 instance Exception ConnectionRestricted
 

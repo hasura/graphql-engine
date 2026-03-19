@@ -90,7 +90,6 @@ data LocalPool a = LocalPool
     -- | empty value used to attach a finalizer to (internal)
     lfin :: IORef ()
   }
-  deriving (Typeable)
 
 data Pool a = Pool
   { -- | Action for creating a new entry to add to the pool.
@@ -120,7 +119,6 @@ data Pool a = Pool
     -- | Amount of time to wait while attempting to acquire a resource.
     timeout :: Maybe NominalDiffTime
   }
-  deriving (Typeable)
 
 instance Show (Pool a) where
   show Pool {..} =

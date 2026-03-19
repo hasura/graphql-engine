@@ -1,3 +1,4 @@
+{-# LANGUAGE ExplicitNamespaces #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE ViewPatterns #-}
 
@@ -19,9 +20,9 @@ module Harness.Test.Fixture
     FixtureName (..),
     BackendType (..),
     BackendTypeConfig (..),
-    pattern DataConnectorMock,
-    pattern DataConnectorReference,
-    pattern DataConnectorSqlite,
+    data DataConnectorMock,
+    data DataConnectorReference,
+    data DataConnectorSqlite,
     noLocalTestEnvironment,
     SetupAction (..),
     Options (..),

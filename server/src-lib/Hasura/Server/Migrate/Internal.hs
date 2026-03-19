@@ -14,7 +14,6 @@ import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
 import Hasura.Prelude
-import Hasura.RQL.Types.Backend (Backend)
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common (InputWebhook, TriggerOnReplication (..))
 import Hasura.RQL.Types.EventTrigger
@@ -35,7 +34,7 @@ getCatalogVersion = do
   onLeft (readEither $ T.unpack versionText)
     $ \err -> throw500 $ "Unexpected: couldn't convert read catalog version " <> versionText <> ", err:" <> tshow err
 
-from3To4 :: forall m. (Backend ('Postgres 'Vanilla), MonadTx m) => m ()
+from3To4 :: forall m. (MonadTx m) => m ()
 from3To4 = liftTx do
   PG.unitQE
     defaultTxErrorHandler

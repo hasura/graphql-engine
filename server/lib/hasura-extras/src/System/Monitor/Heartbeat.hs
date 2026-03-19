@@ -35,7 +35,6 @@ import Data.ByteString qualified as BS
 import Data.Char
 import Data.IORef
 import Data.Time
-import Data.Typeable
 import GHC.Conc
 import GHC.Generics
 import Options.Generic
@@ -144,7 +143,7 @@ instance ParseRecord (HeartbeatOptions Wrapped) where
         }
 
 data HeartbeatSource = StdInSource
-  deriving (Show, Read, Eq, Typeable, Generic)
+  deriving (Show, Read, Eq, Generic)
 
 instance ParseField HeartbeatSource
 

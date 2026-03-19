@@ -121,16 +121,16 @@ data GetNativeQuery (b :: BackendType) = GetNativeQuery
   { gnqSource :: SourceName
   }
 
-deriving instance (Backend b) => Show (GetNativeQuery b)
+deriving instance Show (GetNativeQuery b)
 
-deriving instance (Backend b) => Eq (GetNativeQuery b)
+deriving instance Eq (GetNativeQuery b)
 
-instance (Backend b) => FromJSON (GetNativeQuery b) where
+instance FromJSON (GetNativeQuery b) where
   parseJSON = withObject "GetNativeQuery" $ \o -> do
     gnqSource <- o .: "source"
     pure GetNativeQuery {..}
 
-instance (Backend b) => ToJSON (GetNativeQuery b) where
+instance ToJSON (GetNativeQuery b) where
   toJSON GetNativeQuery {..} =
     object
       [ "source" .= gnqSource

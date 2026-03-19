@@ -27,10 +27,11 @@
 --   curl 'https://drive.usercontent.google.com/download?id=1ZYKOwmwINRNzo9M2PkdpDX7htgQ98oMG&export=download&confirm=t' --output 9.10.1-fork-bindist.tar.xz
 --   ghcup install ghc -u file:///9.10.1-fork-bindist.tar.xz
 -- 
-with-compiler: ghc-9.10.2
+with-compiler: ghc-9.14.1
 
 -- package-level parallelism:
 jobs: $ncpus
+semaphore: True
 
 packages: server
 packages: server/lib/*/*.cabal
@@ -146,6 +147,7 @@ allow-newer: kriti-lang:aeson
 allow-newer: generic-monoid:base
 allow-newer: aeson-optics:base
 allow-newer: testcontainers:bytestring
+allow-newer: testcontainers:network
 allow-newer: postgresql-libpq:base
 allow-newer: xml-lens:text
 allow-newer: xml-lens:containers
@@ -156,6 +158,49 @@ allow-newer: cabal-doctest:Cabal
 allow-newer: postgresql-libpq:Cabal
 allow-newer: hsc2hs:filepath
 allow-newer: hsc2hs:containers
+-- 9.14.1
+allow-newer: http-api-data:hashable
+allow-newer: aeson:template-haskell
+allow-newer: aeson:time
+allow-newer: indexed-traversable-instances:base
+allow-newer: these:base
+allow-newer: semialign:base
+allow-newer: aeson:containers
+allow-newer: indexed-traversable:base
+allow-newer: semialign:containers
+allow-newer: indexed-traversable:containers
+allow-newer: modern-uri:template-haskell
+allow-newer: postgresql-simple:hashable
+allow-newer: dec:base
+allow-newer: boring:base
+allow-newer: http-media:containers
+allow-newer: ekg-core:hashable
+allow-newer: time-compat:time
+allow-newer: text-iso8601:time
+allow-newer: insert-ordered-containers:hashable
+allow-newer: uuid:time
+allow-newer: servant-client:time
+allow-newer: openapi3:time
+allow-newer: nonempty-vector:base
+allow-newer: quickcheck-instances:containers
+allow-newer: dependent-map:containers
+allow-newer: constraints-extras:template-haskell
+allow-newer: proto-lens:ghc-prim
+allow-newer: proto-lens:containers
+allow-newer: lens-family:containers
+allow-newer: lens-family-core:containers
+allow-newer: proto-lens-runtime:containers
+allow-newer: launchdarkly-server-sdk:time
+allow-newer: launchdarkly-server-sdk:extra
+allow-newer: bytestring-lexing:base
+allow-newer: parallel:base
+allow-newer: microstache:base
+allow-newer: microstache:containers
+allow-newer: binary-orphans:base
+allow-newer: config-ini:containers
+allow-newer: Cabal:containers
+allow-newer: Cabal-syntax:containers
+allow-newer: entropy:Cabal
 
 -- https://github.com/mokus0/th-extras/pull/20
 allow-newer: th-extras:template-haskell

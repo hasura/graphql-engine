@@ -7,7 +7,7 @@ import Control.Concurrent.Async
 import Control.Exception
 import Data.Typeable
 import qualified Data.List
-import Data.Text
+import Data.Text (Text)
 import Data.ByteString
 import Control.Concurrent.STM
 import qualified Test.Framework as Test
@@ -100,7 +100,7 @@ removeAllTest conn = Test.testCase "Multithreaded Pub/Sub - basic" $ do
     waitForPMessage msgVar "InitialBar2" "bar2:aaa" "0987"
 
 data TestError = TestError ByteString
-  deriving (Eq, Show, Typeable)
+  deriving (Eq, Show)
 instance Exception TestError
 
 -- | Test an error thrown from a message handler

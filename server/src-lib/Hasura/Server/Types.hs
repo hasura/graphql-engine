@@ -1,4 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
+-- GHC 9.14: deriveJSON generates redundant (FromJSON a, ToJSON a) constraints for
+-- ExtPersistedQueryRequest because 'a' is a phantom type parameter unused in any field.
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 module Hasura.Server.Types
   ( ExperimentalFeature (..),

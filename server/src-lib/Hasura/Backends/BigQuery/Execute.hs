@@ -70,7 +70,7 @@ data RecordSet = RecordSet
 -- is just the unqualified text name itself.
 newtype FieldNameText
   = FieldNameText Text
-  deriving (Show, Ord, Eq, Hashable, J.FromJSON, J.ToJSONKey, IsString)
+  deriving (Show, Ord, Eq, Hashable, J.FromJSON, J.ToJSON, J.ToJSONKey, IsString)
 
 data OutputValue
   = DecimalOutputValue Decimal

@@ -27,7 +27,6 @@ import qualified Data.Time as Time
 import Data.Maybe (fromMaybe)
 import Control.Concurrent.MVar(newMVar, readMVar, swapMVar)
 import Control.Exception(bracketOnError, Exception, throwIO, try)
-import           Data.Typeable
 import Data.Functor(void)
 import qualified Network.Socket as NS
 import qualified Network.TLS as TLS
@@ -56,7 +55,7 @@ data ConnectPhase
   deriving (Show)
 
 newtype ConnectTimeout = ConnectTimeout ConnectPhase
-  deriving (Show, Typeable)
+  deriving (Show)
 
 instance Exception ConnectTimeout
 

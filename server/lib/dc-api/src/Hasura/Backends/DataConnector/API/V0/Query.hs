@@ -4,9 +4,9 @@
 
 module Hasura.Backends.DataConnector.API.V0.Query
   ( QueryRequest (..),
-    pattern TableQueryRequest,
-    pattern FunctionQueryRequest,
-    pattern NativeQueryRequest,
+    data TableQueryRequest,
+    data FunctionQueryRequest,
+    data NativeQueryRequest,
     qrRelationships,
     qrRedactionExpressions,
     qrQuery,

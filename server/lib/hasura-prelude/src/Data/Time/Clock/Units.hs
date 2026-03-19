@@ -84,7 +84,7 @@ import Data.Aeson
 import Data.Hashable
 import Data.Proxy
 import Data.Text (unpack)
-import Data.Time.Clock
+import Data.Time.Clock hiding (Seconds)
 import GHC.TypeLits
 import Numeric (readFloat)
 import Text.Read qualified as TR

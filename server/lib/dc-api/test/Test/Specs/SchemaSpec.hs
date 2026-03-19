@@ -20,7 +20,6 @@ import Data.List (sort, sortOn)
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Maybe (isJust, isNothing, mapMaybe)
 import Data.Text qualified as Text
-import GHC.Stack (HasCallStack)
 import Hasura.Backends.DataConnector.API qualified as API
 import Test.AgentAPI (getSchemaGuarded, getSchemaGuarded')
 import Test.AgentClient (HasAgentClient, runAgentClientT)
@@ -204,5 +203,5 @@ agentSchemaLabel = Label
 
 type HasPreloadedAgentSchema context = HasLabel context "agent-schema" API.SchemaResponse
 
-getPreloadedAgentSchema :: (HasCallStack, HasPreloadedAgentSchema context, MonadReader context m) => m API.SchemaResponse
+getPreloadedAgentSchema :: (HasPreloadedAgentSchema context, MonadReader context m) => m API.SchemaResponse
 getPreloadedAgentSchema = getContext agentSchemaLabel

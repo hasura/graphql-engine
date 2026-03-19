@@ -95,9 +95,7 @@ instance
     ToJSON (TableCache b),
     ToJSON (FunctionCache b),
     ToJSON (NativeQueryCache b),
-    ToJSON (StoredProcedureCache b),
-    ToJSON (QueryTagsConfig),
-    ToJSON (SourceCustomization)
+    ToJSON (StoredProcedureCache b)
   ) =>
   ToJSON (SourceInfo b)
   where

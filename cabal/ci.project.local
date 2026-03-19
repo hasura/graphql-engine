@@ -4,9 +4,7 @@ reject-unconstrained-dependencies: all
 
 package *
   ghc-options:
-    -- We compile with package-level parallelism, so just use a small amount
-    -- of module-level parallelism for dependencies:
-    -j2
+    -j
     -- For performance, with `-j`:
     +RTS -A64m -n2m -RTS
 

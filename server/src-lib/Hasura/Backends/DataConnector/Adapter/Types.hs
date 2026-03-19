@@ -551,7 +551,7 @@ deriving stock instance
   Eq (CountAggregate v)
 
 deriving stock instance
-  (Backend 'DataConnector, Data (IR.AnnRedactionExp 'DataConnector v), Data v) =>
+  (Data (IR.AnnRedactionExp 'DataConnector v), Data v) =>
   Data (CountAggregate v)
 
 --------------------------------------------------------------------------------

@@ -53,7 +53,6 @@ import qualified Data.ByteString.Char8 as BS8
 import           Data.Foldable         (toList)
 import           Data.List             (delete)
 import           Data.List.NonEmpty    (NonEmpty (..))
-import           Data.Typeable         (Typeable)
 import           Data.Unique
 import           Network.Socket        (HostName)
 
@@ -217,6 +216,6 @@ data SentinelConnectInfo
 data RedisSentinelException
   = NoSentinels (NonEmpty (HostName, PortID))
     -- ^ Thrown if no sentinel can be reached.
-  deriving (Show, Typeable)
+  deriving (Show)
 
 deriving instance Exception RedisSentinelException

@@ -83,7 +83,7 @@ library
                     text,
                     deepseq,
                     mtl >= 2,
-                    network >= 2 && < 3.2,
+                    network >= 2 && < 3.3,
                     resource-pool >= 0.2,
                     stm,
                     time,

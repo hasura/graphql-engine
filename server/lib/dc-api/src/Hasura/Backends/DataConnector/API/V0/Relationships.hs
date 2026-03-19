@@ -4,8 +4,8 @@
 
 module Hasura.Backends.DataConnector.API.V0.Relationships
   ( Relationships (..),
-    pattern RTableRelationships,
-    pattern RFunctionRelationships,
+    data RTableRelationships,
+    data RFunctionRelationships,
     FunctionRelationships (..),
     TableRelationships (..),
     InterpolatedRelationships (..),

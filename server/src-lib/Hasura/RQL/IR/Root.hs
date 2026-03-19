@@ -18,7 +18,6 @@ where
 
 import Data.Kind (Type)
 import Hasura.EncJSON
-import Hasura.GraphQL.Execute.Action.Types qualified as EA
 import Hasura.Prelude
 import Hasura.QueryTags.Types qualified as RQL
 import Hasura.RQL.IR.Action
@@ -27,7 +26,6 @@ import Hasura.RQL.IR.Insert
 import Hasura.RQL.IR.RemoteSchema
 import Hasura.RQL.IR.Select
 import Hasura.RQL.IR.Update
-import Hasura.RQL.IR.Value qualified as IR (UnpreparedValue)
 import Hasura.RQL.Types.Backend qualified as RQL
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common qualified as RQL
@@ -39,7 +37,7 @@ data SourceConfigWith (db :: BackendType -> Type) (b :: BackendType)
   = SourceConfigWith (RQL.SourceConfig b) (Maybe RQL.QueryTagsConfig) (db b)
 
 deriving instance
-  (RQL.Backend b, Show (db b), Show (RQL.SourceConfig b)) =>
+  (Show (db b), Show (RQL.SourceConfig b)) =>
   Show (SourceConfigWith db b)
 
 data RootField (db :: BackendType -> Type) remote action raw where
@@ -81,12 +79,7 @@ newtype QueryDBRoot r v b = QDBR (QueryDB b r (v b))
 deriving stock instance
   ( RQL.Backend b,
     Show r,
-    Show (v b),
-    Show (RQL.AggregationPredicates b (v b)),
-    Show (RQL.BooleanOperators b (v b)),
-    Show (RQL.FunctionArgumentExp b (v b)),
-    Show (RQL.CountType b (v b)),
-    Show (EA.AsyncActionQuerySourceExecution (IR.UnpreparedValue b))
+    Show (v b)
   ) =>
   Show (QueryDBRoot r v b)
 

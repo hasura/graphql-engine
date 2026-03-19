@@ -3,7 +3,7 @@
 module Test.Specs.ExplainSpec (spec) where
 
 import Control.Lens ((&), (?~))
-import Hasura.Backends.DataConnector.API (Capabilities (..), ExplainResponse (..), QueryRequest (..), qFields, pattern TableQueryRequest)
+import Hasura.Backends.DataConnector.API (Capabilities (..), ExplainResponse (..), QueryRequest (..), qFields, data TableQueryRequest)
 import Test.AgentAPI (explain)
 import Test.Data (TestData (..))
 import Test.Data qualified as Data

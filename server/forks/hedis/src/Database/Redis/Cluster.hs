@@ -37,7 +37,6 @@ import qualified Database.Redis.ConnectionContext as CC
 import qualified Data.HashMap.Strict as HM
 import qualified Data.IntMap.Strict as IntMap
 import qualified Data.Time as Time
-import           Data.Typeable
 import qualified Scanner
 import System.Environment (lookupEnv)
 import System.IO.Unsafe(unsafeInterleaveIO)
@@ -113,19 +112,19 @@ data Shard = Shard MasterNode [SlaveNode] deriving (Show, Eq, Ord)
 -- A map from hashslot to shards
 newtype ShardMap = ShardMap (IntMap.IntMap Shard) deriving (Show)
 
-newtype MissingNodeException = MissingNodeException [B.ByteString] deriving (Show, Typeable)
+newtype MissingNodeException = MissingNodeException [B.ByteString] deriving (Show)
 instance Exception MissingNodeException
 
-newtype UnsupportedClusterCommandException = UnsupportedClusterCommandException [B.ByteString] deriving (Show, Typeable)
+newtype UnsupportedClusterCommandException = UnsupportedClusterCommandException [B.ByteString] deriving (Show)
 instance Exception UnsupportedClusterCommandException
 
-newtype CrossSlotException = CrossSlotException [[B.ByteString]] deriving (Show, Typeable)
+newtype CrossSlotException = CrossSlotException [[B.ByteString]] deriving (Show)
 instance Exception CrossSlotException
 
-data NoNodeException = NoNodeException  deriving (Show, Typeable)
+data NoNodeException = NoNodeException  deriving (Show)
 instance Exception NoNodeException
 
-data TimeoutException = TimeoutException String deriving (Show, Typeable)
+data TimeoutException = TimeoutException String deriving (Show)
 instance Exception TimeoutException
 
 connect :: (Host -> CC.PortID -> Maybe Int -> IO CC.ConnectionContext) -> [CMD.CommandInfo] -> MVar ShardMap -> Maybe Int -> Bool -> ([NodeConnection] -> IO ShardMap) -> IO Connection

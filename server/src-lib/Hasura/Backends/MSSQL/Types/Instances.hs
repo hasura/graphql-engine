@@ -16,7 +16,6 @@ import qualified Autodocodec as AC
 import Data.Aeson.Extended
 import Data.Aeson.Types
 import Data.Text.Extended (ToTxt (..))
-import Data.Time as Time
 import Hasura.Backends.MSSQL.Types.Internal
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
@@ -126,7 +125,6 @@ deriving instance Lift Order
 --------------------------------------------------------------------------------
 -- Third-party types
 
-deriving instance Generic (Time.TimeZone)
 
 --------------------------------------------------------------------------------
 -- Debug instances

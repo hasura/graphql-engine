@@ -29,8 +29,9 @@ library
     -Wno-missing-safe-haskell-mode
     -- try and mitigate damage from missed inlining opportunities from this
     -- code being it's own package
-    -fexpose-all-unfoldings
+    -fexpose-overloaded-unfoldings
     -fspecialise-aggressively
+    -fpolymorphic-specialisation
     -- We want these warnings, but the code doesn't satisfy them yet:
     -Wno-missing-deriving-strategies
     -Wno-unused-packages

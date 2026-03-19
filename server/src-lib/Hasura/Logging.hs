@@ -60,7 +60,7 @@ module Hasura.Logging
   )
 where
 
-import Control.Exception (ErrorCall (ErrorCallWithLocation), catch)
+import Control.Exception (ErrorCall (..), catch)
 import Control.FoldDebounce qualified as FDebounce
 import Control.Monad.Trans.Control
 import Control.Monad.Trans.Managed (ManagedT (..), allocate)
@@ -350,10 +350,10 @@ getLogsExporter = _lcLogsExporter
 newtype UnhandledInternalErrorLog = UnhandledInternalErrorLog ErrorCall
 
 instance ToEngineLog UnhandledInternalErrorLog Hasura where
-  toEngineLog (UnhandledInternalErrorLog (ErrorCallWithLocation err loc)) =
+  toEngineLog (UnhandledInternalErrorLog (ErrorCall err)) =
     ( LevelError,
       ELTInternal ILTUnhandledInternalError,
-      J.object [("error", fromString err), ("location", fromString loc)]
+      J.object [("error", fromString err)]
     )
 
 -- * LoggerSettings

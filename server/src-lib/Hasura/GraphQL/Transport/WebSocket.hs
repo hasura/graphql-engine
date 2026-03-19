@@ -44,7 +44,7 @@ import Data.String
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
 import Data.Text.Extended (toTxt, (<>>))
-import Data.Time.Clock
+import Data.Time.Clock hiding (Seconds)
 import Data.Time.Clock qualified as TC
 import Data.Word (Word16)
 import GHC.AssertNF.CPP

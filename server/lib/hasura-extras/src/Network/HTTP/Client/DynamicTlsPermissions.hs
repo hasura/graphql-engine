@@ -3,7 +3,7 @@ module Network.HTTP.Client.DynamicTlsPermissions
   )
 where
 
-import Control.Exception.Safe (Exception, Typeable, impureThrow)
+import Control.Exception.Safe (Exception, impureThrow)
 import Data.ByteString.Char8 qualified as BC
 import Data.Default.Class qualified as HTTP
 import Data.X509 qualified as HTTP
@@ -20,7 +20,7 @@ import System.X509 qualified as HTTP
 newtype TlsServiceDefinitionError = TlsServiceDefinitionError
   { tlsServiceDefinitionError :: String
   }
-  deriving (Show, Typeable)
+  deriving (Show)
 
 instance Exception TlsServiceDefinitionError where
   displayException (TlsServiceDefinitionError msg) = "TlsServiceDefinitionError: " <> show msg

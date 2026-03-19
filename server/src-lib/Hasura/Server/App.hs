@@ -176,7 +176,7 @@ runHandler :: (MonadIO m, Tracing.MonadTraceContext m, HasResourceLimits m, Mona
 runHandler logger ctx (Handler r) = do
   handlerLimit <- askHTTPHandlerLimit
   runExceptT (runReaderT (runResourceLimits handlerLimit r) ctx)
-    `catch` \errorCallWithLoc@(ErrorCallWithLocation txt _) -> do
+    `catch` \errorCallWithLoc@(ErrorCall txt) -> do
       L.unLoggerTracing logger $ L.UnhandledInternalErrorLog errorCallWithLoc
       pure
         $ throw500WithDetail "Internal Server Error"
@@ -877,7 +877,7 @@ spockInternalErrorHandler _status = do
 -- | Logger for internal errors arising from spock
 spockInternalErrorLogger :: (Tracing.MonadTraceContext m, MonadIO m) => L.Logger L.Hasura -> Text -> m ()
 spockInternalErrorLogger logger msg =
-  L.unLoggerTracing logger $ L.UnhandledInternalErrorLog $ ErrorCallWithLocation (T.unpack msg) ""
+  L.unLoggerTracing logger $ L.UnhandledInternalErrorLog $ ErrorCall (T.unpack msg)
 
 httpApp ::
   forall m impl.

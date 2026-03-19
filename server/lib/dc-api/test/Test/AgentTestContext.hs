@@ -10,7 +10,6 @@ where
 
 import Command (AgentConfig)
 import Control.Monad.Reader.Class (MonadReader)
-import GHC.Stack (HasCallStack)
 import Hasura.Backends.DataConnector.API qualified as API
 import Test.Sandwich (HasLabel, Label (..), LabelValue, NodeOptions (..), SpecFree, defaultNodeOptions, getContext, introduce', type (:>))
 import Prelude
@@ -41,5 +40,5 @@ agentTestContextLabel = Label
 
 type HasAgentTestContext context = HasLabel context "agent-test-context" AgentTestContext
 
-getAgentTestContext :: (HasCallStack, HasAgentTestContext context, MonadReader context m) => m AgentTestContext
+getAgentTestContext :: (HasAgentTestContext context, MonadReader context m) => m AgentTestContext
 getAgentTestContext = getContext agentTestContextLabel

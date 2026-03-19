@@ -27,7 +27,6 @@ module Hasura.Server.Migrate
   )
 where
 
-import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.FileEmbed (makeRelativeToProject)
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
@@ -106,8 +105,7 @@ data MigrationPair m = MigrationPair
 migrateCatalog ::
   forall m.
   ( MonadTx m,
-    MonadIO m,
-    MonadBaseControl IO m
+    MonadIO m
   ) =>
   Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) ->
   ExtensionsSchema ->

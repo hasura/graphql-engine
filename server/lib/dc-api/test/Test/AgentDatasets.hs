@@ -22,7 +22,6 @@ import Data.Maybe (isJust)
 import Data.Text qualified as Text
 import Data.UUID qualified as UUID
 import Data.UUID.V4 qualified as UUID
-import GHC.Stack (HasCallStack)
 import Hasura.Backends.DataConnector.API qualified as API
 import Servant.API (NamedRoutes)
 import Servant.Client (HasClient (..), (//))
@@ -91,7 +90,7 @@ datasetContextLabel = Label
 
 type HasDatasetContext context = HasLabel context "dataset-context" DatasetContext
 
-getDatasetContext :: (HasCallStack, HasDatasetContext context, MonadReader context m) => m DatasetContext
+getDatasetContext :: (HasDatasetContext context, MonadReader context m) => m DatasetContext
 getDatasetContext = getContext datasetContextLabel
 
 supportsDatasets :: API.CapabilitiesResponse -> Bool
@@ -106,7 +105,7 @@ createClone client datasetTemplateName = do
   API.DatasetCreateCloneResponse {..} <- (client // API._datasets // API._createClone) cloneName request
   pure $ DatasetCloneInfo cloneName _dccrConfig
 
-deleteClone :: (MonadThrow m) => Client m (NamedRoutes API.Routes) -> DatasetCloneInfo -> m ()
+deleteClone :: (MonadThrow m, MonadIO m) => Client m (NamedRoutes API.Routes) -> DatasetCloneInfo -> m ()
 deleteClone client DatasetCloneInfo {..} = do
   response@API.DatasetDeleteCloneResponse {..} <- (client // API._datasets // API._deleteClone) _dciCloneName
   unless (response == API.datasetDeleteCloneSuccess) $

@@ -5,6 +5,9 @@
 -- You can temporarily override values here rather than modifying 'dev.sh'
 -- during development (although that might break certain things).
 
+-- NOTE: this would be good, to match CI, however it breaks `cabal freeze`
+-- reject-unconstrained-dependencies: all
+
 package *
   -- build with DWARF support. This may not be very useful yet, but we want
   -- to be able to experiment with it, and turning it from off to on requires
@@ -14,9 +17,7 @@ package *
 
   -- For compile-time performance (see cabal.project.ci.local):
   ghc-options:
-    -- We compile with package-level parallelism, so just use a small amount
-    -- of module-level parallelism for dependencies:
-    -j2
+    -j
     +RTS -A64m -n2m -RTS
 
   -- This guarantees that -Wredundant-contraints will properly fire, even with

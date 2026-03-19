@@ -486,7 +486,7 @@ data CombinedSelPermInfo (b :: BackendType) = CombinedSelPermInfo
     cspiAllowedSubscriptionRootFieldTypes :: AllowedRootFields SubscriptionRootFieldType
   }
 
-instance (Backend b) => Semigroup (CombinedSelPermInfo b) where
+instance Semigroup (CombinedSelPermInfo b) where
   CombinedSelPermInfo colsL scalarComputedFieldsL filterL limitL allowAggL reqHeadersL allowedQueryRFTypesL allowedSubsRFTypesL
     <> CombinedSelPermInfo colsR scalarComputedFieldsR filterR limitR allowAggR reqHeadersR allowedQueryRFTypesR allowedSubsRFTypesR =
       CombinedSelPermInfo
@@ -711,8 +711,7 @@ instance
   NFData (RolePermInfo b)
 
 instance
-  ( Backend b,
-    ToJSON (InsPermInfo b),
+  ( ToJSON (InsPermInfo b),
     ToJSON (SelPermInfo b),
     ToJSON (UpdPermInfo b),
     ToJSON (DelPermInfo b)
@@ -1049,7 +1048,7 @@ data TableCoreInfoG (b :: BackendType) field primaryKeyColumn = TableCoreInfo
 
 deriving instance (Eq field, Eq pkCol, Backend b) => Eq (TableCoreInfoG b field pkCol)
 
-instance (Backend b, Generic pkCol, ToJSON field, ToJSON pkCol) => ToJSON (TableCoreInfoG b field pkCol) where
+instance (Backend b, ToJSON field, ToJSON pkCol) => ToJSON (TableCoreInfoG b field pkCol) where
   toJSON = genericToJSON hasuraJSON
 
 $(makeLenses ''TableCoreInfoG)
@@ -1079,8 +1078,7 @@ data TableInfo (b :: BackendType) = TableInfo
   deriving (Generic)
 
 instance
-  ( Backend b,
-    ToJSON (EventTriggerInfoMap b),
+  ( ToJSON (EventTriggerInfoMap b),
     ToJSON (RolePermInfo b),
     ToJSON (RolePermInfoMap b),
     ToJSON (TableCoreInfo b)

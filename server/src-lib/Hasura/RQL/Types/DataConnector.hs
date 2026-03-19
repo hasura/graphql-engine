@@ -12,7 +12,6 @@ where
 
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Aeson qualified as J
-import Data.Data (Typeable)
 import Data.Text qualified as Text
 import Data.Text.Extended (ToTxt (..))
 import Data.Text.NonEmpty (NonEmptyText, mkNonEmptyTextUnsafe)
@@ -24,7 +23,7 @@ import Witch qualified
 --         This should be enforced in instances, and the `mkDataConnectorName`
 --         smart constructor is available to assist.
 newtype DataConnectorName = DataConnectorName {unDataConnectorName :: GQL.Name}
-  deriving stock (Eq, Ord, Show, Typeable, Generic)
+  deriving stock (Eq, Ord, Show, Generic)
   deriving newtype (ToJSON, FromJSONKey, ToJSONKey, Hashable, ToTxt)
   deriving anyclass (NFData)
 

@@ -90,16 +90,16 @@ data GetStoredProcedure (b :: BackendType) = GetStoredProcedure
   { gspSource :: SourceName
   }
 
-deriving instance (Backend b) => Show (GetStoredProcedure b)
+deriving instance Show (GetStoredProcedure b)
 
-deriving instance (Backend b) => Eq (GetStoredProcedure b)
+deriving instance Eq (GetStoredProcedure b)
 
-instance (Backend b) => FromJSON (GetStoredProcedure b) where
+instance FromJSON (GetStoredProcedure b) where
   parseJSON = withObject "GetStoredProcedure" $ \o -> do
     gspSource <- o .: "source"
     pure GetStoredProcedure {..}
 
-instance (Backend b) => ToJSON (GetStoredProcedure b) where
+instance ToJSON (GetStoredProcedure b) where
   toJSON GetStoredProcedure {..} =
     object
       [ "source" .= gspSource

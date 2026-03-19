@@ -23,7 +23,7 @@ data BackendInsert v = BackendInsert
     _biIfMatched :: Maybe (IfMatched v)
   }
 
-deriving instance (Backend 'MSSQL, Show (IfMatched v), Show v) => Show (BackendInsert v)
+deriving instance (Show (IfMatched v)) => Show (BackendInsert v)
 
 deriving instance (Backend 'MSSQL) => Functor BackendInsert
 
@@ -43,7 +43,7 @@ data IfMatched v = IfMatched
     _imColumnPresets :: HashMap ColumnName v
   }
 
-deriving instance (Backend 'MSSQL, Show (AnnBoolExp 'MSSQL v), Show v) => Show (IfMatched v)
+deriving instance (Show (AnnBoolExp 'MSSQL v), Show v) => Show (IfMatched v)
 
 deriving instance (Backend 'MSSQL) => Functor IfMatched
 

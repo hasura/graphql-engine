@@ -100,16 +100,16 @@ data GetLogicalModel (b :: BackendType) = GetLogicalModel
   { glmSource :: SourceName
   }
 
-deriving instance (Backend b) => Show (GetLogicalModel b)
+deriving instance Show (GetLogicalModel b)
 
-deriving instance (Backend b) => Eq (GetLogicalModel b)
+deriving instance Eq (GetLogicalModel b)
 
-instance (Backend b) => FromJSON (GetLogicalModel b) where
+instance FromJSON (GetLogicalModel b) where
   parseJSON = withObject "GetLogicalModel" $ \o -> do
     glmSource <- o .: "source"
     pure GetLogicalModel {..}
 
-instance (Backend b) => ToJSON (GetLogicalModel b) where
+instance ToJSON (GetLogicalModel b) where
   toJSON GetLogicalModel {..} =
     object
       [ "source" .= glmSource

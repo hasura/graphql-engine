@@ -27,5 +27,5 @@ deriving instance (Backend b, Eq field) => Eq (NativeQuery b field)
 
 deriving instance (Backend b, Show field) => Show (NativeQuery b field)
 
-instance (Backend b, ToJSON field, field ~ ArgumentName) => ToJSON (NativeQuery b field) where
+instance (Backend b, field ~ ArgumentName) => ToJSON (NativeQuery b field) where
   toEncoding = genericToEncoding defaultOptions
