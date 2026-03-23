@@ -131,8 +131,6 @@ onNothingA f = proc (e, (v, s)) -> case v of
 "&&&/arr"   forall f g. f &&& arr g = first  f . arr (id &&& g)
 "arr/&&&"   forall f g. arr f &&& g = second g . arr (f &&& id)
 
-"|||/id"    forall f. f ||| id = arr (id ||| id) . left f
-"id/|||"    forall f. id ||| f = arr (id ||| id) . right f
 "|||/arr"   forall f g. f ||| arr g = arr (id ||| g) . left f
 "arr/|||"   forall f g. arr f ||| g = arr (f ||| id) . right g
 #-}
