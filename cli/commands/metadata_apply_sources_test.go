@@ -124,6 +124,81 @@ func TestBuildMetadataApplySourceRequests(t *testing.T) {
 	})
 }
 
+func TestMetadataApplySourceConfigsEqual(t *testing.T) {
+	t.Parallel()
+
+	t.Run("treats empty customization as equal to omitted customization", func(t *testing.T) {
+		local := metadataApplySourceConfig{
+			Name:          "default",
+			Kind:          "postgres",
+			Configuration: map[string]interface{}{"connection_info": map[string]interface{}{"database_url": "postgres://example"}},
+		}
+		server := metadataApplySourceConfig{
+			Name:          "default",
+			Kind:          "postgres",
+			Configuration: map[string]interface{}{"connection_info": map[string]interface{}{"database_url": "postgres://example"}},
+			Customization: map[string]interface{}{},
+		}
+		equal, err := metadataApplySourceConfigsEqual(local, server)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !equal {
+			t.Fatalf("expected configs to be equal")
+		}
+	})
+
+	t.Run("detects changed configuration", func(t *testing.T) {
+		local := metadataApplySourceConfig{
+			Name:          "default",
+			Kind:          "postgres",
+			Configuration: map[string]interface{}{"connection_info": map[string]interface{}{"database_url": "postgres://one"}},
+		}
+		server := metadataApplySourceConfig{
+			Name:          "default",
+			Kind:          "postgres",
+			Configuration: map[string]interface{}{"connection_info": map[string]interface{}{"database_url": "postgres://two"}},
+		}
+		equal, err := metadataApplySourceConfigsEqual(local, server)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if equal {
+			t.Fatalf("expected configs to differ")
+		}
+	})
+
+	t.Run("ignores map key ordering", func(t *testing.T) {
+		local := metadataApplySourceConfig{
+			Name: "default",
+			Kind: "postgres",
+			Configuration: map[string]interface{}{
+				"connection_info": map[string]interface{}{
+					"database_url":            "postgres://example",
+					"use_prepared_statements": false,
+				},
+			},
+		}
+		server := metadataApplySourceConfig{
+			Name: "default",
+			Kind: "postgres",
+			Configuration: map[string]interface{}{
+				"connection_info": map[string]interface{}{
+					"use_prepared_statements": false,
+					"database_url":            "postgres://example",
+				},
+			},
+		}
+		equal, err := metadataApplySourceConfigsEqual(local, server)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !equal {
+			t.Fatalf("expected configs to be equal")
+		}
+	})
+}
+
 func TestLoadMetadataApplySources(t *testing.T) {
 	t.Parallel()
 

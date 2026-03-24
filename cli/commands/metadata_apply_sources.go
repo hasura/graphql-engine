@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
+	"reflect"
 
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
@@ -50,6 +51,10 @@ Further reading:
 			if err != nil {
 				return errors.E(op, err)
 			}
+			if opts.OperationCount == 0 {
+				opts.EC.Logger.Info("Source configurations are already up to date")
+				return nil
+			}
 			opts.EC.Logger.Info("Source configurations applied")
 			return nil
 		},
@@ -59,7 +64,8 @@ Further reading:
 }
 
 type MetadataApplySourcesOptions struct {
-	EC *cli.ExecutionContext
+	EC             *cli.ExecutionContext
+	OperationCount int
 }
 
 type metadataApplySourceConfig struct {
@@ -102,7 +108,16 @@ func (o *MetadataApplySourcesOptions) Run() error {
 	addRequests := make([]hasura.RequestBody, 0, len(localSources))
 	followUpRequests := make([]hasura.RequestBody, 0, len(localSources))
 	for _, source := range localSources {
-		_, sourceExistsOnServer := serverSources[source.Name]
+		serverSource, sourceExistsOnServer := serverSources[source.Name]
+		if sourceExistsOnServer {
+			isEqual, err := metadataApplySourceConfigsEqual(source, serverSource)
+			if err != nil {
+				return errors.E(op, err)
+			}
+			if isEqual {
+				continue
+			}
+		}
 		requests, err := buildMetadataApplySourceRequests(source, sourceExistsOnServer)
 		if err != nil {
 			return errors.E(op, err)
@@ -114,6 +129,7 @@ func (o *MetadataApplySourcesOptions) Run() error {
 	}
 
 	bulkRequests := append(addRequests, followUpRequests...)
+	o.OperationCount = len(bulkRequests)
 	if len(bulkRequests) == 0 {
 		return nil
 	}
@@ -230,6 +246,73 @@ func buildMetadataApplySourceRequests(source metadataApplySourceConfig, sourceEx
 	}
 
 	return requests, nil
+}
+
+func metadataApplySourceConfigsEqual(localSource metadataApplySourceConfig, serverSource metadataApplySourceConfig) (bool, error) {
+	var op errors.Op = "commands.metadataApplySourceConfigsEqual"
+	localNormalized, err := normalizeMetadataApplySourceConfig(localSource)
+	if err != nil {
+		return false, errors.E(op, err)
+	}
+	serverNormalized, err := normalizeMetadataApplySourceConfig(serverSource)
+	if err != nil {
+		return false, errors.E(op, err)
+	}
+	return reflect.DeepEqual(localNormalized, serverNormalized), nil
+}
+
+func normalizeMetadataApplySourceConfig(source metadataApplySourceConfig) (interface{}, error) {
+	var op errors.Op = "commands.normalizeMetadataApplySourceConfig"
+	normalizedSource, err := normalizeMetadataApplyComparableValue(map[string]interface{}{
+		"configuration": source.Configuration,
+		"customization": source.Customization,
+		"health_check":  source.HealthCheck,
+	})
+	if err != nil {
+		return nil, errors.E(op, err)
+	}
+	return normalizedSource, nil
+}
+
+func normalizeMetadataApplyComparableValue(value interface{}) (interface{}, error) {
+	var op errors.Op = "commands.normalizeMetadataApplyComparableValue"
+	jsonBytes, err := json.Marshal(value)
+	if err != nil {
+		return nil, errors.E(op, err)
+	}
+	var normalized interface{}
+	if err := json.Unmarshal(jsonBytes, &normalized); err != nil {
+		return nil, errors.E(op, err)
+	}
+	return pruneEmptyComparableValue(normalized), nil
+}
+
+func pruneEmptyComparableValue(value interface{}) interface{} {
+	switch typed := value.(type) {
+	case map[string]interface{}:
+		normalizedMap := make(map[string]interface{}, len(typed))
+		for key, val := range typed {
+			normalizedValue := pruneEmptyComparableValue(val)
+			if normalizedValue != nil {
+				normalizedMap[key] = normalizedValue
+			}
+		}
+		if len(normalizedMap) == 0 {
+			return nil
+		}
+		return normalizedMap
+	case []interface{}:
+		if len(typed) == 0 {
+			return nil
+		}
+		normalizedSlice := make([]interface{}, len(typed))
+		for idx, val := range typed {
+			normalizedSlice[idx] = pruneEmptyComparableValue(val)
+		}
+		return normalizedSlice
+	default:
+		return value
+	}
 }
 
 func (o *MetadataApplySourcesOptions) sendMetadataBulkRequest(requests []hasura.RequestBody) error {
