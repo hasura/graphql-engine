@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/Pallinder/go-randomdata"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -51,6 +52,76 @@ func TestMetadataApplySourcesRequestType(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestBuildMetadataApplySourceRequests(t *testing.T) {
+	t.Parallel()
+
+	source := metadataApplySourceConfig{
+		Name:          "default",
+		Kind:          "postgres",
+		Configuration: map[string]interface{}{"connection_info": map[string]interface{}{"database_url": "postgres://example"}},
+		HealthCheck:   map[string]interface{}{"test": "ok"},
+	}
+
+	t.Run("new source", func(t *testing.T) {
+		requests, err := buildMetadataApplySourceRequests(source, false)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(requests) != 1 {
+			t.Fatalf("got %d requests, want 1", len(requests))
+		}
+		if requests[0].Type != "pg_add_source" {
+			t.Fatalf("got request type %q, want %q", requests[0].Type, "pg_add_source")
+		}
+		args, ok := requests[0].Args.(map[string]interface{})
+		if !ok {
+			t.Fatalf("args has unexpected type %T", requests[0].Args)
+		}
+		if _, ok := args["replace_configuration"]; ok {
+			t.Fatalf("unexpected replace_configuration for new source")
+		}
+		if _, ok := args["health_check"]; !ok {
+			t.Fatalf("missing health_check for new source")
+		}
+	})
+
+	t.Run("existing source", func(t *testing.T) {
+		requests, err := buildMetadataApplySourceRequests(source, true)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(requests) != 2 {
+			t.Fatalf("got %d requests, want 2", len(requests))
+		}
+		if requests[0].Type != "pg_add_source" {
+			t.Fatalf("got request type %q, want %q", requests[0].Type, "pg_add_source")
+		}
+		if requests[1].Type != "pg_update_source" {
+			t.Fatalf("got request type %q, want %q", requests[1].Type, "pg_update_source")
+		}
+		addArgs, ok := requests[0].Args.(map[string]interface{})
+		if !ok {
+			t.Fatalf("args has unexpected type %T", requests[0].Args)
+		}
+		if addArgs["replace_configuration"] != true {
+			t.Fatalf("expected replace_configuration=true, got %v", addArgs["replace_configuration"])
+		}
+		if _, ok := addArgs["health_check"]; ok {
+			t.Fatalf("unexpected health_check in add request for existing source")
+		}
+	})
+
+	t.Run("request bodies are bulk-compatible", func(t *testing.T) {
+		requests, err := buildMetadataApplySourceRequests(source, true)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if _, err := json.Marshal(hasura.RequestBody{Type: "bulk", Args: requests}); err != nil {
+			t.Fatalf("unexpected marshal error: %v", err)
+		}
+	})
 }
 
 func TestLoadMetadataApplySources(t *testing.T) {

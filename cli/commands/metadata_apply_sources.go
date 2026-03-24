@@ -99,14 +99,27 @@ func (o *MetadataApplySourcesOptions) Run() error {
 		}
 	}
 
+	addRequests := make([]hasura.RequestBody, 0, len(localSources))
+	followUpRequests := make([]hasura.RequestBody, 0, len(localSources))
 	for _, source := range localSources {
-		requestType, err := metadataApplySourcesRequestType(source.Kind, "add")
+		_, sourceExistsOnServer := serverSources[source.Name]
+		requests, err := buildMetadataApplySourceRequests(source, sourceExistsOnServer)
 		if err != nil {
 			return errors.E(op, err)
 		}
-		if err := o.applySource(source, requestType, serverSources); err != nil {
-			return errors.E(op, err)
+		addRequests = append(addRequests, requests[0])
+		if len(requests) > 1 {
+			followUpRequests = append(followUpRequests, requests[1:]...)
 		}
+	}
+
+	bulkRequests := append(addRequests, followUpRequests...)
+	if len(bulkRequests) == 0 {
+		return nil
+	}
+
+	if err := o.sendMetadataBulkRequest(bulkRequests); err != nil {
+		return errors.E(op, err)
 	}
 
 	return nil
@@ -178,10 +191,12 @@ func (o *MetadataApplySourcesOptions) exportServerSources() (map[string]metadata
 	return serverSources, nil
 }
 
-func (o *MetadataApplySourcesOptions) applySource(source metadataApplySourceConfig, addRequestType string, serverSources map[string]metadataApplySourceConfig) error {
-	var op errors.Op = "commands.MetadataApplySourcesOptions.applySource"
-	_, sourceExistsOnServer := serverSources[source.Name]
-
+func buildMetadataApplySourceRequests(source metadataApplySourceConfig, sourceExistsOnServer bool) ([]hasura.RequestBody, error) {
+	var op errors.Op = "commands.buildMetadataApplySourceRequests"
+	addRequestType, err := metadataApplySourcesRequestType(source.Kind, "add")
+	if err != nil {
+		return nil, errors.E(op, err)
+	}
 	addSourceArgs := map[string]interface{}{
 		"name":          source.Name,
 		"configuration": source.Configuration,
@@ -196,32 +211,33 @@ func (o *MetadataApplySourcesOptions) applySource(source metadataApplySourceConf
 		addSourceArgs["health_check"] = source.HealthCheck
 	}
 
-	if err := o.sendMetadataRequest(hasura.RequestBody{Type: addRequestType, Args: addSourceArgs}); err != nil {
-		return errors.E(op, fmt.Errorf("applying source %q: %w", source.Name, err))
+	requests := []hasura.RequestBody{
+		{Type: addRequestType, Args: addSourceArgs},
 	}
 
 	if sourceExistsOnServer && source.HealthCheck != nil {
 		updateRequestType, err := metadataApplySourcesRequestType(source.Kind, "update")
 		if err != nil {
-			return errors.E(op, err)
+			return nil, errors.E(op, err)
 		}
-		if err := o.sendMetadataRequest(hasura.RequestBody{
+		requests = append(requests, hasura.RequestBody{
 			Type: updateRequestType,
 			Args: map[string]interface{}{
 				"name":         source.Name,
 				"health_check": source.HealthCheck,
 			},
-		}); err != nil {
-			return errors.E(op, fmt.Errorf("updating health check for source %q: %w", source.Name, err))
-		}
+		})
 	}
 
-	return nil
+	return requests, nil
 }
 
-func (o *MetadataApplySourcesOptions) sendMetadataRequest(requestBody hasura.RequestBody) error {
-	var op errors.Op = "commands.MetadataApplySourcesOptions.sendMetadataRequest"
-	response, body, err := o.EC.APIClient.V1Metadata.Send(requestBody)
+func (o *MetadataApplySourcesOptions) sendMetadataBulkRequest(requests []hasura.RequestBody) error {
+	var op errors.Op = "commands.MetadataApplySourcesOptions.sendMetadataBulkRequest"
+	response, body, err := o.EC.APIClient.V1Metadata.Send(hasura.RequestBody{
+		Type: "bulk",
+		Args: requests,
+	})
 	if err != nil {
 		return errors.E(op, err)
 	}
