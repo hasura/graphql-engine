@@ -58,6 +58,7 @@ Further reading:
 		newMetadataClearCmd(ec),
 		newMetadataReloadCmd(ec),
 		newMetadataApplyCmd(ec),
+		newMetadataApplySourcesCmd(ec),
 		newMetadataInconsistencyCmd(ec),
 	)
 
