@@ -1,6 +1,6 @@
 # Build the plugin binary
 # Match Rust version used elsewhere (see rust-toolchain.toml and dev-auth-webhook.Dockerfile)
-FROM rust:1.93.0 AS builder
+FROM rust:1.94.1 AS builder
 
 WORKDIR /app
 COPY ./Cargo.toml ./Cargo.toml
@@ -21,4 +21,3 @@ RUN apt-get update && \
 
 EXPOSE 5004
 ENTRYPOINT ["/usr/bin/pre-ndc-response-plugin-example"]
-
