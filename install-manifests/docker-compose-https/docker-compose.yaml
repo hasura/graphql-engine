@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_PASSWORD: postgrespassword
   graphql-engine:
-    image: hasura/graphql-engine:v2.48.14
+    image: hasura/graphql-engine:v2.48.15
     depends_on:
       - "postgres"
     restart: always
