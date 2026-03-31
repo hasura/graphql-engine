@@ -169,11 +169,13 @@ fn evaluate_value_expression(
     match value_expression {
         ValueExpression::Literal(value) => Ok(value.clone()),
         ValueExpression::SessionVariable(reference) => {
-            let session_variable_value = session_variables.get(&reference.name).ok_or(
-                ConditionError::SessionVariableNotFound {
-                    name: reference.name.clone(),
-                },
-            )?;
+            let Some(session_variable_value) = session_variables.get(&reference.name) else {
+                // if the session variable is not set, treat it as null
+                // this means conditions referencing missing session variables
+                // will evaluate to false (e.g. equal("missing", "true") -> null == "true" -> false)
+                // rather than producing an error that aborts the entire permission evaluation
+                return Ok(serde_json::Value::Null);
+            };
 
             let value = if reference.passed_as_json {
                 session_variable_value
@@ -351,5 +353,56 @@ mod tests {
         for test in test_cases_that_should_fail {
             assert_eq!(evaluate_condition(&test, &session.variables), Ok(false));
         }
+    }
+
+    #[test]
+    fn test_missing_session_variable_treated_as_null() {
+        let session_variable = |name: &str| {
+            ValueExpression::SessionVariable(SessionVariableReference {
+                name: SessionVariableName::from_str(name).unwrap(),
+                disallow_unknown_fields: true,
+                passed_as_json: true,
+            })
+        };
+
+        let string = |s: &str| ValueExpression::Literal(serde_json::Value::String(s.to_string()));
+
+        let equals = |left: ValueExpression, right: ValueExpression| Condition::BinaryOperation {
+            left,
+            right,
+            op: BinaryOperation::Equals,
+        };
+
+        let is_null = |value: ValueExpression| Condition::UnaryOperation {
+            op: UnaryOperation::IsNull,
+            value,
+        };
+
+        // empty session — no variables set at all
+        let authorization = Identity::admin(Role::new("user"));
+        let role = Role::new("user");
+        let role_authorization = authorization.get_role_authorization(Some(&role)).unwrap();
+        let session = role_authorization.build_session(BTreeMap::new());
+
+        // a missing session variable compared to a literal should evaluate to false, not error
+        assert_eq!(
+            evaluate_condition(
+                &equals(
+                    session_variable("x-hasura-custom-claim-no-chemical-access"),
+                    string("true")
+                ),
+                &session.variables,
+            ),
+            Ok(false)
+        );
+
+        // isNull on a missing session variable should evaluate to true
+        assert_eq!(
+            evaluate_condition(
+                &is_null(session_variable("x-hasura-custom-claim-no-chemical-access")),
+                &session.variables,
+            ),
+            Ok(true)
+        );
     }
 }

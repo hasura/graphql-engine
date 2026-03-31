@@ -807,4 +807,60 @@ mod tests {
             Some(ModelPermission::new())
         );
     }
+
+    // Regression test: an unconditional allow rule followed by a deny rule
+    // that references a missing session variable should grant access, not error.
+    #[test]
+    fn test_deny_with_missing_session_variable_does_not_block_access() {
+        use hasura_authn_core::SessionVariableReference;
+        use std::str::FromStr;
+
+        let session_variables = BTreeMap::new();
+        let mut condition_cache = ConditionCache::new();
+
+        let authorization = Identity::admin(Role::new("user"));
+        let role = Role::new("user");
+        let role_authorization = authorization.get_role_authorization(Some(&role)).unwrap();
+        let session = role_authorization.build_session(session_variables);
+
+        let mut conditions = Conditions::new();
+
+        // unconditional allow (condition: None)
+        let allow_rule = ModelAuthorizationRule::Access {
+            condition: None,
+            allow_or_deny: AllowOrDeny::Allow,
+        };
+
+        // deny when x-hasura-custom-claim-no-chemical-access == "true"
+        // this session variable is NOT present in the session
+        let deny_condition = Condition::BinaryOperation {
+            left: ValueExpression::SessionVariable(SessionVariableReference {
+                name: hasura_authn_core::SessionVariableName::from_str(
+                    "x-hasura-custom-claim-no-chemical-access",
+                )
+                .unwrap(),
+                disallow_unknown_fields: true,
+                passed_as_json: false,
+            }),
+            right: ValueExpression::Literal(serde_json::Value::String("true".to_string())),
+            op: BinaryOperation::Equals,
+        };
+        let deny_condition_id = conditions.add(deny_condition);
+
+        let deny_rule = ModelAuthorizationRule::Access {
+            condition: Some(deny_condition_id),
+            allow_or_deny: AllowOrDeny::Deny,
+        };
+
+        // should grant access: allow fires unconditionally,
+        // deny condition evaluates to false (missing var -> null != "true")
+        let rules = vec![allow_rule, deny_rule];
+        let result = evaluate_model_authorization_rules(
+            &rules,
+            &session.variables,
+            &conditions,
+            &mut condition_cache,
+        );
+        assert_eq!(result.unwrap(), Some(ModelPermission::new()));
+    }
 }

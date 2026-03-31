@@ -8,6 +8,9 @@
 
 ### Fixed
 
+- An authorization `Condition` that references a non-existent session variables
+  fails to match rather than throwing an error
+
 ## [v2026.03.25]
 
 ### Added
