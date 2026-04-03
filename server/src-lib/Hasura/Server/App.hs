@@ -28,7 +28,7 @@ module Hasura.Server.App
 where
 
 import Control.Concurrent.Async.Lifted.Safe qualified as LA
-import Control.Exception (IOException, throwIO, try)
+import Control.Exception (IOException, evaluate, throwIO, try)
 import Control.Exception.Lifted (ErrorCall (..), catch)
 import Control.Monad.Morph (hoist)
 import Control.Monad.Stateless
@@ -455,11 +455,19 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
 
     logSuccessAndResp userInfo reqId waiReq req result qTime reqHeaders authHdrs httpLoggingMetadata = do
       AppEnv {..} <- lift askAppEnv
-      let (respBytes, respHeaders) = case result of
-            JSONResp (HttpResponse encJson h) -> (encJToLBS encJson, pure jsonHeader <> h)
-            RawResp (HttpResponse rawBytes h) -> (rawBytes, h)
-          (compressedResp, encodingType) = compressResponse (Wai.requestHeaders waiReq) respBytes
-          encodingHeader = maybeToList (contentEncodingHeader <$> encodingType)
+      (respBytes, respHeaders) <- case result of
+        JSONResp (HttpResponse encJson h) -> lift $ Tracing.newSpan "Encode response" Tracing.SKInternal $ liftIO $ do
+          let respBytes = encJToLBS encJson 
+              respHeaders = pure jsonHeader <> h
+          _ <- evaluate (BL.length respBytes) -- force LBS
+          pure (respBytes, respHeaders)
+        RawResp (HttpResponse rawBytes h) -> pure (rawBytes, h)
+      -- Run the EncJSON Builder and compress strictly, so timing is captured in the span:
+      (compressedResp, encodingType) <- lift $ Tracing.newSpan "Compress response" Tracing.SKInternal $ liftIO $ do
+        let (cr, et) = compressResponse (Wai.requestHeaders waiReq) respBytes
+        _ <- evaluate (BL.length cr) -- force LBS
+        pure (cr, et)
+      let encodingHeader = maybeToList (contentEncodingHeader <$> encodingType)
           reqIdHeader = (requestIdHeader, txtToBs $ unRequestId reqId)
           contentLength = ("Content-Length", B8.toStrict $ BB.toLazyByteString $ BB.int64Dec $ BL.length compressedResp)
           allRespHeaders = [reqIdHeader, contentLength] <> encodingHeader <> respHeaders <> authHdrs
