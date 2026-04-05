@@ -76,6 +76,7 @@ module Hasura.Server.Init.Arg.Command.Serve
     configuredHeaderPrecedenceOption,
     traceQueryStatusOption,
     serverTimeoutOption,
+    logMaskedVariablesOption,
 
     -- * Pretty Printer
     serveCmdFooter,
@@ -179,6 +180,7 @@ serveCommandParser =
     <*> parseDisableNativeQueryValidation
     <*> parsePreserve401Errors
     <*> parseServerTimeout
+    <*> parseLogMaskedVariables
 
 --------------------------------------------------------------------------------
 -- Serve Options
@@ -1448,6 +1450,26 @@ parseServerTimeout =
           <> Opt.help (Config._helpMessage serverTimeoutOption)
       )
 
+parseLogMaskedVariables :: Opt.Parser (Maybe (HashSet Text))
+parseLogMaskedVariables =
+  Opt.optional
+    $ Opt.option
+      (Opt.eitherReader Env.fromEnv)
+      ( Opt.long "log-masked-variables"
+          <> Opt.help (Config._helpMessage logMaskedVariablesOption)
+      )
+
+logMaskedVariablesOption :: Config.Option (HashSet Text)
+logMaskedVariablesOption =
+  Config.Option
+    { Config._default = HashSet.empty,
+      Config._envVar = "HASURA_GRAPHQL_LOG_MASKED_VARIABLES",
+      Config._helpMessage =
+        "Comma separated list of variable names to mask in query logs "
+          <> "(default: none). When set, the values of these variables will be "
+          <> "replaced with \"[MASKED]\" in query-log output."
+    }
+
 --------------------------------------------------------------------------------
 -- Pretty Printer
 
@@ -1556,6 +1578,7 @@ serveCmdFooter =
         Config.optionPP persistedQueriesTtlOption,
         Config.optionPP configuredHeaderPrecedenceOption,
         Config.optionPP preserve401ErrorsOption,
-        Config.optionPP serverTimeoutOption
+        Config.optionPP serverTimeoutOption,
+        Config.optionPP logMaskedVariablesOption
       ]
     eventEnvs = [Config.optionPP graphqlEventsHttpPoolSizeOption, Config.optionPP graphqlEventsFetchIntervalOption]

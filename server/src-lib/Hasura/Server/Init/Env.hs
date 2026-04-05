@@ -351,6 +351,9 @@ instance FromEnv [Auth.JWTConfig] where
 instance (Logging.EnabledLogTypes impl) => FromEnv (HashSet (Logging.EngineLogType impl)) where
   fromEnv = fmap HashSet.fromList . Logging.parseEnabledLogTypes
 
+instance FromEnv (HashSet Text) where
+  fromEnv = Right . HashSet.fromList . filter (not . Text.null) . map Text.strip . Text.splitOn "," . Text.pack
+
 instance FromEnv Logging.LogLevel where
   fromEnv s = case Text.toLower $ Text.strip $ Text.pack s of
     "debug" -> Right Logging.LevelDebug

@@ -107,6 +107,7 @@ import Hasura.GraphQL.Execute.Action.Subscription
 import Hasura.GraphQL.Execute.Subscription.Poll qualified as ES
 import Hasura.GraphQL.Execute.Subscription.State qualified as ES
 import Hasura.GraphQL.Logging (MonadExecutionLog (..), MonadQueryLog (..))
+import Hasura.GraphQL.Logging.QueryLog (maskQueryLog)
 import Hasura.GraphQL.Transport.HTTP
   ( CacheResult (..),
     MonadExecuteQuery (..),
@@ -477,7 +478,7 @@ initialiseAppEnv env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liv
           appEnvMetadataVersionRef = metaVersionRef,
           appEnvInstanceId = instanceId,
           appEnvEnableMaintenanceMode = soEnableMaintenanceMode,
-          appEnvLoggingSettings = LoggingSettings soEnabledLogTypes soEnableMetadataQueryLogging soHttpLogQueryOnlyOnError,
+          appEnvLoggingSettings = LoggingSettings soEnabledLogTypes soEnableMetadataQueryLogging soHttpLogQueryOnlyOnError soLogMaskedVariables,
           appEnvEventingMode = soEventingMode,
           appEnvEnableReadOnlyMode = soReadOnlyMode,
           appEnvServerMetrics = serverMetrics,
@@ -789,7 +790,9 @@ instance MonadGQLApiHandler AppM where
       EqrAPQReq _ -> throw400 NotSupported "PersistedQueryNotSupported"
 
 instance MonadQueryLog AppM where
-  logQueryLog logger = unLoggerTracing logger
+  logQueryLog logger ql = do
+    maskedKeys <- asks (_lsLogMaskedVariables . appEnvLoggingSettings)
+    unLoggerTracing logger (maskQueryLog maskedKeys ql)
 
 instance MonadExecutionLog AppM where
   logExecutionLog logger = unLoggerTracing logger
