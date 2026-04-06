@@ -32,7 +32,6 @@ import Control.Arrow.Interpret
 import Control.Lens hiding ((.=))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
-import Data.Aeson.Ordered qualified as JO
 import Data.Align (align)
 import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
@@ -41,13 +40,12 @@ import Data.Text.Casing (GQLNameIdentifier, fromCustomName)
 import Data.Text.Extended
 import Data.These (These (..))
 import Data.Vector (Vector)
+import Data.Vector qualified as V
 import Hasura.Backends.Postgres.SQL.Types (PGDescription (..), QualifiedTable)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Eventing.Backend (BackendEventTrigger, dropTriggerAndArchiveEvents)
 import Hasura.GraphQL.Context
-import Hasura.GraphQL.Namespace
-import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.GraphQL.Schema.Common (textToGQLIdentifier)
 import Hasura.Incremental qualified as Inc
 import Hasura.LogicalModel.Metadata
@@ -56,7 +54,6 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.DDL.Schema.Enum (resolveEnumReferences)
 import Hasura.RQL.DDL.Warnings
-import Hasura.RQL.IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
@@ -178,62 +175,9 @@ trackExistingTableOrViewPhase1 source tableName = do
     <<> " already exists"
 
 queryForExistingFieldNames :: SchemaCache -> Vector Text
-queryForExistingFieldNames schemaCache = do
-  let GQLContext queryParser _ _ = scUnauthenticatedGQLContext schemaCache
-      -- {
-      --   __schema {
-      --     queryType {
-      --       fields {
-      --         name
-      --       }
-      --     }
-      --   }
-      -- }
-      introspectionQuery =
-        [ G.SelectionField
-            $ G.Field
-              Nothing
-              GName.___schema
-              mempty
-              []
-              [ G.SelectionField
-                  $ G.Field
-                    Nothing
-                    GName._queryType
-                    mempty
-                    []
-                    [ G.SelectionField
-                        $ G.Field
-                          Nothing
-                          GName._fields
-                          mempty
-                          []
-                          [ G.SelectionField
-                              $ G.Field
-                                Nothing
-                                GName._name
-                                mempty
-                                []
-                                []
-                          ]
-                    ]
-              ]
-        ]
-  case queryParser introspectionQuery of
-    Left _ -> mempty
-    Right results -> do
-      case InsOrdHashMap.lookup (mkUnNamespacedRootFieldAlias GName.___schema) results of
-        Just (RFRaw (JO.Object schema)) -> do
-          let names = do
-                JO.Object queryType <- JO.lookup "queryType" schema
-                JO.Array fields <- JO.lookup "fields" queryType
-                for fields \case
-                  JO.Object field -> do
-                    JO.String name <- JO.lookup "name" field
-                    pure name
-                  _ -> Nothing
-          fromMaybe mempty $ names
-        _ -> mempty
+queryForExistingFieldNames schemaCache =
+  let GQLContext _ fieldNames _ _ = scUnauthenticatedGQLContext schemaCache
+   in V.fromList $ map G.unName fieldNames
 
 -- | Check whether a given name would conflict with the current schema by doing
 -- an internal introspection

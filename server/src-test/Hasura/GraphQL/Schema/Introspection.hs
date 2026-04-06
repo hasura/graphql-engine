@@ -6,7 +6,6 @@ module Hasura.GraphQL.Schema.Introspection
 where
 
 import Data.Aeson qualified as J
-import Data.Aeson.Ordered qualified as JO
 import Data.Text qualified as T
 import Hasura.Backends.Postgres.Instances.Schema ()
 import Hasura.Base.ErrorMessage
@@ -51,6 +50,6 @@ introspectDefintions definitions = do
                   sSubscriptionType = Nothing,
                   sDirectives = []
                 }
-        return $ (JO.fromOrdered . ($ schema)) <$> I.schema @n
+        return $ (J.toJSON . ($ schema)) <$> I.schema @n
 
   onLeft introParser (error . T.unpack . fromErrorMessage . toErrorValue)

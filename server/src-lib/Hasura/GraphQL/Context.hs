@@ -30,6 +30,9 @@ instance (J.ToJSON a) => J.ToJSON (RoleContext a) where
 
 data GQLContext = GQLContext
   { gqlQueryParser :: ParserFn (RootFieldMap (IR.QueryRootField IR.UnpreparedValue)),
+    -- | Names of top-level query root fields (used for conflict detection without
+    -- needing to run/decode an introspection query)
+    gqlQueryRootFieldNames :: [G.Name],
     gqlMutationParser :: Maybe (ParserFn (RootFieldMap (IR.MutationRootField IR.UnpreparedValue))),
     gqlSubscriptionParser :: Maybe (ParserFn (RootFieldMap (IR.QueryRootField IR.UnpreparedValue)))
   }

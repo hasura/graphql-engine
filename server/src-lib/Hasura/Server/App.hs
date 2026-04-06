@@ -457,7 +457,7 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
       AppEnv {..} <- lift askAppEnv
       (respBytes, respHeaders) <- case result of
         JSONResp (HttpResponse encJson h) -> lift $ Tracing.newSpan "Encode response" Tracing.SKInternal $ liftIO $ do
-          let respBytes = encJToLBS encJson 
+          let respBytes = encJToLBS encJson
               respHeaders = pure jsonHeader <> h
           _ <- evaluate (BL.length respBytes) -- force LBS
           pure (respBytes, respHeaders)

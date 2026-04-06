@@ -245,7 +245,7 @@ buildSubscriptionPlan removeEmptySubscriptionResponses userInfo rootFields param
               case JO.asObject oldResponse of
                 Left (_err :: String) -> oldResponse
                 Right responseObj ->
-                  JO.Object $ JO.insert (fieldIndex, G.unName $ _rfaAlias gName) val responseObj
+                  JO.Object $ JO.insert (fieldIndex, G.unName $ _rfaAlias gName) (JO.toOrdered (IR.irEncJSON val)) responseObj
         pure ((accLiveQueryFields, accStreamingFields), Just (Endo newModifier) <> modifier)
       IR.RFMulti _ -> throw400 NotSupported "not supported over subscriptions"
       IR.RFDB src e -> do

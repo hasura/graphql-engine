@@ -21,6 +21,7 @@ import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text qualified as T
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (toErrorMessage)
+import Hasura.EncJSON
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Parser
@@ -165,7 +166,12 @@ mkServiceField = serviceFieldParser
     serviceFieldParser =
       P.subselection_ Name.__service Nothing serviceParser `bindField` \selSet -> do
         let partialValue = InsOrdHashMap.map (\ps -> handleTypename (\tName _ -> JO.toOrdered tName) ps) (InsOrdHashMap.mapKeys G.unName selSet)
-        pure \schemaIntrospection -> RFRaw . JO.fromOrderedHashMap $ (partialValue ?? schemaIntrospection)
+        pure \schemaIntrospection ->
+          RFRaw
+            . SchemaIntrospection
+            $ encJFromAssocList
+            $ map (fmap encJFromOrderedValue)
+            $ InsOrdHashMap.toList (partialValue ?? schemaIntrospection)
 
 apolloRootFields ::
   ApolloFederationStatus ->

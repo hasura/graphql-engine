@@ -7,12 +7,12 @@ module Hasura.GraphQL.Schema.Introspect
   )
 where
 
-import Data.Aeson.Ordered qualified as J
+import Data.Aeson qualified as Aeson
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
-import Data.Vector qualified as V
+import Hasura.EncJSON
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.Directives
 import Hasura.GraphQL.Parser.Name qualified as GName
@@ -36,7 +36,7 @@ However the schema information is obtained, the @Schema@ type stores it.  From a
 @Schema@ object we then produce one @FieldParser@ that reads a `__schema` field,
 and one that reads a `__type` field.  The idea is that these parsers simply
 output a JSON value directly, and so indeed the type of @schema@, for instance,
-is @FieldParser n J.Value@.
+is @FieldParser n EncJSON@.
 
 The idea of "just output the JSON object directly" breaks down when we want to
 output a list of things, however, such as in the `types` field of `__schema`.
@@ -57,7 +57,7 @@ means that we only output the _name_ of every type in our schema.  One naive
 approach one might consider here would be to have a parser
 
 ```
-typeField :: P.Type k -> Parser n J.Value
+typeField :: P.Type k -> Parser n EncJSON
 ```
 
 that takes a type, and is able to produce a JSON value for it, and then to apply
@@ -112,7 +112,7 @@ output the conversion functions directly.  So the type of @typeField@ is closer
 to:
 
 ```
-typeField :: Parser n (P.Type k -> J.Value)
+typeField :: Parser n (P.Type k -> EncJSON)
 ```
 
 This says that we are always able to parse a selection set for a `__Type`, and
@@ -121,14 +121,14 @@ which can output a JSON object for a given GraphQL type from our schema.
 
 To use `typeField` as part of another selection set, we build up a corresponding
 `FieldParser`, thus obtaining a printer, then apply this printer to all desired
-types, and output the final JSON object as a J.Array of the printed results,
+types, and output the final JSON object as an EncJSON array of the printed results,
 like so (again, heavily simplified):
 
 ```
-    types :: FieldParser n J.Value
+    types :: FieldParser n EncJSON
     types = do
       printer <- P.subselection_ GName._types Nothing typeField
-      return $ J.Array $ map printer $ allSchemaTypes
+      return $ encJFromList $ map printer $ allSchemaTypes
 ```
 
 Upon reading this you may be bewildered how we are able to use do notation for
@@ -234,7 +234,7 @@ buildIntrospectionSchema queryRoot' mutationRoot' subscriptionRoot' = do
 typeIntrospection ::
   forall n.
   (MonadParse n) =>
-  FieldParser n (Schema -> J.Value)
+  FieldParser n (Schema -> EncJSON)
 {-# INLINE typeIntrospection #-}
 typeIntrospection = do
   let nameArg :: P.InputFieldsParser n Text
@@ -244,7 +244,7 @@ typeIntrospection = do
   -- because the GraphQL spec forces us to expose a hybrid between the
   -- specification of valid queries (including introspection) and an
   -- introspection-free GraphQL schema.  See Note [What introspection exposes].
-  pure $ \partialSchema -> fromMaybe J.Null $ do
+  pure $ \partialSchema -> fromMaybe encJNull $ do
     name <- G.mkName nameText
     P.SomeDefinitionTypeInfo def <- HashMap.lookup name $ sTypes partialSchema
     Just $ printer $ SomeType $ P.TNamed P.Nullable def
@@ -253,7 +253,7 @@ typeIntrospection = do
 schema ::
   forall n.
   (MonadParse n) =>
-  FieldParser n (Schema -> J.Value)
+  FieldParser n (Schema -> EncJSON)
 {-# INLINE schema #-}
 schema = P.subselection_ GName.___schema Nothing schemaSet
 
@@ -288,53 +288,53 @@ data SomeType = forall k. SomeType (P.Type k)
 typeField ::
   forall n.
   (MonadParse n) =>
-  Parser 'Output n (SomeType -> J.Value)
+  Parser 'Output n (SomeType -> EncJSON)
 typeField =
   let includeDeprecated :: P.InputFieldsParser n Bool
       includeDeprecated =
         P.fieldWithDefault GName._includeDeprecated Nothing (G.VBoolean False) (P.nullable P.boolean)
           <&> fromMaybe False
-      kind :: FieldParser n (SomeType -> J.Value)
+      kind :: FieldParser n (SomeType -> EncJSON)
       kind =
         P.selection_ GName._kind Nothing typeKind
           $> \case
             SomeType tp ->
               case tp of
                 P.TList P.NonNullable _ ->
-                  J.String "NON_NULL"
+                  encJFromJValue ("NON_NULL" :: Text)
                 P.TNamed P.NonNullable _ ->
-                  J.String "NON_NULL"
+                  encJFromJValue ("NON_NULL" :: Text)
                 P.TList P.Nullable _ ->
-                  J.String "LIST"
+                  encJFromJValue ("LIST" :: Text)
                 P.TNamed P.Nullable (P.Definition _ _ _ _ P.TIScalar) ->
-                  J.String "SCALAR"
+                  encJFromJValue ("SCALAR" :: Text)
                 P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIEnum _)) ->
-                  J.String "ENUM"
+                  encJFromJValue ("ENUM" :: Text)
                 P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIInputObject _)) ->
-                  J.String "INPUT_OBJECT"
+                  encJFromJValue ("INPUT_OBJECT" :: Text)
                 P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIObject _)) ->
-                  J.String "OBJECT"
+                  encJFromJValue ("OBJECT" :: Text)
                 P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIInterface _)) ->
-                  J.String "INTERFACE"
+                  encJFromJValue ("INTERFACE" :: Text)
                 P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIUnion _)) ->
-                  J.String "UNION"
-      name :: FieldParser n (SomeType -> J.Value)
+                  encJFromJValue ("UNION" :: Text)
+      name :: FieldParser n (SomeType -> EncJSON)
       name =
         P.selection_ GName._name Nothing P.string
           $> \case
             SomeType tp ->
               case tp of
                 P.TNamed P.Nullable (P.Definition name' _ _ _ _) ->
-                  nameAsJSON name'
-                _ -> J.Null
-      description :: FieldParser n (SomeType -> J.Value)
+                  nameAsEncJSON name'
+                _ -> encJNull
+      description :: FieldParser n (SomeType -> EncJSON)
       description =
         P.selection_ GName._description Nothing P.string
           $> \case
             SomeType (P.TNamed _ (P.Definition _ (Just desc) _ _ _)) ->
-              J.String (G.unDescription desc)
-            _ -> J.Null
-      fields :: FieldParser n (SomeType -> J.Value)
+              encJFromJValue (G.unDescription desc)
+            _ -> encJNull
+      fields :: FieldParser n (SomeType -> EncJSON)
       fields = do
         -- TODO handle the value of includeDeprecated
         ~(_includeDeprecated, printer) <- P.subselection GName._fields Nothing includeDeprecated fieldField
@@ -343,11 +343,11 @@ typeField =
             SomeType tp ->
               case tp of
                 P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIObject (P.ObjectInfo fields' _interfaces'))) ->
-                  J.Array $ V.fromList $ printer <$> fields'
+                  encJFromList $ printer <$> fields'
                 P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIInterface (P.InterfaceInfo fields' _objects'))) ->
-                  J.Array $ V.fromList $ printer <$> fields'
-                _ -> J.Null
-      interfaces :: FieldParser n (SomeType -> J.Value)
+                  encJFromList $ printer <$> fields'
+                _ -> encJNull
+      interfaces :: FieldParser n (SomeType -> EncJSON)
       interfaces = do
         printer <- P.subselection_ GName._interfaces Nothing typeField
         return
@@ -355,9 +355,9 @@ typeField =
             SomeType tp ->
               case tp of
                 P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIObject (P.ObjectInfo _fields' interfaces'))) ->
-                  J.Array $ V.fromList $ printer . SomeType . P.TNamed P.Nullable . fmap P.TIInterface <$> interfaces'
-                _ -> J.Null
-      possibleTypes :: FieldParser n (SomeType -> J.Value)
+                  encJFromList $ printer . SomeType . P.TNamed P.Nullable . fmap P.TIInterface <$> interfaces'
+                _ -> encJNull
+      possibleTypes :: FieldParser n (SomeType -> EncJSON)
       possibleTypes = do
         printer <- P.subselection_ GName._possibleTypes Nothing typeField
         return
@@ -365,11 +365,11 @@ typeField =
             SomeType tp ->
               case tp of
                 P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIInterface (P.InterfaceInfo _fields' objects'))) ->
-                  J.Array $ V.fromList $ printer . SomeType . P.TNamed P.Nullable . fmap P.TIObject <$> objects'
+                  encJFromList $ printer . SomeType . P.TNamed P.Nullable . fmap P.TIObject <$> objects'
                 P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIUnion (P.UnionInfo objects'))) ->
-                  J.Array $ V.fromList $ printer . SomeType . P.TNamed P.Nullable . fmap P.TIObject <$> objects'
-                _ -> J.Null
-      enumValues :: FieldParser n (SomeType -> J.Value)
+                  encJFromList $ printer . SomeType . P.TNamed P.Nullable . fmap P.TIObject <$> objects'
+                _ -> encJNull
+      enumValues :: FieldParser n (SomeType -> EncJSON)
       enumValues = do
         -- TODO handle the value of includeDeprecated
         ~(_includeDeprecated, printer) <- P.subselection GName._enumValues Nothing includeDeprecated enumValue
@@ -378,9 +378,9 @@ typeField =
             SomeType tp ->
               case tp of
                 P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIEnum vals)) ->
-                  J.Array $ V.fromList $ fmap printer $ toList vals
-                _ -> J.Null
-      inputFields :: FieldParser n (SomeType -> J.Value)
+                  encJFromList $ fmap printer $ toList vals
+                _ -> encJNull
+      inputFields :: FieldParser n (SomeType -> EncJSON)
       inputFields = do
         printer <- P.subselection_ GName._inputFields Nothing inputValue
         return
@@ -388,10 +388,10 @@ typeField =
             SomeType tp ->
               case tp of
                 P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIInputObject (P.InputObjectInfo fieldDefs))) ->
-                  J.Array $ V.fromList $ map printer fieldDefs
-                _ -> J.Null
+                  encJFromList $ map printer fieldDefs
+                _ -> encJNull
       -- ofType peels modalities off of types
-      ofType :: FieldParser n (SomeType -> J.Value)
+      ofType :: FieldParser n (SomeType -> EncJSON)
       ofType = do
         printer <- P.subselection_ GName._ofType Nothing typeField
         return $ \case
@@ -404,7 +404,7 @@ typeField =
           -- kind = "LIST": [a] -> a
           SomeType (P.TList P.Nullable x) ->
             printer $ SomeType x
-          _ -> J.Null
+          _ -> encJNull
    in applyPrinter
         <$> P.selectionSet
           GName.___Type
@@ -431,29 +431,29 @@ type __InputValue {
 inputValue ::
   forall n.
   (MonadParse n) =>
-  Parser 'Output n (P.Definition P.InputFieldInfo -> J.Value)
+  Parser 'Output n (P.Definition P.InputFieldInfo -> EncJSON)
 inputValue =
-  let name :: FieldParser n (P.Definition P.InputFieldInfo -> J.Value)
+  let name :: FieldParser n (P.Definition P.InputFieldInfo -> EncJSON)
       name =
         P.selection_ GName._name Nothing P.string
-          $> nameAsJSON
+          $> nameAsEncJSON
           . P.dName
-      description :: FieldParser n (P.Definition P.InputFieldInfo -> J.Value)
+      description :: FieldParser n (P.Definition P.InputFieldInfo -> EncJSON)
       description =
         P.selection_ GName._description Nothing P.string
-          $> maybe J.Null (J.String . G.unDescription)
+          $> maybe encJNull (encJFromJValue . G.unDescription)
           . P.dDescription
-      typeF :: FieldParser n (P.Definition P.InputFieldInfo -> J.Value)
+      typeF :: FieldParser n (P.Definition P.InputFieldInfo -> EncJSON)
       typeF = do
         printer <- P.subselection_ GName._type Nothing typeField
         return $ \defInfo -> case P.dInfo defInfo of
           P.InputFieldInfo tp _ -> printer $ SomeType tp
-      defaultValue :: FieldParser n (P.Definition P.InputFieldInfo -> J.Value)
+      defaultValue :: FieldParser n (P.Definition P.InputFieldInfo -> EncJSON)
       defaultValue =
         P.selection_ GName._defaultValue Nothing P.string
           $> \defInfo -> case P.dInfo defInfo of
-            P.InputFieldInfo _ (Just val) -> J.String $ T.run $ GP.value val
-            _ -> J.Null
+            P.InputFieldInfo _ (Just val) -> encJFromJValue $ T.run $ GP.value val
+            _ -> encJNull
    in applyPrinter
         <$> P.selectionSet
           GName.___InputValue
@@ -475,27 +475,27 @@ type __EnumValue {
 enumValue ::
   forall n.
   (MonadParse n) =>
-  Parser 'Output n (P.Definition P.EnumValueInfo -> J.Value)
+  Parser 'Output n (P.Definition P.EnumValueInfo -> EncJSON)
 enumValue =
-  let name :: FieldParser n (P.Definition P.EnumValueInfo -> J.Value)
+  let name :: FieldParser n (P.Definition P.EnumValueInfo -> EncJSON)
       name =
         P.selection_ GName._name Nothing P.string
-          $> nameAsJSON
+          $> nameAsEncJSON
           . P.dName
-      description :: FieldParser n (P.Definition P.EnumValueInfo -> J.Value)
+      description :: FieldParser n (P.Definition P.EnumValueInfo -> EncJSON)
       description =
         P.selection_ GName._description Nothing P.string
-          $> maybe J.Null (J.String . G.unDescription)
+          $> maybe encJNull (encJFromJValue . G.unDescription)
           . P.dDescription
       -- TODO We don't seem to support enum value deprecation
-      isDeprecated :: FieldParser n (P.Definition P.EnumValueInfo -> J.Value)
+      isDeprecated :: FieldParser n (P.Definition P.EnumValueInfo -> EncJSON)
       isDeprecated =
         P.selection_ GName._isDeprecated Nothing P.string
-          $> const (J.Bool False)
-      deprecationReason :: FieldParser n (P.Definition P.EnumValueInfo -> J.Value)
+          $> const (encJFromBool False)
+      deprecationReason :: FieldParser n (P.Definition P.EnumValueInfo -> EncJSON)
       deprecationReason =
         P.selection_ GName._deprecationReason Nothing P.string
-          $> const J.Null
+          $> const encJNull
    in applyPrinter
         <$> P.selectionSet
           GName.___EnumValue
@@ -553,36 +553,36 @@ type __Field {
 fieldField ::
   forall n.
   (MonadParse n) =>
-  Parser 'Output n (P.Definition P.FieldInfo -> J.Value)
+  Parser 'Output n (P.Definition P.FieldInfo -> EncJSON)
 fieldField =
-  let name :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
+  let name :: FieldParser n (P.Definition P.FieldInfo -> EncJSON)
       name =
         P.selection_ GName._name Nothing P.string
-          $> nameAsJSON
+          $> nameAsEncJSON
           . P.dName
-      description :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
+      description :: FieldParser n (P.Definition P.FieldInfo -> EncJSON)
       description =
         P.selection_ GName._description Nothing P.string $> \defInfo ->
           case P.dDescription defInfo of
-            Nothing -> J.Null
-            Just desc -> J.String (G.unDescription desc)
-      args :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
+            Nothing -> encJNull
+            Just desc -> encJFromJValue (G.unDescription desc)
+      args :: FieldParser n (P.Definition P.FieldInfo -> EncJSON)
       args = do
         printer <- P.subselection_ GName._args Nothing inputValue
-        return $ J.Array . V.fromList . map printer . sortOn P.dName . P.fArguments . P.dInfo
-      typeF :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
+        return $ encJFromList . map printer . sortOn P.dName . P.fArguments . P.dInfo
+      typeF :: FieldParser n (P.Definition P.FieldInfo -> EncJSON)
       typeF = do
         printer <- P.subselection_ GName._type Nothing typeField
         return $ printer . (\case P.FieldInfo _ tp -> SomeType tp) . P.dInfo
       -- TODO We don't seem to track deprecation info
-      isDeprecated :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
+      isDeprecated :: FieldParser n (P.Definition P.FieldInfo -> EncJSON)
       isDeprecated =
         P.selection_ GName._isDeprecated Nothing P.string
-          $> const (J.Bool False)
-      deprecationReason :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
+          $> const (encJFromBool False)
+      deprecationReason :: FieldParser n (P.Definition P.FieldInfo -> EncJSON)
       deprecationReason =
         P.selection_ GName._deprecationReason Nothing P.string
-          $> const J.Null
+          $> const encJNull
    in applyPrinter
         <$> P.selectionSet
           GName.___Field
@@ -608,28 +608,33 @@ type __Directive {
 directiveSet ::
   forall n.
   (MonadParse n) =>
-  Parser 'Output n (P.DirectiveInfo -> J.Value)
+  Parser 'Output n (P.DirectiveInfo -> EncJSON)
 directiveSet =
-  let name :: FieldParser n (P.DirectiveInfo -> J.Value)
+  let name :: FieldParser n (P.DirectiveInfo -> EncJSON)
       name =
         P.selection_ GName._name Nothing P.string
-          $> (J.toOrdered . P.diName)
-      description :: FieldParser n (P.DirectiveInfo -> J.Value)
+          $> encJFromJValue
+          . P.diName
+      description :: FieldParser n (P.DirectiveInfo -> EncJSON)
       description =
         P.selection_ GName._description Nothing P.string
-          $> (J.toOrdered . P.diDescription)
-      locations :: FieldParser n (P.DirectiveInfo -> J.Value)
+          $> encJFromJValue
+          . P.diDescription
+      locations :: FieldParser n (P.DirectiveInfo -> EncJSON)
       locations =
         P.selection_ GName._locations Nothing P.string
-          $> (J.toOrdered . map showDirLoc . P.diLocations)
-      args :: FieldParser n (P.DirectiveInfo -> J.Value)
+          $> encJFromJValue
+          . map showDirLoc
+          . P.diLocations
+      args :: FieldParser n (P.DirectiveInfo -> EncJSON)
       args = do
         printer <- P.subselection_ GName._args Nothing inputValue
-        pure $ J.array . map printer . P.diArguments
-      isRepeatable :: FieldParser n (P.DirectiveInfo -> J.Value)
+        pure $ encJFromList . map printer . P.diArguments
+      isRepeatable :: FieldParser n (P.DirectiveInfo -> EncJSON)
       isRepeatable =
         P.selection_ GName._isRepeatable Nothing P.boolean
-          $> (J.Bool . P.diIsRepeatable)
+          $> encJFromBool
+          . P.diIsRepeatable
    in applyPrinter
         <$> P.selectionSet
           GName.___Directive
@@ -659,22 +664,21 @@ type __Schema {
 schemaSet ::
   forall n.
   (MonadParse n) =>
-  Parser 'Output n (Schema -> J.Value)
+  Parser 'Output n (Schema -> EncJSON)
 {-# INLINE schemaSet #-}
 schemaSet =
-  let description :: FieldParser n (Schema -> J.Value)
+  let description :: FieldParser n (Schema -> EncJSON)
       description =
         P.selection_ GName._description Nothing P.string
           $> \partialSchema -> case sDescription partialSchema of
-            Nothing -> J.Null
-            Just s -> J.String $ G.unDescription s
-      types :: FieldParser n (Schema -> J.Value)
+            Nothing -> encJNull
+            Just s -> encJFromJValue (G.unDescription s)
+      types :: FieldParser n (Schema -> EncJSON)
       types = do
         printer <- P.subselection_ GName._types Nothing typeField
         return
           $ \partialSchema ->
-            J.Array
-              $ V.fromList
+            encJFromList
               $ map (printer . schemaTypeToSomeType)
               $ sortOn P.getName
               $ HashMap.elems
@@ -683,26 +687,26 @@ schemaSet =
           schemaTypeToSomeType :: P.SomeDefinitionTypeInfo -> SomeType
           schemaTypeToSomeType (P.SomeDefinitionTypeInfo def) =
             SomeType $ P.TNamed P.Nullable def
-      queryType :: FieldParser n (Schema -> J.Value)
+      queryType :: FieldParser n (Schema -> EncJSON)
       queryType = do
         printer <- P.subselection_ GName._queryType Nothing typeField
         return $ \partialSchema -> printer $ SomeType $ sQueryType partialSchema
-      mutationType :: FieldParser n (Schema -> J.Value)
+      mutationType :: FieldParser n (Schema -> EncJSON)
       mutationType = do
         printer <- P.subselection_ GName._mutationType Nothing typeField
         return $ \partialSchema -> case sMutationType partialSchema of
-          Nothing -> J.Null
+          Nothing -> encJNull
           Just tp -> printer $ SomeType tp
-      subscriptionType :: FieldParser n (Schema -> J.Value)
+      subscriptionType :: FieldParser n (Schema -> EncJSON)
       subscriptionType = do
         printer <- P.subselection_ GName._subscriptionType Nothing typeField
         return $ \partialSchema -> case sSubscriptionType partialSchema of
-          Nothing -> J.Null
+          Nothing -> encJNull
           Just tp -> printer $ SomeType tp
-      directives :: FieldParser n (Schema -> J.Value)
+      directives :: FieldParser n (Schema -> EncJSON)
       directives = do
         printer <- P.subselection_ GName._directives Nothing directiveSet
-        return $ \partialSchema -> J.array $ map printer $ sDirectives partialSchema
+        return $ \partialSchema -> encJFromList $ map printer $ sDirectives partialSchema
    in applyPrinter
         <$> P.selectionSet
           GName.___Schema
@@ -715,16 +719,17 @@ schemaSet =
             directives
           ]
 
-selectionSetToJSON ::
-  InsOrdHashMap.InsOrdHashMap G.Name J.Value ->
-  J.Value
-selectionSetToJSON = J.object . map (first G.unName) . InsOrdHashMap.toList
-
 applyPrinter ::
-  InsOrdHashMap.InsOrdHashMap G.Name (P.ParsedSelection (a -> J.Value)) ->
+  InsOrdHashMap.InsOrdHashMap G.Name (P.ParsedSelection (a -> EncJSON)) ->
   a ->
-  J.Value
-applyPrinter = flip (\x -> selectionSetToJSON . fmap (($ x) . P.handleTypename (const . nameAsJSON)))
+  EncJSON
+applyPrinter selections x =
+  encJFromAssocList $ map go $ InsOrdHashMap.toList selections
+  where
+    go (k, v) = (G.unName k, P.handleTypename (const . nameAsEncJSON) v x)
 
-nameAsJSON :: (P.HasName a) => a -> J.Value
-nameAsJSON = J.String . G.unName . P.getName
+nameAsEncJSON :: (P.HasName a) => a -> EncJSON
+nameAsEncJSON = encJFromJValue . G.unName . P.getName
+
+encJNull :: EncJSON
+encJNull = encJFromJValue Aeson.Null

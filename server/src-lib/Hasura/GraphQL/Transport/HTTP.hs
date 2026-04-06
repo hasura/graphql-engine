@@ -397,6 +397,8 @@ runGQ env sqlGenCtx sc enableAL readOnlyMode remoteSchemaResponsePriority header
 
   -- 7. Return the response along with logging metadata.
   let requestSize = LBS.length $ J.encode reqUnparsed
+      -- TODO this is the second encJToLBS, which is wasteful just to get length (246us on huge schema introspection, for instance)
+      -- TODO also this is uncompressed size; not sure how this is used
       responseSize = LBS.length $ encJToLBS $ snd $ _hrBody $ arResponse $ response
   when (modelInfoLogStatus == ModelInfoLogOn) $ do
     for_ (modelInfoListForLogging) $ \(ModelInfoPart modelName modelType modelSourceName modelSourceType modelQueryType) -> do
@@ -783,11 +785,10 @@ extractFieldFromResponse remoteSchemaResponsePriority fieldName resultCustomizer
     do400 = withExceptT Right . throw400 RemoteSchemaError
     doGQExecError = withExceptT Left . throwError . GQExecError . fmap J.toEncoding
 
-buildRaw :: (Applicative m) => JO.Value -> m AnnotatedResponsePart
-buildRaw json = do
-  let obj = encJFromOrderedValue json
-      telemTimeIO_DT = 0
-  pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local obj []
+buildRaw :: (Applicative m) => EncJSON -> m AnnotatedResponsePart
+buildRaw encJson = do
+  let telemTimeIO_DT = 0
+  pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local encJson []
 
 encodeAnnotatedResponseParts :: RootFieldMap AnnotatedResponsePart -> EncJSON
 encodeAnnotatedResponseParts = encodeEncJSONResults . fmap arpResponse

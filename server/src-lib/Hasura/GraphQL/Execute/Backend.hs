@@ -14,7 +14,6 @@ where
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
-import Data.Aeson.Ordered qualified as JO
 import Data.Environment qualified as Env
 import Data.Kind (Type)
 import Data.Text.Extended
@@ -333,7 +332,7 @@ data ExecutionStep where
     ExecutionStep
   -- | Output a plain JSON object
   ExecStepRaw ::
-    JO.Value ->
+    EncJSON ->
     ExecutionStep
   ExecStepMulti ::
     [ExecutionStep] ->

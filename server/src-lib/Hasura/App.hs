@@ -127,6 +127,7 @@ import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.DDL.Schema.Catalog
 import Hasura.RQL.DDL.SchemaRegistry qualified as SchemaRegistry
+import Hasura.RQL.IR.Root (irEncJSON)
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
@@ -771,8 +772,8 @@ instance MonadGQLExecutionCheck AppM where
     checkQueryInAllowlist enableAL AllowlistModeGlobalOnly userInfo req sc
     return req
 
-  executeIntrospection _ introspectionQuery _ =
-    pure $ Right $ ExecStepRaw introspectionQuery
+  executeIntrospection _ introspectionResult _ =
+    pure $ Right $ ExecStepRaw (irEncJSON introspectionResult)
 
   checkGQLBatchedReqs _ _ _ _ = runExceptT $ pure ()
 
