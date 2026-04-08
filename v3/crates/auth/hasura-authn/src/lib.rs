@@ -2,10 +2,11 @@ use std::{fmt::Display, str::FromStr};
 
 use all_or_list::AllOrList;
 use axum::http::HeaderMap;
-use hasura_authn_core::{AuthenticateResponse, Role};
+use hasura_authn_core::{AuthenticateResponse, Identity, Role, SessionVariableValue};
 use hasura_authn_jwt::{auth as jwt_auth, jwt};
 use hasura_authn_noauth as noauth;
 use hasura_authn_webhook::webhook;
+use open_dds::session_variables::SessionVariableName;
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -64,6 +65,30 @@ pub struct AuthConfigV4 {
     #[schemars(title = "Alternative Modes")]
     #[schemars(description = "Optional alternative authentication modes")]
     pub alternative_modes: Option<Vec<AlternativeMode>>,
+    /// Optional mapping of session variables to trace attributes.
+    /// When configured, the specified session variable values will be
+    /// extracted after authentication and propagated as trace context
+    /// to downstream services. Works with all auth modes (JWT, webhook, noAuth).
+    /// For webhook auth, explicitly returned baggage values take precedence
+    /// over values from this mapping for the same key.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub session_variable_to_trace_attribute_map:
+        Option<Vec<SessionVariableToTraceAttributeMapping>>,
+}
+
+/// Mapping of a session variable to a trace attribute.
+/// The session variable value from the authenticated identity will be
+/// propagated as a trace attribute to downstream services.
+#[derive(Serialize, Deserialize, PartialEq, Clone, JsonSchema, Debug, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[schemars(title = "SessionVariableToTraceAttributeMapping")]
+pub struct SessionVariableToTraceAttributeMapping {
+    /// The session variable name (e.g. "x-hasura-tenant-id").
+    pub session_variable: SessionVariableName,
+    /// The trace attribute key to use when propagating this value
+    /// (e.g. "tenant-id").
+    pub trace_attribute: String,
 }
 
 impl AuthConfigV4 {
@@ -504,6 +529,63 @@ pub enum PossibleAuthModeConfig<'a> {
     V3V4(&'a AuthModeConfigV3),
 }
 
+/// Extract session variables from the authenticated identity and map them
+/// to trace attribute baggage key-value pairs based on the provided mappings.
+fn extract_session_vars_as_baggage(
+    identity: &Identity,
+    mappings: &[SessionVariableToTraceAttributeMapping],
+) -> Vec<tracing_util::KeyValue> {
+    let session_vars = match identity {
+        Identity::Specific {
+            default_role,
+            allowed_roles,
+        } => allowed_roles
+            .get(default_role)
+            .map(|auth| &auth.session_variables),
+        Identity::RoleEmulationEnabled(_) => None,
+    };
+
+    let Some(session_vars) = session_vars else {
+        return Vec::new();
+    };
+
+    mappings
+        .iter()
+        .filter_map(|mapping| {
+            session_vars.get(&mapping.session_variable).map(|value| {
+                let string_value = match value {
+                    SessionVariableValue::Unparsed(s) => s.clone(),
+                    SessionVariableValue::Parsed(v) => match v {
+                        serde_json::Value::String(s) => s.clone(),
+                        other => other.to_string(),
+                    },
+                };
+                tracing_util::KeyValue::new(mapping.trace_attribute.clone(), string_value)
+            })
+        })
+        .collect()
+}
+
+/// Merge two sets of baggage. `explicit` values (e.g. from webhook response)
+/// take precedence over `mapped` values for the same key.
+fn merge_baggage(
+    mapped: Vec<tracing_util::KeyValue>,
+    explicit: Vec<tracing_util::KeyValue>,
+) -> Vec<tracing_util::KeyValue> {
+    let mut result: std::collections::HashMap<String, String> = mapped
+        .into_iter()
+        .map(|kv| (kv.key.to_string(), kv.value.to_string()))
+        .collect();
+    // Explicit values override mapped ones
+    for kv in explicit {
+        result.insert(kv.key.to_string(), kv.value.to_string());
+    }
+    result
+        .into_iter()
+        .map(|(k, v)| tracing_util::KeyValue::new(k, v))
+        .collect()
+}
+
 /// Authenticate the user based on the headers and the auth config
 pub async fn authenticate(
     headers_map: &HeaderMap,
@@ -511,6 +593,11 @@ pub async fn authenticate(
     resolved_auth_config: &ResolvedAuthConfig,
     auth_mode_header: &str,
 ) -> Result<AuthenticateResponse, AuthError> {
+    let session_variable_to_trace_attribute_map = match &resolved_auth_config.auth_config {
+        AuthConfig::V4(v4) => v4.session_variable_to_trace_attribute_map.as_deref(),
+        _ => None,
+    };
+
     // We are still supporting AuthConfig::V1, hence we need to
     // support role emulation
     let (auth_mode, allow_role_emulation_by) = match &resolved_auth_config.auth_config {
@@ -539,7 +626,7 @@ pub async fn authenticate(
             }
         }
     };
-    match &auth_mode {
+    let auth_response = match &auth_mode {
         PossibleAuthModeConfig::V1V2(AuthModeConfig::NoAuth(no_auth_config))
         | PossibleAuthModeConfig::V3V4(AuthModeConfigV3::NoAuth(no_auth_config)) => Ok(
             AuthenticateResponse::new(noauth::identity_from_config(no_auth_config)),
@@ -580,7 +667,24 @@ pub async fn authenticate(
             .map(AuthenticateResponse::new)
             .map_err(AuthError::from)
         }
+    }?;
+
+    // Apply claims-to-trace-attributes mapping if configured.
+    // This works for all auth modes (JWT, webhook, noAuth).
+    if let Some(mappings) = session_variable_to_trace_attribute_map {
+        let mapped_baggage = extract_session_vars_as_baggage(&auth_response.identity, mappings);
+        if !mapped_baggage.is_empty() {
+            // Merge: explicitly returned baggage (e.g. from webhook) takes
+            // precedence over config-mapped values for the same key.
+            let merged = merge_baggage(mapped_baggage, auth_response.baggage);
+            return Ok(AuthenticateResponse::with_baggage(
+                auth_response.identity,
+                merged,
+            ));
+        }
     }
+
+    Ok(auth_response)
 }
 
 #[cfg(test)]

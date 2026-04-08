@@ -385,24 +385,11 @@
         }
       ]
     },
-    "AlternativeMode": {
-      "$id": "https://hasura.io/jsonschemas/metadata/AlternativeMode",
-      "title": "AlternativeMode",
-      "description": "Alternative Authentication Modes",
-      "type": "object",
-      "required": [
-        "config",
-        "identifier"
-      ],
-      "properties": {
-        "identifier": {
-          "type": "string"
-        },
-        "config": {
-          "$ref": "#/definitions/AuthModeConfigV3"
-        }
-      },
-      "additionalProperties": false
+    "OpenDdSessionVariable": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OpenDdSessionVariable",
+      "title": "OpenDdSessionVariable",
+      "description": "Used to represent the name of a session variable, like \"x-hasura-role\".",
+      "type": "string"
     },
     "JWTClaimsMappingPathEntry_for_Role": {
       "$id": "https://hasura.io/jsonschemas/metadata/JWTClaimsMappingPathEntry_for_Role",
@@ -1304,6 +1291,60 @@
           "items": {
             "$ref": "#/definitions/AlternativeMode"
           }
+        },
+        "sessionVariableToTraceAttributeMap": {
+          "description": "Optional mapping of session variables to trace attributes. When configured, the specified session variable values will be extracted after authentication and propagated as trace context to downstream services. Works with all auth modes (JWT, webhook, noAuth). For webhook auth, explicitly returned baggage values take precedence over values from this mapping for the same key.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/SessionVariableToTraceAttributeMapping"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "AlternativeMode": {
+      "$id": "https://hasura.io/jsonschemas/metadata/AlternativeMode",
+      "title": "AlternativeMode",
+      "description": "Alternative Authentication Modes",
+      "type": "object",
+      "required": [
+        "config",
+        "identifier"
+      ],
+      "properties": {
+        "identifier": {
+          "type": "string"
+        },
+        "config": {
+          "$ref": "#/definitions/AuthModeConfigV3"
+        }
+      },
+      "additionalProperties": false
+    },
+    "SessionVariableToTraceAttributeMapping": {
+      "$id": "https://hasura.io/jsonschemas/metadata/SessionVariableToTraceAttributeMapping",
+      "title": "SessionVariableToTraceAttributeMapping",
+      "description": "Mapping of a session variable to a trace attribute. The session variable value from the authenticated identity will be propagated as a trace attribute to downstream services.",
+      "type": "object",
+      "required": [
+        "sessionVariable",
+        "traceAttribute"
+      ],
+      "properties": {
+        "sessionVariable": {
+          "description": "The session variable name (e.g. \"x-hasura-tenant-id\").",
+          "allOf": [
+            {
+              "$ref": "#/definitions/OpenDdSessionVariable"
+            }
+          ]
+        },
+        "traceAttribute": {
+          "description": "The trace attribute key to use when propagating this value (e.g. \"tenant-id\").",
+          "type": "string"
         }
       },
       "additionalProperties": false

@@ -4,6 +4,12 @@
 
 ### Added
 
+- Added optional `sessionVariableToTraceAttributeMap` field to AuthConfig v4,
+  allowing session variables to be propagated as OpenTelemetry trace attributes
+  to downstream services. Works with all auth modes (JWT, webhook, noAuth). For
+  webhook auth, explicitly returned baggage values take precedence over
+  config-mapped values.
+
 ### Changed
 
 ### Fixed
