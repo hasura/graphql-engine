@@ -720,7 +720,7 @@ instance HttpLog AppM where
 
   buildExtraHttpLogMetadata _ _ = ()
 
-  logHttpError logger loggingSettings userInfoM reqId waiReq req qErr qTime cType headers _ _ =
+  logHttpError logger loggingSettings userInfoM reqId waiReq req qErr qTime cType headers _ _ _ =
     unLoggerTracing logger
       $ mkHttpLog
       $ mkHttpErrorLogContext userInfoM loggingSettings reqId waiReq req qErr qTime cType headers

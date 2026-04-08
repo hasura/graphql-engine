@@ -451,7 +451,7 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
       -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/http/#common-attributes
       lift $ Tracing.attachMetadata [("http.response_content_length", bsToTxt $ snd contentLength)]
       lift $ Tracing.setSpanError (qeError qErr)
-      lift $ logHttpError (_lsLogger appEnvLoggers) appEnvLoggingSettings userInfo reqId waiReq req qErr qTime Nothing headers httpLogMetadata True
+      lift $ logHttpError (_lsLogger appEnvLoggers) appEnvLoggingSettings userInfo reqId waiReq req qErr qTime Nothing headers httpLogMetadata True includeInternal
       mapM_ setHeader allHeaders
       Spock.setStatus $ qeStatus qErr
       Spock.lazyBytes jsonResponse
@@ -1181,7 +1181,7 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore closeWebsocketsOn
       lift $ Tracing.setSpanError (qeError err)
       -- setting the bool flag countDataTransferBytes to False here since we don't want to count the data
       -- transfer bytes for requests to `/heatlhz` and `/v1/version` endpoints
-      lift $ logHttpError logger appEnvLoggingSettings Nothing reqId req (reqBody, Nothing) err Nothing Nothing headers (emptyHttpLogMetadata @m) False
+      lift $ logHttpError logger appEnvLoggingSettings Nothing reqId req (reqBody, Nothing) err Nothing Nothing headers (emptyHttpLogMetadata @m) False HideInternalErrors
 
     -- Set HTTP status for GraphQL errors based on preserve401Errors flag
     maybeMod200 qe = case (appEnvPreserve401Errors, qeStatus qe) of
@@ -1247,7 +1247,7 @@ raiseGenericApiError logger loggingSetting headers qErr = do
   lift $ Tracing.setSpanError (qeError qErr)
   -- setting the bool flag countDataTransferBytes to False here since we don't want to count the data
   -- transfer bytes for requests to undefined resources
-  lift $ logHttpError logger loggingSetting Nothing reqId req (reqBody, Nothing) qErr Nothing Nothing headers (emptyHttpLogMetadata @m) False
+  lift $ logHttpError logger loggingSetting Nothing reqId req (reqBody, Nothing) qErr Nothing Nothing headers (emptyHttpLogMetadata @m) False HideInternalErrors
   setHeader jsonHeader
   Spock.setStatus $ qeStatus qErr
   Spock.lazyBytes $ encode qErr
