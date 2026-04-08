@@ -332,6 +332,8 @@ class (Monad m) => HttpLog m where
     HttpLogMetadata m ->
     -- | flag to indicate if the request/response size should be added to the Prometheus Counter
     Bool ->
+    -- | whether internal errors should be included (used to measure response size accurately)
+    IncludeInternalErrors ->
     m ()
 
   logHttpSuccess ::
@@ -369,7 +371,7 @@ instance (HttpLog m) => HttpLog (TraceT m) where
   buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
   emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
-  logHttpError a b c d e f g h i j k l = lift $ logHttpError a b c d e f g h i j k l
+  logHttpError a b c d e f g h i j k l m = lift $ logHttpError a b c d e f g h i j k l m
 
   logHttpSuccess a b c d e f g h i j k l m = lift $ logHttpSuccess a b c d e f g h i j k l m
 
@@ -379,7 +381,7 @@ instance (HttpLog m) => HttpLog (ReaderT r m) where
   buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
   emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
-  logHttpError a b c d e f g h i j k l = lift $ logHttpError a b c d e f g h i j k l
+  logHttpError a b c d e f g h i j k l m = lift $ logHttpError a b c d e f g h i j k l m
 
   logHttpSuccess a b c d e f g h i j k l m = lift $ logHttpSuccess a b c d e f g h i j k l m
 
@@ -389,7 +391,7 @@ instance (HttpLog m) => HttpLog (ExceptT e m) where
   buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
   emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
-  logHttpError a b c d e f g h i j k l = lift $ logHttpError a b c d e f g h i j k l
+  logHttpError a b c d e f g h i j k l m = lift $ logHttpError a b c d e f g h i j k l m
 
   logHttpSuccess a b c d e f g h i j k l m = lift $ logHttpSuccess a b c d e f g h i j k l m
 
