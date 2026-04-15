@@ -328,6 +328,51 @@ class TestAddRemoteSchemaTbls:
         # Drop "user" table which is created in the previous test
         hge_ctx.v1q_f(self.dir + '/drop_user_table.yaml')
 
+    def test_bulk_track_tables_conflicting_with_remote_schema(self, hge_ctx):
+        """pg_track_tables with a mix of conflicting and non-conflicting tables.
+
+        The remote schema exposes a 'user' field in the query root.  We
+        bulk-track three tables: 'user' (conflicts) plus 'innocent1' and
+        'innocent2' (no conflict).  queryForExistingFieldNames /
+        findConflictingNodes should detect 'user' and emit a warning while the
+        two innocent tables are tracked successfully.
+        """
+        hge_ctx.v1q({
+            'type': 'run_sql',
+            'args': {
+                'sql': 'CREATE TABLE "user" (id int); CREATE TABLE innocent1 (id int); CREATE TABLE innocent2 (id int);'
+            }
+        })
+        try:
+            resp = hge_ctx.v1metadataq({
+                'type': 'pg_track_tables',
+                'args': {
+                    'tables': [
+                        {'table': {'schema': 'public', 'name': 'user'}},
+                        {'table': {'schema': 'public', 'name': 'innocent1'}},
+                        {'table': {'schema': 'public', 'name': 'innocent2'}},
+                    ],
+                    'allow_warnings': True,
+                }
+            })
+            assert resp['message'] == 'success'
+            warnings = resp.get('warnings', [])
+            assert len(warnings) == 1, f"Expected 1 warning for 'user', got: {warnings}"
+            assert warnings[0]['code'] == 'track-table-failed'
+            assert warnings[0]['message'] == 'node user already exists in current graphql schema'
+            # Verify the non-conflicting tables were actually tracked by untracking
+            # them.  If either was silently skipped, this will error.
+            hge_ctx.v1metadataq({'type': 'pg_untrack_table', 'args': {'table': {'schema': 'public', 'name': 'innocent1'}}})
+            hge_ctx.v1metadataq({'type': 'pg_untrack_table', 'args': {'table': {'schema': 'public', 'name': 'innocent2'}}})
+        finally:
+            hge_ctx.v1q({
+                'type': 'run_sql',
+                'args': {
+                    'cascade': True,
+                    'sql': 'DROP TABLE IF EXISTS "user"; DROP TABLE IF EXISTS innocent1; DROP TABLE IF EXISTS innocent2;'
+                }
+            })
+
     def test_introspection(self, hge_ctx):
         with open('queries/graphql_introspection/introspection.yaml') as f:
             query = yaml.load(f)
