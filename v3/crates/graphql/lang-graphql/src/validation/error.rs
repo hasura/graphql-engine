@@ -38,10 +38,10 @@ pub enum Error {
     },
     #[error("no such type defined in the document: {0}")]
     UnknownType(ast::TypeName),
-    #[error("an internal error occured during validation: type lookup failed for {type_name}")]
+    #[error("an internal error occurred during validation: type lookup failed for {type_name}")]
     InternalTypeNotFound { type_name: ast::TypeName },
     #[error(
-        "an internal error occured during validation: field {field_name} lookup failed for sub type '{sub_type_name}' of type '{type_name}'"
+        "an internal error occurred during validation: field {field_name} lookup failed for sub type '{sub_type_name}' of type '{type_name}'"
     )]
     InternalNoFieldOnSubtype {
         type_name: ast::TypeName,
@@ -105,7 +105,7 @@ pub enum Error {
         type_name: ast::TypeName,
     },
     #[error(
-        "an internal error occured: expected {type_name} to be an input type but is of {actual_type}"
+        "an internal error occurred: expected {type_name} to be an input type but is of {actual_type}"
     )]
     InternalNotInputType {
         type_name: ast::TypeName,
