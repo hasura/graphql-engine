@@ -1229,6 +1229,7 @@ test-suite graphql-engine-tests
     Hasura.EncJSONSpec
     Hasura.EventingSpec
     Hasura.Generator.Common
+    Hasura.GraphQL.Logging.QueryLogSpec
     Hasura.GraphQL.NamespaceSpec
     Hasura.GraphQL.Schema.BoolExp.AggregationPredicatesSpec
     Hasura.GraphQL.Schema.Build.UpdateSpec

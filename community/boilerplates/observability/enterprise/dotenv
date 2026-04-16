@@ -12,13 +12,14 @@ HGE_ENABLED_LOG_TYPES=startup,http-log,query-log,websocket-log,response-caching-
 HGE_ENABLED_APIS=metadata,graphql,config,metrics
 HGE_OTEL_STATUS=enabled
 HGE_LOG_LEVEL=info
+HASURA_GRAPHQL_LOG_MASKED_VARIABLES="password"
 
 # Redis
 REDIS_IMAGE=redis:7.0.11
 REDIS_PORT=6379
 
 # Postgres
-PG_IMAGE=bitnami/postgresql:15
+PG_IMAGE=bitnami/postgresql:latest
 PG_PORT=5432
 PG_USER=postgres
 PG_DATABASE=postgres

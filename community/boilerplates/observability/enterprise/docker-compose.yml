@@ -30,7 +30,7 @@ services:
 
   postgres-replica:
     container_name: hge-postgres-replica
-    image: "bitnami/postgresql:15"
+    image: ${PG_IMAGE}
     restart: always
     volumes:
       - "db_replica_data:/bitnami/postgresql"
@@ -87,6 +87,7 @@ services:
       JAEGER_HOST: http://jaeger:4318
       OTEL_COLLECTOR_HOST: http://otel-collector:4318
       HGE_OTEL_STATUS: ${HGE_OTEL_STATUS}
+      HASURA_GRAPHQL_LOG_MASKED_VARIABLES: ${HASURA_GRAPHQL_LOG_MASKED_VARIABLES}
       ## enable basic authorization for the Prometheus metrics endpoint
       ## remember to set the secret credential in the Prometheus target config
       # HASURA_GRAPHQL_METRICS_SECRET: ${HGE_METRICS_SECRET}

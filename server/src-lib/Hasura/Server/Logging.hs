@@ -276,7 +276,10 @@ data LoggingSettings = LoggingSettings
     _lsEnabledLogTypes :: HashSet (EngineLogType Hasura),
     -- See Note [Disable query printing for metadata queries]
     _lsMetadataQueryLoggingMode :: MetadataQueryLoggingMode,
-    _lsHttpLogQueryOnlyOnError :: HttpLogQueryOnlyOnError
+    _lsHttpLogQueryOnlyOnError :: HttpLogQueryOnlyOnError,
+    -- | Set of variable names whose values should be masked in query logs.
+    -- When a variable name matches, its value is replaced with "[MASKED]".
+    _lsLogMaskedVariables :: HashSet Text
   }
   deriving (Eq)
 

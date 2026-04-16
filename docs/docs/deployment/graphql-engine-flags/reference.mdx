@@ -299,7 +299,6 @@ List of domains, **including scheme (http/https) and port**, to allow for CORS.
 important **limitations**:
 
 1. **Wildcard for subdomains**:
-
    - Wildcards (`*`) can indicate **only a single subdomain position** and must be the **starting subdomain**.
      - Example: `http://*.foo.com` will match `http://app.foo.com` but **not** `http://www.app.foo.com`.
      - Similarly, `http://www.*.foo.com` will **not** handle `http://www.app.foo.com`.
@@ -894,9 +893,8 @@ connections until a new connection becomes available, even if there is capacity 
 
 :::warning Notice
 
-In versions > `v2.0.0` this affects only connections to the postgres database used for the metadata catalog.
-The equivalent setting for data sources is now `connection_info > pool_settings > connection_lifetime` in the
-metadata.
+In versions > `v2.0.0` this affects only connections to the postgres database used for the metadata catalog. The
+equivalent setting for data sources is now `connection_info > pool_settings > connection_lifetime` in the metadata.
 
 :::
 
@@ -962,16 +960,18 @@ Each connection's idle time, measured in seconds, before it's closed.
 
 ### Preserve 401 Errors
 
-Preserves HTTP 401 (Unauthorized) status codes from webhook auth responses and JWT auth failures. By default, all GraphQL errors are returned with HTTP status code 200, even authentication errors. When enabled, 401 errors will be propagated back to the client.
+Preserves HTTP 401 (Unauthorized) status codes from webhook auth responses and JWT auth failures. By default, all
+GraphQL errors are returned with HTTP status code 200, even authentication errors. When enabled, 401 errors will be
+propagated back to the client.
 
-|                     |                                                  |
-| ------------------- | ------------------------------------------------ |
-| **Flag**            | `--preserve-401-errors`                          |
-| **Env var**         | `HASURA_GRAPHQL_PRESERVE_401_ERRORS`             |
-| **Accepted values** | Boolean                                          |
-| **Options**         | `true` or `false`                                |
-| **Default**         | `false`                                          |
-| **Supported in**    | CE, Enterprise Edition                           |
+|                     |                                      |
+| ------------------- | ------------------------------------ |
+| **Flag**            | `--preserve-401-errors`              |
+| **Env var**         | `HASURA_GRAPHQL_PRESERVE_401_ERRORS` |
+| **Accepted values** | Boolean                              |
+| **Options**         | `true` or `false`                    |
+| **Default**         | `false`                              |
+| **Supported in**    | CE, Enterprise Edition               |
 
 ### Query Plan Cache Size
 
@@ -1103,19 +1103,22 @@ The path to a shared CA store to use to connect to both (caching and rate-limiti
 
 ### Caching Redis Pool Size
 
-Maximum number of connections in the caching Redis connection pool. For high-traffic production environments, you may want to increase this value. For development or low-traffic environments, you can decrease it to conserve resources.
+Maximum number of connections in the caching Redis connection pool. For high-traffic production environments, you may
+want to increase this value. For development or low-traffic environments, you can decrease it to conserve resources.
 
-|                     |                                             |
-| ------------------- | ------------------------------------------- |
-| **Flag**            | `--caching-redis-pool-size`                 |
-| **Env var**         | `HASURA_GRAPHQL_CACHING_REDIS_POOL_SIZE`    |
-| **Accepted values** | Integer                                     |
-| **Default**         | `500`                                       |
-| **Supported in**    | Enterprise Edition only                     |
+|                     |                                          |
+| ------------------- | ---------------------------------------- |
+| **Flag**            | `--caching-redis-pool-size`              |
+| **Env var**         | `HASURA_GRAPHQL_CACHING_REDIS_POOL_SIZE` |
+| **Accepted values** | Integer                                  |
+| **Default**         | `500`                                    |
+| **Supported in**    | Enterprise Edition only                  |
 
 ### Rate Limit Redis Pool Size
 
-Maximum number of connections in the rate-limiting Redis connection pool. For high-traffic production environments with heavy rate-limiting usage, you may want to increase this value. For development or low-traffic environments, you can decrease it to conserve resources.
+Maximum number of connections in the rate-limiting Redis connection pool. For high-traffic production environments with
+heavy rate-limiting usage, you may want to increase this value. For development or low-traffic environments, you can
+decrease it to conserve resources.
 
 |                     |                                             |
 | ------------------- | ------------------------------------------- |
@@ -1423,5 +1426,16 @@ disabled. **This can be a potential security flaw!** This configuration is only 
 | **Default**         | `false`                            |
 | **Options**         | `true` or `false`                  |
 | **Supported in**    | CE, Enterprise Edition             |
+
+### Masked request variables in query-log
+
+Sets a list of variable names to be masked in query logs.
+
+|                     |                                       |
+| ------------------- | ------------------------------------- |
+| **Flag**            | `--log-masked-variables`              |
+| **Env var**         | `HASURA_GRAPHQL_LOG_MASKED_VARIABLES` |
+| **Accepted values** | String (Comma-separated list)         |
+| **Supported in**    | CE, Enterprise Edition                |
 
 </div>
