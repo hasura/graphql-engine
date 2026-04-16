@@ -103,7 +103,7 @@ type Author {
 
 ### `Model` metadata object
 
-A model can have three diffrent types of descriptions, the number of descriptions correspond
+A model can have three different types of descriptions, the number of descriptions correspond
 to the number of GraphQL APIs that are chosen to expose. At the moment of writing this
 document, two types of GraphQL APIs are supported, `select_many` and `select_one`.
 

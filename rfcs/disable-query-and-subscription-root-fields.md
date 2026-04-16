@@ -36,7 +36,7 @@ which has columns (message_id, reaciton_name, user_id). The permission on
 {"message": {"channel": {"workspace": {"members": {"user_id": "x-hasura-user-id"}}}}}
 ```
 
-As we go down the chain, our permissions gets more and more nested, refering to
+As we go down the chain, our permissions gets more and more nested, referring to
 the permissions of the parent tables and beyond a point can get quite
 cumbersome. Let's say in our application we **never** need to access
 `message_reactions` table directly and is always accessed through `reactions`

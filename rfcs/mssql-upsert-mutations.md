@@ -201,7 +201,7 @@ Generate schema for insert mutations with an `if_matched` clause, with permissio
 
 1. update the `AnnInsert` IR: update `insertIntoTable` and `insertOneIntoTable` (at least) to use the newly introduced `BackendSchema` methods instead of `mkConflictArg`.
 
-1. optionally, update `objectRelationshipInput` and `arrayRelationshipInput` to also use the `BackendSchema` field parser; however, this *may* not be neccesary as nested inserts are not yet supported on SQL Server.
+1. optionally, update `objectRelationshipInput` and `arrayRelationshipInput` to also use the `BackendSchema` field parser; however, this *may* not be necessary as nested inserts are not yet supported on SQL Server.
 
 *To verify:* The generated schema can be verified locally in Hasura Console's Documentation Explorer. This change, if successful, should result in the following generated schema diff for an example `author` table:
 ```diff

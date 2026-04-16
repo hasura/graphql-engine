@@ -68,7 +68,7 @@ be ignored.
   are very important; the 90th percentile may be a better target to optimize for
   than the median (50th percentile)
 
-- ...but keep in mind that **longtail latencies are by definition noisey**: the
+- ...but keep in mind that **longtail latencies are by definition noisy**: the
   99.9th percentile may represent only a handful of samples. Therefore be
   cautious when drawing inferences from a _comparison_ of tail latencies between
   versions.

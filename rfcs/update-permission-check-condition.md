@@ -106,7 +106,7 @@ updated row holds the condition specified with `check`.
 
   1. It may not make sense to allow inserts, but a check condition on update needs
   to be specified.
-  2. The check conditions maybe different for both insert and update permisisons.
+  2. The check conditions maybe different for both insert and update permissions.
 
 ### Implementation
 

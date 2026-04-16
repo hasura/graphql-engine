@@ -28,7 +28,7 @@ SELECT *
 
 Since join is an expensive operation, it would be useful if we could limit the number of rows it needs to process before running the join.
 
-In SQL, trying to push limits down into each side of the join is *not* a semantic perserving operation.  This is because the relationship between the two sides is unspecified, and could be one-to-one, many-to-one, or many-to-many.
+In SQL, trying to push limits down into each side of the join is *not* a semantic preserving operation.  This is because the relationship between the two sides is unspecified, and could be one-to-one, many-to-one, or many-to-many.
 
 For example, in a database of users and streaming providers, a user could be subscribed to multiple providers, and streaming providers provide services to multiple users. trying to get all users and their providers, limit by 10, is different than:
 

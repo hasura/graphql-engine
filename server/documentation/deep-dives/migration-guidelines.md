@@ -29,7 +29,7 @@
    ```
 
    This is because in the former way, the `ALTER TABLE` will acquire an lock on the `hdb_catalog.event_log` table
-   and will keep the lock until all the rows are transformed to the new data type. The latter method is preffered although
+   and will keep the lock until all the rows are transformed to the new data type. The latter method is preferred although
    it does 4 queries, because all the DDL statements do not depend on the data contained in the rows.
 
 ## 2. Avoid adding a default value while adding a new column to an existing table

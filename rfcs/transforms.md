@@ -81,7 +81,7 @@ $url/{{.event.author_id}}
 }
 ```
 
-For loops will be declared with the `range` identifier and a template fragment referrencing the array to be looped over. The current array element is brought in scope be accessed as `$`.
+For loops will be declared with the `range` identifier and a template fragment referencing the array to be looped over. The current array element is brought in scope be accessed as `$`.
 
 We will also support enumeration of array elements with a special syntax:
 ```
@@ -266,7 +266,7 @@ transforms:
    request_content_type: x-www-form-urlencoded
 ```
 
-This transforms the body to `key1={{.value1}}&key2={{.value2}}&key3={{$session.x-hasura-user-id}}`. The console can show the output for a given tranformation hence making it clear what is finally going in the body.
+This transforms the body to `key1={{.value1}}&key2={{.value2}}&key3={{$session.x-hasura-user-id}}`. The console can show the output for a given transformation hence making it clear what is finally going in the body.
 
 ## Real-world example
 

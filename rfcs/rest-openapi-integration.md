@@ -141,5 +141,5 @@ The query parser that is being used resolves the query, a subsequent method stat
 
 # Future Work/ Open Ended Questions
 
-* How to handle authentication in openAPI interative UI?
+* How to handle authentication in openAPI interactive UI?
 * Should we expose different information based on the role of the user?

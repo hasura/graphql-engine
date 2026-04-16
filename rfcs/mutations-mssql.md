@@ -22,13 +22,13 @@ Generation and execution of GraphQL insert, delete and update mutations for MSSQ
 ### Success criteria
 
 Taking reference to [Postgres mutations](https://hasura.io/docs/latest/graphql/core/api-reference/graphql-api/mutation.html#graphql-api-mutation)
-we should able to generate schema and execute mutations for MSSQL backend.
+we should be able to generate schema and execute mutations for MSSQL backend.
 
 For example, let's say a table with name `author` is tracked from a MSSQL server backend. Considering insert
 mutations,
 
 **Schema Generation**:
-The server should able to generate following GraphQL schema
+The server should be able to generate following GraphQL schema
 
 ```graphql
 
@@ -48,7 +48,7 @@ type author_mutation_response {
 ```
 
 **Query Execution**:
-The server should able to execute following sample GraphQL mutation
+The server should be able to execute following sample GraphQL mutation
 
 ```graphql
 
@@ -64,7 +64,7 @@ mutation {
 ```
 
 **Permissions**:
-Users should able to define row-level and column-level permissions for inserts via Metadata API
+Users should be able to define row-level and column-level permissions for inserts via Metadata API
 or Console UI
 
 ### How
@@ -101,7 +101,7 @@ WITH some_alias AS (SELECT * FROM #temp_table)
 SELECT (SELECT * FROM  some_alias FOR JSON PATH, INCLUDE_NULL_VALUES)  AS [returning], count(*) AS [affected_rows] FROM some_alias FOR JSON PATH, WITHOUT_ARRAY_WRAPPER;
 ```
 
-For **tables without primary key**, we choose **not** to generate mutations schema atleast in the initial iterations.
+For **tables without primary key**, we choose **not** to generate mutations schema at least in the initial iterations.
 
 
 #### Permissions

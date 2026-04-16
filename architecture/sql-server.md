@@ -89,7 +89,7 @@ Once you have Hasura running:
 
 ### Replace direct database access with flexible JSON APIs over HTTP
 - Modern workloads in the cloud or end-user web/mobile apps need a flexible and secure API over HTTP to access data
-- Use Hasura to to get a data API instantly, instead of having to build and maintain an API server
+- Use Hasura to get a data API instantly, instead of having to build and maintain an API server
 
 
 ## How Hasura Works
@@ -111,7 +111,7 @@ Because of its compiler-like architecture Hasura can avoid N+1 issues entirely. 
 There are 3 key aspects to this:
 
 **Compiling into a SQL query:** 
-- Instead of resolving a GraphQL query piece by piece, Hasura tries to compile parts of the query to a single data source, into a single query that an upstread source can understand - in this case, a SQL query for SQL Server.
+- Instead of resolving a GraphQL query piece by piece, Hasura tries to compile parts of the query to a single data source, into a single query that an upstream source can understand - in this case, a SQL query for SQL Server.
 - This is especially impactful when dealing with authorization rules since they can be compiled into the same query as the data fetch instead of having to make multiple requests to the data source.
 - Read more about Hasura’s [compiler architecture](https://hasura.io/blog/architecture-of-a-high-performance-graphql-to-sql-server-58d9944b8a87/) and its [subscription mechanism](https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md).
 
@@ -175,7 +175,7 @@ Here are a few examples of types of authorization rules that can be implemented 
 #### Ex 4: Allow roles to inherit from other roles
 - Compose roles to intelligently merge into a single permission policy
 - Hasura composes roles preserving row and field level access using a "cell based nullification" merge algorithm
-- This allows Hasura users to specifcy different levels of ownership and visibility on the same data models easily
+- This allows Hasura users to specify different levels of ownership and visibility on the same data models easily
 - Example: Allow a user to fetch all the fields of their own profile, but only some data for profiles that aren't theirs
   ```yaml
   # Role 1
@@ -214,7 +214,7 @@ Next up on our roadmap for Hasura + SQL Server:
 
 - [#7073](https://github.com/hasura/graphql-engine/issues/7073) Support for stored procedures & functions
 - [#7074](https://github.com/hasura/graphql-engine/issues/7074) Mutations: Run inserts, updates, deletes, stored procedures and transactions securely on SQL Server over a GraphQL API
-- [#7075]() Event triggers: Trigger HTTP webhooks with atomic capture and atleast once guarantee whenever data changes inside the database [(read more)](https://hasura.io/docs/latest/graphql/core/event-triggers/index.html)
+- [#7075]() Event triggers: Trigger HTTP webhooks with atomic capture and at least once guarantee whenever data changes inside the database [(read more)](https://hasura.io/docs/latest/graphql/core/event-triggers/index.html)
 - [#7076](https://github.com/hasura/graphql-engine/issues/7076) Remote Joins: Join models in SQL Server to models from other API services (GraphQL or REST)
 
 Please do upvote / subscribe to the issues above to stay updated! We estimate these to be available over incremental releases in July/Aug 2021.

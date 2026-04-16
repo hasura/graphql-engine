@@ -3,16 +3,16 @@
 This directory contains scripts that are useful to debug the handling of ssl
 certificates in a non-trivial setup involving a read-replica.
 
-There are many many ways to put together a SSL setup. Rather than forming a
+There are many ways to put together a SSL setup. Rather than forming a
 single comprehensive or prescriptive setup, these are instead useful building
-blocks that can be used to as a starting point for a comlex setup.
+blocks that can be used to as a starting point for a complex setup.
 
 We provide a script that can generate fresh server and client certificates, and
 a docker-compose file that uses these certificates to setup a database instance
 and a read-replica instance. The only authentication mechanism accepted by the
 databases is ssl client certificates.
 
-Note that the ability to specify the SSL certficates to use for a data source
+Note that the ability to specify the SSL certificates to use for a data source
 is an Enterprise Edition feature.
 
 ## Starting and stopping

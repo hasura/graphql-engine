@@ -79,7 +79,7 @@ If you are on MacOS, or experiencing any errors related to missing dependencies 
 
 ### IDE Support
 
-You may want to use [hls](https://github.com/haskell/haskell-language-server)/[ghcide](https://github.com/haskell/ghcide) if your editor has LSP support. A sample configuration has been provided which can be used as follows:
+You may want to use [hsl](https://github.com/haskell/haskell-language-server)/[ghcide](https://github.com/haskell/ghcide) if your editor has LSP support. A sample configuration has been provided which can be used as follows:
 
 ```
 ln -s sample.hie.yaml hie.yaml

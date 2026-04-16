@@ -198,7 +198,7 @@ If the agent only supports table columns that are always nullable, then it shoul
 
 ### Interpolated Queries
 
-Interpolated queries are lists of strings and scalars that represent applied templates of analagous form to [`select * from users where id = `, 5]. 
+Interpolated queries are lists of strings and scalars that represent applied templates of analogous form to [`select * from users where id = `, 5]. 
 
 By declaring support for the `interpolated_queries` capability the Hasura admin understands that they will be able to define native queries that leverage this cabability through the agent.
 
@@ -221,7 +221,7 @@ All scalar types must also support the built-in comparison operators `eq`, `gt`,
 
 Aggregate functions can be defined by adding an `aggregate_functions` property to the scalar type capabilities object.
 The `aggregate_functions` property must be an object mapping aggregate function names to their result types.
-Aggregate function names must be must be valid GraphQL names.
+Aggregate function names must be valid GraphQL names.
 Result types must be valid scalar types.
 
 Update column operators are operators that can defined to allow custom mutation operations to be performed on columns of the particular scalar type.
@@ -515,7 +515,7 @@ and here is the resulting query request payload:
 }
 ```
 
-The implementation of the service is responsible for intepreting this data structure and producing a JSON response body which is compatible with both the query and the schema.
+The implementation of the service is responsible for interpreting this data structure and producing a JSON response body which is compatible with both the query and the schema.
 
 Let's break down the request:
 
@@ -555,7 +555,7 @@ The rows returned by the query must be put into the `rows` property array in the
 
 There are three properties that are used to control pagination of queried data:
 
-* `aggregates_limit`: The maximum number of rows to consider in aggregations calculated and returned in the `aggregrates` property. `aggregates_limit` does not influence the rows returned in the `rows` property. It will only be used if there are aggregates in the query.
+* `aggregates_limit`: The maximum number of rows to consider in aggregations calculated and returned in the `aggregates` property. `aggregates_limit` does not influence the rows returned in the `rows` property. It will only be used if there are aggregates in the query.
 * `limit`: The maximum number of rows to return from a query in the `rows` property. `limit` does not influence the rows considered by aggregations.
 * `offset`: The index of the first row to return. This affects the rows returned, and also the rows considered by aggregations.
 
@@ -735,7 +735,7 @@ Values (as used in `value` in `binary_op` and the `values` array in `binary_arr_
 
 Columns (as used in `column` fields in `binary_op`, `binary_arr_op`, `unary_op` and in `column`-typed Values) are specified as a column `name`, a `column_type` to denote the scalar type of the column, as well as optionally a `path` to the table that contains the column. If the `path` property is missing/null or an empty array, then the column is on the current table. However, if the path is `["$"]`, then the column is on the table involved in the Query that the whole `where` expression is from. At this point in time, these are the only valid values of `path`.
 
-Here is a simple example, which correponds to the predicate "`first_name` is John and `last_name` is Smith":
+Here is a simple example, which corresponds to the predicate "`first_name` is John and `last_name` is Smith":
 
 ```json
 {
@@ -3020,7 +3020,7 @@ GraphQL:
 
 ```graphql
 {
-  fibonacci(args: {upto: 9}) {
+  fibonacci(args: {up to: 9}) {
     ArtistId
     Name
     myself {
@@ -3039,7 +3039,7 @@ Query Sent to Agent:
     "fibonacci"
   ],
   "function_arguments": {
-    "upto": 9,
+    "up to": 9,
     "__hasura_session": {
       "x-hasura-artist-name": "patricia",
       "x-hasura-role": "admin"

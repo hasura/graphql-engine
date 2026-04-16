@@ -68,7 +68,7 @@ TODO: document on how to deploy on docker.
 
 You can also have a look at [this docker-compose gist](https://gist.github.com/plmercereau/b8503c869ffa2b5d4e42dc9137b56ae1) to see how I use this service in a docker stack with Hasura and [Traefik](https://traefik.io/).
 
-### Deploy locally (developpment)
+### Deploy locally (development)
 
 ```bash
 # Clone the repo
@@ -172,7 +172,7 @@ curl -H "Content-Type: application/json" \
      http://localhost:8080/login
 ```
 
-It will then send back user information including the JWT in the same format as the above `/signup` endoint.
+It will then send back user information including the JWT in the same format as the above `/signup` endpoint.
 
 You can use this boilerplate as a webhook server in using the `/webhook` endpoint to fetch a webhook token:
 

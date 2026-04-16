@@ -2,7 +2,7 @@
 Sample cloud functions that can be triggered on changes in the database using GraphQL Engine's Event Triggers
 
 **NOTE**
-Some of the language/platforms are work in progress. We welcome contributions for the WIP langauages. See issues and the following checklist:
+Some of the language/platforms are work in progress. We welcome contributions for the WIP languages. See issues and the following checklist:
 
 | Folder name | Use-case| Node.js(8) | Node.js(6) | Python
 |-------------|---------|:--------:|:------:|:----:
