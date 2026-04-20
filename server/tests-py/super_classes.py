@@ -18,7 +18,7 @@ class DefaultTestQueries(ABC):
     def transact(self, setup_ctrl, hge_ctx):
         self.do_setup(setup_ctrl, hge_ctx)
         yield
-        self.do_teardown(setup_ctrl, hge_ctx);
+        self.do_teardown(setup_ctrl, hge_ctx)
 
     @abstractmethod
     def dir(self) -> str:
