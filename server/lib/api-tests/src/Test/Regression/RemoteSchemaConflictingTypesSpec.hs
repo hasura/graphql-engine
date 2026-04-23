@@ -52,12 +52,11 @@ tests = describe "Remote schema conflicting types" $ do
     let remoteSchemaEndpoint = RemoteServer.graphqlEndpoint remoteServer
         expectedResponse =
           [yaml|
-            "Inconsistent object: Found conflicting definitions for GraphQL typeFound conflicting
-                   definitions for GraphQL type 'User'.  The definition at user differs from the definitions
-                   at [delete_User_by_pk, update_User_by_pk, insert_User_one, insert_User.returning,
-                   User_aggregate.nodes, User_by_pk, User].\nFormer has definition:\ntype User { id:
-                   Int!\n  name: String!\n}\nLatter has definition:\n\"columns and relationships of
-                   \\\"User\\\"\" \ntype User { first_name: String\n  id: Int!\n  last_name: String\n}"
+             "Inconsistent object: Conflicting types: Found conflicting
+                   definitions for GraphQL type 'User'.  The definition at 'user' differs from the definition
+                   at e.g. 'User'.\nFormer has definition:\ntype User { id: Int!\n  name: String!\n}\nLatter
+                   has definition:\n\"columns and relationships of \\\"User\\\"\" \ntype User { first_name:
+                   String\n  id: Int!\n  last_name: String\n}"
           |]
         addRemoteSchema =
           [yaml|

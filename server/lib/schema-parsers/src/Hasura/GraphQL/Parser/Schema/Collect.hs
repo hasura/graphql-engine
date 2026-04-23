@@ -7,14 +7,13 @@ module Hasura.GraphQL.Parser.Schema.Collect
 where
 
 import Control.Lens
+import Control.Monad (unless)
 import Control.Monad.Except (ExceptT, MonadError (..), runExcept)
 import Control.Monad.Reader (MonadReader (..), ReaderT (..))
 import Control.Monad.State.Strict (MonadState (..), StateT, execStateT)
 import Data.Foldable (traverse_)
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HashMap
-import Data.List.NonEmpty (NonEmpty)
-import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Hasura.Base.ErrorMessage (toErrorMessage)
 import Hasura.Base.ToErrorValue
@@ -136,17 +135,17 @@ data ConflictingDefinitions origin
   = -- | Type collection has found at least two types with the same name.
     ConflictingDefinitions
       (SomeDefinitionTypeInfo origin, TypeOriginStack)
-      (SomeDefinitionTypeInfo origin, NonEmpty TypeOriginStack)
+      (SomeDefinitionTypeInfo origin, TypeOriginStack)
 
 instance ToErrorValue (ConflictingDefinitions origin) where
-  toErrorValue (ConflictingDefinitions (type1, origin1) (type2, origins)) =
+  toErrorValue (ConflictingDefinitions (type1, origin1) (type2, origin2)) =
     "Found conflicting definitions for GraphQL type "
       <> toErrorValue (getName type1)
-      <> ".  The definition at "
+      <> ".  The definition at '"
       <> toErrorValue origin1
-      <> " differs from the definitions at "
-      <> toErrorValue origins
-      <> "."
+      <> "' differs from the definition at e.g. '"
+      <> toErrorValue origin2
+      <> "'."
       <> "\nFormer has definition:\n"
       <> toErrorMessage (G.typeDefinitionP (bimap (const ()) id (convertType type1)))
       <> "\nLatter has definition:\n"
@@ -163,14 +162,14 @@ newtype TypeAccumulation origin a = TypeAccumulation
       ReaderT
         TypeOriginStack
         ( StateT
-            (HashMap Name (SomeDefinitionTypeInfo origin, NonEmpty TypeOriginStack))
+            (HashMap Name (SomeDefinitionTypeInfo origin, TypeOriginStack))
             (ExceptT (ConflictingDefinitions origin) Identity)
         )
         a
   }
   deriving (Functor, Applicative, Monad)
   deriving (MonadReader TypeOriginStack)
-  deriving (MonadState (HashMap Name (SomeDefinitionTypeInfo origin, NonEmpty TypeOriginStack)))
+  deriving (MonadState (HashMap Name (SomeDefinitionTypeInfo origin, TypeOriginStack)))
   deriving (MonadError (ConflictingDefinitions origin))
 
 class HasTypeDefinitions origin a where
@@ -189,17 +188,18 @@ instance HasTypeDefinitions origin (Definition origin (TypeInfo origin k)) where
     let someNew = SomeDefinitionTypeInfo new
     case HashMap.lookup dName definitions of
       Nothing -> do
-        put $! HashMap.insert dName (someNew, pure stack) definitions
+        put $! HashMap.insert dName (someNew, stack) definitions
         -- This type definition might reference other type definitions, so we
         -- still need to recur.
         local (typeRootRecurse dName) $ accumulateTypeDefinitions dInfo
-      Just (someOld, origins)
+      Just (someOld, origin) ->
         -- It’s important we /don’t/ recur if we’ve already seen this definition
         -- before to avoid infinite loops; see Note [Tying the knot] in Hasura.GraphQL.Parser.Class.
-        -- (NOTE: I tried making `origins` an STRef and doing a mutable update
-        -- here but the performance was about the same)
-        | someOld == someNew -> put $! HashMap.insert dName (someOld, stack `NE.cons` origins) definitions
-        | otherwise -> throwError $ ConflictingDefinitions (someNew, stack) (someOld, origins)
+        -- We only keep the first origin for error reporting; accumulating all
+        -- origins was the dominant source of heap allocation for large schemas.
+        unless (someOld == someNew) $
+          throwError $
+            ConflictingDefinitions (someNew, stack) (someOld, origin)
 
 instance (HasTypeDefinitions origin a) => HasTypeDefinitions origin [a] where
   accumulateTypeDefinitions = traverse_ accumulateTypeDefinitions
