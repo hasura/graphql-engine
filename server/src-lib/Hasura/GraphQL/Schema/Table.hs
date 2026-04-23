@@ -301,7 +301,8 @@ tableSelectColumns tableInfo = do
     getColumnsAndRedactionExps columnPermissions = \case
       FIColumn structuredColumnInfo -> do
         redactionExp <- HashMap.lookup (structuredColumnInfoColumn structuredColumnInfo) columnPermissions
-        pure (structuredColumnInfo, partialSQLExpToUnpreparedValue <$> redactionExp)
+        let !redactionExpU = partialSQLExpToUnpreparedValue <$> redactionExp
+        pure (structuredColumnInfo, redactionExpU)
       _ ->
         Nothing
 
