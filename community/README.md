@@ -7,12 +7,13 @@ The following categories of community content can be found in their respective s
 - [Boilerplates](boilerplates)
 - [Sample Apps](sample-apps)
 - [Tools](tools)
+- [Helm Charts](helm\charts)
 
 Details on how to deploy and/or modify the code is specified in various READMEs.
 
 ## Contributing guidelines
 
-Issues in the repo for community content are labelled as `c/community` (see [list](https://github.com/hasura/graphql-engine/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Ac%2Fcommunity)). Additionally, some of these issues may also be labelled as `help wanted`, indicating a request for community contributions on priority (see [list](https://github.com/hasura/graphql-engine/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Ac%2Fcommunity+label%3A%22help+wanted%22)). 
+Issues in the repo for community content are labelled as `c/community` (see [list](https://github.com/hasura/graphql-engine/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Ac%2Fcommunity)). Additionally, some of these issues may also be labelled as `help wanted`, indicating a request for community contributions on priority (see [list](https://github.com/hasura/graphql-engine/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Ac%2Fcommunity+label%3A%22help+wanted%22)).
 
 Please feel free to open pull requests to address these issues or to add more content here, even if a corresponding issue doesn't exist. If you are unsure about whether to go ahead and work on something like the latter, please get in touch with the maintainers in the `GraphQL Engine`->`contrib` channel in the community [Discord](https://discord.gg/vBPpJkS).
 
