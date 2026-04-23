@@ -4,6 +4,14 @@
 
 ### Added
 
+### Changed
+
+### Fixed
+
+## [v2026.04.23]
+
+### Added
+
 - Added optional `sessionVariableToTraceAttributeMap` field to AuthConfig v4,
   allowing session variables to be propagated as OpenTelemetry trace attributes
   to downstream services. Works with all auth modes (JWT, webhook, noAuth). For
@@ -2178,7 +2186,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2026.03.25...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2026.04.23...HEAD
+[v2026.04.23]: https://github.com/hasura/v3-engine/releases/tag/v2026.04.23
 [v2026.03.25]: https://github.com/hasura/v3-engine/releases/tag/v2026.03.25
 [v2026.03.10]: https://github.com/hasura/v3-engine/releases/tag/v2026.03.10
 [v2026.03.09]: https://github.com/hasura/v3-engine/releases/tag/v2026.03.09
