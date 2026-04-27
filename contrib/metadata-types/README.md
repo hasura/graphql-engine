@@ -11,7 +11,7 @@ yarn add @hasura/metadata # npm i @hasura/metadata
 ## Usage
 
 ```ts
-import { HasuraMetadataV2, Action, ComputedField } from "@hasura/metadata-types"
+import { HasuraMetadataV2, Action, ComputedField } from "@hasura/metadata"
 ```
 
 # Metadata SDK
@@ -100,7 +100,7 @@ import {
   CustomTypes,
   CronTrigger,
   HasuraMetadataV2,
-} from "../generated/HasuraMetadataV2"
+} from "@hasura/metadata"
 
 interface DiffOutput {
   structuralDiff: object
@@ -173,7 +173,7 @@ import {
   Action,
   CustomTypes,
   HasuraMetadataV2,
-} from "../generated/HasuraMetadataV2"
+} from "@hasura/metadata"
 
 // Read "tables.yaml" file as text from filesystem
 const tablesMetadataFile = fs.readFileSync("./metadata/tables.yaml", "utf8")
