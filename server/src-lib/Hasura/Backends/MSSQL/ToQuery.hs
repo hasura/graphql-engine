@@ -666,21 +666,22 @@ fromOrderBys top moffset morderBys =
 
 fromOrderBy :: OrderBy -> [Printer]
 fromOrderBy OrderBy {..} =
-  [ fromNullsOrder orderByExpression orderByNullsOrder,
-    -- Above: This doesn't do anything when using text, ntext or image
-    -- types. See below on CAST commentary.
-    wrapNullHandling (fromExpression orderByExpression)
-      <+> " "
-      <+> fromOrder orderByOrder
-  ]
+  case fromNullsOrder orderByExpression orderByNullsOrder of
+    Nothing ->
+      [ fromExpression orderByExpression
+          <+> " "
+          <+> fromOrder orderByOrder
+      ]
+
+    Just nullExpr ->
+      [ nullExpr
+          <+> ", "
+          <+> fromExpression orderByExpression
+          <+> " "
+          <+> fromOrder orderByOrder
+      ]
   where
-    wrapNullHandling inner =
-      case orderByType of
-        Just TextType -> castTextish inner
-        Just WtextType -> castTextish inner
-        -- Above: For some types, we have to do null handling manually
-        -- ourselves:
-        _ -> inner
+    wrapNullHandling (fromExpression orderByExpression)
     -- Direct quote from SQL Server error response:
     --
     -- > The text, ntext, and image data types cannot be compared or
@@ -695,12 +696,21 @@ fromOrder =
     AscOrder -> "ASC"
     DescOrder -> "DESC"
 
-fromNullsOrder :: Expression -> NullsOrder -> Printer
-fromNullsOrder ex =
-  \case
-    NullsAnyOrder -> ""
-    NullsFirst -> "IIF(" <+> fromExpression ex <+> " IS NULL, 0, 1)"
-    NullsLast -> "IIF(" <+> fromExpression ex <+> " IS NULL, 1, 0)"
+fromNullsOrder :: Expression -> NullsOrder -> Maybe Printer
+fromNullsOrder ex = \case
+  NullsAnyOrder -> Nothing
+
+  NullsFirst
+    | isDefinitelyNotNull ex -> Nothing
+    | otherwise ->
+        Just $
+          "CASE WHEN " <+> fromExpression ex <+> " IS NULL THEN 0 ELSE 1 END"
+
+  NullsLast
+    | isDefinitelyNotNull ex -> Nothing
+    | otherwise ->
+        Just $
+          "CASE WHEN " <+> fromExpression ex <+> " IS NULL THEN 1 ELSE 0 END"
 
 fromJoinAlias :: JoinAlias -> Printer
 fromJoinAlias JoinAlias {..} =
@@ -868,6 +878,12 @@ falsePrinter = "(1<>1)"
 
 parens :: Printer -> Printer
 parens p = "(" <+> IndentPrinter 1 p <+> ")"
+
+isDefinitelyNotNull :: Expression -> Bool
+isDefinitelyNotNull = \case
+  ValueExpression _ -> True
+  DefaultExpression  -> True
+  _                  -> False
 
 --------------------------------------------------------------------------------
 
