@@ -105,7 +105,8 @@ emptyServeOptionsRaw =
       rsoRemoteSchemaResponsePriority = Nothing,
       rsoHeaderPrecedence = Nothing,
       rsoTraceQueryStatus = Nothing,
-      rsoDisableNativeQueryValidation = NativeQuery.AlwaysValidateNativeQueries
+      rsoDisableNativeQueryValidation = NativeQuery.AlwaysValidateNativeQueries,
+      rsoRelayMode = UUT.RelayModeEnabled
     }
 
 mkServeOptionsSpec :: Hspec.Spec

@@ -544,6 +544,19 @@ Enable [RBAC for Remote Schemas](/remote-schemas/auth/remote-schema-permissions.
 | **Default**         | `false`                                              |
 | **Supported in**    | CE, Enterprise Edition, Cloud                        |
 
+### Enable Relay
+
+Enable the Relay API endpoint (`/v1beta1/relay`). When disabled, requests to the relay endpoint return an error with instructions to enable it. Disabling this reduces memory usage for deployments that do not use Relay.
+
+|                     |                                   |
+| ------------------- | --------------------------------- |
+| **Flag**            | `--enable-relay`                  |
+| **Env var**         | `HASURA_GRAPHQL_ENABLE_RELAY`     |
+| **Accepted values** | Boolean                           |
+| **Options**         | `true` or `false`                 |
+| **Default**         | `true`                            |
+| **Supported in**    | CE, Enterprise Edition, Cloud     |
+
 ### Enable Telemetry
 
 Setting this enables or disables [anonymous telemetry](/policies/telemetry.mdx).

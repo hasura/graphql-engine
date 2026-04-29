@@ -133,6 +133,7 @@ main = do
                 ApolloFederationDisabled
                 (_default closeWebsocketsOnMetadataChangeOption)
                 (SchemaSampledFeatureFlags [])
+                RelayModeEnabled
             cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) mkMSSQLSourceResolver staticConfig
 
         (_appInit, appEnv) <-

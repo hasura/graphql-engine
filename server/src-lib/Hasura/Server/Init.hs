@@ -234,6 +234,7 @@ mkServeOptions sor@ServeOptionsRaw {..} = do
     case rsoDisableNativeQueryValidation of
       NativeQuery.AlwaysValidateNativeQueries -> withOptionDefault Nothing disableNativeQueryValidationOption
       NativeQuery.NeverValidateNativeQueries -> pure NativeQuery.NeverValidateNativeQueries
+  soRelayMode <- withOptionSwitch' rsoRelayMode (isRelayEnabled, bool RelayModeDisabled RelayModeEnabled) enableRelayOption
   pure ServeOptions {..}
 
 -- | Fetch Postgres 'Query.ConnParams' components from the environment

@@ -337,7 +337,8 @@ serveOptions =
       soRemoteSchemaResponsePriority = Init._default Init.remoteSchemaResponsePriorityOption,
       soHeaderPrecedence = Init._default Init.configuredHeaderPrecedenceOption,
       soTraceQueryStatus = Init._default Init.traceQueryStatusOption,
-      soDisableNativeQueryValidation = Init._default Init.disableNativeQueryValidationOption
+      soDisableNativeQueryValidation = Init._default Init.disableNativeQueryValidationOption,
+      soRelayMode = Init.RelayModeEnabled
     }
 
 -- | What log level should be used by the engine; this is not exported, and

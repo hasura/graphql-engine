@@ -74,6 +74,7 @@ module Hasura.Server.Init.Arg.Command.Serve
     remoteSchemaResponsePriorityOption,
     configuredHeaderPrecedenceOption,
     traceQueryStatusOption,
+    enableRelayOption,
 
     -- * Pretty Printer
     serveCmdFooter,
@@ -174,6 +175,7 @@ serveCommandParser =
     <*> parseConfiguredHeaderPrecedence
     <*> parseTraceQueryStatus
     <*> parseDisableNativeQueryValidation
+    <*> parseEnableRelay
 
 --------------------------------------------------------------------------------
 -- Serve Options
@@ -892,6 +894,22 @@ graphqlDevModeOption =
       Config._helpMessage = "Set dev mode for GraphQL requests; include 'internal' key in the errors extensions (if required) of the response"
     }
 
+parseEnableRelay :: Opt.Parser Config.RelayModeStatus
+parseEnableRelay =
+  bool Config.RelayModeDisabled Config.RelayModeEnabled
+    <$> Opt.switch
+      ( Opt.long "enable-relay"
+          <> Opt.help (Config._helpMessage enableRelayOption)
+      )
+
+enableRelayOption :: Config.Option Config.RelayModeStatus
+enableRelayOption =
+  Config.Option
+    { Config._default = Config.RelayModeEnabled,
+      Config._envVar = "HASURA_GRAPHQL_ENABLE_RELAY",
+      Config._helpMessage = "Enable the Relay API endpoint (/v1beta1/relay). When disabled, requests to the relay endpoint return an error (default: true)"
+    }
+
 parseGraphqlAdminInternalErrors :: Opt.Parser (Maybe Config.AdminInternalErrorsStatus)
 parseGraphqlAdminInternalErrors =
   Opt.optional
@@ -1513,6 +1531,7 @@ serveCmdFooter =
         Config.optionPP asyncActionsFetchBatchSizeOption,
         Config.optionPP persistedQueriesOption,
         Config.optionPP persistedQueriesTtlOption,
-        Config.optionPP configuredHeaderPrecedenceOption
+        Config.optionPP configuredHeaderPrecedenceOption,
+        Config.optionPP enableRelayOption
       ]
     eventEnvs = [Config.optionPP graphqlEventsHttpPoolSizeOption, Config.optionPP graphqlEventsFetchIntervalOption]

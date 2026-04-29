@@ -70,6 +70,7 @@ import Hasura.RQL.Types.SourceCustomization as SC
 import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Server.Init.Config (RelayModeStatus (..), isRelayEnabled)
 import Hasura.Server.Init.Logging
 import Hasura.Server.Types
 import Hasura.StoredProcedure.Cache (StoredProcedureCache, _spiReturns)
@@ -114,6 +115,7 @@ buildGQLContext ::
   HashSet ExperimentalFeature ->
   SQLGenCtx ->
   ApolloFederationStatus ->
+  RelayModeStatus ->
   SourceCache ->
   HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject) ->
   ActionCache ->
@@ -140,6 +142,7 @@ buildGQLContext
   experimentalFeatures
   sqlGen
   apolloFederationStatus
+  relayMode
   sources
   allRemoteSchemas
   allActions
@@ -156,40 +159,49 @@ buildGQLContext
         allLogicalModelRoles = Set.fromList $ getLogicalModelRoles =<< HashMap.elems sources
         allRoles = actionRoles <> allTableRoles <> allLogicalModelRoles
 
-    contexts <-
-      -- Buld role contexts in parallel. We'd prefer deterministic parallelism
-      -- but that isn't really acheivable (see mono #3829). NOTE: the admin role
-      -- will still be a bottleneck here, even on huge_schema which has many
-      -- roles.
-      fmap HashMap.fromList
-        $ forConcurrentlyEIO 10 (Set.toList allRoles)
-        $ \role -> do
-          (role,)
-            <$> concurrentlyEIO
-              ( buildRoleContext
-                  sampledFeatureFlags
-                  (sqlGen, functionPermissions)
-                  sources
-                  allRemoteSchemas
-                  allActionInfos
-                  customTypes
-                  role
-                  remoteSchemaPermissions
-                  experimentalFeatures
-                  apolloFederationStatus
-                  mSchemaRegistryContext
-              )
-              ( buildRelayRoleContext
-                  (sqlGen, functionPermissions)
-                  sources
-                  allActionInfos
-                  customTypes
-                  role
-                  experimentalFeatures
-                  sampledFeatureFlags
-              )
-    let hasuraContexts = fst <$> contexts
-        relayContexts = snd <$> contexts
+    -- Build role contexts in parallel. We'd prefer deterministic parallelism
+    -- but that isn't really acheivable (see mono #3829). NOTE: the admin role
+    -- will still be a bottleneck here, even on huge_schema which has many
+    -- roles.
+    let buildHasuraRoleContext role =
+          buildRoleContext
+            sampledFeatureFlags
+            (sqlGen, functionPermissions)
+            sources
+            allRemoteSchemas
+            allActionInfos
+            customTypes
+            role
+            remoteSchemaPermissions
+            experimentalFeatures
+            apolloFederationStatus
+            mSchemaRegistryContext
+    (hasuraContexts, relayContexts) <-
+      if isRelayEnabled relayMode
+        then do
+          contexts <-
+            fmap HashMap.fromList
+              $ forConcurrentlyEIO 10 (Set.toList allRoles)
+              $ \role ->
+                (role,)
+                  <$> concurrentlyEIO
+                    (buildHasuraRoleContext role)
+                    ( buildRelayRoleContext
+                        (sqlGen, functionPermissions)
+                        sources
+                        allActionInfos
+                        customTypes
+                        role
+                        experimentalFeatures
+                        sampledFeatureFlags
+                    )
+          pure (fst <$> contexts, snd <$> contexts)
+        else do
+          hctxs <-
+            fmap HashMap.fromList
+              $ forConcurrentlyEIO 10 (Set.toList allRoles)
+              $ \role -> (role,) <$> buildHasuraRoleContext role
+          pure (hctxs, HashMap.empty)
 
     adminIntrospection <-
       case HashMap.lookup adminRoleName hasuraContexts of

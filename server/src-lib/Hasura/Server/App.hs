@@ -1086,11 +1086,19 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore closeWebsocketsOn
       $ apiHandler
 
   Spock.post "v1beta1/relay" $ do
-    onlyWhenApiEnabled isGraphQLEnabled appStateRef
-      $ spockAction GH.encodeGQErr allMod200
-      $ mkGQLRequestHandler
-      $ mkGQLAPIRespHandler
-      $ v1GQRelayHandler
+    onlyWhenApiEnabled isGraphQLEnabled appStateRef $ do
+      appCtx <- liftIO $ getAppContext appStateRef
+      if isRelayEnabled (acRelayMode appCtx)
+        then
+          spockAction GH.encodeGQErr allMod200
+            $ mkGQLRequestHandler
+            $ mkGQLAPIRespHandler
+            $ v1GQRelayHandler
+        else do
+          let qErr = err400 NotSupported "The Relay API is disabled. To enable it, set the HASURA_GRAPHQL_ENABLE_RELAY environment variable to 'true'."
+          Spock.setStatus $ qeStatus qErr
+          setHeader jsonHeader
+          Spock.lazyBytes . J.encodingToLazyByteString $ encodeQErr HideInternalErrors qErr
 
   -- This exposes some simple RTS stats when we run with `+RTS -T`. We want
   -- this to be available even when developer APIs are not compiled in, to

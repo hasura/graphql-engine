@@ -16,6 +16,7 @@ import Hasura.RQL.Types.Common (SQLGenCtx)
 import Hasura.RQL.Types.Metadata (MetadataDefaults)
 import Hasura.RQL.Types.NamingCase (NamingCase)
 import Hasura.RQL.Types.Schema.Options qualified as Options
+import Hasura.Server.Init.Config (RelayModeStatus)
 import Hasura.Server.Types
 
 --------------------------------------------------------------------------------
@@ -76,6 +77,7 @@ data CacheDynamicConfig = CacheDynamicConfig
     _cdcMetadataDefaults :: MetadataDefaults,
     _cdcApolloFederationStatus :: ApolloFederationStatus,
     _cdcCloseWebsocketsOnMetadataChangeStatus :: CloseWebsocketsOnMetadataChangeStatus,
-    _cdcSchemaSampledFeatureFlags :: SchemaSampledFeatureFlags
+    _cdcSchemaSampledFeatureFlags :: SchemaSampledFeatureFlags,
+    _cdcRelayMode :: RelayModeStatus
   }
   deriving (Eq)

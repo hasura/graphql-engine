@@ -46,6 +46,8 @@ module Hasura.Server.Init.Config
     isAllowListEnabled,
     DevModeStatus (..),
     isDevModeEnabled,
+    RelayModeStatus (..),
+    isRelayEnabled,
     TelemetryStatus (..),
     isTelemetryEnabled,
     WsReadCookieStatus (..),
@@ -337,7 +339,8 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoRemoteSchemaResponsePriority :: Maybe Server.Types.RemoteSchemaResponsePriority,
     rsoHeaderPrecedence :: Maybe Server.Types.HeaderPrecedence,
     rsoTraceQueryStatus :: Maybe Server.Types.TraceQueryStatus,
-    rsoDisableNativeQueryValidation :: NativeQuery.Validation.DisableNativeQueryValidation
+    rsoDisableNativeQueryValidation :: NativeQuery.Validation.DisableNativeQueryValidation,
+    rsoRelayMode :: RelayModeStatus
   }
 
 deriving stock instance (Show (Logging.EngineLogType impl)) => Show (ServeOptionsRaw impl)
@@ -426,6 +429,25 @@ instance FromJSON DevModeStatus where
 
 instance ToJSON DevModeStatus where
   toJSON = J.toJSON . isDevModeEnabled
+
+-- | Whether or not to enable the Relay API endpoint (@/v1beta1/relay@).
+data RelayModeStatus = RelayModeEnabled | RelayModeDisabled
+  deriving stock (Show, Eq, Ord, Generic)
+
+instance NFData RelayModeStatus
+
+instance Hashable RelayModeStatus
+
+isRelayEnabled :: RelayModeStatus -> Bool
+isRelayEnabled = \case
+  RelayModeEnabled -> True
+  RelayModeDisabled -> False
+
+instance FromJSON RelayModeStatus where
+  parseJSON = fmap (bool RelayModeDisabled RelayModeEnabled) . J.parseJSON
+
+instance ToJSON RelayModeStatus where
+  toJSON = J.toJSON . isRelayEnabled
 
 -- | A representation of whether or not to enable telemetry that is isomorphic to 'Bool'.
 data TelemetryStatus = TelemetryEnabled | TelemetryDisabled
@@ -651,7 +673,8 @@ data ServeOptions impl = ServeOptions
     soRemoteSchemaResponsePriority :: Server.Types.RemoteSchemaResponsePriority,
     soHeaderPrecedence :: Server.Types.HeaderPrecedence,
     soTraceQueryStatus :: Server.Types.TraceQueryStatus,
-    soDisableNativeQueryValidation :: NativeQuery.Validation.DisableNativeQueryValidation
+    soDisableNativeQueryValidation :: NativeQuery.Validation.DisableNativeQueryValidation,
+    soRelayMode :: RelayModeStatus
   }
 
 -- | 'ResponseInternalErrorsConfig' represents the encoding of the

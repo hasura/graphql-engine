@@ -591,6 +591,7 @@ buildSchemaCacheRule logger env disableNativeQueryValidation mSchemaRegistryCont
               (_cdcExperimentalFeatures dynamicConfig)
               (_cdcSQLGenCtx dynamicConfig)
               (_cdcApolloFederationStatus dynamicConfig)
+              (_cdcRelayMode dynamicConfig)
               (_boSources resolvedOutputs)
               (_boRemoteSchemas resolvedOutputs)
               (_boActions resolvedOutputs)
