@@ -1,0 +1,10 @@
+# this file contains metadata that is intentionally inconsistent with the database, to test
+# the behavior of the entrypoint script when inconsistent metadata is detected.
+# the fake_table table does not exist.
+- table:
+    schema: public
+    name: test
+  object_relationships:
+    - name: fake_table
+      using:
+        foreign_key_constraint_on: test_row_id
