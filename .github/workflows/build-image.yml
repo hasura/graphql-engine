@@ -143,6 +143,12 @@ jobs:
             dist-${{ runner.os }}-ghc9.10.1-${{ hashFiles('cabal.project.freeze') }}-
             dist-${{ runner.os }}-ghc9.10.1-
 
+      - name: Stamp server/CURRENT_VERSION
+        # Hasura.Server.Version uses TH at compile time to bake this file's
+        # contents into the binary, with an error message telling you to
+        # populate it. The file is .gitignored, so CI must generate it.
+        run: scripts/get-version.sh > server/CURRENT_VERSION
+
       - name: cabal update
         run: cabal update
 
