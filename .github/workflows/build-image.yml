@@ -115,8 +115,8 @@ jobs:
         run: |
           curl -fsS https://packages.microsoft.com/keys/microsoft.asc \
             | sudo gpg --dearmor -o /usr/share/keyrings/microsoft.gpg
-          curl -fsS "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list" \
-            | sudo sed "s|deb |deb [signed-by=/usr/share/keyrings/microsoft.gpg] |" \
+          ubuntu_release=$(lsb_release -rs)
+          echo "deb [arch=amd64,arm64,armhf signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/ubuntu/${ubuntu_release}/prod $(lsb_release -cs) main" \
             | sudo tee /etc/apt/sources.list.d/mssql-release.list >/dev/null
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18
