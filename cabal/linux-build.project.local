@@ -1,0 +1,33 @@
+-- Linux container build configuration. Based on cabal/ci.project.local
+-- but with executable-dynamic to keep link-time memory under control.
+
+reject-unconstrained-dependencies: all
+
+package *
+  ghc-options:
+    -j2
+    +RTS -A64m -n2m -RTS
+
+-- For local validation we skip optimize-hasura. With -O2 + dynamic linking,
+-- GHC 9.10.1 hits a heap-overflow panic linking Main on arm64-in-Docker even
+-- with plenty of RAM. Unoptimized binaries are fine for proving the pipeline.
+flags: -optimize-hasura
+
+program-options
+  ghc-options: -j -Werror
+
+package graphql-engine
+  optimization: 0
+
+-- Build a dynamic executable. This avoids the multi-GB static link that OOMs
+-- on the default Docker Desktop VM. See cabal/dev-sh.project.local for the
+-- explanation of why this is needed alongside library-vanilla: False.
+executable-dynamic: True
+library-vanilla: False
+
+package hedis
+  library-vanilla: False
+package Spock
+  library-vanilla: False
+package hasql-pool
+  library-vanilla: False
