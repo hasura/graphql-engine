@@ -9,15 +9,14 @@ env:
   REGISTRY: ghcr.io
   IMAGE: ${{ github.repository }}
   BASE_IMAGE: ${{ github.repository }}-base
-  PLATFORM: linux/amd64
 
 permissions:
   contents: read
   packages: write
 
 jobs:
-  # Build the runtime base image only when its inputs change.
-  # Other runs reuse the existing tag from the registry.
+  # Build the runtime base image as a multi-arch manifest, only when its inputs
+  # change. Other runs reuse the existing tag from the registry.
   build-base-image:
     runs-on: ubuntu-latest
     outputs:
@@ -44,11 +43,17 @@ jobs:
         env:
           BASE_TAG: ${{ env.REGISTRY }}/${{ env.BASE_IMAGE }}:${{ steps.tag.outputs.value }}
         run: |
+          # docker manifest inspect on a multi-arch index returns the index;
+          # we don't care about its contents, just that it resolves.
           if docker manifest inspect "$BASE_TAG" >/dev/null 2>&1; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Set up QEMU
+        if: steps.probe.outputs.exists == 'false'
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         if: steps.probe.outputs.exists == 'false'
@@ -56,23 +61,26 @@ jobs:
 
       - name: Build & push base image
         if: steps.probe.outputs.exists == 'false'
+        # The base is just apt + a few drivers, ~3 min per arch under qemu.
+        # Worth keeping multi-arch in one step rather than splitting like the
+        # engine image, since the cost is small and rebuilds are infrequent.
         uses: docker/build-push-action@v5
         with:
           context: packaging/graphql-engine-base
           file: packaging/graphql-engine-base/ubuntu.dockerfile
-          platforms: ${{ env.PLATFORM }}
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.BASE_IMAGE }}:${{ steps.tag.outputs.value }}
           cache-from: type=gha,scope=base-image
           cache-to: type=gha,mode=max,scope=base-image
 
-  build-engine-image:
-    needs: build-base-image
+  # Console assets are arch-independent (just JS/CSS), so we build them once
+  # and feed the result to both engine matrix legs as an artifact.
+  build-console-assets:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      # ---------- Console assets ----------
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
@@ -99,7 +107,32 @@ jobs:
         working-directory: frontend
         run: node .yarn/releases/yarn-3.2.4.cjs server-build:ce
 
-      # ---------- Engine binary ----------
+      - name: Upload console assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: console-assets
+          path: frontend/dist/apps/server-assets-console-ce
+          retention-days: 1
+
+  # Build the engine binary and the per-arch image natively on each target.
+  # Each leg pushes by digest only (no human tags); merge-manifest stitches
+  # them into a multi-arch manifest below.
+  build-engine-image:
+    needs: [build-base-image, build-console-assets]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+            arch: amd64
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
       - name: Install build dependencies
         # Headers required to compile the Haskell bindings against system
         # libraries. Mirrors the dev-package set in scripts/build-local-image.sh.
@@ -129,19 +162,19 @@ jobs:
           path: |
             ~/.cabal/store
             ~/.cabal/packages
-          key: cabal-${{ runner.os }}-ghc9.10.1-${{ hashFiles('cabal.project.freeze') }}-${{ hashFiles('server/graphql-engine.cabal') }}
+          key: cabal-${{ runner.os }}-${{ matrix.arch }}-ghc9.10.1-${{ hashFiles('cabal.project.freeze') }}-${{ hashFiles('server/graphql-engine.cabal') }}
           restore-keys: |
-            cabal-${{ runner.os }}-ghc9.10.1-${{ hashFiles('cabal.project.freeze') }}-
-            cabal-${{ runner.os }}-ghc9.10.1-
+            cabal-${{ runner.os }}-${{ matrix.arch }}-ghc9.10.1-${{ hashFiles('cabal.project.freeze') }}-
+            cabal-${{ runner.os }}-${{ matrix.arch }}-ghc9.10.1-
 
       - name: Cache dist-newstyle
         uses: actions/cache@v4
         with:
           path: dist-newstyle
-          key: dist-${{ runner.os }}-ghc9.10.1-${{ hashFiles('cabal.project.freeze') }}-${{ hashFiles('server/**/*.hs', 'server/**/*.cabal') }}
+          key: dist-${{ runner.os }}-${{ matrix.arch }}-ghc9.10.1-${{ hashFiles('cabal.project.freeze') }}-${{ hashFiles('server/**/*.hs', 'server/**/*.cabal') }}
           restore-keys: |
-            dist-${{ runner.os }}-ghc9.10.1-${{ hashFiles('cabal.project.freeze') }}-
-            dist-${{ runner.os }}-ghc9.10.1-
+            dist-${{ runner.os }}-${{ matrix.arch }}-ghc9.10.1-${{ hashFiles('cabal.project.freeze') }}-
+            dist-${{ runner.os }}-${{ matrix.arch }}-ghc9.10.1-
 
       - name: Stamp server/CURRENT_VERSION
         # Hasura.Server.Version uses TH at compile time to bake this file's
@@ -155,7 +188,12 @@ jobs:
       - name: Build graphql-engine
         run: cabal build exe:graphql-engine
 
-      # ---------- Assemble rootfs ----------
+      - name: Download console assets
+        uses: actions/download-artifact@v4
+        with:
+          name: console-assets
+          path: frontend/dist/apps/server-assets-console-ce
+
       - name: Stage rootfs
         run: |
           mkdir -p packaging/graphql-engine/rootfs/bin packaging/graphql-engine/rootfs/srv
@@ -165,7 +203,98 @@ jobs:
           ls -la packaging/graphql-engine/rootfs/bin
           du -sh packaging/graphql-engine/rootfs/srv/console-assets
 
-      # ---------- Build & push final image ----------
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build & push by digest
+        id: build
+        # push-by-digest produces an untagged manifest; merge-manifest stitches
+        # the per-arch digests into a multi-arch index with the user-facing tags.
+        uses: docker/build-push-action@v5
+        with:
+          context: packaging/graphql-engine
+          file: packaging/graphql-engine/Dockerfile
+          platforms: ${{ matrix.platform }}
+          build-args: |
+            BASE_IMAGE=${{ env.REGISTRY }}/${{ env.BASE_IMAGE }}:${{ needs.build-base-image.outputs.base-tag }}
+          outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=engine-image-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=engine-image-${{ matrix.arch }}
+
+      - name: Export digest
+        # Matrix-job outputs collapse across legs (last-writer-wins), so we
+        # can't use them to pass per-arch digests. Write to a per-arch file
+        # and upload it as an artifact for merge-manifest to consume.
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          mkdir -p /tmp/digests
+          # The digest looks like "sha256:abc..."; strip the "sha256:" prefix
+          # so the filename is filesystem-safe and use the digest as a marker.
+          echo -n "${DIGEST}" > "/tmp/digests/${{ matrix.arch }}"
+          echo "Built ${{ matrix.arch }} digest: ${DIGEST}"
+
+      - name: Upload digest artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: digest-${{ matrix.arch }}
+          path: /tmp/digests/${{ matrix.arch }}
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Smoke test (native arch)
+        env:
+          REF: ${{ env.REGISTRY }}/${{ env.IMAGE }}@${{ steps.build.outputs.digest }}
+        run: |
+          set -e
+          docker network create hasura-test
+          docker run -d --rm --name pg --network hasura-test \
+            -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=hasura postgres:15
+          for i in $(seq 1 30); do
+            if docker exec pg pg_isready -U postgres >/dev/null 2>&1; then break; fi
+            sleep 1
+          done
+          docker run -d --rm --name engine --network hasura-test -p 18080:8080 \
+            -e HASURA_GRAPHQL_DATABASE_URL=postgres://postgres:postgres@pg:5432/hasura \
+            -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
+            "$REF"
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:18080/healthz >/dev/null; then
+              echo "engine healthy after ${i}s"
+              break
+            fi
+            sleep 1
+          done
+          curl -fsS http://localhost:18080/healthz
+          curl -fsS http://localhost:18080/v1/version
+          curl -fsS -o /dev/null -w 'console index status=%{http_code}\n' http://localhost:18080/console
+          curl -fsS -o /dev/null -w 'assetLoader status=%{http_code}\n' http://localhost:18080/console/assets/versioned/assetLoader.js.gz
+          docker logs engine | tail -20
+          docker rm -f engine pg
+          docker network rm hasura-test
+
+  # Stitch the per-arch digests into a multi-arch manifest with the
+  # user-facing tags.
+  merge-manifest:
+    needs: build-engine-image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digest-*
+          merge-multiple: true
+
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
@@ -183,57 +312,34 @@ jobs:
           REF: ${{ github.ref }}
         run: |
           short=$(git rev-parse --short HEAD)
-          {
-            echo "list<<EOF"
-            echo "${{ env.REGISTRY }}/${{ env.IMAGE }}:$REF_NAME"
-            echo "${{ env.REGISTRY }}/${{ env.IMAGE }}:sha-$short"
-            if [ "$REF" = "refs/heads/master" ]; then
-              echo "${{ env.REGISTRY }}/${{ env.IMAGE }}:latest"
-            fi
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
-          echo "short=$short" >> "$GITHUB_OUTPUT"
+          tags=()
+          tags+=("${{ env.REGISTRY }}/${{ env.IMAGE }}:$REF_NAME")
+          tags+=("${{ env.REGISTRY }}/${{ env.IMAGE }}:sha-$short")
+          if [ "$REF" = "refs/heads/master" ]; then
+            tags+=("${{ env.REGISTRY }}/${{ env.IMAGE }}:latest")
+          fi
+          # Render as repeated --tag args for buildx imagetools create.
+          tag_args=""
+          for t in "${tags[@]}"; do
+            tag_args="$tag_args --tag $t"
+          done
+          echo "args=$tag_args" >> "$GITHUB_OUTPUT"
+          echo "primary=${tags[0]}" >> "$GITHUB_OUTPUT"
 
-      - name: Build & push engine image
-        uses: docker/build-push-action@v5
-        with:
-          context: packaging/graphql-engine
-          file: packaging/graphql-engine/Dockerfile
-          platforms: ${{ env.PLATFORM }}
-          push: true
-          build-args: |
-            BASE_IMAGE=${{ env.REGISTRY }}/${{ env.BASE_IMAGE }}:${{ needs.build-base-image.outputs.base-tag }}
-          tags: ${{ steps.tags.outputs.list }}
-          cache-from: type=gha,scope=engine-image
-          cache-to: type=gha,mode=max,scope=engine-image
-
-      - name: Smoke test
+      - name: Create multi-arch manifest
         env:
-          ENGINE_TAG: ${{ env.REGISTRY }}/${{ env.IMAGE }}:sha-${{ steps.tags.outputs.short }}
+          IMAGE_REPO: ${{ env.REGISTRY }}/${{ env.IMAGE }}
         run: |
-          set -e
-          docker network create hasura-test
-          docker run -d --rm --name pg --network hasura-test \
-            -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=hasura postgres:15
-          for i in $(seq 1 30); do
-            if docker exec pg pg_isready -U postgres >/dev/null 2>&1; then break; fi
-            sleep 1
-          done
-          docker run -d --rm --name engine --network hasura-test -p 18080:8080 \
-            -e HASURA_GRAPHQL_DATABASE_URL=postgres://postgres:postgres@pg:5432/hasura \
-            -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
-            "$ENGINE_TAG"
-          for i in $(seq 1 60); do
-            if curl -fsS http://localhost:18080/healthz >/dev/null; then
-              echo "engine healthy after ${i}s"
-              break
-            fi
-            sleep 1
-          done
-          curl -fsS http://localhost:18080/healthz
-          curl -fsS http://localhost:18080/v1/version
-          curl -fsS -o /dev/null -w 'console index status=%{http_code}\n' http://localhost:18080/console
-          curl -fsS -o /dev/null -w 'assetLoader status=%{http_code}\n' http://localhost:18080/console/assets/versioned/assetLoader.js.gz
-          docker logs engine | tail -20
-          docker rm -f engine pg
-          docker network rm hasura-test
+          AMD64_DIGEST=$(cat /tmp/digests/amd64)
+          ARM64_DIGEST=$(cat /tmp/digests/arm64)
+          echo "amd64: $AMD64_DIGEST"
+          echo "arm64: $ARM64_DIGEST"
+          docker buildx imagetools create \
+            ${{ steps.tags.outputs.args }} \
+            "${IMAGE_REPO}@${AMD64_DIGEST}" \
+            "${IMAGE_REPO}@${ARM64_DIGEST}"
+
+      - name: Inspect resulting manifest
+        env:
+          PRIMARY: ${{ steps.tags.outputs.primary }}
+        run: docker buildx imagetools inspect "$PRIMARY"
