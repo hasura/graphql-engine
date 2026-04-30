@@ -38,17 +38,28 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check whether base image already exists
+      - name: Check whether base image already exists for both platforms
         id: probe
         env:
           BASE_TAG: ${{ env.REGISTRY }}/${{ env.BASE_IMAGE }}:${{ steps.tag.outputs.value }}
+        # Skip rebuild only if the existing manifest covers BOTH amd64 and
+        # arm64. A pre-existing single-arch manifest (e.g. from an older
+        # workflow) would otherwise be re-used and the engine build for the
+        # missing arch would fail with "no match for platform in manifest".
         run: |
-          # docker manifest inspect on a multi-arch index returns the index;
-          # we don't care about its contents, just that it resolves.
-          if docker manifest inspect "$BASE_TAG" >/dev/null 2>&1; then
+          if ! manifest=$(docker manifest inspect "$BASE_TAG" 2>/dev/null); then
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "reason: tag does not exist"
+            exit 0
+          fi
+          have_amd64=$(echo "$manifest" | jq -r '[.manifests[]?.platform.architecture] | any(. == "amd64")')
+          have_arm64=$(echo "$manifest" | jq -r '[.manifests[]?.platform.architecture] | any(. == "arm64")')
+          if [ "$have_amd64" = "true" ] && [ "$have_arm64" = "true" ]; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "reason: tag has both amd64 and arm64"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "reason: tag missing platforms (amd64=$have_amd64, arm64=$have_arm64)"
           fi
 
       - name: Set up QEMU
