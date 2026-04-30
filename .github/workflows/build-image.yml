@@ -1,0 +1,224 @@
+name: Build & publish image
+
+on:
+  push:
+    branches: [build-ci]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE: ${{ github.repository }}
+  BASE_IMAGE: ${{ github.repository }}-base
+  PLATFORM: linux/amd64
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  # Build the runtime base image only when its inputs change.
+  # Other runs reuse the existing tag from the registry.
+  build-base-image:
+    runs-on: ubuntu-latest
+    outputs:
+      base-tag: ${{ steps.tag.outputs.value }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: tag
+        run: |
+          # Tag derived from the hash of the base Dockerfile so we can detect
+          # whether to rebuild. Bumps automatically when the file changes.
+          hash=$(sha256sum packaging/graphql-engine-base/ubuntu.dockerfile | cut -c1-12)
+          echo "value=ubuntu-jammy-$hash" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check whether base image already exists
+        id: probe
+        env:
+          BASE_TAG: ${{ env.REGISTRY }}/${{ env.BASE_IMAGE }}:${{ steps.tag.outputs.value }}
+        run: |
+          if docker manifest inspect "$BASE_TAG" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Docker Buildx
+        if: steps.probe.outputs.exists == 'false'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build & push base image
+        if: steps.probe.outputs.exists == 'false'
+        uses: docker/build-push-action@v5
+        with:
+          context: packaging/graphql-engine-base
+          file: packaging/graphql-engine-base/ubuntu.dockerfile
+          platforms: ${{ env.PLATFORM }}
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.BASE_IMAGE }}:${{ steps.tag.outputs.value }}
+          cache-from: type=gha,scope=base-image
+          cache-to: type=gha,mode=max,scope=base-image
+
+  build-engine-image:
+    needs: build-base-image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # ---------- Console assets ----------
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+
+      - name: Cache yarn
+        uses: actions/cache@v4
+        with:
+          path: |
+            frontend/.yarn/cache
+            frontend/.yarn/install-state.gz
+          key: yarn-${{ runner.os }}-${{ hashFiles('frontend/yarn.lock') }}
+          restore-keys: |
+            yarn-${{ runner.os }}-
+
+      - name: Install console deps
+        working-directory: frontend
+        # The bundled yarn 3.2.4 is invoked directly because the global yarn on
+        # ubuntu-latest is v1, which won't honor yarnPath. Node 16 also can't
+        # run yarn v4, so this is the only path that works.
+        run: node .yarn/releases/yarn-3.2.4.cjs install --immutable
+
+      - name: Build console assets
+        working-directory: frontend
+        run: node .yarn/releases/yarn-3.2.4.cjs server-build:ce
+
+      # ---------- Engine binary ----------
+      - name: Set up GHC + cabal
+        uses: haskell-actions/setup@v2
+        with:
+          ghc-version: '9.10.1'
+          cabal-version: '3.12.1.0'
+
+      - name: Repoint cabal.project.local at CI config
+        # The repo symlinks cabal.project.local → cabal/dev-sh.project.local,
+        # which has macOS Homebrew paths. cabal/ci.project.local is the clean
+        # Linux/CI variant.
+        run: |
+          rm -f cabal.project.local
+          ln -sf cabal/ci.project.local cabal.project.local
+
+      - name: Cache cabal store
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cabal/store
+            ~/.cabal/packages
+          key: cabal-${{ runner.os }}-ghc9.10.1-${{ hashFiles('cabal.project.freeze') }}-${{ hashFiles('server/graphql-engine.cabal') }}
+          restore-keys: |
+            cabal-${{ runner.os }}-ghc9.10.1-${{ hashFiles('cabal.project.freeze') }}-
+            cabal-${{ runner.os }}-ghc9.10.1-
+
+      - name: Cache dist-newstyle
+        uses: actions/cache@v4
+        with:
+          path: dist-newstyle
+          key: dist-${{ runner.os }}-ghc9.10.1-${{ hashFiles('cabal.project.freeze') }}-${{ hashFiles('server/**/*.hs', 'server/**/*.cabal') }}
+          restore-keys: |
+            dist-${{ runner.os }}-ghc9.10.1-${{ hashFiles('cabal.project.freeze') }}-
+            dist-${{ runner.os }}-ghc9.10.1-
+
+      - name: cabal update
+        run: cabal update
+
+      - name: Build graphql-engine
+        run: cabal build exe:graphql-engine
+
+      # ---------- Assemble rootfs ----------
+      - name: Stage rootfs
+        run: |
+          mkdir -p packaging/graphql-engine/rootfs/bin packaging/graphql-engine/rootfs/srv
+          cp "$(cabal list-bin exe:graphql-engine)" packaging/graphql-engine/rootfs/bin/graphql-engine
+          chmod +x packaging/graphql-engine/rootfs/bin/graphql-engine
+          cp -r frontend/dist/apps/server-assets-console-ce packaging/graphql-engine/rootfs/srv/console-assets
+          ls -la packaging/graphql-engine/rootfs/bin
+          du -sh packaging/graphql-engine/rootfs/srv/console-assets
+
+      # ---------- Build & push final image ----------
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Compute image tags
+        id: tags
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          REF: ${{ github.ref }}
+        run: |
+          short=$(git rev-parse --short HEAD)
+          {
+            echo "list<<EOF"
+            echo "${{ env.REGISTRY }}/${{ env.IMAGE }}:$REF_NAME"
+            echo "${{ env.REGISTRY }}/${{ env.IMAGE }}:sha-$short"
+            if [ "$REF" = "refs/heads/master" ]; then
+              echo "${{ env.REGISTRY }}/${{ env.IMAGE }}:latest"
+            fi
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          echo "short=$short" >> "$GITHUB_OUTPUT"
+
+      - name: Build & push engine image
+        uses: docker/build-push-action@v5
+        with:
+          context: packaging/graphql-engine
+          file: packaging/graphql-engine/Dockerfile
+          platforms: ${{ env.PLATFORM }}
+          push: true
+          build-args: |
+            BASE_IMAGE=${{ env.REGISTRY }}/${{ env.BASE_IMAGE }}:${{ needs.build-base-image.outputs.base-tag }}
+          tags: ${{ steps.tags.outputs.list }}
+          cache-from: type=gha,scope=engine-image
+          cache-to: type=gha,mode=max,scope=engine-image
+
+      - name: Smoke test
+        env:
+          ENGINE_TAG: ${{ env.REGISTRY }}/${{ env.IMAGE }}:sha-${{ steps.tags.outputs.short }}
+        run: |
+          set -e
+          docker network create hasura-test
+          docker run -d --rm --name pg --network hasura-test \
+            -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=hasura postgres:15
+          for i in $(seq 1 30); do
+            if docker exec pg pg_isready -U postgres >/dev/null 2>&1; then break; fi
+            sleep 1
+          done
+          docker run -d --rm --name engine --network hasura-test -p 18080:8080 \
+            -e HASURA_GRAPHQL_DATABASE_URL=postgres://postgres:postgres@pg:5432/hasura \
+            -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
+            "$ENGINE_TAG"
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:18080/healthz >/dev/null; then
+              echo "engine healthy after ${i}s"
+              break
+            fi
+            sleep 1
+          done
+          curl -fsS http://localhost:18080/healthz
+          curl -fsS http://localhost:18080/v1/version
+          curl -fsS -o /dev/null -w 'console index status=%{http_code}\n' http://localhost:18080/console
+          curl -fsS -o /dev/null -w 'assetLoader status=%{http_code}\n' http://localhost:18080/console/assets/versioned/assetLoader.js.gz
+          docker logs engine | tail -20
+          docker rm -f engine pg
+          docker network rm hasura-test

@@ -7,6 +7,8 @@ ENV HGE_BINARY ${HGE_BINARY_NAME}
 COPY rootfs/bin/ /bin/
 COPY rootfs/srv/ /srv/
 
+ENV HASURA_GRAPHQL_CONSOLE_ASSETS_DIR=/srv/console-assets
+
 HEALTHCHECK --start-period=10s CMD curl -f http://localhost:8080/healthz || exit 1
 
 CMD "${HGE_BINARY}" serve
