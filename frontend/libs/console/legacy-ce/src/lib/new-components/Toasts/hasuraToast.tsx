@@ -1,8 +1,8 @@
 import clsx from 'clsx';
 import { deepmerge } from 'deepmerge-ts';
-import { MouseEventHandler, PropsWithChildren, ReactNode } from 'react';
+import React, { MouseEventHandler, PropsWithChildren, ReactNode } from 'react';
 import { Toast, ToastOptions, toast } from 'react-hot-toast/headless';
-import { FaTimesCircle } from 'react-icons/fa';
+import { FaTimesCircle, FaCopy } from 'react-icons/fa';
 import { HtmlAnalyticsAttributes } from '../../features/Analytics';
 
 export type ToastType = 'error' | 'success' | 'info' | 'warning';
@@ -108,6 +108,50 @@ export const hasuraToast = ({
     onRemove();
   };
 
+  const extractTextFromChildren = (node: ReactNode): string => {
+    if (typeof node === 'string' || typeof node === 'number') {
+      return String(node);
+    }
+    
+    if (React.isValidElement(node)) {
+      if (node.props.children) {
+        if (Array.isArray(node.props.children)) {
+          return node.props.children
+            .map((child) => extractTextFromChildren(child))
+            .join('');
+        }
+        return extractTextFromChildren(node.props.children);
+      }
+    }
+    
+    if (Array.isArray(node)) {
+      return node.map((child) => extractTextFromChildren(child)).join('');
+    }
+    
+    return '';
+  };
+
+  const handleCopy = () => {
+    if (!navigator.clipboard) {
+      console.warn('Clipboard API not available');
+      return;
+    }
+
+    let copyText = '';
+    if (title) copyText += `${title}\n`;
+    if (message) copyText += `${message}\n`;
+    if (children) {
+      const childText = extractTextFromChildren(children);
+      if (childText.trim()) {
+        copyText += `${childText.trim()}\n`;
+      }
+    }
+    
+    navigator.clipboard.writeText(copyText.trim()).catch(err => {
+      console.error('Failed to copy notification:', err);
+    });
+  };
+
   return toast.custom(
     t => (
       <div
@@ -151,11 +195,23 @@ export const hasuraToast = ({
             </div>
           ) : null}
         </div>
-        <button onClick={handleOnRemove(t)} className="p-1">
-          <FaTimesCircle
-            color={TOASTS_TYPES_OPTIONS[type].iconTheme?.primary}
-          />
-        </button>
+        <div className="flex items-center gap-1">
+          <button 
+            onClick={handleCopy} 
+            className="p-1 hover:bg-gray-700 rounded" 
+            title="Copy notification content"
+          >
+            <FaCopy
+              color={TOASTS_TYPES_OPTIONS[type].iconTheme?.primary}
+              size={14}
+            />
+          </button>
+          <button onClick={handleOnRemove(t)} className="p-1 hover:bg-gray-700 rounded">
+            <FaTimesCircle
+              color={TOASTS_TYPES_OPTIONS[type].iconTheme?.primary}
+            />
+          </button>
+        </div>
       </div>
     ),
     deepmerge(
