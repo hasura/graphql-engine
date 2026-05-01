@@ -130,7 +130,7 @@ orderByExpInternal gqlName description selectPermissions tableFields memoizeKey 
       case fieldInfo of
         FIColumn (SCIScalarColumn columnInfo) -> do
           let !fieldName = ciName columnInfo
-          let redactionExp = fromMaybe NoRedaction $ getRedactionExprForColumn selectPermissions' (ciColumn columnInfo)
+          let !redactionExp = fromMaybe NoRedaction $ getRedactionExprForColumn selectPermissions' (ciColumn columnInfo)
           orderByOperator @b tCase sourceInfo
             & P.fieldOptional fieldName Nothing
             <&> (fmap (pure . mkOrderByItemG @b (IR.AOCColumn columnInfo redactionExp)) . join)

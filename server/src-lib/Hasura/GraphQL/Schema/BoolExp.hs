@@ -137,7 +137,7 @@ boolExpInternal gqlName selectPermissions fieldInfos description memoizeKey mkAg
       P.fieldOptional fieldName Nothing <$> case fieldInfo of
         -- field_name: field_type_comparison_exp
         FIColumn (SCIScalarColumn columnInfo) ->
-          let redactionExp = fromMaybe NoRedaction $ getRedactionExprForColumn selectPermissions' (ciColumn columnInfo)
+          let !redactionExp = fromMaybe NoRedaction $ getRedactionExprForColumn selectPermissions' (ciColumn columnInfo)
            in lift $ fmap (AVColumn columnInfo redactionExp) <$> comparisonExps @b (ciType columnInfo)
         FIColumn (SCIObjectColumn nestedObjectInfo@NestedObjectInfo {..}) -> do
           SourceInfo {..} <- asks getter

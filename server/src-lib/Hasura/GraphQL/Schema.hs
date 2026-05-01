@@ -729,7 +729,7 @@ buildAndValidateRemoteSchemas remotes sourcesQueryFields sourcesMutationFields a
                       P.TypeDefinitionsWrapper $ map P.fDefinition <$> piMutation remoteSchemaParser
                     ]
             onLeft_ collectedTypes $ \conflictingTypes ->
-              reportInconsistency $ "Found conflicting definitions for GraphQL type" <> fromErrorMessage (toErrorValue conflictingTypes)
+              reportInconsistency $ "Conflicting types: " <> fromErrorMessage (toErrorValue conflictingTypes)
 
           -- Only add this new remote to the list if there was no error
           pure
