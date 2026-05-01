@@ -2,9 +2,9 @@
 # Build a runnable Docker image of graphql-engine + console for local validation.
 #
 # Produces an arm64 image that runs natively on Apple Silicon. Uses dynamic
-# linking + unoptimized graphql-engine to dodge GHC 9.10.1's heap-overflow at
-# link time inside the default Docker Desktop VM. The CI build (linux/amd64
-# on a real Linux runner) does not need any of these workarounds.
+# linking + unoptimized graphql-engine to dodge a heap-overflow at link time
+# inside the default Docker Desktop VM. The CI build (linux/amd64 on a real
+# Linux runner) does not need any of these workarounds.
 #
 # Reuses cached cabal store + dist-newstyle across runs via Docker volumes,
 # so only the first run pays the ~30-45 min cabal cost.
@@ -50,9 +50,11 @@ fi
 # ---------------------------------------------------------------------------
 step "2/6 Builder image"
 # ---------------------------------------------------------------------------
+GHC_VERSION="$(cat "$REPO_ROOT/.ghcversion")"
 BUILDER_DOCKERFILE="$REPO_ROOT/scripts/build-local-image.builder.dockerfile"
 cat > "$BUILDER_DOCKERFILE" <<'DOCKERFILE'
 FROM ubuntu:jammy-20250530
+ARG GHC_VERSION
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8 DEBIAN_FRONTEND=noninteractive
 
 RUN set -ex; \
@@ -73,7 +75,7 @@ RUN set -ex; \
 ENV GHCUP_INSTALL_BASE_PREFIX=/opt PATH=/opt/.ghcup/bin:$PATH
 RUN curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org \
       | BOOTSTRAP_HASKELL_NONINTERACTIVE=1 \
-        BOOTSTRAP_HASKELL_GHC_VERSION=9.10.1 \
+        BOOTSTRAP_HASKELL_GHC_VERSION="$GHC_VERSION" \
         BOOTSTRAP_HASKELL_CABAL_VERSION=3.12.1.0 \
         BOOTSTRAP_HASKELL_INSTALL_NO_STACK=1 \
         BOOTSTRAP_HASKELL_ADJUST_BASHRC=N \
@@ -82,6 +84,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org \
 WORKDIR /src
 DOCKERFILE
 docker buildx build --platform "$PLATFORM" --load \
+  --build-arg "GHC_VERSION=$GHC_VERSION" \
   -t "$BUILDER_TAG" -f "$BUILDER_DOCKERFILE" "$(dirname "$BUILDER_DOCKERFILE")"
 
 # ---------------------------------------------------------------------------
