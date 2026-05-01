@@ -153,10 +153,13 @@ jobs:
             libpq-dev libssl-dev libkrb5-dev libnuma-dev libpcre3-dev \
             unixodbc-dev libsystemd-dev libreadline-dev
 
+      - name: Read GHC version from .ghcversion
+        run: echo "GHC_VERSION=$(cat .ghcversion)" >> "$GITHUB_ENV"
+
       - name: Set up GHC + cabal
         uses: haskell-actions/setup@v2
         with:
-          ghc-version: '9.10.1'
+          ghc-version: ${{ env.GHC_VERSION }}
           cabal-version: '3.12.1.0'
 
       - name: Repoint cabal.project.local at CI config
@@ -173,19 +176,19 @@ jobs:
           path: |
             ~/.cabal/store
             ~/.cabal/packages
-          key: cabal-${{ runner.os }}-${{ matrix.arch }}-ghc9.10.1-${{ hashFiles('cabal.project.freeze') }}-${{ hashFiles('server/graphql-engine.cabal') }}
+          key: cabal-${{ runner.os }}-${{ matrix.arch }}-ghc${{ env.GHC_VERSION }}-${{ hashFiles('cabal.project.freeze') }}-${{ hashFiles('server/graphql-engine.cabal') }}
           restore-keys: |
-            cabal-${{ runner.os }}-${{ matrix.arch }}-ghc9.10.1-${{ hashFiles('cabal.project.freeze') }}-
-            cabal-${{ runner.os }}-${{ matrix.arch }}-ghc9.10.1-
+            cabal-${{ runner.os }}-${{ matrix.arch }}-ghc${{ env.GHC_VERSION }}-${{ hashFiles('cabal.project.freeze') }}-
+            cabal-${{ runner.os }}-${{ matrix.arch }}-ghc${{ env.GHC_VERSION }}-
 
       - name: Cache dist-newstyle
         uses: actions/cache@v4
         with:
           path: dist-newstyle
-          key: dist-${{ runner.os }}-${{ matrix.arch }}-ghc9.10.1-${{ hashFiles('cabal.project.freeze') }}-${{ hashFiles('server/**/*.hs', 'server/**/*.cabal') }}
+          key: dist-${{ runner.os }}-${{ matrix.arch }}-ghc${{ env.GHC_VERSION }}-${{ hashFiles('cabal.project.freeze') }}-${{ hashFiles('server/**/*.hs', 'server/**/*.cabal') }}
           restore-keys: |
-            dist-${{ runner.os }}-${{ matrix.arch }}-ghc9.10.1-${{ hashFiles('cabal.project.freeze') }}-
-            dist-${{ runner.os }}-${{ matrix.arch }}-ghc9.10.1-
+            dist-${{ runner.os }}-${{ matrix.arch }}-ghc${{ env.GHC_VERSION }}-${{ hashFiles('cabal.project.freeze') }}-
+            dist-${{ runner.os }}-${{ matrix.arch }}-ghc${{ env.GHC_VERSION }}-
 
       - name: Stamp server/CURRENT_VERSION
         # Hasura.Server.Version uses TH at compile time to bake this file's
