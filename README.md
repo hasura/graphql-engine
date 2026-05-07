@@ -16,7 +16,7 @@ to data via a single, composable, secure API endpoint.
 The future of data delivery is GA: Supporting PostgreSQL (and its flavors), MongoDB, ClickHouse, and MS SQL Server. Also supports writing custom business logic using the Typescript, Python, and Go Connector SDKs. Here is the recommended [Getting Started](https://hasura.io/docs/3.0/getting-started/quickstart/) guide on DDN.
 
 The Hasura v3 engine code, which powers Hasura DDN, is in the `v3` folder of this repo. You can find more detailed
-information about in this [v3 README](/v3/README.md).
+information about this [v3 README](/v3/README.md).
 
 The Hasura DDN architecture includes Data Connectors to connect to data sources. All Hasura connectors are also
 available completely open source. Check out the [Connector Hub](https://hasura.io/connectors/) which lists all

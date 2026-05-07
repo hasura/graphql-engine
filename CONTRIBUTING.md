@@ -99,7 +99,7 @@ Since we launched our [learn page](https://hasura.io/learn/), we are happy about
 
 - Fix errors in existing learn tutorials
 
-- Add new tutorials (please reach out to us if you have ideas to avoid duplicate word)
+- Add new tutorials (please reach out to us if you have ideas to avoid duplicate work)
 
 The README of the learn repository can be found [here](https://github.com/hasura/learn-graphql).
 

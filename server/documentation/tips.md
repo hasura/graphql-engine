@@ -52,7 +52,7 @@ We'll use the `TestGraphQLQueryBasicMSSQL` test as an example.
 
 ### Start-up graphql-engine
 
-First step stays the same. Start up the relevant databases and graphql-engine in seperate terminals.
+First step stays the same. Start up the relevant databases and graphql-engine in separate terminals.
 
 We also need mssql for this test, this can be skipped if you're testing postgres for example.
 
@@ -70,7 +70,7 @@ scripts/dev.sh graphql-engine
 
 In the case of mssql, we also need to register the database. This can be done in the hasura console but going to
 the `DATA` tab, then `Manage` button on the left and then `Connect Database` button. Add a mssql database with the
-connection string that `scripts/dev.sh mssql` outputed.
+connection string that `scripts/dev.sh mssql` outputted.
 
 Note: the database name should match the `source` field that tests use. In mssql's case this is usually `mssql`.
 
