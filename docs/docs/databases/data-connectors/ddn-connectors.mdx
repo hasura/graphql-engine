@@ -34,11 +34,25 @@ project, thereby allowing you to use the new connector.
 
 Start by [creating a new Hasura DDN project](https://hasura.io/docs/3.0/getting-started/build/prerequisites) locally.
 
+:::info Connecting Docker-based connectors to local databases
+
+If your DDN connector runs in Docker and needs to connect to a database running on your host machine, do not use
+`localhost` or `127.0.0.1` in the connector connection string. Inside a Docker container, those addresses point to the
+container itself. Use `local.hasura.dev` instead, for example:
+
+```bash
+postgresql://postgres:password@local.hasura.dev:5432/postgres
+```
+
+If the database runs as another service in the same Docker Compose file, use the Compose service name instead.
+
+:::
+
 :::info Choose a connector
 
-When creating a new project, you'll be prompted to select which connector you'd like to include in your project. You 
-can see the full list on the [Connector Hub](https://hasura.io/connectors). This connector will connect to your data
-source, introspect it, and generate the required metadata to create a GraphQL API with Hasura DDN.
+When creating a new project, you'll be prompted to select which connector you'd like to include in your project. You can
+see the full list on the [Connector Hub](https://hasura.io/connectors). This connector will connect to your data source,
+introspect it, and generate the required metadata to create a GraphQL API with Hasura DDN.
 
 :::
 

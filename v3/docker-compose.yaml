@@ -149,6 +149,8 @@ services:
     image: ghcr.io/hasura/ndc-postgres:122d80f6c
     ports:
       - 8080:8080
+    extra_hosts:
+      - local.hasura.dev=${LOCALHOST_GATEWAY:-host-gateway}
     environment:
       CONNECTION_URI: "postgresql://postgres:password@postgres"
       OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://jaeger:4317"
@@ -167,6 +169,8 @@ services:
     image: ghcr.io/hasura/ndc-postgres:dev-main
     ports:
       - 8082:8080
+    extra_hosts:
+      - local.hasura.dev=${LOCALHOST_GATEWAY:-host-gateway}
     environment:
       CONNECTION_URI: "postgresql://postgres:password@postgres"
       OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://jaeger:4317"

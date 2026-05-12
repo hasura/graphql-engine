@@ -104,6 +104,33 @@ Add the following entry to your `/etc/hosts` file:
 
 This mapping ensures proper resolution of connector URLs by the engine.
 
+When a connector runs in Docker, `localhost` and `127.0.0.1` refer to the
+connector container itself, not to your host machine. If the connector needs to
+reach a database running on your host machine, use `local.hasura.dev` in the
+connector connection URI:
+
+```bash
+CONNECTION_URI=postgresql://postgres:password@local.hasura.dev:5432/postgres
+```
+
+If the database is another service in the same Docker Compose file, use that
+service name instead. For example, the bundled Postgres service in
+`docker-compose.yaml` is available to the bundled Postgres connectors as
+`postgres`, so the sample connection URI is:
+
+```bash
+CONNECTION_URI=postgresql://postgres:password@postgres
+```
+
+The Docker Compose file maps `local.hasura.dev` to the host gateway for the
+engine and Postgres connector containers. On Docker versions or environments
+where `host-gateway` is not available, set `LOCALHOST_GATEWAY` to the gateway IP
+before starting Docker Compose:
+
+```bash
+LOCALHOST_GATEWAY=172.17.0.1 docker compose up
+```
+
 ## Running tests
 
 To run the test suite, you need to docker login to `ghcr.io` first:
