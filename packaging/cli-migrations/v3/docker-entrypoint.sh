@@ -46,8 +46,11 @@ wait_for_port() {
 
 log "migrations-startup" "starting graphql engine temporarily on port $HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT"
 
-# start graphql engine with metadata api enabled
-$HGE_BINARY serve --enabled-apis="metadata" \
+# start graphql engine with metadata api enabled. Disable eventing so the
+# temporary server does not poll for event triggers, cron triggers,
+# scheduled events or async actions while we apply migrations and metadata —
+# this avoids competing with the migration workload for database resources.
+HASURA_GRAPHQL_DISABLE_EVENTING=true $HGE_BINARY serve --enabled-apis="metadata" \
                --server-port=${HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT}  &
 # store the pid to kill it later
 PID=$!

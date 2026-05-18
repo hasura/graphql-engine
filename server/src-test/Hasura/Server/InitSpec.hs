@@ -85,6 +85,7 @@ emptyServeOptionsRaw =
       rsoWebSocketKeepAlive = Nothing,
       rsoInferFunctionPermissions = Nothing,
       rsoEnableMaintenanceMode = Types.MaintenanceModeDisabled,
+      rsoEventingMode = Types.EventingEnabled,
       rsoSchemaPollInterval = Nothing,
       rsoExperimentalFeatures = Nothing,
       rsoEventsFetchBatchSize = Nothing,

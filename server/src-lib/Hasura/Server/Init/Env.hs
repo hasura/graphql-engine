@@ -269,6 +269,9 @@ instance FromEnv Options.InferFunctionPermissions where
 instance FromEnv (Server.Types.MaintenanceMode ()) where
   fromEnv = fmap (bool Server.Types.MaintenanceModeDisabled (Server.Types.MaintenanceModeEnabled ())) . fromEnv @Bool
 
+instance FromEnv Server.Types.EventingMode where
+  fromEnv = fmap (bool Server.Types.EventingEnabled Server.Types.EventingDisabled) . fromEnv @Bool
+
 instance FromEnv Server.Logging.MetadataQueryLoggingMode where
   fromEnv = fmap (bool Server.Logging.MetadataQueryLoggingDisabled Server.Logging.MetadataQueryLoggingEnabled) . fromEnv @Bool
 

@@ -206,7 +206,9 @@ mkServeOptions sor@ServeOptionsRaw {..} = do
   soEventsFetchBatchSize <- withOptionDefault rsoEventsFetchBatchSize eventsFetchBatchSizeOption
   soGracefulShutdownTimeout <- withOptionDefault rsoGracefulShutdownTimeout gracefulShutdownOption
   soWebSocketConnectionInitTimeout <- withOptionDefault rsoWebSocketConnectionInitTimeout webSocketConnectionInitTimeoutOption
-  let soEventingMode = Types.EventingEnabled
+  soEventingMode <- case rsoEventingMode of
+    Types.EventingEnabled -> withOptionDefault Nothing disableEventingOption
+    eventingDisabled -> pure eventingDisabled
   let soReadOnlyMode = Types.ReadOnlyModeDisabled
   soEnableMetadataQueryLogging <- case rsoEnableMetadataQueryLoggingEnv of
     Server.Logging.MetadataQueryLoggingDisabled -> withOptionDefault Nothing enableMetadataQueryLoggingOption

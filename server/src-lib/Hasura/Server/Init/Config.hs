@@ -318,6 +318,7 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoWebSocketKeepAlive :: Maybe KeepAliveDelay,
     rsoInferFunctionPermissions :: Maybe Schema.Options.InferFunctionPermissions,
     rsoEnableMaintenanceMode :: Server.Types.MaintenanceMode (),
+    rsoEventingMode :: Server.Types.EventingMode,
     rsoSchemaPollInterval :: Maybe OptionalInterval,
     -- | See Note '$experimentalFeatures' at bottom of module
     rsoExperimentalFeatures :: Maybe (HashSet Server.Types.ExperimentalFeature),

@@ -54,6 +54,7 @@ module Hasura.Server.Init.Arg.Command.Serve
     webSocketKeepAliveOption,
     inferFunctionPermsOption,
     enableMaintenanceModeOption,
+    disableEventingOption,
     schemaPollIntervalOption,
     experimentalFeaturesOption,
     eventsFetchBatchSizeOption,
@@ -158,6 +159,7 @@ serveCommandParser =
     <*> parseWebSocketKeepAlive
     <*> parseInferFunctionPerms
     <*> parseEnableMaintenanceMode
+    <*> parseDisableEventing
     <*> parseSchemaPollInterval
     <*> parseExperimentalFeatures
     <*> parseEventsFetchBatchSize
@@ -1075,6 +1077,27 @@ enableMaintenanceModeOption =
       Config._helpMessage = "Flag to enable maintenance mode in the graphql-engine"
     }
 
+parseDisableEventing :: Opt.Parser Types.EventingMode
+parseDisableEventing =
+  fmap (bool Types.EventingEnabled Types.EventingDisabled)
+    $ Opt.switch
+      ( Opt.long "disable-eventing"
+          <> Opt.help (Config._helpMessage disableEventingOption)
+      )
+
+disableEventingOption :: Config.Option Types.EventingMode
+disableEventingOption =
+  Config.Option
+    { Config._default = Types.EventingEnabled,
+      Config._envVar = "HASURA_GRAPHQL_DISABLE_EVENTING",
+      Config._helpMessage =
+        "Disable the eventing subsystem entirely: event triggers, "
+          <> "cron triggers, scheduled events, and async actions. "
+          <> "Useful for migration jobs and other transient instances "
+          <> "where these background pollers compete with the workload "
+          <> "for database resources."
+    }
+
 parseSchemaPollInterval :: Opt.Parser (Maybe Config.OptionalInterval)
 parseSchemaPollInterval =
   Opt.optional
@@ -1578,6 +1601,7 @@ serveCmdFooter =
         Config.optionPP webSocketKeepAliveOption,
         Config.optionPP inferFunctionPermsOption,
         Config.optionPP enableMaintenanceModeOption,
+        Config.optionPP disableEventingOption,
         Config.optionPP schemaPollIntervalOption,
         Config.optionPP experimentalFeaturesOption,
         Config.optionPP eventsFetchBatchSizeOption,
