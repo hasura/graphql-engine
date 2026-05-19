@@ -11,6 +11,7 @@ use crate::types::{PlanError, PlanState};
 pub use arguments::{
     ArgumentPresetExecutionError, MapFieldNamesError, UnresolvedArgument,
     process_argument_presets_for_command, process_argument_presets_for_model,
+    process_connector_link_presets,
 };
 pub use command::{CommandPlan, FromCommand, from_command};
 pub use filter::{build_relationship_comparison_expression, plan_expression};

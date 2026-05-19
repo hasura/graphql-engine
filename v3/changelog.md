@@ -8,6 +8,11 @@
 
 ### Fixed
 
+- Apply `DataConnectorLink.argumentPresets` (e.g. header forwarding) to
+  relational queries on the `/v1/sql` path. Previously these presets were
+  honoured only for GraphQL/JSON:API requests, so connectors received no
+  forwarded headers when the same model was queried via SQL.
+
 ## [v2026.04.23]
 
 ### Added
