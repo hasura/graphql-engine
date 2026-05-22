@@ -80,7 +80,7 @@ convertEnumValue Definition {..} =
     }
 
 convertInputField :: Definition origin (InputFieldInfo origin) -> G.InputValueDefinition
-convertInputField Definition {..} = case dInfo of
+convertInputField (Definition {dName, dDescription, dDirectives, dInfo}) = case dInfo of
   InputFieldInfo typeInfo defaultValue ->
     G.InputValueDefinition
       { G._ivdDescription = dDescription,

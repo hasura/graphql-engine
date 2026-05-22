@@ -83,10 +83,8 @@ instance (Applicative m) => Applicative (InputFieldsParser origin m) where
   {-# INLINE pure #-}
   pure v = InputFieldsParser [] (const $ pure v)
   {-# INLINE (<*>) #-}
-  a <*> b =
-    InputFieldsParser
-      (ifDefinitions a <> ifDefinitions b)
-      (\args -> ifParser a args <*> ifParser b args)
+  (InputFieldsParser da pa) <*> (InputFieldsParser db pb) =
+    InputFieldsParser (da <> db) (\args -> pa args <*> pb args)
 
 {- Note [When are fields optional?]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
