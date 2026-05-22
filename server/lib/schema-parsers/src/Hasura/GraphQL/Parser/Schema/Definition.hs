@@ -1,4 +1,5 @@
 {-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE ViewPatterns #-}
 
 -- | Types for representing a GraphQL schema.
 module Hasura.GraphQL.Parser.Schema.Definition
@@ -31,7 +32,7 @@ module Hasura.GraphQL.Parser.Schema.Definition
     UnionInfo (UnionInfo, uiPossibleTypes),
 
     -- * Definitions
-    Definition (..),
+    Definition (Definition, dName, dDescription, dOrigin, dDirectives, dInfo),
 
     -- * Schemas
     Schema (..),
@@ -564,13 +565,17 @@ instance Eq (SomeDefinitionTypeInfo origin) where
     == SomeDefinitionTypeInfo (Definition name2 _ _ _ ti2) =
       name1 == name2 && eqTypeInfo ti1 ti2
 
-data Definition origin a = Definition
-  { dName :: Name,
-    dDescription :: Maybe Description,
-    -- | What piece of metadata was this fragment of GraphQL type information
+-- Internal representation. Use the 'Definition' pattern synonym for construction
+-- and deconstruction; do not use these constructors directly.
+data Definition origin a
+  = -- | Compact 3-word form: no description, origin, or directives.
+    DefinitionCompact__ !Name ~a
+  | -- | Full form with all fields.
+    --
+    -- What piece of metadata was this fragment of GraphQL type information
     -- from?  See also 'Hasura.GraphQL.Schema.Parser'.
     --
-    -- 'Nothing' can represent a couple of scenarios:
+    -- 'Nothing' for 'dOrigin' can represent a couple of scenarios:
     -- 1. This is a native part of the GraphQL spec, e.g. the '__Type'
     --    introspection type
     -- 2. This is a native part of HGE, e.g. our scalar types and Relay-related
@@ -583,16 +588,44 @@ data Definition origin a = Definition
     --
     -- Maybe, at some point, it makes sense to represent the above options more
     -- accurately in the type of 'dOrigin'.
-    dOrigin :: Maybe origin,
-    -- | The directives for this object.
-    dDirectives :: [G.Directive Void],
-    -- | Lazy to allow mutually-recursive type definitions.
-    dInfo :: ~a
-  }
-  deriving (Functor, Foldable, Traversable, Generic)
+    --
+    -- 'dInfo' is intentionally lazy to allow mutually-recursive type
+    -- definitions; see Note [Tying the knot] in Hasura.GraphQL.Parser.Class.
+    DefinitionFull__ !Name (Maybe Description) (Maybe origin) [G.Directive Void] ~a
+  deriving (Functor, Foldable, Traversable)
+
+viewDefinition :: Definition origin a -> (Name, Maybe Description, Maybe origin, [G.Directive Void], a)
+viewDefinition (DefinitionCompact__ n i) = (n, Nothing, Nothing, [], i)
+viewDefinition (DefinitionFull__ n d o dirs i) = (n, d, o, dirs, i)
+{-# INLINE viewDefinition #-}
+
+-- | Public interface for 'Definition' values. The 'DefinitionCompact__' form
+-- is used automatically when description, origin, and directives are all
+-- absent, saving three words per Definition.
+--
+-- Pattern synonyms allow us to perform this optimization while (basically)
+-- keeping the same interface.
+pattern Definition ::
+  Name ->
+  Maybe Description ->
+  Maybe origin ->
+  [G.Directive Void] ->
+  -- | Lazy to allow mutually-recursive type definitions.
+  a ->
+  Definition origin a
+pattern Definition {dName, dDescription, dOrigin, dDirectives, dInfo}
+  <- (viewDefinition -> (dName, dDescription, dOrigin, dDirectives, dInfo))
+  where
+    Definition n d o dirs i = case (d, o, dirs) of
+      (Nothing, Nothing, []) -> DefinitionCompact__ n i
+      _ -> DefinitionFull__ n d o dirs i
+
+{-# INLINE CONLIKE Definition #-}
+
+{-# COMPLETE Definition #-}
 
 instance (Hashable a) => Hashable (Definition origin a) where
-  hashWithSalt salt Definition {..} =
+  hashWithSalt salt (Definition { dName, dInfo }) =
     salt `hashWithSalt` dName `hashWithSalt` dInfo
 
 instance (Eq a) => Eq (Definition origin a) where
