@@ -916,7 +916,7 @@ enableRelayOption =
   Config.Option
     { Config._default = Config.RelayModeEnabled,
       Config._envVar = "HASURA_GRAPHQL_ENABLE_RELAY",
-      Config._helpMessage = "Enable the Relay API endpoint (/v1beta1/relay). When disabled, requests to the relay endpoint return an error (default: true)"
+      Config._helpMessage = "Enable the Relay API endpoint (/v1/relay and /v1beta1/relay). When disabled, requests to the relay endpoint return an error (default: true)"
     }
 
 parseGraphqlAdminInternalErrors :: Opt.Parser (Maybe Config.AdminInternalErrorsStatus)

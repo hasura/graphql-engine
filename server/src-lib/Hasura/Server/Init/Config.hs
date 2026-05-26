@@ -435,7 +435,7 @@ instance FromJSON DevModeStatus where
 instance ToJSON DevModeStatus where
   toJSON = J.toJSON . isDevModeEnabled
 
--- | Whether or not to enable the Relay API endpoint (@/v1beta1/relay@).
+-- | Whether or not to enable the Relay API endpoints (@/v1/relay@, @/v1beta1/relay@).
 data RelayModeStatus = RelayModeEnabled | RelayModeDisabled
   deriving stock (Show, Eq, Ord, Generic)
 

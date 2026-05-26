@@ -1088,20 +1088,9 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore closeWebsocketsOn
       $ mkGetHandler
       $ apiHandler
 
-  Spock.post "v1beta1/relay" $ do
-    onlyWhenApiEnabled isGraphQLEnabled appStateRef $ do
-      appCtx <- liftIO $ getAppContext appStateRef
-      if isRelayEnabled (acRelayMode appCtx)
-        then
-          mkSpockAction appStateRef GH.encodeGQErr maybeMod200
-            $ mkGQLRequestHandler
-            $ mkGQLAPIRespHandler
-            $ v1GQRelayHandler
-        else do
-          let qErr = err400 NotSupported "The Relay API is disabled. To enable it, set the HASURA_GRAPHQL_ENABLE_RELAY environment variable to 'true'."
-          Spock.setStatus $ qeStatus qErr
-          setHeader jsonHeader
-          Spock.lazyBytes . J.encodingToLazyByteString $ encodeQErr HideInternalErrors qErr
+  Spock.post "v1/relay" serveV1Relay
+  
+  Spock.post "v1beta1/relay" serveV1Relay
 
   -- This exposes some simple RTS stats when we run with `+RTS -T`. We want
   -- this to be available even when developer APIs are not compiled in, to
@@ -1229,6 +1218,21 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore closeWebsocketsOn
       for_ appEnvConsoleAssetsDir $ \dir ->
         Spock.get ("console/assets" <//> Spock.wildcard) $ \path -> do
           consoleAssetsHandler logger appEnvLoggingSettings dir path
+
+    serveV1Relay = do
+      onlyWhenApiEnabled isGraphQLEnabled appStateRef $ do
+        appCtx <- liftIO $ getAppContext appStateRef
+        if isRelayEnabled (acRelayMode appCtx)
+          then
+            mkSpockAction appStateRef GH.encodeGQErr maybeMod200
+              $ mkGQLRequestHandler
+              $ mkGQLAPIRespHandler
+              $ v1GQRelayHandler
+          else do
+            let qErr = err400 NotSupported "The Relay API is disabled. To enable it, set the HASURA_GRAPHQL_ENABLE_RELAY environment variable to 'true'."
+            Spock.setStatus $ qeStatus qErr
+            setHeader jsonHeader
+            Spock.lazyBytes . J.encodingToLazyByteString $ encodeQErr HideInternalErrors qErr
 
 -- an endpoint can be switched ON/OFF dynamically, hence serve the endpoint only
 -- when it is enabled else throw HTTP Error 404

@@ -377,8 +377,9 @@ onConn wsId requestHead ipAddress onConnHActions = do
       "/v1alpha1/graphql" -> return (ERTLegacy, E.QueryHasura)
       "/v1/graphql" -> return (ERTGraphqlCompliant, E.QueryHasura)
       "/v1beta1/relay" -> return (ERTGraphqlCompliant, E.QueryRelay)
+      "/v1/relay" -> return (ERTGraphqlCompliant, E.QueryRelay)
       _ ->
-        throw404 "only '/v1/graphql', '/v1alpha1/graphql' and '/v1beta1/relay' are supported on websockets"
+        throw404 "only '/v1/graphql', '/v1alpha1/graphql', '/v1/relay' and '/v1beta1/relay' are supported on websockets"
 
     getOrigin =
       find ((==) "Origin" . fst) (WS.requestHeaders requestHead)

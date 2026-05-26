@@ -159,7 +159,7 @@ def check_event_transformed(hge_ctx,
 
 
 def test_forbidden_when_admin_secret_reqd(hge_ctx, conf):
-    if conf['url'] == '/v1/graphql' or conf['url'] == '/v1beta1/relay':
+    if conf['url'] == '/v1/graphql' or conf['url'] == '/v1/relay' or conf['url'] == '/v1beta1/relay':
         if conf['status'] == 404:
             status = [404]
         else:
@@ -199,7 +199,7 @@ def test_forbidden_when_admin_secret_reqd(hge_ctx, conf):
 
 
 def test_forbidden_webhook(hge_ctx, conf):
-    if conf['url'] == '/v1/graphql' or conf['url'] == '/v1beta1/relay':
+    if conf['url'] == '/v1/graphql' or conf['url'] == '/v1/relay' or conf['url'] == '/v1beta1/relay':
         if conf['status'] == 404:
             status = [404]
         else:
@@ -295,8 +295,10 @@ def validate_gql_ws_q(hge_ctx, conf, headers, retry=False, via_subscription=Fals
 
     if endpoint == '/v1alpha1/graphql':
         ws_client = hge_ctx.ws_client_v1alpha1
-    elif endpoint == '/v1beta1/relay':
+    elif endpoint == '/v1/relay':
         ws_client = hge_ctx.ws_client_relay
+    elif endpoint == '/v1beta1/relay':
+        ws_client = hge_ctx.ws_client_relay_v1beta1
     elif gqlws: # for `graphQL-ws` clients
         ws_client = hge_ctx.ws_client_graphql_ws
     else:

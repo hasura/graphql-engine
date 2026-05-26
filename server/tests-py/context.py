@@ -861,7 +861,8 @@ class HGECtx:
 
         self.ws_client = GQLWsClient(self, '/v1/graphql')
         self.ws_client_v1alpha1 = GQLWsClient(self, '/v1alpha1/graphql')
-        self.ws_client_relay = GQLWsClient(self, '/v1beta1/relay')
+        self.ws_client_relay = GQLWsClient(self, '/v1/relay')
+        self.ws_client_relay_v1beta1 = GQLWsClient(self, '/v1beta1/relay')
         self.ws_client_graphql_ws = GraphQLWSClient(self, '/v1/graphql')
 
         self.backend = config.getoption('--backend')
@@ -1019,6 +1020,7 @@ class HGECtx:
         self.ws_client.teardown()
         self.ws_client_v1alpha1.teardown()
         self.ws_client_relay.teardown()
+        self.ws_client_relay_v1beta1.teardown()
         self.ws_client_graphql_ws.teardown()
 
     def v1GraphqlExplain(self, q, headers = {}, expected_status_code = 200):

@@ -11,7 +11,7 @@ export const getEndpoints = (globals: typeof consoleGlobals) => {
   const endpoints = {
     serverConfig: `${baseUrl}/v1alpha1/config`,
     graphQLUrl: `${baseUrl}/v1/graphql`,
-    relayURL: `${baseUrl}/v1beta1/relay`,
+    relayURL: `${baseUrl}/v1/relay`,
     query: `${baseUrl}/v2/query`,
     entitlement: `${baseUrl}/v1/entitlement`,
     license: `${baseUrl}/v1/entitlement/license`,
