@@ -194,11 +194,8 @@ saveLockedEventTriggerEvents :: (MonadIO m) => SourceName -> [EventId] -> TVar (
 saveLockedEventTriggerEvents sourceName eventIds lockedEvents =
   liftIO
     $ atomically
-    $ do
-      lockedEventsVals <- readTVar lockedEvents
-      case HashMap.lookup sourceName lockedEventsVals of
-        Nothing -> writeTVar lockedEvents $! HashMap.singleton sourceName (Set.fromList eventIds)
-        Just _ -> writeTVar lockedEvents $! HashMap.insertWith Set.union sourceName (Set.fromList eventIds) lockedEventsVals
+    $ modifyTVar' lockedEvents
+    $ HashMap.insertWith Set.union sourceName (Set.fromList eventIds)
 
 removeEventTriggerEventFromLockedEvents ::
   (MonadIO m) => SourceName -> EventId -> TVar (HashMap SourceName (Set.Set EventId)) -> m ()

@@ -78,6 +78,7 @@ import Data.ByteString.Lazy.Char8 qualified as BLC
 import Data.Environment qualified as Env
 import Data.FileEmbed (makeRelativeToProject)
 import Data.HashMap.Strict qualified as HashMap
+import Data.Set qualified as Set
 import Data.Set.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Time.Clock (UTCTime)
@@ -1307,7 +1308,7 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
               waitForProcessingAction
                 logger
                 "event_triggers"
-                (length <$> readTVarIO (leEvents lockedEventsCtx))
+                (sum . fmap Set.size <$> readTVarIO (leEvents lockedEventsCtx))
                 (EventTriggerShutdownAction (shutdownEventTriggerEvents allSources logger lockedEventsCtx))
                 (unrefine appEnvGracefulShutdownTimeout)
 
