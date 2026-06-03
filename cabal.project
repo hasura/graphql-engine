@@ -47,7 +47,6 @@ allow-newer: ekg-core:inspection-testing
 allow-newer: ekg-core:text
 allow-newer: ekg-json:base
 allow-newer: ekg-json:text
-allow-newer: ekg-json:aeson
 allow-newer: ekg-json:vector
 allow-newer: ekg-prometheus:base
 allow-newer: ekg-prometheus:text
@@ -143,7 +142,6 @@ allow-newer: launchdarkly-server-sdk:bytestring
 allow-newer: launchdarkly-server-sdk:text
 allow-newer: launchdarkly-server-sdk:containers
 allow-newer: lrucache:containers
-allow-newer: kriti-lang:aeson
 allow-newer: generic-monoid:base
 allow-newer: aeson-optics:base
 allow-newer: testcontainers:bytestring
@@ -177,6 +175,9 @@ allow-newer: http-media:containers
 allow-newer: ekg-core:hashable
 allow-newer: time-compat:time
 allow-newer: text-iso8601:time
+allow-newer: http-api-data:text-iso8601
+-- aeson 2.3 upgrade: relax aeson upper bounds across all packages
+allow-newer: all:aeson
 allow-newer: insert-ordered-containers:hashable
 allow-newer: uuid:time
 allow-newer: servant-client:time
