@@ -77,4 +77,4 @@ eventTriggersLockingUnlockingSpec = do
     it "unlocks (removes) an event correctly from the locked events" $ do
       removeEventTriggerEventFromLockedEvents SNDefault eventId lockedEventsContainer
       currentLockedEvents <- readTVarIO lockedEventsContainer
-      currentLockedEvents `shouldBe` (HashMap.singleton SNDefault mempty)
+      currentLockedEvents `shouldBe` HashMap.empty
