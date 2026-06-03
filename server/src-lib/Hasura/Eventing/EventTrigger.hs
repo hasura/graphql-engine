@@ -207,7 +207,12 @@ removeEventTriggerEventFromLockedEvents sourceName eventId lockedEvents =
     $ atomically
     $ do
       lockedEventsVals <- readTVar lockedEvents
-      writeTVar lockedEvents $! HashMap.adjust (Set.delete eventId) sourceName lockedEventsVals
+      -- delete eventId from set, maintaining no-empty-sets invariant
+      writeTVar lockedEvents $! HashMap.update deleteEventIdNE sourceName lockedEventsVals
+  where
+    deleteEventIdNE s = 
+      let sDeleted = Set.delete eventId s
+       in sDeleted <$ guard (not $ null sDeleted)
 
 type BackendEventWithSource = AB.AnyBackend EventWithSource
 
