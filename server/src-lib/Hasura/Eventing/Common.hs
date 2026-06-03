@@ -25,9 +25,15 @@ import Hasura.RQL.Types.Eventing (EventId)
 import Hasura.RQL.Types.ScheduledTrigger (CronEventId, OneOffScheduledEventId)
 import System.Cron
 
+
+-- | Global state reflecting the state of "popped" events in the locked state in the database.
 data LockedEventsCtx = LockedEventsCtx
   { leCronEvents :: TVar (Set.Set CronEventId),
     leOneOffEvents :: TVar (Set.Set OneOffScheduledEventId),
+    -- | Invariant: Set is never empty.
+    -- TODO Investigate whether nonempty-containers has bugs? I've just noticed
+    -- that it is surprisingly a fork of 'containers', not simply a wrapper,
+    -- and at a glance would seem to have bugs fixed in 'containers'...
     leEvents :: TVar (HashMap SourceName (Set.Set EventId)),
     leActionEvents :: TVar (Set.Set LockedActionEventId)
   }
