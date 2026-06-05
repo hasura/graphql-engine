@@ -101,9 +101,13 @@
         #
         #   targets.x86_64-linux.engine.aarch64-linux.binary
         #
-        # Docker images are named "docker", and live next to the binaries. They
-        # are not provided for all systems; if there is no Docker image, the
-        # value will be `null`.
+        # Docker images are named "docker", and live next to the binaries. An
+        # "docker-env-loader" sibling provides the same image wrapped with the
+        # env-loader entrypoint that reads /secrets/*.json before exec'ing the
+        # binary. Both reuse the same `binary` derivation, so adding the
+        # variant does not trigger a second Rust build. They are not provided
+        # for all systems; if there is no Docker image, the value will be
+        # `null`.
         #
         # The tree looks something like this:
         #
@@ -113,15 +117,19 @@
         #          - x86_64-linux
         #            - binary
         #            - docker
+        #            - docker-env-loader
         #          - aarch64-linux
         #            - binary
         #            - docker
+        #            - docker-env-loader
         #          - x86_64-darwin
         #            - binary
         #            - docker = null
+        #            - docker-env-loader = null
         #          - aarch64-darwin
         #            - binary
         #            - docker = null
+        #            - docker-env-loader = null
         #        - custom-connector
         #          - ...
         #     - aarch64-linux
@@ -147,6 +155,25 @@
                     image-name = "build.internal/${binaryName}-${targetSystem}";
                     extraConfig = dockerConfig.${binaryName} or { };
                     extraContents = dockerExtraContents.${binaryName} or [ ];
+                    tag = "ci";
+                  }
+              else null;
+            # An env-loader variant of the Docker image. It reuses the *same*
+            # binary derivation as `docker` above (so the Rust build is not
+            # repeated), and just rewraps it with the vendored env-loader
+            # entrypoint that reads /secrets/*.json into the environment before
+            # exec'ing the binary.
+            docker-env-loader =
+              if dockerArchitectures ? ${targetSystem}
+              then
+                pkgs.callPackage ./nix/docker.nix
+                  {
+                    package = self.targets.${localSystem}.${binaryName}.${targetSystem}.binary;
+                    architecture = dockerArchitectures.${targetSystem};
+                    image-name = "build.internal/${binaryName}-${targetSystem}-env-loader";
+                    extraConfig = dockerConfig.${binaryName} or { };
+                    extraContents = dockerExtraContents.${binaryName} or [ ];
+                    envLoader = true;
                     tag = "ci";
                   }
               else null;

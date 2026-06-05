@@ -4,6 +4,24 @@
 
 ### Added
 
+- Add `docker-env-loader` Nix flake outputs that produce env-loader variants of
+  each Docker image (e.g.
+  `.#targets.x86_64-linux.multitenant-engine.x86_64-linux.docker-env-loader`).
+  The variants reuse the same Rust binary derivation as the regular `docker`
+  output and wrap it with a vendored entrypoint script that reads
+  `/secrets/*.json` into the environment before exec'ing the binary. This
+  replaces the per-service `Dockerfile_EnvLoader` workflow (see #2502) with the
+  Nix-based build pipeline that the rest of the images use. The
+  `cloud-docker-images` workflow now publishes both the regular and
+  `-env-loader` images for every target.
+
+- Publish floating `:main` and `:main-env-loader` tags for the
+  `v3-metadata-build-service` and `v3-engine-multitenant` cloud Docker images
+  when built from the `main` branch. The tags are registry-side manifest aliases
+  (created via `docker buildx imagetools create`) so they do not re-upload image
+  layers; they give self-hosted release automation a stable pointer to the
+  latest `main`-branch build.
+
 ### Changed
 
 ### Fixed
