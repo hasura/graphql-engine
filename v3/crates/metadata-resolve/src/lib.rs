@@ -19,6 +19,7 @@ pub use helpers::types::{
     NdcColumnForComparison, TypeRepresentation, get_type_representation, mk_name,
     object_type_exists, unwrap_custom_type_name,
 };
+pub use open_dds::sql_schema_aliases::{SqlCatalogName, SqlSchemaName};
 pub use stages::aggregates::{
     AggregatableFieldInfo, AggregateExpression, AggregateExpressionGraphqlConfig, AggregateOperand,
     AggregationFunctionInfo, DataConnectorAggregationFunctionInfo,
@@ -80,6 +81,7 @@ pub use stages::scalar_boolean_expressions::{
     LogicalOperators, LogicalOperatorsGraphqlConfig, ResolvedScalarBooleanExpressionType,
 };
 pub use stages::scalar_type_representations::ScalarTypeRepresentation;
+pub use stages::sql_schema_aliases::{SqlSchemaAlias, SqlSchemaAliases};
 pub use stages::type_permissions::{
     FieldAuthorizationRule, FieldPresetInfo, TypeInputAuthorizationRule, TypeInputPermission,
 };

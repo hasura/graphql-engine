@@ -141,6 +141,7 @@ input_file: crates/metadata-resolve/tests/passing/conflicting_type_names_warning
         runtime_flags: RuntimeFlags(
             {},
         ),
+        sql_schema_aliases: {},
     },
     [
         ConflictingNameAcrossTypes(

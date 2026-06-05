@@ -26,6 +26,7 @@ pub mod query;
 pub mod relationships;
 pub mod session_variables;
 pub mod spanned;
+pub mod sql_schema_aliases;
 pub mod test_utils;
 pub mod traits;
 pub mod types;
@@ -298,9 +299,12 @@ pub struct MetadataV3 {
 )]
 #[serde(tag = "kind")]
 #[opendd(as_kind)]
+#[allow(clippy::large_enum_variant)]
 pub enum OpenDdSupergraphObject {
     /// GraphQL schema configuration
     GraphqlConfig(graphql_config::GraphqlConfig),
+    /// SQL schema alias
+    SqlSchemaAlias(sql_schema_aliases::SqlSchemaAlias),
 }
 
 /// A collection of objects that apply to the entire supergraph.

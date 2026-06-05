@@ -1069,6 +1069,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic_
         runtime_flags: RuntimeFlags(
             {},
         ),
+        sql_schema_aliases: {},
     },
     [],
 )

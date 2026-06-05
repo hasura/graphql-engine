@@ -1025,6 +1025,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/nested_r
         runtime_flags: RuntimeFlags(
             {},
         ),
+        sql_schema_aliases: {},
     },
     [],
 )

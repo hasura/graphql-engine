@@ -909,6 +909,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested_re
         runtime_flags: RuntimeFlags(
             {},
         ),
+        sql_schema_aliases: {},
     },
     [],
 )

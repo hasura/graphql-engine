@@ -256,6 +256,7 @@ input_file: crates/metadata-resolve/tests/passing/scalar_types/scalar_extraction
         runtime_flags: RuntimeFlags(
             {},
         ),
+        sql_schema_aliases: {},
     },
     [],
 )

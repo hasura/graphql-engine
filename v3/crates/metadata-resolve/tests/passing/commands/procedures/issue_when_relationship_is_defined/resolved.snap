@@ -494,6 +494,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/procedures/issue_when
         runtime_flags: RuntimeFlags(
             {},
         ),
+        sql_schema_aliases: {},
     },
     [
         ObjectRelationshipsIssue(

@@ -6515,6 +6515,50 @@
               "additionalProperties": false
             }
           ]
+        },
+        {
+          "$id": "https://hasura.io/jsonschemas/metadata/SqlSchemaAlias",
+          "title": "SqlSchemaAlias",
+          "description": "Configuration for mapping a subgraph to a specific SQL catalog and schema. By default, models in a subgraph are exposed in the SQL interface as `default.<subgraph_name>.<model_name>`. A `SqlSchemaAlias` overrides this so that the models appear under a different catalog and/or schema name.",
+          "examples": [
+            {
+              "kind": "SqlSchemaAlias",
+              "version": "v1",
+              "definition": {
+                "subgraph": "my_subgraph",
+                "catalog": "shelf",
+                "schema": "default"
+              }
+            }
+          ],
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "definition",
+                "kind",
+                "version"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "SqlSchemaAlias"
+                  ]
+                },
+                "version": {
+                  "type": "string",
+                  "enum": [
+                    "v1"
+                  ]
+                },
+                "definition": {
+                  "$ref": "#/definitions/SqlSchemaAliasV1"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
         }
       ]
     },
@@ -7727,6 +7771,53 @@
         }
       },
       "additionalProperties": false
+    },
+    "SqlCatalogName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/SqlCatalogName",
+      "title": "SqlCatalogName",
+      "description": "The name of a SQL catalog.",
+      "type": "string"
+    },
+    "SqlSchemaAliasV1": {
+      "$id": "https://hasura.io/jsonschemas/metadata/SqlSchemaAliasV1",
+      "title": "SqlSchemaAliasV1",
+      "description": "Maps all models and views in a subgraph to a given SQL catalog and schema.\n\nFor example, with `catalog: \"shelf\"` and `schema: \"default\"`, a model named `Foo` in the mapped subgraph would be queryable as `shelf.default.Foo` as well as `default.<subgraph>.Foo`.",
+      "type": "object",
+      "required": [
+        "catalog",
+        "schema",
+        "subgraph"
+      ],
+      "properties": {
+        "subgraph": {
+          "description": "The subgraph whose models should be remapped.",
+          "type": "string",
+          "pattern": "^(?!__)[_a-zA-Z][_a-zA-Z0-9]*$"
+        },
+        "catalog": {
+          "description": "The SQL catalog name to expose models under.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/SqlCatalogName"
+            }
+          ]
+        },
+        "schema": {
+          "description": "The SQL schema name within the catalog.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/SqlSchemaName"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "SqlSchemaName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/SqlSchemaName",
+      "title": "SqlSchemaName",
+      "description": "The name of a SQL schema.",
+      "type": "string"
     },
     "SubscriptionGraphQlDefinition": {
       "$id": "https://hasura.io/jsonschemas/metadata/SubscriptionGraphQlDefinition",

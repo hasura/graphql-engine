@@ -3437,6 +3437,7 @@ input_file: crates/metadata-resolve/tests/passing/object_types/type_mapping_fiel
         runtime_flags: RuntimeFlags(
             {},
         ),
+        sql_schema_aliases: {},
     },
     [
         ObjectTypesIssue(

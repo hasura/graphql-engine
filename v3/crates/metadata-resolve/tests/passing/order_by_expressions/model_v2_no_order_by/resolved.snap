@@ -548,6 +548,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
         runtime_flags: RuntimeFlags(
             {},
         ),
+        sql_schema_aliases: {},
     },
     [],
 )

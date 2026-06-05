@@ -6288,6 +6288,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
         runtime_flags: RuntimeFlags(
             {},
         ),
+        sql_schema_aliases: {},
     },
     [],
 )

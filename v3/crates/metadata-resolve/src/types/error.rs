@@ -8,7 +8,7 @@ use crate::stages::{
     boolean_expressions, commands, data_connector_scalar_types, data_connectors, graphql_config,
     model_permissions, models, models_graphql, object_relationships, object_types,
     order_by_expressions, plugins, relationships, relay, scalar_boolean_expressions, scalar_types,
-    type_permissions, views,
+    sql_schema_aliases, type_permissions, views,
 };
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 use error_context::{Context, Step};
@@ -288,6 +288,8 @@ pub enum Error {
 
     #[error("{0}")]
     ViewError(#[from] views::Error),
+    #[error("{0}")]
+    SqlSchemaAliasError(#[from] sql_schema_aliases::SqlSchemaAliasError),
     #[error("unknown view '{view_name}' in view permissions")]
     UnknownView { view_name: Qualified<ViewName> },
 
