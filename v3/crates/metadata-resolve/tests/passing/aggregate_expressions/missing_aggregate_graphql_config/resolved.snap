@@ -581,6 +581,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/missing_
         runtime_flags: RuntimeFlags(
             {},
         ),
+        sql_schema_aliases: {},
     },
     [
         ObjectTypesIssue(

@@ -318,6 +318,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/issue_when_
         runtime_flags: RuntimeFlags(
             {},
         ),
+        sql_schema_aliases: {},
     },
     [
         CommandIssue(

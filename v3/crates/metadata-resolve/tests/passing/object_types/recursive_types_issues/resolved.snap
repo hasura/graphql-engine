@@ -792,6 +792,7 @@ input_file: crates/metadata-resolve/tests/passing/object_types/recursive_types_i
         runtime_flags: RuntimeFlags(
             {},
         ),
+        sql_schema_aliases: {},
     },
     [
         ObjectTypesIssue(

@@ -1752,6 +1752,7 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
         runtime_flags: RuntimeFlags(
             {},
         ),
+        sql_schema_aliases: {},
     },
     [],
 )

@@ -22,6 +22,7 @@ pub mod roles;
 pub mod scalar_boolean_expressions;
 pub mod scalar_type_representations;
 pub mod scalar_types;
+pub mod sql_schema_aliases;
 pub mod type_permissions;
 mod types;
 pub mod view_permissions;
@@ -361,6 +362,9 @@ fn resolve_internal(
 
     let plugin_configs = plugins::resolve(&metadata_accessor).map_err(flatten_multiple_errors)?;
 
+    let sql_schema_aliases =
+        sql_schema_aliases::resolve(&metadata_accessor).map_err(flatten_multiple_errors)?;
+
     // check for duplicate names across types
     all_issues.extend(conflicting_types::check_conflicting_names_across_types(
         &scalar_types_with_representations,
@@ -387,6 +391,7 @@ fn resolve_internal(
             conditions,
             runtime_flags,
             views: views_with_permissions,
+            sql_schema_aliases,
         },
         all_warnings,
     ))

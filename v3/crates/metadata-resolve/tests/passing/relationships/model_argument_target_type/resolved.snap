@@ -2149,6 +2149,7 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
         runtime_flags: RuntimeFlags(
             {},
         ),
+        sql_schema_aliases: {},
     },
     [],
 )

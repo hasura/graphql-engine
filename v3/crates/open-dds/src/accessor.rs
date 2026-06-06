@@ -5,7 +5,7 @@ use crate::identifier::SubgraphName;
 use crate::{
     Metadata, MetadataWithVersion, OpenDdSubgraphObject, OpenDdSupergraphObject, aggregates,
     boolean_expression, commands, data_connector, flags, graphql_config, models,
-    order_by_expression, permissions, plugins, relationships, types, views,
+    order_by_expression, permissions, plugins, relationships, sql_schema_aliases, types, views,
 };
 
 const GLOBALS_SUBGRAPH: SubgraphName = SubgraphName::new_inline_static("__globals");
@@ -50,6 +50,7 @@ pub struct MetadataAccessor {
     pub plugins: Vec<QualifiedObject<plugins::LifecyclePluginHookV1>>,
     pub views: Vec<QualifiedObject<views::ViewV1>>,
     pub view_permissions: Vec<QualifiedObject<permissions::ViewPermissions>>,
+    pub sql_schema_aliases: Vec<sql_schema_aliases::SqlSchemaAliasV1>,
 }
 
 /// Counts of each metadata object variant, used for preallocating Vec capacity.
@@ -287,6 +288,9 @@ fn load_metadata_supergraph_object(
                 graphql_config,
             ));
         }
+        OpenDdSupergraphObject::SqlSchemaAlias(mapping) => {
+            accessor.sql_schema_aliases.push(mapping.upgrade());
+        }
     }
 }
 
@@ -365,6 +369,7 @@ impl MetadataAccessor {
             plugins: Vec::with_capacity(counts.plugins),
             views: Vec::with_capacity(counts.views),
             view_permissions: Vec::with_capacity(counts.view_permissions),
+            sql_schema_aliases: Vec::new(),
         }
     }
 }

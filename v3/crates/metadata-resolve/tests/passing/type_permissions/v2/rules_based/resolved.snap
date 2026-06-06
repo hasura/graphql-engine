@@ -211,6 +211,7 @@ input_file: crates/metadata-resolve/tests/passing/type_permissions/v2/rules_base
         runtime_flags: RuntimeFlags(
             {},
         ),
+        sql_schema_aliases: {},
     },
     [
         TypePermissionIssue(

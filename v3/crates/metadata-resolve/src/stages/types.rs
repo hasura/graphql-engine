@@ -17,7 +17,7 @@ use crate::types::subgraph::Qualified;
 
 use crate::stages::{
     aggregates, boolean_expressions, command_permissions, graphql_config, model_permissions,
-    object_relationships, order_by_expressions, scalar_type_representations,
+    object_relationships, order_by_expressions, scalar_type_representations, sql_schema_aliases,
 };
 
 use super::plugins::LifecyclePluginConfigs;
@@ -48,4 +48,5 @@ pub struct Metadata {
     pub roles: BTreeSet<Role>,
     pub conditions: Conditions,
     pub runtime_flags: RuntimeFlags,
+    pub sql_schema_aliases: sql_schema_aliases::SqlSchemaAliases,
 }

@@ -70,6 +70,7 @@ input_file: crates/metadata-resolve/tests/passing/subgraph_valid_name/metadata.j
         runtime_flags: RuntimeFlags(
             {},
         ),
+        sql_schema_aliases: {},
     },
     [],
 )

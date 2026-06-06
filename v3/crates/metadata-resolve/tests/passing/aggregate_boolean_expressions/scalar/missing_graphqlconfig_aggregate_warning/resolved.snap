@@ -311,6 +311,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
         runtime_flags: RuntimeFlags(
             {},
         ),
+        sql_schema_aliases: {},
     },
     [
         ScalarBooleanExpressionIssue(
