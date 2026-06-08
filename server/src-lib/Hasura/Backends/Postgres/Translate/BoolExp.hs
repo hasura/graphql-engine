@@ -170,16 +170,24 @@ translateBoolExp userInfo = \case
           -- Convert the where clause on scalar computed field
           bExps <- traverse (lift . mkFieldCompExp rootReference currTableReference redactionExp (LComputedField function sessionArgPresence) userInfo) opExps
           pure $ sqlAnd bExps
-        CFBETable _ be -> do
-          -- Convert the where clause on table computed field
+        -- NOTE: this mostly mirrors the AVRelationship case above
+        CFBETable _ RelationshipFilters { rfTargetTablePermissions, rfFilter } -> do
+          -- Convert the where clause on table computed field, mirroring AVRelationship:
+          -- AND the returning table's row permission filter into the EXISTS subquery.
           BoolExpCtx {currTableReference} <- ask
           functionAlias <- S.toTableAlias <$> freshIdentifier function
           let functionIdentifier = S.tableAliasToIdentifier functionAlias
+              functionQual = S.QualifiedIdentifier functionIdentifier Nothing
               functionExp =
                 mkComputedFieldFunctionExp currTableReference function sessionArgPresence
                   $ Just
                   $ functionAlias
-          S.mkExists (S.FIFunc functionExp) <$> withCurrentTable (S.QualifiedIdentifier functionIdentifier Nothing) (translateBoolExp userInfo be)
+          permBoolExp <-
+            local
+              (\e -> e {currTableReference = functionQual, rootReference = functionQual})
+              (translateBoolExp userInfo rfTargetTablePermissions)
+          annBoolExp <- withCurrentTable functionQual (translateBoolExp userInfo rfFilter)
+          pure $ S.mkExists (S.FIFunc functionExp) (S.BEBin S.AndOp permBoolExp annBoolExp)
     AVAggregationPredicates aggPreds -> translateAVAggregationPredicates userInfo aggPreds
     AVRemoteRelationship (RemoteRelPermBoolExp _rawRelBoolExp (lhsCol, _rawRelBoolExplhsColType) rhsFetchInfo) -> do
       {-

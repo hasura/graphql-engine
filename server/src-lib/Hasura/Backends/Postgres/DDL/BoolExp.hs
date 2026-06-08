@@ -343,7 +343,7 @@ buildComputedFieldBooleanExp boolExpResolver rhsParser rootFieldInfoMap colInfoM
             tableBoolExp <- decodeValue colVal
             tableFieldInfoMap <- askFieldInfoMapSource table
             annTableBoolExp <- (getBoolExpResolver boolExpResolver) rhsParser tableFieldInfoMap tableFieldInfoMap $ unBoolExp tableBoolExp
-            pure $ CFBETable table annTableBoolExp
+            pure $ CFBETable table (RelationshipFilters annBoolExpTrue annTableBoolExp)
     _ ->
       throw400
         UnexpectedPayload
