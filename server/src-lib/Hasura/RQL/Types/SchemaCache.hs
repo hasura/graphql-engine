@@ -912,8 +912,12 @@ getColExpDeps bexp = do
                       $ bool DRSessionVariable DROnType
                       $ any hasStaticExp opExps
                in (computedFieldDep :) <$> getOpExpDeps opExps
-            CFBETable cfTable cfTableBoolExp ->
-              (mkComputedFieldDep' DROnType :) <$> local (\e -> e {currTable = cfTable}) (getBoolExpDeps' cfTableBoolExp)
+            CFBETable cfTable RelationshipFilters {rfTargetTablePermissions = cfTablePerms, rfFilter = cfTableBoolExp} ->
+              (mkComputedFieldDep' DROnType :)
+                <$> do
+                      filterDeps <- local (\e -> e {currTable = cfTable}) (getBoolExpDeps' cfTableBoolExp)
+                      permDeps <- local (\e -> e {currTable = cfTable, rootTable = cfTable}) (getBoolExpDeps' cfTablePerms)
+                      pure (filterDeps <> permDeps)
     AVAggregationPredicates aggPreds -> getAggregationPredicateDeps aggPreds
     AVRemoteRelationship remoteRelPermBoolExp -> do
       sourceName <- AB.dispatchAnyBackend @Backend (rhsFetchInfo remoteRelPermBoolExp) \(RemoteRelRHSFetchInfo {..}) -> pure rrrfiSource
@@ -926,6 +930,7 @@ getColExpDeps bexp = do
       pure
         $ [SchemaDependency (SOSourceObj sourceName sourceColumnObject) DRRemoteRelationship]
 
+-- FYI the only place rootTable is actually consulted
 getOpExpDeps ::
   forall b.
   (Backend b) =>

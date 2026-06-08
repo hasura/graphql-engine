@@ -348,19 +348,34 @@ genComputedFieldBoolExp
             ),
         CFBETable
           <$> genTableName
-          <*> genAnnBoolExp
-            ( genAnnBoolExpFld
-                genColumn
-                genColumnPath
-                genTableName
-                genScalarType
-                genFunctionName
-                genXComputedField
-                genBooleanOperators
-                genFunctionArgumentExp
-                genA
-            )
-            genTableName
+          <*> ( RelationshipFilters
+                  <$> genAnnBoolExp
+                    ( genAnnBoolExpFld
+                        genColumn
+                        genColumnPath
+                        genTableName
+                        genScalarType
+                        genFunctionName
+                        genXComputedField
+                        genBooleanOperators
+                        genFunctionArgumentExp
+                        genA
+                    )
+                    genTableName
+                  <*> genAnnBoolExp
+                    ( genAnnBoolExpFld
+                        genColumn
+                        genColumnPath
+                        genTableName
+                        genScalarType
+                        genFunctionName
+                        genXComputedField
+                        genBooleanOperators
+                        genFunctionArgumentExp
+                        genA
+                    )
+                    genTableName
+              )
       ]
 
 genComputedFieldName :: (MonadGen m) => m ComputedFieldName

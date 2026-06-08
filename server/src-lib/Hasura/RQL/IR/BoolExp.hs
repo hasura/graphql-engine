@@ -29,6 +29,7 @@ module Hasura.RQL.IR.BoolExp
     AnnRedactionExpUnpreparedValue,
     AnnRedactionExp (..),
     annBoolExpTrue,
+    annBoolExpFalse,
     andAnnBoolExps,
     AnnBoolExpFldSQL,
     AnnBoolExpSQL,
@@ -402,7 +403,7 @@ data ComputedFieldBoolExp (backend :: BackendType) scalar
   = -- | SQL function returning a scalar
     CFBEScalar (AnnRedactionExp backend scalar) [OpExpG backend scalar]
   | -- | SQL function returning SET OF table
-    CFBETable (TableName backend) (AnnBoolExp backend scalar)
+    CFBETable (TableName backend) (RelationshipFilters backend scalar)
   deriving (Functor, Foldable, Traversable, Generic)
 
 deriving instance
@@ -585,15 +586,16 @@ instance
         let function = _acfbFunction cfBoolExp
          in case _acfbBoolExp cfBoolExp of
               CFBEScalar _redactionExp opExps -> toJSON (function, object . pure . toJSONKeyValue <$> opExps)
-              CFBETable _ boolExp -> toJSON (function, toJSON boolExp)
+              CFBETable _ filters -> toJSON (function, toJSON filters)
       )
     AVAggregationPredicates avAggregationPredicates -> toJSONKeyValue avAggregationPredicates
     AVRemoteRelationship (RemoteRelPermBoolExp (relName, fieldValue) _ _) ->
       (K.fromText (relNameToTxt relName), fieldValue)
 
--- | This type represents a boolean expression over a relationship. In addition
--- to the actual user-specified predicate, we need to also consider the
--- permissions of the target table.
+-- | This type represents a boolean expression over a relationship, both tables
+-- and functions (for computed fields). In addition to the actual
+-- user-specified predicate, we need to also consider the permissions of the
+-- target table.
 --
 -- Because the permissions may include column-comparison-operators, they need to
 -- be translated in the context of the table they apply to. Thus we keep the
@@ -644,6 +646,10 @@ type AnnBoolExpPartialSQL backend = AnnBoolExp backend (PartialSQLExp backend)
 
 annBoolExpTrue :: AnnBoolExp backend scalar
 annBoolExpTrue = gBoolExpTrue
+
+-- | A default representation for a @false@ boolean value.
+annBoolExpFalse :: AnnBoolExp backend scalar
+annBoolExpFalse = BoolOr []
 
 andAnnBoolExps :: AnnBoolExp backend scalar -> AnnBoolExp backend scalar -> AnnBoolExp backend scalar
 andAnnBoolExps l r = BoolAnd [l, r]

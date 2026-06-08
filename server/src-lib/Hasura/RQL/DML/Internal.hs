@@ -288,6 +288,8 @@ checkOnColExp spi sessVarBldr annFld = case annFld of
     let cn = ciColumn colInfo
     checkSelOnCol spi cn
     return annFld
+  -- TODO I think targetPerm is always "true" here and below. Some kind of
+  -- impedance mismatch that deserves more investigation and possible refactor
   AVRelationship relInfo (RelationshipFilters targetPerm nesAnn) ->
     case riTarget relInfo of
       RelTargetNativeQuery _ -> error "checkOnColExp RelTargetNativeQuery"
@@ -303,7 +305,7 @@ checkOnColExp spi sessVarBldr annFld = case annFld of
       CFBEScalar _ _ -> do
         checkSelectPermOnScalarComputedField spi fieldName
         pure annFld
-      CFBETable table nesBoolExp -> do
+      CFBETable table (RelationshipFilters _ nesBoolExp) -> do
         tableInfo <- modifyErrAndSet500 ("function " <>) $ askTableInfoSource table
         let errMsg _ =
               "role "
@@ -316,9 +318,11 @@ checkOnColExp spi sessVarBldr annFld = case annFld of
         tableSPI <- modifyErr errMsg $ askSelPermInfo tableInfo
         modBoolExp <- checkSelPerm tableSPI sessVarBldr nesBoolExp
         resolvedFltr <- convAnnBoolExpPartialSQL sessVarBldr $ spiFilter tableSPI
-        -- Including table permission filter; "input condition" AND "permission filter condition"
-        let finalBoolExp = andAnnBoolExps modBoolExp resolvedFltr
-        pure $ AVComputedField cfBoolExp {_acfbBoolExp = CFBETable table finalBoolExp}
+        -- TODO note, this is inconsistent with the placement of resolvedFltr
+        -- in the AVRelationship case above, which seems to only have bearing
+        -- on the meaning of "$" (i.e. the root table of the query). See
+        -- 'translateBoolExp'. But I don't know if this matters in practice.
+        pure $ AVComputedField cfBoolExp {_acfbBoolExp = CFBETable table (RelationshipFilters resolvedFltr modBoolExp)}
   AVAggregationPredicates {} -> throw400 NotExists "Aggregation Predicates cannot appear in permission checks"
   AVRemoteRelationship {} -> throw400 NotExists "Remote relationships permission checks not implemented yet"
 
