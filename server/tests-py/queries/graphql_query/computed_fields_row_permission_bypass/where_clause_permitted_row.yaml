@@ -1,0 +1,67 @@
+- description: >
+    Negative control: alice probing a document she is permitted to see returns
+    user rows correctly. Doc id=2 (owner_id=1, is_private=true) passes alice's
+    row filter (owner_id = X-Hasura-User-Id = 1). Because user_all_documents
+    returns ALL documents for every user row and the session variable is
+    constant across the query, the EXISTS fires for both user rows — so both
+    are returned. This confirms the fix does not over-filter: a permitted
+    document is still reachable via the computed field WHERE clause.
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+    X-Hasura-User-Id: '1'
+  query:
+    query: |
+      query {
+        users(where: {all_docs: {id: {_eq: 2}}}) {
+          id
+        }
+      }
+  response:
+    data:
+      users:
+      - id: 1
+      - id: 2
+
+- description: >
+    Same, but with EXISTS document 1
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+    X-Hasura-User-Id: '1'
+  query:
+    query: |
+      query {
+        users(where: {all_docs: {id: {_eq: 1}}}) {
+          id
+        }
+      }
+  response:
+    data:
+      users:
+      - id: 1
+      - id: 2
+
+- description: >
+    Negative control: public_role probing doc 4 (admin's public doc, is_private=false).
+    public_role's filter is just is_private=false, so doc 4 is visible.
+    Because user_all_documents returns all docs for every user row, the EXISTS
+    fires for both user rows — both are returned, confirming no over-filtering.
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: public_role
+  query:
+    query: |
+      query {
+        users(where: {all_docs: {id: {_eq: 4}}}) {
+          id
+        }
+      }
+  response:
+    data:
+      users:
+      - id: 1
+      - id: 2

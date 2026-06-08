@@ -1,0 +1,25 @@
+description: >
+  Issue 2 — WHERE clause content oracle (O(log n) extraction via _like / range ops).
+  alice probes whether the invisible document's title starts with "Admin".
+  This is the efficient exfiltration path: by composing _and with _like or _gt/_lt
+  the attacker recovers the full contents of hidden rows.
+  Correct behavior: empty result, because the row filter hides document 3.
+  Buggy behavior: alice's user row is returned, confirming the title prefix.
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '1'
+query:
+  query: |
+    query {
+      users(where: {all_docs: {_and: [
+        {id: {_eq: 3}},
+        {title: {_like: "Admin%"}}
+      ]}}) {
+        id
+      }
+    }
+response:
+  data:
+    users: []

@@ -1,0 +1,60 @@
+- description: >
+    Issue 1 — WHERE clause existence oracle, "user" role.
+    alice asks "which users have a document with id=3?" via the computed field WHERE.
+    Document 3 is admin's private document; alice's row permission excludes it.
+    The row filter must be applied inside the EXISTS subquery, so the result must be
+    empty.  Currently (bug) the row filter is omitted and alice's user row is returned,
+    leaking that the invisible document exists.
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+    X-Hasura-User-Id: '1'
+  query:
+    query: |
+      query {
+        users(where: {all_docs: {id: {_eq: 3}}}) {
+          id
+        }
+      }
+  response:
+    data:
+      users: []
+
+- description: >
+    Issue 1 — WHERE clause existence oracle, public_role probing admin's private doc.
+    public_role has a simpler permission (is_private = false only, no owner check).
+    Doc 3 is private so it must not be visible; result must be empty.
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: public_role
+  query:
+    query: |
+      query {
+        users(where: {all_docs: {id: {_eq: 3}}}) {
+          id
+        }
+      }
+  response:
+    data:
+      users: []
+
+- description: >
+    Issue 1 — WHERE clause existence oracle, public_role probing alice's private doc.
+    Doc 2 is private (owner alice), so public_role cannot see it either.
+    Result must be empty even though a logged-in alice would be able to see doc 2.
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: public_role
+  query:
+    query: |
+      query {
+        users(where: {all_docs: {id: {_eq: 2}}}) {
+          id
+        }
+      }
+  response:
+    data:
+      users: []
