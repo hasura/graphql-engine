@@ -2,13 +2,13 @@
 //! or fail in the expected way.
 
 use hasura_authn_core::{
-    Role, RoleAuthorization, Session, SessionVariableList, SessionVariableName,
-    SessionVariableValue,
+    JsonSessionVariableValue, Role, RoleAuthorization, SESSION_VARIABLE_ROLE, Session,
+    SessionVariableList, SessionVariableName, SessionVariableValue,
 };
 use metadata_resolve::configuration;
 use reqwest::header::HeaderMap;
 use std::collections::{BTreeMap, HashMap};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[test]
 fn test_passing_plan() {
@@ -28,7 +28,7 @@ fn test_passing_plan() {
 
             let metadata = test_environment_setup();
 
-            let session = make_test_session("admin",BTreeMap::new());
+            let session = make_session_for_directory(directory);
             let header_map = HeaderMap::new();
 
             let execution_plan = plan::plan_query_request(&query_request, &metadata,&session,&header_map )
@@ -57,7 +57,7 @@ fn test_failing_plan() {
 
         let metadata = test_environment_setup();
 
-        let session = make_test_session("admin",BTreeMap::new());
+        let session = make_session_for_directory(directory);
         let header_map = HeaderMap::new();
 
         match plan::plan_query_request(&query_request, &metadata,&session,&header_map ) {
@@ -94,6 +94,38 @@ fn test_environment_setup() -> metadata_resolve::Metadata {
         .unwrap_or_else(|error| panic!("Could not resolve metadata: {error}",));
 
     resolved_metadata
+}
+
+// Build the session for a test. A test directory may contain an optional
+// `session_variables.json` (mirroring the JSON:API golden tests' folder-per-role
+// mechanism) to run the request under a non-admin role; when absent we default to
+// `admin`, so existing fixtures and their snapshots are unaffected. This lets golden
+// tests assert role-dependent planning behaviour (e.g. field-level read permissions)
+// directly from OpenDD query IR.
+fn make_session_for_directory(directory: &Path) -> Session {
+    let session_vars_path = directory.join("session_variables.json");
+
+    let json_session_variables: HashMap<SessionVariableName, JsonSessionVariableValue> =
+        match std::fs::read_to_string(&session_vars_path) {
+            Ok(content) => serde_json::from_str(&content).unwrap_or_else(|error| {
+                panic!("{}: could not parse: {error}", session_vars_path.display())
+            }),
+            // no session_variables.json -> default to the admin role
+            Err(_) => HashMap::new(),
+        };
+
+    let session_variables: BTreeMap<SessionVariableName, SessionVariableValue> =
+        json_session_variables
+            .into_iter()
+            .map(|(name, value)| (name, value.into()))
+            .collect();
+
+    let role = session_variables
+        .get(&SESSION_VARIABLE_ROLE)
+        .and_then(SessionVariableValue::as_str)
+        .map_or_else(|| "admin".to_string(), str::to_string);
+
+    make_test_session(&role, session_variables)
 }
 
 fn make_test_session(

@@ -1,11 +1,14 @@
 //! Tests that run JSONAPI to see if it works
 
 use engine_types::HttpContext;
-use hasura_authn_core::{Identity, Role};
+use hasura_authn_core::{
+    Identity, JsonSessionVariableValue, Role, SessionError, SessionVariableValue,
+};
 use jsonapi_library::api::{DocumentData, IdentifierData, PrimaryData};
 use metadata_resolve::{LifecyclePluginConfigs, ResolvedLifecyclePreResponsePluginHooks};
+use open_dds::session_variables::{SESSION_VARIABLE_ROLE, SessionVariableName};
 use reqwest::header::HeaderMap;
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::Arc;
@@ -40,7 +43,7 @@ fn test_get_succeeding_requests() {
                     ndc_response_size_limit: None,
                 };
 
-                let session = create_default_session();
+                let session = create_session(path);
 
                 let plugins = LifecyclePluginConfigs {
                     pre_parse_plugins: Vec::new(),
@@ -112,7 +115,7 @@ fn test_get_failing_requests() {
                     ndc_response_size_limit: None,
                 };
 
-                let session = create_default_session();
+                let session = create_session(path);
 
                 let plugins = LifecyclePluginConfigs {
                     pre_parse_plugins: Vec::new(),
@@ -242,15 +245,53 @@ fn test_request_setup(path: &Path) -> TestRequest {
     }
 }
 
-// we will need to allow tests to define their own session options at some point
-// the way that the GraphQL tests defined in `crates/engine/tests/execution.rs` do
-fn create_default_session() -> hasura_authn_core::Session {
-    //return an arbitrary identity with role emulation enabled
-    let authorization = Identity::admin(Role::new("admin"));
-    let role = Role::new("admin");
-    let role_authorization = authorization.get_role_authorization(Some(&role)).unwrap();
+// Build the session for a test. A test directory may contain an optional
+// `session_variables.json` (mirroring the `/v1/sql` golden tests' folder-per-role
+// mechanism) to run the request under a non-admin role; when absent we default to
+// `admin`. The resolved role is encoded into the snapshot file name, so tests for
+// different roles never collide.
+fn create_session(test_file_path: &Path) -> hasura_authn_core::Session {
+    let session_vars_path = test_file_path
+        .parent()
+        .unwrap()
+        .join("session_variables.json");
 
-    role_authorization.build_session(BTreeMap::new())
+    let session_variables: HashMap<SessionVariableName, JsonSessionVariableValue> =
+        match std::fs::read_to_string(&session_vars_path) {
+            Ok(content) => serde_json::from_str(&content).unwrap_or_else(|error| {
+                panic!("{}: could not parse: {error}", session_vars_path.display())
+            }),
+            // no session_variables.json -> default to the admin role
+            Err(_) => HashMap::new(),
+        };
+
+    resolve_session(
+        session_variables
+            .into_iter()
+            .map(|(k, v)| (k, v.into()))
+            .collect(),
+    )
+    .unwrap()
+}
+
+fn resolve_session(
+    session_variables: BTreeMap<SessionVariableName, SessionVariableValue>,
+) -> Result<hasura_authn_core::Session, SessionError> {
+    // return an arbitrary identity with role emulation enabled
+    let authorization = Identity::admin(Role::new("admin"));
+    let role = session_variables
+        .get(&SESSION_VARIABLE_ROLE)
+        .map(|v| {
+            Ok(Role::new(v.as_str().ok_or_else(|| {
+                SessionError::InvalidHeaderValue {
+                    header_name: SESSION_VARIABLE_ROLE.to_string(),
+                    error: "session variable value is not a string".to_owned(),
+                }
+            })?))
+        })
+        .transpose()?;
+    let role_authorization = authorization.get_role_authorization(role.as_ref())?;
+    Ok(role_authorization.build_session(session_variables))
 }
 
 fn get_metadata_resolve_configuration() -> metadata_resolve::configuration::Configuration {
