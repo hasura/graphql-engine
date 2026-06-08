@@ -1,0 +1,9 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      DROP FUNCTION user_all_documents(users);
+      DROP TABLE documents;
+      DROP TABLE users;
+    cascade: true

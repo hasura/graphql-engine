@@ -1,0 +1,103 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE users(
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL
+      );
+
+      INSERT INTO users (name) VALUES ('alice'), ('bob_admin');
+
+      CREATE TABLE documents(
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        body TEXT,
+        owner_id INTEGER NOT NULL REFERENCES users(id),
+        is_private BOOLEAN NOT NULL DEFAULT false
+      );
+
+      -- alice's public document (id=1)
+      INSERT INTO documents (title, body, owner_id, is_private)
+      VALUES ('Alice Public Doc', 'public content', 1, false);
+
+      -- alice's private document (id=2)
+      INSERT INTO documents (title, body, owner_id, is_private)
+      VALUES ('Alice Private Doc', 'alice secret content', 1, true);
+
+      -- admin's private document (id=3): alice must never be able to see this
+      INSERT INTO documents (title, body, owner_id, is_private)
+      VALUES ('Admin Secret Doc', 'admin secret content', 2, true);
+
+      -- admin's public document (id=4): visible to everyone (is_private=false)
+      INSERT INTO documents (title, body, owner_id, is_private)
+      VALUES ('Admin Public Doc', 'bob public content', 2, false);
+
+      -- Returns ALL documents regardless of the caller's row permissions.
+      -- This is the documented Hasura pattern for a SETOF-table computed field.
+      CREATE FUNCTION user_all_documents(user_row users)
+      RETURNS SETOF documents AS $$
+        SELECT * FROM documents
+      $$ LANGUAGE sql STABLE;
+
+- type: track_table
+  args:
+    name: users
+    schema: public
+
+- type: track_table
+  args:
+    name: documents
+    schema: public
+
+- type: add_computed_field
+  args:
+    table: users
+    name: all_docs
+    definition:
+      function: user_all_documents
+      table_argument: user_row
+
+# documents: role "user" may only see own documents or publicly visible ones.
+# This is the row-level permission the computed field WHERE path must respect.
+- type: create_select_permission
+  args:
+    table: documents
+    role: user
+    permission:
+      columns: [id, title, body, owner_id, is_private]
+      filter:
+        _or:
+          - owner_id: X-Hasura-User-Id
+          - is_private:
+              _eq: false
+
+# users: role "user" can see all users (no row filter needed for the exploit)
+- type: create_select_permission
+  args:
+    table: users
+    role: user
+    permission:
+      columns: [id, name]
+      filter: {}
+
+# documents: public_role may only see publicly visible documents (no owner check).
+# This exercises the fix with a simpler permission expression than the "user" role.
+- type: create_select_permission
+  args:
+    table: documents
+    role: public_role
+    permission:
+      columns: [id, title, body, owner_id, is_private]
+      filter:
+        is_private:
+          _eq: false
+
+- type: create_select_permission
+  args:
+    table: users
+    role: public_role
+    permission:
+      columns: [id, name]
+      filter: {}

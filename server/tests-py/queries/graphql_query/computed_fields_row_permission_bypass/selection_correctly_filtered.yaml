@@ -1,0 +1,61 @@
+- description: >
+    Sanity check: selection path correctly filters all_docs for the "user" role.
+    alice (user_id=1) sees her own docs (1, 2) plus the public doc she does not
+    own (4). Admin's private doc (3) must not appear.
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+    X-Hasura-User-Id: '1'
+  query:
+    query: |
+      query {
+        users(where: {id: {_eq: 1}}) {
+          id
+          all_docs(order_by: {id: asc}) {
+            id
+            title
+          }
+        }
+      }
+  response:
+    data:
+      users:
+      - id: 1
+        all_docs:
+        - id: 1
+          title: Alice Public Doc
+        - id: 2
+          title: Alice Private Doc
+        - id: 4
+          title: Admin Public Doc
+
+- description: >
+    Sanity check: selection path correctly filters all_docs for public_role.
+    public_role has no owner_id condition, only is_private=false.
+    Only docs 1 and 4 (both public) should appear; docs 2 and 3 (both private)
+    must not.
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: public_role
+  query:
+    query: |
+      query {
+        users(where: {id: {_eq: 1}}) {
+          id
+          all_docs(order_by: {id: asc}) {
+            id
+            title
+          }
+        }
+      }
+  response:
+    data:
+      users:
+      - id: 1
+        all_docs:
+        - id: 1
+          title: Alice Public Doc
+        - id: 4
+          title: Admin Public Doc

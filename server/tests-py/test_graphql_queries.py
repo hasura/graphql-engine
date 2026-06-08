@@ -902,6 +902,33 @@ class TestGraphQLQueryComputedFields:
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')
+class TestComputedFieldRowPermissionBypass:
+    """
+    Regression tests for the row-level permission bypass via SETOF-table computed
+    fields in WHERE clauses (CVE candidate reported by Cipher / Causal Security).
+
+    The Postgres BoolExp translator omits the returning table's row filter for the
+    AVComputedField / CFBETable case, allowing a low-privileged role to use the
+    computed field as a boolean oracle over otherwise hidden rows.
+    """
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/computed_fields_row_permission_bypass'
+
+    def test_selection_correctly_filtered(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/selection_correctly_filtered.yaml', transport)
+
+    def test_where_clause_existence_oracle(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/where_clause_existence_oracle.yaml', transport)
+
+    def test_where_clause_content_oracle(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/where_clause_content_oracle.yaml', transport)
+
+    def test_where_clause_permitted_row(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/where_clause_permitted_row.yaml', transport)
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryCaching:
     @classmethod
     def dir(cls):
