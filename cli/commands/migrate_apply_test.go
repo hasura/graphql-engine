@@ -69,6 +69,50 @@ var testMigrateApplyNonTransactional = func(projectDirectory string, globalFlags
 	})
 }
 
+var testMigrateApplyPerMigrationTransaction = func(projectDirectory string, globalFlags []string) {
+	concurrentSQL := `CREATE TABLE test_pmt (id SERIAL PRIMARY KEY, name TEXT); CREATE INDEX CONCURRENTLY idx_test_pmt_name ON test_pmt (name);`
+	downSQL := `DROP INDEX IF EXISTS idx_test_pmt_name; DROP TABLE IF EXISTS test_pmt;`
+
+	Context("migrate apply --per-migration-transaction: comment-marked migration applies without transaction", func() {
+		testutil.RunCommandAndSucceed(testutil.CmdOpts{
+			Args: append(
+				[]string{"migrate", "create", "concurrent_index_pmt", "--up-sql", "-- hasura:no-transaction\n" + concurrentSQL, "--down-sql", "-- hasura:no-transaction\n" + downSQL},
+				globalFlags...,
+			),
+			WorkingDirectory: projectDirectory,
+		})
+		session := testutil.Hasura(testutil.CmdOpts{
+			Args: append(
+				[]string{"migrate", "apply", "--per-migration-transaction"},
+				globalFlags...,
+			),
+			WorkingDirectory: projectDirectory,
+		})
+		Eventually(session, timeout).Should(Exit(0))
+		Expect(session.Err.Contents()).Should(ContainSubstring("migrations applied"))
+	})
+
+	Context("migrate apply: comment alone does nothing without --per-migration-transaction flag", func() {
+		testutil.RunCommandAndSucceed(testutil.CmdOpts{
+			Args: append(
+				[]string{"migrate", "create", "concurrent_index_no_flag", "--up-sql", "-- hasura:no-transaction\n" + concurrentSQL, "--down-sql", "-- hasura:no-transaction\n" + downSQL},
+				globalFlags...,
+			),
+			WorkingDirectory: projectDirectory,
+		})
+		session := testutil.Hasura(testutil.CmdOpts{
+			Args: append(
+				[]string{"migrate", "apply"},
+				globalFlags...,
+			),
+			WorkingDirectory: projectDirectory,
+		})
+		// Without --per-migration-transaction, the comment is ignored and the migration
+		// runs inside a transaction, which causes CREATE INDEX CONCURRENTLY to fail.
+		Eventually(session, timeout).Should(Exit(1))
+	})
+}
+
 var testMigrateApplySkipExecution = func(projectDirectory string, globalFlags []string) {
 	Context("migrate apply --skip-execution", func() {
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
@@ -310,6 +354,9 @@ var _ = Describe("hasura migrate apply (config v3)", func() {
 	})
 	It("should apply the non-transactional migrations on server", func() {
 		testMigrateApplyNonTransactional(projectDirectory, []string{"--database-name", pgSource})
+	})
+	It("should apply per-migration non-transactional migrations via SQL comment", func() {
+		testMigrateApplyPerMigrationTransaction(projectDirectory, []string{"--database-name", pgSource})
 	})
 	It("should mark the migrations as applied ", func() {
 		testMigrateApplySkipExecution(projectDirectory, []string{"--database-name", pgSource})

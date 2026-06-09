@@ -6,6 +6,7 @@
 package migrate
 
 import (
+	"bufio"
 	"bytes"
 	"container/list"
 	"errors"
@@ -13,6 +14,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"strings"
 	"sync"
 	"text/tabwriter"
 	"time"
@@ -160,10 +162,11 @@ type Migrate struct {
 
 	status *Status
 
-	SkipExecution   bool
-	DryRun          bool
-	ProgressBarLogs bool
-	NoTransaction   bool
+	SkipExecution           bool
+	DryRun                  bool
+	ProgressBarLogs         bool
+	NoTransaction           bool
+	PerMigrationTransaction bool
 }
 
 type NewMigrateOpts struct {
@@ -1278,6 +1281,25 @@ func (m *Migrate) readDown(limit int64, ret chan<- interface{}, bar *pb.Progress
 	}
 }
 
+// noTransactionMarker is the exact string that must appear as the first line
+// of a SQL migration file (after trimming whitespace) to opt out of transactions.
+const noTransactionMarker = "-- hasura:no-transaction"
+
+// detectNoTransactionComment peeks at up to 256 bytes of r, extracts the first
+// line, and returns true if that line equals noTransactionMarker after trimming
+// leading and trailing whitespace. The marker must be the very first line of
+// the file; any other position is not checked. Returns the result and a reader
+// whose content is intact (Peek does not consume bytes).
+func detectNoTransactionComment(r io.Reader) (bool, io.Reader) {
+	br := bufio.NewReaderSize(r, 512)
+	peeked, _ := br.Peek(256)
+	firstLine := string(peeked)
+	if idx := strings.IndexByte(firstLine, '\n'); idx >= 0 {
+		firstLine = firstLine[:idx]
+	}
+	return strings.TrimSpace(firstLine) == noTransactionMarker, br
+}
+
 // runMigrations reads *Migration and error from a channel. Any other type
 // sent on this channel will result in a panic. Each migration is then
 // proxied to the database driver and run against the database.
@@ -1303,7 +1325,12 @@ func (m *Migrate) runMigrations(ret <-chan interface{}, bar *pb.ProgressBar) err
 			if r.Body != nil {
 				if !m.SkipExecution {
 					m.Logger.Debugf("applying migration: %s", r.FileName)
-					if err := m.databaseDrv.Run(r.BufferedBody, r.FileType, r.FileName, m.NoTransaction); err != nil {
+					noTx := m.NoTransaction
+					body := r.BufferedBody
+					if m.PerMigrationTransaction && r.FileType == "sql" {
+						noTx, body = detectNoTransactionComment(r.BufferedBody)
+					}
+					if err := m.databaseDrv.Run(body, r.FileType, r.FileName, noTx); err != nil {
 						return herrors.E(op, err)
 					}
 				}

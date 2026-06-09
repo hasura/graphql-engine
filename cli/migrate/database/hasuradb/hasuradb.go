@@ -260,6 +260,9 @@ func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string, noTransac
 				return errors.E(op, err)
 			}
 		case hasura.SourceKindMSSQL:
+			if noTransaction {
+				h.logger.Warn("no-transaction is not supported for MSSQL sources; the migration will run inside a transaction")
+			}
 			_, err := h.mssqlSourceOps.MSSQLRunSQL(hasura.MSSQLRunSQLInput(sqlInput))
 			if err != nil {
 				return errors.E(op, err)
@@ -281,6 +284,9 @@ func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string, noTransac
 				return errors.E(op, err)
 			}
 		case hasura.SourceKindBigQuery:
+			if noTransaction {
+				h.logger.Warn("no-transaction is not supported for BigQuery sources; the migration will run inside a transaction")
+			}
 			_, err := h.bigquerySourceOps.BigQueryRunSQL(hasura.BigQueryRunSQLInput(sqlInput))
 			if err != nil {
 				return err

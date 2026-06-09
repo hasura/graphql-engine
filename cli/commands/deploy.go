@@ -56,6 +56,10 @@ Further reading:
 		RunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "RunE")
 			opts.NoTransaction = ec.Viper.GetBool("no_transaction")
+			opts.PerMigrationTransaction = ec.Viper.GetBool("per_migration_transaction")
+			if opts.NoTransaction && opts.PerMigrationTransaction {
+				return errors.E(op, fmt.Errorf("--no-transaction and --per-migration-transaction are mutually exclusive"))
+			}
 			if err := opts.Run(); err != nil {
 				return errors.E(op, err)
 			}
@@ -90,8 +94,10 @@ Further reading:
 	}
 
 	f.BoolVar(&opts.NoTransaction, "no-transaction", false, "disable transaction for migration")
+	f.BoolVar(&opts.PerMigrationTransaction, "per-migration-transaction", false, "enable per-migration transaction control; add '-- hasura:no-transaction' as the first line of a SQL file to run that migration without a transaction (not supported on MSSQL/BigQuery sources)")
 
 	util.BindPFlag(v, "no_transaction", f.Lookup("no-transaction"))
+	util.BindPFlag(v, "per_migration_transaction", f.Lookup("per-migration-transaction"))
 
 	return deployCmd
 }
@@ -101,7 +107,8 @@ type DeployOptions struct {
 
 	WithSeeds bool
 
-	NoTransaction bool // apply migrations without using transactions
+	NoTransaction           bool // apply migrations without using transactions
+	PerMigrationTransaction bool
 }
 
 func (opts *DeployOptions) Run() error {
@@ -114,7 +121,8 @@ func (opts *DeployOptions) Run() error {
 		err:       nil,
 		withSeeds: opts.WithSeeds,
 
-		noTransaction: opts.NoTransaction,
+		noTransaction:           opts.NoTransaction,
+		perMigrationTransaction: opts.PerMigrationTransaction,
 	}
 
 	if opts.EC.Config.Version <= cli.V2 {
@@ -176,7 +184,8 @@ type deployCtx struct {
 	err       error
 	withSeeds bool
 
-	noTransaction bool
+	noTransaction           bool
+	perMigrationTransaction bool
 }
 
 type applyingInitialMetadataAction struct{}
@@ -217,8 +226,9 @@ func (a *applyingMigrationsAction) Execute(ctx fsm.EventContext) eventType {
 
 	context.ec.Config.DisableInteractive = true
 	opts := MigrateApplyOptions{
-		EC:            context.ec,
-		NoTransaction: context.noTransaction,
+		EC:                      context.ec,
+		NoTransaction:           context.noTransaction,
+		PerMigrationTransaction: context.perMigrationTransaction,
 	}
 	opts.EC.AllDatabases = true
 	if err := opts.Run(); err != nil {

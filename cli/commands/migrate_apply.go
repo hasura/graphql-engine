@@ -81,6 +81,7 @@ Further reading:
 		RunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "RunE")
 			opts.NoTransaction = ec.Viper.GetBool("no_transaction")
+			opts.PerMigrationTransaction = ec.Viper.GetBool("per_migration_transaction")
 			if err := opts.Run(); err != nil {
 				return herrors.E(op, err)
 			}
@@ -106,8 +107,10 @@ Further reading:
 	}
 
 	f.BoolVar(&opts.NoTransaction, "no-transaction", false, "disable transaction for migration")
+	f.BoolVar(&opts.PerMigrationTransaction, "per-migration-transaction", false, "enable per-migration transaction control; add '-- hasura:no-transaction' as the first line of a SQL file to run that migration without a transaction (not supported on MSSQL/BigQuery sources)")
 
 	util.BindPFlag(ec.Viper, "no_transaction", f.Lookup("no-transaction"))
+	util.BindPFlag(ec.Viper, "per_migration_transaction", f.Lookup("per-migration-transaction"))
 
 	return migrateApplyCmd
 }
@@ -126,7 +129,8 @@ type MigrateApplyOptions struct {
 	Source          cli.Source
 	ProgressBarLogs bool
 
-	NoTransaction bool
+	NoTransaction           bool
+	PerMigrationTransaction bool
 }
 
 func (o *MigrateApplyOptions) Validate() error {
@@ -136,6 +140,9 @@ func (o *MigrateApplyOptions) Validate() error {
 		o.Source.Name = ""
 	}
 
+	if o.NoTransaction && o.PerMigrationTransaction {
+		return herrors.E(op, "--no-transaction and --per-migration-transaction are mutually exclusive")
+	}
 	if o.DryRun && o.SkipExecution {
 		return herrors.E(op, "both --skip-execution and --dry-run flags cannot be used together")
 	}
@@ -310,6 +317,7 @@ func (o *MigrateApplyOptions) Exec() error {
 	migrateDrv.DryRun = o.DryRun
 	migrateDrv.ProgressBarLogs = o.ProgressBarLogs
 	migrateDrv.NoTransaction = o.NoTransaction
+	migrateDrv.PerMigrationTransaction = o.PerMigrationTransaction
 
 	if err := ExecuteMigration(migrationType, migrateDrv, step); err != nil {
 		return herrors.E(op, err)

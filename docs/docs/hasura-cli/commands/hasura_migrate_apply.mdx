@@ -74,16 +74,17 @@ hasura migrate apply --down all
 ## Options
 
 ```sass
-    --up string        apply all or N up migration steps
-    --down string      apply all or N down migration steps
-    --goto string      apply migration chain up to to the version specified
-    --version string   only apply this particular migration
-    --skip-execution   skip executing the migration action, but mark them as applied
-    --type string      type of migration (up, down) to be used with version flag (default "up")
-    --dry-run          print the names of migrations which are going to be applied
-    --all-databases    set this flag to attempt to apply migrations on all databases present on server
-    --no-transaction   disable transaction for migration (env "HASURA_GRAPHQL_NO_TRANSACTION")
--h, --help             help for apply
+    --up string                   apply all or N up migration steps
+    --down string                 apply all or N down migration steps
+    --goto string                 apply migration chain up to to the version specified
+    --version string              only apply this particular migration
+    --skip-execution              skip executing the migration action, but mark them as applied
+    --type string                 type of migration (up, down) to be used with version flag (default "up")
+    --dry-run                     print the names of migrations which are going to be applied
+    --all-databases               set this flag to attempt to apply migrations on all databases present on server
+    --no-transaction              disable transaction for migration (env "HASURA_GRAPHQL_NO_TRANSACTION")
+    --per-migration-transaction   enable per-migration transaction control; add '-- hasura:no-transaction' as the first line of a SQL file to run that migration without a transaction (not supported on MSSQL/BigQuery sources) (env "HASURA_GRAPHQL_PER_MIGRATION_TRANSACTION")
+-h, --help                        help for apply
 ```
 
 ## Options inherited from parent commands
