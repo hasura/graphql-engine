@@ -244,7 +244,18 @@ isDeveloperAPIEnabled ac = S.member DEVELOPER $ acEnabledAPIs ac
 -- {-# SCC parseBody #-}
 parseBody :: (FromJSON a, MonadError QErr m) => BL.ByteString -> m (Value, a)
 parseBody reqBody =
-  case eitherDecode' reqBody of
+  -- Sanitize illegal unescaped ASCII control characters (0x00–0x1F) that some
+  -- clients embed literally inside JSON strings. Prior to aeson 2.2.4.0 these
+  -- were sometimes passed through into parsed 'String's.
+  --
+  -- In valid JSON these can only appear as insignificant whitespace between
+  -- tokens, so stripping them never semantically alters or corrupts a
+  -- well-formed payload. But some customers seem to have been relying on the
+  -- old behavior to inject newlines as white-space delimiter for their
+  -- graphql (e.g. in selection sets, in lieu of a comma or space), so rather
+  -- than just stripping, with great sadness we map control characters to space
+  -- so that these malformed queries continue to lex to equivalent graphql.
+  case eitherDecode' (BL.map (\w -> if w < 0x20 then 0x20 else w) reqBody) of
     Left e -> throw400 InvalidJSON (T.pack e)
     Right jVal -> (jVal,) <$> decodeValue jVal
 
