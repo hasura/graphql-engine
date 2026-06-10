@@ -1,0 +1,44 @@
+description: >
+  Consistency check for IsRoot ("$") column reference in a relationship
+  permission filter on the /v1/graphql path.  Mirrors the DML-path regression
+  test at queries/v1/select/dml_root_col_perm/user_cannot_access_tasks_via_root_col_perm.yaml
+  to confirm both endpoints behave identically.
+
+  The dml_rbp_tasks permission is:
+    { grants: { user_id: X-Hasura-User-Id, user_level: { _cgte: ["$","min_level"] } } }
+
+  ["$","min_level"] is an IsRoot reference meaning dml_rbp_tasks.min_level.
+  The intent is: the user can see a task only if they hold a grant whose
+  user_level >= that task's own min_level.
+
+  Data:
+    project-accessible (id=1, min_level=0) has task-low (min_level=0)
+    project-restricted  (id=2, min_level=0) has task-high (min_level=10)
+    user 1 has a grant for both tasks with user_level=5
+
+  Correct behaviour: 5 >= task-low.min_level(0) -> accessible, so project-accessible
+  is returned; 5 >= task-high.min_level(10) -> false, so project-restricted is NOT
+  returned.  Only [{id:1, name:"project-accessible"}] should come back.
+
+  The order_by id DESC is intentional: if a bug leaks project-restricted (id=2)
+  it sorts first, mismatching the expected {id:1} at position [0] and causing the
+  test to fail.  Without the bug only {id:1} is returned, which matches exactly.
+
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '1'
+response:
+  data:
+    dml_rbp_projects:
+      - id: 1
+        name: project-accessible
+query:
+  query: |
+    query {
+      dml_rbp_projects(order_by: {id: desc}, where: {tasks: {id: {_gt: 0}}}) {
+        id
+        name
+      }
+    }
