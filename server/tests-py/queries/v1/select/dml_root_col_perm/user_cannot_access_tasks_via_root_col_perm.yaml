@@ -1,0 +1,56 @@
+description: >
+  Regression test for IsRoot ("$") column reference in a relationship
+  permission filter on the /v1/query (DML) path.
+
+  The dml_rbp_tasks permission is:
+    { grants: { user_id: X-Hasura-User-Id, user_level: { _cgte: ["$","min_level"] } } }
+
+  ["$","min_level"] is an IsRoot reference meaning dml_rbp_tasks.min_level.
+  The intent is: the user can see a task only if they hold a grant whose
+  user_level >= that task's own min_level.
+
+  Data:
+    project-accessible (id=1, min_level=0) has task-low (min_level=0)
+    project-restricted  (id=2, min_level=0) has task-high (min_level=10)
+    user 1 has a grant for both tasks with user_level=5
+
+  Correct behaviour: 5 >= task-low.min_level(0) -> accessible, so project-accessible
+  is returned; 5 >= task-high.min_level(10) -> false, so project-restricted is NOT
+  returned.  Only [{id:1, name:"project-accessible"}] should come back.
+
+  BUG: In the DML path (checkOnColExp / AVRelationship), resolvedFltr is placed
+  in rfFilter rather than rfTargetTablePermissions.  The translator evaluates
+  rfFilter with the outer rootReference (dml_rbp_projects), so ["$","min_level"]
+  resolves to dml_rbp_projects.min_level = 0 for BOTH projects.  The check
+  becomes "5 >= 0" for every task, task-high passes the (bugged) permission, and
+  project-restricted is also returned — leaking it to an unauthorised user.
+
+  The order_by id DESC is intentional: if the bug leaks project-restricted (id=2)
+  it sorts first, mismatching the expected {id:1} at position [0] and causing the
+  test to fail.  Without the bug only {id:1} is returned, which matches exactly.
+
+  This test FAILS while the bug is present (both projects returned instead of one)
+  and PASSES once the fix is applied.
+
+url: /v1/query
+status: 200
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '1'
+response:
+  - id: 1
+    name: project-accessible
+query:
+  type: select
+  args:
+    table: dml_rbp_projects
+    where:
+      tasks:
+        id:
+          _gt: 0
+    order_by:
+      - column: id
+        type: desc
+    columns:
+      - id
+      - name

@@ -1,0 +1,7 @@
+type: run_sql
+args:
+  sql: |
+    DROP TABLE dml_rbp_grants;
+    DROP TABLE dml_rbp_tasks;
+    DROP TABLE dml_rbp_projects;
+  cascade: true

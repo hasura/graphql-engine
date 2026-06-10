@@ -929,6 +929,22 @@ class TestComputedFieldRowPermissionBypass:
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')
+class TestGraphQLRootColPerm:
+    """
+    Consistency check: the same IsRoot ("$") column-reference scenario tested in
+    TestV1SelectDMLRootColPerm (queries/v1/select/dml_root_col_perm) exercised via
+    /v1/graphql.  Confirms both endpoints behave identically after the DML-path fix
+    (resolvedFltr moved from rfFilter to rfTargetTablePermissions in checkOnColExp).
+    """
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/root_col_perm'
+
+    def test_user_cannot_access_tasks_via_root_col_perm(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/user_cannot_access_tasks_via_root_col_perm.yaml', transport)
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryCaching:
     @classmethod
     def dir(cls):

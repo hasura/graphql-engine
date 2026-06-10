@@ -1,0 +1,113 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      -- Both tables have a 'min_level' column.
+      -- The exploit: a DML WHERE clause that traverses projects->tasks causes the
+      -- tasks row-permission filter to be placed in rfFilter (instead of
+      -- rfTargetTablePermissions), so ["$","min_level"] resolves against the outer
+      -- table (dml_rbp_projects.min_level) rather than the permission-anchor table
+      -- (dml_rbp_tasks.min_level).
+      CREATE TABLE dml_rbp_projects (
+        id        SERIAL  PRIMARY KEY,
+        min_level INTEGER NOT NULL,
+        name      TEXT    NOT NULL
+      );
+      CREATE TABLE dml_rbp_tasks (
+        id         SERIAL  PRIMARY KEY,
+        project_id INTEGER NOT NULL REFERENCES dml_rbp_projects(id),
+        min_level  INTEGER NOT NULL,
+        title      TEXT    NOT NULL
+      );
+      CREATE TABLE dml_rbp_grants (
+        task_id    INTEGER NOT NULL REFERENCES dml_rbp_tasks(id),
+        user_id    INTEGER NOT NULL,
+        user_level INTEGER NOT NULL
+      );
+
+      -- Both projects have the same projects.min_level = 0 (the "decoy" value).
+      INSERT INTO dml_rbp_projects (min_level, name) VALUES
+        (0, 'project-accessible'),
+        (0, 'project-restricted');
+
+      -- task-low  (min_level=0):  user 1 with clearance 5 SHOULD be able to access
+      -- task-high (min_level=10): user 1 with clearance 5 SHOULD NOT be able to access
+      INSERT INTO dml_rbp_tasks (project_id, min_level, title) VALUES
+        (1, 0,  'task-low'),
+        (2, 10, 'task-high');
+
+      -- user 1 has a grant for both tasks, but clearance 5 is only sufficient for task-low
+      INSERT INTO dml_rbp_grants (task_id, user_id, user_level) VALUES
+        (1, 1, 5),
+        (2, 1, 5);
+
+- type: track_table
+  args:
+    schema: public
+    name: dml_rbp_projects
+
+- type: track_table
+  args:
+    schema: public
+    name: dml_rbp_tasks
+
+- type: track_table
+  args:
+    schema: public
+    name: dml_rbp_grants
+
+- type: create_array_relationship
+  args:
+    table: dml_rbp_projects
+    name: tasks
+    using:
+      foreign_key_constraint_on:
+        table: dml_rbp_tasks
+        column: project_id
+
+- type: create_array_relationship
+  args:
+    table: dml_rbp_tasks
+    name: grants
+    using:
+      foreign_key_constraint_on:
+        table: dml_rbp_grants
+        column: task_id
+
+# projects: user can see all rows (the outer query table; no row filter needed)
+- type: create_select_permission
+  args:
+    table: dml_rbp_projects
+    role: user
+    permission:
+      columns: [id, min_level, name]
+      filter: {}
+
+# tasks: user may only see tasks where they hold a grant with
+#   user_level >= ["$", "min_level"]   (IsRoot -> dml_rbp_tasks.min_level)
+#
+# Correct behaviour: user 1 (clearance 5) can access task-low (min_level=0) but
+# NOT task-high (min_level=10).  project-accessible has task-low and should be
+# returned; project-restricted has task-high and should NOT be returned.
+#
+# BUG (DML path): resolvedFltr is placed in rfFilter instead of
+# rfTargetTablePermissions, so ["$","min_level"] resolves to the outer query
+# table's column (dml_rbp_projects.min_level = 0 for BOTH projects).  The check
+# becomes "5 >= 0" for every task, bypassing the intended clearance restriction
+# and returning both projects instead of just project-accessible.
+- type: create_select_permission
+  args:
+    table: dml_rbp_tasks
+    role: user
+    permission:
+      columns: [id, project_id, min_level, title]
+      filter:
+        grants:
+          user_id:
+            _eq: X-Hasura-User-Id
+          user_level:
+            _cgte:
+              - "$"
+              - min_level
