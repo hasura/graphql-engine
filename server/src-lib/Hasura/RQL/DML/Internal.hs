@@ -288,16 +288,17 @@ checkOnColExp spi sessVarBldr annFld = case annFld of
     let cn = ciColumn colInfo
     checkSelOnCol spi cn
     return annFld
-  -- TODO I think targetPerm is always "true" here and below. Some kind of
-  -- impedance mismatch that deserves more investigation and possible refactor
-  AVRelationship relInfo (RelationshipFilters targetPerm nesAnn) ->
+  -- TODO The discarded rfTargetTablePermissions field is always BoolAnd [] (true) at
+  -- this point; see 'annBoolExp' in Permission.Internal. Some kind of
+  -- impedance mismatch that deserves refactor.
+  AVRelationship relInfo (RelationshipFilters _ nesAnn) ->
     case riTarget relInfo of
       RelTargetNativeQuery _ -> error "checkOnColExp RelTargetNativeQuery"
       RelTargetTable tableName -> do
         relSPI <- snd <$> fetchRelDet (riName relInfo) tableName
         modAnn <- checkSelPerm relSPI sessVarBldr nesAnn
         resolvedFltr <- convAnnBoolExpPartialSQL sessVarBldr $ spiFilter relSPI
-        return $ AVRelationship relInfo (RelationshipFilters targetPerm (andAnnBoolExps modAnn resolvedFltr))
+        return $ AVRelationship relInfo (RelationshipFilters resolvedFltr modAnn)
   AVComputedField cfBoolExp -> do
     roleName <- askCurRole
     let fieldName = _acfbName cfBoolExp
@@ -318,10 +319,6 @@ checkOnColExp spi sessVarBldr annFld = case annFld of
         tableSPI <- modifyErr errMsg $ askSelPermInfo tableInfo
         modBoolExp <- checkSelPerm tableSPI sessVarBldr nesBoolExp
         resolvedFltr <- convAnnBoolExpPartialSQL sessVarBldr $ spiFilter tableSPI
-        -- TODO note, this is inconsistent with the placement of resolvedFltr
-        -- in the AVRelationship case above, which seems to only have bearing
-        -- on the meaning of "$" (i.e. the root table of the query). See
-        -- 'translateBoolExp'. But I don't know if this matters in practice.
         pure $ AVComputedField cfBoolExp {_acfbBoolExp = CFBETable table (RelationshipFilters resolvedFltr modBoolExp)}
   AVAggregationPredicates {} -> throw400 NotExists "Aggregation Predicates cannot appear in permission checks"
   AVRemoteRelationship {} -> throw400 NotExists "Remote relationships permission checks not implemented yet"
