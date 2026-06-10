@@ -1,10 +1,19 @@
 {-# LANGUAGE Arrows #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.Backends.DataConnector.Adapter.Metadata () where
+-- | Note: the export list is non-empty only so that a handful of helpers can be
+-- unit-tested (see 'Hasura.Backends.DataConnector.Adapter.MetadataSpec'). The
+-- module's primary purpose remains providing the orphan 'BackendMetadata'
+-- instance for ''DataConnector'.
+module Hasura.Backends.DataConnector.Adapter.Metadata
+  ( getDataConnectorInfo,
+    isConnectionError,
+  )
+where
 
 import Control.Arrow.Extended
 import Control.Monad.Trans.Control
+import Control.Retry qualified as Retry
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
@@ -264,24 +273,44 @@ resolveBackendInfo' logger env = proc (invalidationKeys, optionsMap) -> do
       DC.DataConnectorOptions ->
       HTTP.Manager ->
       ExceptT QErr m (Maybe DC.DataConnectorInfo)
-    getDataConnectorCapabilities options@DC.DataConnectorOptions {..} manager =
-      do
-        resolvedUri <- DC.resolveDataConnectorUri env _dcoUri
-        ( ignoreTraceT
-            . flip runAgentClientT (AgentClientContext logger resolvedUri manager Nothing Nothing)
-            $ (Just . mkDataConnectorInfo options)
-            <$> Client.capabilities
-          )
-        `catchError` ignoreConnectionErrors
+    getDataConnectorCapabilities options@DC.DataConnectorOptions {..} manager = do
+      resolvedUri <- DC.resolveDataConnectorUri env _dcoUri
+      let fetchCapabilities =
+            runExceptT
+              . ignoreTraceT
+              . flip runAgentClientT (AgentClientContext logger resolvedUri manager Nothing Nothing)
+              $ (Just . mkDataConnectorInfo options)
+              <$> Client.capabilities
+      -- Retry the capabilities fetch on transient connection-level failures
+      -- before giving up. New/restarted engine workers (e.g. during
+      -- autoscaling) introspect every agent on startup, and an agent that is
+      -- still booting can briefly refuse connections or time out. Without the
+      -- retry a single blip during that window permanently drops the agent from
+      -- the backend info (see Note below), which surfaces much later as a
+      -- confusing source-level "not found in the data connector backend info"
+      -- inconsistency that only a manual metadata reload clears. Each failed
+      -- attempt is logged via the agent communication log. Only connection
+      -- errors are retried; other failures (bad status, invalid payload) are
+      -- handled immediately by 'withRecordInconsistency' as before.
+      result <-
+        lift
+          $ Retry.retrying
+            capabilitiesRetryPolicy
+            (\_retryStatus res -> pure (either isConnectionError (const False) res))
+            (const fetchCapabilities)
+      liftEither result `catchError` ignoreConnectionErrors
 
-    -- If we can't connect to a data connector agent to get its capabilities
-    -- we don't throw an error, we just return Nothing, which means the agent is in a broken state
-    -- but we don't fail the schema cache building process with metadata inconsistencies if the
-    -- agent isn't in use. If the agent is in use, when we go to consume its 'DC.DataConnectorInfo'
-    -- later, it will be missing and we'll throw an error then.
+    -- Note [Dropping unreachable agents from the backend info]
+    -- After exhausting the retries above, if we still can't connect to a data
+    -- connector agent to get its capabilities we don't throw an error, we just
+    -- return Nothing, which means the agent is in a broken state but we don't
+    -- fail the schema cache building process with metadata inconsistencies if
+    -- the agent isn't in use. If the agent is in use, when we go to consume its
+    -- 'DC.DataConnectorInfo' later, it will be missing and we'll throw an error
+    -- then (with actionable guidance; see 'getDataConnectorInfo').
     ignoreConnectionErrors :: QErr -> ExceptT QErr m (Maybe a)
-    ignoreConnectionErrors err@QErr {..} =
-      if qeCode == ConnectionNotEstablished
+    ignoreConnectionErrors err =
+      if isConnectionError err
         then pure Nothing
         else throwError err
 
@@ -325,10 +354,45 @@ resolveSourceConfig'
           _scEnvironment = env
         }
 
+-- | Was this error the result of a connection-level failure to reach a data
+-- connector agent (timeout, connection refused, reset, DNS/TLS failure, ...)?
+--
+-- These are signalled by the agent client mapping the underlying
+-- 'Network.HTTP.Client.HttpException' to the 'ConnectionNotEstablished' code
+-- (see 'Hasura.Backends.DataConnector.Agent.Client.runRequestAcceptStatus''),
+-- and are distinct from a reachable agent returning a bad HTTP status.
+isConnectionError :: QErr -> Bool
+isConnectionError QErr {qeCode} = qeCode == ConnectionNotEstablished
+
+-- | Bounded exponential backoff used when fetching a data connector agent's
+-- capabilities to build the backend info. Gives a just-booted/autoscaling
+-- agent a short window to become ready before it is dropped, while keeping the
+-- worst-case added latency to the schema cache build small and bounded.
+capabilitiesRetryPolicy :: (Monad m) => Retry.RetryPolicyM m
+capabilitiesRetryPolicy =
+  Retry.capDelay (2 * 1000 * 1000) -- cap any individual delay at 2s
+    $ Retry.exponentialBackoff (200 * 1000) -- start at 200ms (200ms, 400ms, 800ms, 1.6s)
+    <> Retry.limitRetries 4
+
 getDataConnectorInfo :: (MonadError QErr m) => DC.DataConnectorName -> HashMap DC.DataConnectorName DC.DataConnectorInfo -> m DC.DataConnectorInfo
 getDataConnectorInfo dataConnectorName backendInfo =
   onNothing (HashMap.lookup dataConnectorName backendInfo)
-    $ throw400 DataConnectorError ("Data connector named " <> toTxt dataConnectorName <<> " was not found in the data connector backend info")
+    -- This message intentionally retains the "was not found in the data
+    -- connector backend info" phrasing for backwards compatibility, but adds
+    -- actionable guidance: the most common cause is that the agent was
+    -- unreachable when the engine last built its schema (e.g. the agent was
+    -- still starting up during autoscaling/worker restart), in which case it
+    -- was dropped from the backend info. See Note [Dropping unreachable agents
+    -- from the backend info].
+    $ throw400
+      DataConnectorError
+      ( "Data connector named "
+          <> toTxt dataConnectorName
+          <<> " was not found in the data connector backend info."
+          <> " This usually means the engine could not reach the data connector agent when it last built its schema"
+          <> " (for example, the agent was still starting up or was briefly unreachable)."
+          <> " Check that the agent is healthy and reachable, then reload the metadata to retry."
+      )
 
 mkRawColumnType :: API.ColumnType -> RQL.T.C.RawColumnType 'DataConnector
 mkRawColumnType = \case
