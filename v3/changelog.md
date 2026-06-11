@@ -4,6 +4,14 @@
 
 ### Added
 
+### Changed
+
+### Fixed
+
+## [v2026.06.10]
+
+### Added
+
 - Add `docker-env-loader` Nix flake outputs that produce env-loader variants of
   each Docker image (e.g.
   `.#targets.x86_64-linux.multitenant-engine.x86_64-linux.docker-env-loader`).
@@ -2209,7 +2217,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2026.04.23...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2026.06.10...HEAD
+[v2026.06.10]: https://github.com/hasura/v3-engine/releases/tag/v2026.06.10
 [v2026.04.23]: https://github.com/hasura/v3-engine/releases/tag/v2026.04.23
 [v2026.03.25]: https://github.com/hasura/v3-engine/releases/tag/v2026.03.25
 [v2026.03.10]: https://github.com/hasura/v3-engine/releases/tag/v2026.03.10
