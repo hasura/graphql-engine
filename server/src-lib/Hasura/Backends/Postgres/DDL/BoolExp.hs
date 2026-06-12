@@ -115,6 +115,10 @@ parseBoolExpOperations rhsParser rootFieldInfoMap fim columnRef value = do
         "$has_keys_any" -> guardType [PGJSONB] >> ABackendSpecific . AHasKeysAny <$> parseManyWithType (ColumnScalar PGText)
         "_has_keys_all" -> guardType [PGJSONB] >> ABackendSpecific . AHasKeysAll <$> parseManyWithType (ColumnScalar PGText)
         "$has_keys_all" -> guardType [PGJSONB] >> ABackendSpecific . AHasKeysAll <$> parseManyWithType (ColumnScalar PGText)
+        "_jsonb_path_exists" -> guardType [PGJSONB] >> ABackendSpecific . AJsonbPathExists <$> parseWithTy (ColumnScalar PGText)
+        "$jsonb_path_exists" -> guardType [PGJSONB] >> ABackendSpecific . AJsonbPathExists <$> parseWithTy (ColumnScalar PGText)
+        "_jsonb_path_match" -> guardType [PGJSONB] >> ABackendSpecific . AJsonbPathMatch <$> parseWithTy (ColumnScalar PGText)
+        "$jsonb_path_match" -> guardType [PGJSONB] >> ABackendSpecific . AJsonbPathMatch <$> parseWithTy (ColumnScalar PGText)
         -- geometry types
         "_st_contains" -> parseGeometryOp ASTContains
         "$st_contains" -> parseGeometryOp ASTContains

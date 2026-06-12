@@ -114,6 +114,8 @@ const whitelist: Record<string, string[]> = {
     '_has_key',
     '_has_keys_any',
     '_has_keys_all',
+    '_jsonb_path_exists',
+    '_jsonb_path_match',
   ],
   // JSON does not seem to come with any operators
   // To match the old implementation, which does not provide any operators, we do not whitelist any for now
