@@ -1,0 +1,39 @@
+description: Select products where spec has a Touchscreen key set to true using jsonb path match
+url: /v1/graphql
+status: 200
+response:
+  data:
+    product:
+    - id: 2
+      name: laptop2
+      spec:
+        OS: os2
+        RAM: 16GB
+        Disk: 128GB
+        Weight: 1.2Kg
+        Processor: processor2
+        Touchscreen: true
+    - id: 3
+      name: mobile1
+      spec:
+        RAM: 3GB
+        Weight: 200g
+        Processor: processor2
+        Network type: 4G
+        SIM type: DualSim
+        Touchscreen: true
+        Sensors: Accelerometer sensor, E-compass, Proximity sensor
+        Operating System Type: osType1
+query:
+  query: |
+    query {
+      product(
+        where: { spec: { _jsonb_path_match: "$.Touchscreen == true" } }
+        order_by: { id: asc }
+      ) {
+        id
+        name
+        spec
+      }
+    }
+
