@@ -120,6 +120,7 @@ data AppEnv = AppEnv
     appEnvEnableMaintenanceMode :: MaintenanceMode (),
     appEnvLoggingSettings :: LoggingSettings,
     appEnvEventingMode :: EventingMode,
+    appEnvEventProcessingMode :: EventProcessingMode,
     appEnvEnableReadOnlyMode :: ReadOnlyMode,
     appEnvServerMetrics :: ServerMetrics,
     appEnvShutdownLatch :: ShutdownLatch,

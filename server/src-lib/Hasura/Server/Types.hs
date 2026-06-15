@@ -13,6 +13,7 @@ module Hasura.Server.Types
     mdDbIdToDbUid,
     MaintenanceMode (..),
     EventingMode (..),
+    EventProcessingMode (..),
     ReadOnlyMode (..),
     DbVersion (DbVersion),
     PGVersion (PGVersion),
@@ -170,6 +171,15 @@ data ReadOnlyMode = ReadOnlyModeEnabled | ReadOnlyModeDisabled
 -- `EventDisabled` mode disables Event Triggers, Async Actions, Scheduled Events and source catalaog migrations.
 -- This is an internal feature and will not be exposed to users.
 data EventingMode = EventingEnabled | EventingDisabled
+  deriving (Show, Eq)
+
+-- | EventProcessingMode decides whether the eventing background processing should run.
+-- `EventProcessingDisabled` stops the event trigger, cron, scheduled event and async action
+-- pollers from running, but unlike `EventingDisabled` it leaves the eventing subsystem
+-- otherwise intact: source catalog migrations still run, so the eventing catalog tables are
+-- created as normal. This is intended for transient instances (e.g. migration jobs) that need
+-- to set up a fresh database but must not deliver/send any events while doing so.
+data EventProcessingMode = EventProcessingEnabled | EventProcessingDisabled
   deriving (Show, Eq)
 
 -- | Whether or not to enable apollo federation fields.

@@ -209,6 +209,9 @@ mkServeOptions sor@ServeOptionsRaw {..} = do
   soEventingMode <- case rsoEventingMode of
     Types.EventingEnabled -> withOptionDefault Nothing disableEventingOption
     eventingDisabled -> pure eventingDisabled
+  soEventProcessingMode <- case rsoEventProcessingMode of
+    Types.EventProcessingEnabled -> withOptionDefault Nothing disableEventProcessingOption
+    eventProcessingDisabled -> pure eventProcessingDisabled
   let soReadOnlyMode = Types.ReadOnlyModeDisabled
   soEnableMetadataQueryLogging <- case rsoEnableMetadataQueryLoggingEnv of
     Server.Logging.MetadataQueryLoggingDisabled -> withOptionDefault Nothing enableMetadataQueryLoggingOption

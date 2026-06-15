@@ -482,6 +482,7 @@ initialiseAppEnv env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liv
           appEnvEnableMaintenanceMode = soEnableMaintenanceMode,
           appEnvLoggingSettings = LoggingSettings soEnabledLogTypes soEnableMetadataQueryLogging soHttpLogQueryOnlyOnError soLogMaskedVariables,
           appEnvEventingMode = soEventingMode,
+          appEnvEventProcessingMode = soEventProcessingMode,
           appEnvEnableReadOnlyMode = soReadOnlyMode,
           appEnvServerMetrics = serverMetrics,
           appEnvShutdownLatch = latch,
@@ -1113,8 +1114,8 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
   -- Start a background thread for processing schema sync event present in the '_sscSyncEventRef'
   _ <- startSchemaSyncProcessorThread appStateRef newLogTVar
 
-  case appEnvEventingMode of
-    EventingEnabled -> do
+  case (appEnvEventingMode, appEnvEventProcessingMode) of
+    (EventingEnabled, EventProcessingEnabled) -> do
       lift $ unLoggerTracing logger $ mkGenericLog @Text LevelInfo "server" "Starting in eventing enabled mode"
 
       startEventTriggerPollerThread logger appEnvLockedEventsCtx
@@ -1132,7 +1133,12 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
           $ runCronEventsGenerator logger fetchedCronTriggerStatsLogger (getSchemaCache appStateRef)
 
       startScheduledEventsPollerThread logger appEnvLockedEventsCtx
-    EventingDisabled ->
+    -- Eventing is enabled (so source catalogs are still set up) but event
+    -- processing is disabled: don't start any of the pollers, so no event
+    -- triggers, cron triggers, scheduled events or async actions are delivered.
+    (EventingEnabled, EventProcessingDisabled) ->
+      lift $ unLoggerTracing logger $ mkGenericLog @Text LevelInfo "server" "Starting with event processing disabled: source catalogs will be set up but no events will be delivered"
+    (EventingDisabled, _) ->
       lift $ unLoggerTracing logger $ mkGenericLog @Text LevelInfo "server" "Starting in eventing disabled mode"
 
   -- start a background thread to check for updates

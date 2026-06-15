@@ -55,6 +55,7 @@ module Hasura.Server.Init.Arg.Command.Serve
     inferFunctionPermsOption,
     enableMaintenanceModeOption,
     disableEventingOption,
+    disableEventProcessingOption,
     schemaPollIntervalOption,
     experimentalFeaturesOption,
     eventsFetchBatchSizeOption,
@@ -160,6 +161,7 @@ serveCommandParser =
     <*> parseInferFunctionPerms
     <*> parseEnableMaintenanceMode
     <*> parseDisableEventing
+    <*> parseDisableEventProcessing
     <*> parseSchemaPollInterval
     <*> parseExperimentalFeatures
     <*> parseEventsFetchBatchSize
@@ -1098,6 +1100,29 @@ disableEventingOption =
           <> "for database resources."
     }
 
+parseDisableEventProcessing :: Opt.Parser Types.EventProcessingMode
+parseDisableEventProcessing =
+  fmap (bool Types.EventProcessingEnabled Types.EventProcessingDisabled)
+    $ Opt.switch
+      ( Opt.long "disable-event-processing"
+          <> Opt.help (Config._helpMessage disableEventProcessingOption)
+      )
+
+disableEventProcessingOption :: Config.Option Types.EventProcessingMode
+disableEventProcessingOption =
+  Config.Option
+    { Config._default = Types.EventProcessingEnabled,
+      Config._envVar = "HASURA_GRAPHQL_DISABLE_EVENT_PROCESSING",
+      Config._helpMessage =
+        "Stop the eventing background pollers (event triggers, cron triggers, "
+          <> "scheduled events and async actions) from running, so the instance "
+          <> "delivers/sends no events. Unlike HASURA_GRAPHQL_DISABLE_EVENTING this "
+          <> "leaves the eventing subsystem otherwise intact: source catalog "
+          <> "migrations still run, so the eventing catalog tables are created. "
+          <> "Useful for migration jobs that must set up a fresh database without "
+          <> "sending any events while doing so."
+    }
+
 parseSchemaPollInterval :: Opt.Parser (Maybe Config.OptionalInterval)
 parseSchemaPollInterval =
   Opt.optional
@@ -1602,6 +1627,7 @@ serveCmdFooter =
         Config.optionPP inferFunctionPermsOption,
         Config.optionPP enableMaintenanceModeOption,
         Config.optionPP disableEventingOption,
+        Config.optionPP disableEventProcessingOption,
         Config.optionPP schemaPollIntervalOption,
         Config.optionPP experimentalFeaturesOption,
         Config.optionPP eventsFetchBatchSizeOption,

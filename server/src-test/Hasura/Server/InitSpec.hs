@@ -86,6 +86,7 @@ emptyServeOptionsRaw =
       rsoInferFunctionPermissions = Nothing,
       rsoEnableMaintenanceMode = Types.MaintenanceModeDisabled,
       rsoEventingMode = Types.EventingEnabled,
+      rsoEventProcessingMode = Types.EventProcessingEnabled,
       rsoSchemaPollInterval = Nothing,
       rsoExperimentalFeatures = Nothing,
       rsoEventsFetchBatchSize = Nothing,

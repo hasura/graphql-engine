@@ -319,6 +319,7 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoInferFunctionPermissions :: Maybe Schema.Options.InferFunctionPermissions,
     rsoEnableMaintenanceMode :: Server.Types.MaintenanceMode (),
     rsoEventingMode :: Server.Types.EventingMode,
+    rsoEventProcessingMode :: Server.Types.EventProcessingMode,
     rsoSchemaPollInterval :: Maybe OptionalInterval,
     -- | See Note '$experimentalFeatures' at bottom of module
     rsoExperimentalFeatures :: Maybe (HashSet Server.Types.ExperimentalFeature),
@@ -674,6 +675,7 @@ data ServeOptions impl = ServeOptions
     soGracefulShutdownTimeout :: Refined NonNegative Seconds,
     soWebSocketConnectionInitTimeout :: WSConnectionInitTimeout,
     soEventingMode :: Server.Types.EventingMode,
+    soEventProcessingMode :: Server.Types.EventProcessingMode,
     -- | See note '$readOnlyMode'
     soReadOnlyMode :: Server.Types.ReadOnlyMode,
     soEnableMetadataQueryLogging :: Server.Logging.MetadataQueryLoggingMode,
