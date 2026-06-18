@@ -7,14 +7,21 @@
 # permanently specified in this file.
 
 [advisories]
-ignore = ["RUSTSEC-2024-0437", "RUSTSEC-2023-0071"] # advisory IDs to ignore e.g. ["RUSTSEC-2019-0001", ...]
+ignore = ["RUSTSEC-2024-0437", "RUSTSEC-2023-0071", "RUSTSEC-2026-0176", "RUSTSEC-2026-0177"] # advisory IDs to ignore e.g. ["RUSTSEC-2019-0001", ...]
 
 # RUSTSEC-2024-0437
 #
 # https://github.com/tikv/rust-prometheus/issues/538#issuecomment-2708222613
-# we ignore this there is no current fix, and because the prometheus crate 
+# we ignore this there is no current fix, and because the prometheus crate
 # that uses protobuf does not parse any protobufs, only writes them.
 
 # RUSTSEC-2023-0071
 # https://rustsec.org/advisories/RUSTSEC-2023-0071
 # No fixed upgrade is available
+
+# RUSTSEC-2026-0176, RUSTSEC-2026-0177
+# https://rustsec.org/advisories/RUSTSEC-2026-0176
+# https://rustsec.org/advisories/RUSTSEC-2026-0177
+# pyo3 0.27.2 is an unused optional dependency of jiter (behind the "python"
+# feature which is not enabled). It is only present in the lockfile, never
+# compiled. Upgrading requires a major datafusion version bump (51 -> 54).
