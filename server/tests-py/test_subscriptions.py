@@ -251,7 +251,6 @@ class TestSubscriptionBasicGraphQLWS:
 
     def test_connection_error(self, hge_key, ws_client_graphql_ws):
         if ws_client_graphql_ws.get_conn_close_state():
-            ws_client_graphql_ws.create_conn()
             if hge_key == None:
                 ws_client_graphql_ws.init()
             else:
@@ -263,7 +262,6 @@ class TestSubscriptionBasicGraphQLWS:
 
     def test_start(self, hge_key, ws_client_graphql_ws):
         if ws_client_graphql_ws.get_conn_close_state():
-            ws_client_graphql_ws.create_conn()
             if hge_key == None:
                 ws_client_graphql_ws.init()
             else:
@@ -292,7 +290,6 @@ class TestSubscriptionBasicGraphQLWS:
     @pytest.mark.skip(reason="refer to https://github.com/hasura/graphql-engine/pull/387#issuecomment-421343098")
     def test_start_duplicate(self, hge_key, ws_client_graphql_ws):
         if ws_client_graphql_ws.get_conn_close_state():
-            ws_client_graphql_ws.create_conn()
             if hge_key == None:
                 ws_client_graphql_ws.init()
             else:
@@ -301,7 +298,6 @@ class TestSubscriptionBasicGraphQLWS:
 
     def test_stop_without_id(self, hge_key, ws_client_graphql_ws):
         if ws_client_graphql_ws.get_conn_close_state():
-            ws_client_graphql_ws.create_conn()
             if hge_key == None:
                 ws_client_graphql_ws.init()
             else:
@@ -316,7 +312,6 @@ class TestSubscriptionBasicGraphQLWS:
 
     def test_stop(self, hge_key, ws_client_graphql_ws):
         if ws_client_graphql_ws.get_conn_close_state():
-            ws_client_graphql_ws.create_conn()
             if hge_key == None:
                 ws_client_graphql_ws.init()
             else:
@@ -332,7 +327,6 @@ class TestSubscriptionBasicGraphQLWS:
 
     def test_start_after_stop(self, hge_key, hge_ctx, ws_client_graphql_ws):
         if ws_client_graphql_ws.get_conn_close_state():
-            ws_client_graphql_ws.create_conn()
             if hge_key == None:
                 ws_client_graphql_ws.init()
             else:
@@ -346,7 +340,6 @@ class TestSubscriptionBasicGraphQLWS:
     def test_complete(self, hge_key, ws_client_graphql_ws):
         id = str(uuid.uuid4())
         if ws_client_graphql_ws.get_conn_close_state():
-            ws_client_graphql_ws.create_conn()
             if hge_key == None:
                 ws_client_graphql_ws.init()
             else:
