@@ -28,4 +28,4 @@ docker compose up -d
 
 ![Screen Shot 2022-10-07 at 11 16 34 AM](https://user-images.githubusercontent.com/49927862/194600350-8131459e-cd91-4ac8-9fcc-3d1b2e491a1f.png)
 
-You should now have this new databse listed on the left: ![Screen Shot 2022-10-07 at 11 12 52 AM](https://user-images.githubusercontent.com/49927862/194599628-952d61e7-1ab8-4c25-8aa2-a9883b9fe6bb.png)
+You should now have this new database listed on the left: ![Screen Shot 2022-10-07 at 11 12 52 AM](https://user-images.githubusercontent.com/49927862/194599628-952d61e7-1ab8-4c25-8aa2-a9883b9fe6bb.png)
