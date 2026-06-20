@@ -105,3 +105,10 @@ If you're managing Migrations with a different tool and want to use this image t
 `metadata` directory of your Hasura Project at the `/hasura-metadata`
 [path of this Docker container the container's entry point script](https://github.com/hasura/graphql-engine/blob/master/packaging/cli-migrations/v3/docker-entrypoint.sh#L13)
 will apply the Metadata before starting the server.
+
+## Disallowing Inconsistent Metadata
+
+If you set the `HASURA_GRAPHQL_DISALLOW_INCONSISTENT_METADATA` environment variable to `true`, the entrypoint script will
+reject inconsistent metadata and exit with a non-zero exit code. This has the same behavior as the
+`--disallow-inconsistent-metadata` flag in the `hasura metadata apply` command documented
+[here](/hasura-cli/commands/hasura_metadata_apply.mdx).

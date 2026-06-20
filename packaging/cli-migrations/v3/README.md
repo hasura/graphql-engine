@@ -71,3 +71,11 @@ Optional configuration for the server which boots during migrations.
 - `HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT` (default=`30s`)
 
   Specify the server timeout threshold.
+
+### Disallow Inconsistent Metadata (Optional)
+
+- `HASURA_GRAPHQL_DISALLOW_INCONSISTENT_METADATA` (default=`false`)
+
+  If set to true, inconsistent metadata will be rejected, causing the entrypoint script to exit with a non-zero exit code.
+  Has the same behavior as the `--disallow-inconsistent-metadata` flag in the `hasura metadata apply` command documented 
+  [here](https://hasura.io/docs/latest/hasura-cli/commands/hasura_metadata_apply).
