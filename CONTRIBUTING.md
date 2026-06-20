@@ -48,7 +48,7 @@ This V2 portion consists of 3 components and each has their own contributing gui
 
 3. [Console (JavaScript)](frontend/docs/generic-info.md#contributing-to-hasura-console)
 
-All of the three components have a single version, denoted by either the git tag or a combination of branch name and git
+All the three components have a single version, denoted by either the git tag or a combination of branch name and git
 commit SHA.
 
 For all contributions, a CLA (Contributor License Agreement) needs to be signed 
