@@ -7,7 +7,7 @@
 # permanently specified in this file.
 
 [advisories]
-ignore = ["RUSTSEC-2024-0437", "RUSTSEC-2023-0071", "RUSTSEC-2026-0176", "RUSTSEC-2026-0177"] # advisory IDs to ignore e.g. ["RUSTSEC-2019-0001", ...]
+ignore = ["RUSTSEC-2024-0437", "RUSTSEC-2023-0071", "RUSTSEC-2026-0176", "RUSTSEC-2026-0177", "RUSTSEC-2024-0436"] # advisory IDs to ignore e.g. ["RUSTSEC-2019-0001", ...]
 
 # RUSTSEC-2024-0437
 #
@@ -25,3 +25,9 @@ ignore = ["RUSTSEC-2024-0437", "RUSTSEC-2023-0071", "RUSTSEC-2026-0176", "RUSTSE
 # pyo3 0.27.2 is an unused optional dependency of jiter (behind the "python"
 # feature which is not enabled). It is only present in the lockfile, never
 # compiled. Upgrading requires a major datafusion version bump (51 -> 54).
+
+# RUSTSEC-2024-0436
+# https://rustsec.org/advisories/RUSTSEC-2024-0436
+# paste is unmaintained with no maintained drop-in replacement. It is a
+# proc-macro pulled in transitively via parquet / datafusion and there is no
+# current fix, so we ignore the unmaintained warning.
