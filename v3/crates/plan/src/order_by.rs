@@ -119,6 +119,20 @@ fn resolve_field_operand(
     plan_state: &mut PlanState,
     usage_counts: &mut UsagesCounts,
 ) -> Result<plan_types::OrderByTarget<ResolvedFilterExpression>, PlanError> {
+    // Enforce field-level permissions before building an order-by that references
+    // this field. `object_type` is the role-filtered `OutputObjectTypeView`, so a
+    // field that exists on the underlying object type but is not selectable by the
+    // current role is rejected here with a user-facing permission error.
+    //
+    // This is the single planning path shared by all frontends. GraphQL and SQL
+    // never surface hidden fields in their generated schemas, so they never reach
+    // here with an inaccessible field; JSON:API, however, builds order-by elements
+    // straight from free-form `sort` keys, which previously allowed ordering by a
+    // hidden column and leaking its values through the result ordering
+    // (AISLE-2026-0087). Resolving the column from `type_mappings` (the unfiltered
+    // object type) without this check is what exposed the gap.
+    let field_view = object_type.get_field(&operand.target.field_name)?;
+
     let type_mapping = type_mappings.get(type_name).ok_or_else(|| {
         OrderByError::Internal(format!("can't find type mapping for type: {type_name}"))
             .into_plan_error()
@@ -137,18 +151,7 @@ fn resolve_field_operand(
     let column_name = field_mapping.column.clone();
 
     if let Some(nested_operand) = &operand.nested {
-        let field = object_type
-            .fields
-            .get(&operand.target.field_name)
-            .ok_or_else(|| {
-                OrderByError::Internal(format!(
-                    "can't find object field definition for field {} in type: {}",
-                    operand.target.field_name, type_name
-                ))
-                .into_plan_error()
-            })?;
-
-        let field_type = field
+        let field_type = field_view
             .field_type
             .get_underlying_type_name()
             .get_custom_type_name()

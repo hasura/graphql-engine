@@ -215,6 +215,27 @@ fn to_exists_expression<'metadata>(
     let source_boolean_expression_type =
         boolean_expression_type_for_path(metadata, boolean_expression_type, operand)?;
 
+    // Enforce field-level read permissions before using this field as an `exists`
+    // target. We resolve the field through the role-filtered `OutputObjectTypeView` for
+    // the source object type, so a field that exists on the underlying object type but is
+    // not selectable by the current role is rejected with a user-facing permission error,
+    // rather than resolving its column straight from `type_mappings` and leaking its
+    // values through an `exists` predicate side-channel (the `exists` analogue of the
+    // comparison/order-by gap in AISLE-2026-0087).
+    //
+    // This is only reachable from the user-supplied filter path (`to_filter_expression`);
+    // admin-defined permission predicates compile through `process_model_predicate`
+    // against pre-resolved NDC columns and never reach here, so this constrains user input
+    // only. Always reach for fields via `get_field` so the permission check cannot be
+    // accidentally skipped.
+    let source_object_type = crate::metadata_accessor::get_output_object_type(
+        metadata,
+        &source_boolean_expression_type.object_type,
+        &session.variables,
+        plan_state,
+    )?;
+    source_object_type.get_field(field_name)?;
+
     let TypeMapping::Object {
         ndc_object_type_name: _,
         field_mappings,
@@ -231,10 +252,10 @@ fn to_exists_expression<'metadata>(
         .get(field_name)
         .cloned()
         .ok_or_else(|| {
-            PlanError::Internal(format!(
-                "couldn't fetch field mapping of field {} in type {}",
-                field_name, source_boolean_expression_type.object_type
-            ))
+            PlanError::Permission(PermissionError::ObjectFieldNotFound {
+                object_type_name: source_boolean_expression_type.object_type.clone(),
+                field_name: field_name.clone(),
+            })
         })?
         .column;
 
@@ -625,6 +646,16 @@ fn to_field_comparison_expression<'metadata>(
     usage_counts: &mut UsagesCounts,
 ) -> Result<Expression<'metadata>, PlanError> {
     let type_name = source_object_type.object_type_name;
+
+    // Enforce field-level read permissions before using a field in a predicate.
+    // `source_object_type` is the role-filtered `OutputObjectTypeView`, so this
+    // rejects any field hidden from the current role by `TypePermissions` with a
+    // user-facing permission error, rather than leaking its values through
+    // predicate-based inference (the filter analogue of the order-by gap in
+    // AISLE-2026-0087). Always reach for fields via `get_field` so the permission
+    // check cannot be accidentally skipped.
+    let field_view = source_object_type.get_field(&field.target.field_name)?;
+
     if let Some(nested_field) = &field.nested {
         // Boolean expression type is required to resolve custom operators
         let boolean_expression_type = boolean_expression_type.ok_or_else(|| {
@@ -728,16 +759,6 @@ fn to_field_comparison_expression<'metadata>(
             ))
         }
     } else {
-        let field_view = source_object_type
-            .fields
-            .get(&field.target.field_name)
-            .ok_or_else(|| {
-                PlanError::Internal(format!(
-                    "can't find field {} in type {}",
-                    field.target.field_name, type_name
-                ))
-            })?;
-
         match field_view.field_type.underlying_type {
             QualifiedBaseType::List(_) => {
                 let TypeMapping::Object {

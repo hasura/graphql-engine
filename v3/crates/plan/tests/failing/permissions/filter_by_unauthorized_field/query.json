@@ -1,0 +1,26 @@
+{
+  "version": "v1",
+  "queries": {
+    "albums": {
+      "model": {
+        "subgraph": "default",
+        "modelName": "Album",
+        "limit": 5,
+        "filter": {
+          "comparison": {
+            "operand": { "field": { "fieldName": "ArtistId" } },
+            "operator": "_eq",
+            "argument": { "literal": 1 }
+          }
+        },
+        "selection": {
+          "album_id": {
+            "field": {
+              "fieldName": "AlbumId"
+            }
+          }
+        }
+      }
+    }
+  }
+}

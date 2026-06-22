@@ -1,0 +1,6 @@
+---
+source: crates/plan/tests/plan_golden_tests.rs
+expression: msg
+input_file: crates/plan/tests/failing/permissions/filter_by_unauthorized_field/query.json
+---
+no permission to select from field ArtistId in type Album (in subgraph default)

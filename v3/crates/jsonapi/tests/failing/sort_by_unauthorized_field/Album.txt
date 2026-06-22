@@ -1,0 +1,1 @@
+fields[Album]=AlbumId,Title&page[offset]=0&page[limit]=5&sort=-ArtistId,AlbumId

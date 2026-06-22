@@ -1,0 +1,28 @@
+---
+source: crates/jsonapi/tests/jsonapi_golden_tests.rs
+expression: result
+input_file: crates/jsonapi/tests/failing/sort_by_unauthorized_field/Album.txt
+---
+Err(
+    PlanError(
+        Permission(
+            ObjectFieldNotFound {
+                object_type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "Album",
+                        ),
+                    ),
+                },
+                field_name: FieldName(
+                    Identifier(
+                        "ArtistId",
+                    ),
+                ),
+            },
+        ),
+    ),
+)
