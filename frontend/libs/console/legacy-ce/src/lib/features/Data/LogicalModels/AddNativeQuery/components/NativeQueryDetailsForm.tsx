@@ -70,7 +70,7 @@ export const NativeQueryFormFields = ({ sources }: { sources?: Source[] }) => {
         <InputField
           name="comment"
           label="Comment"
-          placeholder="A description of this logical model"
+          placeholder="A description of this native query"
         />
         <Select
           name="source"
