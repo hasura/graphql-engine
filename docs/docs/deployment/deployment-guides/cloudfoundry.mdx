@@ -1,0 +1,258 @@
+---
+description: Deploy Hasura GraphQL Engine on Pivotal Cloud Foundry (PCF)
+keywords:
+  - cloudfoundry
+  - pivotal
+  - pcf
+  - deployment
+sidebar_position: 6
+sidebar_label: Cloud Foundry
+---
+
+# Deploying Hasura on Pivotal Cloud Foundry
+
+## Introduction
+
+This guide covers deploying Hasura GraphQL Engine on Pivotal Cloud Foundry (PCF). Cloud Foundry is an open-source cloud application platform that abstracts away infrastructure complexity.
+
+## Prerequisites
+
+- A Pivotal Cloud Foundry (PCF) or Cloud Foundry environment setup
+- Access to the Cloud Foundry CLI (`cf` command)
+- A PostgreSQL database instance (can be created via Cloud Foundry marketplace)
+- Docker image of Hasura GraphQL Engine or access to build from source
+
+## Step 1: Prepare Your Cloud Foundry Environment
+
+First, ensure you have the Cloud Foundry CLI installed and are logged into your Cloud Foundry environment:
+
+```bash
+cf login -a <API_ENDPOINT> -u <USERNAME>
+```
+
+Create a new space for your Hasura deployment:
+
+```bash
+cf create-space hasura-space
+cf target -s hasura-space
+```
+
+## Step 2: Set Up a PostgreSQL Database
+
+You can use the Cloud Foundry marketplace to provision a PostgreSQL database:
+
+```bash
+cf marketplace
+```
+
+Look for PostgreSQL services available in your marketplace. For example, using AWS RDS:
+
+```bash
+cf create-service aws-rds-postgresql-instance shared-psql hasura-db
+```
+
+Wait for the service instance to be created:
+
+```bash
+cf services
+```
+
+## Step 3: Deploy Hasura GraphQL Engine
+
+### Option A: Using a Pre-built Docker Image
+
+Create a `manifest.yml` file in your deployment directory:
+
+```yaml
+applications:
+  - name: hasura-graphql-engine
+    docker:
+      image: hasura/graphql-engine:latest
+    memory: 512M
+    instances: 1
+    environment:
+      HASURA_GRAPHQL_DATABASE_URL: <DATABASE_CONNECTION_STRING>
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_ADMIN_SECRET: <YOUR_ADMIN_SECRET>
+    routes:
+      - route: hasura-<ORG>.<DOMAIN>
+    services:
+      - hasura-db
+```
+
+Replace placeholders with your actual values.
+
+Deploy using the manifest:
+
+```bash
+cf push
+```
+
+### Option B: Using a Buildpack
+
+If Docker is not available, you can use a buildpack. Create a `manifest.yml`:
+
+```yaml
+applications:
+  - name: hasura-graphql-engine
+    buildpacks:
+      - binary_buildpack
+    command: ./hasura serve
+    memory: 512M
+    instances: 1
+    environment:
+      HASURA_GRAPHQL_DATABASE_URL: <DATABASE_CONNECTION_STRING>
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_ADMIN_SECRET: <YOUR_ADMIN_SECRET>
+    routes:
+      - route: hasura-<ORG>.<DOMAIN>
+    services:
+      - hasura-db
+```
+
+## Step 4: Configure Environment Variables
+
+Set essential environment variables for your Hasura instance:
+
+```bash
+cf set-env hasura-graphql-engine HASURA_GRAPHQL_DATABASE_URL "<database_url>"
+cf set-env hasura-graphql-engine HASURA_GRAPHQL_ADMIN_SECRET "<your_secret_key>"
+cf set-env hasura-graphql-engine HASURA_GRAPHQL_ENABLE_CONSOLE "true"
+cf set-env hasura-graphql-engine HASURA_GRAPHQL_LOG_LEVEL "info"
+```
+
+Restart the application for changes to take effect:
+
+```bash
+cf restart hasura-graphql-engine
+```
+
+## Step 5: Access Hasura Console
+
+Once deployed, access the Hasura GraphQL Console via your application URL:
+
+```
+https://hasura-<ORG>.<DOMAIN>/console
+```
+
+Log in using your `HASURA_GRAPHQL_ADMIN_SECRET`.
+
+## Step 6: Configure Your Database Connection
+
+In the Hasura Console:
+
+1. Go to the **Data** tab
+2. Click **Connect Database**
+3. Enter your PostgreSQL connection details
+4. Configure your tables and relationships
+
+## Environment Variables Reference
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `HASURA_GRAPHQL_DATABASE_URL` | PostgreSQL database connection string | `postgres://user:password@host:5432/database` |
+| `HASURA_GRAPHQL_ADMIN_SECRET` | Secret key for admin access | Your chosen secret |
+| `HASURA_GRAPHQL_ENABLE_CONSOLE` | Enable GraphQL Console | `true` or `false` |
+| `HASURA_GRAPHQL_LOG_LEVEL` | Logging level | `debug`, `info`, `warn`, `error` |
+| `HASURA_GRAPHQL_CORS_DOMAIN` | CORS domain restriction | `*` for all or specific domain |
+| `HASURA_GRAPHQL_JWT_SECRET` | JWT secret for authentication | Your JWT secret config |
+
+## Scaling and Performance
+
+### Horizontal Scaling
+
+Scale the number of Hasura instances:
+
+```bash
+cf scale hasura-graphql-engine -i 3
+```
+
+### Memory Allocation
+
+Increase memory as needed:
+
+```bash
+cf scale hasura-graphql-engine -m 1G
+```
+
+## Health Checks
+
+Cloud Foundry automatically monitors application health. Ensure the health endpoint is accessible:
+
+```bash
+cf apps
+```
+
+The application should show `running` state.
+
+## Troubleshooting
+
+### Application Won't Start
+
+1. Check logs:
+   ```bash
+   cf logs hasura-graphql-engine --recent
+   ```
+
+2. Verify database connectivity:
+   ```bash
+   cf env hasura-graphql-engine
+   ```
+
+3. Ensure all required environment variables are set
+
+### Database Connection Issues
+
+1. Verify the database service is bound:
+   ```bash
+   cf services
+   ```
+
+2. Check the connection string format
+
+3. Ensure security group rules allow traffic
+
+### Performance Issues
+
+1. Monitor logs for errors
+2. Check database performance and connectivity
+3. Scale up instances or memory if needed
+
+## Security Considerations
+
+1. **Admin Secret**: Use a strong, randomly generated `HASURA_GRAPHQL_ADMIN_SECRET`
+2. **HTTPS**: Ensure all traffic is encrypted with SSL/TLS
+3. **JWT Authentication**: Configure JWT secrets for API access
+4. **Database Security**: Use Cloud Foundry security groups to restrict database access
+5. **Secrets Management**: Consider using Cloud Foundry credential services for secret storage
+
+## Backup and Recovery
+
+Always backup your PostgreSQL database:
+
+```bash
+pg_dump -U username -h host -d database > backup.sql
+```
+
+For regular automated backups, configure your PostgreSQL service backup policies through the Cloud Foundry marketplace.
+
+## Next Steps
+
+- Configure your GraphQL schema and resolvers
+- Set up authentication and authorization
+- Implement business logic with Actions
+- Deploy your GraphQL API to production
+- Monitor and optimize performance
+
+## Additional Resources
+
+- [Cloud Foundry Documentation](https://docs.cloudfoundry.org/)
+- [Hasura Documentation](https://hasura.io/docs/)
+- [PostgreSQL on Cloud Foundry](https://docs.cloudfoundry.org/services/index.html)
+
+## Support
+
+For issues and questions:
+- Check the [Hasura Community Forums](https://discourse.hasura.io/)
+- Refer to the [Hasura GitHub Issues](https://github.com/hasura/graphql-engine/issues)
+- Consult your Cloud Foundry provider's documentation
