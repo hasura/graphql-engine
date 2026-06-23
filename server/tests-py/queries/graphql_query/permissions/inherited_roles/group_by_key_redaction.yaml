@@ -1,0 +1,64 @@
+# Security regression test for F-001: group_by key redaction bypass in inherited roles.
+#
+# In inherited roles with cell-level security, columns visible to one parent role but
+# not another should return NULL for rows accessible only via the role that cannot see
+# the column. This redaction is controlled by AnnRedactionExpUnpreparedValue.
+#
+# Bug: groupByKeySelectionSet in Select.hs discards AnnRedactionExpUnpreparedValue
+# when building the group_key selection set, so group_key fields bypass redaction and
+# expose raw column values that should be hidden.
+#
+# Setup (from inherited_roles/setup.yaml):
+#   - 'employee' role on employee: columns=[id,name,salary,title,team_id], filter={id=X-Hasura-User-Id}
+#   - 'manager' role on employee:  columns=[name,title,manager_remarks], filter={manager_id=X-Hasura-Manager-Id}, allow_aggregations=true
+#   - 'manager_employee' inherited role = union of the above two
+#
+# With X-Hasura-User-Id=1 and X-Hasura-Manager-Id=2:
+#   - employee 1 (id=1, salary=10000, manager_id=1): accessible via employee filter
+#     => salary IS visible (employee role can see salary)
+#   - employee 4 (id=4, salary=15430, manager_id=2): accessible via manager filter only
+#     => salary should be NULL (manager role cannot see salary)
+#
+# CORRECT group_by salary result: [{salary: null}, {salary: 10000}] (in some order)
+# BUGGY group_by salary result:   [{salary: 15430}, {salary: 10000}]  <- 15430 leaks!
+
+- description: >
+    group_by key must redact salary for rows only accessible via a role that cannot see
+    salary. Under the manager_employee inherited role, employee 4 (salary=15430) is only
+    accessible via the manager role, which has no access to the salary column, so
+    group_key.salary must be null for that group. This test currently FAILS because
+    groupByKeySelectionSet drops AnnRedactionExpUnpreparedValue (F-001).
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: manager_employee
+    X-Hasura-User-Id: '1'
+    X-Hasura-Manager-Id: '2'
+  allowed_responses:
+    - response:
+        data:
+          employee_aggregate:
+            group_by:
+              - group_key:
+                  salary: null
+              - group_key:
+                  salary: 10000
+    - response:
+        data:
+          employee_aggregate:
+            group_by:
+              - group_key:
+                  salary: 10000
+              - group_key:
+                  salary: null
+  query:
+    query: |
+      query {
+        employee_aggregate {
+          group_by(keys: [{column: salary}]) {
+            group_key {
+              salary
+            }
+          }
+        }
+      }

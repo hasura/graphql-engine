@@ -599,6 +599,29 @@ class TestGraphQLInheritedRolesPostgres:
     def test_inherited_role_when_some_roles_may_not_have_permission_configured(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/inherited_role_with_some_roles_having_no_permissions.yaml')
 
+# NOTE (Brandon): this is a potential issue flagged by Claude that is not
+# currently reachable, but we leave it here in case we decide to finish the
+# implementation.
+#
+# Security regression test for F-001: group_by key redaction bypass in inherited roles.
+# groupByKeySelectionSet in Select.hs drops AnnRedactionExpUnpreparedValue, so
+# group_key fields expose raw column values that should be NULL under inherited-role
+# cell-level security. Requires group_by_aggregations experimental feature (Postgres only).
+@pytest.mark.hge_env('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES', 'group_by_aggregations')
+@pytest.mark.parametrize('transport', ['http'])
+@usefixtures('per_class_tests_db_state')
+class TestGroupByKeyRedactionInheritedRoles:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/permissions/inherited_roles'
+
+    setup_metadata_api_version = "v2"
+
+    @pytest.mark.xfail(reason="Potentially vulnerable code not yet reachable")
+    def test_group_by_key_does_not_leak_redacted_column_values(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/group_by_key_redaction.yaml')
+
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @pytest.mark.backend('mssql')
 @usefixtures('per_class_tests_db_state')

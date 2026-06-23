@@ -392,7 +392,7 @@ def validate_http_anyq_with_allowed_responses(hge_ctx, url, query, headers, exp_
             return resp_res, test_passed
         else:
             # test should fail if none of the allowed responses work
-            raise Exception("allowed_responses did not contain the response that was expected. Please check your allowed_responses")
+            raise Exception(f"allowed_responses did not contain the response that was expected. Got:\n{resp}")
     else:
         raise Exception("allowed_responses was not a list of permissible responses")
 

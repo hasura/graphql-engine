@@ -253,6 +253,8 @@ processAnnAggregateSelect userInfo sourcePrefixes fieldAlias annAggSel = do
                   ( [(nodesColumnAlias, nodesExtractorExp)],
                     withJsonAggExtr permLimitSubQuery (orderByForJsonAgg selectSource) nodesColumnAlias
                   )
+              -- TODO: if we ever fix this, be sure to look more closely at the potential security
+              -- issue tentatively flagged in TestGroupByKeyRedactionInheritedRoles
               TAFGroupBy _xGroupBy _groupBy -> error "processAnnAggregateSelect: group_by is not yet supported"
               TAFExp e ->
                 pure
