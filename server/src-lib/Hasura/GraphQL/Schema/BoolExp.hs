@@ -144,7 +144,11 @@ boolExpInternal gqlName selectPermissions fieldInfos description memoizeKey mkAg
           logicalModelInfo <-
             HashMap.lookup _noiType _siLogicalModels
               `onNothing` throw500 ("Logical model " <> _noiType <<> " not found in source " <>> _siName)
+          -- NOTE: AVNestedObject omits the RelationshipFilters wrapper that AVRelationship uses to inject spiFilter (see d874b75b02).
+          -- If the nested logical model type ever gains a meaningful row-level spiFilter, AND it in here as RelTargetNativeQuery does.
           lift $ fmap (AVNestedObject nestedObjectInfo) <$> logicalModelBoolExp logicalModelInfo
+        -- NOTE: When SCIArrayColumn filtering is implemented, it will also need RelationshipFilters wrapping (see d874b75b02).
+        -- Array elements have "rows" with potential per-element permissions; omitting that wrapper would be an oracle bypass.
         FIColumn (SCIArrayColumn _) -> empty -- TODO(dmoverton)
         -- field_name: field_type_bool_exp
         FIRelationship relationshipInfo -> do

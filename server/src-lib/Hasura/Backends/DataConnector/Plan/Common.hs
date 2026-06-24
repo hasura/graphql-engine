@@ -397,6 +397,8 @@ translateBoolExp sourceName columnStack = \case
     redactionExpName <- recordRedactionExpression sourceName redactionExp
     mkIfZeroOrMany API.And <$> traverse (translateOp columnSelector (Witch.from . columnTypeToScalarType $ ciType c) redactionExpName) opExps
   BoolField (AVNestedObject NestedObjectInfo {..} nestedExp) ->
+    -- NOTE: No row-level permission filter from the nested type is applied before recursing (see d874b75b02).
+    -- If nested logical model types gain spiFilter semantics, AND that filter into nestedExp before this call.
     translateBoolExp sourceName (pushColumn columnStack _noiColumn) nestedExp
   BoolField (AVRelationship relationshipInfo (RelationshipFilters {rfTargetTablePermissions, rfFilter})) -> do
     (relationshipName, API.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceName relationshipInfo

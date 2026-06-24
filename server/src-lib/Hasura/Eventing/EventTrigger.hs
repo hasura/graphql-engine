@@ -772,6 +772,9 @@ retryOrSetError e retryConf eventTriggerMetrics err = do
           (eventProcessedTotal eventTriggerMetrics)
           (EventStatusWithTriggerLabel eventFailedLabel (Just (DynamicEventTriggerLabel (tmName (eTrigger e)) (eSource e))))
       pure PESetError
+    -- TODO: the webhook setting Retry-After can indefinitely bypass our retry limit mechanism.
+    -- I find our docs ambiguous ("the event will be delivered once more") as to correct behavior.
+    -- This might be causing problems for people AND be something we can no longer change.
     else do
       currentTime <- liftIO getCurrentTime
       let delay = fromMaybe (rcIntervalSec retryConf) mretryHeaderSeconds
