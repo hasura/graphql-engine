@@ -1,12 +1,19 @@
 module Hasura.Server.Auth.JWTSpec (spec) where
 
 import Control.Arrow
+import Crypto.JOSE.JWK qualified as JoseJWK
+import Crypto.JWT qualified as CryptoJWT
 import Data.ByteString.UTF8 qualified as BS
 import Data.Fixed (Pico)
+import Control.Lens ((.~))
+import Data.Either (isLeft, isRight)
+import Data.IORef (newIORef)
+import Data.Word (Word8)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Time (UTCTime (..), addUTCTime, defaultTimeLocale, formatTime, fromGregorian, secondsToDiffTime, secondsToNominalDiffTime)
 import Hasura.Logging (Hasura, Logger (..))
 import Hasura.Prelude
+import Hasura.Server.Auth.JWT (JWTClaimCheckConfig (..), JWTClaims (..), JWTClaimsFormat (..), JWTCtx (..), JWTHeader (..), JWTNamespace (..), RawJWT (..), verifyJwt)
 import Hasura.Server.Auth.JWT qualified as JWT
 import Hasura.Server.Auth.JWT.Logging (JwkFetchError)
 import Network.HTTP.Types (Header, ResponseHeaders)
@@ -14,7 +21,47 @@ import Test.Hspec
 
 spec :: Spec
 spec = do
+  audienceValidationTests
   determineJwkExpiryLifetimeTests
+
+-- | Audience validation tests. jose skips its 'audCheck' predicate entirely
+-- when 'aud' is absent from a token, so by default a token omitting 'aud' is
+-- accepted even when 'audience' is configured. 'CheckInvalidIfMissing' opts
+-- into strict validation where absence is treated as a mismatch.
+audienceValidationTests :: Spec
+audienceValidationTests = describe "JWT audience validation" $ do
+  let testJwk = JoseJWK.fromOctets (replicate 32 (0x42 :: Word8))
+      mkCtx audCheck = do
+        keyRef <- newIORef (JoseJWK.JWKSet [testJwk], Nothing)
+        pure
+          JWTCtx
+            { jcxUrl = Nothing
+            , jcxKeyConfig = keyRef
+            , jcxAudience = audCheck
+            , jcxIssuer = Nothing
+            , jcxClaims = JCNamespace (ClaimNs "hasura") JCFJson
+            , jcxAllowedSkew = Just (secondsToNominalDiffTime (10 * 365 * 24 * 3600))
+            , jcxHeader = JHAuthorization
+            }
+      signNoAud = do
+        let action :: CryptoJWT.JOSE CryptoJWT.Error IO CryptoJWT.SignedJWT
+            action = do
+              alg <- JoseJWK.bestJWSAlg testJwk
+              CryptoJWT.signClaims testJwk (CryptoJWT.newJWSHeader ((), alg))
+                (CryptoJWT.emptyClaimsSet & CryptoJWT.claimSub .~ Just "test-user")
+        CryptoJWT.runJOSE action >>= either (fail . show) pure
+
+  it "by default accepts a JWT with no aud claim even when audience is configured" $ do
+    ctx <- mkCtx (Just JWTClaimCheckConfig { checkValue = CryptoJWT.Audience ["myapp"], invalidIfMissing = False })
+    signed <- signNoAud
+    result <- runExceptT (verifyJwt ctx (RawJWT (CryptoJWT.encodeCompact signed)))
+    result `shouldSatisfy` isRight
+
+  it "rejects a JWT with no aud claim when extra_required_claims includes audience" $ do
+    ctx <- mkCtx (Just JWTClaimCheckConfig { checkValue = CryptoJWT.Audience ["myapp"], invalidIfMissing = True })
+    signed <- signNoAud
+    result <- runExceptT (verifyJwt ctx (RawJWT (CryptoJWT.encodeCompact signed)))
+    result `shouldSatisfy` isLeft
 
 determineJwkExpiryLifetimeTests :: Spec
 determineJwkExpiryLifetimeTests = describe "determineJwkExpiryLifetime" $ do

@@ -367,13 +367,16 @@ or
 
 :::danger Audience Security Vulnerability
 
-Certain JWT providers share JWKs between multiple tenants. They use the `aud` claim of the JWT to specify the intended
-audience. Setting the `audience` field in the Hasura JWT configuration will make sure that the `aud` claim
-from the JWT is also checked during verification. Not doing this check will allow JWTs issued for other tenants to be
-valid as well.
+Certain JWT providers share JWKs between multiple tenants and use the `aud` claim to identify the intended
+audience. Setting the `audience` field in the Hasura JWT configuration ensures that a present `aud` claim is
+checked during verification. Not doing this will allow JWTs issued for other tenants to be valid as well.
 
 In these cases, you **MUST** set the `audience` field to the appropriate value. Failing to do so is a **major security
 vulnerability**.
+
+**Default behaviour:** by default, a token that omits the `aud` claim entirely is still accepted when `audience` is
+configured — only a present-but-mismatched `aud` causes rejection. If your provider always issues `aud` and you want
+to enforce its presence, set `"extra_required_claims": ["audience"]` (see below).
 
 :::
 
@@ -401,7 +404,30 @@ Examples:
 - Certain providers require you to verify the `iss` claim on the JWT. To do that you can set this field to the
   appropriate value.
 - A JWT configuration without an issuer will match any issuer field present in an incoming JWT.
-- An incoming JWT without an issuer specified will match a configuration even if it specifies an issuer.
+- An incoming JWT without an issuer specified will match a configuration even if it specifies an issuer. Set
+  `"extra_required_claims": ["issuer"]` to opt into strict validation where absence is treated as a mismatch.
+
+### extra_required_claims
+
+This is an optional field. It takes a list containing any combination of `"audience"` and `"issuer"`.
+
+By default, a token that omits the `aud` or `iss` claim is accepted even when `audience` or `issuer` is configured
+in Hasura (a present-but-mismatched value is still rejected). Use `extra_required_claims` to opt into stricter
+validation where a missing claim is treated the same as a mismatch.
+
+Example — require both claims to be present:
+
+```json
+{
+  "jwk_url": "https://......",
+  "audience": "myapp",
+  "issuer": "https://my-auth-server.com",
+  "extra_required_claims": ["audience", "issuer"]
+}
+```
+
+This is useful when your provider always includes these claims and you want to guard against accidentally accepting
+tokens from a provider that omits them.
 
 ### claims_map
 

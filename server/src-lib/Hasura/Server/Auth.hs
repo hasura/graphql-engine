@@ -120,10 +120,10 @@ compareAuthMode authMode authMode' = do
     _ -> return $ authMode == authMode'
   where
     compareJWTConfig :: JWTCtx -> JWTCtx -> IO Bool
-    compareJWTConfig (JWTCtx url keyConfigRef audM iss claims allowedSkew headers) (JWTCtx url' keyConfigRef' audM' iss' claims' allowedSkew' headers') = do
+    compareJWTConfig (JWTCtx url keyConfigRef aud iss claims allowedSkew headers) (JWTCtx url' keyConfigRef' aud' iss' claims' allowedSkew' headers') = do
       keyConfig <- readIORef keyConfigRef
       keyConfig' <- readIORef keyConfigRef'
-      return $ (url, keyConfig, audM, iss, claims, allowedSkew, headers) == (url', keyConfig', audM', iss', claims', allowedSkew', headers')
+      return $ (url, keyConfig, aud, iss, claims, allowedSkew, headers) == (url', keyConfig', aud', iss', claims', allowedSkew', headers')
 
 -- | Validate the user's requested authentication configuration, launching any
 -- required maintenance threads for JWT etc.
@@ -188,7 +188,11 @@ mkJwtCtx JWTConfig {..} logger httpManager = do
       jwkRef <- liftIO $ newIORef (JWKSet [], Nothing)
       return (Just uri, jwkRef)
   let jwtHeader = fromMaybe JHAuthorization jcHeader
-  return $ JWTCtx jwkUri jwkKeyConfig jcAudience jcIssuer jcClaims jcAllowedSkew jwtHeader
+      toClaimCheck :: ExtraRequiredClaim -> Maybe a -> Maybe (JWTClaimCheckConfig a)
+      toClaimCheck erc = fmap \checkValue -> JWTClaimCheckConfig { checkValue, invalidIfMissing = erc `elem` jcExtraRequiredClaims }
+      jcxAudienceCheck = toClaimCheck ERCAudience jcAudience
+      jcxIssuerCheck = toClaimCheck ERCIssuer jcIssuer
+  return $ JWTCtx jwkUri jwkKeyConfig jcxAudienceCheck jcxIssuerCheck jcClaims jcAllowedSkew jwtHeader
   where
     -- JWK fetching is a significant source of tenant startup failures that are
     -- (currently) not automatically retried since they appear to be user

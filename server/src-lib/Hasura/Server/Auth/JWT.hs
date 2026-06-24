@@ -27,7 +27,7 @@
 -- considered an ambiguity error.
 module Hasura.Server.Auth.JWT
   ( processJwt,
-    RawJWT,
+    RawJWT (..),
     StringOrURI (..),
     JWTConfig (..),
     JWTCtx (..),
@@ -36,6 +36,8 @@ module Hasura.Server.Auth.JWT
     JWTClaims (..),
     JwkFetchError (..),
     JWTHeader (..),
+    ExtraRequiredClaim (..),
+    JWTClaimCheckConfig (..),
     JWTNamespace (..),
     JWTCustomClaimsMapDefaultRole,
     JWTCustomClaimsMapAllowedRoles,
@@ -58,6 +60,7 @@ module Hasura.Server.Auth.JWT
     JWTCustomClaimsMapValueG (..),
     JWTCustomClaimsMap (..),
     determineJwkExpiryLifetime,
+    verifyJwt,
   )
 where
 
@@ -145,6 +148,38 @@ data JWTHeader
   deriving (Show, Eq, Generic)
 
 instance Hashable JWTHeader
+
+-- | Claims that, when their corresponding validation config is set, must be
+-- present in the token. By default a token missing 'iss' or 'aud' is still
+-- accepted (see jwt.mdx). Setting 'extra_required_claims' opts into stricter
+-- validation where absence of the claim is treated as a mismatch.
+data ExtraRequiredClaim
+  = ERCAudience
+  | ERCIssuer
+  deriving (Show, Eq, Generic)
+
+instance Hashable ExtraRequiredClaim
+
+instance J.FromJSON ExtraRequiredClaim where
+  parseJSON = J.withText "ExtraRequiredClaim" $ \case
+    "audience" -> pure ERCAudience
+    "issuer" -> pure ERCIssuer
+    other -> fail $ "Unknown extra_required_claims value: " <> T.unpack other
+
+instance J.ToJSON ExtraRequiredClaim where
+  toJSON ERCAudience = "audience"
+  toJSON ERCIssuer = "issuer"
+
+-- | How to validate a single JWT claim at runtime.
+-- 'Nothing' means the claim is not configured and no validation is performed.
+-- 'Just' carries the configured value and 'invalidIfMissing': when 'True' the
+-- token is rejected if the claim is absent; when 'False' an absent claim is
+-- accepted without validation.
+data JWTClaimCheckConfig a = JWTClaimCheckConfig
+  { checkValue :: a,
+    invalidIfMissing :: Bool
+  }
+  deriving (Show, Eq)
 
 instance J.FromJSON JWTHeader where
   parseJSON = J.withObject "JWTHeader" $ \o -> do
@@ -296,7 +331,12 @@ data JWTConfig = JWTConfig
     jcIssuer :: !(Maybe Jose.StringOrURI),
     jcClaims :: !JWTClaims,
     jcAllowedSkew :: !(Maybe NominalDiffTime),
-    jcHeader :: !(Maybe JWTHeader)
+    jcHeader :: !(Maybe JWTHeader),
+    -- | Claims that must be present in the token when their validation config is
+    -- set. By default a missing 'aud' or 'iss' claim is accepted even when
+    -- 'audience' or 'issuer' is configured. Include 'audience' or 'issuer' here
+    -- to opt into stricter validation where absence is treated as a mismatch.
+    jcExtraRequiredClaims :: ![ExtraRequiredClaim]
   }
   deriving (Show, Eq)
 
@@ -307,8 +347,14 @@ data JWTCtx = JWTCtx
     -- | We add the expiry time of the JWK to the IORef, to determine
     -- | if the JWK has expired and needs to be refreshed.
     jcxKeyConfig :: !(IORef (Jose.JWKSet, Maybe UTCTime)),
-    jcxAudience :: !(Maybe Jose.Audience),
-    jcxIssuer :: !(Maybe Jose.StringOrURI),
+    -- | How to validate the token's 'aud' claim. 'Nothing' means no audience
+    -- is configured. 'Just' carries the expected value and whether an absent
+    -- claim should be rejected (see 'JWTClaimCheckConfig').
+    jcxAudience :: !(Maybe (JWTClaimCheckConfig Jose.Audience)),
+    -- | How to validate the token's 'iss' claim. 'Nothing' means no issuer is
+    -- configured. 'Just' carries the expected value and whether an absent claim
+    -- should be rejected (see 'JWTClaimCheckConfig').
+    jcxIssuer :: !(Maybe (JWTClaimCheckConfig Jose.StringOrURI)),
     jcxClaims :: !JWTClaims,
     jcxAllowedSkew :: !(Maybe NominalDiffTime),
     jcxHeader :: !JWTHeader
@@ -316,8 +362,8 @@ data JWTCtx = JWTCtx
   deriving (Eq)
 
 instance Show JWTCtx where
-  show (JWTCtx url _ audM iss claims allowedSkew headers) =
-    show [show url, "<IORef JWKSet, Expiry>", show audM, show iss, show claims, show allowedSkew, show headers]
+  show (JWTCtx url _ aud iss claims allowedSkew headers) =
+    show [show url, "<IORef JWKSet, Expiry>", show aud, show iss, show claims, show allowedSkew, show headers]
 
 data HasuraClaims = HasuraClaims
   { _cmAllowedRoles :: ![RoleName],
@@ -596,12 +642,21 @@ processJwt_ processJwtBytes decodeIssuer fGetHeaderType jwtCtxs headers mUnAuthR
             _ -> throw400 InvalidHeaders "Malformed Authorization header"
         (JHCustomHeader _, b') -> pure b'
 
-      case (StringOrURI <$> jcxIssuer j, decodeIssuer $ RawJWT $ BLC.fromStrict b'') of
-        (Nothing, _) -> pure $ Right (j, b'')
-        (_, Nothing) -> pure $ Right (j, b'')
-        (ci, ji)
-          | ci == ji -> pure $ Right (j, b'')
-          | otherwise -> pure $ Left (ci, ji, j, b'')
+      let tokenIss = decodeIssuer $ RawJWT $ BLC.fromStrict b''
+      case jcxIssuer j of
+        Nothing -> pure $ Right (j, b'')
+        -- By default a token missing 'iss' is accepted even when an issuer is
+        -- configured (documented behaviour in jwt.mdx). invalidIfMissing opts
+        -- into strict validation where a missing 'iss' is a mismatch.
+        Just JWTClaimCheckConfig { checkValue = configuredIss, invalidIfMissing } ->
+          let ci = Just (StringOrURI configuredIss)
+           in case tokenIss of
+                Nothing
+                  | invalidIfMissing -> pure $ Left (ci, Nothing, j, b'')
+                  | otherwise -> pure $ Right (j, b'')
+                ji
+                  | ci == ji -> pure $ Right (j, b'')
+                  | otherwise -> pure $ Left (ci, ji, j, b'')
 
     cartesianProduct :: [a] -> [b] -> [(a, b)]
     cartesianProduct as bs = [(a, b) | a <- as, b <- bs]
@@ -821,7 +876,14 @@ verifyJwt ctx (RawJWT rawJWT) = do
   keyConfig <- liftIO $ readIORef $ jcxKeyConfig ctx
   jwt <- Jose.decodeCompact rawJWT
   t <- liftIO getCurrentTime
-  Jose.verifyClaimsAt config (fst keyConfig) t jwt
+  claims <- Jose.verifyClaimsAt config (fst keyConfig) t jwt
+  -- jose's audCheck predicate is only called when aud is present in the token,
+  -- so a token omitting aud entirely passes by default. invalidIfMissing opts
+  -- into strict validation where a missing 'aud' is a hard rejection.
+  case jcxAudience ctx of
+    Just JWTClaimCheckConfig { invalidIfMissing = True } | isNothing (view Jose.claimAud claims) -> throwError Jose.JWTNotInAudience
+    _ -> pure ()
+  pure claims
   where
     validationSettingsWithSkew =
       case jcxAllowedSkew ctx of
@@ -831,15 +893,15 @@ verifyJwt ctx (RawJWT rawJWT) = do
 
     config = case jcxIssuer ctx of
       Nothing -> validationSettingsWithSkew
-      Just iss -> validationSettingsWithSkew & set Jose.issuerPredicate (== iss)
+      Just JWTClaimCheckConfig { checkValue = iss } -> validationSettingsWithSkew & set Jose.issuerPredicate (== iss)
     audCheck audience =
       -- dont perform the check if there are no audiences in the conf
       case jcxAudience ctx of
         Nothing -> True
-        Just (Jose.Audience audiences) -> audience `elem` audiences
+        Just JWTClaimCheckConfig { checkValue = Jose.Audience audiences } -> audience `elem` audiences
 
 instance J.ToJSON JWTConfig where
-  toJSON (JWTConfig keyOrUrl aud iss claims allowedSkew jwtHeader) =
+  toJSON (JWTConfig keyOrUrl aud iss claims allowedSkew jwtHeader extraRequiredClaims) =
     let keyOrUrlPairs = case keyOrUrl of
           Left _ ->
             [ "type" J..= J.String "<TYPE REDACTED>",
@@ -862,6 +924,7 @@ instance J.ToJSON JWTConfig where
              ]
           <> claimsPairs
           <> (maybe [] (\skew -> ["allowed_skew" J..= skew]) allowedSkew)
+          <> (if null extraRequiredClaims then [] else ["extra_required_claims" J..= extraRequiredClaims])
 
 -- | Parse from a json string like:
 -- | `{"type": "RS256", "key": "<PEM-encoded-public-key-or-X509-cert>"}`
@@ -897,7 +960,9 @@ instance J.FromJSON JWTConfig where
 
     let jwtClaims = maybe (JCNamespace hasuraClaimsNs claimsFormat) JCMap claimsMap
 
-    pure $ JWTConfig keyOrUrl aud iss jwtClaims allowedSkew jwtHeader
+    extraRequiredClaims <- o J..:? "extra_required_claims" J..!= []
+
+    pure $ JWTConfig keyOrUrl aud iss jwtClaims allowedSkew jwtHeader extraRequiredClaims
     where
       parseKey keyType rawKey =
         case keyType of

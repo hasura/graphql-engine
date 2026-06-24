@@ -617,6 +617,7 @@ fakeJWTConfig =
       jcClaims = JCNamespace (ClaimNs "") JCFJson
       jcAllowedSkew = Nothing
       jcHeader = Nothing
+      jcExtraRequiredClaims = []
    in JWTConfig {..}
 
 fakeAuthHook :: AuthHook
