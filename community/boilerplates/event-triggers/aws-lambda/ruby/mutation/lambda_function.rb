@@ -26,7 +26,7 @@ def lambda_handler(event:, context:)
   res = Net::HTTP.start(uri.host, uri.port, use_ssl: use_ssl) do |http|
     req = Net::HTTP::Post.new(uri)
     req['Content-Type'] = 'application/json'
-    req['x-hasura-access-key'] = access_key
+    req['x-hasura-admin-secret'] = access_key
     req.body = JSON.generate(
       query: query,
       variables: { noteId: note_id, data: data }

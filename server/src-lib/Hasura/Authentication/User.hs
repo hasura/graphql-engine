@@ -120,7 +120,6 @@ mkUserInfo roleBuild userAdminSecret sessionVariables = do
     modifySessionVariables roleName =
       sessionVariablesWith userRoleHeader (roleNameToTxt roleName)
         . sessionVariablesWithout adminSecretHeader
-        . sessionVariablesWithout deprecatedAccessKeyHeader
 
     getBackendOnlyFieldAccess :: m BackendOnlyFieldAccess
     getBackendOnlyFieldAccess = case userAdminSecret of

@@ -119,12 +119,9 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
           `shouldReturn` Left AccessDenied
         getUserInfoWithExpTime mempty [("blah", "blah"), sessionVariableToHeader adminSecretHeader "blah"] mode
           `shouldReturn` Left AccessDenied
-        -- with deprecated header:
-        getUserInfoWithExpTime mempty [sessionVariableToHeader deprecatedAccessKeyHeader "bad secret"] mode
-          `shouldReturn` Left AccessDenied
-        getUserInfoWithExpTime mempty [sessionVariableToHeader deprecatedAccessKeyHeader ""] mode
-          `shouldReturn` Left AccessDenied
-        getUserInfoWithExpTime mempty [("blah", "blah"), sessionVariableToHeader deprecatedAccessKeyHeader "blah"] mode
+        -- x-hasura-access-key is no longer accepted; even the correct admin secret
+        -- via the deprecated header is treated as no credential sent.
+        getUserInfoWithExpTime mempty [("x-hasura-access-key", "secret")] mode
           `shouldReturn` Left AccessDenied
 
       it "rejects when no secret sent, since no fallback unauth role" $ do
@@ -157,13 +154,10 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
           `shouldReturn` Left AccessDenied
         getUserInfoWithExpTime mempty [("blah", "blah"), sessionVariableToHeader adminSecretHeader "blah"] mode
           `shouldReturn` Left AccessDenied
-        -- with deprecated header:
-        getUserInfoWithExpTime mempty [sessionVariableToHeader deprecatedAccessKeyHeader "bad secret"] mode
-          `shouldReturn` Left AccessDenied
-        getUserInfoWithExpTime mempty [sessionVariableToHeader deprecatedAccessKeyHeader ""] mode
-          `shouldReturn` Left AccessDenied
-        getUserInfoWithExpTime mempty [("blah", "blah"), sessionVariableToHeader deprecatedAccessKeyHeader "blah"] mode
-          `shouldReturn` Left AccessDenied
+        -- x-hasura-access-key is no longer accepted; the correct admin secret via
+        -- the deprecated header is not recognized as admin, falling to the unauth role.
+        getUserInfoWithExpTime mempty [("x-hasura-access-key", "secret")] mode
+          `shouldReturn` Right ourUnauthRole
 
       it "accepts when no secret sent and unauth role defined" $ do
         getUserInfoWithExpTime mempty mempty mode
@@ -194,13 +188,10 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
         `shouldReturn` Left AccessDenied
       getUserInfoWithExpTime mempty [("blah", "blah"), sessionVariableToHeader adminSecretHeader "blah"] mode
         `shouldReturn` Left AccessDenied
-      -- with deprecated header:
-      getUserInfoWithExpTime mempty [sessionVariableToHeader deprecatedAccessKeyHeader "bad secret"] mode
-        `shouldReturn` Left AccessDenied
-      getUserInfoWithExpTime mempty [sessionVariableToHeader deprecatedAccessKeyHeader ""] mode
-        `shouldReturn` Left AccessDenied
-      getUserInfoWithExpTime mempty [("blah", "blah"), sessionVariableToHeader deprecatedAccessKeyHeader "blah"] mode
-        `shouldReturn` Left AccessDenied
+      -- x-hasura-access-key is no longer accepted; the correct admin secret via
+      -- the deprecated header is not recognized, falling through to webhook auth.
+      getUserInfoWithExpTime mempty [("x-hasura-access-key", "secret")] mode
+        `shouldReturn` Right (mkRoleNameE "hook")
 
     it "authenticates with webhook when no admin secret sent" $ do
       getUserInfoWithExpTime mempty mempty mode
@@ -242,13 +233,10 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
           `shouldReturn` Left AccessDenied
         getUserInfoWithExpTime mempty [("blah", "blah"), sessionVariableToHeader adminSecretHeader "blah"] mode
           `shouldReturn` Left AccessDenied
-        -- with deprecated header:
-        getUserInfoWithExpTime mempty [sessionVariableToHeader deprecatedAccessKeyHeader "bad secret"] mode
-          `shouldReturn` Left AccessDenied
-        getUserInfoWithExpTime mempty [sessionVariableToHeader deprecatedAccessKeyHeader ""] mode
-          `shouldReturn` Left AccessDenied
-        getUserInfoWithExpTime mempty [("blah", "blah"), sessionVariableToHeader deprecatedAccessKeyHeader "blah"] mode
-          `shouldReturn` Left AccessDenied
+        -- x-hasura-access-key is no longer accepted; the correct admin secret via
+        -- the deprecated header is not recognized, treated as no credential sent.
+        getUserInfoWithExpTime mempty [("x-hasura-access-key", "secret")] mode
+          `shouldReturn` Left InvalidHeaders
 
       it "rejects when admin secret not sent and no 'Authorization' header" $ do
         getUserInfoWithExpTime mempty [("blah", "blah")] mode
@@ -281,13 +269,10 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
           `shouldReturn` Left AccessDenied
         getUserInfoWithExpTime mempty [("blah", "blah"), sessionVariableToHeader adminSecretHeader "blah"] mode
           `shouldReturn` Left AccessDenied
-        -- with deprecated header:
-        getUserInfoWithExpTime mempty [sessionVariableToHeader deprecatedAccessKeyHeader "bad secret"] mode
-          `shouldReturn` Left AccessDenied
-        getUserInfoWithExpTime mempty [sessionVariableToHeader deprecatedAccessKeyHeader ""] mode
-          `shouldReturn` Left AccessDenied
-        getUserInfoWithExpTime mempty [("blah", "blah"), sessionVariableToHeader deprecatedAccessKeyHeader "blah"] mode
-          `shouldReturn` Left AccessDenied
+        -- x-hasura-access-key is no longer accepted; the correct admin secret via
+        -- the deprecated header is not recognized as admin, falling to the unauth role.
+        getUserInfoWithExpTime mempty [("x-hasura-access-key", "secret")] mode
+          `shouldReturn` Right ourUnauthRole
 
       it "authorizes as unauth role when no 'Authorization' header" $ do
         getUserInfoWithExpTime mempty [("blah", "blah")] mode

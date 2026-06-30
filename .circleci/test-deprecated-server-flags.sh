@@ -32,10 +32,6 @@ wait_for_port() {
 	echo "Failed waiting for $PORT" && exit 1
 }
 
-test_export_metadata_with_access_key() {
-	curl -f -d'{"type" : "export_metadata", "args" : {} }' localhost:8080/v1/query -H "X-Hasura-Access-Key: $1" >/dev/null
-}
-
 cd $SERVER_ROOT
 
 if [ -z "${HASURA_GRAPHQL_DATABASE_URL:-}" ]; then
@@ -84,7 +80,6 @@ run_hge_with_flags --access-key="$key"
 
 echoInfo "Test deprecated flag --access-key=XXXX"
 grep -F '"admin_secret_set":true' "$OUTPUT_FOLDER/graphql-engine.log" >/dev/null
-test_export_metadata_with_access_key "$key"
 
 kill_hge
 
@@ -98,7 +93,6 @@ run_hge_with_flags
 
 echoInfo "Test deprecated EnvVar HASURA_GRAPHQL_ACCESS_KEY=XXXX"
 grep -F '"admin_secret_set":true' "$OUTPUT_FOLDER/graphql-engine.log" >/dev/null || (cat "$OUTPUT_FOLDER/graphql-engine.log" && false)
-test_export_metadata_with_access_key "$key"
 
 kill_hge
 

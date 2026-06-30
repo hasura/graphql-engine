@@ -24,7 +24,7 @@ exports.handler = async (event) => {
     const result = await fetch(hgeEndpoint + '/v1/graphql', {
       method: 'POST',
       body: JSON.stringify({ query: query, variables: qv }),
-      headers: { 'Content-Type': 'application/json', 'x-hasura-access-key': accessKey },
+      headers: { 'Content-Type': 'application/json', 'x-hasura-admin-secret': accessKey },
     });
     
     const { errors, data } = await result.json();

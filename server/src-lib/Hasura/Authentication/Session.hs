@@ -1,7 +1,6 @@
 module Hasura.Authentication.Session
   ( -- * Known headers
     adminSecretHeader,
-    deprecatedAccessKeyHeader,
     useBackendOnlyPermissionsHeader,
     userIdHeader,
     userRoleHeader,
@@ -61,9 +60,6 @@ userRoleHeader = SessionVariable "x-hasura-role"
 
 useBackendOnlyPermissionsHeader :: SessionVariable
 useBackendOnlyPermissionsHeader = SessionVariable "x-hasura-use-backend-only-permissions"
-
-deprecatedAccessKeyHeader :: SessionVariable
-deprecatedAccessKeyHeader = SessionVariable "x-hasura-access-key"
 
 newtype SessionVariable = SessionVariable {unSessionVariable :: CI.CI Text}
   deriving (Show, Eq, Hashable, Data, NFData, Ord)
