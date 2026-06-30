@@ -18,8 +18,6 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as S
 import Data.Text.Extended
-import Hasura.Authentication.Role (RoleName)
-import Hasura.Authentication.User (UserInfoM)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.RemoteServer
@@ -56,13 +54,19 @@ instance J.ToJSON AddRemoteSchemaQuery where
   toJSON = J.genericToJSON hasuraJSON
   toEncoding = J.genericToEncoding hasuraJSON
 
-newtype RemoteSchemaNameQuery = RemoteSchemaNameQuery
-  { _rsnqName :: RemoteSchemaName
+data RemoteSchemaNameQuery = RemoteSchemaNameQuery
+  { _rsnqName :: RemoteSchemaName,
+    _rsnqCascade :: Bool
   }
   deriving (Show, Eq, Generic)
 
 instance J.FromJSON RemoteSchemaNameQuery where
-  parseJSON = J.genericParseJSON hasuraJSON
+  parseJSON = J.withObject "RemoteSchemaNameQuery" $ \o -> do
+    name <- o J..: "name"
+    cascade <-
+      o J..:? "cascade"
+        >>= maybe (o J..:? "cascade_dependents" J..!= False) pure
+    pure $ RemoteSchemaNameQuery name cascade
 
 instance J.ToJSON RemoteSchemaNameQuery where
   toJSON = J.genericToJSON hasuraJSON
@@ -106,28 +110,31 @@ addRemoteSchemaP1 name = do
     <<> " already exists"
 
 runRemoveRemoteSchema ::
-  (QErrM m, UserInfoM m, CacheRWM m, MetadataM m) =>
+  (QErrM m, CacheRWM m, MetadataM m) =>
   RemoteSchemaNameQuery ->
   m EncJSON
-runRemoveRemoteSchema (RemoteSchemaNameQuery rsn) = do
-  void $ removeRemoteSchemaP1 rsn
+runRemoveRemoteSchema (RemoteSchemaNameQuery rsn cascade) = do
+  deps <- removeRemoteSchemaP1 rsn cascade
+  metadataModifier <- execWriterT $ do
+    traverse_ purgeSourceAndSchemaDependencies deps
+    tell $ dropRemoteSchemaInMetadata rsn
   withNewInconsistentObjsCheck
     $ buildSchemaCache
-    $ dropRemoteSchemaInMetadata rsn
+    $ metadataModifier
   pure successMsg
 
 removeRemoteSchemaP1 ::
-  (UserInfoM m, QErrM m, CacheRM m) =>
+  (QErrM m, CacheRM m) =>
   RemoteSchemaName ->
-  m [RoleName]
-removeRemoteSchemaP1 rsn = do
+  Bool ->
+  m [SchemaObjId]
+removeRemoteSchemaP1 rsn cascade = do
   sc <- askSchemaCache
   let rmSchemas = scRemoteSchemas sc
   void
     $ onNothing (HashMap.lookup rsn rmSchemas)
     $ throw400 NotExists "no such remote schema"
   let depObjs = getDependentObjs sc remoteSchemaDepId
-      roles = mapMaybe getRole depObjs
       nonPermDependentObjs = filter nonPermDependentObjPredicate depObjs
   -- report non permission dependencies (if any), this happens
   -- mostly when a remote relationship is defined with
@@ -135,15 +142,10 @@ removeRemoteSchemaP1 rsn = do
 
   -- we only report the non permission dependencies because we
   -- drop the related permissions
-  unless (null nonPermDependentObjs) $ reportDependentObjectsExist nonPermDependentObjs
-  pure roles
+  unless (cascade || null nonPermDependentObjs) $ reportDependentObjectsExist nonPermDependentObjs
+  pure nonPermDependentObjs
   where
     remoteSchemaDepId = SORemoteSchema rsn
-
-    getRole depObj =
-      case depObj of
-        SORemoteSchemaPermission _ role -> Just role
-        _ -> Nothing
 
     nonPermDependentObjPredicate (SORemoteSchemaPermission _ _) = False
     nonPermDependentObjPredicate _ = True
@@ -152,7 +154,7 @@ runReloadRemoteSchema ::
   (QErrM m, CacheRWM m, MetadataM m) =>
   RemoteSchemaNameQuery ->
   m EncJSON
-runReloadRemoteSchema (RemoteSchemaNameQuery name) = do
+runReloadRemoteSchema (RemoteSchemaNameQuery name _) = do
   remoteSchemas <- getAllRemoteSchemas <$> askSchemaCache
   unless (name `elem` remoteSchemas)
     $ throw400 NotExists
@@ -168,7 +170,7 @@ runReloadRemoteSchema (RemoteSchemaNameQuery name) = do
 
 runIntrospectRemoteSchema ::
   (CacheRM m, QErrM m) => RemoteSchemaNameQuery -> m EncJSON
-runIntrospectRemoteSchema (RemoteSchemaNameQuery rsName) = do
+runIntrospectRemoteSchema (RemoteSchemaNameQuery rsName _) = do
   sc <- askSchemaCache
   RemoteSchemaCtx {..} <-
     HashMap.lookup rsName (scRemoteSchemas sc) `onNothing` throw400 NotExists ("remote schema: " <> rsName <<> " not found")
