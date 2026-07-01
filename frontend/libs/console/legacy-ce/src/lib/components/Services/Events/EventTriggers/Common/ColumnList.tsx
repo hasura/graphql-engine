@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { QualifiedTable } from '../../../../../metadata/types';
 import { Button } from '../../../../../new-components/Button';
 import { ETOperationColumn } from '../../types';
@@ -23,11 +23,11 @@ const ColumnList: React.FC<ColumnListProps> = props => {
     handleOperationsColumnsChange,
   } = props;
 
-  const [allColEnabled, setAllColEnabled] = useState(true);
-
   if (!table.name) {
     return <i>Select a table first to get column list</i>;
   }
+
+  const hasSelectedColumns = operationColumns.some(col => col.enabled);
 
   const handleToggleColumn = (opCol: ETOperationColumn) => {
     const newCols = operationColumns.map(o => {
@@ -40,25 +40,13 @@ const ColumnList: React.FC<ColumnListProps> = props => {
   };
 
   const handleToggleAllColumns = () => {
-    if (allColEnabled) {
-      const cols = operationColumns.map(col => {
-        return {
-          ...col,
-          enabled: false,
-        };
-      });
-      handleOperationsColumnsChange(cols);
-      setAllColEnabled(false);
-    } else {
-      const cols = operationColumns.map(col => {
-        return {
-          ...col,
-          enabled: true,
-        };
-      });
-      handleOperationsColumnsChange(cols);
-      setAllColEnabled(true);
-    }
+    const cols = operationColumns.map(col => {
+      return {
+        ...col,
+        enabled: !hasSelectedColumns,
+      };
+    });
+    handleOperationsColumnsChange(cols);
   };
 
   return (
@@ -78,7 +66,7 @@ const ColumnList: React.FC<ColumnListProps> = props => {
                 size="sm"
                 onClick={() => handleToggleAllColumns()}
               >
-                Toggle All
+                {hasSelectedColumns ? 'Unselect All' : 'Select All'}
               </Button>
             </div>
             {operationColumns.map(opCol => (

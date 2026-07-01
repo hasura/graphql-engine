@@ -26,7 +26,6 @@ import {
   setRequestUrlTransform,
   setRequestPayloadTransform,
 } from '../../../../Common/ConfigureTransformation/requestTransformState';
-import { showErrorNotification } from '../../../Common/Notification';
 import {
   QueryParams,
   RequestTransformContentType,
@@ -294,21 +293,6 @@ const Add: React.FC<Props> = props => {
 
   const submit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (
-      state.operationColumns.every(
-        operationColumn => !operationColumn.enabled
-      ) &&
-      state.operations.update
-    ) {
-      dispatch(
-        showErrorNotification(
-          'Creating event trigger failed.',
-          'Please select at-least one trigger column for the update trigger operation.'
-        )
-      );
-      return;
-    }
-
     const newState = { ...state };
 
     /* don't cleanup_config if console type is oss */

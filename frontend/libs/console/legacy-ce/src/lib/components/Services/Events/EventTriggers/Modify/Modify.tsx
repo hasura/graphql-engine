@@ -44,7 +44,6 @@ import {
   parseValidateApiData,
   getTransformState,
 } from '../../../../../components/Common/ConfigureTransformation/utils';
-import { showErrorNotification } from '../../../../../components/Services/Common/Notification';
 import { Button } from '../../../../../new-components/Button';
 import { isProConsole } from '../../../../../utils/proConsole';
 import globals from '../../../../../Globals';
@@ -329,21 +328,6 @@ const Modify: React.FC<Props> = props => {
   const saveWrapper =
     (property?: EventTriggerProperty) =>
     (successCb?: () => void, errorCb?: () => void) => {
-      if (
-        state.operationColumns.every(
-          operationColumn => !operationColumn.enabled
-        ) &&
-        state.operations.update
-      ) {
-        dispatch(
-          showErrorNotification(
-            'Updating event trigger failed.',
-            'Please select at-least one trigger column for the update trigger operation.'
-          )
-        );
-        return;
-      }
-
       const modifyTriggerState = { ...state };
 
       /* don't pass cleanup config if it's empty or just have only paused */
