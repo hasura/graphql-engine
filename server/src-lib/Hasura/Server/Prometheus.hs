@@ -82,6 +82,10 @@ data PrometheusMetrics = PrometheusMetrics
     pmSubscriptionMetrics :: SubscriptionMetrics,
     pmWebsocketMsgQueueTimeSeconds :: Histogram,
     pmWebsocketMsgWriteTimeSeconds :: Histogram,
+    -- | Total messages enqueued via sendMsg (including evictions).
+    pmWebsocketMsgQueued :: Counter,
+    -- | Messages evicted from a full send queue to make room for a newer message.
+    pmWebsocketMsgEvicted :: Counter,
     pmCacheRequestMetrics :: CacheRequestMetrics,
     pmOpenTelemetryMetrics :: OpenTelemetryMetrics
   }
@@ -164,6 +168,8 @@ makeDummyPrometheusMetrics = do
   pmSubscriptionMetrics <- makeDummySubscriptionMetrics
   pmWebsocketMsgQueueTimeSeconds <- Histogram.new []
   pmWebsocketMsgWriteTimeSeconds <- Histogram.new []
+  pmWebsocketMsgQueued <- Counter.new
+  pmWebsocketMsgEvicted <- Counter.new
   pmCacheRequestMetrics <- makeDummyCacheRequestMetrics
   pmOpenTelemetryMetrics <- makeDummyOpenTelemetryMetrics
   pure PrometheusMetrics {..}

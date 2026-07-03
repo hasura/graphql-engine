@@ -61,6 +61,7 @@ module Hasura.Server.Init.Arg.Command.Serve
     eventsFetchBatchSizeOption,
     gracefulShutdownOption,
     webSocketConnectionInitTimeoutOption,
+    webSocketQueueSizeOption,
     enableMetadataQueryLoggingOption,
     httpLogQueryOnlyOnErrorOption,
     defaultNamingConventionOption,
@@ -167,6 +168,7 @@ serveCommandParser =
     <*> parseEventsFetchBatchSize
     <*> parseGracefulShutdownTimeout
     <*> parseWebSocketConnectionInitTimeout
+    <*> parseWebSocketQueueSize
     <*> parseEnableMetadataQueryLogging
     <*> parseHttpLogQueryOnlyOnError
     <*> parseDefaultNamingConvention
@@ -1224,6 +1226,24 @@ webSocketConnectionInitTimeoutOption =
       Config._helpMessage = "Control websocket connection_init timeout (default 3 seconds)"
     }
 
+parseWebSocketQueueSize :: Opt.Parser (Maybe (Refined Positive Int))
+parseWebSocketQueueSize =
+  Opt.optional
+    $ Opt.option
+      (Opt.eitherReader Env.fromEnv)
+      ( Opt.long "websocket-queue-size"
+          <> Opt.metavar (Config._envVar webSocketQueueSizeOption)
+          <> Opt.help (Config._helpMessage webSocketQueueSizeOption)
+      )
+
+webSocketQueueSizeOption :: Config.Option (Refined Positive Int)
+webSocketQueueSizeOption =
+  Config.Option
+    { Config._default = $$(refineTH @Positive @Int 100),
+      Config._envVar = "HASURA_GRAPHQL_WEBSOCKET_QUEUE_SIZE",
+      Config._helpMessage = "Max number of messages buffered per WebSocket connection before older messages are dropped (default: 100; default: 1000 when streaming subscriptions are enabled via HASURA_GRAPHQL_EXPERIMENTAL_FEATURES; minimum: 1)"
+    }
+
 parseEnableMetadataQueryLogging :: Opt.Parser Server.Logging.MetadataQueryLoggingMode
 parseEnableMetadataQueryLogging =
   fmap (bool Server.Logging.MetadataQueryLoggingDisabled Server.Logging.MetadataQueryLoggingEnabled)
@@ -1633,6 +1653,7 @@ serveCmdFooter =
         Config.optionPP eventsFetchBatchSizeOption,
         Config.optionPP gracefulShutdownOption,
         Config.optionPP webSocketConnectionInitTimeoutOption,
+        Config.optionPP webSocketQueueSizeOption,
         Config.optionPP enableMetadataQueryLoggingOption,
         Config.optionPP defaultNamingConventionOption,
         Config.optionPP metadataDBExtensionsSchemaOption,

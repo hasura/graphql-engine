@@ -92,6 +92,7 @@ emptyServeOptionsRaw =
       rsoEventsFetchBatchSize = Nothing,
       rsoGracefulShutdownTimeout = Nothing,
       rsoWebSocketConnectionInitTimeout = Nothing,
+      rsoWebSocketQueueSize = Nothing,
       rsoEnableMetadataQueryLoggingEnv = Logging.MetadataQueryLoggingDisabled,
       rsoHttpLogQueryOnlyOnError = Logging.HttpLogQueryOnlyOnErrorDisabled,
       rsoDefaultNamingConvention = Nothing,

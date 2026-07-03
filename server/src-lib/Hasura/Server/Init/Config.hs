@@ -326,6 +326,7 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoEventsFetchBatchSize :: Maybe (Refined NonNegative Int),
     rsoGracefulShutdownTimeout :: Maybe (Refined NonNegative Seconds),
     rsoWebSocketConnectionInitTimeout :: Maybe WSConnectionInitTimeout,
+    rsoWebSocketQueueSize :: Maybe (Refined Positive Int),
     rsoEnableMetadataQueryLoggingEnv :: Server.Logging.MetadataQueryLoggingMode,
     rsoHttpLogQueryOnlyOnError :: Server.Logging.HttpLogQueryOnlyOnError,
     -- | stores global default naming convention
@@ -674,6 +675,7 @@ data ServeOptions impl = ServeOptions
     soAdminInternalErrors :: AdminInternalErrorsStatus,
     soGracefulShutdownTimeout :: Refined NonNegative Seconds,
     soWebSocketConnectionInitTimeout :: WSConnectionInitTimeout,
+    soWebSocketQueueSize :: Refined Positive Int,
     soEventingMode :: Server.Types.EventingMode,
     soEventProcessingMode :: Server.Types.EventProcessingMode,
     -- | See note '$readOnlyMode'

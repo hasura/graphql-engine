@@ -498,6 +498,7 @@ initialiseAppEnv env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liv
           appEnvConnectionOptions = soConnectionOptions,
           appEnvWebSocketKeepAlive = soWebSocketKeepAlive,
           appEnvWebSocketConnectionInitTimeout = soWebSocketConnectionInitTimeout,
+          appEnvWebSocketQueueSize = soWebSocketQueueSize,
           appEnvGracefulShutdownTimeout = soGracefulShutdownTimeout,
           appEnvCheckFeatureFlag = ceCheckFeatureFlag env,
           appEnvSchemaPollInterval = soSchemaPollInterval,

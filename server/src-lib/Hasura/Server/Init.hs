@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- | Arg and Env Parsing for initialisation of the engine along with
 -- corresponding logging and other helper functionality.
@@ -48,7 +49,7 @@ import Hasura.Server.Init.Logging
 import Hasura.Server.Logging qualified as Server.Logging
 import Hasura.Server.Types qualified as Types
 import Network.WebSockets qualified as WebSockets
-import Refined (unrefine)
+import Refined (Positive, refineTH, unrefine)
 
 --------------------------------------------------------------------------------
 -- TODO(SOLOMON): Where does this note belong?
@@ -206,6 +207,15 @@ mkServeOptions sor@ServeOptionsRaw {..} = do
   soEventsFetchBatchSize <- withOptionDefault rsoEventsFetchBatchSize eventsFetchBatchSizeOption
   soGracefulShutdownTimeout <- withOptionDefault rsoGracefulShutdownTimeout gracefulShutdownOption
   soWebSocketConnectionInitTimeout <- withOptionDefault rsoWebSocketConnectionInitTimeout webSocketConnectionInitTimeoutOption
+  soWebSocketQueueSize <-
+    -- When the user has not set a value explicitly, default to 1000 if streaming
+    -- subscriptions are enabled (ordered streams make eviction a correctness risk).
+    case rsoWebSocketQueueSize of
+      Just explicit -> pure explicit
+      Nothing
+        | HashSet.member Types.EFStreamingSubscriptions soExperimentalFeatures ->
+            pure $$(refineTH @Positive @Int 1000)
+        | otherwise -> pure $ _default webSocketQueueSizeOption
   soEventingMode <- case rsoEventingMode of
     Types.EventingEnabled -> withOptionDefault Nothing disableEventingOption
     eventingDisabled -> pure eventingDisabled

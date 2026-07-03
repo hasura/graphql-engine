@@ -75,13 +75,15 @@ import Hasura.Server.Prometheus
   ( DynamicGraphqlOperationLabel (..),
     PrometheusMetrics (..),
     recordMetricWithLabel,
+    pmWebsocketMsgEvicted,
+    pmWebsocketMsgQueued,
   )
 import Hasura.Server.Types (ExperimentalFeature (..), MonadGetPolicies (runGetPrometheusMetricsGranularity))
 import ListT qualified
 import Network.Wai.Extended (IpAddress)
 import Network.Wai.Handler.Warp qualified as Warp
 import Network.WebSockets qualified as WS
-import Refined (unrefine)
+import Refined (Positive, Refined, unrefine)
 import StmContainers.Map qualified as STMMap
 import System.IO.Error qualified as E
 import System.Metrics.Prometheus.Counter qualified as Prometheus.Counter
@@ -201,9 +203,10 @@ data WSConn a = WSConn
   { _wcConnId :: !WSId,
     _wcLogger :: !(L.Logger L.Hasura),
     _wcConnRaw :: !WS.Connection,
-    _wcSendQ :: !(STM.TQueue WSQueueResponse),
+    _wcSendQ :: !(STM.TBQueue WSQueueResponse),
     _wsConnInitTimer :: !WSConnInitTimeout,
-    _wcExtraData :: !a
+    _wcExtraData :: !a,
+    _wcPrometheusMetrics :: !PrometheusMetrics
   }
 
 getRawWebSocketConnection :: WSConn a -> WS.Connection
@@ -241,9 +244,19 @@ sendMsgAndCloseConn wsConn errCode bs serverErr = do
 -- writes to a queue instead of the raw connection
 -- so that sendMsg doesn't block
 sendMsg :: WSConn a -> WSQueueResponse -> IO ()
-sendMsg wsConn !resp = do
+sendMsg WSConn{_wcSendQ, _wcPrometheusMetrics} !resp = do
   $assertNFHere resp -- so we don't write thunks to mutable vars
-  STM.atomically $ STM.writeTQueue (_wcSendQ wsConn) resp
+  -- non-blocking push that pops the oldest if full
+  didEvict <- STM.atomically $ do
+    full <- STM.isFullTBQueue _wcSendQ
+    when full $ do
+      -- make room, sanity checking an invariant while here
+      oldest <- STM.tryReadTBQueue _wcSendQ
+      when (isNothing oldest) $ error "impossible: wsQueueSize <1, input validation broken"
+    STM.writeTBQueue _wcSendQ resp
+    pure full
+  Prometheus.Counter.inc (pmWebsocketMsgQueued _wcPrometheusMetrics)
+  when didEvict $ Prometheus.Counter.inc (pmWebsocketMsgEvicted _wcPrometheusMetrics)
 
 type ConnMap a = STMMap.Map WSId (WSConn a)
 
@@ -510,6 +523,7 @@ createServerApp ::
   (MonadIO m, MC.MonadBaseControl IO m, LA.Forall (LA.Pure m), MonadWSLog m, MonadGetPolicies m) =>
   IO MetricsConfig ->
   WSConnectionInitTimeout ->
+  Refined Positive Int ->
   WSServer a ->
   PrometheusMetrics ->
   -- | user provided handlers
@@ -517,7 +531,7 @@ createServerApp ::
   -- | aka WS.ServerApp
   HasuraServerApp m
 {-# INLINE createServerApp #-}
-createServerApp getMetricsConfig wsConnInitTimeout (WSServer logger@(L.Logger writeLog) _ serverStatus) prometheusMetrics wsHandlers !ipAddress !pendingConn = do
+createServerApp getMetricsConfig wsConnInitTimeout wsQueueSize (WSServer logger@(L.Logger writeLog) _ serverStatus) prometheusMetrics wsHandlers !ipAddress !pendingConn = do
   wsId <- WSId <$> liftIO UUID.nextRandom
   logWSLog logger $ WSLog wsId EConnectionRequest Nothing
   -- if the client doesn't send a `connection_init` message within the timeout period
@@ -600,8 +614,8 @@ createServerApp getMetricsConfig wsConnInitTimeout (WSServer logger@(L.Logger wr
     onAccept wsConnInitTimer wsId (AcceptWith a acceptWithParams keepAlive onJwtExpiry) = do
       conn <- liftIO $ WS.acceptRequestWith pendingConn acceptWithParams
       logWSLog logger $ WSLog wsId EAccepted Nothing
-      sendQ <- liftIO STM.newTQueueIO
-      let !wsConn = WSConn wsId logger conn sendQ wsConnInitTimer a
+      sendQ <- liftIO $ STM.newTBQueueIO (fromIntegral (unrefine wsQueueSize))
+      let !wsConn = WSConn wsId logger conn sendQ wsConnInitTimer a prometheusMetrics
       -- TODO there are many thunks here. Difficult to trace how much is retained, and
       --      how much of that would be shared anyway.
       --      Requires a fork of 'wai-websockets' and 'websockets', it looks like.
@@ -659,7 +673,7 @@ createServerApp getMetricsConfig wsConnInitTimeout (WSServer logger@(L.Logger wr
             let send = do
                   labelMe "WebSocket send"
                   forever $ do
-                    WSQueueResponse msg wsInfo wsTimer <- liftIO $ STM.atomically $ STM.readTQueue sendQ
+                    WSQueueResponse msg wsInfo wsTimer <- liftIO $ STM.atomically $ STM.readTBQueue sendQ
                     messageQueueTime <- liftIO $ realToFrac <$> wsTimer
                     (messageWriteTime, _) <- liftIO $ withElapsedTime $ WS.sendTextData conn msg
                     let messageLength = BL.length msg

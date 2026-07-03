@@ -60,7 +60,7 @@ import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client qualified as HTTP
 import Network.Wai.Handler.Warp (HostPreference)
 import Network.WebSockets.Connection qualified as WebSockets
-import Refined (NonNegative, Refined)
+import Refined (NonNegative, Positive, Refined)
 
 --------------------------------------------------------------------------------
 -- application state
@@ -136,6 +136,7 @@ data AppEnv = AppEnv
     appEnvConnectionOptions :: WebSockets.ConnectionOptions,
     appEnvWebSocketKeepAlive :: KeepAliveDelay,
     appEnvWebSocketConnectionInitTimeout :: WSConnectionInitTimeout,
+    appEnvWebSocketQueueSize :: Refined Positive Int,
     appEnvGracefulShutdownTimeout :: Refined NonNegative Seconds,
     -- TODO: Move this to `AppContext`. We are leaving this for now as this cannot be changed directly
     -- by the user on the cloud dashboard and will also require a refactor in HasuraPro/App.hs
