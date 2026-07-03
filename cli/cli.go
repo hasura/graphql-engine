@@ -259,7 +259,7 @@ func (c *ServerConfig) GetVersionEndpoint() string {
 	return nurl.String()
 }
 
-// GetQueryEndpoint provides the url to contact the query API
+// GetV1QueryEndpoint provides the url to contact the query API
 func (c *ServerConfig) GetV1QueryEndpoint() string {
 	nurl := *c.ParsedEndpoint
 	nurl.Path = path.Join(nurl.Path, c.APIPaths.V1Query)
@@ -284,7 +284,7 @@ func (c *ServerConfig) GetV1GraphqlEndpoint() string {
 	return nurl.String()
 }
 
-// GetQueryEndpoint provides the url to contact the query API
+// GetV1MetadataEndpoint provides the url to contact the metadata API
 func (c *ServerConfig) GetV1MetadataEndpoint() string {
 	nurl := *c.ParsedEndpoint
 	nurl.Path = path.Join(nurl.Path, c.APIPaths.V1Metadata)

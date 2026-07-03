@@ -105,7 +105,7 @@ func ValidateDirectory(dir string) error {
 	return nil
 }
 
-// CheckFilesystemBiundary returns an error if dir is filesystem root
+// CheckFilesystemBoundary returns an error if dir is filesystem root
 func CheckFilesystemBoundary(dir string) error {
 	var op errors.Op = "cli.CheckFilesystemBoundary"
 	// since filepath.Abs calls filepath.Clean the path is expected to be in "clean" state
