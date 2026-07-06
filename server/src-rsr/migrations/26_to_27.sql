@@ -1,5 +1,5 @@
 ALTER TABLE hdb_catalog.event_log
-  ADD COLUMN archived BOOLEAN NOT NULL DEFAULT FALSE;
+  ADD COLUMN IF NOT EXISTS archived BOOLEAN NOT NULL DEFAULT FALSE;
 
 UPDATE hdb_catalog.event_log
    SET archived = 't'

@@ -6,4 +6,4 @@ CREATE TRIGGER hdb_schema_update_event_notifier AFTER INSERT ON
 
 DROP INDEX hdb_catalog."hdb_schema_update_event_one_row";
 
-ALTER TABLE hdb_catalog.hdb_schema_update_event ADD COLUMN id SERIAL PRIMARY KEY;
+ALTER TABLE hdb_catalog.hdb_schema_update_event ADD COLUMN IF NOT EXISTS id SERIAL PRIMARY KEY;

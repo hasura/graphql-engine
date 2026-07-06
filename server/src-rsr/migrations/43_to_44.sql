@@ -4,7 +4,7 @@
 DO $$ 
     BEGIN
         BEGIN
-          ALTER TABLE hdb_catalog.hdb_metadata ADD COLUMN "resource_version" INTEGER NOT NULL DEFAULT 1 UNIQUE;
+          ALTER TABLE hdb_catalog.hdb_metadata ADD COLUMN IF NOT EXISTS "resource_version" INTEGER NOT NULL DEFAULT 1 UNIQUE;
         EXCEPTION
           -- For pg 9.6 compatibility
           WHEN duplicate_column THEN RAISE NOTICE 'column resource_version already exists in hdb_metadata';

@@ -8,7 +8,7 @@ SET DEFAULT hdb_catalog.gen_hasura_uuid();
 
 ALTER TABLE hdb_catalog.event_log RENAME COLUMN locked TO locked_boolean;
 
-ALTER TABLE hdb_catalog.event_log ADD COLUMN locked TIMESTAMPTZ;
+ALTER TABLE hdb_catalog.event_log ADD COLUMN IF NOT EXISTS locked TIMESTAMPTZ;
 
 UPDATE hdb_catalog.event_log
 SET locked = NOW()

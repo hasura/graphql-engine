@@ -1,5 +1,5 @@
 ALTER TABLE hdb_catalog.hdb_table
-  ADD COLUMN is_enum boolean NOT NULL DEFAULT false;
+  ADD COLUMN IF NOT EXISTS is_enum boolean NOT NULL DEFAULT false;
 
 DROP TRIGGER hdb_table_oid_check ON hdb_catalog.hdb_table;
 DROP FUNCTION hdb_catalog.hdb_table_oid_check();

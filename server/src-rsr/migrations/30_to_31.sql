@@ -1,5 +1,5 @@
 TRUNCATE hdb_catalog.hdb_schema_update_event;
-ALTER TABLE hdb_catalog.hdb_schema_update_event ADD COLUMN invalidations json NOT NULL;
+ALTER TABLE hdb_catalog.hdb_schema_update_event ADD COLUMN IF NOT EXISTS invalidations json NOT NULL;
 CREATE OR REPLACE FUNCTION hdb_catalog.hdb_schema_update_event_notifier() RETURNS trigger AS
 $function$
   DECLARE
