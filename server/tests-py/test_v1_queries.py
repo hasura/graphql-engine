@@ -27,6 +27,21 @@ class TestV1General:
     def test_query_v2_invalid_version(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/query_v2_invalid_version.yaml')
 
+    def test_error_response_includes_request_id_header(self, hge_ctx):
+        request_id = 'error-response-request-id'
+        headers = {'x-request-id': request_id}
+        if hge_ctx.hge_key:
+            headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
+
+        code, _, resp_headers = hge_ctx.anyq(
+            '/v1/query',
+            {'type': 'random', 'args': {'foo': 'bar'}},
+            headers,
+        )
+
+        assert code == 400
+        assert resp_headers['x-request-id'] == request_id
+
     @classmethod
     def dir(cls):
         return "queries/v1/basic"

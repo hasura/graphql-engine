@@ -457,8 +457,9 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
       AppEnv {..} <- lift askAppEnv
       let httpLogMetadata = buildHttpLogMetadata @m emptyHttpLogGraphQLInfo extraUserInfo
           jsonResponse = J.encodingToLazyByteString $ qErrEncoder includeInternal qErr
+          reqIdHeader = (requestIdHeader, txtToBs $ unRequestId reqId)
           contentLength = ("Content-Length", B8.toStrict $ BB.toLazyByteString $ BB.int64Dec $ BL.length jsonResponse)
-          allHeaders = [contentLength, jsonHeader]
+          allHeaders = [reqIdHeader, contentLength, jsonHeader]
       -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/http/#common-attributes
       lift $ Tracing.attachMetadata [("http.response_content_length", bsToTxt $ snd contentLength)]
       lift $ Tracing.setSpanError (qeError qErr)
