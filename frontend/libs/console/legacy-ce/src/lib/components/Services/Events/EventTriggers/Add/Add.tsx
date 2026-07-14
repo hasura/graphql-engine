@@ -26,7 +26,6 @@ import {
   setRequestUrlTransform,
   setRequestPayloadTransform,
 } from '../../../../Common/ConfigureTransformation/requestTransformState';
-import { showErrorNotification } from '../../../Common/Notification';
 import {
   QueryParams,
   RequestTransformContentType,
@@ -57,7 +56,10 @@ import { getDataSources } from '../../../../../metadata/selector';
 import { DataSource } from '../../../../../metadata/types';
 import { getDatabaseSchemasInfo } from '../../../Data/DataActions';
 import { getSourceDriver } from '../../../Data/utils';
-import { getEventRequestSampleInput } from '../utils';
+import {
+  getEventRequestSampleInput,
+  validateEventTriggerState,
+} from '../utils';
 import CreateETForm from './CreateETForm';
 import {
   DatabaseInfo,
@@ -67,6 +69,7 @@ import {
   EventTriggerAutoCleanup,
 } from '../../types';
 import { useDebouncedEffect } from '../../../../../hooks/useDebounceEffect';
+import { hasuraToast } from '../../../../../new-components/Toasts';
 
 type Props = InjectedProps;
 
@@ -294,18 +297,14 @@ const Add: React.FC<Props> = props => {
 
   const submit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (
-      state.operationColumns.every(
-        operationColumn => !operationColumn.enabled
-      ) &&
-      state.operations.update
-    ) {
-      dispatch(
-        showErrorNotification(
-          'Creating event trigger failed.',
-          'Please select at-least one trigger column for the update trigger operation.'
-        )
-      );
+
+    const invalidMessage = validateEventTriggerState(state);
+    if (invalidMessage) {
+      hasuraToast({
+        type: 'error',
+        title: 'Creating event trigger failed.',
+        message: invalidMessage,
+      });
       return;
     }
 

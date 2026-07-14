@@ -54,6 +54,21 @@ describe('Testing generateCreateEventTriggerQuery while creating ET', () => {
     expect(res?.args?.request_transform).toEqual(undefined);
     expect(res).toMatchSnapshot();
   });
+  it('allows update triggers with no selected columns', () => {
+    const res = generateCreateEventTriggerQuery(
+      {
+        ...eventTriggerStateWithoutHeaders,
+        operations: {
+          ...eventTriggerStateWithoutHeaders.operations,
+          update: true,
+        },
+      },
+      source,
+      false
+    );
+    expect(res?.args?.update?.columns).toEqual([]);
+    expect(res).toMatchSnapshot();
+  });
 });
 
 describe('Testing generateCreateEventTriggerQuery while mofifying ET', () => {

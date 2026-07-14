@@ -44,13 +44,15 @@ import {
   parseValidateApiData,
   getTransformState,
 } from '../../../../../components/Common/ConfigureTransformation/utils';
-import { showErrorNotification } from '../../../../../components/Services/Common/Notification';
 import { Button } from '../../../../../new-components/Button';
 import { isProConsole } from '../../../../../utils/proConsole';
 import globals from '../../../../../Globals';
 import { getSourceDriver } from '../../../Data/utils';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
-import { getEventRequestSampleInput } from '../utils';
+import {
+  getEventRequestSampleInput,
+  validateEventTriggerState,
+} from '../utils';
 import TableHeader from '../TableCommon/TableHeader';
 import { getDatabaseSchemasInfo } from '../../../Data/DataActions';
 import { parseServerETDefinition, useEventTriggerModify } from '../state';
@@ -70,6 +72,7 @@ import {
 } from '../../../../../metadata/selector';
 import { AutoCleanupForm } from '../Common/AutoCleanupForm';
 import { useDebouncedEffect } from '../../../../../hooks/useDebounceEffect';
+import { hasuraToast } from '../../../../../new-components/Toasts';
 
 type Props = InjectedProps;
 
@@ -329,18 +332,13 @@ const Modify: React.FC<Props> = props => {
   const saveWrapper =
     (property?: EventTriggerProperty) =>
     (successCb?: () => void, errorCb?: () => void) => {
-      if (
-        state.operationColumns.every(
-          operationColumn => !operationColumn.enabled
-        ) &&
-        state.operations.update
-      ) {
-        dispatch(
-          showErrorNotification(
-            'Updating event trigger failed.',
-            'Please select at-least one trigger column for the update trigger operation.'
-          )
-        );
+      const invalidMessage = validateEventTriggerState(state);
+      if (invalidMessage) {
+        hasuraToast({
+          type: 'error',
+          title: 'Updating event trigger failed.',
+          message: invalidMessage,
+        });
         return;
       }
 

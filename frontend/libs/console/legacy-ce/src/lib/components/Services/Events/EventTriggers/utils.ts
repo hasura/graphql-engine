@@ -250,3 +250,31 @@ export const getCronTriggerRequestSampleInput = () => {
   const value = JSON.stringify(obj, null, 2);
   return value;
 };
+
+/**
+ * Validate the local event trigger state.
+ * @param state the local event trigger state.
+ * @returns error message if the state is invalid.
+ */
+export const validateEventTriggerState = (
+  state: LocalEventTriggerState
+): string => {
+  if (
+    !state.operations.insert &&
+    !state.operations.update &&
+    !state.operations.delete &&
+    !state.operations.enable_manual
+  ) {
+    return 'Please select at-least one operation.';
+  }
+
+  if (
+    state.operationColumns.every(operationColumn => !operationColumn.enabled) &&
+    state.operations.update &&
+    !state.isAllColumnChecked
+  ) {
+    return 'Please select at-least one trigger column for the update trigger operation.';
+  }
+
+  return '';
+};
