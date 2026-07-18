@@ -32,7 +32,6 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Source.Table (SourceTableInfo)
 import Hasura.SQL.Types
-import Hasura.Server.Init.FeatureFlag qualified as FF
 import Hasura.Server.Migrate.Version
 import Hasura.Services.Network
 import Hasura.StoredProcedure.Metadata (StoredProcedureConfig, StoredProcedureMetadata)
@@ -112,8 +111,7 @@ class
   resolveDatabaseMetadata ::
     ( MonadIO m,
       MonadBaseControl IO m,
-      MonadResolveSource m,
-      FF.HasFeatureFlagChecker m
+      MonadResolveSource m
     ) =>
     Logger Hasura ->
     SourceMetadata b ->

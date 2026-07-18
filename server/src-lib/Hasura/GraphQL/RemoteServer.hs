@@ -60,13 +60,12 @@ fetchRemoteSchema ::
   forall m.
   (MonadIO m, MonadError QErr m, Tracing.MonadTrace m, ProvidesNetwork m) =>
   Env.Environment ->
-  SchemaSampledFeatureFlags ->
   ValidatedRemoteSchemaDef ->
   m (IntrospectionResult, BL.ByteString, RemoteSchemaInfo)
-fetchRemoteSchema env schemaSampledFeatureFlags rsDef = do
+fetchRemoteSchema env rsDef = do
   (_, _, rawIntrospectionResult) <-
     execRemoteGQ env Tracing.b3TraceContextPropagator adminUserInfo [] rsDef introspectionQuery
-  (ir, rsi) <- stitchRemoteSchema schemaSampledFeatureFlags rawIntrospectionResult rsDef
+  (ir, rsi) <- stitchRemoteSchema rawIntrospectionResult rsDef
   -- The 'rawIntrospectionResult' contains the 'Bytestring' response of
   -- the introspection result of the remote server. We store this in the
   -- 'RemoteSchemaCtx' because we can use this when the 'introspect_remote_schema'
@@ -77,11 +76,10 @@ fetchRemoteSchema env schemaSampledFeatureFlags rsDef = do
 -- like it's a valid GraphQL endpoint even under the configured customization.
 stitchRemoteSchema ::
   (MonadIO m, MonadError QErr m) =>
-  SchemaSampledFeatureFlags ->
   BL.ByteString ->
   ValidatedRemoteSchemaDef ->
   m (IntrospectionResult, RemoteSchemaInfo)
-stitchRemoteSchema schemaSampledFeatureFlags rawIntrospectionResult rsDef@ValidatedRemoteSchemaDef {..} = do
+stitchRemoteSchema rawIntrospectionResult rsDef@ValidatedRemoteSchemaDef {..} = do
   -- Parse the JSON into flat GraphQL type AST.
   FromIntrospection _rscIntroOriginal <-
     J.eitherDecode rawIntrospectionResult `onLeft` (throwRemoteSchema . T.pack)
@@ -127,7 +125,6 @@ stitchRemoteSchema schemaSampledFeatureFlags rawIntrospectionResult rsDef@Valida
         HasuraSchema
         ignoreRemoteRelationship
         adminRoleName
-        schemaSampledFeatureFlags
 
 -- | Sends a GraphQL query to the given server.
 execRemoteGQ ::

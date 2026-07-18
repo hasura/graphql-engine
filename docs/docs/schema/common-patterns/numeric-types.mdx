@@ -20,7 +20,7 @@ overflow issues.
 
 For example, The JSON object `{ "value" : 9223372036854775807}`, is still a valid
 [RFC4627](https://www.ietf.org/rfc/rfc4627.txt) JSON string, but in most JS runtimes, the result of `JSON.parse` is the
-object `{ value: 9223372036854776000 }`, where the last 4 digits have been rounded.
+object `{ value: 9223372036854775807 }`, where the last 4 digits have been rounded.
 
 In order to deal with this you will need to ensure that clients issuing queries containing large numbers are adequately
 equipped to handle those. For Javascript, this could mean using a package such as
@@ -52,10 +52,10 @@ var json = '{ "value" : 9223372036854775807, "v2": 123 }';
 var r = JSON.parse(json);
 
 console.log(r.value.toString());
-// Prints: 9223372036854776000
+// Prints: 9223372036854775807
 
 console.log(JSON.stringify(r));
-// Prints: {"value":9223372036854776000,"v2":123}
+// Prints: {"value":9223372036854775807,"v2":123}
 // Big number JSON parsing:
 var r1 = JSONbig.parse(json);
 

@@ -9,19 +9,17 @@ import io
 import os
 import pathlib
 import queue
+import shlex
 from fabric import Connection
-import patchwork.transfers
-import invoke.exceptions
-import tempfile
-# import paramiko.rsakey
-import json
 from invoke import run as local
+from invoke.exceptions import UnexpectedExit
+import tempfile
+import json
 from functools import reduce
 
 # # DEBUGGING:
 # import logging
 # logging.basicConfig(level=logging.DEBUG)
-
 
 #### Environment/arguments: ####
 
@@ -127,6 +125,20 @@ def new_boto_session():
         aws_access_key_id=AWS_ACCESS_KEY_ID,
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY
     )
+
+# Rsync 'source' (local) to 'target' (remote path) on the host behind
+# Connection 'c', reusing its SSH key/user/host/port. Roughly equivalent to
+# the old 'patchwork.transfers.rsync', minus the options this fabfile doesn't use.
+def rsync_to_remote(c, source, target, exclude=()):
+    if isinstance(exclude, str):
+        exclude = [exclude]
+    exclude_opts = [opt for e in exclude for opt in ("--exclude", e)]
+    key_filename = c.connect_kwargs["key_filename"][0]
+    ssh_opts = f"ssh -p {c.port} -i {key_filename} -o StrictHostKeyChecking=no"
+    cmd = ["rsync", "--quiet", "-pthrvz", *exclude_opts, "--rsh", ssh_opts,
+           source, f"{c.user}@{c.host}:{target}"]
+    local(shlex.join(cmd))
+    
 
 # Start an EC2 instance that will run 'benchmark_set'. use_spot indicates
 # whether we should try to start spot instances. If use_spot=True we'll retry
@@ -251,7 +263,7 @@ def run_benchmark_set(benchmark_set, use_spot=True):
                 return instance
     try:
       # for reasons of ergonomics and compatibility on CI, we want to supply the SSH key as an environment variable. Unfortunately I'm not sure how to do that without writing to a file
-      with tempfile.NamedTemporaryFile(mode='w+') as key_file:
+      with tempfile.NamedTemporaryFile(mode='w+', delete_on_close=False) as key_file:
         key_file.write(BENCHMARKS_RUNNER_PRIVATE_KEY)
         key_file.seek(0)
 
@@ -294,7 +306,7 @@ def run_benchmark_set(benchmark_set, use_spot=True):
         c.sudo('shutdown -P +20 "Oops, we failed to clean up this instance; terminating now"')
 
         say("Uploading and loading docker image under test")
-        patchwork.transfers.rsync(c, HASURA_DOCKER_IMAGE, '/tmp/hasura_image.tar', rsync_opts="--quiet")
+        rsync_to_remote(c, HASURA_DOCKER_IMAGE, '/tmp/hasura_image.tar')
         hasura_docker_image_name = c.run(
             "docker load -i /tmp/hasura_image.tar | grep '^Loaded image: ' | sed 's/Loaded image: //g'",
             pty=True
@@ -302,7 +314,7 @@ def run_benchmark_set(benchmark_set, use_spot=True):
 
         say(f"Running benchmarks for: {hasura_docker_image_name}")
         # Upload the benchmarks directory to remote (though we only care about 'benchmark_set')
-        patchwork.transfers.rsync(c, abs_path('../benchmarks'), '/tmp', exclude='venv', rsync_opts="--quiet")
+        rsync_to_remote(c, abs_path('../benchmarks'), '/tmp', exclude='venv')
         with c.cd("/tmp/benchmarks"):
             # We'll sleep for the 'huge_schema' case to allow memory to settle,
             # since measuring idle residency to support the schema is the main
@@ -334,7 +346,7 @@ def run_benchmark_set(benchmark_set, use_spot=True):
         return bench_result
 
     # If AWS evicted our spot instance (probably), try again with on-demand
-    except invoke.exceptions.UnexpectedExit:
+    except UnexpectedExit:
         if SHUTTING_DOWN:
             warn("interrupted, exiting")
             return None

@@ -390,7 +390,6 @@ data AppInit = AppInit
 -- NOTE: this is invoked in pro, but only for OSS mode (no license key)
 initialiseAppEnv ::
   (C.ForkableMonadIO m) =>
-  Env.Environment ->
   BasicConnectionInfo ->
   ServeOptions Hasura ->
   Maybe ES.SubscriptionPostPollHook ->
@@ -398,7 +397,7 @@ initialiseAppEnv ::
   PrometheusMetrics ->
   SamplingPolicy ->
   ManagedT m (AppInit, AppEnv)
-initialiseAppEnv env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liveQueryHook serverMetrics prometheusMetrics traceSamplingPolicy = do
+initialiseAppEnv BasicConnectionInfo {..} serveOptions@ServeOptions {..} liveQueryHook serverMetrics prometheusMetrics traceSamplingPolicy = do
   loggers@(Loggers _loggerCtx logger pgLogger) <- mkLoggers soEnabledLogTypes soLogLevel
 
   -- SIDE EFFECT: print a warning if no admin secret is set.
@@ -500,7 +499,6 @@ initialiseAppEnv env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liv
           appEnvWebSocketConnectionInitTimeout = soWebSocketConnectionInitTimeout,
           appEnvWebSocketQueueSize = soWebSocketQueueSize,
           appEnvGracefulShutdownTimeout = soGracefulShutdownTimeout,
-          appEnvCheckFeatureFlag = ceCheckFeatureFlag env,
           appEnvSchemaPollInterval = soSchemaPollInterval,
           appEnvLicenseKeyCache = Nothing,
           appEnvMaxTotalHeaderLength = soMaxTotalHeaderLength,
@@ -536,7 +534,6 @@ initialiseAppContext env serveOptions AppInit {..} = do
         ( buildRebuildableAppContext
             (logger, appEnvManager)
             serveOptions
-            appEnvCheckFeatureFlag
             env
         )
   !rebuildableAppCtx <- onLeft rebuildableAppCtxE $ \e -> throwErrExit InvalidEnvironmentVariableOptionsError $ T.unpack $ qeError e
@@ -693,11 +690,6 @@ runAppM c (AppM a) = ignoreTraceT $ runReaderT a c
 
 instance HasAppEnv AppM where
   askAppEnv = ask
-
-instance HasFeatureFlagChecker AppM where
-  checkFlag f = AppM do
-    CheckFeatureFlag {runCheckFeatureFlag} <- asks appEnvCheckFeatureFlag
-    liftIO $ runCheckFeatureFlag f
 
 instance HasCacheStaticConfig AppM where
   askCacheStaticConfig = buildCacheStaticConfig <$> askAppEnv

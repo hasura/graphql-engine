@@ -470,7 +470,7 @@ runApp metadataDbUrl serveOptions = do
         liftIO $ createServerMetrics $ EKG.subset ServerSubset store
       pure (EKG.subset EKG.emptyOf store, serverMetrics)
   prometheusMetrics <- makeDummyPrometheusMetrics
-  let managedServerCtx = App.initialiseAppEnv env defaultConnInfo serveOptions Nothing serverMetrics prometheusMetrics sampleAlways
+  let managedServerCtx = App.initialiseAppEnv defaultConnInfo serveOptions Nothing serverMetrics prometheusMetrics sampleAlways
   runManagedT managedServerCtx \(appInit, appEnv) ->
     App.runAppM appEnv do
       appCtx <- App.initialiseAppContext env serveOptions appInit

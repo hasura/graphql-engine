@@ -1,6 +1,6 @@
 # Used only for preview builds
 
-FROM --platform=linux/amd64 node:17-alpine
+FROM --platform=linux/amd64 node:24-alpine
 
 ENV release_mode="staging"
 

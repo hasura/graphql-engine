@@ -151,7 +151,6 @@ newtype Handler m a = Handler (ReaderT HandlerCtx (ExceptT QErr m) a)
       MonadTrace,
       HasAppEnv,
       HasCacheStaticConfig,
-      HasFeatureFlagChecker,
       HasResourceLimits,
       MonadResolveSource,
       E.MonadGQLExecutionCheck,
@@ -788,10 +787,6 @@ configApiGetHandler appStateRef = do
     $ do
       AppEnv {..} <- lift askAppEnv
       AppContext {..} <- liftIO $ getAppContext appStateRef
-      featureFlagSettings <-
-        traverse
-          (\(ff, desc) -> (ff,desc,) <$> liftIO (runCheckFeatureFlag appEnvCheckFeatureFlag ff))
-          (listKnownFeatureFlags appEnvCheckFeatureFlag)
       mkSpockAction appStateRef encodeQErr id
         $ mkGetHandler
         $ do
@@ -808,7 +803,6 @@ configApiGetHandler appStateRef = do
                   acExperimentalFeatures
                   acEnabledAPIs
                   acDefaultNamingConvention
-                  featureFlagSettings
                   acApolloFederationStatus
           return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue res) [])
 

@@ -245,7 +245,7 @@ go_gc_duration_seconds{quantile="0.25"} 0
 You can install Grafana by running the following commands:
 
 ```bash
-wget -q -O - https://packages.grafana.com/gpg.key | sudo apt-key add -
+wget -q -O - https://packages.grafana.com/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/grafana.gpg
 sudo add-apt-repository "deb https://packages.grafana.com/oss/deb stable main" sudo apt update
 sudo apt install grafana
 sudo systemctl start grafana-server

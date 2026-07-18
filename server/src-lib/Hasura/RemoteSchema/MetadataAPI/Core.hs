@@ -23,7 +23,6 @@ import Hasura.Authentication.User (UserInfoM)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.RemoteServer
-import Hasura.GraphQL.Schema.Common (SchemaSampledFeatureFlags)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
@@ -77,12 +76,11 @@ runAddRemoteSchema ::
     Tracing.MonadTrace m
   ) =>
   Env.Environment ->
-  SchemaSampledFeatureFlags ->
   AddRemoteSchemaQuery ->
   m EncJSON
-runAddRemoteSchema env schemaSampledFeatureFlags (AddRemoteSchemaQuery name defn comment) = do
+runAddRemoteSchema env (AddRemoteSchemaQuery name defn comment) = do
   addRemoteSchemaP1 name
-  void $ addRemoteSchemaP2Setup name env schemaSampledFeatureFlags defn
+  void $ addRemoteSchemaP2Setup name env defn
   buildSchemaCacheFor (MORemoteSchema name)
     $ MetadataModifier
     $ metaRemoteSchemas
@@ -183,10 +181,9 @@ runUpdateRemoteSchema ::
     Tracing.MonadTrace m
   ) =>
   Env.Environment ->
-  SchemaSampledFeatureFlags ->
   AddRemoteSchemaQuery ->
   m EncJSON
-runUpdateRemoteSchema env schemaSampledFeatureFlags (AddRemoteSchemaQuery name defn comment) = do
+runUpdateRemoteSchema env (AddRemoteSchemaQuery name defn comment) = do
   remoteSchemaNames <- getAllRemoteSchemas <$> askSchemaCache
   remoteSchemaMap <- _metaRemoteSchemas <$> getMetadata
 
@@ -215,7 +212,7 @@ runUpdateRemoteSchema env schemaSampledFeatureFlags (AddRemoteSchemaQuery name d
         || (isJust metadataRMSchemaURLFromEnv && isJust currentRMSchemaURLFromEnv && metadataRMSchemaURLFromEnv == currentRMSchemaURLFromEnv)
     )
     $ void
-    $ fetchRemoteSchema env schemaSampledFeatureFlags rsi
+    $ fetchRemoteSchema env rsi
 
   -- This will throw an error if the new schema fetched in incompatible
   -- with the existing permissions and relations

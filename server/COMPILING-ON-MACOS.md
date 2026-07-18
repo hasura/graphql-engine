@@ -10,14 +10,12 @@
     brew install google-cloud-sdk \
                  node@16 \
                  openssl \
-                 pcre \
                  unixodbc \
                  libpq \
                  libffi \
                  microsoft/mssql-release/mssql-tools18 \
                  direnv \
-                 coreutils \
-                 pcre
+                 coreutils
     ```
 
      And add them to your environment:
@@ -63,10 +61,6 @@ If you are re-running this command to update your Mac, you may need to run
     package odbc
       extra-include-dirs: /opt/homebrew/opt/unixodbc/include
       extra-lib-dirs: /opt/homebrew/opt/unixodbc/lib
-
-    package pcre-light
-      extra-include-dirs: /opt/homebrew/opt/pcre/include
-      extra-lib-dirs: /opt/homebrew/opt/pcre/lib
 
     package postgresql-libpq
       extra-include-dirs:

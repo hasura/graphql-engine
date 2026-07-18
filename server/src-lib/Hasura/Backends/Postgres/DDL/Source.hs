@@ -54,7 +54,6 @@ import Hasura.RQL.Types.Metadata (SourceMetadata (..), _cfmDefinition)
 import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.Server.Init.FeatureFlag qualified as FF
 import Hasura.Server.Migrate.Internal
 import Hasura.Server.Migrate.Version qualified as Version
 import Hasura.Table.Cache
@@ -164,14 +163,12 @@ resolveDatabaseMetadata ::
     FetchFunctionMetadata pgKind,
     FetchTableMetadata pgKind,
     MonadIO m,
-    MonadBaseControl IO m,
-    FF.HasFeatureFlagChecker m
+    MonadBaseControl IO m
   ) =>
   SourceMetadata ('Postgres pgKind) ->
   SourceConfig ('Postgres pgKind) ->
   m (Either QErr (DBObjectsIntrospection ('Postgres pgKind)))
 resolveDatabaseMetadata sourceMetadata sourceConfig = do
-  enableNamingConventionSep2023 <- FF.checkFlag FF.namingConventionSep2023
   runExceptT $ _pecRunTx (_pscExecCtx sourceConfig) (PGExecCtxInfo (Tx PG.ReadOnly Nothing) InternalRawQuery) do
     tablesMeta <- fetchTableMetadata $ HashMap.keysSet $ InsOrdHashMap.toHashMap $ _smTables sourceMetadata
     let allFunctions =
@@ -181,9 +178,7 @@ resolveDatabaseMetadata sourceMetadata sourceConfig = do
     functionsMeta <- fetchFunctionMetadata @pgKind allFunctions
     pgScalars <- fetchPgScalars
     let customization = _smCustomization sourceMetadata
-        tCase
-          | enableNamingConventionSep2023 = fromMaybe HasuraCase $ _scNamingConvention customization
-          | otherwise = HasuraCase
+        tCase = fromMaybe HasuraCase $ _scNamingConvention customization
         scalarsMap = HashMap.fromList do
           scalar <- Set.toList pgScalars
           name <- afold @(Either QErr) $ mkScalarTypeName tCase scalar

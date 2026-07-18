@@ -85,7 +85,6 @@ import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.Types
-import Hasura.Server.Init.FeatureFlag qualified as FF
 import Hasura.Table.Cache (TableInfo (..), UpdPermInfo (..))
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
@@ -424,12 +423,9 @@ columnParser ::
   SchemaT r m (Parser 'Both n (IR.ValueWithOrigin (ColumnValue ('Postgres pgKind))))
 columnParser columnType nullability = case columnType of
   ColumnScalar scalarType -> memoizeOn 'columnParser (scalarType, nullability) do
-    enableNamingConventionSep2023 <- FF.checkFlag FF.namingConventionSep2023
     sourceInfo :: SourceInfo ('Postgres pgKind) <- asks getter
     let customization = _siCustomization sourceInfo
-        tCase
-          | enableNamingConventionSep2023 = _rscNamingConvention customization
-          | otherwise = HasuraCase
+        tCase = _rscNamingConvention customization
     -- We convert the value to JSON and use the FromJSON instance. This avoids
     -- having two separate ways of parsing a value in the codebase, which
     -- could lead to inconsistencies.
@@ -910,10 +906,7 @@ comparisonExps = memoize 'comparisonExps \columnType -> do
 
     castExp :: ColumnType ('Postgres pgKind) -> NamingCase -> SchemaT r m (Maybe (Parser 'Input n (CastExp ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind)))))
     castExp sourceType tCase = do
-      enableNamingConventionSep2023 <- FF.checkFlag FF.namingConventionSep2023
-      let tCaseSep2023
-            | enableNamingConventionSep2023 = tCase
-            | otherwise = HasuraCase
+      let tCaseSep2023 = tCase
 
       let maybeScalars = case sourceType of
             ColumnScalar PGGeography -> Just (PGGeography, PGGeometry)

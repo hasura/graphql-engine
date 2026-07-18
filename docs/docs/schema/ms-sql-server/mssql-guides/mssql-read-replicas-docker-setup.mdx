@@ -23,7 +23,7 @@ This tutorial was highly influenced by
 ### Create Docker file
 
 ```docker
-FROM ubuntu:18.04
+FROM ubuntu:noble-20260610
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update
@@ -31,9 +31,8 @@ RUN apt-get install apt-utils -y
 
 RUN apt-get install sudo wget curl gnupg gnupg1 gnupg2 -y
 RUN apt-get install software-properties-common systemd vim -y
-RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-
-RUN add-apt-repository "$(wget -qO- https://packages.microsoft.com/config/ubuntu/18.04/mssql-server-2019.list)"
+RUN curl -fsSL https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/mssql-server-2025.list | tee /etc/apt/sources.list.d/mssql-server-2025.list
+RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
 RUN apt-get update
 RUN apt-get install -y mssql-server
 

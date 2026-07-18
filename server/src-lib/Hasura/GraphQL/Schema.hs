@@ -109,7 +109,6 @@ buildGQLContext ::
   ( MonadError QErr m,
     MonadIO m
   ) =>
-  SchemaSampledFeatureFlags ->
   Options.InferFunctionPermissions ->
   Options.RemoteSchemaPermissions ->
   HashSet ExperimentalFeature ->
@@ -136,7 +135,6 @@ buildGQLContext ::
       SchemaRegistryAction
     )
 buildGQLContext
-  sampledFeatureFlags
   functionPermissions
   remoteSchemaPermissions
   experimentalFeatures
@@ -165,7 +163,6 @@ buildGQLContext
     -- roles.
     let buildHasuraRoleContext role =
           buildRoleContext
-            sampledFeatureFlags
             (sqlGen, functionPermissions)
             sources
             allRemoteSchemas
@@ -193,7 +190,6 @@ buildGQLContext
                         customTypes
                         role
                         experimentalFeatures
-                        sampledFeatureFlags
                     )
           pure (fst <$> contexts, snd <$> contexts)
         else do
@@ -207,7 +203,7 @@ buildGQLContext
       case HashMap.lookup adminRoleName hasuraContexts of
         Just (_context, _errors, introspection) -> pure introspection
         Nothing -> throw500 "buildGQLContext failed to build for the admin role"
-    (unauthenticated, unauthenticatedRemotesErrors) <- unauthenticatedContext (sqlGen, functionPermissions) sources allRemoteSchemas experimentalFeatures sampledFeatureFlags remoteSchemaPermissions
+    (unauthenticated, unauthenticatedRemotesErrors) <- unauthenticatedContext (sqlGen, functionPermissions) sources allRemoteSchemas experimentalFeatures remoteSchemaPermissions
 
     writeToSchemaRegistryAction <-
       forM mSchemaRegistryContext $ \schemaRegistryCtx -> do
@@ -306,7 +302,6 @@ buildSchemaOptions
 buildRoleContext ::
   forall m.
   (MonadError QErr m, MonadIO m) =>
-  SchemaSampledFeatureFlags ->
   (SQLGenCtx, Options.InferFunctionPermissions) ->
   SourceCache ->
   HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject) ->
@@ -318,7 +313,7 @@ buildRoleContext ::
   ApolloFederationStatus ->
   Maybe SchemaRegistryContext ->
   m RoleContextValue
-buildRoleContext sampledFeatureFlags options sources remotes actions customTypes role remoteSchemaPermsCtx expFeatures apolloFederationStatus mSchemaRegistryContext = do
+buildRoleContext options sources remotes actions customTypes role remoteSchemaPermsCtx expFeatures apolloFederationStatus mSchemaRegistryContext = do
   let schemaOptions = buildSchemaOptions options expFeatures
       schemaContext =
         SchemaContext
@@ -332,7 +327,6 @@ buildRoleContext sampledFeatureFlags options sources remotes actions customTypes
               IncludeRemoteSourceRelationship
           )
           role
-          sampledFeatureFlags
   runMemoizeT $ do
     -- build all sources (`apolloFedTableParsers` contains all the parsers and
     -- type names, which are eligible for the `_Entity` Union)
@@ -480,9 +474,8 @@ buildRelayRoleContext ::
   AnnotatedCustomTypes ->
   RoleName ->
   Set.HashSet ExperimentalFeature ->
-  SchemaSampledFeatureFlags ->
   m (RoleContext GQLContext)
-buildRelayRoleContext options sources actions customTypes role expFeatures schemaSampledFeatureFlags = do
+buildRelayRoleContext options sources actions customTypes role expFeatures = do
   let schemaOptions = buildSchemaOptions options expFeatures
       -- TODO: At the time of writing this, remote schema queries are not supported in relay.
       -- When they are supported, we should get do what `buildRoleContext` does. Since, they
@@ -494,7 +487,6 @@ buildRelayRoleContext options sources actions customTypes role expFeatures schem
           -- introspection issues such as https://github.com/hasura/graphql-engine/issues/5144.
           ignoreRemoteRelationship
           role
-          schemaSampledFeatureFlags
   runMemoizeT do
     -- build all sources, and the node root
     (node, fieldsList) <- do
@@ -618,10 +610,9 @@ unauthenticatedContext ::
   SourceCache ->
   HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject) ->
   Set.HashSet ExperimentalFeature ->
-  SchemaSampledFeatureFlags ->
   Options.RemoteSchemaPermissions ->
   m (GQLContext, HashSet InconsistentMetadata)
-unauthenticatedContext options sources allRemotes expFeatures schemaSampledFeatureFlags remoteSchemaPermsCtx = do
+unauthenticatedContext options sources allRemotes expFeatures remoteSchemaPermsCtx = do
   let schemaOptions = buildSchemaOptions options expFeatures
       fakeSchemaContext =
         SchemaContext
@@ -639,7 +630,6 @@ unauthenticatedContext options sources allRemotes expFeatures schemaSampledFeatu
               ExcludeRemoteSourceRelationship
           )
           fakeRole
-          schemaSampledFeatureFlags
       -- chosen arbitrarily to be as improbable as possible
       fakeRole = mkRoleNameSafe [NT.nonEmptyTextQQ|MyNameIsOzymandiasKingOfKingsLookOnMyWorksYeMightyAndDespair|]
 

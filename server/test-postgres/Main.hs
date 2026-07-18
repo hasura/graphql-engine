@@ -26,7 +26,6 @@ import Hasura.App
 import Hasura.Backends.Postgres.Connection.Settings
 import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Base.Error
-import Hasura.GraphQL.Schema.Common
 import Hasura.Logging
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache
@@ -132,14 +131,12 @@ main = do
                 emptyMetadataDefaults
                 ApolloFederationDisabled
                 (_default closeWebsocketsOnMetadataChangeOption)
-                (SchemaSampledFeatureFlags [])
                 RelayModeEnabled
             cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) mkMSSQLSourceResolver staticConfig
 
         (_appInit, appEnv) <-
           lowerManagedT
             $ initialiseAppEnv
-              envMap
               globalCtx
               serveOptions
               Nothing

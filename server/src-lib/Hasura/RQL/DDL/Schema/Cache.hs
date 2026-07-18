@@ -50,7 +50,6 @@ import Hasura.Function.API
 import Hasura.Function.Cache
 import Hasura.Function.Metadata (FunctionMetadata (..))
 import Hasura.GraphQL.Schema (buildGQLContext)
-import Hasura.GraphQL.Schema.Common
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging
 import Hasura.LogicalModel.Cache (LogicalModelCache, LogicalModelInfo (..))
@@ -109,7 +108,6 @@ import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
-import Hasura.Server.Init.FeatureFlag qualified as FF
 import Hasura.Server.Migrate.Version
 import Hasura.Server.Types
 import Hasura.Services
@@ -201,14 +199,6 @@ newtype CacheRWT m a
       ProvidesNetwork
     )
   deriving anyclass (MonadQueryTags)
-
--- | Since 'CacheRWT' runs in a context where we have sampled the feature flags
--- we intentionally use those for 'HasFeatureFlagChecker', so that we always give
--- coherent results consistent with the 'CacheDynamicConfig'.
-instance (Monad m) => FF.HasFeatureFlagChecker (CacheRWT m) where
-  checkFlag ff = do
-    ffs <- CacheRWT $ asks _cdcSchemaSampledFeatureFlags
-    withSchemaSampledFeatureFlags ffs (FF.checkFlag ff)
 
 instance (MonadReader r m) => MonadReader r (CacheRWT m) where
   ask = lift ask
@@ -585,7 +575,6 @@ buildSchemaCacheRule logger env disableNativeQueryValidation mSchemaRegistryCont
         bindA
           -< do
             buildGQLContext
-              (_cdcSchemaSampledFeatureFlags dynamicConfig)
               (_cdcFunctionPermsCtx dynamicConfig)
               (_cdcRemoteSchemaPermsCtx dynamicConfig)
               (_cdcExperimentalFeatures dynamicConfig)
@@ -686,8 +675,7 @@ buildSchemaCacheRule logger env disableNativeQueryValidation mSchemaRegistryCont
       ) =>
       ( Inc.Dependency (HashMap SourceName Inc.InvalidationKey),
         Maybe LBS.ByteString,
-        BackendInfoAndSourceMetadata b,
-        SchemaSampledFeatureFlags
+        BackendInfoAndSourceMetadata b
       )
         `arr` Maybe (SourceConfig b, DBObjectsIntrospection b)
     tryResolveSource =
@@ -695,8 +683,7 @@ buildSchemaCacheRule logger env disableNativeQueryValidation mSchemaRegistryCont
         proc
           ( invalidationKeys,
             sourceIntrospection,
-            BackendInfoAndSourceMetadata {..},
-            schemaSampledFeatureFlags
+            BackendInfoAndSourceMetadata {..}
             )
         -> do
           let sourceName = _smName _bcasmSourceMetadata
@@ -706,7 +693,7 @@ buildSchemaCacheRule logger env disableNativeQueryValidation mSchemaRegistryCont
           case maybeSourceConfig of
             Nothing -> returnA -< Nothing
             Just sourceConfig -> do
-              databaseResponse <- bindA -< withSchemaSampledFeatureFlags schemaSampledFeatureFlags (resolveDatabaseMetadata logger _bcasmSourceMetadata sourceConfig)
+              databaseResponse <- bindA -< resolveDatabaseMetadata logger _bcasmSourceMetadata sourceConfig
               case databaseResponse of
                 Right databaseMetadata -> do
                   -- Collect database introspection to persist in the storage
@@ -1230,7 +1217,7 @@ buildSchemaCacheRule logger env disableNativeQueryValidation mSchemaRegistryCont
       remoteSchemaMap <-
         buildRemoteSchemas logger env
           -<
-            ((remoteSchemaInvalidationKeys, orderedRoles, fmap encJToLBS . siRemotes <$> storedIntrospection, _cdcSchemaSampledFeatureFlags dynamicConfig), InsOrdHashMap.elems remoteSchemas)
+            ((remoteSchemaInvalidationKeys, orderedRoles, fmap encJToLBS . siRemotes <$> storedIntrospection), InsOrdHashMap.elems remoteSchemas)
       let remoteSchemaCtxMap = HashMap.map fst remoteSchemaMap
           !defaultNC = _cdcDefaultNamingConvention dynamicConfig
           !isNamingConventionEnabled = EFNamingConventions `elem` (_cdcExperimentalFeatures dynamicConfig)
@@ -1257,8 +1244,7 @@ buildSchemaCacheRule logger env disableNativeQueryValidation mSchemaRegistryCont
                           -<
                             ( sourceInvalidationsKeys,
                               encJToLBS <$> sourceIntrospection,
-                              backendInfoAndSourceMetadata,
-                              _cdcSchemaSampledFeatureFlags dynamicConfig
+                              backendInfoAndSourceMetadata
                             )
                       case maybeResolvedSource of
                         Nothing -> returnA -< Nothing

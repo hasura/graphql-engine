@@ -19,7 +19,6 @@ module Hasura.Server.Types
     PGVersion (PGVersion),
     pgToDbVersion,
     RequestId (..),
-    CheckFeatureFlag (..),
     getRequestId,
     ApolloFederationStatus (..),
     TriggersErrorLogLevelStatus (..),
@@ -53,7 +52,6 @@ import Hasura.Authentication.Headers
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.Prelude hiding (intercalate)
 import Hasura.RQL.Types.ApiLimit
-import Hasura.Server.Init.FeatureFlag (CheckFeatureFlag (..))
 import Hasura.Server.Utils (generateFingerprint)
 import Network.HTTP.Types qualified as HTTP
 

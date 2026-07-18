@@ -5,10 +5,6 @@
 
 module Hasura.GraphQL.Schema.Common
   ( SchemaContext (..),
-    SchemaSampledFeatureFlags (..),
-    sampleFeatureFlags,
-    WithSchemaSampledFeatureFlags,
-    withSchemaSampledFeatureFlags,
     SchemaKind (..),
     RemoteRelationshipParserBuilder (..),
     NodeInterfaceParserBuilder (..),
@@ -70,7 +66,6 @@ module Hasura.GraphQL.Schema.Common
   )
 where
 
-import Control.Monad.Trans.Control
 import Data.Either (isRight)
 import Data.Has
 import Data.HashMap.Strict qualified as HashMap
@@ -107,7 +102,6 @@ import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Server.Init.FeatureFlag qualified as FF
 import Hasura.StoredProcedure.Cache (StoredProcedureCache)
 import Hasura.Table.Cache (SelPermInfo (..))
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -121,49 +115,8 @@ data SchemaContext = SchemaContext
     -- | how to process remote relationships
     scRemoteRelationshipParserBuilder :: RemoteRelationshipParserBuilder,
     -- | the role for which the schema is being built
-    scRole :: RoleName,
-    scSampledFeatureFlags :: SchemaSampledFeatureFlags
+    scRole :: RoleName
   }
-
--- | We want to be able to probe feature flags in the schema parsers, but we also
--- want to be able to run schema actions without requiring IO, in part because we
--- want to be able to run them in tests and in part because we want some assurance
--- that the schema we parse doesn't change without our knowledge, as that precludes
--- safely caching schema introspection.
-newtype SchemaSampledFeatureFlags = SchemaSampledFeatureFlags [(FF.FeatureFlag, Bool)]
-  deriving (Eq, Show)
-
-sampleFeatureFlags :: FF.CheckFeatureFlag -> IO SchemaSampledFeatureFlags
-sampleFeatureFlags checkFeatureFlag = do
-  let ffs = map fst $ FF.listKnownFeatureFlags checkFeatureFlag
-  SchemaSampledFeatureFlags <$> mapM (\ff -> (ff,) <$> FF.runCheckFeatureFlag checkFeatureFlag ff) ffs
-
--- | Monad transformer that lets you use the sampled feature flags from a reader environment.
--- This is necessary because we want 'ReaderT r m` to be transparent wrt. 'HasFeatureFlagChecker m'.
-newtype WithSchemaSampledFeatureFlags m a = WithSchemaSampledFeatureFlags {unWithSchemaSampledFeatureFlags :: ReaderT SchemaSampledFeatureFlags m a}
-  deriving (Functor, Applicative, Monad, MonadIO)
-
-deriving instance (MonadBase IO m) => MonadBase IO (WithSchemaSampledFeatureFlags m)
-
-deriving instance (MonadBaseControl IO m, MonadBase IO m) => MonadBaseControl IO (WithSchemaSampledFeatureFlags m)
-
-instance MonadTrans WithSchemaSampledFeatureFlags where
-  lift = WithSchemaSampledFeatureFlags . lift
-
-instance (MonadResolveSource m) => MonadResolveSource (WithSchemaSampledFeatureFlags m) where
-  getPGSourceResolver = lift getPGSourceResolver
-  getMSSQLSourceResolver = lift getMSSQLSourceResolver
-
-withSchemaSampledFeatureFlags :: SchemaSampledFeatureFlags -> WithSchemaSampledFeatureFlags m a -> m a
-withSchemaSampledFeatureFlags ffs = flip runReaderT ffs . unWithSchemaSampledFeatureFlags
-
-instance (Monad m) => FF.HasFeatureFlagChecker (WithSchemaSampledFeatureFlags m) where
-  checkFlag ff = do
-    flags <- WithSchemaSampledFeatureFlags $ ask
-    pure $ sampledCheckFlag flags ff
-
-sampledCheckFlag :: SchemaSampledFeatureFlags -> FF.FeatureFlag -> Bool
-sampledCheckFlag (SchemaSampledFeatureFlags flags) ff = fromMaybe False (lookup ff flags)
 
 -- | The kind of schema we're building, and its associated options.
 data SchemaKind
@@ -284,11 +237,6 @@ calling monad with a simple `lift`, as demonstrated in
 -- In the future, we might monomorphize this further to make `MemoizeT` explicit.
 newtype SchemaT r m a = SchemaT {runSchemaT :: ReaderT r m a}
   deriving newtype (Functor, Applicative, Monad, MonadReader r, P.MonadMemoize, MonadTrans, MonadError e)
-
-instance (Has SchemaContext r, Monad m) => FF.HasFeatureFlagChecker (SchemaT r m) where
-  checkFlag ff = do
-    flags <- asks (scSampledFeatureFlags . getter)
-    pure $ sampledCheckFlag flags ff
 
 type MonadBuildSourceSchema b r m n =
   ( MonadBuildSchemaBase m n,

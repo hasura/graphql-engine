@@ -37,7 +37,6 @@ import Hasura.Eventing.Common (LockedEventsCtx)
 import Hasura.Eventing.EventTrigger
 import Hasura.GraphQL.Execute.Subscription.Options
 import Hasura.GraphQL.Execute.Subscription.State qualified as ES
-import Hasura.GraphQL.Schema.Common (SchemaSampledFeatureFlags, sampleFeatureFlags)
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging qualified as L
 import Hasura.Prelude
@@ -102,7 +101,7 @@ data RebuildableAppContext impl = RebuildableAppContext
     _racRebuild ::
       Inc.Rule
         (ReaderT (L.Logger L.Hasura, HTTP.Manager) (ExceptT QErr IO))
-        (ServeOptions impl, E.Environment, InvalidationKeys, CheckFeatureFlag)
+        (ServeOptions impl, E.Environment, InvalidationKeys)
         AppContext
   }
 
@@ -143,7 +142,6 @@ data AppEnv = AppEnv
     -- as this thread is initialised there before creating the `AppStateRef`. But eventually we need
     -- to do it for the Enterprise version.
     appEnvSchemaPollInterval :: OptionalInterval,
-    appEnvCheckFeatureFlag :: CheckFeatureFlag,
     appEnvLicenseKeyCache :: Maybe (CredentialCache AgentLicenseKey),
     appEnvMaxTotalHeaderLength :: Int,
     appEnvTriggersErrorLogLevelStatus :: TriggersErrorLogLevelStatus,
@@ -177,7 +175,6 @@ data AppContext = AppContext
     acAsyncActionsFetchInterval :: OptionalInterval,
     acApolloFederationStatus :: ApolloFederationStatus,
     acCloseWebsocketsOnMetadataChangeStatus :: CloseWebsocketsOnMetadataChangeStatus,
-    acSchemaSampledFeatureFlags :: SchemaSampledFeatureFlags,
     acRemoteSchemaResponsePriority :: RemoteSchemaResponsePriority,
     acHeaderPrecedence :: HeaderPrecedence,
     acTraceQueryStatus :: TraceQueryStatus,
@@ -232,11 +229,10 @@ buildRebuildableAppContext ::
     HTTP.Manager
   ) ->
   ServeOptions impl ->
-  CheckFeatureFlag ->
   E.Environment ->
   ExceptT QErr IO (RebuildableAppContext impl)
-buildRebuildableAppContext readerContext serveOptions checkFeatureFlag env = do
-  result <- flip runReaderT readerContext $ Inc.build (buildAppContextRule) (serveOptions, env, initInvalidationKeys, checkFeatureFlag)
+buildRebuildableAppContext readerContext serveOptions env = do
+  result <- flip runReaderT readerContext $ Inc.build (buildAppContextRule) (serveOptions, env, initInvalidationKeys)
   let !appContext = Inc.result result
   let !rebuildableAppContext = RebuildableAppContext appContext initInvalidationKeys (Inc.rebuildRule result)
   pure rebuildableAppContext
@@ -248,17 +244,16 @@ rebuildRebuildableAppContext ::
   (L.Logger L.Hasura, HTTP.Manager) ->
   RebuildableAppContext impl ->
   ServeOptions impl ->
-  CheckFeatureFlag ->
   E.Environment ->
   m (RebuildableAppContext impl)
-rebuildRebuildableAppContext readerCtx (RebuildableAppContext _ _ rule) serveOptions checkFeatureFlag env = do
+rebuildRebuildableAppContext readerCtx (RebuildableAppContext _ _ rule) serveOptions env = do
   let newInvalidationKeys = InvalidationKeys
   result <-
     liftEitherM
       $ liftIO
       $ runExceptT
       $ flip runReaderT readerCtx
-      $ Inc.build rule (serveOptions, env, newInvalidationKeys, checkFeatureFlag)
+      $ Inc.build rule (serveOptions, env, newInvalidationKeys)
   let appContext = Inc.result result
       !newCtx = RebuildableAppContext appContext newInvalidationKeys (Inc.rebuildRule result)
   pure newCtx
@@ -273,9 +268,8 @@ buildAppContextRule ::
     MonadError QErr m,
     MonadReader (L.Logger L.Hasura, HTTP.Manager) m
   ) =>
-  (ServeOptions impl, E.Environment, InvalidationKeys, CheckFeatureFlag) `arr` AppContext
-buildAppContextRule = proc (ServeOptions {..}, env, _keys, checkFeatureFlag) -> do
-  schemaSampledFeatureFlags <- arrM (liftIO . sampleFeatureFlags) -< checkFeatureFlag
+  (ServeOptions impl, E.Environment, InvalidationKeys) `arr` AppContext
+buildAppContextRule = proc (ServeOptions {..}, env, _keys) -> do
   authMode <- buildAuthMode -< (soAdminSecret, soAuthHook, soJwtSecret, soUnAuthRole)
   let sqlGenCtx = initSQLGenCtx soExperimentalFeatures soStringifyNum soDangerousBooleanCollapse soBackwardsCompatibleNullInNonNullableVariables soRemoteNullForwardingPolicy
   responseInternalErrorsConfig <- buildResponseInternalErrorsConfig -< (soAdminInternalErrors, soDevMode)
@@ -303,7 +297,6 @@ buildAppContextRule = proc (ServeOptions {..}, env, _keys, checkFeatureFlag) -> 
           acAsyncActionsFetchInterval = soAsyncActionsFetchInterval,
           acApolloFederationStatus = soApolloFederationStatus,
           acCloseWebsocketsOnMetadataChangeStatus = soCloseWebsocketsOnMetadataChangeStatus,
-          acSchemaSampledFeatureFlags = schemaSampledFeatureFlags,
           acRemoteSchemaResponsePriority = soRemoteSchemaResponsePriority,
           acHeaderPrecedence = soHeaderPrecedence,
           acTraceQueryStatus = soTraceQueryStatus,
@@ -395,6 +388,5 @@ buildCacheDynamicConfig AppContext {..} = do
       _cdcMetadataDefaults = acMetadataDefaults,
       _cdcApolloFederationStatus = acApolloFederationStatus,
       _cdcCloseWebsocketsOnMetadataChangeStatus = acCloseWebsocketsOnMetadataChangeStatus,
-      _cdcSchemaSampledFeatureFlags = acSchemaSampledFeatureFlags,
       _cdcRelayMode = acRelayMode
     }

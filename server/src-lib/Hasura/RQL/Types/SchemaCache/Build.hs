@@ -72,7 +72,6 @@ import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RemoteSchema.Metadata (RemoteSchemaName)
-import Hasura.Server.Init.FeatureFlag (HasFeatureFlagChecker)
 import Hasura.Server.Types (MonadGetPolicies (..))
 import Hasura.Services.Network
 import Hasura.Tracing (TraceT)
@@ -287,8 +286,7 @@ newtype MetadataT m a = MetadataT {unMetadataT :: StateT Metadata m a}
       Tracing.MonadTrace,
       MonadBase b,
       MonadBaseControl b,
-      ProvidesNetwork,
-      HasFeatureFlagChecker
+      ProvidesNetwork
     )
   deriving anyclass (MonadQueryTags)
 

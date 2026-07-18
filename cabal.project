@@ -137,10 +137,6 @@ allow-newer: uuid:uuid-types
 allow-newer: connection:tls
 allow-newer: proto-lens:base
 allow-newer: proto-lens-runtime:base
-allow-newer: launchdarkly-server-sdk:lens
-allow-newer: launchdarkly-server-sdk:bytestring
-allow-newer: launchdarkly-server-sdk:text
-allow-newer: launchdarkly-server-sdk:containers
 allow-newer: lrucache:containers
 allow-newer: generic-monoid:base
 allow-newer: aeson-optics:base
@@ -191,8 +187,6 @@ allow-newer: proto-lens:containers
 allow-newer: lens-family:containers
 allow-newer: lens-family-core:containers
 allow-newer: proto-lens-runtime:containers
-allow-newer: launchdarkly-server-sdk:time
-allow-newer: launchdarkly-server-sdk:extra
 allow-newer: bytestring-lexing:base
 allow-newer: parallel:base
 allow-newer: microstache:base

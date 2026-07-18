@@ -105,8 +105,7 @@ instance Has SchemaContext SchemaEnvironment where
       SchemaContext
         { scSchemaKind = HasuraSchema,
           scRemoteRelationshipParserBuilder = ignoreRemoteRelationship,
-          scRole = adminRoleName,
-          scSampledFeatureFlags = SchemaSampledFeatureFlags []
+          scRole = adminRoleName
         }
 
   modifier :: (SchemaContext -> SchemaContext) -> SchemaEnvironment -> SchemaEnvironment
