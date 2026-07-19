@@ -31,7 +31,7 @@ export const useRootFieldPermissions = ({
 }: Props) => {
   const { data: configData } = useServerConfig();
   const isSubscriptionStreamingEnabled =
-    !!configData?.experimental_features.includes('streaming_subscriptions');
+    !!configData?.experimental_features?.includes('streaming_subscriptions');
 
   const isRootPermissionsSwitchedOn =
     subscriptionRootPermissions !== null && queryRootPermissions !== null;
