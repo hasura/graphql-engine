@@ -51,3 +51,7 @@ RUN set -ex; \
     apt-get -y auto-remove; \
     apt-get -y clean; \
     rm -rf /var/lib/apt/lists/* /usr/share/doc/ /usr/share/man/ /usr/share/locale/
+
+# Remove the default snakeoil private key and certificate so they are not left
+# in the image (installed as a side effect of the ssl-cert dependency)
+RUN rm -f /etc/ssl/private/ssl-cert-snakeoil.key /etc/ssl/certs/ssl-cert-snakeoil.pem
