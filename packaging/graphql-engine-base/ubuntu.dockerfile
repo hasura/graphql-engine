@@ -22,7 +22,10 @@ RUN set -ex; \
     # deps needed for graphql-engine
     apt-get install -y libkrb5-3 libpq5 libnuma1 unixodbc-dev; \
     # deps needed for cli-migrations
-    apt-get install -y netcat
+    apt-get install -y netcat; \
+    # Remove the default snakeoil private key and certificate so they are not left
+    # in the image (installed as a side effect of the ssl-cert dependency)
+    rm -f /etc/ssl/private/ssl-cert-snakeoil.key /etc/ssl/certs/ssl-cert-snakeoil.pem
 
 RUN set -ex; \
     curl -fsS "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list" > /etc/apt/sources.list.d/mssql-release.list; \
@@ -30,9 +33,9 @@ RUN set -ex; \
     apt-get update; \
     ACCEPT_EULA=Y apt-get install -y msodbcsql18; \
     if [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
-      # Support the old version of the driver too, where possible.
-      # v17 is only supported on amd64.
-      ACCEPT_EULA=Y apt-get -y install msodbcsql17; \
+    # Support the old version of the driver too, where possible.
+    # v17 is only supported on amd64.
+    ACCEPT_EULA=Y apt-get -y install msodbcsql17; \
     fi
 
 # Install pg_dump
@@ -55,7 +58,3 @@ RUN set -ex; \
     apt-get -y auto-remove; \
     apt-get -y clean; \
     rm -rf /var/lib/apt/lists/* /usr/share/doc/ /usr/share/man/ /usr/share/locale/
-
-# Remove the default snakeoil private key and certificate so they are not left
-# in the image (installed as a side effect of the ssl-cert dependency)
-RUN rm -f /etc/ssl/private/ssl-cert-snakeoil.key /etc/ssl/certs/ssl-cert-snakeoil.pem
