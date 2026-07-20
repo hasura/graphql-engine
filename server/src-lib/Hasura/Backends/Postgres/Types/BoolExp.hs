@@ -12,6 +12,8 @@ module Hasura.Backends.Postgres.Types.BoolExp
         AHasKey,
         AHasKeysAll,
         AHasKeysAny,
+        AJsonbPathExists,
+        AJsonbPathMatch,
         AILIKE,
         AIREGEX,
         AMatches,
@@ -59,6 +61,8 @@ data BooleanOperators a
   | AHasKey a
   | AHasKeysAny a
   | AHasKeysAll a
+  | AJsonbPathExists a
+  | AJsonbPathMatch a
   | ASTContains a
   | ASTCrosses a
   | ASTEquals a
@@ -101,6 +105,8 @@ instance (ToJSON a) => ToJSONKeyValue (BooleanOperators a) where
     AHasKey a -> ("_has_key", toJSON a)
     AHasKeysAny a -> ("_has_keys_any", toJSON a)
     AHasKeysAll a -> ("_has_keys_all", toJSON a)
+    AJsonbPathExists a -> ("_jsonb_path_exists", toJSON a)
+    AJsonbPathMatch a -> ("_jsonb_path_match", toJSON a)
     ASTContains a -> ("_st_contains", toJSON a)
     ASTCrosses a -> ("_st_crosses", toJSON a)
     AST3DDWithinGeom o -> ("_st_3d_d_within", toJSON o)

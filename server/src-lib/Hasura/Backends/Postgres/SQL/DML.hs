@@ -8,7 +8,7 @@ module Hasura.Backends.Postgres.SQL.DML
     BoolExp (..),
     TopLevelCTE (CTEDelete, CTEInsert, CTESelect, CTEUpdate, CTEUnsafeRawSQL),
     InnerCTE (..),
-    CompareOp (SContainedIn, SContains, SEQ, SGT, SGTE, SHasKey, SHasKeysAll, SHasKeysAny, SILIKE, SIREGEX, SLIKE, SLT, SLTE, SMatchesFulltext, SNE, SNILIKE, SNIREGEX, SNLIKE, SNREGEX, SNSIMILAR, SREGEX, SSIMILAR),
+    CompareOp (SContainedIn, SContains, SEQ, SGT, SGTE, SHasKey, SHasKeysAll, SHasKeysAny, SILIKE, SIREGEX, SJsonbPathExists, SJsonbPathMatch, SLIKE, SLT, SLTE, SMatchesFulltext, SNE, SNILIKE, SNIREGEX, SNLIKE, SNREGEX, SNSIMILAR, SREGEX, SSIMILAR),
     CountType (CTDistinct, CTSimple, CTStar),
     DistinctExpr (DistinctOn, DistinctSimple),
     Extractor (..),
@@ -1021,6 +1021,8 @@ data CompareOp
   | SHasKey
   | SHasKeysAny
   | SHasKeysAll
+  | SJsonbPathExists
+  | SJsonbPathMatch
   | SMatchesFulltext
   deriving (Eq, Generic, Data)
 
@@ -1053,6 +1055,8 @@ instance Show CompareOp where
     SHasKey -> "?"
     SHasKeysAny -> "?|"
     SHasKeysAll -> "?&"
+    SJsonbPathExists -> "@?"
+    SJsonbPathMatch -> "@@"
     SMatchesFulltext -> "@"
 
 instance ToSQL CompareOp where

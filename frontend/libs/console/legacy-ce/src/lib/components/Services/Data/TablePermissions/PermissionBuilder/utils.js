@@ -163,6 +163,16 @@ export const columnOperatorsInfo = {
     inputStructure: 'array',
     inputType: 'character',
   },
+  _jsonb_path_exists: {
+    type: 'jsonb',
+    inputStructure: 'object',
+    inputType: 'character',
+  },
+  _jsonb_path_match: {
+    type: 'jsonb',
+    inputStructure: 'object',
+    inputType: 'character',
+  },
   _st_contains: {
     type: 'geometric',
     inputStructure: 'object',

@@ -17,8 +17,8 @@ import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
 ## Introduction
 
-The `_contains`, `_contained_in`, `_has_key`, `_has_keys_any` and `_has_keys_all` operators are used to filter based on
-`JSONB` columns.
+The `_contains`, `_contained_in`, `_has_key`, `_has_keys_any`, `_has_keys_all`, `_jsonb_path_exists` and
+`_jsonb_path_match` operators are used to filter based on `JSONB` columns.
 
 For more details on JSONB operators and Postgres equivalents, refer to the
 [API reference](/api-reference/graphql-api/query.mdx#jsonb-operators).
@@ -201,4 +201,69 @@ Fetch user, where their id is "123", and check if the address has all the fields
       }
     } 
   }`}
+/>
+
+## \_jsonb_path_exists
+
+Fetch all orders where the `items` array contains at least one item with a `quantity` greater than 5. Uses the
+PostgreSQL `@?` operator with a [SQL/JSON path](https://www.postgresql.org/docs/current/functions-json.html#FUNCTIONS-SQLJSON-PATH)
+expression:
+
+<GraphiQLIDE
+  query={`query get_large_orders {
+  orders(
+    where: {
+      items: {
+        _jsonb_path_exists: "$[*] ? (@.quantity > 5)"
+      }
+    }
+  ) {
+    id
+    items
+  }
+}`}
+  response={`{
+  "data": {
+    "orders": [
+      {
+        "id": 1,
+        "items": [
+          { "name": "Widget", "quantity": 10, "price": 9.99 }
+        ]
+      }
+    ]
+  }
+}`}
+/>
+
+## \_jsonb_path_match
+
+Fetch all products where the nested `price` value is less than 50. Uses the PostgreSQL `@@` operator with a
+[SQL/JSON path](https://www.postgresql.org/docs/current/functions-json.html#FUNCTIONS-SQLJSON-PATH) predicate expression:
+
+<GraphiQLIDE
+  query={`query get_affordable_products {
+  products(
+    where: {
+      metadata: {
+        _jsonb_path_match: "$.price < 50"
+      }
+    }
+  ) {
+    id
+    name
+    metadata
+  }
+}`}
+  response={`{
+  "data": {
+    "products": [
+      {
+        "id": 3,
+        "name": "Widget",
+        "metadata": { "price": 29.99, "stock": 100 }
+      }
+    ]
+  }
+}`}
 />

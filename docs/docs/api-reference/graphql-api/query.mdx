@@ -812,11 +812,13 @@ Operators are used to compare a column value with a specified value. The followi
 
 | Operator        | PostgreSQL equivalent |
 | --------------- | --------------------- |
-| `_contains`     | `@>`                  |
-| `_contained_in` | `<@`                  |
-| `_has_key`      | `?`                   |
-| `_has_keys_any` | `?!`                  |
-| `_has_keys_all` | `?&`                  |
+| `_contains`          | `@>`                  |
+| `_contained_in`      | `<@`                  |
+| `_has_key`           | `?`                   |
+| `_has_keys_any`      | `?!`                  |
+| `_has_keys_all`      | `?&`                  |
+| `_jsonb_path_exists` | `@?`                  |
+| `_jsonb_path_match`  | `@@`                  |
 
 (For more details on JSONB operators, refer to the
 [Postgres docs](https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE).)

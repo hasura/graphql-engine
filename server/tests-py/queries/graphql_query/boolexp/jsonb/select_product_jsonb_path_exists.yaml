@@ -1,0 +1,36 @@
+description: Select products where spec contains a RAM key with value matching a jsonb path
+url: /v1/graphql
+status: 200
+response:
+  data:
+    product:
+    - id: 1
+      name: laptop1
+      spec:
+        RAM: 8GB
+        Disk: 128GB
+        Weight: 1.2Kg
+        Processor: processor1
+        Operating System: os1
+    - id: 2
+      name: laptop2
+      spec:
+        OS: os2
+        RAM: 16GB
+        Disk: 128GB
+        Weight: 1.2Kg
+        Processor: processor2
+        Touchscreen: true
+query:
+  query: |
+    query {
+      product(
+        where: { spec: { _jsonb_path_exists: "$.RAM" } }
+        order_by: { id: asc }
+      ) {
+        id
+        name
+        spec
+      }
+    }
+

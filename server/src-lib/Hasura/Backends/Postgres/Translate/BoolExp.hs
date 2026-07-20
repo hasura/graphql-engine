@@ -485,6 +485,8 @@ mkFieldCompExp rootReference currTableReference lhsRedactionExp lhsField userInf
         AHasKey val -> S.BECompare S.SHasKey lhs val
         AHasKeysAny val -> S.BECompare S.SHasKeysAny lhs val
         AHasKeysAll val -> S.BECompare S.SHasKeysAll lhs val
+        AJsonbPathExists val -> S.BECompare S.SJsonbPathExists lhs (S.SETyAnn val (S.TypeAnn "jsonpath"))
+        AJsonbPathMatch val -> S.BECompare S.SJsonbPathMatch lhs (S.SETyAnn val (S.TypeAnn "jsonpath"))
         AAncestor val -> S.BECompare S.SContains lhs val
         AAncestorAny val -> S.BECompare S.SContains lhs val
         ADescendant val -> S.BECompare S.SContainedIn lhs val
