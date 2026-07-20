@@ -1,7 +1,6 @@
 package file
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -12,7 +11,7 @@ import (
 )
 
 func Test(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "")
+	tmpDir, err := os.MkdirTemp("", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -61,7 +60,7 @@ func Test(t *testing.T) {
 }
 
 func TestOpen(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "TestOpen")
+	tmpDir, err := os.MkdirTemp("", "TestOpen")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -83,7 +82,7 @@ func TestOpen(t *testing.T) {
 }
 
 func TestOpenWithRelativePath(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "TestOpen")
+	tmpDir, err := os.MkdirTemp("", "TestOpen")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -161,7 +160,7 @@ func TestOpenDefaultsToCurrentDirectory(t *testing.T) {
 }
 
 func TestOpenWithDuplicateVersion(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "TestOpenWithDuplicateVersion")
+	tmpDir, err := os.MkdirTemp("", "TestOpenWithDuplicateVersion")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -223,7 +222,7 @@ func TestWithInvalidDirectory(t *testing.T) {
 }
 
 func TestClose(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "TestOpen")
+	tmpDir, err := os.MkdirTemp("", "TestOpen")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -242,7 +241,7 @@ func TestClose(t *testing.T) {
 }
 
 func mustWriteFile(t testing.TB, dir, file string, body string) {
-	if err := ioutil.WriteFile(path.Join(dir, file), []byte(body), 06444); err != nil {
+	if err := os.WriteFile(path.Join(dir, file), []byte(body), 0o6444); err != nil {
 		t.Fatal(err)
 	}
 }

@@ -53,7 +53,11 @@ func TestMigrateApplyOptionsValidate_MutualExclusion(t *testing.T) {
 				t.Fatalf("Validate() expected error containing %q, got nil", tt.wantErrSubstr)
 			}
 			if !strings.Contains(err.Error(), tt.wantErrSubstr) {
-				t.Errorf("Validate() error = %q, want it to contain %q", err.Error(), tt.wantErrSubstr)
+				t.Errorf(
+					"Validate() error = %q, want it to contain %q",
+					err.Error(),
+					tt.wantErrSubstr,
+				)
 			}
 		})
 	}

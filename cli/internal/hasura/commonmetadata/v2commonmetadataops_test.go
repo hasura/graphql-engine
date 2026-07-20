@@ -4,13 +4,11 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
-	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestClientCommonMetadataOps_V2ReplaceMetadata(t *testing.T) {
@@ -72,7 +70,7 @@ func TestClientCommonMetadataOps_V2ReplaceMetadata(t *testing.T) {
 }`)
 					var m interface{}
 					assert.NoError(t, json.Unmarshal(metadata, &m))
-					var a = hasura.V2ReplaceMetadataArgs{
+					a := hasura.V2ReplaceMetadataArgs{
 						AllowInconsistentMetadata: true,
 						Metadata:                  m,
 					}
@@ -136,7 +134,7 @@ func TestClientCommonMetadataOps_V2ReplaceMetadata(t *testing.T) {
 }`)
 					var m interface{}
 					assert.NoError(t, json.Unmarshal(metadata, &m))
-					var a = hasura.V2ReplaceMetadataArgs{
+					a := hasura.V2ReplaceMetadataArgs{
 						AllowInconsistentMetadata: true,
 						Metadata:                  m,
 					}

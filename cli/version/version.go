@@ -2,9 +2,7 @@
 package version
 
 import (
-	"fmt"
-
-	"github.com/Masterminds/semver"
+	"github.com/Masterminds/semver/v3"
 )
 
 // DevVersion is the version string for development versions.
@@ -41,38 +39,44 @@ func (v *Version) GetServerVersion() string {
 	return v.Server
 }
 
-// SetCLIVersion parses the version string vs and sets it as CLI version
+// SetCLIVersion parses the version string vs and sets it as CLI version.
 func (v *Version) SetCLIVersion(s string) {
 	// if semver parsing fails, cv will be nil
 	sv, _ := semver.NewVersion(s)
+
 	v.CLI = s
 	if sv != nil {
-		v.CLI = fmt.Sprintf("v%s", sv.String())
+		v.CLI = "v" + sv.String()
 	}
+
 	v.CLISemver = sv
 }
 
-// SetServerVersion parses the version string vs and sets it as server version
+// SetServerVersion parses the version string vs and sets it as server version.
 func (v *Version) SetServerVersion(s string) {
 	// if semver parsing fails, sv will be nil
 	sv, _ := semver.NewVersion(s)
+
 	v.Server = s
 	if sv != nil {
-		v.Server = fmt.Sprintf("v%s", sv.String())
+		v.Server = "v" + sv.String()
 	}
+
 	v.ServerSemver = sv
 }
 
-// New returns a new version object with BuildVersion filled in as CLI
+// New returns a new version object with BuildVersion filled in as CLI.
 func New() *Version {
 	v := &Version{}
 	v.SetCLIVersion(BuildVersion)
+
 	return v
 }
 
-// NewCLIVersion returns a new version object with CLI info filled in
+// NewCLIVersion returns a new version object with CLI info filled in.
 func NewCLIVersion(cli string) *Version {
 	v := &Version{}
 	v.SetCLIVersion(cli)
+
 	return v
 }

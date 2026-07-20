@@ -1,18 +1,18 @@
 package testutil
 
 import (
-	"fmt"
 	"os"
 	"runtime"
 )
 
-// this can be overridden by ldflags
+// this can be overridden by ldflags.
 var (
 	HasuraDockerImage = func() string {
 		graphqlEngineDockerImage := os.Getenv("HASURA_TEST_CLI_HGE_DOCKER_IMAGE")
 		if graphqlEngineDockerImage != "" {
 			return graphqlEngineDockerImage
 		}
+
 		return ""
 	}()
 
@@ -23,10 +23,11 @@ var (
 		case "darwin", "windows":
 			return "host.docker.internal"
 		}
+
 		return "172.17.0.1"
 	}()
 	Hostname      = "localhost"
-	BaseURL       = fmt.Sprintf("http://%s", Hostname)
+	BaseURL       = "http://" + Hostname
 	MSSQLPassword = "MSSQLp@ssw0rd"
 	CLIBinaryPath = func() string {
 		if os.Getenv("CI") == "true" {

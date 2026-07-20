@@ -12,7 +12,6 @@ import (
 )
 
 var _ = Describe("hasura metadata reload", func() {
-
 	var projectDirectory string
 	var teardown func()
 	BeforeEach(func() {

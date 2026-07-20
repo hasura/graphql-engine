@@ -37,10 +37,16 @@ type HTTPFetcher struct{}
 // Get gets the file and returns an stream to read the file.
 func (HTTPFetcher) Get(uri string) (io.ReadCloser, error) {
 	var op errors.Op = "download.HTTPFetcher.Get"
+
 	resp, err := http.Get(uri)
 	if err != nil {
-		return nil, errors.E(op, errors.KindNetwork, fmt.Errorf("failed to download %q: %w", uri, err))
+		return nil, errors.E(
+			op,
+			errors.KindNetwork,
+			fmt.Errorf("failed to download %q: %w", uri, err),
+		)
 	}
+
 	return resp.Body, nil
 }
 
@@ -50,10 +56,15 @@ type fileFetcher struct{ f string }
 
 func (f fileFetcher) Get(_ string) (io.ReadCloser, error) {
 	var op errors.Op = "download.fileFetcher.Get"
+
 	file, err := os.Open(f.f)
 	if err != nil {
-		return file, errors.E(op, fmt.Errorf("failed to open archive file %q for reading: %w", f.f, err))
+		return file, errors.E(
+			op,
+			fmt.Errorf("failed to open archive file %q for reading: %w", f.f, err),
+		)
 	}
+
 	return file, nil
 }
 

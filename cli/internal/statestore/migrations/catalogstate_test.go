@@ -4,12 +4,10 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
-
-	"github.com/stretchr/testify/assert"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/catalogstate"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCatalogStateStore_InsertVersion(t *testing.T) {
@@ -31,7 +29,10 @@ func TestCatalogStateStore_InsertVersion(t *testing.T) {
 		{
 			"can insert version into catalog state",
 			fields{
-				statestore.NewCLICatalogState(catalogstate.New(testutil.NewHttpcClient(t, port, nil), "v1/metadata"))},
+				statestore.NewCLICatalogState(
+					catalogstate.New(testutil.NewHttpcClient(t, port, nil), "v1/metadata"),
+				),
+			},
 			args{
 				database: "test",
 				version:  321312321321321,
@@ -51,7 +52,11 @@ func TestCatalogStateStore_InsertVersion(t *testing.T) {
 				assert.NoError(t, err)
 				state, err := m.getCLIState()
 				assert.NoError(t, err)
-				assert.Equal(t, map[string]bool{strconv.Itoa(int(tt.args.version)): false}, state.GetMigrationsByDatabase(tt.args.database))
+				assert.Equal(
+					t,
+					map[string]bool{strconv.Itoa(int(tt.args.version)): false},
+					state.GetMigrationsByDatabase(tt.args.database),
+				)
 			}
 		})
 	}

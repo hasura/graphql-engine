@@ -2,9 +2,9 @@ package hasuradb
 
 import (
 	"encoding/json"
+	stderrors "errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	nurl "net/url"
 	"path"
@@ -15,7 +15,6 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
 	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/settings"
 	"github.com/hasura/graphql-engine/cli/v2/migrate/database"
-
 	"github.com/mitchellh/mapstructure"
 	log "github.com/sirupsen/logrus"
 )
@@ -30,23 +29,45 @@ const (
 )
 
 var (
-	ErrNilConfig      = fmt.Errorf("no config")
-	ErrNoDatabaseName = fmt.Errorf("no database name")
-	ErrNoSchema       = fmt.Errorf("no schema")
-	ErrDatabaseDirty  = fmt.Errorf("database is dirty")
+	ErrNilConfig      = stderrors.New("no config")
+	ErrNoDatabaseName = stderrors.New("no database name")
+	ErrNoSchema       = stderrors.New("no schema")
+	ErrDatabaseDirty  = stderrors.New("database is dirty")
 
 	queryTypes = []string{
-		"select", "insert", "update", "delete", "count", "run_sql", "bulk",
-		"mssql_select", "mssql_insert", "mssql_update", "mssql_delete", "mssql_count", "mssql_run_sql",
-		"citus_select", "citus_insert", "citus_update", "citus_delete", "citus_count", "citus_run_sql",
-		"bigquery_select", "bigquery_insert", "bigquery_update", "bigquery_delete", "bigquery_count", "bigquery_run_sql",
+		"select",
+		"insert",
+		"update",
+		"delete",
+		"count",
+		"run_sql",
+		"bulk",
+		"mssql_select",
+		"mssql_insert",
+		"mssql_update",
+		"mssql_delete",
+		"mssql_count",
+		"mssql_run_sql",
+		"citus_select",
+		"citus_insert",
+		"citus_update",
+		"citus_delete",
+		"citus_count",
+		"citus_run_sql",
+		"bigquery_select",
+		"bigquery_insert",
+		"bigquery_update",
+		"bigquery_delete",
+		"bigquery_count",
+		"bigquery_run_sql",
 		"cockroach_run_sql",
 	}
 	queryTypesMap = func() map[string]bool {
-		var m = map[string]bool{}
+		m := map[string]bool{}
 		for _, v := range queryTypes {
 			m[v] = true
 		}
+
 		return m
 	}()
 )
@@ -87,10 +108,16 @@ type HasuraDB struct {
 	settingsStateStore   statestore.SettingsStateStore
 }
 
-func WithInstance(config *Config, logger *log.Logger, hasuraOpts *database.HasuraOpts) (database.Driver, error) {
+func WithInstance(
+	config *Config,
+	logger *log.Logger,
+	hasuraOpts *database.HasuraOpts,
+) (database.Driver, error) {
 	var op errors.Op = "hasuradb.WithInstance"
+
 	if config == nil {
 		logger.Debug(ErrNilConfig)
+
 		return nil, errors.E(op, ErrNilConfig)
 	}
 
@@ -116,31 +143,46 @@ func WithInstance(config *Config, logger *log.Logger, hasuraOpts *database.Hasur
 		settingsStateStore:   hasuraOpts.SettingsStateStore,
 	}
 
-	if err := hx.migrationsStateStore.PrepareMigrationsStateStore(hasuraOpts.SourceName); err != nil {
+	err := hx.migrationsStateStore.PrepareMigrationsStateStore(hasuraOpts.SourceName)
+	if err != nil {
 		logger.Debug(err)
+
 		return nil, errors.E(op, err)
 	}
-	if err := hx.settingsStateStore.PrepareSettingsDriver(); err != nil {
+
+	err = hx.settingsStateStore.PrepareSettingsDriver()
+	if err != nil {
 		logger.Debug(err)
+
 		return nil, errors.E(op, err)
 	}
 
 	return hx, nil
 }
 
-func (h *HasuraDB) Open(url string, isCMD bool, logger *log.Logger, hasuraOpts *database.HasuraOpts) (database.Driver, error) {
+func (h *HasuraDB) Open(
+	url string,
+	isCMD bool,
+	logger *log.Logger,
+	hasuraOpts *database.HasuraOpts,
+) (database.Driver, error) {
 	var op errors.Op = "hasuradb.HasuraDB.Open"
+
 	if logger == nil {
 		logger = log.New()
 	}
+
 	hurl, err := nurl.Parse(url)
 	if err != nil {
 		logger.Debug(err)
+
 		return nil, errors.E(op, err)
 	}
 	// Use sslMode query param to set Scheme
 	var scheme string
+
 	params := hurl.Query()
+
 	sslMode := params.Get("sslmode")
 	if sslMode == "enable" {
 		scheme = "https"
@@ -149,6 +191,7 @@ func (h *HasuraDB) Open(url string, isCMD bool, logger *log.Logger, hasuraOpts *
 	}
 
 	headers := make(map[string]string)
+
 	if queryHeaders, ok := params["headers"]; ok {
 		for _, header := range queryHeaders {
 			headerValue := strings.SplitN(header, ":", 2)
@@ -182,11 +225,14 @@ func (h *HasuraDB) Open(url string, isCMD bool, logger *log.Logger, hasuraOpts *
 		isCMD:   isCMD,
 		Headers: headers,
 	}
+
 	hx, err := WithInstance(config, logger, hasuraOpts)
 	if err != nil {
 		logger.Debug(err)
+
 		return nil, errors.E(op, err)
 	}
+
 	return hx, nil
 }
 
@@ -197,11 +243,14 @@ func (h *HasuraDB) Close() error {
 
 func (h *HasuraDB) Scan() error {
 	var op errors.Op = "hasuradb.HasuraDB.Scan"
+
 	h.migrations = database.NewMigrations()
+
 	err := h.getVersions()
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
@@ -213,10 +262,11 @@ func (h *HasuraDB) Lock() error {
 
 	h.migrationQuery = HasuraInterfaceBulk{
 		Type: "bulk",
-		Args: make([]interface{}, 0),
+		Args: make([]any, 0),
 	}
 	h.jsonPath = make(map[string]string)
 	h.isLocked = true
+
 	return nil
 }
 
@@ -228,41 +278,55 @@ func (h *HasuraDB) UnLock() error {
 	defer func() {
 		h.isLocked = false
 	}()
+
 	return nil
 }
 
 func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string, noTransaction bool) error {
 	var op errors.Op = "hasuradb.HasuraDB.Run"
-	migr, err := ioutil.ReadAll(migration)
+
+	migr, err := io.ReadAll(migration)
 	if err != nil {
 		return errors.E(op, err)
 	}
-	body := string(migr[:])
+
+	body := string(migr)
+
 	switch fileType {
 	case "sql":
 		if body == "" {
 			break
 		}
+
 		sqlInput := hasura.PGRunSQLInput{
-			SQL:    string(body),
+			SQL:    body,
 			Source: h.hasuraOpts.SourceName,
 		}
 		if h.config.enableCheckMetadataConsistency {
-			sqlInput.CheckMetadataConsistency = func() *bool { b := false; return &b }()
+			sqlInput.CheckMetadataConsistency = func() *bool {
+				b := false
+
+				return &b
+			}()
 		}
+
 		switch h.hasuraOpts.SourceKind {
 		case hasura.SourceKindPG:
 			if noTransaction {
 				sqlInput.NoTransaction = &noTransaction
 			}
+
 			_, err := h.pgSourceOps.PGRunSQL(sqlInput)
 			if err != nil {
 				return errors.E(op, err)
 			}
 		case hasura.SourceKindMSSQL:
 			if noTransaction {
-				h.logger.Warn("no-transaction is not supported for MSSQL sources; the migration will run inside a transaction")
+				h.logger.Warn(
+					"no-transaction is not supported for MSSQL sources; the migration will run inside a transaction",
+				)
 			}
+
 			_, err := h.mssqlSourceOps.MSSQLRunSQL(hasura.MSSQLRunSQLInput(sqlInput))
 			if err != nil {
 				return errors.E(op, err)
@@ -271,6 +335,7 @@ func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string, noTransac
 			if noTransaction {
 				sqlInput.NoTransaction = &noTransaction
 			}
+
 			_, err := h.citusSourceOps.CitusRunSQL(hasura.CitusRunSQLInput(sqlInput))
 			if err != nil {
 				return errors.E(op, err)
@@ -279,73 +344,100 @@ func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string, noTransac
 			if noTransaction {
 				sqlInput.NoTransaction = &noTransaction
 			}
+
 			_, err := h.cockroachSourceOps.CockroachRunSQL(hasura.CockroachRunSQLInput(sqlInput))
 			if err != nil {
 				return errors.E(op, err)
 			}
 		case hasura.SourceKindBigQuery:
 			if noTransaction {
-				h.logger.Warn("no-transaction is not supported for BigQuery sources; the migration will run inside a transaction")
+				h.logger.Warn(
+					"no-transaction is not supported for BigQuery sources; the migration will run inside a transaction",
+				)
 			}
+
 			_, err := h.bigquerySourceOps.BigQueryRunSQL(hasura.BigQueryRunSQLInput(sqlInput))
 			if err != nil {
 				return err
 			}
 
 		default:
-			return errors.E(op, fmt.Errorf("unsupported source kind, source name: %v kind: %v", h.hasuraOpts.SourceName, h.hasuraOpts.SourceKind))
+			return errors.E(
+				op,
+				fmt.Errorf(
+					"unsupported source kind, source name: %v kind: %v",
+					h.hasuraOpts.SourceName,
+					h.hasuraOpts.SourceKind,
+				),
+			)
 		}
 	case "meta":
-		var metadataRequests []interface{}
+		var metadataRequests []any
+
 		err := json.Unmarshal(migr, &metadataRequests)
 		if err != nil {
 			h.migrationQuery.ResetArgs()
+
 			return errors.E(op, err)
 		}
+
 		err = sendMetadataMigrations(h, metadataRequests)
 		if err != nil {
 			return errors.E(op, err)
 		}
+
 		return nil
 	}
+
 	return nil
 }
 
-// responsible for deciding which request to send to v1/metadata and which to send to v2/query
-func sendMetadataMigrations(hasuradb *HasuraDB, requests []interface{}) error {
-	var op errors.Op = "hasuradb.sendMetadataMigrations"
-	var metadataRequests []interface{}
-	var queryRequests []interface{}
-	isQueryRequest := func(req interface{}) bool {
-		var isIt = false
+// responsible for deciding which request to send to v1/metadata and which to send to v2/query.
+func sendMetadataMigrations(hasuradb *HasuraDB, requests []any) error {
+	var (
+		op               errors.Op = "hasuradb.sendMetadataMigrations"
+		metadataRequests []any
+		queryRequests    []any
+	)
+
+	isQueryRequest := func(req any) bool {
+		isIt := false
+
 		type request struct {
-			Type string        `mapstructure:"type"`
-			Args []interface{} `mapstructure:"args"`
+			Type string `mapstructure:"type"`
+			Args []any  `mapstructure:"args"`
 		}
-		var r = new(request)
-		if err := mapstructure.Decode(req, r); err != nil {
+
+		r := new(request)
+
+		err := mapstructure.Decode(req, r)
+		if err != nil {
 			if _, ok := queryTypesMap[r.Type]; ok {
 				isIt = true
 			} else {
 				return isIt
 			}
 		}
+
 		return isIt
 	}
+
 	for _, v := range requests {
 		type bulkQuery struct {
-			Type string        `mapstructure:"type"`
-			Args []interface{} `mapstructure:"args"`
+			Type string `mapstructure:"type"`
+			Args []any  `mapstructure:"args"`
 		}
-		var bulk = new(bulkQuery)
+
+		bulk := new(bulkQuery)
 		if _ = mapstructure.Decode(v, bulk); bulk.Type == "bulk" {
 			queryBulk := HasuraInterfaceBulk{
 				Type: "bulk",
-				Args: []interface{}{},
+				Args: []any{},
 			}
+
 			metadataBulk := HasuraInterfaceBulk{
 				Type: "bulk",
-				Args: []interface{}{},
+				Args: []any{},
 			}
 			for _, bulkRequest := range bulk.Args {
 				if ok := isQueryRequest(v); ok {
@@ -354,6 +446,7 @@ func sendMetadataMigrations(hasuradb *HasuraDB, requests []interface{}) error {
 					metadataBulk.Args = append(metadataBulk.Args, bulkRequest)
 				}
 			}
+
 			metadataRequests = append(metadataRequests, metadataBulk)
 			queryRequests = append(queryRequests, queryBulk)
 		} else {
@@ -364,41 +457,49 @@ func sendMetadataMigrations(hasuradb *HasuraDB, requests []interface{}) error {
 			}
 		}
 	}
+
 	if len(queryRequests) > 0 {
 		queryBulk := HasuraInterfaceBulk{
 			Type: "bulk",
 			Args: queryRequests,
 		}
+
 		resp, body, err := hasuradb.genericQueryRequest(queryBulk)
 		if err != nil {
 			return errors.E(op, err)
 		}
+
 		if resp.StatusCode != http.StatusOK {
-			b, err := ioutil.ReadAll(body)
+			b, err := io.ReadAll(body)
 			if err != nil {
 				return errors.E(op, errors.KindHasuraAPI, err)
 			}
+
 			return errors.E(op, errors.KindHasuraAPI, string(b))
 		}
-
 	}
+
 	if len(metadataRequests) > 0 {
 		metadataBulk := HasuraInterfaceBulk{
 			Type: "bulk",
 			Args: metadataRequests,
 		}
+
 		resp, body, err := hasuradb.metadataops.SendCommonMetadataOperation(metadataBulk)
 		if err != nil {
 			return errors.E(op, err)
 		}
+
 		if resp.StatusCode != http.StatusOK {
-			b, err := ioutil.ReadAll(body)
+			b, err := io.ReadAll(body)
 			if err != nil {
 				return errors.E(op, errors.KindHasuraAPI, err)
 			}
+
 			return errors.E(op, errors.KindHasuraAPI, string(b))
 		}
 	}
+
 	return nil
 }
 
@@ -408,40 +509,49 @@ func (h *HasuraDB) ResetQuery() {
 
 func (h *HasuraDB) InsertVersion(version int64) error {
 	var op errors.Op = "hasuradb.HasuraDB.InsertVersion"
+
 	err := h.migrationsStateStore.InsertVersion(h.hasuraOpts.SourceName, version)
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
 func (h *HasuraDB) SetVersion(version int64, dirty bool) error {
 	var op errors.Op = "hasuradb.HasuraDB.SetVersion"
+
 	err := h.migrationsStateStore.SetVersion(h.hasuraOpts.SourceName, version, dirty)
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
 func (h *HasuraDB) RemoveVersion(version int64) error {
 	var op errors.Op = "hasuradb.HasuraDB.RemoveVersion"
+
 	err := h.migrationsStateStore.RemoveVersion(h.hasuraOpts.SourceName, version)
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
 func (h *HasuraDB) getVersions() (err error) {
 	var op errors.Op = "hasuradb.HasuraDB.getVersions"
+
 	v, err := h.migrationsStateStore.GetVersions(h.hasuraOpts.SourceName)
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	for version, dirty := range v {
 		h.migrations.Append(database.MigrationVersion{Version: version, Dirty: dirty})
 	}
+
 	return nil
 }
 
@@ -478,18 +588,22 @@ func (h *HasuraDB) Read(version uint64) (ok bool) {
 	return h.migrations.Read(version)
 }
 
-func (h *HasuraDB) Query(data interface{}) error {
+func (h *HasuraDB) Query(data any) error {
 	var op errors.Op = "hasuradb.HasuraDB.Query"
+
 	resp, body, err := h.metadataops.SendCommonMetadataOperation(data)
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	if resp.StatusCode != http.StatusOK {
-		b, err := ioutil.ReadAll(body)
+		b, err := io.ReadAll(body)
 		if err != nil {
 			return errors.E(op, errors.KindHasuraAPI, err)
 		}
+
 		return errors.E(op, errors.KindHasuraAPI, string(b))
 	}
+
 	return nil
 }

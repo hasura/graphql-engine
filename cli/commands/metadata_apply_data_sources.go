@@ -15,7 +15,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/sources"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 func newMetadataApplyDataSourcesCmd(ec *cli.ExecutionContext) *cobra.Command {
@@ -57,20 +57,31 @@ This requires a config v3 project and connectivity to the data source(s).`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "RunE")
+
 			if !opts.DryRun {
 				ec.Spin("Applying data sources...")
 			}
+
 			err := opts.Run()
+
 			ec.Spinner.Stop()
+
 			if err != nil {
 				return errors.E(op, err)
 			}
+
 			return nil
 		},
 	}
 
 	f := metadataApplyDataSourcesCmd.Flags()
-	f.BoolVar(&opts.DryRun, "dry-run", false, "show the metadata API request that would be sent to the server, without applying it")
+	f.BoolVar(
+		&opts.DryRun,
+		"dry-run",
+		false,
+		"show the metadata API request that would be sent to the server, without applying it",
+	)
+
 	return metadataApplyDataSourcesCmd
 }
 
@@ -84,41 +95,59 @@ func (o *MetadataApplyDataSourcesOptions) Run() error {
 	var op errors.Op = "commands.MetadataApplyDataSourcesOptions.Run"
 
 	// Only config v3 projects have the concept of "sources" in metadata.
-	if !(o.EC.Config.Version >= cli.V3 && o.EC.HasMetadataV3) {
-		return errors.E(op, fmt.Errorf("metadata apply-data-sources is only supported on config v3 projects"))
+	if o.EC.Config.Version < cli.V3 || !o.EC.HasMetadataV3 {
+		return errors.E(
+			op,
+			stderrors.New("metadata apply-data-sources is only supported on config v3 projects"),
+		)
 	}
 
 	requestBody, numSources, err := buildApplyDataSourcesRequest(o.EC)
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	if numSources == 0 {
 		o.EC.Logger.Info("No data sources found in project metadata, nothing to apply")
+
 		return nil
 	}
 
 	if o.DryRun {
 		out := new(bytes.Buffer)
-		if err := writeByOutputFormat(out, requestBody, rawOutputFormatJSON); err != nil {
+
+		err := writeByOutputFormat(out, requestBody, rawOutputFormatJSON)
+		if err != nil {
 			return errors.E(op, err)
 		}
+
 		fmt.Fprintln(o.EC.Stdout, out.String())
+
 		return nil
 	}
 
-	resp, body, err := o.EC.APIClient.V1Metadata.SendCommonMetadataOperation(json.RawMessage(requestBody))
+	resp, body, err := o.EC.APIClient.V1Metadata.SendCommonMetadataOperation(
+		json.RawMessage(requestBody),
+	)
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	if resp.StatusCode != http.StatusOK {
 		b, err := io.ReadAll(body)
 		if err != nil {
 			return errors.E(op, errors.KindHasuraAPI, err)
 		}
-		return errors.E(op, errors.KindHasuraAPI, fmt.Errorf("applying data sources failed: %s", string(b)))
+
+		return errors.E(
+			op,
+			errors.KindHasuraAPI,
+			fmt.Errorf("applying data sources failed: %s", string(b)),
+		)
 	}
 
 	o.EC.Logger.Infof("Data sources applied (%d)", numSources)
+
 	return nil
 }
 
@@ -151,12 +180,14 @@ func buildApplyDataSourcesRequest(ec *cli.ExecutionContext) ([]byte, int, error)
 	var op errors.Op = "commands.buildApplyDataSourcesRequest"
 
 	sourceObject := sources.New(ec, ec.MetadataDir)
+
 	built, err := sourceObject.Build()
 	if err != nil {
 		// A missing databases.yaml simply means there are no sources to apply.
 		if stderrors.Is(err, metadataobject.ErrMetadataFileNotFound) {
 			return nil, 0, nil
 		}
+
 		return nil, 0, errors.E(op, err)
 	}
 
@@ -176,8 +207,12 @@ func buildAddSourceBulkRequest(projectSources []sources.Source) ([]byte, int, er
 	requests := make([]metadataAPIRequest, 0, len(projectSources))
 	for _, source := range projectSources {
 		if len(source.Name) == 0 || len(source.Kind) == 0 {
-			return nil, 0, errors.E(op, fmt.Errorf("found a source with a missing name or kind in project metadata"))
+			return nil, 0, errors.E(
+				op,
+				stderrors.New("found a source with a missing name or kind in project metadata"),
+			)
 		}
+
 		requests = append(requests, metadataAPIRequest{
 			Type: addSourceCommandName(source.Kind),
 			Args: addSourceArgs{
@@ -196,10 +231,12 @@ func buildAddSourceBulkRequest(projectSources []sources.Source) ([]byte, int, er
 	if err != nil {
 		return nil, 0, errors.E(op, err)
 	}
+
 	jsonBody, err := metadatautil.YAMLToJSON(yamlBody)
 	if err != nil {
 		return nil, 0, errors.E(op, err)
 	}
+
 	return jsonBody, len(requests), nil
 }
 
@@ -210,5 +247,6 @@ func addSourceCommandName(kind string) string {
 	if hasura.SourceKind(kind) == hasura.SourceKindPG {
 		return "pg_add_source"
 	}
-	return fmt.Sprintf("%s_add_source", kind)
+
+	return kind + "_add_source"
 }

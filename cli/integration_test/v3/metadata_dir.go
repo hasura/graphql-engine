@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Masterminds/semver"
+	"github.com/Masterminds/semver/v3"
 )
 
 const (
@@ -18,6 +18,7 @@ func getMetadataDir(serverVersion *semver.Version) string {
 		version = "latest"
 	} else {
 		currDir, _ := os.Getwd()
+
 		versionDir := fmt.Sprintf("v%d.%d", serverVersion.Major(), serverVersion.Minor())
 		if _, err := os.Stat(filepath.Join(currDir, metadataDirPrefixV3, versionDir)); err != nil {
 			version = "latest"
@@ -25,5 +26,6 @@ func getMetadataDir(serverVersion *semver.Version) string {
 			version = versionDir
 		}
 	}
+
 	return filepath.Join(metadataDirPrefixV3, version)
 }

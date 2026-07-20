@@ -42,7 +42,7 @@ func TestGetConsoleAssetsVersion(t *testing.T) {
 		{"tagged server version", "v1.2.4", "channel/stable/v1.2"},
 		{"tagged server version without v", "2.3.4", "channel/stable/v2.3"},
 		{"tagged alpha release without .", "v1.0.0-alpha45", "channel/alpha/v1.0"},
-		{"tagged beta release with .", "v1.0.0-beta.01", "channel/beta/v1.0"},
+		{"tagged beta release with .", "v1.0.0-beta.01", "versioned/v1.0.0-beta.01"},
 		{"tagged rc release with .", "v2.3.1-rc.11", "channel/rc/v2.3"},
 		{"tagged rj release with .", "v1.2.0-rj.1", "channel/rj/v1.2"},
 		{"tagged cloud stable", "v2.0.0-cloud.9", "channel/stable/v2.0"},

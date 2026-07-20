@@ -5,20 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
 	"testing"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
-
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
-
-	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 )
 
 func TestClient_ExportMetadata(t *testing.T) {
@@ -98,7 +94,7 @@ func TestClient_ExportMetadata(t *testing.T) {
 			gotMetadata, err := c.ExportMetadata()
 			tt.assertErr(t, err)
 			if !tt.wantErr {
-				b, err := ioutil.ReadAll(gotMetadata)
+				b, err := io.ReadAll(gotMetadata)
 				assert.NoError(t, err)
 				assert.JSONEq(t, tt.wantMetadata, string(b))
 			}
@@ -160,7 +156,7 @@ func TestClient_ReloadMetadata(t *testing.T) {
 			gotMetadata, err := c.ReloadMetadata()
 			tt.assertErr(t, err)
 			if !tt.wantErr {
-				b, err := ioutil.ReadAll(gotMetadata)
+				b, err := io.ReadAll(gotMetadata)
 				assert.NoError(t, err)
 				assert.JSONEq(t, tt.want, string(b))
 			}
@@ -221,7 +217,7 @@ func TestClient_DropInconsistentMetadata(t *testing.T) {
 			gotMetadata, err := c.DropInconsistentMetadata()
 			tt.assertErr(t, err)
 			if !tt.wantErr {
-				b, err := ioutil.ReadAll(gotMetadata)
+				b, err := io.ReadAll(gotMetadata)
 				assert.NoError(t, err)
 				assert.JSONEq(t, tt.want, string(b))
 			}
@@ -283,7 +279,7 @@ func TestClient_ResetMetadata(t *testing.T) {
 				got, err := c.ClearMetadata()
 				tt.assertErr(t, err)
 				if !tt.wantErr {
-					b, err := ioutil.ReadAll(got)
+					b, err := io.ReadAll(got)
 					assert.NoError(t, err)
 					assert.JSONEq(t, tt.want, string(b))
 				}
@@ -297,7 +293,11 @@ func TestClient_GetInconsistentMetadata(t *testing.T) {
 	defer teardownLatest()
 	// create a table track it and delete it
 	sendReq := func(body io.Reader, url string) {
-		req, err := http.NewRequest("POST", fmt.Sprintf("http://%s:%s/%s", "0.0.0.0", portHasuraLatest, url), body)
+		req, err := http.NewRequest(
+			"POST",
+			fmt.Sprintf("http://%s:%s/%s", "0.0.0.0", portHasuraLatest, url),
+			body,
+		)
 		assert.NoError(t, err)
 
 		req.Header.Set("Content-Type", "application/json")
@@ -313,7 +313,7 @@ func TestClient_GetInconsistentMetadata(t *testing.T) {
 			t.Fatal(err)
 		}
 		if resp.StatusCode != http.StatusOK {
-			b, err := ioutil.ReadAll(resp.Body)
+			b, err := io.ReadAll(resp.Body)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -376,7 +376,11 @@ func TestClient_GetInconsistentMetadata(t *testing.T) {
 	}{
 		{
 			name: "can get inconsistent metadata",
-			want: bytes.NewReader([]byte(`{"is_consistent":false,"inconsistent_objects":[{"definition":{"name":"test", "schema":"public"}, "name":"table test in source default", "reason":"Inconsistent object: no such table/view exists in source: \"test\"", "type":"table"}]}`)),
+			want: bytes.NewReader(
+				[]byte(
+					`{"is_consistent":false,"inconsistent_objects":[{"definition":{"name":"test", "schema":"public"}, "name":"table test in source default", "reason":"Inconsistent object: no such table/view exists in source: \"test\"", "type":"table"}]}`,
+				),
+			),
 			fields: fields{
 				Client: testutil.NewHttpcClient(t, portHasuraLatest, nil),
 				path:   "v1/metadata",
@@ -395,7 +399,7 @@ func TestClient_GetInconsistentMetadata(t *testing.T) {
 			got, err := c.GetInconsistentMetadata()
 			tt.assertErr(t, err)
 			if !tt.wantErr {
-				var wantStruct = new(hasura.GetInconsistentMetadataResponse)
+				wantStruct := new(hasura.GetInconsistentMetadataResponse)
 				err = json.NewDecoder(tt.want).Decode(wantStruct)
 				assert.NoError(t, err)
 				assert.NoError(t, err)
@@ -469,7 +473,7 @@ func TestClient_ReplaceMetadata(t *testing.T) {
 				got, err := c.ReplaceMetadata(tt.args.metadata)
 				tt.assertErr(t, err)
 				if !tt.wantErr {
-					b, err := ioutil.ReadAll(got)
+					b, err := io.ReadAll(got)
 					assert.NoError(t, err)
 					assert.JSONEq(t, tt.want, string(b))
 				}

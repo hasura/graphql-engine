@@ -8,18 +8,22 @@ import (
 )
 
 type projectMigrationsDeleter struct {
-	ec *cli.ExecutionContext
+	ec   *cli.ExecutionContext
 	opts commands.MigrateDeleteOptions
 }
 
 func newProjectMigrationsDeleter(ec *cli.ExecutionContext) *projectMigrationsDeleter {
 	p := &projectMigrationsDeleter{ec: ec, opts: commands.MigrateDeleteOptions{EC: ec}}
+
 	return p
 }
 
 type ProjectMigrationDeleterOption func(deleter *projectMigrationsDeleter)
 
-func DeleteOnDatabase(databaseName string, databaseKind hasura.SourceKind) ProjectMigrationDeleterOption {
+func DeleteOnDatabase(
+	databaseName string,
+	databaseKind hasura.SourceKind,
+) ProjectMigrationDeleterOption {
 	return func(p *projectMigrationsDeleter) {
 		p.opts.EC.Source.Name = databaseName
 		p.opts.EC.Source.Kind = databaseKind
@@ -52,12 +56,16 @@ func DeleteOnAllDatabases() ProjectMigrationDeleterOption {
 
 func (p *projectMigrationsDeleter) delete(opts ...ProjectMigrationDeleterOption) error {
 	var op errors.Op = "migrate.projectMigrationsDeleter.delete"
-	p.opts.EC.AllDatabases = false // this becomes `true` if not explicitly set to `false` for some unkown reason
+
+	p.opts.EC.AllDatabases = false // this becomes `true` if not explicitly set to `false` for some unknown reason
 	for _, opt := range opts {
 		opt(p)
 	}
-	if err := p.opts.Run(); err != nil {
+
+	err := p.opts.Run()
+	if err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }

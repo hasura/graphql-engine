@@ -20,7 +20,12 @@ var _ = Describe("hasura metadata inconsistency list", func() {
 		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
 		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
 		sourceName := randomdata.SillyName()
-		connectionString, teardownPG := testutil.AddDatabaseToHasura(GinkgoT(), hgeEndpoint, sourceName, "postgres")
+		connectionString, teardownPG := testutil.AddDatabaseToHasura(
+			GinkgoT(),
+			hgeEndpoint,
+			sourceName,
+			"postgres",
+		)
 		copyTestConfigV3Project(projectDirectory)
 		editEndpointInConfig(filepath.Join(projectDirectory, defaultConfigFilename), hgeEndpoint)
 		editSourceNameInConfigV3ProjectTemplate(projectDirectory, sourceName, connectionString)
@@ -38,8 +43,16 @@ var _ = Describe("hasura metadata inconsistency list", func() {
 	})
 
 	AfterEach(func() { teardown() })
-	var matcher = func(out []byte) {
-		want := []string{"genres", "albums", "media_types", "playlists", "artists", "tracks", "playlist_track"}
+	matcher := func(out []byte) {
+		want := []string{
+			"genres",
+			"albums",
+			"media_types",
+			"playlists",
+			"artists",
+			"tracks",
+			"playlist_track",
+		}
 		for _, v := range want {
 			Expect(out).To(ContainSubstring(v))
 		}

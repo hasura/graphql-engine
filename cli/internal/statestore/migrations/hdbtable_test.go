@@ -7,14 +7,12 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
-	"github.com/stretchr/testify/assert"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/sourceops/postgres"
 	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMigrationStateStoreHdbTable_SetVersions(t *testing.T) {
@@ -30,7 +28,12 @@ func TestMigrationStateStoreHdbTable_SetVersions(t *testing.T) {
 `))
 	var body interface{}
 	require.NoError(t, json.NewDecoder(createSchemaMigrations).Decode(&body))
-	req := testutil.NewRequest(t, http.MethodPost, fmt.Sprintf("%s:%s/%s", testutil.BaseURL, port, "v2/query"), body)
+	req := testutil.NewRequest(
+		t,
+		http.MethodPost,
+		fmt.Sprintf("%s:%s/%s", testutil.BaseURL, port, "v2/query"),
+		body,
+	)
 	r, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
 	require.Equal(t, r.StatusCode, http.StatusOK)
@@ -59,7 +62,11 @@ func TestMigrationStateStoreHdbTable_SetVersions(t *testing.T) {
 			},
 			args{
 				"default",
-				[]statestore.Version{{Version: 1, Dirty: false}, {Version: 2, Dirty: false}, {Version: 3, Dirty: false}},
+				[]statestore.Version{
+					{Version: 1, Dirty: false},
+					{Version: 2, Dirty: false},
+					{Version: 3, Dirty: false},
+				},
 			},
 			false,
 		},
@@ -71,7 +78,10 @@ func TestMigrationStateStoreHdbTable_SetVersions(t *testing.T) {
 				schema: tt.fields.schema,
 				table:  tt.fields.table,
 			}
-			if err := m.SetVersions(tt.args.sourceName, tt.args.versions); (err != nil) != tt.wantErr {
+			if err := m.SetVersions(
+				tt.args.sourceName,
+				tt.args.versions,
+			); (err != nil) != tt.wantErr {
 				t.Errorf("SetVersions() error = %v, wantErr %v", err, tt.wantErr)
 			}
 

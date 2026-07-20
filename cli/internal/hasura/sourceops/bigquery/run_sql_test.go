@@ -7,13 +7,15 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestHasuraDatabaseOperations_RunSQL(t *testing.T) {
-	port, source, projectId, dataset, teardown := testutil.StartHasuraWithBigQuerySource(t, testutil.HasuraDockerImage)
+	port, source, projectId, dataset, teardown := testutil.StartHasuraWithBigQuerySource(
+		t,
+		testutil.HasuraDockerImage,
+	)
 	defer teardown()
 	type fields struct {
 		httpClient *httpc.Client
@@ -38,7 +40,11 @@ func TestHasuraDatabaseOperations_RunSQL(t *testing.T) {
 			},
 			args{
 				input: hasura.BigQueryRunSQLInput{
-					SQL:    fmt.Sprintf("CREATE TABLE IF NOT EXISTS `%s.%s.test_1` (first_name STRING,last_name STRING);", projectId, dataset),
+					SQL: fmt.Sprintf(
+						"CREATE TABLE IF NOT EXISTS `%s.%s.test_1` (first_name STRING,last_name STRING);",
+						projectId,
+						dataset,
+					),
 					Source: source,
 				},
 			},

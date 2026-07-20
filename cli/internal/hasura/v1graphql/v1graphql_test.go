@@ -3,16 +3,14 @@ package v1graphql
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
-
-	"github.com/stretchr/testify/require"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
+	"github.com/stretchr/testify/require"
 )
 
 func TestClient_GetIntrospectionSchema(t *testing.T) {
@@ -83,7 +81,9 @@ func TestClient_GetIntrospectionSchema(t *testing.T) {
 			got, err := c.GetIntrospectionSchema()
 			tt.errAssertion(t, err)
 			if !tt.wantErr {
-				wantb, err := ioutil.ReadFile(filepath.Join("testdata", fmt.Sprintf("%s.golden", tt.wantGolden)))
+				wantb, err := os.ReadFile(
+					filepath.Join("testdata", fmt.Sprintf("%s.golden", tt.wantGolden)),
+				)
 				require.NoError(t, err)
 				gotb, err := json.MarshalIndent(got, "", "  ")
 				require.NoError(t, err)

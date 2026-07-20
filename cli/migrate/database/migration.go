@@ -3,9 +3,8 @@ package database
 import (
 	"sort"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
 )
 
 // Migrations wraps Migration and has an internal index
@@ -24,18 +23,19 @@ func (m *Migrations) Append(migrationVersion MigrationVersion) {
 	if m.findPos(migrationVersion.Version) > 0 {
 		return
 	}
+
 	m.index = append(m.index, migrationVersion)
 
 	sort.Slice(m.index, func(i, j int) bool {
 		return m.index[i].Version < m.index[j].Version
 	})
-
 }
 
 func (m *Migrations) First() (migrationVersion *MigrationVersion, ok bool) {
 	if len(m.index) == 0 {
 		return nil, false
 	}
+
 	return &m.index[0], true
 }
 
@@ -52,6 +52,7 @@ func (m *Migrations) Prev(version uint64) (prevVersion *MigrationVersion, ok boo
 	if pos >= 1 && len(m.index) > pos-1 {
 		return &m.index[pos-1], true
 	}
+
 	return nil, false
 }
 
@@ -60,11 +61,13 @@ func (m *Migrations) Next(version uint64) (migrationVersion *MigrationVersion, o
 	if pos >= 0 && len(m.index) > pos+1 {
 		return &m.index[pos+1], true
 	}
+
 	return nil, false
 }
 
 func (m *Migrations) Read(version uint64) (ok bool) {
 	pos := m.findPos(version)
+
 	return pos >= 0
 }
 
@@ -75,6 +78,7 @@ func (m *Migrations) findPos(version uint64) int {
 			return ix
 		}
 	}
+
 	return -1
 }
 

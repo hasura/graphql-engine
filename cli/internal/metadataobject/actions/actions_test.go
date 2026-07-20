@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -15,18 +15,17 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/types"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 	"github.com/hasura/graphql-engine/cli/v2/version"
-	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 func TestActionConfig_Export(t *testing.T) {
 	testEC := cli.NewExecutionContext()
 	testEC.Version = version.NewCLIVersion(version.DevVersion)
 	testEC.Logger = logrus.New()
-	home, err := homedir.Dir()
+	home, err := os.UserHomeDir()
 	assert.NoError(t, err)
 	testEC.GlobalConfigDir = filepath.Join(home, cli.GlobalConfigDirName)
 	assert.NoError(t, cliext.Setup(testEC))
@@ -61,7 +60,10 @@ func TestActionConfig_Export(t *testing.T) {
 				serverFeatureFlags: &version.ServerFeatureFlags{
 					HasAction: true,
 				},
-				cliExtensionConfig: cliextension.NewCLIExtensionConfig(&testEC.CliExtDestinationBinPath, testEC.Logger),
+				cliExtensionConfig: cliextension.NewCLIExtensionConfig(
+					&testEC.CliExtDestinationBinPath,
+					testEC.Logger,
+				),
 				ensureCliExt: func() error {
 					return cliext.Setup(testEC)
 				},
@@ -72,7 +74,7 @@ func TestActionConfig_Export(t *testing.T) {
 			},
 			args{
 				metadata: func() map[string]yaml.Node {
-					bs, err := ioutil.ReadFile("testdata/export/t1/metadata.json")
+					bs, err := os.ReadFile("testdata/export/t1/metadata.json")
 					assert.NoError(t, err)
 					yamlbs, err := metadatautil.JSONToYAML(bs)
 					assert.NoError(t, err)
@@ -83,12 +85,12 @@ func TestActionConfig_Export(t *testing.T) {
 			},
 			map[string][]byte{
 				"metadata/actions.graphql": func() []byte {
-					bs, err := ioutil.ReadFile("testdata/export/t1/want.actions.graphql")
+					bs, err := os.ReadFile("testdata/export/t1/want.actions.graphql")
 					assert.NoError(t, err)
 					return bs
 				}(),
 				"metadata/actions.yaml": func() []byte {
-					bs, err := ioutil.ReadFile("testdata/export/t1/want.actions.yaml")
+					bs, err := os.ReadFile("testdata/export/t1/want.actions.yaml")
 					assert.NoError(t, err)
 					return bs
 				}(),
@@ -116,7 +118,7 @@ func TestActionConfig_Export(t *testing.T) {
 			for k, v := range got {
 				assert.Contains(t, tt.want, k)
 				// uncomment to update golden files
-				// assert.NoError(t, ioutil.WriteFile(fmt.Sprintf("testdata/export/%v/want.%v", tt.id, filepath.Base(k)), v, os.ModePerm))
+				// assert.NoError(t, os.WriteFile(fmt.Sprintf("testdata/export/%v/want.%v", tt.id, filepath.Base(k)), v, os.ModePerm))
 				assert.Equalf(t, string(tt.want[k]), string(v), "%v", k)
 			}
 		})
@@ -155,7 +157,10 @@ func TestActionConfig_Build(t *testing.T) {
 				serverFeatureFlags: &version.ServerFeatureFlags{
 					HasAction: true,
 				},
-				cliExtensionConfig: cliextension.NewCLIExtensionConfig(&testEC.CliExtDestinationBinPath, testEC.Logger),
+				cliExtensionConfig: cliextension.NewCLIExtensionConfig(
+					&testEC.CliExtDestinationBinPath,
+					testEC.Logger,
+				),
 				ensureCliExt: func() error {
 					return cliext.Setup(testEC)
 				},
@@ -185,6 +190,7 @@ func TestActionConfig_Build(t *testing.T) {
 			if tt.wantErr {
 				return
 			}
+
 			gotbs, err := yaml.Marshal(got)
 			require.NoError(t, err)
 			gotjson, err := goyaml.YAMLToJSON(gotbs)
@@ -194,9 +200,9 @@ func TestActionConfig_Build(t *testing.T) {
 			err = json.Indent(&pretty_json, gotjson, "", " ")
 			assert.NoError(t, err)
 			// uncomment to update golden file
-			// assert.NoError(t, ioutil.WriteFile(goldenFile, pretty_json.Bytes(), os.ModePerm))
+			// assert.NoError(t, os.WriteFile(goldenFile, pretty_json.Bytes(), os.ModePerm))
 
-			want, err := ioutil.ReadFile(goldenFile)
+			want, err := os.ReadFile(goldenFile)
 			assert.NoError(t, err)
 			assert.Equal(t, string(want), pretty_json.String())
 		})

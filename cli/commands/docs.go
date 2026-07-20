@@ -12,19 +12,21 @@ import (
 
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
 	"github.com/spf13/viper"
 )
 
-var rootPath string = "/hasura-cli/commands/"
-var sidebarPositionMap = make(map[string]int)
-var sidebarPosition int = 0
+var (
+	rootPath           string = "/hasura-cli/commands/"
+	sidebarPositionMap        = make(map[string]int)
+	sidebarPosition    int    = 0
+)
 
-// NewDocsCmd returns the docs command
+// NewDocsCmd returns the docs command.
 func NewDocsCmd(ec *cli.ExecutionContext) *cobra.Command {
 	var docType, docDirectory string
+
 	docsCmd := &cobra.Command{
 		Use:          "docs",
 		Short:        "Generate CLI docs in various formats",
@@ -32,43 +34,67 @@ func NewDocsCmd(ec *cli.ExecutionContext) *cobra.Command {
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = viper.New()
+
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			op := genOpName(cmd, "RunE")
+
 			err = os.MkdirAll(docDirectory, os.ModePerm)
 			if err != nil {
 				return errors.E(op, fmt.Errorf("unable to create directory: %w", err))
 			}
+
 			switch docType {
 			case "man":
-				err = doc.GenManTree(rootCmd, &doc.GenManHeader{Title: "HASURA", Section: "3"}, docDirectory)
+				err = doc.GenManTree(
+					rootCmd,
+					&doc.GenManHeader{Title: "HASURA", Section: "3"},
+					docDirectory,
+				)
 			case "mdx":
 				generateSidebarPositions(rootCmd)
-				err = genMarkdownXTreeCustom(rootCmd, docDirectory,
+				err = genMarkdownXTreeCustom(
+					rootCmd,
+					docDirectory,
 					func(s string) string { return "" },
-					func(s string) string { return fmt.Sprintf("%s%s", rootPath, strings.Replace(s, " ", "_", -1)) },
+					func(s string) string { return fmt.Sprintf("%s%s", rootPath, strings.ReplaceAll(s, " ", "_")) },
 				)
 			case "md":
 				err = doc.GenMarkdownTree(rootCmd, docDirectory)
 			case "rest":
-				err = genReSTTreeCustom(rootCmd, docDirectory, "Hasura CLI: ", func(s string) string { return "" }, sphinxLinkHandler)
+				err = genReSTTreeCustom(
+					rootCmd,
+					docDirectory,
+					"Hasura CLI: ",
+					func(s string) string { return "" },
+					sphinxLinkHandler,
+				)
 			case "yaml":
 				err = doc.GenYamlTree(rootCmd, docDirectory)
 			default:
 				return errors.E(op, "unknown type")
 			}
+
 			if err != nil {
 				return errors.E(op, fmt.Errorf("generating docs failed: %w", err))
 			}
+
 			ec.Logger.Infof("[%s] docs generated in [%s]", docType, docDirectory)
+
 			return nil
 		},
 	}
 
 	f := docsCmd.Flags()
-	f.StringVar(&docType, "type", "md", "type of documentation to generate (man, md, mdx, rest, yaml)")
+	f.StringVar(
+		&docType,
+		"type",
+		"md",
+		"type of documentation to generate (man, md, mdx, rest, yaml)",
+	)
 	f.StringVar(&docDirectory, "directory", "docs", "directory where docs should be generated")
+
 	return docsCmd
 }
 
@@ -80,6 +106,7 @@ func sphinxLinkHandler(name, ref string) string {
 func printOptionsReST(buf *bytes.Buffer, cmd *cobra.Command, name string) error {
 	flags := cmd.NonInheritedFlags()
 	flags.SetOutput(buf)
+
 	if flags.HasFlags() {
 		buf.WriteString("Options\n")
 		buf.WriteString("~~~~~~~\n\n::\n\n")
@@ -89,12 +116,14 @@ func printOptionsReST(buf *bytes.Buffer, cmd *cobra.Command, name string) error 
 
 	parentFlags := cmd.InheritedFlags()
 	parentFlags.SetOutput(buf)
+
 	if parentFlags.HasFlags() {
 		buf.WriteString("Options inherited from parent commands\n")
 		buf.WriteString("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n::\n\n")
 		parentFlags.PrintDefaults()
 		buf.WriteString("\n")
 	}
+
 	return nil
 }
 
@@ -109,28 +138,39 @@ func genReST(cmd *cobra.Command, w io.Writer, titlePrefix string) error {
 }*/
 
 // genReSTCustom creates custom reStructured Text output.
-func genReSTCustom(cmd *cobra.Command, w io.Writer, titlePrefix string, linkHandler func(string, string) string) error {
+func genReSTCustom(
+	cmd *cobra.Command,
+	w io.Writer,
+	titlePrefix string,
+	linkHandler func(string, string) string,
+) error {
 	var op errors.Op = "commands.genReSTCustom"
+
 	cmd.InitDefaultHelpCmd()
 	cmd.InitDefaultHelpFlag()
 
 	buf := new(bytes.Buffer)
 	name := cmd.CommandPath()
-	ref := strings.Replace(name, " ", "_", -1)
+	ref := strings.ReplaceAll(name, " ", "_")
 	short := cmd.Short
+
 	long := cmd.Long
 	if len(long) == 0 {
 		long = short
 	}
+
 	info := short
+
 	buf.WriteString(".. meta::\n")
 	buf.WriteString("   :description: " + info + " using the Hasura CLI\n")
 	buf.WriteString("   :keywords: hasura, docs, CLI")
+
 	if cmd.CommandPath() != "hasura" {
 		buf.WriteString(", " + cmd.CommandPath() + "\n")
 	} else {
 		buf.WriteString("\n")
 	}
+
 	buf.WriteString("\n")
 	buf.WriteString(".. _" + ref + ":\n\n")
 
@@ -140,17 +180,21 @@ func genReSTCustom(cmd *cobra.Command, w io.Writer, titlePrefix string, linkHand
 
 	buf.WriteString("Synopsis\n")
 	buf.WriteString("~~~~~~~~\n\n")
+
 	if name == "hasura" {
 		buf.WriteString("::")
 	}
+
 	buf.WriteString("\n" + long)
+
 	if name != "hasura" && name != "hasura scripts update-project-v2" {
 		buf.WriteString(".")
 	}
+
 	buf.WriteString("\n\n")
 
 	if cmd.Runnable() {
-		buf.WriteString(fmt.Sprintf("::\n\n  %s\n\n", cmd.UseLine()))
+		fmt.Fprintf(buf, "::\n\n  %s\n\n", cmd.UseLine())
 	}
 
 	if len(cmd.Aliases) > 0 {
@@ -160,20 +204,22 @@ func genReSTCustom(cmd *cobra.Command, w io.Writer, titlePrefix string, linkHand
 	if len(cmd.Example) > 0 {
 		buf.WriteString("Examples\n")
 		buf.WriteString("~~~~~~~~\n\n")
-		buf.WriteString(fmt.Sprintf("::\n\n%s\n\n", indentString(cmd.Example, "  ")))
+		fmt.Fprintf(buf, "::\n\n%s\n\n", indentString(cmd.Example, "  "))
 	}
 
 	if err := printOptionsReST(buf, cmd, name); err != nil {
 		return errors.E(op, err)
 	}
+
 	if hasSeeAlso(cmd) {
 		buf.WriteString("SEE ALSO\n")
 		buf.WriteString("~~~~~~~~\n\n")
+
 		if cmd.HasParent() {
 			parent := cmd.Parent()
 			pname := parent.CommandPath()
-			ref = strings.Replace(pname, " ", "_", -1)
-			buf.WriteString(fmt.Sprintf("* %s \t - %s\n", linkHandler(pname, ref), parent.Short))
+			ref = strings.ReplaceAll(pname, " ", "_")
+			fmt.Fprintf(buf, "* %s \t - %s\n", linkHandler(pname, ref), parent.Short)
 			cmd.VisitParents(func(c *cobra.Command) {
 				if c.DisableAutoGenTag {
 					cmd.DisableAutoGenTag = c.DisableAutoGenTag
@@ -188,19 +234,24 @@ func genReSTCustom(cmd *cobra.Command, w io.Writer, titlePrefix string, linkHand
 			if !child.IsAvailableCommand() || child.IsAdditionalHelpTopicCommand() {
 				continue
 			}
+
 			cname := name + " " + child.Name()
-			ref = strings.Replace(cname, " ", "_", -1)
-			buf.WriteString(fmt.Sprintf("* %s \t - %s\n", linkHandler(cname, ref), child.Short))
+			ref = strings.ReplaceAll(cname, " ", "_")
+			fmt.Fprintf(buf, "* %s \t - %s\n", linkHandler(cname, ref), child.Short)
 		}
+
 		buf.WriteString("\n")
 	}
+
 	if !cmd.DisableAutoGenTag {
 		buf.WriteString("*Auto generated by spf13/cobra*\n")
 	}
+
 	_, err := buf.WriteTo(w)
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
@@ -215,20 +266,30 @@ func genReSTTree(cmd *cobra.Command, dir, titlePrefix string) error {
 	return genReSTTreeCustom(cmd, dir, titlePrefix, emptyStr, defaultLinkHandler)
 }*/
 
-// genReSTTreeCustom is the the same as genReSTTree, but
+// genReSTTreeCustom is the same as genReSTTree, but
 // with custom filePrepender and linkHandler.
-func genReSTTreeCustom(cmd *cobra.Command, dir, titlePrefix string, filePrepender func(string) string, linkHandler func(string, string) string) error {
+func genReSTTreeCustom(
+	cmd *cobra.Command,
+	dir, titlePrefix string,
+	filePrepender func(string) string,
+	linkHandler func(string, string) string,
+) error {
 	var op errors.Op = "commands.genReSTTreeCustom"
+
 	for _, c := range cmd.Commands() {
 		if !c.IsAvailableCommand() || c.IsAdditionalHelpTopicCommand() {
 			continue
 		}
-		if err := genReSTTreeCustom(c, dir, titlePrefix, filePrepender, linkHandler); err != nil {
+
+		err := genReSTTreeCustom(c, dir, titlePrefix, filePrepender, linkHandler)
+		if err != nil {
 			return errors.E(op, err)
 		}
 	}
-	basename := strings.Replace(cmd.CommandPath(), " ", "_", -1) + ".rst"
+
+	basename := strings.ReplaceAll(cmd.CommandPath(), " ", "_") + ".rst"
 	filename := filepath.Join(dir, basename)
+
 	f, err := os.Create(filename)
 	if err != nil {
 		return errors.E(op, err)
@@ -238,9 +299,11 @@ func genReSTTreeCustom(cmd *cobra.Command, dir, titlePrefix string, filePrepende
 	if _, err := io.WriteString(f, filePrepender(filename)); err != nil {
 		return errors.E(op, err)
 	}
+
 	if err := genReSTCustom(cmd, f, titlePrefix, linkHandler); err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
@@ -248,28 +311,36 @@ func printOptionsMarkdownX(buf *bytes.Buffer, cmd *cobra.Command, name string) e
 	localBuf := new(bytes.Buffer)
 	flags := cmd.NonInheritedFlags()
 	flags.SetOutput(localBuf)
+
 	if flags.HasAvailableFlags() {
 		flags.PrintDefaults()
+
 		scanner := bufio.NewScanner(localBuf)
 		// sass highlighting seems to work for this section
 		buf.WriteString("## Options\n\n```sass\n")
+
 		for scanner.Scan() {
-			buf.WriteString(fmt.Sprintf("%s\n", strings.TrimPrefix(scanner.Text(), "  ")))
+			fmt.Fprintf(buf, "%s\n", strings.TrimPrefix(scanner.Text(), "  "))
 		}
+
 		buf.WriteString("```\n\n")
 	}
 
 	localBuf = new(bytes.Buffer)
 	parentFlags := cmd.InheritedFlags()
 	parentFlags.SetOutput(localBuf)
+
 	if parentFlags.HasAvailableFlags() {
 		parentFlags.PrintDefaults()
+
 		scanner := bufio.NewScanner(localBuf)
 		// sass highlighting seems to work for this section
 		buf.WriteString("## Options inherited from parent commands\n\n```sass\n")
+
 		for scanner.Scan() {
-			buf.WriteString(fmt.Sprintf("%s\n", strings.TrimPrefix(scanner.Text(), "      ")))
+			fmt.Fprintf(buf, "%s\n", strings.TrimPrefix(scanner.Text(), "      "))
 		}
+
 		buf.WriteString("```\n\n")
 	}
 
@@ -279,68 +350,80 @@ func printOptionsMarkdownX(buf *bytes.Buffer, cmd *cobra.Command, name string) e
 // genMarkdownXCustom creates custom markdown output.
 func genMarkdownXCustom(cmd *cobra.Command, w io.Writer, linkHandler func(string) string) error {
 	var op errors.Op = "commands.genMarkdownXCustom"
+
 	cmd.InitDefaultHelpCmd()
 	cmd.InitDefaultHelpFlag()
 
 	buf := new(bytes.Buffer)
 	name := cmd.CommandPath()
 	short := cmd.Short
+
 	long := cmd.Long
 	if len(long) == 0 {
 		long = short
 	}
 
 	info := short
+
 	buf.WriteString("---\n")
-	buf.WriteString(fmt.Sprintf("sidebar_label: %s\n", name))
-	buf.WriteString(fmt.Sprintf("sidebar_position: %d\n", getSidebarPositionForCmd(cmd.CommandPath())))
-	buf.WriteString(fmt.Sprintf("description: %s using the Hasura CLI\n", info))
+	fmt.Fprintf(buf, "sidebar_label: %s\n", name)
+	fmt.Fprintf(buf, "sidebar_position: %d\n", getSidebarPositionForCmd(cmd.CommandPath()))
+	fmt.Fprintf(buf, "description: %s using the Hasura CLI\n", info)
 	buf.WriteString("keywords:\n  - hasura\n  - docs\n  - CLI\n")
+
 	if name != "hasura" {
-		buf.WriteString(fmt.Sprintf("  - %s\n", name))
+		fmt.Fprintf(buf, "  - %s\n", name)
 	}
+
 	buf.WriteString("---\n\n")
 
-	buf.WriteString(fmt.Sprintf("# Hasura CLI: %s\n\n", name))
+	fmt.Fprintf(buf, "# Hasura CLI: %s\n\n", name)
 	buf.WriteString(cmd.Short + "." + "\n\n")
 	buf.WriteString("## Synopsis\n\n")
+
 	if name == "hasura" {
 		buf.WriteString("```\n\n")
-		buf.WriteString(fmt.Sprintf("%s\n\n", long))
+		fmt.Fprintf(buf, "%s\n\n", long)
 		buf.WriteString("```\n\n")
 	} else {
-		buf.WriteString(fmt.Sprintf("%s\n\n", long))
+		fmt.Fprintf(buf, "%s\n\n", long)
 	}
 
 	if cmd.Runnable() {
-		buf.WriteString(fmt.Sprintf("```bash\n%s\n```\n\n", cmd.UseLine()))
+		fmt.Fprintf(buf, "```bash\n%s\n```\n\n", cmd.UseLine())
 	}
 
 	if len(cmd.Aliases) > 0 {
-		buf.WriteString(fmt.Sprintf("**Alias:** %s\n\n", strings.Join(cmd.Aliases, ", ")))
+		fmt.Fprintf(buf, "**Alias:** %s\n\n", strings.Join(cmd.Aliases, ", "))
 	}
 
 	if len(cmd.Example) > 0 {
 		buf.WriteString("## Examples\n\n")
+
 		scanner := bufio.NewScanner(strings.NewReader(cmd.Example))
+
 		buf.WriteString("```bash\n")
+
 		for scanner.Scan() {
-			buf.WriteString(fmt.Sprintf("%s\n", strings.TrimPrefix(scanner.Text(), "  ")))
+			fmt.Fprintf(buf, "%s\n", strings.TrimPrefix(scanner.Text(), "  "))
 		}
+
 		buf.WriteString("```\n\n")
 	}
 
 	if err := printOptionsMarkdownX(buf, cmd, name); err != nil {
 		return errors.E(op, err)
 	}
+
 	if hasSeeAlso(cmd) {
 		buf.WriteString("## SEE ALSO\n\n")
+
 		if cmd.HasParent() {
 			parent := cmd.Parent()
 			pname := parent.CommandPath()
 			link := pname + ".mdx"
 			link = strings.ReplaceAll(link, " ", "_")
-			buf.WriteString(fmt.Sprintf("- [%s](%s) - %s\n", pname, linkHandler(link), parent.Short))
+			fmt.Fprintf(buf, "- [%s](%s) - %s\n", pname, linkHandler(link), parent.Short)
 			cmd.VisitParents(func(c *cobra.Command) {
 				if c.DisableAutoGenTag {
 					cmd.DisableAutoGenTag = c.DisableAutoGenTag
@@ -355,38 +438,51 @@ func genMarkdownXCustom(cmd *cobra.Command, w io.Writer, linkHandler func(string
 			if !child.IsAvailableCommand() || child.IsAdditionalHelpTopicCommand() {
 				continue
 			}
+
 			cname := name + " " + child.Name()
 			link := cname + ".mdx"
 			link = strings.ReplaceAll(link, " ", "_")
-			buf.WriteString(fmt.Sprintf("- [%s](%s) - %s\n", cname, linkHandler(link), child.Short))
+			fmt.Fprintf(buf, "- [%s](%s) - %s\n", cname, linkHandler(link), child.Short)
 		}
+
 		buf.WriteString("\n")
 	}
+
 	if !cmd.DisableAutoGenTag {
 		buf.WriteString("_Auto generated by spf13/cobra_\n")
 	}
+
 	_, err := buf.WriteTo(w)
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
-// genMarkdownXTreeCustom is the the same as GenMarkdownTree, but
+// genMarkdownXTreeCustom is the same as GenMarkdownTree, but
 // with custom filePrepender and linkHandler.
-func genMarkdownXTreeCustom(cmd *cobra.Command, dir string, filePrepender, linkHandler func(string) string) error {
+func genMarkdownXTreeCustom(
+	cmd *cobra.Command,
+	dir string,
+	filePrepender, linkHandler func(string) string,
+) error {
 	var op errors.Op = "commands.genMarkdownXTreeCustom"
+
 	for _, c := range cmd.Commands() {
 		if !c.IsAvailableCommand() || c.IsAdditionalHelpTopicCommand() {
 			continue
 		}
-		if err := genMarkdownXTreeCustom(c, dir, filePrepender, linkHandler); err != nil {
+
+		err := genMarkdownXTreeCustom(c, dir, filePrepender, linkHandler)
+		if err != nil {
 			return errors.E(op, err)
 		}
 	}
 
 	basename := strings.ReplaceAll(cmd.CommandPath(), " ", "_") + ".mdx"
 	filename := filepath.Join(dir, basename)
+
 	f, err := os.Create(filename)
 	if err != nil {
 		return errors.E(op, err)
@@ -396,25 +492,31 @@ func genMarkdownXTreeCustom(cmd *cobra.Command, dir string, filePrepender, linkH
 	if _, err := io.WriteString(f, filePrepender(filename)); err != nil {
 		return errors.E(op, err)
 	}
+
 	if err := genMarkdownXCustom(cmd, f, linkHandler); err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
 // adapted from: https://github.com/kr/text/blob/main/indent.go
 func indentString(s, p string) string {
 	var res []byte
+
 	b := []byte(s)
 	prefix := []byte(p)
+
 	bol := true
 	for _, c := range b {
 		if bol && c != '\n' {
 			res = append(res, prefix...)
 		}
+
 		res = append(res, c)
 		bol = c == '\n'
 	}
+
 	return string(res)
 }
 
@@ -425,23 +527,27 @@ func hasSeeAlso(cmd *cobra.Command) bool {
 	if cmd.HasParent() {
 		return true
 	}
+
 	for _, c := range cmd.Commands() {
 		if !c.IsAvailableCommand() || c.IsAdditionalHelpTopicCommand() {
 			continue
 		}
+
 		return true
 	}
+
 	return false
 }
 
-// Returns the sidebar position for a command
+// Returns the sidebar position for a command.
 func getSidebarPositionForCmd(commandPath string) int {
 	return sidebarPositionMap[commandPath]
 }
 
-// Allocates a sidebar position to commands using DFS
+// Allocates a sidebar position to commands using DFS.
 func generateSidebarPositions(cmd *cobra.Command) {
-	sidebarPosition = sidebarPosition + 1
+	sidebarPosition++
+
 	sidebarPositionMap[cmd.CommandPath()] = sidebarPosition
 	for _, c := range cmd.Commands() {
 		generateSidebarPositions(c)

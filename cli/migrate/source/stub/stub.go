@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
@@ -20,7 +19,7 @@ type Config struct{}
 
 type Stub struct {
 	Url        string
-	Instance   interface{}
+	Instance   any
 	Migrations *source.Migrations
 	Config     *Config
 	logger     *log.Logger
@@ -30,6 +29,7 @@ func (s *Stub) Open(url string, logger *log.Logger) (source.Driver, error) {
 	if logger == nil {
 		logger = log.New()
 	}
+
 	return &Stub{
 		Url:        url,
 		Migrations: source.NewMigrations(),
@@ -52,7 +52,10 @@ func (s *Stub) DefaultParser(p source.Parser) {
 func (s *Stub) First() (version uint64, err error) {
 	var op errors.Op = "stub.Stub.First"
 	if v, ok := s.Migrations.First(); !ok {
-		return 0, errors.E(op, &os.PathError{Op: "first", Path: s.Url, Err: os.ErrNotExist}) // TODO: s.Url can be empty when called with WithInstance
+		return 0, errors.E(
+			op,
+			&os.PathError{Op: "first", Path: s.Url, Err: os.ErrNotExist},
+		) // TODO: s.Url can be empty when called with WithInstance
 	} else {
 		return v, nil
 	}
@@ -61,7 +64,14 @@ func (s *Stub) First() (version uint64, err error) {
 func (s *Stub) Prev(version uint64) (prevVersion uint64, err error) {
 	var op errors.Op = "stub.Stub.Prev"
 	if v, ok := s.Migrations.Prev(version); !ok {
-		return 0, errors.E(op, &os.PathError{Op: fmt.Sprintf("prev for version %v", version), Path: s.Url, Err: os.ErrNotExist})
+		return 0, errors.E(
+			op,
+			&os.PathError{
+				Op:   fmt.Sprintf("prev for version %v", version),
+				Path: s.Url,
+				Err:  os.ErrNotExist,
+			},
+		)
 	} else {
 		return v, nil
 	}
@@ -70,26 +80,71 @@ func (s *Stub) Prev(version uint64) (prevVersion uint64, err error) {
 func (s *Stub) Next(version uint64) (nextVersion uint64, err error) {
 	var op errors.Op = "stub.Stub.Next"
 	if v, ok := s.Migrations.Next(version); !ok {
-		return 0, errors.E(op, &os.PathError{Op: fmt.Sprintf("next for version %v", version), Path: s.Url, Err: os.ErrNotExist})
+		return 0, errors.E(
+			op,
+			&os.PathError{
+				Op:   fmt.Sprintf("next for version %v", version),
+				Path: s.Url,
+				Err:  os.ErrNotExist,
+			},
+		)
 	} else {
 		return v, nil
 	}
 }
 
-func (s *Stub) ReadUp(version uint64) (r io.ReadCloser, identifier string, fileName string, err error) {
+func (s *Stub) ReadUp(
+	version uint64,
+) (r io.ReadCloser, identifier string, fileName string, err error) {
 	var op errors.Op = "stub.Stub.ReadUp"
+
 	if m, ok := s.Migrations.Up(version); ok {
-		return ioutil.NopCloser(bytes.NewBufferString(m.Identifier)), fmt.Sprintf("%v.up.sql.stub", version), fmt.Sprintf("%v.up.sql.stub", version), nil
+		return io.NopCloser(
+				bytes.NewBufferString(m.Identifier),
+			), fmt.Sprintf(
+				"%v.up.sql.stub",
+				version,
+			), fmt.Sprintf(
+				"%v.up.sql.stub",
+				version,
+			), nil
 	}
-	return nil, "", "", errors.E(op, &os.PathError{Op: fmt.Sprintf("read up sql version %v", version), Path: s.Url, Err: os.ErrNotExist})
+
+	return nil, "", "", errors.E(
+		op,
+		&os.PathError{
+			Op:   fmt.Sprintf("read up sql version %v", version),
+			Path: s.Url,
+			Err:  os.ErrNotExist,
+		},
+	)
 }
 
-func (s *Stub) ReadDown(version uint64) (r io.ReadCloser, identifier string, fileName string, err error) {
+func (s *Stub) ReadDown(
+	version uint64,
+) (r io.ReadCloser, identifier string, fileName string, err error) {
 	var op errors.Op = "stub.Stub.ReadDown"
+
 	if m, ok := s.Migrations.Down(version); ok {
-		return ioutil.NopCloser(bytes.NewBufferString(m.Identifier)), fmt.Sprintf("%v.down.sql.stub", version), fmt.Sprintf("%v.down.sql.stub", version), nil
+		return io.NopCloser(
+				bytes.NewBufferString(m.Identifier),
+			), fmt.Sprintf(
+				"%v.down.sql.stub",
+				version,
+			), fmt.Sprintf(
+				"%v.down.sql.stub",
+				version,
+			), nil
 	}
-	return nil, "", "", errors.E(op, &os.PathError{Op: fmt.Sprintf("read down sql version %v", version), Path: s.Url, Err: os.ErrNotExist})
+
+	return nil, "", "", errors.E(
+		op,
+		&os.PathError{
+			Op:   fmt.Sprintf("read down sql version %v", version),
+			Path: s.Url,
+			Err:  os.ErrNotExist,
+		},
+	)
 }
 
 func (s *Stub) GetDirections(version uint64) map[source.Direction]bool {
@@ -104,20 +159,58 @@ func (s *Stub) GetUnappliedMigrations(version uint64) (versions []uint64) {
 	return s.Migrations.GetUnappliedMigrations(version)
 }
 
-func (s *Stub) ReadMetaUp(version uint64) (r io.ReadCloser, identifier string, fileName string, err error) {
+func (s *Stub) ReadMetaUp(
+	version uint64,
+) (r io.ReadCloser, identifier string, fileName string, err error) {
 	var op errors.Op = "stub.Stub.ReadMetaUp"
+
 	if m, ok := s.Migrations.MetaUp(version); ok {
-		return ioutil.NopCloser(bytes.NewBufferString(m.Identifier)), fmt.Sprintf("%v.up.yaml.stub", version), fmt.Sprintf("%v.up.yaml.stub", version), nil
+		return io.NopCloser(
+				bytes.NewBufferString(m.Identifier),
+			), fmt.Sprintf(
+				"%v.up.yaml.stub",
+				version,
+			), fmt.Sprintf(
+				"%v.up.yaml.stub",
+				version,
+			), nil
 	}
-	return nil, "", "", errors.E(op, &os.PathError{Op: fmt.Sprintf("read up yaml version %v", version), Path: s.Url, Err: os.ErrNotExist})
+
+	return nil, "", "", errors.E(
+		op,
+		&os.PathError{
+			Op:   fmt.Sprintf("read up yaml version %v", version),
+			Path: s.Url,
+			Err:  os.ErrNotExist,
+		},
+	)
 }
 
-func (s *Stub) ReadMetaDown(version uint64) (r io.ReadCloser, identifier string, fileName string, err error) {
+func (s *Stub) ReadMetaDown(
+	version uint64,
+) (r io.ReadCloser, identifier string, fileName string, err error) {
 	var op errors.Op = "stub.Stub.ReadMetaDown"
+
 	if m, ok := s.Migrations.MetaDown(version); ok {
-		return ioutil.NopCloser(bytes.NewBufferString(m.Identifier)), fmt.Sprintf("%v.down.yaml.stub", version), fmt.Sprintf("%v.down.yaml.stub", version), nil
+		return io.NopCloser(
+				bytes.NewBufferString(m.Identifier),
+			), fmt.Sprintf(
+				"%v.down.yaml.stub",
+				version,
+			), fmt.Sprintf(
+				"%v.down.yaml.stub",
+				version,
+			), nil
 	}
-	return nil, "", "", errors.E(op, &os.PathError{Op: fmt.Sprintf("read down yaml version %v", version), Path: s.Url, Err: os.ErrNotExist})
+
+	return nil, "", "", errors.E(
+		op,
+		&os.PathError{
+			Op:   fmt.Sprintf("read down yaml version %v", version),
+			Path: s.Url,
+			Err:  os.ErrNotExist,
+		},
+	)
 }
 
 func (f *Stub) ReadName(version uint64) (name string) {

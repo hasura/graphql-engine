@@ -3,20 +3,19 @@ package metadata
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	"github.com/hasura/graphql-engine/cli/v2/pkg/migrate"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 )
 
 func TestProjectMetadataOps_Apply(t *testing.T) {
@@ -29,8 +28,7 @@ func TestProjectMetadataOps_Apply(t *testing.T) {
 	}
 	// Named for reuse below. We only care about the inconsistent_objects array
 	// as a set, i.e. ordering may change:
-	v3Expected :=
-		`{"is_consistent":false,"inconsistent_objects":[
+	v3Expected := `{"is_consistent":false,"inconsistent_objects":[
 			{"definition":{"name":"t2","schema":"public"},"name":"table t2 in source default","reason":"Inconsistent object: no such table/view exists in source: \"t2\"","type":"table"},
 			{"definition":{"name":"t4","schema":"pub"},"name":"table pub.t4 in source default","reason":"Inconsistent object: no such table/view exists in source: \"pub.t4\"","type":"table"},
 			{"definition":{"name":"t3","schema":"pub"},"name":"table pub.t3 in source default","reason":"Inconsistent object: no such table/view exists in source: \"pub.t3\"","type":"table"},
@@ -118,7 +116,11 @@ func TestProjectMetadataOps_Apply(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p, err := NewProjectMetadata(tt.fields.projectDirectory, WithAdminSecret(testutil.TestAdminSecret), WithEndpoint(tt.fields.endpointString))
+			p, err := NewProjectMetadata(
+				tt.fields.projectDirectory,
+				WithAdminSecret(testutil.TestAdminSecret),
+				WithEndpoint(tt.fields.endpointString),
+			)
 			require.NoError(t, err)
 			got, err := p.Apply()
 			tt.assertErr(t, err)
@@ -126,9 +128,9 @@ func TestProjectMetadataOps_Apply(t *testing.T) {
 				return
 			}
 			require.NotNil(t, got)
-			gotb, err := ioutil.ReadAll(got)
+			gotb, err := io.ReadAll(got)
 			require.NoError(t, err)
-            require.JSONEq(t, tt.want, string(gotb))
+			require.JSONEq(t, tt.want, string(gotb))
 		})
 	}
 }
@@ -204,7 +206,11 @@ func TestProjectMetadataOps_Parse(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p, err := NewProjectMetadata(tt.fields.projectDirectory, WithEndpoint(hgeEndpoint), WithAdminSecret(testutil.TestAdminSecret))
+			p, err := NewProjectMetadata(
+				tt.fields.projectDirectory,
+				WithEndpoint(hgeEndpoint),
+				WithAdminSecret(testutil.TestAdminSecret),
+			)
 			assert.NoError(t, err)
 			got, err := p.Parse()
 			tt.assertErr(t, err)
@@ -212,12 +218,12 @@ func TestProjectMetadataOps_Parse(t *testing.T) {
 				return
 			}
 			require.NotNil(t, got)
-			gotb, err := ioutil.ReadAll(got)
+			gotb, err := io.ReadAll(got)
 			require.NoError(t, err)
 			// uncomment to update golden file
-			//assert.NoError(t, ioutil.WriteFile(tt.wantGolden, gotb, os.ModePerm))
+			// assert.NoError(t, os.WriteFile(tt.wantGolden, gotb, os.ModePerm))
 
-			wantb, err := ioutil.ReadFile(tt.wantGolden)
+			wantb, err := os.ReadFile(tt.wantGolden)
 			require.NoError(t, err)
 			require.JSONEq(t, string(wantb), string(gotb))
 		})
@@ -259,20 +265,24 @@ func TestProjectMetadataOps_Diff(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p, err := NewProjectMetadata(tt.fields.projectDirectory, WithEndpoint(hgeEndpoint), WithAdminSecret(testutil.TestAdminSecret))
+			p, err := NewProjectMetadata(
+				tt.fields.projectDirectory,
+				WithEndpoint(hgeEndpoint),
+				WithAdminSecret(testutil.TestAdminSecret),
+			)
 			require.NoError(t, err)
 			got, err := p.Diff()
 			tt.assertErr(t, err)
 			if tt.wantErr {
 				return
 			}
-			gotb, err := ioutil.ReadAll(got)
+			gotb, err := io.ReadAll(got)
 			require.NoError(t, err)
 
 			// uncomment to update golden file
-			//require.NoError(t, ioutil.WriteFile(tt.wantGolden, gotb, os.ModePerm))
+			// require.NoError(t, os.WriteFile(tt.wantGolden, gotb, os.ModePerm))
 
-			wantb, err := ioutil.ReadFile(tt.wantGolden)
+			wantb, err := os.ReadFile(tt.wantGolden)
 			require.NoError(t, err)
 			require.Equal(t, string(wantb), string(gotb))
 		})
@@ -348,13 +358,17 @@ func TestProjectMetadata_Reload(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p, err := NewProjectMetadata(tt.fields.projectDirectory, WithEndpoint(tt.fields.endpointString), WithAdminSecret(testutil.TestAdminSecret))
+			p, err := NewProjectMetadata(
+				tt.fields.projectDirectory,
+				WithEndpoint(tt.fields.endpointString),
+				WithAdminSecret(testutil.TestAdminSecret),
+			)
 			tt.wantErr(t, err)
 			if p != nil {
 				got, err := p.Reload()
 
 				tt.wantErr(t, err)
-				gotb, err := ioutil.ReadAll(got)
+				gotb, err := io.ReadAll(got)
 				require.NoError(t, err)
 				require.JSONEq(t, tt.want, string(gotb))
 			}
@@ -383,7 +397,7 @@ func TestProjectMetadata_GetInconsistentMetadata(t *testing.T) {
 				Type: "run_sql",
 				Args: hasura.PGRunSQLInput{
 					SQL:                      "DROP table t1;",
-					CheckMetadataConsistency: func() *bool { var v = false; return &v }(),
+					CheckMetadataConsistency: func() *bool { v := false; return &v }(),
 				},
 			},
 		)
@@ -450,9 +464,17 @@ func TestProjectMetadata_GetInconsistentMetadata(t *testing.T) {
 			hgeEndpoint := fmt.Sprintf("%s:%s", testutil.BaseURL, port)
 			defer teardown()
 
-			migrations, err := migrate.NewProjectMigrate(tt.fields.projectDirectory, migrate.WithEndpoint(hgeEndpoint), migrate.WithAdminSecret(testutil.TestAdminSecret))
+			migrations, err := migrate.NewProjectMigrate(
+				tt.fields.projectDirectory,
+				migrate.WithEndpoint(hgeEndpoint),
+				migrate.WithAdminSecret(testutil.TestAdminSecret),
+			)
 			require.NoError(t, err)
-			metadata, err := NewProjectMetadata(tt.fields.projectDirectory, WithEndpoint(hgeEndpoint), WithAdminSecret(testutil.TestAdminSecret))
+			metadata, err := NewProjectMetadata(
+				tt.fields.projectDirectory,
+				WithEndpoint(hgeEndpoint),
+				WithAdminSecret(testutil.TestAdminSecret),
+			)
 			require.NoError(t, err)
 			if tt.before != nil {
 				tt.before(t, metadata, migrations, port, tt.queryEndpoint)
@@ -462,14 +484,17 @@ func TestProjectMetadata_GetInconsistentMetadata(t *testing.T) {
 			if tt.wantErr {
 				return
 			}
-			gotb, err := ioutil.ReadAll(got)
+			gotb, err := io.ReadAll(got)
 			require.NoError(t, err)
-			goldenFile := filepath.Join("testdata/get_inconsistent_metadata_test", strings.Join(strings.Split(tt.name, " "), "_")+".golden.json")
+			goldenFile := filepath.Join(
+				"testdata/get_inconsistent_metadata_test",
+				strings.Join(strings.Split(tt.name, " "), "_")+".golden.json",
+			)
 
 			// uncomment the following line to update test golden file
-			// require.NoError(t, ioutil.WriteFile(goldenFile, gotb, 0655))
+			// require.NoError(t, os.WriteFile(goldenFile, gotb, 0655))
 
-			wantb, err := ioutil.ReadFile(goldenFile)
+			wantb, err := os.ReadFile(goldenFile)
 			require.NoError(t, err)
 			require.JSONEq(t, string(wantb), string(gotb))
 		})
@@ -522,23 +547,26 @@ func TestProjectMetadata_Export(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p, err := NewProjectMetadata(tt.fields.projectDirectory, WithEndpoint(hgeEndpoint), WithAdminSecret(testutil.TestAdminSecret))
+			p, err := NewProjectMetadata(
+				tt.fields.projectDirectory,
+				WithEndpoint(hgeEndpoint),
+				WithAdminSecret(testutil.TestAdminSecret),
+			)
 			require.NoError(t, err)
 			got, err := p.Export()
 			tt.assertErr(t, err)
 			if tt.wantErr {
 				return
 			}
-			gotb, err := ioutil.ReadAll(got)
+			gotb, err := io.ReadAll(got)
 			require.NoError(t, err)
 
 			// uncomment to update golden file
-			//require.NoError(t, ioutil.WriteFile(tt.wantGolden, gotb, os.ModePerm))
+			// require.NoError(t, os.WriteFile(tt.wantGolden, gotb, os.ModePerm))
 
-			wantb, err := ioutil.ReadFile(tt.want)
+			wantb, err := os.ReadFile(tt.want)
 			require.NoError(t, err)
 			require.Equal(t, string(wantb), string(gotb))
 		})
 	}
-
 }

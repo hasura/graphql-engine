@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"io"
-	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 
@@ -25,9 +25,12 @@ func BenchmarkGetSourceKind(b *testing.B) {
 	for _, f := range funcs {
 		b.Run(f.name, func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				input, err := ioutil.ReadFile("testdata/json/t2/metadata.json")
+				input, err := os.ReadFile("testdata/json/t2/metadata.json")
 				assert.NoError(b, err)
-				kindblackhole, err = f.f(func() (io.Reader, error) { return bytes.NewReader(input), nil }, "default")
+				kindblackhole, err = f.f(
+					func() (io.Reader, error) { return bytes.NewReader(input), nil },
+					"default",
+				)
 				assert.NoError(b, err)
 			}
 		})
@@ -207,7 +210,11 @@ func TestGetSourcesAndKindStrict(t *testing.T) {
 			nil,
 			true,
 			require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.Truef(t, errors.Is(err, ErrNoConnectedSources), "expected to find ErrNoConnectedSources in error chain")
+				require.Truef(
+					t,
+					errors.Is(err, ErrNoConnectedSources),
+					"expected to find ErrNoConnectedSources in error chain",
+				)
 			}),
 		},
 		{

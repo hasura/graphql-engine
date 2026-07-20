@@ -1,6 +1,7 @@
 package commands
 
 import (
+	stderrors "errors"
 	"fmt"
 
 	"github.com/hasura/graphql-engine/cli/v2"
@@ -43,26 +44,39 @@ Further reading:
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "PersistentPreRunE")
 			cmd.Root().PersistentPreRun(cmd, args)
+
 			ec.Viper = v
+
 			err := ec.Prepare()
 			if err != nil {
 				return errors.E(op, err)
 			}
+
 			if err := ec.Validate(); err != nil {
 				return errors.E(op, err)
 			}
+
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "RunE")
 			opts.NoTransaction = ec.Viper.GetBool("no_transaction")
+
 			opts.PerMigrationTransaction = ec.Viper.GetBool("per_migration_transaction")
 			if opts.NoTransaction && opts.PerMigrationTransaction {
-				return errors.E(op, fmt.Errorf("--no-transaction and --per-migration-transaction are mutually exclusive"))
+				return errors.E(
+					op,
+					stderrors.New(
+						"--no-transaction and --per-migration-transaction are mutually exclusive",
+					),
+				)
 			}
-			if err := opts.Run(); err != nil {
+
+			err := opts.Run()
+			if err != nil {
 				return errors.E(op, err)
 			}
+
 			return nil
 		},
 	}
@@ -74,10 +88,17 @@ Further reading:
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
 	f.String("access-key", "", "access key for Hasura GraphQL Engine")
-	if err := f.MarkDeprecated("access-key", "use --admin-secret instead"); err != nil {
+
+	err := f.MarkDeprecated("access-key", "use --admin-secret instead")
+	if err != nil {
 		ec.Logger.WithError(err).Errorf("error while using a dependency library")
 	}
-	f.Bool("insecure-skip-tls-verify", false, "skip TLS verification and disable cert checking (default: false)")
+
+	f.Bool(
+		"insecure-skip-tls-verify",
+		false,
+		"skip TLS verification and disable cert checking (default: false)",
+	)
 	f.String("certificate-authority", "", "path to a cert file for the certificate authority")
 	f.Bool("disable-interactive", false, "disables interactive prompts (default: false)")
 
@@ -88,13 +109,25 @@ Further reading:
 	util.BindPFlag(v, "certificate_authority", f.Lookup("certificate-authority"))
 	util.BindPFlag(v, "disable_interactive", f.Lookup("disable-interactive"))
 
-	f.BoolVar(&ec.DisableAutoStateMigration, "disable-auto-state-migration", false, "after a config v3 update, disable automatically moving state from hdb_catalog.schema_migrations to catalog state")
-	if err := f.MarkHidden("disable-auto-state-migration"); err != nil {
+	f.BoolVar(
+		&ec.DisableAutoStateMigration,
+		"disable-auto-state-migration",
+		false,
+		"after a config v3 update, disable automatically moving state from hdb_catalog.schema_migrations to catalog state",
+	)
+
+	err = f.MarkHidden("disable-auto-state-migration")
+	if err != nil {
 		ec.Logger.WithError(err).Errorf("error while using a dependency library")
 	}
 
 	f.BoolVar(&opts.NoTransaction, "no-transaction", false, "disable transaction for migration")
-	f.BoolVar(&opts.PerMigrationTransaction, "per-migration-transaction", false, "enable per-migration transaction control; add '-- hasura:no-transaction' as the first line of a SQL file to run that migration without a transaction (not supported on MSSQL/BigQuery sources)")
+	f.BoolVar(
+		&opts.PerMigrationTransaction,
+		"per-migration-transaction",
+		false,
+		"enable per-migration transaction control; add '-- hasura:no-transaction' as the first line of a SQL file to run that migration without a transaction (not supported on MSSQL/BigQuery sources)",
+	)
 
 	util.BindPFlag(v, "no_transaction", f.Lookup("no-transaction"))
 	util.BindPFlag(v, "per_migration_transaction", f.Lookup("per-migration-transaction"))
@@ -113,6 +146,7 @@ type DeployOptions struct {
 
 func (opts *DeployOptions) Run() error {
 	var op errors.Op = "commands.DeployOptions.Run"
+
 	opts.EC.Config.DisableInteractive = true
 
 	context := &deployCtx{
@@ -127,22 +161,30 @@ func (opts *DeployOptions) Run() error {
 
 	if opts.EC.Config.Version <= cli.V2 {
 		configV2FSM := newConfigV2DeployFSM()
-		if err := configV2FSM.SendEvent(applyMigrations, context); err != nil {
+
+		err := configV2FSM.SendEvent(applyMigrations, context)
+		if err != nil {
 			return errors.E(op, err)
 		}
+
 		if configV2FSM.Current == failedOperation {
 			return errors.E(op, fmt.Errorf("operation failed: %w", context.err))
 		}
+
 		return nil
 	}
 
 	configV3FSM := newConfigV3DeployFSM()
-	if err := configV3FSM.SendEvent(applyInitialMetadata, context); err != nil {
+
+	err := configV3FSM.SendEvent(applyInitialMetadata, context)
+	if err != nil {
 		return errors.E(op, err)
 	}
+
 	if configV3FSM.Current == failedOperation {
 		return errors.E(op, fmt.Errorf("operation failed: %w", context.err))
 	}
+
 	return nil
 }
 
@@ -196,10 +238,14 @@ func (a *applyingInitialMetadataAction) Execute(ctx fsm.EventContext) eventType 
 		EC: context.ec,
 	}
 	context.logger.Debug(applyingInitialMetadata)
-	if err := opts.Run(); err != nil {
+
+	err := opts.Run()
+	if err != nil {
 		context.err = err
+
 		return applyInitialMetadataFailed
 	}
+
 	return applyMigrations
 }
 
@@ -208,11 +254,15 @@ type applyingInitialMetadataFailedAction struct{}
 func (a *applyingInitialMetadataFailedAction) Execute(ctx fsm.EventContext) eventType {
 	context := ctx.(*deployCtx)
 	context.logger.Debug(applyingInitialMetadataFailed)
+
 	if context.err != nil {
 		context.logger.Errorf("applying metadata failed")
-		context.logger.Info("This can happen when metadata in your project metadata directory is malformed")
+		context.logger.Info(
+			"This can happen when metadata in your project metadata directory is malformed",
+		)
 		context.logger.Debug(context.err)
 	}
+
 	return failOperation
 }
 
@@ -221,6 +271,7 @@ type applyingMigrationsAction struct{}
 func (a *applyingMigrationsAction) Execute(ctx fsm.EventContext) eventType {
 	context := ctx.(*deployCtx)
 	context.logger.Debug(applyingMigrations)
+
 	disableInteractive := context.ec.Config.DisableInteractive
 	defer func() { context.ec.Config.DisableInteractive = disableInteractive }()
 
@@ -230,11 +281,16 @@ func (a *applyingMigrationsAction) Execute(ctx fsm.EventContext) eventType {
 		NoTransaction:           context.noTransaction,
 		PerMigrationTransaction: context.perMigrationTransaction,
 	}
+
 	opts.EC.AllDatabases = true
-	if err := opts.Run(); err != nil {
+
+	err := opts.Run()
+	if err != nil {
 		context.err = err
+
 		return applyMigrationsFailed
 	}
+
 	return applyMetadata
 }
 
@@ -243,10 +299,12 @@ type applyingMigrationsFailedAction struct{}
 func (a *applyingMigrationsFailedAction) Execute(ctx fsm.EventContext) eventType {
 	context := ctx.(*deployCtx)
 	context.logger.Debug(applyingMigrationsFailed)
+
 	if context.err != nil {
 		context.logger.Errorf("applying migrations failed")
 		context.logger.Debug(context.err)
 	}
+
 	return failOperation
 }
 
@@ -259,13 +317,19 @@ func (a *applyingMetadataAction) Execute(ctx fsm.EventContext) eventType {
 		EC: context.ec,
 	}
 	opts.EC.Spin("Applying metadata...")
-	if err := opts.Run(); err != nil {
+
+	err := opts.Run()
+	if err != nil {
 		opts.EC.Spinner.Stop()
+
 		context.err = err
+
 		return applyMetadataFailed
 	}
+
 	opts.EC.Spinner.Stop()
 	opts.EC.Logger.Info("Metadata applied")
+
 	return reloadMetadata
 }
 
@@ -274,10 +338,12 @@ type applyingMetadataFailedAction struct{}
 func (a *applyingMetadataFailedAction) Execute(ctx fsm.EventContext) eventType {
 	context := ctx.(*deployCtx)
 	context.logger.Debug(applyingMetadataFailed)
+
 	if context.err != nil {
 		context.logger.Errorf("applying metadata failed")
 		context.logger.Debug(context.err)
 	}
+
 	return failOperation
 }
 
@@ -286,13 +352,18 @@ type reloadingMetadataAction struct{}
 func (a *reloadingMetadataAction) Execute(ctx fsm.EventContext) eventType {
 	context := ctx.(*deployCtx)
 	context.logger.Debug(reloadingMetadata)
+
 	opts := MetadataReloadOptions{
 		EC: context.ec,
 	}
-	if err := opts.runWithInfo(); err != nil {
+
+	err := opts.runWithInfo()
+	if err != nil {
 		context.err = err
+
 		return reloadMetadataFailed
 	}
+
 	return applySeeds
 }
 
@@ -301,10 +372,12 @@ type reloadingMetadataFailedAction struct{}
 func (a *reloadingMetadataFailedAction) Execute(ctx fsm.EventContext) eventType {
 	context := ctx.(*deployCtx)
 	context.logger.Debug(reloadingMetadataFailed)
+
 	if context.err != nil {
 		context.logger.Errorf("reloading metadata failed")
 		context.logger.Debug(context.err)
 	}
+
 	return failOperation
 }
 
@@ -318,12 +391,17 @@ func (a *applyingSeedsAction) Execute(ctx fsm.EventContext) eventType {
 			EC:     context.ec,
 			Driver: getSeedDriver(context.ec, context.ec.Config.Version),
 		}
+
 		opts.EC.AllDatabases = true
-		if err := opts.Run(); err != nil {
+
+		err := opts.Run()
+		if err != nil {
 			context.err = err
+
 			return applySeedsFailed
 		}
 	}
+
 	return fsm.NoOp
 }
 
@@ -332,10 +410,12 @@ type applyingSeedsFailedAction struct{}
 func (a *applyingSeedsFailedAction) Execute(ctx fsm.EventContext) eventType {
 	context := ctx.(*deployCtx)
 	context.logger.Debug(applyingSeedsFailed)
+
 	if context.err != nil {
 		context.logger.Errorf("applying seeds failed")
 		context.logger.Debug(context.err)
 	}
+
 	return fsm.NoOp
 }
 
@@ -344,13 +424,17 @@ type failedOperationAction struct{}
 func (a *failedOperationAction) Execute(ctx fsm.EventContext) eventType {
 	context := ctx.(*deployCtx)
 	context.logger.Debug(failedOperation)
+
 	return fsm.NoOp
 }
 
 func newConfigV3DeployFSM() *fsm.StateMachine {
 	type State = fsm.State
+
 	type States = fsm.States
+
 	type Events = fsm.Events
+
 	return &fsm.StateMachine{
 		States: States{
 			fsm.Default: State{
@@ -428,8 +512,11 @@ func newConfigV3DeployFSM() *fsm.StateMachine {
 
 func newConfigV2DeployFSM() *fsm.StateMachine {
 	type State = fsm.State
+
 	type States = fsm.States
+
 	type Events = fsm.Events
+
 	return &fsm.StateMachine{
 		States: States{
 			fsm.Default: State{

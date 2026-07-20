@@ -44,14 +44,17 @@ type TemplateProvider interface {
 	GetAssetsCDN() string
 }
 
-// DefaultTemplateProvider implements the github.com/hasura/graphl-engine/cli/pkg/templates.DefaultTemplateProvider interface
+// DefaultTemplateProvider implements the github.com/hasura/graphl-engine/cli/pkg/templates.DefaultTemplateProvider interface.
 type DefaultTemplateProvider struct {
 	basePath         string
 	templateFileName string
 	consoleFS        embed.FS
 }
 
-func NewDefaultTemplateProvider(basePath, templateFilename string, consoleFS embed.FS) *DefaultTemplateProvider {
+func NewDefaultTemplateProvider(
+	basePath, templateFilename string,
+	consoleFS embed.FS,
+) *DefaultTemplateProvider {
 	return &DefaultTemplateProvider{
 		basePath:         basePath,
 		templateFileName: templateFilename,
@@ -67,26 +70,45 @@ func (p *DefaultTemplateProvider) TemplateFilename() string {
 	return p.templateFileName
 }
 
-// DoTemplateExist returns true if an asset exists at pathk
+// DoTemplateExist returns true if an asset exists at pathk.
 func (p *DefaultTemplateProvider) DoTemplateExist(path string) bool {
 	_, err := p.consoleFS.ReadFile(path)
+
 	return err == nil
 }
 
-func (p *DefaultTemplateProvider) LoadTemplates(path string, templateNames ...string) (multitemplate.Render, error) {
+func (p *DefaultTemplateProvider) LoadTemplates(
+	path string,
+	templateNames ...string,
+) (multitemplate.Render, error) {
 	var op errors.Op = "console.DefaultTemplateProvider.LoadTemplates"
+
 	r := multitemplate.New()
 
 	for _, templateName := range templateNames {
 		templatePath := path + templateName
+
 		templateBytes, err := p.consoleFS.ReadFile(templatePath)
 		if err != nil {
-			return nil, errors.E(op, fmt.Errorf("error reading from file: path: %s :%w", templatePath, err))
+			return nil, errors.E(
+				op,
+				fmt.Errorf("error reading from file: path: %s :%w", templatePath, err),
+			)
 		}
+
 		theTemplate, err := template.New(templateName).Parse(string(templateBytes))
 		if err != nil {
-			return nil, errors.E(op, fmt.Errorf("error creating template: path: %s, name: %s: %w", path, templateName, err))
+			return nil, errors.E(
+				op,
+				fmt.Errorf(
+					"error creating template: path: %s, name: %s: %w",
+					path,
+					templateName,
+					err,
+				),
+			)
 		}
+
 		r.Add(templateName, theTemplate)
 	}
 
@@ -117,7 +139,7 @@ func (p *DefaultTemplateProvider) GetTemplateVersion(v *version.Version) string 
 // > v1.0.0-beta.01  -> beta/v1.0
 // > v1.0.0-alpha.01 -> alpha/v1.0
 // > v1.2.1-rc.03    -> rc/v1.2
-// > v1.1.0          -> stable/v1.1
+// > v1.1.0          -> stable/v1.1.
 func (p *DefaultTemplateProvider) GetAssetsVersion(v *version.Version) string {
 	// server has a version
 	if v.Server != "" {
@@ -129,8 +151,10 @@ func (p *DefaultTemplateProvider) GetAssetsVersion(v *version.Version) string {
 			// check for release channels
 			preRelease := v.ServerSemver.Prerelease()
 			channel := "stable"
+
 			if preRelease != "" {
-				var re = regexp.MustCompile(`^[a-z]+`)
+				re := regexp.MustCompile(`^[a-z]+`)
+
 				tag := re.FindString(preRelease)
 				// cloud and pro will be tagged like v2.0.0-cloud.9
 				// so, tag will be set as cloud/pro
@@ -139,7 +163,13 @@ func (p *DefaultTemplateProvider) GetAssetsVersion(v *version.Version) string {
 					channel = tag
 				}
 			}
-			return fmt.Sprintf("channel/%s/v%d.%d", channel, v.ServerSemver.Major(), v.ServerSemver.Minor())
+
+			return fmt.Sprintf(
+				"channel/%s/v%d.%d",
+				channel,
+				v.ServerSemver.Major(),
+				v.ServerSemver.Minor(),
+			)
 		}
 		// version is not semver
 		return fmt.Sprintf("%s/%s", versioned, v.Server)
@@ -156,14 +186,18 @@ type EELiteTemplateProvider struct {
 	*DefaultTemplateProvider
 }
 
-func NewEETemplateProvider(basePath string, templateFileName string, consoleFs embed.FS) *EELiteTemplateProvider {
+func NewEETemplateProvider(
+	basePath string,
+	templateFileName string,
+	consoleFs embed.FS,
+) *EELiteTemplateProvider {
 	return &EELiteTemplateProvider{
 		NewDefaultTemplateProvider(basePath, templateFileName, consoleFs),
 	}
 }
 
 func (p *EELiteTemplateProvider) GetAssetsVersion(v *version.Version) string {
-	return fmt.Sprintf("channel/versioned/%s", v.Server)
+	return "channel/versioned/" + v.Server
 }
 
 func (p *EELiteTemplateProvider) GetAssetsCDN() string {
@@ -175,14 +209,18 @@ type CloudTemplateProvider struct {
 }
 
 func (p *CloudTemplateProvider) GetAssetsVersion(v *version.Version) string {
-	return fmt.Sprintf("channel/versioned/%s", v.Server)
+	return "channel/versioned/" + v.Server
 }
 
 func (p *CloudTemplateProvider) GetAssetsCDN() string {
 	return "https://graphql-engine-cdn.hasura.io/cloud-console/assets"
 }
 
-func NewCloudTemplateProvider(basePath string, templateFileName string, consoleFs embed.FS) *CloudTemplateProvider {
+func NewCloudTemplateProvider(
+	basePath string,
+	templateFileName string,
+	consoleFs embed.FS,
+) *CloudTemplateProvider {
 	return &CloudTemplateProvider{
 		NewDefaultTemplateProvider(basePath, templateFileName, consoleFs),
 	}

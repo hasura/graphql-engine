@@ -2,15 +2,13 @@ package commands
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	"github.com/hasura/graphql-engine/cli/v2/util"
 	. "github.com/onsi/ginkgo"
-	"io/ioutil"
-	"path/filepath"
-
 	. "github.com/onsi/gomega"
-	//. "github.com/onsi/gomega/gbytes"
-	//. "github.com/onsi/gomega/gexec"
 )
 
 var _ = Describe("hasura scripts update-project-v2", func() {
@@ -32,7 +30,11 @@ var _ = Describe("hasura scripts update-project-v2", func() {
 		)
 		teardownV13()
 
-		port, teardownLatest := testutil.StartHasuraWithPG(GinkgoT(), testutil.HasuraDockerImage, connectionUrl)
+		port, teardownLatest := testutil.StartHasuraWithPG(
+			GinkgoT(),
+			testutil.HasuraDockerImage,
+			connectionUrl,
+		)
 		hgeEndpoint = fmt.Sprintf("http://%s:%s", testutil.Hostname, port)
 		teardown = func() {
 			teardownPG()
@@ -42,7 +44,7 @@ var _ = Describe("hasura scripts update-project-v2", func() {
 	AfterEach(func() { teardown() })
 
 	It("can update a config v1 project to config v2", func() {
-		tmpDir, err := ioutil.TempDir("", "hasura-cli-test-*")
+		tmpDir, err := os.MkdirTemp("", "hasura-cli-test-*")
 		Expect(err).To(BeNil())
 		projectDir := filepath.Join(tmpDir, "project")
 		Expect(util.CopyDir("testdata/config-v1-test-project", projectDir)).To(BeNil())
@@ -52,6 +54,13 @@ var _ = Describe("hasura scripts update-project-v2", func() {
 			WorkingDirectory: projectDir,
 		})
 		Expect(filepath.Join(projectDir, "metadata", "tables.yaml")).To(BeAnExistingFile())
-		Expect(filepath.Join(projectDir, "migrations", "1626431381198_create_table_public_t1", "up.sql")).To(BeAnExistingFile())
+		Expect(
+			filepath.Join(
+				projectDir,
+				"migrations",
+				"1626431381198_create_table_public_t1",
+				"up.sql",
+			),
+		).To(BeAnExistingFile())
 	})
 })

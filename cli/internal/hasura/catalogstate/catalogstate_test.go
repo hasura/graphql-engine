@@ -3,17 +3,14 @@ package catalogstate
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
-	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestClientCatalogState_Set(t *testing.T) {
@@ -70,7 +67,11 @@ func TestClientCatalogState_Set(t *testing.T) {
 			true,
 			require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
 				require.IsType(t, &errors.Error{}, err)
-				require.Equal(t, errors.Op("catalogstate.ClientCatalogState.Set"), err.(*errors.Error).Op)
+				require.Equal(
+					t,
+					errors.Op("catalogstate.ClientCatalogState.Set"),
+					err.(*errors.Error).Op,
+				)
 				require.Equal(t, errors.KindHasuraAPI.String(), errors.GetKind(err).String())
 				require.JSONEq(t, err.(*errors.Error).Err.Error(), `{
   "code": "parse-failed",
@@ -90,9 +91,9 @@ func TestClientCatalogState_Set(t *testing.T) {
 			tt.assertErr(t, err)
 			if !tt.wantErr {
 				assert.NoError(t, err)
-				gotb, err := ioutil.ReadAll(got)
+				gotb, err := io.ReadAll(got)
 				assert.NoError(t, err)
-				wantb, err := ioutil.ReadAll(tt.want)
+				wantb, err := io.ReadAll(tt.want)
 				assert.NoError(t, err)
 				assert.JSONEq(t, string(wantb), string(gotb))
 			}

@@ -19,5 +19,6 @@ func newMetadataInconsistencyCmd(ec *cli.ExecutionContext) *cobra.Command {
 		newMetadataInconsistencyDropCmd(ec),
 		newMetadataInconsistencyStatusCmd(ec),
 	)
+
 	return metadataInconsistencyCmd
 }

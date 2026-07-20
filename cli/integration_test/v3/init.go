@@ -1,23 +1,24 @@
 package v3
 
 import (
-	"fmt"
-	"io/ioutil"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-	"gopkg.in/yaml.v3"
-
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/commands"
+	"github.com/stretchr/testify/require"
+	"go.yaml.in/yaml/v3"
 )
 
-// TODO: move this to testutil
+// TODO: move this to testutil.
 func editEndpointInConfig(t *testing.T, configFilePath, endpoint string) {
+	t.Helper()
+
 	var config cli.Config
-	b, err := ioutil.ReadFile(configFilePath)
+
+	b, err := os.ReadFile(configFilePath)
 	require.NoError(t, err)
 
 	err = yaml.Unmarshal(b, &config)
@@ -28,9 +29,8 @@ func editEndpointInConfig(t *testing.T, configFilePath, endpoint string) {
 	b, err = yaml.Marshal(&config)
 	require.NoError(t, err)
 
-	err = ioutil.WriteFile(configFilePath, b, 0655)
+	err = os.WriteFile(configFilePath, b, 0o655)
 	require.NoError(t, err)
-
 }
 
 func TestInitCmd(t *testing.T, ec *cli.ExecutionContext, initDir, hasuraPort string) {
@@ -50,11 +50,15 @@ func TestInitCmd(t *testing.T, ec *cli.ExecutionContext, initDir, hasuraPort str
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.opts.Run()
-			if err != tc.err {
+			if !errors.Is(err, tc.err) {
 				t.Fatalf("%s: expected %v, got %v", tc.name, tc.err, err)
 			}
 
-			editEndpointInConfig(t, filepath.Join(initDir, "config.yaml"), fmt.Sprintf("http://localhost:%s", hasuraPort))
+			editEndpointInConfig(
+				t,
+				filepath.Join(initDir, "config.yaml"),
+				"http://localhost:"+hasuraPort,
+			)
 		})
 	}
 }

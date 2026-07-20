@@ -1,13 +1,11 @@
 package statestore
 
 import (
-	"io/ioutil"
+	"io"
 	"testing"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/catalogstate"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	"github.com/stretchr/testify/assert"
@@ -115,7 +113,7 @@ func TestCLICatalogState_Set(t *testing.T) {
 			if tt.wantErr {
 				return
 			}
-			b, err := ioutil.ReadAll(got)
+			b, err := io.ReadAll(got)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.want, string(b))
 		})

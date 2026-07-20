@@ -28,13 +28,12 @@ import (
 
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
-
 	"github.com/spf13/cobra"
 )
 
 var validPluginFilenamePrefixes = []string{"hasura"}
 
-// NewPluginsCmd returns the plugins command
+// NewPluginsCmd returns the plugins command.
 func NewPluginsCmd(ec *cli.ExecutionContext) *cobra.Command {
 	pluginsCmd := &cobra.Command{
 		Use:          "plugins",
@@ -52,8 +51,12 @@ func NewPluginsCmd(ec *cli.ExecutionContext) *cobra.Command {
 			}
 
 			if err := ec.PluginsConfig.Repo.EnsureCloned(); err != nil {
-				return errors.E(op, fmt.Errorf("pulling latest plugins list from internet failed: %w", err))
+				return errors.E(
+					op,
+					fmt.Errorf("pulling latest plugins list from internet failed: %w", err),
+				)
 			}
+
 			return nil
 		},
 	}
@@ -63,6 +66,7 @@ func NewPluginsCmd(ec *cli.ExecutionContext) *cobra.Command {
 		newPluginsUnInstallCmd(ec),
 		newPluginsUpgradeCmd(ec),
 	)
+
 	return pluginsCmd
 }
 
@@ -83,7 +87,7 @@ type PluginHandler interface {
 	Execute(executablePath string, cmdArgs, environment []string) error
 }
 
-// DefaultPluginHandler implements PluginHandler
+// DefaultPluginHandler implements PluginHandler.
 type DefaultPluginHandler struct {
 	ValidPrefixes []string
 }
@@ -96,21 +100,26 @@ func NewDefaultPluginHandler(validPrefixes []string) *DefaultPluginHandler {
 	}
 }
 
-// Lookup implements PluginHandler
+// Lookup implements PluginHandler.
 func (h *DefaultPluginHandler) Lookup(filename string) (string, bool) {
 	for _, prefix := range h.ValidPrefixes {
-		filename := filepath.Join(ec.PluginsConfig.Paths.BinPath(), fmt.Sprintf("%s-%s", prefix, filename))
+		filename := filepath.Join(
+			ec.PluginsConfig.Paths.BinPath(),
+			fmt.Sprintf("%s-%s", prefix, filename),
+		)
+
 		path, err := exec.LookPath(filename)
 		if err != nil || len(path) == 0 {
 			continue
 		}
+
 		return path, true
 	}
 
 	return "", false
 }
 
-// Execute implements PluginHandler
+// Execute implements PluginHandler.
 func (h *DefaultPluginHandler) Execute(executablePath string, cmdArgs, environment []string) error {
 	var op errors.Op = "commands.DefaultPluginHandler.Execute"
 	// Windows does not support exec syscall.
@@ -120,18 +129,22 @@ func (h *DefaultPluginHandler) Execute(executablePath string, cmdArgs, environme
 		cmd.Stderr = os.Stderr
 		cmd.Stdin = os.Stdin
 		cmd.Env = environment
+
 		err := cmd.Run()
 		if err == nil {
 			os.Exit(0)
 		}
+
 		return errors.E(op, err)
 	}
 
 	// invoke cmd binary relaying the environment and args given
 	// append executablePath to cmdArgs, as execve will make first argument the "binary name".
-	if err := syscall.Exec(executablePath, append([]string{executablePath}, cmdArgs...), environment); err != nil {
+	err := syscall.Exec(executablePath, append([]string{executablePath}, cmdArgs...), environment)
+	if err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
@@ -139,13 +152,15 @@ func (h *DefaultPluginHandler) Execute(executablePath string, cmdArgs, environme
 // a plugin executable on the PATH that satisfies the given arguments.
 func HandlePluginCommand(pluginHandler PluginHandler, cmdArgs []string) error {
 	var op errors.Op = "commands.HandlePluginCommand"
+
 	remainingArgs := []string{} // all "non-flag" arguments
 
 	for idx := range cmdArgs {
 		if strings.HasPrefix(cmdArgs[idx], "-") {
 			break
 		}
-		remainingArgs = append(remainingArgs, strings.Replace(cmdArgs[idx], "-", "_", -1))
+
+		remainingArgs = append(remainingArgs, strings.ReplaceAll(cmdArgs[idx], "-", "_"))
 	}
 
 	foundBinaryPath := ""
@@ -155,10 +170,12 @@ func HandlePluginCommand(pluginHandler PluginHandler, cmdArgs []string) error {
 		path, found := pluginHandler.Lookup(strings.Join(remainingArgs, "-"))
 		if !found {
 			remainingArgs = remainingArgs[:len(remainingArgs)-1]
+
 			continue
 		}
 
 		foundBinaryPath = path
+
 		break
 	}
 
@@ -167,7 +184,8 @@ func HandlePluginCommand(pluginHandler PluginHandler, cmdArgs []string) error {
 	}
 
 	// invoke cmd binary relaying the current environment and args given
-	if err := pluginHandler.Execute(foundBinaryPath, cmdArgs[len(remainingArgs):], os.Environ()); err != nil {
+	err := pluginHandler.Execute(foundBinaryPath, cmdArgs[len(remainingArgs):], os.Environ())
+	if err != nil {
 		return errors.E(op, err)
 	}
 
@@ -178,5 +196,6 @@ func limitString(s string, length int) string {
 	if len(s) > length && length > 3 {
 		s = s[:length-3] + "..."
 	}
+
 	return s
 }

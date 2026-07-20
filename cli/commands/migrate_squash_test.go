@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -68,7 +67,10 @@ var _ = Describe("hasura migrate squash", func() {
 		}
 
 		// verify squashed migrations are permanently deleted
-		squashedMigrationsDirectory := filepath.Join(migrationsDirectory, "squashed_1588172669699_to_1588172670820")
+		squashedMigrationsDirectory := filepath.Join(
+			migrationsDirectory,
+			"squashed_1588172669699_to_1588172670820",
+		)
 		Expect(squashedMigrationsDirectory).ShouldNot(BeADirectory())
 
 		// verify squashed migrations are deleted in statestore
@@ -83,19 +85,21 @@ var _ = Describe("hasura migrate squash", func() {
 		}
 
 		// assert contents of squashed migration
-		files, err := ioutil.ReadDir(migrationsDirectory)
+		files, err := os.ReadDir(migrationsDirectory)
 		Expect(err).To(BeNil())
 		Expect(files).NotTo(BeEmpty())
 		for _, f := range files {
 			if strings.Contains(f.Name(), "squashed") {
-				gotUpSQL, err := ioutil.ReadFile(filepath.Join(migrationsDirectory, f.Name(), "up.sql"))
+				gotUpSQL, err := os.ReadFile(filepath.Join(migrationsDirectory, f.Name(), "up.sql"))
 				Expect(err).To(BeNil())
-				gotDownSQL, err := ioutil.ReadFile(filepath.Join(migrationsDirectory, f.Name(), "down.sql"))
+				gotDownSQL, err := os.ReadFile(
+					filepath.Join(migrationsDirectory, f.Name(), "down.sql"),
+				)
 				Expect(err).To(BeNil())
 
-				wantUpSQL, err := ioutil.ReadFile("testdata/migrate-squash-test/want_from.up.sql")
+				wantUpSQL, err := os.ReadFile("testdata/migrate-squash-test/want_from.up.sql")
 				Expect(err).To(BeNil())
-				wantDownSQL, err := ioutil.ReadFile("testdata/migrate-squash-test/want_from.down.sql")
+				wantDownSQL, err := os.ReadFile("testdata/migrate-squash-test/want_from.down.sql")
 				Expect(err).To(BeNil())
 
 				Expect(string(gotUpSQL)).To(Equal(string(wantUpSQL)))
@@ -146,7 +150,10 @@ var _ = Describe("hasura migrate squash", func() {
 		}
 
 		// verify squashed migrations are moved to squashed_1588172668232_1588172668531
-		squashedMigrationsDirectory := filepath.Join(migrationsDirectory, "squashed_1588172668232_to_1588172668531")
+		squashedMigrationsDirectory := filepath.Join(
+			migrationsDirectory,
+			"squashed_1588172668232_to_1588172668531",
+		)
 		for _, migration := range toSquash {
 			Expect(filepath.Join(squashedMigrationsDirectory, migration)).Should(BeADirectory())
 		}
@@ -163,19 +170,24 @@ var _ = Describe("hasura migrate squash", func() {
 		}
 
 		// assert contents of squashed migration
-		files, err := ioutil.ReadDir(migrationsDirectory)
+		files, err := os.ReadDir(migrationsDirectory)
 		Expect(err).To(BeNil())
 		Expect(files).NotTo(BeEmpty())
 		for _, f := range files {
-			if strings.Contains(f.Name(), "squashed") && strings.Contains(f.Name(), "1588172668531") {
-				gotUpSQL, err := ioutil.ReadFile(filepath.Join(migrationsDirectory, f.Name(), "up.sql"))
+			if strings.Contains(f.Name(), "squashed") &&
+				strings.Contains(f.Name(), "1588172668531") {
+				gotUpSQL, err := os.ReadFile(filepath.Join(migrationsDirectory, f.Name(), "up.sql"))
 				Expect(err).To(BeNil())
-				gotDownSQL, err := ioutil.ReadFile(filepath.Join(migrationsDirectory, f.Name(), "down.sql"))
+				gotDownSQL, err := os.ReadFile(
+					filepath.Join(migrationsDirectory, f.Name(), "down.sql"),
+				)
 				Expect(err).To(BeNil())
 
-				wantUpSQL, err := ioutil.ReadFile("testdata/migrate-squash-test/want_from_to.up.sql")
+				wantUpSQL, err := os.ReadFile("testdata/migrate-squash-test/want_from_to.up.sql")
 				Expect(err).To(BeNil())
-				wantDownSQL, err := ioutil.ReadFile("testdata/migrate-squash-test/want_from_to.down.sql")
+				wantDownSQL, err := os.ReadFile(
+					"testdata/migrate-squash-test/want_from_to.down.sql",
+				)
 				Expect(err).To(BeNil())
 
 				Expect(string(gotUpSQL)).To(Equal(string(wantUpSQL)))
@@ -189,29 +201,54 @@ var _ = Describe("hasura migrate squash", func() {
 	var teardown func()
 	BeforeEach(func() {
 		projectDirectoryLatestConfigV3 = testutil.RandDirName()
-		hgeEndPortLatest, teardownHGELatest := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
+		hgeEndPortLatest, teardownHGELatest := testutil.StartHasura(
+			GinkgoT(),
+			testutil.HasuraDockerImage,
+		)
 		hgeEndpointLatest := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPortLatest)
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
 			Args: []string{"init", projectDirectoryLatestConfigV3},
 		})
-		editEndpointInConfig(filepath.Join(projectDirectoryLatestConfigV3, defaultConfigFilename), hgeEndpointLatest)
-		copyMigrationsToProjectDirectory(projectDirectoryLatestConfigV3, "testdata/migrate-squash-test/migrations", "default")
+		editEndpointInConfig(
+			filepath.Join(projectDirectoryLatestConfigV3, defaultConfigFilename),
+			hgeEndpointLatest,
+		)
+		copyMigrationsToProjectDirectory(
+			projectDirectoryLatestConfigV3,
+			"testdata/migrate-squash-test/migrations",
+			"default",
+		)
 
 		projectDirectoryLatestConfigV2 = testutil.RandDirName()
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
 			Args: []string{"init", projectDirectoryLatestConfigV2, "--version", "2"},
 		})
-		editEndpointInConfig(filepath.Join(projectDirectoryLatestConfigV2, defaultConfigFilename), hgeEndpointLatest)
-		copyMigrationsToProjectDirectory(projectDirectoryLatestConfigV2, "testdata/migrate-squash-test/migrations")
+		editEndpointInConfig(
+			filepath.Join(projectDirectoryLatestConfigV2, defaultConfigFilename),
+			hgeEndpointLatest,
+		)
+		copyMigrationsToProjectDirectory(
+			projectDirectoryLatestConfigV2,
+			"testdata/migrate-squash-test/migrations",
+		)
 
 		projectDirectoryV13 = testutil.RandDirName()
-		hgeEndPortV13, teardownHGEV13 := testutil.StartHasura(GinkgoT(), "hasura/graphql-engine:v1.3.3")
+		hgeEndPortV13, teardownHGEV13 := testutil.StartHasura(
+			GinkgoT(),
+			"hasura/graphql-engine:v1.3.3",
+		)
 		hgeEndpointV13 := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPortV13)
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
 			Args: []string{"init", projectDirectoryV13, "--version", "2"},
 		})
-		editEndpointInConfig(filepath.Join(projectDirectoryV13, defaultConfigFilename), hgeEndpointV13)
-		copyMigrationsToProjectDirectory(projectDirectoryV13, "testdata/migrate-squash-test/migrations")
+		editEndpointInConfig(
+			filepath.Join(projectDirectoryV13, defaultConfigFilename),
+			hgeEndpointV13,
+		)
+		copyMigrationsToProjectDirectory(
+			projectDirectoryV13,
+			"testdata/migrate-squash-test/migrations",
+		)
 
 		teardown = func() {
 			os.RemoveAll(projectDirectoryLatestConfigV3)
@@ -226,8 +263,16 @@ var _ = Describe("hasura migrate squash", func() {
 
 	It("can squash the migrations in local project dir", func() {
 		Context("config v3", func() {
-			testFromFlag(projectDirectoryLatestConfigV3, []string{"--database-name", "default"}, "default")
-			testToFlag(projectDirectoryLatestConfigV3, []string{"--database-name", "default"}, "default")
+			testFromFlag(
+				projectDirectoryLatestConfigV3,
+				[]string{"--database-name", "default"},
+				"default",
+			)
+			testToFlag(
+				projectDirectoryLatestConfigV3,
+				[]string{"--database-name", "default"},
+				"default",
+			)
 		})
 		Context("config v2 (latest)", func() {
 			testFromFlag(projectDirectoryLatestConfigV2, nil, "")

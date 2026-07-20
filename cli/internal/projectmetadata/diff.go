@@ -15,7 +15,9 @@ type PrintContextRichDiffBetweenProjectDirectoriesOpts struct {
 	DisableColor               bool
 }
 
-func PrintContextRichDiffBetweenProjectDirectories(opts PrintContextRichDiffBetweenProjectDirectoriesOpts) error {
+func PrintContextRichDiffBetweenProjectDirectories(
+	opts PrintContextRichDiffBetweenProjectDirectoriesOpts,
+) error {
 	fromObjects := GetMetadataObjectsWithDir(opts.EC, opts.FromDirectory)
 	toObjects := GetMetadataObjectsWithDir(opts.EC, opts.ToDirectory)
 
@@ -30,10 +32,12 @@ func PrintContextRichDiffBetweenProjectDirectories(opts PrintContextRichDiffBetw
 			W:            opts.Writer,
 			DisableColor: opts.DisableColor,
 		}
+
 		err := fromObject.WriteDiff(diffOpts)
 		if err != nil {
 			opts.EC.Logger.Error(err)
 		}
 	}
+
 	return nil
 }

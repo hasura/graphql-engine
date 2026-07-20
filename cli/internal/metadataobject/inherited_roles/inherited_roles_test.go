@@ -1,16 +1,15 @@
 package inheritedroles
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
 
 	goyaml "github.com/goccy/go-yaml"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
-
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 func TestInheritedRolesConfig_Build(t *testing.T) {
@@ -52,9 +51,9 @@ func TestInheritedRolesConfig_Build(t *testing.T) {
 				assert.NoError(t, err)
 
 				// uncomment following lines to update golden file
-				//assert.NoError(t, ioutil.WriteFile(tt.wantGolden, jsonbs, os.ModePerm))
+				// assert.NoError(t, os.WriteFile(tt.wantGolden, jsonbs, os.ModePerm))
 
-				wantbs, err := ioutil.ReadFile(tt.wantGolden)
+				wantbs, err := os.ReadFile(tt.wantGolden)
 				assert.NoError(t, err)
 				assert.Equal(t, string(wantbs), string(jsonbs))
 			}
@@ -88,7 +87,7 @@ func TestInheritedRolesConfig_Export(t *testing.T) {
 			},
 			args{
 				metadata: func() map[string]yaml.Node {
-					bs, err := ioutil.ReadFile("testdata/export_test/t1/metadata.json")
+					bs, err := os.ReadFile("testdata/export_test/t1/metadata.json")
 					assert.NoError(t, err)
 					yamlbs, err := metadatautil.JSONToYAML(bs)
 					assert.NoError(t, err)
@@ -100,7 +99,7 @@ func TestInheritedRolesConfig_Export(t *testing.T) {
 			func() map[string][]byte {
 				m := map[string][]byte{
 					"testdata/metadata/inherited_roles.yaml": func() []byte {
-						bs, err := ioutil.ReadFile("testdata/export_test/t1/want.inherited_roles.yaml")
+						bs, err := os.ReadFile("testdata/export_test/t1/want.inherited_roles.yaml")
 						assert.NoError(t, err)
 						return bs
 					}(),
@@ -123,7 +122,7 @@ func TestInheritedRolesConfig_Export(t *testing.T) {
 				for k, v := range got {
 					assert.Contains(t, tt.want, k)
 					// uncomment to update golden files
-					//assert.NoError(t, ioutil.WriteFile(fmt.Sprintf("testdata/export_test/%v/want.%v", tt.id, filepath.Base(k)), v, os.ModePerm))
+					// assert.NoError(t, os.WriteFile(fmt.Sprintf("testdata/export_test/%v/want.%v", tt.id, filepath.Base(k)), v, os.ModePerm))
 
 					assert.Equalf(t, string(tt.want[k]), string(v), "%v", k)
 				}

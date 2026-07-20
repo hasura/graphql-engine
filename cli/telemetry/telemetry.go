@@ -1,16 +1,20 @@
 package telemetry
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"io"
+	"net/http"
 	"runtime"
 	"sync"
 	"time"
 
-	"github.com/Masterminds/semver"
-	"github.com/parnurzeal/gorequest"
+	"github.com/Masterminds/semver/v3"
 	"github.com/sirupsen/logrus"
 )
 
-// Waiter waits for telemetry ops to complete, if required
+// Waiter waits for telemetry ops to complete, if required.
 var Waiter sync.WaitGroup
 
 // Endpoint is where telemetry data is sent.
@@ -20,11 +24,12 @@ const Endpoint = "https://telemetry.hasura.io/v1/http"
 var Topic = "cli_test"
 
 type requestPayload struct {
+	Data
+
 	Topic string `json:"topic"`
-	Data  `json:"data"`
 }
 
-// Data holds all info collected and transmitted
+// Data holds all info collected and transmitted.
 type Data struct {
 	// UUID used for telemetry, generated on first run.
 	UUID string `json:"uuid"`
@@ -54,7 +59,7 @@ type Data struct {
 	Error error `json:"error"`
 
 	// Any additional payload information.
-	Payload map[string]interface{} `json:"payload"`
+	Payload map[string]any `json:"payload"`
 
 	// Additional objects - mandatory
 	Logger *logrus.Logger `json:"-"`
@@ -66,7 +71,7 @@ type Data struct {
 	CanBeam bool `json:"-"`
 }
 
-// BuildEvent returns a Data object which represent a telemetry event
+// BuildEvent returns a Data object which represent a telemetry event.
 func BuildEvent() *Data {
 	return &Data{
 		OSPlatform: runtime.GOOS,
@@ -76,17 +81,20 @@ func BuildEvent() *Data {
 	}
 }
 
-// Beam the telemetry data
+// Beam the telemetry data.
 func (d *Data) Beam() {
 	// to be on the safe side, create a new logger if a logger
 	// is not passed
 	if d.Logger == nil {
 		d.Logger = logrus.New()
 	}
+
 	if !d.CanBeam {
 		d.Logger.Debugf("telemetry: disabled, not beaming any data")
+
 		return
 	}
+
 	if !d.IsBeamed {
 		beam(d, d.Logger)
 	} else {
@@ -99,6 +107,7 @@ func getTopic(v string) string {
 	if _, err := semver.NewVersion(v); err == nil {
 		topic = "cli"
 	}
+
 	return topic
 }
 
@@ -109,16 +118,42 @@ func beam(d *Data, log *logrus.Logger) {
 		Data:  *d,
 	}
 	tick := time.Now()
-	_, _, err := gorequest.New().
-		Post(Endpoint).
-		Timeout(2 * time.Second).
-		Send(p).
-		End()
+
+	rawBytes, err := json.Marshal(p)
 	if err != nil {
 		log.Debugf("telemetry: beaming payload failed: %v", err)
-	} else {
-		tock := time.Now()
-		delta := tock.Sub(tick)
-		log.WithField("isError", d.IsError).WithField("time", delta.String()).Debug("telemetry: beamed")
+
+		return
 	}
+
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Minute)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodPost,
+		Endpoint,
+		bytes.NewBuffer(rawBytes),
+	)
+	if err != nil {
+		log.Debugf("telemetry: beaming payload failed: %v", err)
+
+		return
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Debugf("telemetry: beaming payload failed: %v", err)
+
+		return
+	}
+
+	if resp.Body != nil {
+		_, _ = io.Copy(io.Discard, resp.Body)
+		_ = resp.Body.Close()
+	}
+
+	tock := time.Now()
+	delta := tock.Sub(tick)
+	log.WithField("isError", d.IsError).WithField("time", delta.String()).Debug("telemetry: beamed")
 }

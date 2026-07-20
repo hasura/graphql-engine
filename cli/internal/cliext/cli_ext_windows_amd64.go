@@ -1,5 +1,4 @@
-// +build windows
-// +build amd64
+//go:build windows && amd64
 
 package cliext
 

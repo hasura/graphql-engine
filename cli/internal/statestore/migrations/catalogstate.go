@@ -9,27 +9,32 @@ import (
 )
 
 // from v1.4 clients are expected to make use of the catalog API
-// rather than assuming a SQL backend for metadata storage
+// rather than assuming a SQL backend for metadata storage.
 type CatalogStateStore struct {
 	c *statestore.CLICatalogState
 }
 
 func (m *CatalogStateStore) getCLIState() (*statestore.CLIState, error) {
 	var op errors.Op = "migrations.CatalogStateStore.getCLIState"
+
 	clistate, err := m.c.Get()
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
+
 	clistate.Init()
+
 	return clistate, nil
 }
 
 func (m *CatalogStateStore) setCLIState(state statestore.CLIState) error {
 	var op errors.Op = "migrations.CatalogStateStore.setCLIState"
+
 	_, err := m.c.Set(state)
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
@@ -44,11 +49,14 @@ func (m *CatalogStateStore) InsertVersion(database string, version int64) error 
 	if err != nil {
 		return errors.E(op, err)
 	}
-	versionString := fmt.Sprintf("%d", version)
+
+	versionString := strconv.FormatInt(version, 10)
 	state.SetMigration(database, versionString, false)
+
 	if err := m.setCLIState(*state); err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
@@ -59,25 +67,33 @@ func (m *CatalogStateStore) SetVersion(database string, version int64, dirty boo
 	if err != nil {
 		return errors.E(op, err)
 	}
-	versionString := fmt.Sprintf("%d", version)
+
+	versionString := strconv.FormatInt(version, 10)
 	state.SetMigration(database, versionString, dirty)
+
 	if err := m.setCLIState(*state); err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
 func (m *CatalogStateStore) RemoveVersion(database string, version int64) error {
 	var op errors.Op = "migrations.CatalogStateStore.RemoveVersion"
-	versionString := fmt.Sprintf("%d", version)
+
+	versionString := strconv.FormatInt(version, 10)
+
 	state, err := m.getCLIState()
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	state.UnsetMigration(database, versionString)
+
 	if err := m.setCLIState(*state); err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
@@ -87,33 +103,42 @@ func (m *CatalogStateStore) PrepareMigrationsStateStore(_ string) error {
 
 func (m *CatalogStateStore) GetVersions(database string) (map[uint64]bool, error) {
 	var op errors.Op = "migrations.CatalogStateStore.GetVersions"
+
 	state, err := m.getCLIState()
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
-	var versions = map[uint64]bool{}
+
+	versions := map[uint64]bool{}
+
 	for version, dirty := range state.GetMigrationsByDatabase(database) {
 		parsedVersion, err := strconv.ParseUint(version, 10, 64)
 		if err != nil {
 			return nil, errors.E(op, fmt.Errorf("parsing migration version: %w", err))
 		}
+
 		versions[parsedVersion] = dirty
 	}
+
 	return versions, nil
 }
 
 func (m *CatalogStateStore) SetVersions(database string, versions []statestore.Version) error {
 	var op errors.Op = "migrations.CatalogStateStore.SetVersions"
+
 	state, err := m.getCLIState()
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	for _, v := range versions {
-		versionString := fmt.Sprintf("%d", v.Version)
+		versionString := strconv.FormatInt(v.Version, 10)
 		state.SetMigration(database, versionString, v.Dirty)
 	}
+
 	if err := m.setCLIState(*state); err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }

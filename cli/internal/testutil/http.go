@@ -4,18 +4,22 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
 func SendHTTPRequestWithFileAsBody(t *testing.T, filepath, url string) *http.Response {
-	b, err := ioutil.ReadFile(filepath)
+	t.Helper()
+
+	b, err := os.ReadFile(filepath)
 	require.NoError(t, err)
-	var body map[string]interface{}
+
+	var body map[string]any
+
 	err = json.Unmarshal(b, &body)
 	require.NoError(t, err)
 
@@ -28,9 +32,12 @@ func SendHTTPRequestWithFileAsBody(t *testing.T, filepath, url string) *http.Res
 	return resp
 }
 
-func NewRequest(t *testing.T, method, urlStr string, body interface{}) *http.Request {
+func NewRequest(t *testing.T, method, urlStr string, body any) *http.Request {
+	t.Helper()
+
 	u, err := url.ParseRequestURI(urlStr)
 	require.NoError(t, err)
+
 	var buf io.ReadWriter
 	if body != nil {
 		buf = &bytes.Buffer{}
@@ -46,8 +53,10 @@ func NewRequest(t *testing.T, method, urlStr string, body interface{}) *http.Req
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
+
 	if len(TestAdminSecret) > 0 {
-		req.Header.Set("x-hasura-admin-secret", TestAdminSecret)
+		req.Header.Set("X-Hasura-Admin-Secret", TestAdminSecret)
 	}
+
 	return req
 }

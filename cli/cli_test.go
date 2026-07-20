@@ -18,7 +18,7 @@ func TestExecutionContext_readAdminSecret(t *testing.T) {
 		os.Setenv(adminSecretEnv, oldAdminSecret)
 	}()
 	fs := afero.NewMemMapFs()
-	require.NoError(t, fs.MkdirAll("/project", 0755))
+	require.NoError(t, fs.MkdirAll("/project", 0o755))
 	tests := []struct {
 		name             string
 		before           func() func()
@@ -31,7 +31,10 @@ func TestExecutionContext_readAdminSecret(t *testing.T) {
 			"can set admin secret from config file",
 			func() func() {
 				configFile := `admin_secret: test`
-				require.NoError(t, afero.WriteFile(fs, "/project/config.yml", []byte(configFile), 0644))
+				require.NoError(
+					t,
+					afero.WriteFile(fs, "/project/config.yml", []byte(configFile), 0o644),
+				)
 				_, err := fs.Stat("/project/config.yml")
 				require.NoError(t, err)
 				return func() {}
@@ -45,7 +48,10 @@ func TestExecutionContext_readAdminSecret(t *testing.T) {
 			"can set admin secrets from config file",
 			func() func() {
 				configFile := `admin_secrets: '["s1","s2","s3"]'`
-				require.NoError(t, afero.WriteFile(fs, "/project/config.yml", []byte(configFile), 0644))
+				require.NoError(
+					t,
+					afero.WriteFile(fs, "/project/config.yml", []byte(configFile), 0o644),
+				)
 				_, err := fs.Stat("/project/config.yml")
 				require.NoError(t, err)
 				return func() {}
@@ -58,7 +64,7 @@ func TestExecutionContext_readAdminSecret(t *testing.T) {
 		{
 			"can set admin secret from env variable",
 			func() func() {
-				require.NoError(t, afero.WriteFile(fs, "/project/config.yml", []byte(""), 0644))
+				require.NoError(t, afero.WriteFile(fs, "/project/config.yml", []byte(""), 0o644))
 				oldEnvValue := os.Getenv(adminSecretEnv)
 				teardown := func() {
 					os.Setenv(adminSecretEnv, oldEnvValue)
@@ -74,7 +80,7 @@ func TestExecutionContext_readAdminSecret(t *testing.T) {
 		{
 			"can set admin secrets from env variable",
 			func() func() {
-				require.NoError(t, afero.WriteFile(fs, "/project/config.yml", []byte(""), 0644))
+				require.NoError(t, afero.WriteFile(fs, "/project/config.yml", []byte(""), 0o644))
 				adminSecretEnv := "HASURA_GRAPHQL_ADMIN_SECRETS"
 				oldEnvValue := os.Getenv(adminSecretEnv)
 				teardown := func() {
@@ -107,7 +113,6 @@ func TestExecutionContext_readAdminSecret(t *testing.T) {
 			}
 			assert.Equal(t, tt.wantAdminSecret, ec.Config.AdminSecret)
 			assert.Equal(t, tt.wantAdminSecrets, ec.Config.AdminSecrets)
-
 		})
 	}
 }

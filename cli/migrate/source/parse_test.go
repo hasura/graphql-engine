@@ -3,9 +3,8 @@ package source
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParse(t *testing.T) {
@@ -88,61 +87,73 @@ func TestParse(t *testing.T) {
 		{
 			name:    "-1_foobar.up.sql",
 			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &errors.Error{}, err)
-				e := err.(*errors.Error)
-				require.Equal(t, e.Err, ErrParse)
-			}),
+			assertErr: require.ErrorAssertionFunc(
+				func(tt require.TestingT, err error, i ...interface{}) {
+					require.IsType(t, &errors.Error{}, err)
+					e := err.(*errors.Error)
+					require.Equal(t, e.Err, ErrParse)
+				},
+			),
 			expectMigration: nil,
 		},
 		{
 			name:    "foobar.up.sql",
 			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &errors.Error{}, err)
-				e := err.(*errors.Error)
-				require.Equal(t, e.Err, ErrParse)
-			}),
+			assertErr: require.ErrorAssertionFunc(
+				func(tt require.TestingT, err error, i ...interface{}) {
+					require.IsType(t, &errors.Error{}, err)
+					e := err.(*errors.Error)
+					require.Equal(t, e.Err, ErrParse)
+				},
+			),
 			expectMigration: nil,
 		},
 		{
 			name:    "1.up.sql",
 			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &errors.Error{}, err)
-				e := err.(*errors.Error)
-				require.Equal(t, e.Err, ErrParse)
-			}),
+			assertErr: require.ErrorAssertionFunc(
+				func(tt require.TestingT, err error, i ...interface{}) {
+					require.IsType(t, &errors.Error{}, err)
+					e := err.(*errors.Error)
+					require.Equal(t, e.Err, ErrParse)
+				},
+			),
 			expectMigration: nil,
 		},
 		{
 			name:    "1_foobar.sql",
 			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &errors.Error{}, err)
-				e := err.(*errors.Error)
-				require.Equal(t, e.Err, ErrParse)
-			}),
+			assertErr: require.ErrorAssertionFunc(
+				func(tt require.TestingT, err error, i ...interface{}) {
+					require.IsType(t, &errors.Error{}, err)
+					e := err.(*errors.Error)
+					require.Equal(t, e.Err, ErrParse)
+				},
+			),
 			expectMigration: nil,
 		},
 		{
 			name:    "1_foobar.up",
 			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &errors.Error{}, err)
-				e := err.(*errors.Error)
-				require.Equal(t, e.Err, ErrParse)
-			}),
+			assertErr: require.ErrorAssertionFunc(
+				func(tt require.TestingT, err error, i ...interface{}) {
+					require.IsType(t, &errors.Error{}, err)
+					e := err.(*errors.Error)
+					require.Equal(t, e.Err, ErrParse)
+				},
+			),
 			expectMigration: nil,
 		},
 		{
 			name:    "1_foobar.down",
 			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &errors.Error{}, err)
-				e := err.(*errors.Error)
-				require.Equal(t, e.Err, ErrParse)
-			}),
+			assertErr: require.ErrorAssertionFunc(
+				func(tt require.TestingT, err error, i ...interface{}) {
+					require.IsType(t, &errors.Error{}, err)
+					e := err.(*errors.Error)
+					require.Equal(t, e.Err, ErrParse)
+				},
+			),
 			expectMigration: nil,
 		},
 	}

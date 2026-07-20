@@ -13,7 +13,6 @@ import (
 )
 
 var _ = Describe("hasura metadata inconsistency drop", func() {
-
 	var projectDirectory string
 	var sourceName string
 	var teardown func()
@@ -22,7 +21,12 @@ var _ = Describe("hasura metadata inconsistency drop", func() {
 		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
 		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
 		sourceName = randomdata.SillyName()
-		connectionString, teardownPG := testutil.AddDatabaseToHasura(GinkgoT(), hgeEndpoint, sourceName, "postgres")
+		connectionString, teardownPG := testutil.AddDatabaseToHasura(
+			GinkgoT(),
+			hgeEndpoint,
+			sourceName,
+			"postgres",
+		)
 		copyTestConfigV3Project(projectDirectory)
 		editEndpointInConfig(filepath.Join(projectDirectory, defaultConfigFilename), hgeEndpoint)
 		editSourceNameInConfigV3ProjectTemplate(projectDirectory, sourceName, connectionString)
@@ -47,7 +51,9 @@ var _ = Describe("hasura metadata inconsistency drop", func() {
 				WorkingDirectory: projectDirectory,
 			})
 			Eventually(session, timeout).Should(Exit(1))
-			Expect(session.Err.Contents()).Should(ContainSubstring("metadata is inconsistent, use 'hasura metadata ic list' command to see the inconsistent objects"))
+			Expect(
+				session.Err.Contents(),
+			).Should(ContainSubstring("metadata is inconsistent, use 'hasura metadata ic list' command to see the inconsistent objects"))
 
 			testutil.RunCommandAndSucceed(testutil.CmdOpts{
 				Args:             []string{"metadata", "inconsistency", "drop"},

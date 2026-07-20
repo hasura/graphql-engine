@@ -6,7 +6,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/allowlist"
 	apilimits "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/api_limits"
-	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/backend_configs"
+	backendconfigs "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/backend_configs"
 	crontriggers "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/cron_triggers"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/functions"
 	graphqlschemaintrospection "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/graphql_schema_introspection"
@@ -29,11 +29,14 @@ func GetMetadataObjectsWithDir(ec *cli.ExecutionContext, dir ...string) metadata
 	} else {
 		metadataDir = dir[0]
 	}
+
 	err := ec.Version.GetServerFeatureFlags()
 	if err != nil {
 		ec.Logger.Errorf("error determining server feature flags: %v", err)
 	}
+
 	objects := make(metadataobject.Objects, 0)
+
 	if ec.Config.Version >= cli.V2 && metadataDir != "" {
 		// hasura core metadata objects
 		if ec.HasMetadataV3 {
@@ -50,6 +53,7 @@ func GetMetadataObjectsWithDir(ec *cli.ExecutionContext, dir ...string) metadata
 			objects = append(objects, tables.New(ec, metadataDir))
 			objects = append(objects, functions.New(ec, metadataDir))
 		}
+
 		objects = append(objects, remoteschemas.New(ec, metadataDir))
 		objects = append(objects, querycollections.New(ec, metadataDir))
 		objects = append(objects, allowlist.New(ec, metadataDir))

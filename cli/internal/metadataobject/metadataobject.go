@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,9 +13,8 @@ import (
 	"github.com/gonvenience/ytbx"
 	"github.com/hasura/graphql-engine/cli/v2/internal/diff"
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 const (
@@ -49,10 +47,11 @@ type WriteDiffOpts struct {
 }
 
 // GetEncoder is the YAML encoder which is expected to be used in all implementations
-// of Object. This helps bring uniformity in the format of generated YAML
+// of Object. This helps bring uniformity in the format of generated YAML.
 func GetEncoder(destination io.Writer) *yaml.Encoder {
 	encoder := yaml.NewEncoder(destination)
 	encoder.SetIndent(2)
+
 	return encoder
 }
 
@@ -65,7 +64,7 @@ type Object interface {
 	// "remote_schemas": []yaml.Node
 	// since there is a chance that this function can return a yaml.Node. The return value is not expected to
 	// directly be unmarshalled to JSON using json.Marshal
-	Build() (map[string]interface{}, error)
+	Build() (map[string]any, error)
 	// Export is responsible for writing the yaml Node(s) for the metadata object
 	// to project directory
 	// Export expects a map[string]yaml.Node specifically rather than a builtin data structure like
@@ -107,17 +106,20 @@ type Object interface {
 	BaseDirectory() string
 }
 
-var ErrMetadataFileNotFound = fmt.Errorf("metadata file not found")
+var ErrMetadataFileNotFound = stderrors.New("metadata file not found")
 
 func ReadMetadataFile(filename string) ([]byte, error) {
 	var op errors.Op = "metadataobject.ReadMetadataFile"
-	bytes, err := ioutil.ReadFile(filename)
+
+	bytes, err := os.ReadFile(filename)
 	if err != nil && stderrors.Is(err, fs.ErrNotExist) {
 		return nil, errors.E(op, ErrMetadataFileNotFound)
 	}
+
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
+
 	return bytes, nil
 }
 
@@ -160,6 +162,7 @@ func (e *errParsingMetadataObjectFile) ErrorContext() string {
 	if len(e.context) != 0 {
 		return fmt.Sprintf("context: %v\n", strings.Join(e.context, "\n"))
 	}
+
 	return ""
 }
 
@@ -175,19 +178,24 @@ func (e *errParsingMetadataObjectFile) Error() string {
 
 func (e *errParsingMetadataObjectFile) Unwrap() error { return e.err }
 
-// DefaultGetFiles is a default implementation for Object.GetFiles
+// DefaultGetFiles is a default implementation for Object.GetFiles.
 func DefaultGetFiles(yamlFile string) ([]string, error) {
 	var op errors.Op = "metadataobject.DefaultGetFiles"
-	rootFileContents, err := ioutil.ReadFile(yamlFile)
+
+	rootFileContents, err := os.ReadFile(yamlFile)
 	if err != nil {
 		if stderrors.Is(err, os.ErrNotExist) {
 			return nil, nil
 		}
+
 		return nil, errors.E(op, err)
 	}
+
 	var rootIsMapArray []map[string]yaml.Node
+
 	files := []string{yamlFile}
 	parentDir := filepath.Dir(yamlFile)
+
 	err = yaml.Unmarshal(rootFileContents, &rootIsMapArray)
 	if err == nil {
 		for _, item := range rootIsMapArray {
@@ -196,11 +204,13 @@ func DefaultGetFiles(yamlFile string) ([]string, error) {
 				if err != nil {
 					return nil, errors.E(op, err)
 				}
+
 				files = append(files, nodeFiles...)
 			}
 		}
 	} else {
 		var rootIsMap map[string]yaml.Node
+
 		err = yaml.Unmarshal(rootFileContents, &rootIsMap)
 		if err == nil {
 			for _, node := range rootIsMap {
@@ -208,6 +218,7 @@ func DefaultGetFiles(yamlFile string) ([]string, error) {
 				if err != nil {
 					return nil, errors.E(op, err)
 				}
+
 				files = append(files, nodeFiles...)
 			}
 		} else {
@@ -219,41 +230,51 @@ func DefaultGetFiles(yamlFile string) ([]string, error) {
 }
 
 type DefaultWriteDiffOpts struct {
-	From Object
 	WriteDiffOpts
+
+	From                 Object
 	ExcludeFilesPatterns []string
 }
 
-// DefaultWriteDiff is the default implementation for Object.WriteDiff
+// DefaultWriteDiff is the default implementation for Object.WriteDiff.
 func DefaultWriteDiff(opts DefaultWriteDiffOpts) error {
-	var op errors.Op = "metadataobject.DefaultWriteDiff"
-	var err error
-	var fromFiles, toFiles []string
+	var (
+		op                 errors.Op = "metadataobject.DefaultWriteDiff"
+		err                error
+		fromFiles, toFiles []string
+	)
 	// we want to diff between the current object and to
 	fromFiles, err = opts.From.GetFiles()
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	toFiles, err = opts.To.GetFiles()
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	fromFiles, err = cleanExcludedPatterns(fromFiles, opts.ExcludeFilesPatterns)
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	toFiles, err = cleanExcludedPatterns(toFiles, opts.ExcludeFilesPatterns)
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	fromFilesMap, toFilesMap := map[string]diffFile{}, map[string]diffFile{}
+
 	for _, file := range fromFiles {
 		relativePath, err := filepath.Rel(opts.From.BaseDirectory(), file)
 		if err != nil {
 			return errors.E(op, err)
 		}
+
 		fromFilesMap[relativePath] = diffFile{false, file, relativePath}
 	}
+
 	for _, file := range toFiles {
 		relativePath, err := filepath.Rel(opts.To.BaseDirectory(), file)
 		if err != nil {
@@ -262,12 +283,15 @@ func DefaultWriteDiff(opts DefaultWriteDiffOpts) error {
 
 		toFilesMap[relativePath] = diffFile{false, file, relativePath}
 	}
+
 	for _, file := range fromFiles {
 		fromFileRelativeFilepath, err := filepath.Rel(opts.From.BaseDirectory(), file)
 		if err != nil {
 			return errors.E(op, err)
 		}
+
 		fromFileDetails, foundFromRelativeFilepath := fromFilesMap[fromFileRelativeFilepath]
+
 		toFileDetails, foundToFileRelativeFilepath := toFilesMap[fromFileRelativeFilepath]
 		if foundFromRelativeFilepath && foundToFileRelativeFilepath {
 			if diff.IsYAMLFile(fromFileRelativeFilepath) {
@@ -275,92 +299,127 @@ func DefaultWriteDiff(opts DefaultWriteDiffOpts) error {
 				if err != nil {
 					return errors.E(op, err)
 				}
+
 				toYAML, err := ytbx.LoadFile(toFileDetails.fullFilePath)
 				if err != nil {
 					return errors.E(op, err)
 				}
+
 				toFileDetails.processed = true
 				toFilesMap[fromFileRelativeFilepath] = toFileDetails
+
 				_, err = diff.YamlDiff(fromYAML, toYAML, opts.W, fromFileRelativeFilepath)
 				if err != nil {
 					return errors.E(op, err)
 				}
 			} else {
-				fromFileBytes, err := ioutil.ReadFile(fromFileDetails.fullFilePath)
+				fromFileBytes, err := os.ReadFile(fromFileDetails.fullFilePath)
 				if err != nil {
 					return errors.E(op, err)
 				}
-				toFileBytes, err := ioutil.ReadFile(toFileDetails.fullFilePath)
+
+				toFileBytes, err := os.ReadFile(toFileDetails.fullFilePath)
 				if err != nil {
 					return errors.E(op, err)
 				}
+
 				toFileDetails.processed = true
 				toFilesMap[fromFileRelativeFilepath] = toFileDetails
+
 				var buf bytes.Buffer
-				diffCount, err := diff.MyersDiff(string(fromFileBytes), string(toFileBytes), fromFileRelativeFilepath, fromFileRelativeFilepath, &buf, opts.DisableColor)
+
+				diffCount, err := diff.MyersDiff(
+					string(fromFileBytes),
+					string(toFileBytes),
+					fromFileRelativeFilepath,
+					fromFileRelativeFilepath,
+					&buf,
+					opts.DisableColor,
+				)
 				if err != nil {
 					return errors.E(op, err)
 				}
+
 				if diffCount > 0 {
 					fmt.Fprintln(opts.W, fromFileRelativeFilepath)
+
 					_, err := io.Copy(opts.W, &buf)
 					if err != nil {
 						return errors.E(op, err)
 					}
+
 					fmt.Fprintln(opts.W)
 				}
 			}
 		} else {
-			if err := diffWithEmptyFile(fromFileDetails, diffDirectionFrom, opts.W, opts.DisableColor); err != nil {
+			err := diffWithEmptyFile(fromFileDetails, diffDirectionFrom, opts.W, opts.DisableColor)
+			if err != nil {
 				return errors.E(op, err)
 			}
 		}
+
 		fromFileDetails.processed = true
 		fromFilesMap[fromFileRelativeFilepath] = fromFileDetails
 	}
+
 	for _, file := range toFiles {
 		toFileRelativeFilepath, err := filepath.Rel(opts.To.BaseDirectory(), file)
 		if err != nil {
 			return errors.E(op, err)
 		}
+
 		if !toFilesMap[toFileRelativeFilepath].processed {
-			if err := diffWithEmptyFile(toFilesMap[toFileRelativeFilepath], diffDirectionTo, opts.W, opts.DisableColor); err != nil {
+			err := diffWithEmptyFile(
+				toFilesMap[toFileRelativeFilepath],
+				diffDirectionTo,
+				opts.W,
+				opts.DisableColor,
+			)
+			if err != nil {
 				return errors.E(op, err)
 			}
 		}
 	}
+
 	return nil
 }
 
 // createEmptyYamlFileAccordingToContent helps to generate a ytbx.InputFile
 // if file is a document which contains YAML Sequence nodes it'll return a YAML
-// file of an empty sequence ([]), otherwise it returns an MappingNode
+// file of an empty sequence ([]), otherwise it returns an MappingNode.
 func createEmptyYamlFileAccordingToContent(file ytbx.InputFile) ytbx.InputFile {
-	//Empty yaml data
+	// Empty yaml data
 	var documentNode *yaml.Node
 	for _, node := range file.Documents {
 		documentNode = node
+
 		break
 	}
+
 	var contentNode *yaml.Node
 	for _, n := range documentNode.Content {
 		contentNode = n
+
 		break
 	}
-	var content interface{}
+
+	var content any
 	if contentNode != nil && contentNode.Kind == yaml.SequenceNode {
 		content = []map[string]string{}
 	} else {
 		content = map[string]string{}
 	}
+
 	emptyBytes, _ := yaml.Marshal(content)
 	emptyNode, _ := ytbx.LoadYAMLDocuments(emptyBytes)
 	emptyInputFile := ytbx.InputFile{Documents: emptyNode}
+
 	return emptyInputFile
 }
 
 func cleanExcludedPatterns(files []string, patterns []string) ([]string, error) {
 	var cleaned []string
+
 	for _, file := range files {
 		matched := false
 		for _, pattern := range patterns {
@@ -369,10 +428,12 @@ func cleanExcludedPatterns(files []string, patterns []string) ([]string, error) 
 				break
 			}
 		}
+
 		if !matched {
 			cleaned = append(cleaned, file)
 		}
 	}
+
 	return cleaned, nil
 }
 
@@ -389,49 +450,87 @@ type diffFile struct {
 	relativePath string
 }
 
-func diffWithEmptyFile(file diffFile, direction diffDirection, w io.Writer, disableColor bool) error {
+func diffWithEmptyFile(
+	file diffFile,
+	direction diffDirection,
+	w io.Writer,
+	disableColor bool,
+) error {
 	var op errors.Op = "metadataobject.diffWithEmptyFile"
+
 	if diff.IsYAMLFile(file.fullFilePath) {
 		yamlFile, err := ytbx.LoadFile(file.fullFilePath)
 		if err != nil {
 			return errors.E(op, err)
 		}
+
 		if direction == diffDirectionTo {
-			_, err = diff.YamlDiff(createEmptyYamlFileAccordingToContent(yamlFile), yamlFile, w, file.relativePath)
+			_, err = diff.YamlDiff(
+				createEmptyYamlFileAccordingToContent(yamlFile),
+				yamlFile,
+				w,
+				file.relativePath,
+			)
 			if err != nil {
 				return errors.E(op, err)
 			}
 		} else {
-			_, err = diff.YamlDiff(yamlFile, createEmptyYamlFileAccordingToContent(yamlFile), w, file.relativePath)
+			_, err = diff.YamlDiff(
+				yamlFile,
+				createEmptyYamlFileAccordingToContent(yamlFile),
+				w,
+				file.relativePath,
+			)
 			if err != nil {
 				return errors.E(op, err)
 			}
 		}
 	} else {
-		fileBytes, err := ioutil.ReadFile(file.fullFilePath)
+		fileBytes, err := os.ReadFile(file.fullFilePath)
 		if err != nil {
 			return errors.E(op, err)
 		}
 
-		var buf bytes.Buffer
-		var diffCount int
+		var (
+			buf       bytes.Buffer
+			diffCount int
+		)
 		if direction == diffDirectionTo {
-			diffCount, err = diff.MyersDiff("", string(fileBytes), file.relativePath, file.relativePath, &buf, disableColor)
+			diffCount, err = diff.MyersDiff(
+				"",
+				string(fileBytes),
+				file.relativePath,
+				file.relativePath,
+				&buf,
+				disableColor,
+			)
 		} else {
-			diffCount, err = diff.MyersDiff(string(fileBytes), "", file.relativePath, file.relativePath, &buf, disableColor)
+			diffCount, err = diff.MyersDiff(
+				string(fileBytes),
+				"",
+				file.relativePath,
+				file.relativePath,
+				&buf,
+				disableColor,
+			)
 		}
+
 		if err != nil {
 			return errors.E(op, err)
 		}
+
 		if diffCount > 0 {
 			fmt.Fprintln(w, file.relativePath)
+
 			_, err := io.Copy(w, &buf)
 			if err != nil {
 				return errors.E(op, err)
 			}
+
 			fmt.Fprintln(w)
 		}
 	}
+
 	return nil
 }
 
@@ -443,9 +542,14 @@ const (
 )
 
 // DefaultExport is an implementation for Object.Export
-// metadata objects which doesn't require additional customisations can make use of this implementation
-func DefaultExport(object Object, metadata map[string]yaml.Node, errorFunc func(error, ...string) ErrParsingMetadataObject, objectType DefaultObjectType) (map[string][]byte, ErrParsingMetadataObject) {
-	var value interface{}
+// metadata objects which doesn't require additional customisations can make use of this implementation.
+func DefaultExport(
+	object Object,
+	metadata map[string]yaml.Node,
+	errorFunc func(error, ...string) ErrParsingMetadataObject,
+	objectType DefaultObjectType,
+) (map[string][]byte, ErrParsingMetadataObject) {
+	var value any
 	if v, ok := metadata[object.Key()]; ok {
 		value = v
 	} else {
@@ -460,10 +564,12 @@ func DefaultExport(object Object, metadata map[string]yaml.Node, errorFunc func(
 	}
 
 	var buf bytes.Buffer
+
 	err := GetEncoder(&buf).Encode(value)
 	if err != nil {
 		return nil, errorFunc(err)
 	}
+
 	return map[string][]byte{
 		filepath.ToSlash(filepath.Join(object.BaseDirectory(), object.Filename())): buf.Bytes(),
 	}, nil

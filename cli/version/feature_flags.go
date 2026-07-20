@@ -3,8 +3,7 @@ package version
 import (
 	"fmt"
 
-	"github.com/Masterminds/semver"
-
+	"github.com/Masterminds/semver/v3"
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 )
 
@@ -17,13 +16,16 @@ type ServerFeatureFlags struct {
 	HasCronTriggers bool
 }
 
-const adminSecretVersion = "v1.0.0-alpha38"
-const actionVersion = "v1.2.0-beta.1"
-const cronTriggersVersion = "v1.3.0-beta.1"
+const (
+	adminSecretVersion  = "v1.0.0-alpha38"
+	actionVersion       = "v1.2.0-beta.1"
+	cronTriggersVersion = "v1.3.0-beta.1"
+)
 
 // GetServerFeatureFlags returns the feature flags for server.
 func (v *Version) GetServerFeatureFlags() error {
 	var op errors.Op = "version.GetServerFeatureFlags"
+
 	flags := &ServerFeatureFlags{}
 	if v.ServerSemver == nil {
 		flags.HasAccessKey = false
@@ -53,6 +55,8 @@ func (v *Version) GetServerFeatureFlags() error {
 		// check the current version with the constraint
 		flags.HasCronTriggers = cronTriggersConstraint.Check(v.ServerSemver)
 	}
+
 	v.ServerFeatureFlags = flags
+
 	return nil
 }

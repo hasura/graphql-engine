@@ -31,15 +31,21 @@ func newMetadataClearCmd(ec *cli.ExecutionContext) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "RunE")
 			if cmd.CalledAs() == "reset" {
-				opts.EC.Logger.Warn("metadata reset command is deprecated, use metadata clear instead")
+				opts.EC.Logger.Warn(
+					"metadata reset command is deprecated, use metadata clear instead",
+				)
 			}
+
 			opts.EC.Spin("Clearing metadata...")
 			err := opts.Run()
 			opts.EC.Spinner.Stop()
+
 			if err != nil {
 				return errors.E(op, fmt.Errorf("failed to clear metadata: %w", err))
 			}
+
 			opts.EC.Logger.Info("Metadata cleared")
+
 			return nil
 		},
 	}
@@ -52,12 +58,17 @@ type MetadataClearOptions struct {
 }
 
 func (o *MetadataClearOptions) Run() error {
-	var op errors.Op = "commands.MetadataClearOptions.Run"
-	var err error
+	var (
+		op  errors.Op = "commands.MetadataClearOptions.Run"
+		err error
+	)
+
 	metadataHandler := projectmetadata.NewHandlerFromEC(o.EC)
+
 	err = metadataHandler.ResetMetadata()
 	if err != nil {
 		return errors.E(op, fmt.Errorf("cannot clear Metadata: %w", err))
 	}
+
 	return nil
 }

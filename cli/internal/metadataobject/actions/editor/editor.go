@@ -2,11 +2,11 @@ package editor
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
@@ -40,6 +40,7 @@ func GetPreferredEditorFromEnvironment() ([]string, bool) {
 	}
 
 	shell := defaultEnvShell()
+
 	return append(shell, editor), true
 }
 
@@ -57,8 +58,8 @@ func OpenFileInEditor(filename string, resolveEditor PreferredEditorResolver) er
 		return errors.E(op, err)
 	}
 
-	cmdArgs := make([]string, len(args))
-	copy(cmdArgs, args)
+	cmdArgs := slices.Clone(args)
+
 	if shell {
 		last := cmdArgs[len(cmdArgs)-1]
 		cmdArgs[len(cmdArgs)-1] = fmt.Sprintf("%s %q", last, abs)
@@ -70,18 +71,25 @@ func OpenFileInEditor(filename string, resolveEditor PreferredEditorResolver) er
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
+
+	err = cmd.Run()
+	if err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
 // CaptureInputFromEditor opens a temporary file in a text editor and returns
 // the written bytes on success or an error on failure. It handles deletion
 // of the temporary file behind the scenes.
-func CaptureInputFromEditor(resolveEditor PreferredEditorResolver, text, extension string) ([]byte, error) {
+func CaptureInputFromEditor(
+	resolveEditor PreferredEditorResolver,
+	text, extension string,
+) ([]byte, error) {
 	var op errors.Op = "editor.CaptureInputFromEditor"
-	file, err := ioutil.TempFile(os.TempDir(), fmt.Sprintf("*.%s", extension))
+
+	file, err := os.CreateTemp(os.TempDir(), "*."+extension)
 	if err != nil {
 		return []byte{}, errors.E(op, err)
 	}
@@ -91,7 +99,7 @@ func CaptureInputFromEditor(resolveEditor PreferredEditorResolver, text, extensi
 	// Defer removal of the temporary file in case any of the next steps fail.
 	defer os.Remove(filename)
 
-	_, err = file.Write([]byte(text))
+	_, err = file.WriteString(text)
 	if err != nil {
 		return []byte{}, errors.E(op, err)
 	}
@@ -104,7 +112,7 @@ func CaptureInputFromEditor(resolveEditor PreferredEditorResolver, text, extensi
 		return []byte{}, errors.E(op, err)
 	}
 
-	bytes, err := ioutil.ReadFile(filename)
+	bytes, err := os.ReadFile(filename)
 	if err != nil {
 		return []byte{}, errors.E(op, err)
 	}
@@ -117,10 +125,12 @@ func defaultEnvShell() []string {
 	if len(shell) == 0 {
 		shell = platformize(defaultShell, windowsShell)
 	}
+
 	flag := "-c"
 	if shell == windowsShell {
 		flag = "/C"
 	}
+
 	return []string{shell, flag}
 }
 
@@ -128,5 +138,6 @@ func platformize(linux, windows string) string {
 	if runtime.GOOS == "windows" {
 		return windows
 	}
+
 	return linux
 }

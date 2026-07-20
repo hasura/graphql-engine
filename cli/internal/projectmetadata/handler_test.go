@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -14,7 +13,6 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/internal/cliext"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 	"github.com/hasura/graphql-engine/cli/v2/version"
-	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -366,7 +364,7 @@ func TestGenMetadataFromMap(t *testing.T) {
 	testEC := cli.NewExecutionContext()
 	testEC.Version = version.NewCLIVersion(version.DevVersion)
 	testEC.Logger = logrus.New()
-	home, err := homedir.Dir()
+	home, err := os.UserHomeDir()
 	assert.NoError(t, err)
 	testEC.GlobalConfigDir = filepath.Join(home, cli.GlobalConfigDirName)
 	testEC.Config = &cli.Config{Version: cli.V3}
@@ -438,12 +436,18 @@ func TestGenMetadataFromMap(t *testing.T) {
 			goldenFile := filepath.Join("testdata/test-gen-metadata-from-map", tt.id, "want.json")
 
 			// uncomment to update golden file
-			assert.NoError(t, ioutil.WriteFile(goldenFile, buf.Bytes(), os.ModePerm))
+			assert.NoError(t, os.WriteFile(goldenFile, buf.Bytes(), os.ModePerm))
 
-			wantbs, err := ioutil.ReadFile(goldenFile)
+			wantbs, err := os.ReadFile(goldenFile)
 			assert.NoError(t, err)
 
-			assert.Equalf(t, string(wantbs), buf.String(), "GenMetadataFromMap(%v)", tt.args.metadata)
+			assert.Equalf(
+				t,
+				string(wantbs),
+				buf.String(),
+				"GenMetadataFromMap(%v)",
+				tt.args.metadata,
+			)
 		})
 	}
 }
@@ -452,7 +456,7 @@ func TestBuildMetadataErrorStrict(t *testing.T) {
 	testEC := cli.NewExecutionContext()
 	testEC.Version = version.NewCLIVersion(version.DevVersion)
 	testEC.Logger = logrus.New()
-	home, err := homedir.Dir()
+	home, err := os.UserHomeDir()
 	assert.NoError(t, err)
 	testEC.GlobalConfigDir = filepath.Join(home, cli.GlobalConfigDirName)
 	testEC.Config = &cli.Config{Version: cli.V3}
@@ -474,7 +478,9 @@ func TestBuildMetadataErrorStrict(t *testing.T) {
 			"returns correct error type when v3 Metadata files not found",
 			args{
 				h: func() *Handler {
-					metadataDir := filepath.Join("testdata/test-gen-metadata-from-map/") // metadata files don't exist in this folder
+					metadataDir := filepath.Join(
+						"testdata/test-gen-metadata-from-map/",
+					) // metadata files don't exist in this folder
 					testEC.MetadataDir = metadataDir
 					handler := NewHandler(getObjects(metadataDir), nil, nil, logrus.New())
 					assert.NoError(t, err)
@@ -492,7 +498,9 @@ func TestBuildMetadataErrorStrict(t *testing.T) {
 					testEC.Config.Version = cli.V2
 					testEC.HasMetadataV3 = false
 
-					metadataDir := filepath.Join("testdata/test-gen-metadata-from-map/") // metadata files don't exist in this folder
+					metadataDir := filepath.Join(
+						"testdata/test-gen-metadata-from-map/",
+					) // metadata files don't exist in this folder
 					testEC.MetadataDir = metadataDir
 					handler := NewHandler(getObjects(metadataDir), nil, nil, logrus.New())
 					assert.NoError(t, err)

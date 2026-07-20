@@ -37,7 +37,6 @@ func (v *Version) CheckCLIServerCompatibility() (compatible bool, reason string)
 		}
 		// different cli version
 		return false, untaggedBuild
-
 	}
 
 	// tagged server version
@@ -47,12 +46,16 @@ func (v *Version) CheckCLIServerCompatibility() (compatible bool, reason string)
 			if v.CLISemver.Major() < v.ServerSemver.Major() {
 				return false, olderCLIVersion
 			}
+
 			if v.CLISemver.Major() > v.ServerSemver.Major() {
 				return false, versionMismatch
 			}
-			if v.CLISemver.Major() == v.ServerSemver.Major() && v.CLISemver.Minor() != v.ServerSemver.Minor() {
+
+			if v.CLISemver.Major() == v.ServerSemver.Major() &&
+				v.CLISemver.Minor() != v.ServerSemver.Minor() {
 				return true, versionMismatch
 			}
+
 			return true, compatibleCLIAndServer
 		}
 	}

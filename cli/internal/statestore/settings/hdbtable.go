@@ -2,6 +2,7 @@ package settings
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
@@ -13,15 +14,23 @@ type StateStoreHdbTable struct {
 	schema, table string
 }
 
-func NewStateStoreHdbTable(client hasura.PGSourceOps, sourceName, schema, table string) *StateStoreHdbTable {
+func NewStateStoreHdbTable(
+	client hasura.PGSourceOps,
+	sourceName, schema, table string,
+) *StateStoreHdbTable {
 	return &StateStoreHdbTable{client, sourceName, schema, table}
 }
 
 func (s *StateStoreHdbTable) GetSetting(name string) (value string, err error) {
 	var op errors.Op = "settings.StateStoreHdbTable.GetSetting"
+
 	query := hasura.PGRunSQLInput{
 		Source: s.sourceName,
-		SQL:    `SELECT value from ` + fmt.Sprintf("%s.%s", s.schema, s.table) + ` where setting='` + name + `'`,
+		SQL: `SELECT value from ` + fmt.Sprintf(
+			"%s.%s",
+			s.schema,
+			s.table,
+		) + ` where setting='` + name + `'`,
 	}
 
 	resp, err := s.client.PGRunSQL(query)
@@ -39,6 +48,7 @@ func (s *StateStoreHdbTable) GetSetting(name string) (value string, err error) {
 				return setting.GetDefaultValue(), nil
 			}
 		}
+
 		return value, errors.E(op, fmt.Errorf("invalid setting name: %s", name))
 	}
 
@@ -47,6 +57,7 @@ func (s *StateStoreHdbTable) GetSetting(name string) (value string, err error) {
 
 func (s *StateStoreHdbTable) GetAllSettings() (map[string]string, error) {
 	var op errors.Op = "settings.StateStoreHdbTable.GetAllSettings"
+
 	query := hasura.PGRunSQLInput{
 		Source: s.sourceName,
 		SQL:    `SELECT setting, value from ` + fmt.Sprintf("%s.%s", s.schema, s.table) + `;`,
@@ -61,32 +72,42 @@ func (s *StateStoreHdbTable) GetAllSettings() (map[string]string, error) {
 		return nil, errors.E(op, fmt.Errorf("invalid result Type %s", resp.ResultType))
 	}
 
-	var settings = map[string]string{}
+	settings := map[string]string{}
+
 	for idx, row := range resp.Result {
 		if idx == 0 {
 			continue
 		}
+
 		if len(row) == 2 {
 			settings[row[0]] = row[1]
 		}
 	}
+
 	return settings, nil
 }
 
 func (s *StateStoreHdbTable) UpdateSetting(name string, value string) error {
 	var op errors.Op = "statestore.StateStoreHdbTable.UpdateSetting"
+
 	query := hasura.PGRunSQLInput{
 		Source: s.sourceName,
-		SQL:    `INSERT INTO ` + fmt.Sprintf("%s.%s", s.schema, s.table) + ` (setting, value) VALUES ('` + name + `', '` + value + `') ON CONFLICT (setting) DO UPDATE SET value='` + value + `'`,
+		SQL: `INSERT INTO ` + fmt.Sprintf(
+			"%s.%s",
+			s.schema,
+			s.table,
+		) + ` (setting, value) VALUES ('` + name + `', '` + value + `') ON CONFLICT (setting) DO UPDATE SET value='` + value + `'`,
 	}
 
 	resp, err := s.client.PGRunSQL(query)
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	if resp.ResultType != hasura.CommandOK {
 		return errors.E(op, fmt.Errorf("cannot set setting %s to %s", name, value))
 	}
+
 	return nil
 }
 
@@ -114,7 +135,11 @@ func (s *StateStoreHdbTable) PrepareSettingsDriver() error {
 	// Now Create the table
 	query = hasura.PGRunSQLInput{
 		Source: s.sourceName,
-		SQL:    `CREATE TABLE ` + fmt.Sprintf("%s.%s", s.schema, s.table) + ` (setting text not null primary key, value text not null)`,
+		SQL: `CREATE TABLE ` + fmt.Sprintf(
+			"%s.%s",
+			s.schema,
+			s.table,
+		) + ` (setting text not null primary key, value text not null)`,
 	}
 
 	resp, err = s.client.PGRunSQL(query)
@@ -125,28 +150,41 @@ func (s *StateStoreHdbTable) PrepareSettingsDriver() error {
 	if resp.ResultType != hasura.CommandOK {
 		return errors.E(op, fmt.Errorf("creating Version table failed %s", resp.ResultType))
 	}
+
 	if err := s.setDefaults(); err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
 func (s *StateStoreHdbTable) setDefaults() error {
-	var op errors.Op = "statestore.StateStoreHdbTable.setDefaults"
-	var sql string
+	var (
+		op       errors.Op = "statestore.StateStoreHdbTable.setDefaults"
+		sql      string
+		sqlSb137 strings.Builder
+	)
 	for _, setting := range Settings {
-		sql += `INSERT INTO ` + fmt.Sprintf("%s.%s", s.schema, s.table) + ` (setting, value) VALUES ('` + setting.GetName() + `', '` + setting.GetDefaultValue() + `');`
+		sqlSb137.WriteString(
+			`INSERT INTO ` + fmt.Sprintf(
+				"%s.%s",
+				s.schema,
+				s.table,
+			) + ` (setting, value) VALUES ('` + setting.GetName() + `', '` + setting.GetDefaultValue() + `');`,
+		)
 	}
+
+	sql += sqlSb137.String()
 
 	query := hasura.PGRunSQLInput{
 		Source: s.sourceName,
 		SQL:    sql,
 	}
+
 	_, err := s.client.PGRunSQL(query)
 	if err != nil {
 		return errors.E(op, err)
 	}
 
 	return nil
-
 }

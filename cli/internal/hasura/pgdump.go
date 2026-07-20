@@ -11,5 +11,5 @@ type PGDumpRequest struct {
 }
 
 type PGDump interface {
-	Send(request PGDumpRequest) (responseBody io.Reader, error error)
+	Send(request PGDumpRequest) (io.Reader, error)
 }

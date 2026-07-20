@@ -1,45 +1,44 @@
 package database
 
 import (
+	stderrors "errors"
 	"fmt"
 	"io"
+	nurl "net/url"
 	"sync"
 
-	nurl "net/url"
-
-	log "github.com/sirupsen/logrus"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	log "github.com/sirupsen/logrus"
 )
 
-var (
-	ErrLocked = fmt.Errorf("can't acquire lock")
-)
+var ErrLocked = stderrors.New("can't acquire lock")
 
 const NilVersion int64 = -1
 
-var driversMu sync.RWMutex
-var drivers = make(map[string]Driver)
+var (
+	driversMu sync.RWMutex
+	drivers   = make(map[string]Driver)
+)
 
 // Driver is the interface every database driver must implement.
 //
 // How to implement a database driver?
-//   1. Implement this interface.
-//   2. Optionally, add a function named `WithInstance`.
-//      This function should accept an existing DB instance and a Config{} struct
-//      and return a driver instance.
-//   3. Add a test that calls database/testing.go:Test()
-//   4. Add own tests for Open(), WithInstance() (when provided) and Close().
-//      All other functions are tested by tests in database/testing.
-//      Saves you some time and makes sure all database drivers behave the same way.
-//   5. Call Register in init().
-//   6. Create a migrate/cli/build_<driver-name>.go file
-//   7. Add driver name in 'DATABASE' variable in Makefile
+//  1. Implement this interface.
+//  2. Optionally, add a function named `WithInstance`.
+//     This function should accept an existing DB instance and a Config{} struct
+//     and return a driver instance.
+//  3. Add a test that calls database/testing.go:Test()
+//  4. Add own tests for Open(), WithInstance() (when provided) and Close().
+//     All other functions are tested by tests in database/testing.
+//     Saves you some time and makes sure all database drivers behave the same way.
+//  5. Call Register in init().
+//  6. Create a migrate/cli/build_<driver-name>.go file
+//  7. Add driver name in 'DATABASE' variable in Makefile
 //
 // Guidelines:
-//   * Don't try to correct user input. Don't assume things.
+//   - Don't try to correct user input. Don't assume things.
 //     When in doubt, return an error and explain the situation to the user.
-//   * All configuration input must come from the URL string in func Open()
+//   - All configuration input must come from the URL string in func Open()
 //     or the Config{} struct in WithInstance. Don't os.Getenv().
 type Driver interface {
 	// Open returns a new driver instance configured with parameters
@@ -107,7 +106,7 @@ type Driver interface {
 
 	PushToList(migration io.Reader, fileType string, list *CustomList) error
 
-	Squash(list *CustomList, ret chan<- interface{})
+	Squash(list *CustomList, ret chan<- any)
 
 	MetadataDriver
 
@@ -115,22 +114,26 @@ type Driver interface {
 
 	SettingsDriver
 
-	Query(data interface{}) error
+	Query(data any) error
 }
 
 // Open returns a new driver instance.
 func Open(url string, isCMD bool, logger *log.Logger, hasuraOpts *HasuraOpts) (Driver, error) {
 	var op errors.Op = "database.Open"
+
 	u, err := nurl.Parse(url)
 	if err != nil {
 		log.Debug(err)
+
 		return nil, errors.E(op, err)
 	}
 
 	driversMu.RLock()
+
 	if u.Scheme == "" {
-		return nil, errors.E(op, fmt.Errorf("database driver: invalid URL scheme"))
+		return nil, errors.E(op, stderrors.New("database driver: invalid URL scheme"))
 	}
+
 	driversMu.RUnlock()
 
 	d, ok := drivers[u.Scheme]
@@ -146,17 +149,21 @@ func Open(url string, isCMD bool, logger *log.Logger, hasuraOpts *HasuraOpts) (D
 	if err != nil {
 		return driver, errors.E(op, err)
 	}
+
 	return driver, nil
 }
 
 func Register(name string, driver Driver) {
 	driversMu.Lock()
 	defer driversMu.Unlock()
+
 	if driver == nil {
 		panic("Register driver is nil")
 	}
+
 	if _, dup := drivers[name]; dup {
 		panic("Register called twice for driver " + name)
 	}
+
 	drivers[name] = driver
 }

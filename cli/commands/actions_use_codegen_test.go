@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -13,7 +12,6 @@ import (
 )
 
 var _ = Describe("hasura actions use-codegen", func() {
-
 	var projectDirectory string
 	var teardown func()
 	BeforeEach(func() {
@@ -36,7 +34,16 @@ var _ = Describe("hasura actions use-codegen", func() {
 	Context("actions use codegen tests", func() {
 		It("should change the config.yaml file and create the nodejs-express directory ", func() {
 			session := testutil.Hasura(testutil.CmdOpts{
-				Args:             []string{"actions", "use-codegen", "--framework", "nodejs-express", "--output-dir", "codegen", "--with-starter-kit", "true"},
+				Args: []string{
+					"actions",
+					"use-codegen",
+					"--framework",
+					"nodejs-express",
+					"--output-dir",
+					"codegen",
+					"--with-starter-kit",
+					"true",
+				},
 				WorkingDirectory: projectDirectory,
 			})
 			wantKeywordList := []string{
@@ -49,7 +56,7 @@ var _ = Describe("hasura actions use-codegen", func() {
 				Expect(session.Err.Contents()).Should(ContainSubstring(keyword))
 			}
 			configPath := filepath.Join(projectDirectory, "config.yaml")
-			contents, err := ioutil.ReadFile(configPath)
+			contents, err := os.ReadFile(configPath)
 			Expect(err).To(BeNil())
 			wantKeywordList = []string{
 				"framework: nodejs-express",
@@ -61,7 +68,6 @@ var _ = Describe("hasura actions use-codegen", func() {
 			}
 
 			Expect(filepath.Join(projectDirectory, "nodejs-express")).To(BeADirectory())
-
 		})
 	})
 })

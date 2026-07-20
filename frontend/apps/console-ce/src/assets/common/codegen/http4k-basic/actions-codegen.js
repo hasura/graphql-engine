@@ -86,7 +86,7 @@
       }
 
       // parse the response
-      respBytes, err := ioutil.ReadAll(resp.Body)
+      respBytes, err := io.ReadAll(resp.Body)
       if err != nil {
         return
       }
@@ -136,7 +136,7 @@
     import (
       "bytes"
       "encoding/json"
-      "io/ioutil"
+      
       "log"
       "net/http"
     )
@@ -160,7 +160,7 @@
       w.Header().Set("Content-Type", "application/json")
 
       // read request body
-      reqBody, err := ioutil.ReadAll(r.Body)
+      reqBody, err := io.ReadAll(r.Body)
       if err != nil {
         http.Error(w, "invalid payload", http.StatusBadRequest)
         return

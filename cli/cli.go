@@ -15,7 +15,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"io/ioutil"
+	"maps"
 	"net/http"
 	"net/url"
 	"os"
@@ -26,33 +26,24 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Masterminds/semver/v3"
+	"github.com/briandowns/spinner"
+	"github.com/google/uuid"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/commonmetadata"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/pgdump"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1graphql"
-	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1version"
-	"github.com/hasura/graphql-engine/cli/v2/migrate/database/hasuradb"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1metadata"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1query"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1version"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v2query"
-
-	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/commonmetadata"
-
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
-
-	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/settings"
-
-	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/migrations"
-
-	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
-
-	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
-
-	"github.com/Masterminds/semver"
-	"github.com/briandowns/spinner"
-	"github.com/cockroachdb/redact"
-	"github.com/gofrs/uuid"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/types"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/migrations"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/settings"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/database/hasuradb"
 	"github.com/hasura/graphql-engine/cli/v2/plugins"
 	"github.com/hasura/graphql-engine/cli/v2/telemetry"
 	"github.com/hasura/graphql-engine/cli/v2/util"
@@ -60,18 +51,18 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/subosito/gotenv"
+	"go.yaml.in/yaml/v3"
 	"golang.org/x/term"
-	"gopkg.in/yaml.v3"
 )
 
-// Other constants used in the package
+// Other constants used in the package.
 const (
-	// Name of the global configuration directory
+	// Name of the global configuration directory.
 	GlobalConfigDirName = ".hasura"
-	// Name of the global configuration file
+	// Name of the global configuration file.
 	GlobalConfigFileName = "config.json"
 
-	// Name of the file to store last update check time
+	// Name of the file to store last update check time.
 	LastUpdateCheckFileName = "last_update_check_at"
 
 	DefaultMigrationsDirectory = "migrations"
@@ -95,9 +86,9 @@ visit https://hasura.io/docs/latest/graphql/core/guides/telemetry.html
 type ConfigVersion int
 
 const (
-	// V1 represents config version 1
+	// V1 represents config version 1.
 	V1 ConfigVersion = iota + 1
-	// V2 represents config version 2
+	// V2 represents config version 2.
 	V2
 	V3
 )
@@ -110,7 +101,7 @@ const (
 	MetadataModeYAML
 )
 
-// ServerAPIPaths has the custom paths defined for server api
+// ServerAPIPaths has the custom paths defined for server api.
 type ServerAPIPaths struct {
 	V1Query    string `yaml:"v1_query,omitempty"`
 	V2Query    string `yaml:"v2_query,omitempty"`
@@ -121,47 +112,58 @@ type ServerAPIPaths struct {
 	Version    string `yaml:"version,omitempty"`
 }
 
-// GetQueryParams - encodes the values in url
+// GetQueryParams - encodes the values in url.
 func (s ServerAPIPaths) GetQueryParams() url.Values {
 	vals := url.Values{}
-	t := reflect.TypeOf(s)
-	for i := 0; i < t.NumField(); i++ {
+	t := reflect.TypeFor[ServerAPIPaths]()
+
+	for i := range t.NumField() {
 		field := t.Field(i)
 		tag := field.Tag.Get("yaml")
+
 		splitTag := strings.Split(tag, ",")
 		if len(splitTag) == 0 {
 			continue
 		}
+
 		name := splitTag[0]
 		if name == "-" {
 			continue
 		}
+
 		v := reflect.ValueOf(s).Field(i)
+
 		vals.Add(name, v.String())
 	}
+
 	return vals
 }
 
-// ErrInvalidConfigVersion - if the config version is not valid
-var ErrInvalidConfigVersion error = fmt.Errorf("invalid config version")
+// ErrInvalidConfigVersion - if the config version is not valid.
+var ErrInvalidConfigVersion error = stderrors.New("invalid config version")
 
-// NewConfigVersionValue returns ConfigVersion set with default value
+// NewConfigVersionValue returns ConfigVersion set with default value.
 func NewConfigVersionValue(val ConfigVersion, p *ConfigVersion) *ConfigVersion {
 	*p = val
+
 	return p
 }
 
 // Set sets the value of the named command-line flag.
 func (c *ConfigVersion) Set(s string) error {
 	var op errors.Op = "cli.ConfigVersion.Set"
+
 	v, err := strconv.ParseInt(s, 0, 64)
 	*c = ConfigVersion(v)
+
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	if !c.IsValid() {
 		return errors.E(op, ErrInvalidConfigVersion)
 	}
+
 	return nil
 }
 
@@ -174,12 +176,12 @@ func (c *ConfigVersion) String() string {
 	return strconv.Itoa(int(*c))
 }
 
-// IsValid returns if its a valid config version
+// IsValid returns if its a valid config version.
 func (c ConfigVersion) IsValid() bool {
 	return c != 0 && c <= V3
 }
 
-// ServerConfig has the config values required to contact the server
+// ServerConfig has the config values required to contact the server.
 type ServerConfig struct {
 	// Endpoint for the GraphQL Engine
 	Endpoint string `yaml:"endpoint"`
@@ -216,6 +218,7 @@ func (c *ServerConfig) GetAdminSecret() string {
 	} else if c.AdminSecret != "" {
 		return c.AdminSecret
 	}
+
 	return ""
 }
 
@@ -223,12 +226,15 @@ func (c *ServerConfig) GetHasuraInternalServerConfig(client *httpc.Client) error
 	var op errors.Op = "cli.ServerConfig.GetHasuraInternalServerConfig"
 	// Determine from where assets should be served
 	url := c.getConfigEndpoint()
+
 	ctx, cancelFunc := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancelFunc()
+
 	req, err := client.NewRequest("GET", url, nil)
 	if err != nil {
 		return errors.E(op, fmt.Errorf("error fetching config from server: %w", err))
 	}
+
 	r, err := client.Do(ctx, req, &c.HasuraServerInternalConfig)
 	if err != nil {
 		return errors.E(op, errors.KindNetwork, err)
@@ -237,88 +243,109 @@ func (c *ServerConfig) GetHasuraInternalServerConfig(client *httpc.Client) error
 
 	if r.StatusCode != http.StatusOK {
 		var horror hasuradb.HasuraError
+
 		err := json.NewDecoder(r.Body).Decode(&horror)
 		if err != nil {
-			return errors.E(op, errors.KindHasuraAPI, fmt.Errorf("error unmarshalling fetching server config"))
+			return errors.E(
+				op,
+				errors.KindHasuraAPI,
+				stderrors.New("error unmarshalling fetching server config"),
+			)
 		}
-		return errors.E(op, errors.KindHasuraAPI, fmt.Errorf("error fetching server config: %v", horror.Error()))
+
+		return errors.E(
+			op,
+			errors.KindHasuraAPI,
+			fmt.Errorf("error fetching server config: %v", horror.Error()),
+		)
 	}
+
 	return nil
 }
 
 // HasuraServerConfig is the type returned by the v1alpha1/config API
-// TODO: Move this type to a client implementation for hasura
+// TODO: Move this type to a client implementation for hasura.
 type HasuraServerInternalConfig struct {
 	ConsoleAssetsDir string `json:"console_assets_dir"`
 }
 
-// GetVersionEndpoint provides the url to contact the version API
+// GetVersionEndpoint provides the url to contact the version API.
 func (c *ServerConfig) GetVersionEndpoint() string {
 	nurl := *c.ParsedEndpoint
 	nurl.Path = path.Join(nurl.Path, c.APIPaths.Version)
+
 	return nurl.String()
 }
 
-// GetQueryEndpoint provides the url to contact the query API
+// GetQueryEndpoint provides the url to contact the query API.
 func (c *ServerConfig) GetV1QueryEndpoint() string {
 	nurl := *c.ParsedEndpoint
 	nurl.Path = path.Join(nurl.Path, c.APIPaths.V1Query)
+
 	return nurl.String()
 }
 
 func (c *ServerConfig) GetV2QueryEndpoint() string {
 	nurl := *c.ParsedEndpoint
 	nurl.Path = path.Join(nurl.Path, c.APIPaths.V2Query)
+
 	return nurl.String()
 }
 
 func (c *ServerConfig) GetPGDumpEndpoint() string {
 	nurl := *c.ParsedEndpoint
 	nurl.Path = path.Join(nurl.Path, c.APIPaths.PGDump)
+
 	return nurl.String()
 }
 
 func (c *ServerConfig) GetV1GraphqlEndpoint() string {
 	nurl := *c.ParsedEndpoint
 	nurl.Path = path.Join(nurl.Path, c.APIPaths.GraphQL)
+
 	return nurl.String()
 }
 
-// GetQueryEndpoint provides the url to contact the query API
+// GetQueryEndpoint provides the url to contact the query API.
 func (c *ServerConfig) GetV1MetadataEndpoint() string {
 	nurl := *c.ParsedEndpoint
 	nurl.Path = path.Join(nurl.Path, c.APIPaths.V1Metadata)
+
 	return nurl.String()
 }
 
-// GetVersionEndpoint provides the url to contact the config API
+// GetVersionEndpoint provides the url to contact the config API.
 func (c *ServerConfig) getConfigEndpoint() string {
 	nurl := *c.ParsedEndpoint
 	nurl.Path = path.Join(nurl.Path, c.APIPaths.Config)
+
 	return nurl.String()
 }
 
 // ParseEndpoint ensures the endpoint is valid.
 func (c *ServerConfig) ParseEndpoint() error {
 	var op errors.Op = "cli.ServerConfig.ParseEndpoint"
+
 	nurl, err := url.ParseRequestURI(c.Endpoint)
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	c.ParsedEndpoint = nurl
+
 	return nil
 }
 
-// Config represents configuration required for the CLI to function
+// Config represents configuration required for the CLI to function.
 type Config struct {
+	// ServerConfig to be used by CLI to contact server.
+	ServerConfig `yaml:",inline"`
+
 	// Version of the config.
 	Version ConfigVersion `yaml:"version,omitempty"`
 
 	// DisableInteractive disables interactive prompt
 	DisableInteractive bool `yaml:"disable_interactive,omitempty"`
-
-	// ServerConfig to be used by CLI to contact server.
-	ServerConfig `yaml:",inline"`
 
 	// MetadataDirectory defines the directory where the metadata files were stored.
 	MetadataDirectory string `yaml:"metadata_directory,omitempty"`
@@ -462,9 +489,8 @@ func (ec *ExecutionContext) AddRequestHeaders(headers map[string]string) {
 	if ec.requestHeaders == nil {
 		ec.requestHeaders = map[string]string{}
 	}
-	for k, v := range headers {
-		ec.requestHeaders[k] = v
-	}
+
+	maps.Copy(ec.requestHeaders, headers)
 }
 
 type Source struct {
@@ -472,7 +498,7 @@ type Source struct {
 	Kind hasura.SourceKind
 }
 
-// NewExecutionContext returns a new instance of execution context
+// NewExecutionContext returns a new instance of execution context.
 func NewExecutionContext() *ExecutionContext {
 	ec := &ExecutionContext{
 		Stderr: os.Stderr,
@@ -481,6 +507,7 @@ func NewExecutionContext() *ExecutionContext {
 	ec.MetadataMode = MetadataModeDirectory
 	ec.Telemetry = telemetry.BuildEvent()
 	ec.Telemetry.Version = version.BuildVersion
+
 	return ec
 }
 
@@ -494,6 +521,7 @@ func (ec *ExecutionContext) Prepare() error {
 	if len(cmdName) == 0 {
 		cmdName = "hasura"
 	}
+
 	ec.CMDName = cmdName
 
 	ec.IsTerminal = term.IsTerminal(int(os.Stdout.Fd()))
@@ -527,48 +555,50 @@ func (ec *ExecutionContext) Prepare() error {
 
 	// generate an execution id
 	if ec.ID == "" {
-		id := "00000000-0000-0000-0000-000000000000"
-		u, err := uuid.NewV4()
-		if err == nil {
-			id = u.String()
-		} else {
-			ec.Logger.Debugf("generating uuid for execution ID failed, %v", err)
-		}
-		ec.ID = id
+		ec.ID = uuid.NewString()
 		ec.Logger.Debugf("execution id: %v", ec.ID)
 	}
+
 	ec.Telemetry.ExecutionID = ec.ID
 
 	return nil
 }
 
 // SetupPlugins create and returns the inferred paths for hasura. By default, it assumes
-// $HOME/.hasura as the base path
+// $HOME/.hasura as the base path.
 func (ec *ExecutionContext) SetupPlugins() error {
 	var op errors.Op = "cli.ExecutionContext.SetupPlugins"
+
 	base := filepath.Join(ec.GlobalConfigDir, "plugins")
+
 	base, err := filepath.Abs(base)
 	if err != nil {
 		return errors.E(op, fmt.Errorf("cannot get absolute path: %w", err))
 	}
+
 	ec.PluginsConfig = plugins.New(base)
 	ec.PluginsConfig.Logger = ec.Logger
+
 	ec.PluginsConfig.Repo.Logger = ec.Logger
 	if ec.GlobalConfig.CLIEnvironment == ServerOnDockerEnvironment {
 		ec.PluginsConfig.Repo.DisableCloneOrUpdate = true
 	}
+
 	err = ec.PluginsConfig.Prepare()
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
 func (ec *ExecutionContext) validateProPluginVersion() {
 	if err := ec.SetupPlugins(); err != nil {
 		ec.Logger.Debugf("Validating installed pro plugin version failed: %v", err)
+
 		return
 	}
+
 	installedPlugins, err := ec.PluginsConfig.ListInstalledPlugins()
 	if err != nil {
 		return
@@ -578,29 +608,41 @@ func (ec *ExecutionContext) validateProPluginVersion() {
 	cliVersion := ec.Version.GetCLIVersion()
 
 	proPluginSemVer, _ := semver.NewVersion(proPluginVersion)
+
 	cliSemVer := ec.Version.CLISemver
 	if proPluginSemVer == nil || cliSemVer == nil {
 		return
 	}
 
 	if cliSemVer.Major() != proPluginSemVer.Major() {
-		ec.Logger.Warnf("[cli: %s] [pro plugin: %s] incompatible version of cli and pro plugin.", cliVersion, proPluginVersion)
-		ec.Logger.Warn("Try running `hasura plugins upgrade pro` or `hasura plugins install pro --version <version>`")
+		ec.Logger.Warnf(
+			"[cli: %s] [pro plugin: %s] incompatible version of cli and pro plugin.",
+			cliVersion,
+			proPluginVersion,
+		)
+		ec.Logger.Warn(
+			"Try running `hasura plugins upgrade pro` or `hasura plugins install pro --version <version>`",
+		)
 	}
 }
 
 func (ec *ExecutionContext) SetupCodegenAssetsRepo() error {
 	var op errors.Op = "cli.ExecutionContext.SetupCodegenAssetsRepo"
+
 	base := filepath.Join(ec.GlobalConfigDir, util.ActionsCodegenDirName)
+
 	base, err := filepath.Abs(base)
 	if err != nil {
 		return errors.E(op, fmt.Errorf("cannot get absolute path: %w", err))
 	}
+
 	ec.CodegenAssetsRepo = util.NewGitUtil(util.ActionsCodegenRepoURI, base, "")
+
 	ec.CodegenAssetsRepo.Logger = ec.Logger
 	if ec.GlobalConfig.CLIEnvironment == ServerOnDockerEnvironment {
 		ec.CodegenAssetsRepo.DisableCloneOrUpdate = true
 	}
+
 	return nil
 }
 
@@ -635,13 +677,16 @@ func (ec *ExecutionContext) Validate() error {
 	// get TLS Config
 	tlsConfig, err := httpc.GenerateTLSConfig(ec.Config.CAPath, ec.Config.InsecureSkipTLSVerify)
 	if err != nil || tlsConfig == nil {
-		return errors.E(op, fmt.Errorf("error while getting TLS config"))
+		return errors.E(op, stderrors.New("error while getting TLS config"))
 	}
 
 	// create a net/http.Client with TLS Config
 	standardHttpClient, err := httpc.NewHttpClientWithTLSConfig(tlsConfig)
 	if err != nil || standardHttpClient == nil {
-		return errors.E(op, fmt.Errorf("error while creating http client with TLS configuration %w", err))
+		return errors.E(
+			op,
+			fmt.Errorf("error while creating http client with TLS configuration %w", err),
+		)
 	}
 
 	// create httpc.Client
@@ -649,17 +694,23 @@ func (ec *ExecutionContext) Validate() error {
 	if err != nil || httpClient == nil {
 		return errors.E(op, err)
 	}
+
 	ec.Config.HTTPClient = httpClient
 
 	err = util.GetServerStatus(ec.Config.GetVersionEndpoint(), ec.Config.HTTPClient)
 	if err != nil {
 		ec.Logger.Error("connecting to graphql-engine server failed")
 		ec.Logger.Info("possible reasons:")
-		ec.Logger.Info("1) Provided root endpoint of graphql-engine server is wrong. Verify endpoint key in config.yaml or/and value of --endpoint flag")
-		ec.Logger.Info("2) Endpoint should NOT be your GraphQL API, ie endpoint is NOT https://hasura-cloud-app.io/v1/graphql it should be: https://hasura-cloud-app.io")
+		ec.Logger.Info(
+			"1) Provided root endpoint of graphql-engine server is wrong. Verify endpoint key in config.yaml or/and value of --endpoint flag",
+		)
+		ec.Logger.Info(
+			"2) Endpoint should NOT be your GraphQL API, ie endpoint is NOT https://hasura-cloud-app.io/v1/graphql it should be: https://hasura-cloud-app.io",
+		)
 		ec.Logger.Info("3) Server might be unhealthy and is not running/accepting API requests")
 		ec.Logger.Info("4) Admin secret is not correct/set")
 		ec.Logger.Infoln()
+
 		return errors.E(op, err)
 	}
 
@@ -675,15 +726,20 @@ func (ec *ExecutionContext) Validate() error {
 		return errors.E(op, fmt.Errorf("error in getting server feature flags %w", err))
 	}
 
-	ec.AddRequestHeaders(map[string]string{GetAdminSecretHeaderName(ec.Version): ec.Config.GetAdminSecret()})
+	ec.AddRequestHeaders(
+		map[string]string{GetAdminSecretHeaderName(ec.Version): ec.Config.GetAdminSecret()},
+	)
 
 	ec.Config.HTTPClient.SetHeaders(ec.requestHeaders)
 
 	// this populates the ec.Config.ServerConfig.HasuraServerInternalConfig
-	err = ec.Config.ServerConfig.GetHasuraInternalServerConfig(httpClient)
+	err = ec.Config.GetHasuraInternalServerConfig(httpClient)
 	if err != nil {
 		// If config API is not enabled log it and don't fail
-		ec.Logger.Debugf("cannot get config information from server, this might be because config API is not enabled: %v", err)
+		ec.Logger.Debugf(
+			"cannot get config information from server, this might be because config API is not enabled: %v",
+			err,
+		)
 	}
 
 	// set name of migration directory
@@ -707,22 +763,31 @@ func (ec *ExecutionContext) Validate() error {
 		if len(ec.Config.MetadataFile) > 0 {
 			ec.MetadataFile = filepath.Join(ec.ExecutionDirectory, ec.Config.MetadataFile)
 			if _, err := os.Stat(ec.MetadataFile); stderrors.Is(err, fs.ErrNotExist) {
-				if err := ioutil.WriteFile(ec.MetadataFile, []byte(""), os.ModePerm); err != nil {
+				err := os.WriteFile(ec.MetadataFile, []byte(""), os.ModePerm)
+				if err != nil {
 					return errors.E(op, err)
 				}
 			}
+
 			switch filepath.Ext(ec.MetadataFile) {
 			case ".json":
 				ec.MetadataMode = MetadataModeJSON
 			case ".yaml":
 				ec.MetadataMode = MetadataModeYAML
 			default:
-				return errors.E(op, fmt.Errorf("unrecogonized file extension. only .json/.yaml files are allowed for value of metadata_file"))
+				return errors.E(
+					op,
+					stderrors.New(
+						"unrecogonized file extension. only .json/.yaml files are allowed for value of metadata_file",
+					),
+				)
 			}
 		}
 		// set name of metadata directory
 		ec.MetadataDir = filepath.Join(ec.ExecutionDirectory, ec.Config.MetadataDirectory)
-		if _, err := os.Stat(ec.MetadataDir); stderrors.Is(err, fs.ErrNotExist) && !(len(ec.MetadataFile) > 0) {
+
+		_, err := os.Stat(ec.MetadataDir)
+		if err != nil && stderrors.Is(err, fs.ErrNotExist) && len(ec.MetadataFile) == 0 {
 			err = os.MkdirAll(ec.MetadataDir, os.ModePerm)
 			if err != nil {
 				return errors.E(op, fmt.Errorf("cannot create metadata directory: %w", err))
@@ -730,8 +795,8 @@ func (ec *ExecutionContext) Validate() error {
 		}
 	}
 
-	ec.Logger.Debug("graphql engine endpoint: ", ec.Config.ServerConfig.Endpoint)
-	ec.Logger.Debug(redact.Sprintf("graphql engine admin_secret: %s", ec.Config.ServerConfig.AdminSecret).Redact())
+	ec.Logger.Debug("graphql engine endpoint: ", ec.Config.Endpoint)
+	ec.Logger.Debug(strings.Repeat("*", len(ec.Config.AdminSecret)))
 
 	uri, err := url.Parse(ec.Config.Endpoint)
 	if err != nil {
@@ -744,25 +809,33 @@ func (ec *ExecutionContext) Validate() error {
 	} else {
 		uri.Path = path.Join(uri.Path, "v1/query")
 	}
+
 	requestUri := uri.String()
+
 	metadata, err := commonmetadata.New(httpClient, requestUri).ExportMetadata()
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	var v struct {
 		Version int `json:"version"`
 	}
 	if err := json.NewDecoder(metadata).Decode(&v); err != nil {
 		return errors.E(op, err)
 	}
+
 	if v.Version == 3 {
 		ec.HasMetadataV3 = true
 	}
+
 	if ec.Config.Version >= V3 && !ec.HasMetadataV3 {
-		return errors.E(op, fmt.Errorf(`config v3 can only be used with servers having metadata version >= 3
+		return errors.E(
+			op,
+			stderrors.New(`config v3 can only be used with servers having metadata version >= 3
 You could fix this problem by taking one of the following actions:
 1. Upgrade your Hasura server to a newer version (>= v2.0.0) ie upgrade to a version which supports metadata v3
-2. Force CLI to use an older config version via the --version <VERSION> flag`))
+2. Force CLI to use an older config version via the --version <VERSION> flag`),
+		)
 	}
 
 	ec.APIClient = &hasura.Client{
@@ -773,12 +846,24 @@ You could fix this problem by taking one of the following actions:
 		V1Graphql:  v1graphql.New(httpClient, ec.Config.GetV1GraphqlEndpoint()),
 		V1Version:  v1version.New(httpClient, ec.Config.GetVersionEndpoint()),
 	}
+
 	var state *util.ServerState
 	if ec.HasMetadataV3 {
-		state = util.GetServerState(httpClient, ec.Config.GetV1MetadataEndpoint(), ec.HasMetadataV3, ec.Logger)
+		state = util.GetServerState(
+			httpClient,
+			ec.Config.GetV1MetadataEndpoint(),
+			ec.HasMetadataV3,
+			ec.Logger,
+		)
 	} else {
-		state = util.GetServerState(httpClient, ec.Config.GetV1QueryEndpoint(), ec.HasMetadataV3, ec.Logger)
+		state = util.GetServerState(
+			httpClient,
+			ec.Config.GetV1QueryEndpoint(),
+			ec.HasMetadataV3,
+			ec.Logger,
+		)
 	}
+
 	ec.ServerUUID = state.UUID
 	ec.Telemetry.ServerUUID = ec.ServerUUID
 	ec.Logger.Debugf("server: uuid: %s", ec.ServerUUID)
@@ -788,41 +873,60 @@ You could fix this problem by taking one of the following actions:
 
 func (ec *ExecutionContext) checkServerVersion() error {
 	var op errors.Op = "cli.ExecutionContext.checkServerVersion"
-	v, err := version.FetchServerVersion(ec.Config.ServerConfig.GetVersionEndpoint(), ec.Config.HTTPClient)
+
+	v, err := version.FetchServerVersion(ec.Config.GetVersionEndpoint(), ec.Config.HTTPClient)
 	if err != nil {
 		return errors.E(op, fmt.Errorf("failed to get version from server: %w", err))
 	}
+
 	ec.Version.SetServerVersion(v)
 	ec.Telemetry.ServerVersion = ec.Version.GetServerVersion()
 	isCompatible, reason := ec.Version.CheckCLIServerCompatibility()
-	ec.Logger.Debugf("versions: cli: [%s] server: [%s]", ec.Version.GetCLIVersion(), ec.Version.GetServerVersion())
+	ec.Logger.Debugf(
+		"versions: cli: [%s] server: [%s]",
+		ec.Version.GetCLIVersion(),
+		ec.Version.GetServerVersion(),
+	)
 	ec.Logger.Debugf("compatibility check: [%v] %v", isCompatible, reason)
+
 	if !isCompatible {
-		ec.Logger.Warnf("[cli: %s] [server: %s] version mismatch: %s", ec.Version.GetCLIVersion(), ec.Version.GetServerVersion(), reason)
+		ec.Logger.Warnf(
+			"[cli: %s] [server: %s] version mismatch: %s",
+			ec.Version.GetCLIVersion(),
+			ec.Version.GetServerVersion(),
+			reason,
+		)
 	}
+
 	return nil
 }
 
-// WriteConfig writes the configuration from ec.Config or input config
+// WriteConfig writes the configuration from ec.Config or input config.
 func (ec *ExecutionContext) WriteConfig(config *Config) error {
-	var op errors.Op = "cli.ExecutionContext.WriteConfig"
-	var cfg *Config
+	var (
+		op  errors.Op = "cli.ExecutionContext.WriteConfig"
+		cfg *Config
+	)
 	if config != nil {
 		cfg = config
 	} else {
 		cfg = ec.Config
 	}
+
 	buf := new(bytes.Buffer)
 	encoder := yaml.NewEncoder(buf)
 	encoder.SetIndent(2)
+
 	err := encoder.Encode(cfg)
 	if err != nil {
 		return errors.E(op, err)
 	}
-	err = ioutil.WriteFile(ec.ConfigFile, buf.Bytes(), 0644)
+
+	err = os.WriteFile(ec.ConfigFile, buf.Bytes(), 0o644)
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
@@ -859,10 +963,12 @@ func (ec *ExecutionContext) readConfig() error {
 	v.SetDefault("actions.codegen.uri", "")
 	v.SetDefault("no_transaction", false)
 	v.AddConfigPath(ec.ExecutionDirectory)
+
 	err := v.ReadInConfig()
 	if err != nil {
 		return errors.E(op, fmt.Errorf("cannot read config from file/env: %w", err))
 	}
+
 	adminSecret := v.GetString("admin_secret")
 	if adminSecret == "" {
 		adminSecret = v.GetString("access_key")
@@ -872,10 +978,18 @@ func (ec *ExecutionContext) readConfig() error {
 	// ["secret1", "secret2"], similar to how the corresponding environment variable
 	// HASURA_GRAPHQL_ADMIN_SECRETS is configured with the server
 	adminSecretsList := v.GetString("admin_secrets")
+
 	adminSecrets := []string{}
 	if len(adminSecretsList) > 0 {
-		if err = json.Unmarshal([]byte(adminSecretsList), &adminSecrets); err != nil {
-			return errors.E(op, fmt.Errorf("parsing 'admin_secrets' from config.yaml / environment variable HASURA_GRAPHQL_ADMIN_SECRETS failed: expected value of format [\"secret1\", \"secret2\"]: %w", err))
+		err = json.Unmarshal([]byte(adminSecretsList), &adminSecrets)
+		if err != nil {
+			return errors.E(
+				op,
+				fmt.Errorf(
+					"parsing 'admin_secrets' from config.yaml / environment variable HASURA_GRAPHQL_ADMIN_SECRETS failed: expected value of format [\"secret1\", \"secret2\"]: %w",
+					err,
+				),
+			)
 		}
 	}
 
@@ -915,10 +1029,12 @@ func (ec *ExecutionContext) readConfig() error {
 	if !ec.Config.Version.IsValid() {
 		return errors.E(op, ErrInvalidConfigVersion)
 	}
-	err = ec.Config.ServerConfig.ParseEndpoint()
+
+	err = ec.Config.ParseEndpoint()
 	if err != nil {
 		return errors.E(op, fmt.Errorf("unable to parse server endpoint: %w", err))
 	}
+
 	return nil
 }
 
@@ -943,26 +1059,37 @@ func (ec *ExecutionContext) Spin(message string) {
 	}
 }
 
-// loadEnvfile loads .env file
+// loadEnvfile loads .env file.
 func (ec *ExecutionContext) loadEnvfile() error {
 	var op errors.Op = "cli.ExecutionContext.loadEnvfile"
-	envfile := ec.Envfile
+
+	envfile := strings.TrimSpace(ec.Envfile)
+	if envfile == "" {
+		ec.Logger.Debug("env file path is empty. Skip loading")
+
+		return nil
+	}
+
 	if !filepath.IsAbs(ec.Envfile) {
 		envfile = filepath.Join(ec.ExecutionDirectory, ec.Envfile)
 	}
+
 	err := gotenv.Load(envfile)
 	if err != nil {
 		// return error if user provided envfile name
 		if ec.Envfile != ".env" {
 			return errors.E(op, err)
 		}
+
 		if !stderrors.Is(err, fs.ErrNotExist) {
 			ec.Logger.Warn(err)
 		}
 	}
+
 	if err == nil {
 		ec.Logger.Debug("ENV vars read from: ", envfile)
 	}
+
 	return nil
 }
 
@@ -978,8 +1105,10 @@ func (ec *ExecutionContext) setupLogger() {
 		level, err := logrus.ParseLevel(ec.LogLevel)
 		if err != nil {
 			ec.Logger.WithError(err).Error("error parsing log-level flag")
+
 			return
 		}
+
 		ec.Logger.SetLevel(level)
 	}
 
@@ -1004,6 +1133,7 @@ func GetAdminSecretHeaderName(v *version.Version) string {
 	if v.ServerFeatureFlags.HasAccessKey {
 		return XHasuraAccessKey
 	}
+
 	return XHasuraAdminSecret
 }
 
@@ -1011,20 +1141,34 @@ func GetCommonMetadataOps(ec *ExecutionContext) hasura.CommonMetadataOperations 
 	if !ec.HasMetadataV3 {
 		return ec.APIClient.V1Query
 	}
+
 	return ec.APIClient.V1Metadata
 }
 
 func GetMigrationsStateStore(ec *ExecutionContext) statestore.MigrationsStateStore {
 	if ec.Config.Version <= V2 {
 		if !ec.HasMetadataV3 {
-			return migrations.NewMigrationStateStoreHdbTable(ec.APIClient.V1Query, migrations.DefaultSchema, migrations.DefaultMigrationsTable)
+			return migrations.NewMigrationStateStoreHdbTable(
+				ec.APIClient.V1Query,
+				migrations.DefaultSchema,
+				migrations.DefaultMigrationsTable,
+			)
 		}
-		return migrations.NewMigrationStateStoreHdbTable(ec.APIClient.V2Query, migrations.DefaultSchema, migrations.DefaultMigrationsTable)
+
+		return migrations.NewMigrationStateStoreHdbTable(
+			ec.APIClient.V2Query,
+			migrations.DefaultSchema,
+			migrations.DefaultMigrationsTable,
+		)
 	}
+
 	return migrations.NewCatalogStateStore(statestore.NewCLICatalogState(ec.APIClient.V1Metadata))
 }
 
-func GetSettingsStateStore(ec *ExecutionContext, databaseName string) statestore.SettingsStateStore {
+func GetSettingsStateStore(
+	ec *ExecutionContext,
+	databaseName string,
+) statestore.SettingsStateStore {
 	const (
 		defaultSettingsTable = "migration_settings"
 		defaultSchema        = "hdb_catalog"
@@ -1032,9 +1176,21 @@ func GetSettingsStateStore(ec *ExecutionContext, databaseName string) statestore
 
 	if ec.Config.Version <= V2 {
 		if !ec.HasMetadataV3 {
-			return settings.NewStateStoreHdbTable(ec.APIClient.V1Query, databaseName, defaultSchema, defaultSettingsTable)
+			return settings.NewStateStoreHdbTable(
+				ec.APIClient.V1Query,
+				databaseName,
+				defaultSchema,
+				defaultSettingsTable,
+			)
 		}
-		return settings.NewStateStoreHdbTable(ec.APIClient.V2Query, databaseName, defaultSchema, defaultSettingsTable)
+
+		return settings.NewStateStoreHdbTable(
+			ec.APIClient.V2Query,
+			databaseName,
+			defaultSchema,
+			defaultSettingsTable,
+		)
 	}
+
 	return settings.NewStateStoreCatalog(statestore.NewCLICatalogState(ec.APIClient.V1Metadata))
 }

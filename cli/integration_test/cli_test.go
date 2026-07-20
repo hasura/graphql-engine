@@ -1,7 +1,7 @@
 package integrationtest_test
 
 import (
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -12,16 +12,15 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/hasura/graphql-engine/cli/v2"
 	integrationtest "github.com/hasura/graphql-engine/cli/v2/integration_test"
-	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
-	"github.com/spf13/viper"
-
 	v2 "github.com/hasura/graphql-engine/cli/v2/integration_test/v2"
 	v3 "github.com/hasura/graphql-engine/cli/v2/integration_test/v3"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	"github.com/sirupsen/logrus/hooks/test"
+	"github.com/spf13/viper"
 )
 
 func init() {
-	rand.Seed(time.Now().UTC().UnixNano())
+	rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
 }
 
 func TestCommands(t *testing.T) {
@@ -32,7 +31,7 @@ func TestCommands(t *testing.T) {
 		logger, _ := test.NewNullLogger()
 		ec.Logger = logger
 		ec.Spinner = spinner.New(spinner.CharSets[7], 100*time.Millisecond)
-		ec.Spinner.Writer = ioutil.Discard
+		ec.Spinner.Writer = io.Discard
 		ec.Viper = viper.New()
 		ec.Stdout = os.Stdout
 		ec.Stderr = os.Stderr
@@ -91,7 +90,7 @@ func TestCommands(t *testing.T) {
 		logger, _ := test.NewNullLogger()
 		ec.Logger = logger
 		ec.Spinner = spinner.New(spinner.CharSets[7], 100*time.Millisecond)
-		ec.Spinner.Writer = ioutil.Discard
+		ec.Spinner.Writer = io.Discard
 		ec.Viper = viper.New()
 		ec.Stdout = os.Stdout
 		ec.Stderr = os.Stderr

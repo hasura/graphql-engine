@@ -23,18 +23,26 @@ type projectMigrationsStatus struct {
 	allDatabases bool
 }
 
-func (p *projectMigrationsStatus) Status(opts ...ProjectMigrationStatusOption) ([]databaseMigration, error) {
-	var op errors.Op = "migrate.projectMigrationsStatus.Status"
-	var migrateStatus []databaseMigration
+func (p *projectMigrationsStatus) Status(
+	opts ...ProjectMigrationStatusOption,
+) ([]databaseMigration, error) {
+	var (
+		op            errors.Op = "migrate.projectMigrationsStatus.Status"
+		migrateStatus []databaseMigration
+	)
+
 	for _, opt := range opts {
 		opt(p)
 	}
+
 	if p.allDatabases {
 		metadataOps := cli.GetCommonMetadataOps(p.ec)
+
 		sources, err := metadatautil.GetSourcesAndKindStrict(metadataOps.ExportMetadata)
 		if err != nil {
 			return nil, errors.E(op, err)
 		}
+
 		for _, source := range sources {
 			opts := commands.MigrateStatusOptions{
 				EC: p.ec,
@@ -43,10 +51,12 @@ func (p *projectMigrationsStatus) Status(opts ...ProjectMigrationStatusOption) (
 					Kind: source.Kind,
 				},
 			}
+
 			status, err := opts.RunOnSource()
 			if err != nil {
 				return nil, errors.E(op, err)
 			}
+
 			migrateStatus = append(
 				migrateStatus,
 				databaseMigration{
@@ -56,19 +66,26 @@ func (p *projectMigrationsStatus) Status(opts ...ProjectMigrationStatusOption) (
 			)
 		}
 	}
+
 	return migrateStatus, nil
 }
 
-func (p *projectMigrationsStatus) StatusJSON(opts ...ProjectMigrationStatusOption) (io.Reader, error) {
+func (p *projectMigrationsStatus) StatusJSON(
+	opts ...ProjectMigrationStatusOption,
+) (io.Reader, error) {
 	var op errors.Op = "migrate.projectMigrationsStatus.StatusJSON"
+
 	d, err := p.Status(opts...)
 	b := new(bytes.Buffer)
+
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
+
 	if err := json.NewEncoder(b).Encode(d); err != nil {
 		return nil, errors.E(op, fmt.Errorf("error encoding migration status as json: %w", err))
 	}
+
 	return b, nil
 }
 
@@ -76,8 +93,10 @@ type ProjectMigrationStatusOption func(applier *projectMigrationsStatus)
 
 func newProjectMigrationsStatus(ec *cli.ExecutionContext) *projectMigrationsStatus {
 	p := &projectMigrationsStatus{ec: ec}
+
 	return p
 }
+
 func StatusAllDatabases() ProjectMigrationStatusOption {
 	return func(p *projectMigrationsStatus) {
 		p.allDatabases = true

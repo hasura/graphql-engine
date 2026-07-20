@@ -1,16 +1,14 @@
 package apilimits
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
-
 	"github.com/sirupsen/logrus"
-
-	"github.com/hasura/graphql-engine/cli/v2"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 type MetadataObject struct {
@@ -31,16 +29,21 @@ func (o *MetadataObject) Validate() error {
 }
 
 func (o *MetadataObject) CreateFiles() error {
-	var op errors.Op = "apilimits.MetadataObject.CreateFiles"
-	var v interface{}
+	var (
+		op errors.Op = "apilimits.MetadataObject.CreateFiles"
+		v  any
+	)
+
 	data, err := yaml.Marshal(v)
 	if err != nil {
 		return errors.E(op, err)
 	}
-	err = ioutil.WriteFile(filepath.Join(o.MetadataDir, o.Filename()), data, 0644)
+
+	err = os.WriteFile(filepath.Join(o.MetadataDir, o.Filename()), data, 0o644)
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
@@ -53,15 +56,16 @@ type apiLimitsObject struct {
 	BatchLimit yaml.Node `yaml:"batch_limit,omitempty"`
 }
 
-func (o *MetadataObject) Build() (map[string]interface{}, error) {
+func (o *MetadataObject) Build() (map[string]any, error) {
 	var op errors.Op = "apilimits.MetadataObject.Build"
+
 	data, err := metadataobject.ReadMetadataFile(filepath.Join(o.MetadataDir, o.Filename()))
 	if err != nil {
 		return nil, errors.E(op, o.error(err))
 	}
 	// The reason for loosely typing this variable to a struct rather than using a catch-all yaml.Node
 	// is because, if we were to do something like
-	// data, _ := ioutil.ReadFile(filepath.Join(o.MetadataDir, o.Filename()))
+	// data, _ := os.ReadFile(filepath.Join(o.MetadataDir, o.Filename()))
 	// var obj yaml.Node
 	// err = yaml.Unmarshal(data, &obj)
 	// then the yaml.Node.Kind will be a Document Node and therefore the final return value will be
@@ -72,19 +76,28 @@ func (o *MetadataObject) Build() (map[string]interface{}, error) {
 	// child of a Mapping Node and hence the error
 	// This pattern is repeated for objects where it's child is a MappingNode
 	var obj apiLimitsObject
+
 	err = yaml.Unmarshal(data, &obj)
 	if err != nil {
 		return nil, errors.E(op, errors.KindBadInput, o.error(err))
 	}
-	return map[string]interface{}{o.Key(): obj}, nil
+
+	return map[string]any{o.Key(): obj}, nil
 }
 
 func (o *MetadataObject) Export(metadata map[string]yaml.Node) (map[string][]byte, error) {
 	var op errors.Op = "apilimits.MetadataObject.Export"
-	b, err := metadataobject.DefaultExport(o, metadata, o.error, metadataobject.DefaultObjectTypeMapping)
+
+	b, err := metadataobject.DefaultExport(
+		o,
+		metadata,
+		o.error,
+		metadataobject.DefaultObjectTypeMapping,
+	)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
+
 	return b, nil
 }
 
@@ -98,20 +111,27 @@ func (o *MetadataObject) Filename() string {
 
 func (o *MetadataObject) GetFiles() ([]string, error) {
 	var op errors.Op = "apilimits.MetadataObject.GetFiles"
+
 	rootFile := filepath.Join(o.BaseDirectory(), o.Filename())
+
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {
 		return nil, errors.E(op, o.error(err))
 	}
+
 	return files, nil
 }
 
 func (o *MetadataObject) WriteDiff(opts metadataobject.WriteDiffOpts) error {
 	var op errors.Op = "apilimits.MetadataObject.WriteDiff"
-	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: o, WriteDiffOpts: opts})
+
+	err := metadataobject.DefaultWriteDiff(
+		metadataobject.DefaultWriteDiffOpts{From: o, WriteDiffOpts: opts},
+	)
 	if err != nil {
 		return errors.E(op, o.error(err))
 	}
+
 	return nil
 }
 
@@ -119,6 +139,9 @@ func (o *MetadataObject) BaseDirectory() string {
 	return o.MetadataDir
 }
 
-func (o *MetadataObject) error(err error, additionalContext ...string) metadataobject.ErrParsingMetadataObject {
+func (o *MetadataObject) error(
+	err error,
+	additionalContext ...string,
+) metadataobject.ErrParsingMetadataObject {
 	return metadataobject.NewErrParsingMetadataObject(o, err, additionalContext...)
 }

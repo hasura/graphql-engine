@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 
 	"github.com/Pallinder/go-randomdata"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -23,7 +22,9 @@ var testSeedCreate = func(projectDirectory string, globalFlags []string) {
 	downSql := `DROP TABLE "public"."table1";`
 
 	testutil.RunCommandAndSucceed(testutil.CmdOpts{
-		Args:             append([]string{"migrate", "create", "table1", "--up-sql", upSql, "--down-sql", downSql}, globalFlags...),
+		Args: append(
+			[]string{"migrate", "create", "table1", "--up-sql", upSql, "--down-sql", downSql},
+			globalFlags...),
 		WorkingDirectory: projectDirectory,
 	})
 	testutil.RunCommandAndSucceed(testutil.CmdOpts{
@@ -31,7 +32,9 @@ var testSeedCreate = func(projectDirectory string, globalFlags []string) {
 		WorkingDirectory: projectDirectory,
 	})
 	session := testutil.Hasura(testutil.CmdOpts{
-		Args:             append([]string{"seed", "create", "table_seed", "--from-table", "table1"}, globalFlags...),
+		Args: append(
+			[]string{"seed", "create", "table_seed", "--from-table", "table1"},
+			globalFlags...),
 		WorkingDirectory: projectDirectory,
 	})
 	Eventually(session, timeout).Should(Exit(0))
@@ -45,15 +48,26 @@ var _ = Describe("hasura seed create", func() {
 		var sourceName string
 		BeforeEach(func() {
 			projectDirectory = testutil.RandDirName()
-			hgeEndPort, teardownHGE := testutil.StartHasuraWithMetadataDatabase(GinkgoT(), testutil.HasuraDockerImage)
+			hgeEndPort, teardownHGE := testutil.StartHasuraWithMetadataDatabase(
+				GinkgoT(),
+				testutil.HasuraDockerImage,
+			)
 			hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
 			sourceName = randomdata.SillyName()
-			_, teardownPG := testutil.AddDatabaseToHasura(GinkgoT(), hgeEndpoint, sourceName, "postgres")
+			_, teardownPG := testutil.AddDatabaseToHasura(
+				GinkgoT(),
+				hgeEndpoint,
+				sourceName,
+				"postgres",
+			)
 
 			testutil.RunCommandAndSucceed(testutil.CmdOpts{
 				Args: []string{"init", projectDirectory},
 			})
-			editEndpointInConfig(filepath.Join(projectDirectory, defaultConfigFilename), hgeEndpoint)
+			editEndpointInConfig(
+				filepath.Join(projectDirectory, defaultConfigFilename),
+				hgeEndpoint,
+			)
 
 			teardown = func() {
 				teardownPG()
@@ -76,7 +90,10 @@ var _ = Describe("hasura seed create", func() {
 			testutil.RunCommandAndSucceed(testutil.CmdOpts{
 				Args: []string{"init", projectDirectoryConfigV2, "--version", "2"},
 			})
-			editEndpointInConfig(filepath.Join(projectDirectoryConfigV2, defaultConfigFilename), hgeEndpoint)
+			editEndpointInConfig(
+				filepath.Join(projectDirectoryConfigV2, defaultConfigFilename),
+				hgeEndpoint,
+			)
 
 			teardown = func() {
 				teardownHGE()

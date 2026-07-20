@@ -1,5 +1,4 @@
-// +build darwin
-// +build amd64
+//go:build darwin && amd64
 
 package cliext
 

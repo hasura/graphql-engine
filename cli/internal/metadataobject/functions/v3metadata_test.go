@@ -3,11 +3,9 @@ package functions
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/sirupsen/logrus"
-
-	"gopkg.in/yaml.v3"
+	"github.com/stretchr/testify/assert"
+	"go.yaml.in/yaml/v3"
 )
 
 func TestV3MetadataTableConfig_Export(t *testing.T) {
@@ -106,7 +104,7 @@ sources:
 				t.Fatalf("Export() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			var gotS = map[string]string{}
+			gotS := map[string]string{}
 			for k, v := range got {
 				gotS[k] = string(v)
 			}

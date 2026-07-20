@@ -33,10 +33,23 @@ var _ = Describe("hasura migrate delete", func() {
 			testutil.RunCommandAndSucceed(testutil.CmdOpts{
 				Args: []string{"init", projectDirectory},
 			})
-			editEndpointInConfig(filepath.Join(projectDirectory, defaultConfigFilename), hgeEndpoint)
+			editEndpointInConfig(
+				filepath.Join(projectDirectory, defaultConfigFilename),
+				hgeEndpoint,
+			)
 
 			session := testutil.RunCommandAndSucceed(testutil.CmdOpts{
-				Args:             []string{"migrate", "create", "schema_creation", "--up-sql", "create schema \"testing\";", "--down-sql", "drop schema \"testing\" cascade;", "--database-name", "default"},
+				Args: []string{
+					"migrate",
+					"create",
+					"schema_creation",
+					"--up-sql",
+					"create schema \"testing\";",
+					"--down-sql",
+					"drop schema \"testing\" cascade;",
+					"--database-name",
+					"default",
+				},
 				WorkingDirectory: projectDirectory,
 			})
 
@@ -81,10 +94,23 @@ var _ = Describe("hasura migrate delete", func() {
 			testutil.RunCommandAndSucceed(testutil.CmdOpts{
 				Args: []string{"init", projectDirectory},
 			})
-			editEndpointInConfig(filepath.Join(projectDirectory, defaultConfigFilename), hgeEndpoint)
+			editEndpointInConfig(
+				filepath.Join(projectDirectory, defaultConfigFilename),
+				hgeEndpoint,
+			)
 
 			session := testutil.RunCommandAndSucceed(testutil.CmdOpts{
-				Args:             []string{"migrate", "create", "schema_creation", "--up-sql", "create schema \"testing\";", "--down-sql", "drop schema \"testing\" cascade;", "--database-name", "default"},
+				Args: []string{
+					"migrate",
+					"create",
+					"schema_creation",
+					"--up-sql",
+					"create schema \"testing\";",
+					"--down-sql",
+					"drop schema \"testing\" cascade;",
+					"--database-name",
+					"default",
+				},
 				WorkingDirectory: projectDirectory,
 			})
 
@@ -103,7 +129,15 @@ var _ = Describe("hasura migrate delete", func() {
 				Expect(session.Wait(timeout).Err).Should(Say(keyword))
 			}
 
-			args := []string{"migrate", "delete", "--all", "--server", "--database-name", "default", "--force"}
+			args := []string{
+				"migrate",
+				"delete",
+				"--all",
+				"--server",
+				"--database-name",
+				"default",
+				"--force",
+			}
 			cmd := exec.Command(testutil.CLIBinaryPath, args...)
 			cmd.Dir = projectDirectory
 			session, err := Start(
@@ -134,7 +168,17 @@ var _ = Describe("hasura migrate delete", func() {
 
 			editEndpointInConfig(filepath.Join(dirName, defaultConfigFilename), hgeEndpoint)
 			session := testutil.RunCommandAndSucceed(testutil.CmdOpts{
-				Args:             []string{"migrate", "create", "schema_creation", "--up-sql", "create schema \"testing\";", "--down-sql", "drop schema \"testing\" cascade;", "--database-name", "default"},
+				Args: []string{
+					"migrate",
+					"create",
+					"schema_creation",
+					"--up-sql",
+					"create schema \"testing\";",
+					"--down-sql",
+					"drop schema \"testing\" cascade;",
+					"--database-name",
+					"default",
+				},
 				WorkingDirectory: dirName,
 			})
 
@@ -154,7 +198,14 @@ var _ = Describe("hasura migrate delete", func() {
 			}
 
 			session = testutil.Hasura(testutil.CmdOpts{
-				Args:             []string{"migrate", "delete", "--version", version, "--database-name", "default"},
+				Args: []string{
+					"migrate",
+					"delete",
+					"--version",
+					version,
+					"--database-name",
+					"default",
+				},
 				WorkingDirectory: dirName,
 			})
 			Expect(session.Wait(timeout).Err).Should(Say("Deleted migrations"))
@@ -175,9 +226,20 @@ var _ = Describe("hasura migrate delete", func() {
 				Args: []string{"init", projectDirectory, "--version", "2"},
 			})
 
-			editEndpointInConfig(filepath.Join(projectDirectory, defaultConfigFilename), hgeEndpoint)
+			editEndpointInConfig(
+				filepath.Join(projectDirectory, defaultConfigFilename),
+				hgeEndpoint,
+			)
 			session := testutil.RunCommandAndSucceed(testutil.CmdOpts{
-				Args:             []string{"migrate", "create", "schema_creation", "--up-sql", "create schema \"testing\";", "--down-sql", "drop schema \"testing\" cascade;"},
+				Args: []string{
+					"migrate",
+					"create",
+					"schema_creation",
+					"--up-sql",
+					"create schema \"testing\";",
+					"--down-sql",
+					"drop schema \"testing\" cascade;",
+				},
 				WorkingDirectory: projectDirectory,
 			})
 
@@ -217,10 +279,21 @@ var _ = Describe("hasura migrate delete", func() {
 			testutil.RunCommandAndSucceed(testutil.CmdOpts{
 				Args: []string{"init", projectDirectory, "--version", "2"},
 			})
-			editEndpointInConfig(filepath.Join(projectDirectory, defaultConfigFilename), hgeEndpoint)
+			editEndpointInConfig(
+				filepath.Join(projectDirectory, defaultConfigFilename),
+				hgeEndpoint,
+			)
 
 			session := testutil.RunCommandAndSucceed(testutil.CmdOpts{
-				Args:             []string{"migrate", "create", "schema_creation", "--up-sql", "create schema \"testing\";", "--down-sql", "drop schema \"testing\" cascade;"},
+				Args: []string{
+					"migrate",
+					"create",
+					"schema_creation",
+					"--up-sql",
+					"create schema \"testing\";",
+					"--down-sql",
+					"drop schema \"testing\" cascade;",
+				},
 				WorkingDirectory: projectDirectory,
 			})
 
@@ -265,10 +338,21 @@ var _ = Describe("hasura migrate delete", func() {
 			testutil.RunCommandAndSucceed(testutil.CmdOpts{
 				Args: []string{"init", projectDirectory, "--version", "2"},
 			})
-			editEndpointInConfig(filepath.Join(projectDirectory, defaultConfigFilename), hgeEndpoint)
+			editEndpointInConfig(
+				filepath.Join(projectDirectory, defaultConfigFilename),
+				hgeEndpoint,
+			)
 
 			session := testutil.RunCommandAndSucceed(testutil.CmdOpts{
-				Args:             []string{"migrate", "create", "schema_creation", "--up-sql", "create schema \"testing\";", "--down-sql", "drop schema \"testing\" cascade;"},
+				Args: []string{
+					"migrate",
+					"create",
+					"schema_creation",
+					"--up-sql",
+					"create schema \"testing\";",
+					"--down-sql",
+					"drop schema \"testing\" cascade;",
+				},
 				WorkingDirectory: projectDirectory,
 			})
 

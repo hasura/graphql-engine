@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetServerState(t *testing.T) {
@@ -31,7 +30,6 @@ func TestGetServerState(t *testing.T) {
 		{
 			"can generate server state for v1.x",
 			args{
-
 				testutil.NewHttpcClient(t, portV13, nil),
 				fmt.Sprintf("%v/v1/query", hgeEndpointV133),
 				false,
@@ -41,7 +39,6 @@ func TestGetServerState(t *testing.T) {
 		{
 			"can generate server state for latest",
 			args{
-
 				testutil.NewHttpcClient(t, port, nil),
 				fmt.Sprintf("%v/v1/metadata", hgeEndpoint),
 				true,
@@ -51,8 +48,18 @@ func TestGetServerState(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := GetServerState(tt.args.client, tt.args.endpoint, tt.args.hasMetadataV3, tt.args.log)
-			assert.Truef(t, got.UUID != "00000000-0000-0000-0000-000000000000" && got.UUID != "", "expected server UUID to be set got: ", got.UUID)
+			got := GetServerState(
+				tt.args.client,
+				tt.args.endpoint,
+				tt.args.hasMetadataV3,
+				tt.args.log,
+			)
+			assert.Truef(
+				t,
+				got.UUID != "00000000-0000-0000-0000-000000000000" && got.UUID != "",
+				"expected server UUID to be set got: ",
+				got.UUID,
+			)
 		})
 	}
 }

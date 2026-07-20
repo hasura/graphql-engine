@@ -1,14 +1,13 @@
 package version
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
 	goyaml "github.com/goccy/go-yaml"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 func TestV3MetadataV2ConfigVersion_Export(t *testing.T) {
@@ -36,7 +35,9 @@ func TestV3MetadataV2ConfigVersion_Export(t *testing.T) {
 			},
 			args{
 				metadata: func() map[string]yaml.Node {
-					bs, err := ioutil.ReadFile("testdata/v3_metadata_v2_config_export_test/t1/metadata.json")
+					bs, err := os.ReadFile(
+						"testdata/v3_metadata_v2_config_export_test/t1/metadata.json",
+					)
 					assert.NoError(t, err)
 					yamlbs, err := metadatautil.JSONToYAML(bs)
 					assert.NoError(t, err)
@@ -47,7 +48,9 @@ func TestV3MetadataV2ConfigVersion_Export(t *testing.T) {
 			},
 			map[string][]byte{
 				"metadata/version.yaml": func() []byte {
-					bs, err := ioutil.ReadFile("testdata/v3_metadata_v2_config_export_test/t1/want.version.yaml")
+					bs, err := os.ReadFile(
+						"testdata/v3_metadata_v2_config_export_test/t1/want.version.yaml",
+					)
 					assert.NoError(t, err)
 					return bs
 				}(),
@@ -67,7 +70,7 @@ func TestV3MetadataV2ConfigVersion_Export(t *testing.T) {
 				for k, v := range got {
 					assert.Contains(t, tt.want, k)
 					// uncomment to update golden files
-					//assert.NoError(t, ioutil.WriteFile(fmt.Sprintf("testdata/v3_metadata_v2_config_export_test/%v/want.%v", tt.id, filepath.Base(k)), v, os.ModePerm))
+					// assert.NoError(t, os.WriteFile(fmt.Sprintf("testdata/v3_metadata_v2_config_export_test/%v/want.%v", tt.id, filepath.Base(k)), v, os.ModePerm))
 
 					assert.Equalf(t, string(tt.want[k]), string(v), "%v", k)
 				}
@@ -115,8 +118,8 @@ func TestV3MetadataV2ConfigVersion_Build(t *testing.T) {
 				assert.NoError(t, err)
 
 				// uncomment following lines to update golden file
-				assert.NoError(t, ioutil.WriteFile(tt.wantGolden, jsonbs, os.ModePerm))
-				wantbs, err := ioutil.ReadFile(tt.wantGolden)
+				assert.NoError(t, os.WriteFile(tt.wantGolden, jsonbs, os.ModePerm))
+				wantbs, err := os.ReadFile(tt.wantGolden)
 				assert.NoError(t, err)
 				assert.Equal(t, string(wantbs), string(jsonbs))
 			}

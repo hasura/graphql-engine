@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 
 	"github.com/Pallinder/go-randomdata"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -14,7 +13,6 @@ import (
 )
 
 var _ = Describe("hasura metadata clear", func() {
-
 	var projectDirectory string
 	var teardown func()
 	BeforeEach(func() {
@@ -24,7 +22,11 @@ var _ = Describe("hasura metadata clear", func() {
 		sourceName := randomdata.SillyName()
 		connectionString, teardownPG := testutil.StartPGContainer(t)
 
-		hgeEndPort, teardownHGE := testutil.StartHasuraWithPG(t, testutil.HasuraDockerImage, connectionString)
+		hgeEndPort, teardownHGE := testutil.StartHasuraWithPG(
+			t,
+			testutil.HasuraDockerImage,
+			connectionString,
+		)
 		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
 
 		copyTestConfigV3Project(projectDirectory)
@@ -62,7 +64,6 @@ var _ = Describe("hasura metadata clear", func() {
 			Eventually(session, timeout).Should(Exit(0))
 			stdout := session.Out.Contents()
 			Expect(stdout).Should(ContainSubstring("tables"))
-
 		})
 	})
 })

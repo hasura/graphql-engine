@@ -1,17 +1,14 @@
 package pgdump
 
 import (
-	"io/ioutil"
+	"io"
 	"testing"
 
-	pg "github.com/hasura/graphql-engine/cli/v2/internal/hasura/sourceops/postgres"
-
-	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
-
-	"github.com/stretchr/testify/require"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	pg "github.com/hasura/graphql-engine/cli/v2/internal/hasura/sourceops/postgres"
 	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
+	"github.com/stretchr/testify/require"
 )
 
 func TestClient_Send(t *testing.T) {
@@ -107,7 +104,7 @@ ALTER TABLE public.test OWNER TO test;
 			got, err := c.Send(tt.args.request)
 			tt.assertErr(t, err)
 			if !tt.wantErr {
-				gotb, err := ioutil.ReadAll(got)
+				gotb, err := io.ReadAll(got)
 				require.NoError(t, err)
 				require.Equal(t, tt.want, string(gotb))
 			}

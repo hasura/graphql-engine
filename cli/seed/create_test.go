@@ -1,17 +1,15 @@
 package seed
 
 import (
-	"io/ioutil"
+	"io"
+	"os"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/pgdump"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1query"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
-
-	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDriver_ExportDatadump(t *testing.T) {
@@ -67,13 +65,13 @@ SELECT pg_catalog.setval('public.authors_id_seq', 1, false);
 			func(t *testing.T) {
 				c := testutil.NewHttpcClient(t, port, nil)
 				q := v1query.New(c, "v2/query")
-				b, err := ioutil.ReadFile("testdata/seeds/articles.sql")
+				b, err := os.ReadFile("testdata/seeds/articles.sql")
 				require.NoError(t, err)
 				_, err = q.PGRunSQL(hasura.PGRunSQLInput{
 					SQL: string(b),
 				})
 				require.NoError(t, err)
-				b, err = ioutil.ReadFile("testdata/seeds/authors.sql")
+				b, err = os.ReadFile("testdata/seeds/authors.sql")
 				require.NoError(t, err)
 				_, err = q.PGRunSQL(hasura.PGRunSQLInput{
 					SQL: string(b),
@@ -97,7 +95,7 @@ SELECT pg_catalog.setval('public.authors_id_seq', 1, false);
 			if tt.wantErr {
 				return
 			}
-			gotb, err := ioutil.ReadAll(got)
+			gotb, err := io.ReadAll(got)
 			require.NoError(t, err)
 			require.Equal(t, tt.want, string(gotb))
 		})

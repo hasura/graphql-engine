@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewScriptsCmd returns the scripts command
+// NewScriptsCmd returns the scripts command.
 func NewScriptsCmd(ec *cli.ExecutionContext) *cobra.Command {
 	scriptsCmd := &cobra.Command{
 		Use:          "scripts",
@@ -17,5 +17,6 @@ func NewScriptsCmd(ec *cli.ExecutionContext) *cobra.Command {
 		newScriptsUpdateConfigV2Cmd(ec),
 		newUpdateMultipleSources(ec),
 	)
+
 	return scriptsCmd
 }

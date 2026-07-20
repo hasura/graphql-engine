@@ -5,14 +5,12 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
-
-	"github.com/gin-contrib/cors"
-
-	"github.com/gin-gonic/gin"
-	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/migrate"
 	"github.com/hasura/graphql-engine/cli/v2/migrate/api"
 	_ "github.com/hasura/graphql-engine/cli/v2/migrate/database/hasuradb"
@@ -37,11 +35,13 @@ func (e errMessage) Error() string {
 	if err == nil {
 		return string(b)
 	}
+
 	return e.ErrorMessage
 }
 
 func cliProjectUpdateCheck(ec *cli.ExecutionContext) gin.HandlerFunc {
 	const updateRequiredMessage = "looks like you are trying to use hasura with multiple databases, this requires changes to your project directory. Please use `hasura scripts update-project-v3` to update your project"
+
 	return func(c *gin.Context) {
 		type response struct {
 			Code       string `json:"code,omitempty"`
@@ -53,29 +53,42 @@ func cliProjectUpdateCheck(ec *cli.ExecutionContext) gin.HandlerFunc {
 		if ec.Config.Version <= cli.V2 && ec.HasMetadataV3 {
 			sources, err := metadatautil.GetSources(ec.APIClient.V1Metadata.ExportMetadata)
 			if err != nil {
-				c.AbortWithStatusJSON(http.StatusBadRequest, &response{Code: "internal_error", Message: errMessage{"cannot list sources"}.Error()})
+				c.AbortWithStatusJSON(
+					http.StatusBadRequest,
+					&response{
+						Code:    "internal_error",
+						Message: errMessage{"cannot list sources"}.Error(),
+					},
+				)
+
 				return
 			}
+
 			if len(sources) > 1 {
 				r := response{
 					Code:    "internal_error",
 					Message: errMessage{updateRequiredMessage}.Error(),
 				}
 				c.AbortWithStatusJSON(http.StatusInternalServerError, &r)
+
 				return
 			}
 		}
+
 		c.Next()
 	}
 }
 
 func NewAPIServer(address string, port string, ec *cli.ExecutionContext) (*APIServer, error) {
 	var op errors.Op = "console.NewAPIServer"
+
 	migrate, err := migrate.NewMigrate(ec, false, "", hasura.SourceKindPG)
 	if err != nil {
 		return nil, errors.E(op, fmt.Errorf("error creating migrate instance: %w", err))
 	}
+
 	gin.SetMode(gin.ReleaseMode)
+
 	router := gin.New()
 	// Setup API Router
 	// Switch to "release" mode in production.
@@ -86,6 +99,7 @@ func NewAPIServer(address string, port string, ec *cli.ExecutionContext) (*APISe
 
 	apiServer := &APIServer{Router: router, Migrate: migrate, Address: address, Port: port, EC: ec}
 	apiServer.setRoutes(ec.MigrationDir, ec.Logger)
+
 	return apiServer, nil
 }
 
@@ -98,7 +112,6 @@ func (r *APIServer) GetHTTPServer() *http.Server {
 }
 
 func (r *APIServer) setRoutes(migrationDir string, logger *logrus.Logger) {
-
 	apis := r.Router.Group("/apis")
 	{
 		apis.Use(r.setLogger(logger))
@@ -113,11 +126,13 @@ func (r *APIServer) setRoutes(migrationDir string, logger *logrus.Logger) {
 			{
 				settingsAPIs.Any("", api.SettingsAPI)
 			}
+
 			squashAPIs := migrateAPIs.Group("/squash")
 			{
 				squashAPIs.POST("/create", api.SquashCreateAPI)
 				squashAPIs.POST("/delete", api.SquashDeleteAPI)
 			}
+
 			migrateAPIs.Any("", api.MigrateAPI)
 		}
 		// Migrate api endpoints and middleware
@@ -174,7 +189,7 @@ func (r *APIServer) setLogger(logger *logrus.Logger) gin.HandlerFunc {
 }
 
 func allowCors() gin.HandlerFunc {
-	var config = cors.DefaultConfig()
+	config := cors.DefaultConfig()
 	config.AddAllowHeaders("X-Hasura-User-Id")
 	config.AddAllowHeaders(cli.XHasuraAccessKey)
 	config.AddAllowHeaders(cli.XHasuraAdminSecret)
@@ -187,5 +202,6 @@ func allowCors() gin.HandlerFunc {
 	config.AddAllowHeaders("Hasura-Internal-Request-Source")
 	config.AllowAllOrigins = true
 	config.AllowCredentials = false
+
 	return cors.New(config)
 }

@@ -2,7 +2,7 @@ package types
 
 import (
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 // CodegenExecutionConfig represents the config required to generate codegen for an action.
@@ -10,7 +10,7 @@ type CodegenExecutionConfig struct {
 	// Framework to be used
 	Framework string `json:"framework" yaml:"framework"`
 	// OutputDir - path to the directory where generated files will be saved.
-	OutputDir string `json:"output_dir" yaml:"output_dir"`
+	OutputDir string `json:"output_dir"    yaml:"output_dir"`
 	URI       string `json:"uri,omitempty" yaml:"uri,omitempty"`
 }
 
@@ -25,7 +25,7 @@ type ActionExecutionConfig struct {
 }
 
 type Common struct {
-	Actions     []Action    `json:"actions" yaml:"actions"`
+	Actions     []Action    `json:"actions"      yaml:"actions"`
 	CustomTypes CustomTypes `json:"custom_types" yaml:"custom_types"`
 }
 
@@ -54,86 +54,87 @@ func (c *Common) SetExportDefault() {
 }
 
 type Action struct {
-	Name        string      `json:"name" yaml:"name"`
-	Definition  ActionDef   `json:"definition" yaml:"definition"`
-	Permissions yaml.Node   `json:"-" yaml:"permissions,omitempty"`
-	Comment     interface{} `json:"comment,omitempty" yaml:"comment,omitempty"`
+	Name        string    `json:"name"              yaml:"name"`
+	Definition  ActionDef `json:"definition"        yaml:"definition"`
+	Permissions yaml.Node `json:"-"                 yaml:"permissions,omitempty"`
+	Comment     any       `json:"comment,omitempty" yaml:"comment,omitempty"`
 }
 
 type ActionType string
 
 const (
-	// For query type
+	// For query type.
 	ActionTypeQuery ActionType = "query"
-	// For mutation type
+	// For mutation type.
 	ActionTypeMutation = "mutation"
 )
 
 type ActionDef struct {
-	Kind                 string      `json:"kind" yaml:"kind"`
-	Type                 ActionType  `json:"type" yaml:"type,omitempty"`
-	Handler              string      `json:"handler" yaml:"handler"`
-	Arguments            []yaml.Node `json:"arguments" yaml:"arguments,omitempty"`
-	OutputType           string      `json:"output_type" yaml:"output_type,omitempty"`
-	ForwardClientHeaders bool        `json:"-" yaml:"forward_client_headers,omitempty"`
-	Headers              yaml.Node   `json:"-" yaml:"headers,omitempty"`
-	Timeout              int         `json:"-" yaml:"timeout,omitempty"`
-	RequestTransform     yaml.Node   `json:"request_transform,omitempty" yaml:"request_transform,omitempty"`
+	Kind                 string      `json:"kind"                         yaml:"kind"`
+	Type                 ActionType  `json:"type"                         yaml:"type,omitempty"`
+	Handler              string      `json:"handler"                      yaml:"handler"`
+	Arguments            []yaml.Node `json:"arguments"                    yaml:"arguments,omitempty"`
+	OutputType           string      `json:"output_type"                  yaml:"output_type,omitempty"`
+	ForwardClientHeaders bool        `json:"-"                            yaml:"forward_client_headers,omitempty"`
+	Headers              yaml.Node   `json:"-"                            yaml:"headers,omitempty"`
+	Timeout              int         `json:"-"                            yaml:"timeout,omitempty"`
+	RequestTransform     yaml.Node   `json:"request_transform,omitempty"  yaml:"request_transform,omitempty"`
 	ResponseTransform    yaml.Node   `json:"response_transform,omitempty" yaml:"response_transform,omitempty"`
 }
 
 type CustomTypes struct {
-	Enums        []CustomTypeDef `json:"enums" yaml:"enums"`
+	Enums        []CustomTypeDef `json:"enums"         yaml:"enums"`
 	InputObjects []CustomTypeDef `json:"input_objects" yaml:"input_objects"`
-	Objects      []CustomTypeDef `json:"objects" yaml:"objects"`
-	Scalars      []CustomTypeDef `json:"scalars" yaml:"scalars"`
+	Objects      []CustomTypeDef `json:"objects"       yaml:"objects"`
+	Scalars      []CustomTypeDef `json:"scalars"       yaml:"scalars"`
 }
 
 type CustomTypeDef struct {
-	Name          string      `json:"name" yaml:"name"`
+	Name          string      `json:"name"                  yaml:"name"`
 	Description   *string     `json:"description,omitempty" yaml:"description,omitempty"`
-	Fields        []yaml.Node `json:"fields,omitempty" yaml:"fields,omitempty"`
-	Values        []yaml.Node `json:"values,omitempty" yaml:"values,omitempty"`
-	Relationships yaml.Node   `json:"-" yaml:"relationships,omitempty"`
+	Fields        []yaml.Node `json:"fields,omitempty"      yaml:"fields,omitempty"`
+	Values        []yaml.Node `json:"values,omitempty"      yaml:"values,omitempty"`
+	Relationships yaml.Node   `json:"-"                     yaml:"relationships,omitempty"`
 }
 
 // CLI Extension types
 
-// DerivePayload defines the object required to derive operation
+// DerivePayload defines the object required to derive operation.
 type DerivePayload struct {
 	IntrospectionSchema hasura.IntrospectionSchema `json:"introspection_schema" yaml:"introspection_schema,omitempty"`
-	Operation           string                     `json:"operation" yaml:"operation,omitempty"`
-	ActionName          string                     `json:"action_name" yaml:"action_name,omitempty"`
+	Operation           string                     `json:"operation"            yaml:"operation,omitempty"`
+	ActionName          string                     `json:"action_name"          yaml:"action_name,omitempty"`
 }
 
 type SDLPayload struct {
-	Complete string `json:"complete"`
+	Complete string `json:"complete" yaml:"complete"`
 }
 
 type SDLToRequest struct {
-	Types   CustomTypes   `json:"types,omitempty" yaml:"types,omitempty"`
+	Types   CustomTypes   `json:"types,omitempty"   yaml:"types,omitempty"`
 	Actions []Action      `json:"actions,omitempty" yaml:"actions,omitempty"`
-	Derive  DerivePayload `json:"derive,omitempty" yaml:"derive,omitempty"`
+	Derive  DerivePayload `json:"derive,omitempty"  yaml:"derive,omitempty"`
 }
 
 type SDLToResponse struct {
-	SDL SDLPayload `json:"sdl"`
+	SDL SDLPayload `json:"sdl" yaml:"sdl"`
 }
 
 type SDLFromRequest struct {
-	SDL SDLPayload `json:"sdl"`
+	SDL SDLPayload `json:"sdl" yaml:"sdl"`
 }
 
 type SDLFromResponse struct {
-	Types   CustomTypes `json:"types"`
-	Actions []Action    `json:"actions"`
+	Types CustomTypes `json:"types" yaml:"types"`
+
+	Actions []Action `json:"actions" yaml:"actions"`
 }
 
 type ActionsCodegenRequest struct {
-	ActionName    string                  `json:"action_name" yaml:"action_name,omitempty"`
-	SDL           SDLPayload              `json:"sdl" yaml:"sdl,omitempty"`
-	Derive        DerivePayload           `json:"derive,omitempty"`
-	CodegenConfig *CodegenExecutionConfig `json:"codegen_config" yaml:"codegen_config,omitempty"`
+	ActionName    string                  `json:"action_name"      yaml:"action_name,omitempty"`
+	SDL           SDLPayload              `json:"sdl"              yaml:"sdl,omitempty"`
+	Derive        DerivePayload           `json:"derive,omitempty" yaml:"derive,omitempty"`
+	CodegenConfig *CodegenExecutionConfig `json:"codegen_config"   yaml:"codegen_config,omitempty"`
 }
 
 type CodegenFile struct {

@@ -7,7 +7,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/sources"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 func TestAddSourceCommandName(t *testing.T) {
@@ -93,7 +93,12 @@ func TestBuildAddSourceBulkRequest(t *testing.T) {
 	assert.Contains(t, pg.Args, "configuration")
 	assert.Contains(t, pg.Args, "customization")
 	assert.NotContains(t, pg.Args, "tables", "tables must never be sent by apply-data-sources")
-	assert.NotContains(t, pg.Args, "functions", "functions must never be sent by apply-data-sources")
+	assert.NotContains(
+		t,
+		pg.Args,
+		"functions",
+		"functions must never be sent by apply-data-sources",
+	)
 	// connection configuration (including from_env) is carried through faithfully
 	cfg, ok := pg.Args["configuration"].(map[string]interface{})
 	require.True(t, ok)

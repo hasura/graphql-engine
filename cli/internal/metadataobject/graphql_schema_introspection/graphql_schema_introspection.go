@@ -2,16 +2,14 @@ package graphqlschemaintrospection
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
-
 	"github.com/sirupsen/logrus"
-
-	"github.com/hasura/graphql-engine/cli/v2"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 type MetadataObject struct {
@@ -32,16 +30,21 @@ func (o *MetadataObject) Validate() error {
 }
 
 func (o *MetadataObject) CreateFiles() error {
-	var op errors.Op = "graphqlschemaintrospection.MetadataObject.CreateFiles"
-	var v interface{}
+	var (
+		op errors.Op = "graphqlschemaintrospection.MetadataObject.CreateFiles"
+		v  any
+	)
+
 	data, err := yaml.Marshal(v)
 	if err != nil {
 		return errors.E(op, err)
 	}
-	err = ioutil.WriteFile(filepath.Join(o.MetadataDir, o.Filename()), data, 0644)
+
+	err = os.WriteFile(filepath.Join(o.MetadataDir, o.Filename()), data, 0o644)
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
@@ -49,19 +52,22 @@ type graphQLSchemaIntrospectionObject struct {
 	DisabledForRoles []yaml.Node `yaml:"disabled_for_roles"`
 }
 
-func (o *MetadataObject) Build() (map[string]interface{}, error) {
+func (o *MetadataObject) Build() (map[string]any, error) {
 	var op errors.Op = "graphqlschemaintrospection.MetadataObject.Build"
+
 	data, err := metadataobject.ReadMetadataFile(filepath.Join(o.MetadataDir, o.Filename()))
 	if err != nil {
 		return nil, errors.E(op, o.error(err))
 	}
+
 	var obj graphQLSchemaIntrospectionObject
+
 	err = yaml.Unmarshal(data, &obj)
 	if err != nil {
 		return nil, errors.E(op, o.error(err))
 	}
 
-	return map[string]interface{}{o.Key(): obj}, nil
+	return map[string]any{o.Key(): obj}, nil
 }
 
 // Export implementation here can probably use metadataobject.DefaultExport
@@ -71,34 +77,44 @@ func (o *MetadataObject) Build() (map[string]interface{}, error) {
 // JSON with "cron_triggers": []. Similarly, If I try to "clear" "graphql_schema_introspection" it'll not work
 //
 // $ hasura metadata apply -o json --dry-run
-// {
-//  // ....other objects skipped for brevity
-//  "graphql_schema_introspection": {}
-//}
+//
+//	{
+//	 // ....other objects skipped for brevity
+//	 "graphql_schema_introspection": {}
+//	}
+//
 // $ hasura md apply
 // FATA[0001] error applying metadata
-//{
-//  "path": "$.args.metadata.graphql_schema_introspection",
-//  "error": "the key 'disabled_for_roles' was not present",
-//  "code": "parse-failed"
-//}
+//
+//	{
+//	 "path": "$.args.metadata.graphql_schema_introspection",
+//	 "error": "the key 'disabled_for_roles' was not present",
+//	 "code": "parse-failed"
+//	}.
 func (o *MetadataObject) Export(metadata map[string]yaml.Node) (map[string][]byte, error) {
-	var op errors.Op = "graphqlschemaintrospection.MetadataObject.Export"
-	var object graphQLSchemaIntrospectionObject
+	var (
+		op     errors.Op = "graphqlschemaintrospection.MetadataObject.Export"
+		object graphQLSchemaIntrospectionObject
+	)
+
 	if v, ok := metadata[o.Key()]; ok {
 		objectbs, err := yaml.Marshal(v)
 		if err != nil {
 			return nil, errors.E(op, o.error(err))
 		}
+
 		if err := yaml.Unmarshal(objectbs, &object); err != nil {
 			return nil, errors.E(op, o.error(err))
 		}
 	}
+
 	var buf bytes.Buffer
+
 	err := metadataobject.GetEncoder(&buf).Encode(object)
 	if err != nil {
 		return nil, errors.E(op, o.error(err))
 	}
+
 	return map[string][]byte{
 		filepath.ToSlash(filepath.Join(o.BaseDirectory(), o.Filename())): buf.Bytes(),
 	}, nil
@@ -114,20 +130,27 @@ func (o *MetadataObject) Filename() string {
 
 func (o *MetadataObject) GetFiles() ([]string, error) {
 	var op errors.Op = "graphqlschemaintrospection.MetadataObject.GetFiles"
+
 	rootFile := filepath.Join(o.BaseDirectory(), o.Filename())
+
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {
 		return nil, errors.E(op, o.error(err))
 	}
+
 	return files, nil
 }
 
 func (o *MetadataObject) WriteDiff(opts metadataobject.WriteDiffOpts) error {
 	var op errors.Op = "graphqlschemaintrospection.MetadataObject.WriteDiff"
-	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: o, WriteDiffOpts: opts})
+
+	err := metadataobject.DefaultWriteDiff(
+		metadataobject.DefaultWriteDiffOpts{From: o, WriteDiffOpts: opts},
+	)
 	if err != nil {
 		return errors.E(op, o.error(err))
 	}
+
 	return nil
 }
 
@@ -135,6 +158,9 @@ func (o *MetadataObject) BaseDirectory() string {
 	return o.MetadataDir
 }
 
-func (o *MetadataObject) error(err error, additionalContext ...string) metadataobject.ErrParsingMetadataObject {
+func (o *MetadataObject) error(
+	err error,
+	additionalContext ...string,
+) metadataobject.ErrParsingMetadataObject {
 	return metadataobject.NewErrParsingMetadataObject(o, err, additionalContext...)
 }

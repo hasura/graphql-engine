@@ -2,19 +2,17 @@ package allowlist
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
 	goyaml "github.com/goccy/go-yaml"
-	"gopkg.in/yaml.v3"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.yaml.in/yaml/v3"
 )
 
 func TestAllowListConfig_WriteDiff(t *testing.T) {
@@ -64,9 +62,9 @@ func TestAllowListConfig_WriteDiff(t *testing.T) {
 			wantGoldenFilePath := filepath.Join("testdata/write_diff", tt.name, "want.golden")
 
 			// uncomment to update test golden file
-			//assert.NoError(t, ioutil.WriteFile(wantGoldenFilePath, w.Bytes(), os.ModePerm))
+			// assert.NoError(t, os.WriteFile(wantGoldenFilePath, w.Bytes(), os.ModePerm))
 
-			want, err := ioutil.ReadFile(wantGoldenFilePath)
+			want, err := os.ReadFile(wantGoldenFilePath)
 			assert.NoError(t, err)
 			if !tt.wantErr {
 				assert.Equal(t, string(want), w.String())
@@ -99,7 +97,7 @@ func TestAllowListConfig_Export(t *testing.T) {
 			},
 			args{
 				metadata: func() map[string]yaml.Node {
-					bs, err := ioutil.ReadFile("testdata/export_test/metadata.json")
+					bs, err := os.ReadFile("testdata/export_test/metadata.json")
 					assert.NoError(t, err)
 					yamlbs, err := metadatautil.JSONToYAML(bs)
 					assert.NoError(t, err)
@@ -108,7 +106,9 @@ func TestAllowListConfig_Export(t *testing.T) {
 					return v
 				}(),
 			},
-			map[string][]byte{"testdata/metadata/allow_list.yaml": []byte("- collection: allowed-queries\n")},
+			map[string][]byte{
+				"testdata/metadata/allow_list.yaml": []byte("- collection: allowed-queries\n"),
+			},
 			false,
 			require.NoError,
 		},
@@ -179,9 +179,9 @@ func TestAllowListConfig_Build(t *testing.T) {
 				assert.NoError(t, err)
 				assert.NoError(t, err)
 				// uncomment to update golden file
-				//assert.NoError(t, ioutil.WriteFile(tt.wantGolden, jsonbs, os.ModePerm))
+				// assert.NoError(t, os.WriteFile(tt.wantGolden, jsonbs, os.ModePerm))
 
-				wantbs, err := ioutil.ReadFile(tt.wantGolden)
+				wantbs, err := os.ReadFile(tt.wantGolden)
 				assert.NoError(t, err)
 				assert.Equal(t, string(wantbs), string(jsonbs))
 			}

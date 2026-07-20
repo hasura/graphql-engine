@@ -134,20 +134,32 @@ var _ = Describe("hasura migrate create (config v2)", func() {
 	var teardown func()
 	BeforeEach(func() {
 		projectDirectoryLatest = testutil.RandDirName()
-		hgeEndPortLatest, teardownHGELatest := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
+		hgeEndPortLatest, teardownHGELatest := testutil.StartHasura(
+			GinkgoT(),
+			testutil.HasuraDockerImage,
+		)
 		hgeEndpointLatest := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPortLatest)
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
 			Args: []string{"init", projectDirectoryLatest, "--version", "2"},
 		})
-		editEndpointInConfig(filepath.Join(projectDirectoryLatest, defaultConfigFilename), hgeEndpointLatest)
+		editEndpointInConfig(
+			filepath.Join(projectDirectoryLatest, defaultConfigFilename),
+			hgeEndpointLatest,
+		)
 
 		projectDirectoryV13 = testutil.RandDirName()
-		hgeEndPortV13, teardownHGEV13 := testutil.StartHasura(GinkgoT(), "hasura/graphql-engine:v1.3.3")
+		hgeEndPortV13, teardownHGEV13 := testutil.StartHasura(
+			GinkgoT(),
+			"hasura/graphql-engine:v1.3.3",
+		)
 		hgeEndpointV13 := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPortV13)
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
 			Args: []string{"init", projectDirectoryV13, "--version", "2"},
 		})
-		editEndpointInConfig(filepath.Join(projectDirectoryV13, defaultConfigFilename), hgeEndpointV13)
+		editEndpointInConfig(
+			filepath.Join(projectDirectoryV13, defaultConfigFilename),
+			hgeEndpointV13,
+		)
 
 		teardown = func() {
 			session.Kill()

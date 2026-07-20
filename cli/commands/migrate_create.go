@@ -1,21 +1,20 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
+	"strconv"
 	"time"
-
-	"errors"
 
 	"github.com/hasura/graphql-engine/cli/v2"
 	herrors "github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 	"github.com/hasura/graphql-engine/cli/v2/migrate"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-
 	mig "github.com/hasura/graphql-engine/cli/v2/migrate/cmd"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 const migrateCreateCmdExamples = `  # Setup migration files for the first time by introspecting a server:
@@ -58,16 +57,21 @@ Further reading:
 			if cmd.Flags().Changed("up-sql") {
 				opts.upSQLChanged = true
 			}
+
 			if cmd.Flags().Changed("down-sql") {
 				opts.downSQLChanged = true
 			}
+
 			if cmd.Flags().Changed("metadata-from-server") {
 				return herrors.E(op, "metadata-from-server flag is deprecated")
 			}
+
 			if cmd.Flags().Changed("metadata-from-file") {
 				return herrors.E(op, "metadata-from-file flag is deprecated")
 			}
-			if err := validateConfigV3Flags(cmd, ec); err != nil {
+
+			err := validateConfigV3Flags(cmd, ec)
+			if err != nil {
 				if errors.Is(err, errDatabaseNotFound) {
 					// this means provided database is not yet connected to hasura
 					// this can be ignored for `migrate create`
@@ -75,8 +79,10 @@ Further reading:
 					// which are not connected
 					ec.Logger.Warnf("database '%s' is not connected to hasura", ec.Source.Name)
 					ec.Source.Kind = hasura.SourceKindPG // the default kind is postgres
+
 					return nil
 				}
+
 				return herrors.E(op, err)
 			}
 
@@ -87,6 +93,7 @@ Further reading:
 			if opts.downSQLChanged && !opts.upSQLChanged {
 				ec.Logger.Warn("you are creating a down migration without an up migration")
 			}
+
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -96,13 +103,16 @@ Further reading:
 			opts.Source = ec.Source
 			version, err := opts.run()
 			opts.EC.Spinner.Stop()
+
 			if err != nil {
 				return herrors.E(op, err)
 			}
+
 			opts.EC.Logger.WithFields(log.Fields{
 				"version": version,
 				"name":    opts.name,
 			}).Info("Migrations files created")
+
 			return nil
 		},
 	}
@@ -110,22 +120,67 @@ Further reading:
 	opts.flags = f
 	f.SortFlags = false
 
-	f.BoolVar(&opts.fromServer, "from-server", false, "take pg_dump of schema (default: public) and Hasura metadata from the server")
-	f.StringVar(&opts.sqlFile, "sql-from-file", "", "path to an SQL file which contains the SQL statements")
-	f.BoolVar(&opts.sqlServer, "sql-from-server", false, "take pg_dump from the server (default: public) and save it as a migration")
-	f.StringSliceVar(&opts.includeSchemas, "schema", []string{"public"}, "name of Postgres schema to export as a migration. provide multiple schemas with a comma separated list e.g. --schema public,user")
-	f.StringVar(&opts.metaDataFile, "metadata-from-file", "", "path to a hasura metadata file to be used for up actions")
-	f.BoolVar(&opts.metaDataServer, "metadata-from-server", false, "take metadata from the server and write it as an up migration file")
-	f.StringVar(&opts.upSQL, "up-sql", "", "sql string/query that is to be used to create an up migration")
-	f.StringVar(&opts.downSQL, "down-sql", "", "sql string/query that is to be used to create a down migration")
+	f.BoolVar(
+		&opts.fromServer,
+		"from-server",
+		false,
+		"take pg_dump of schema (default: public) and Hasura metadata from the server",
+	)
+	f.StringVar(
+		&opts.sqlFile,
+		"sql-from-file",
+		"",
+		"path to an SQL file which contains the SQL statements",
+	)
+	f.BoolVar(
+		&opts.sqlServer,
+		"sql-from-server",
+		false,
+		"take pg_dump from the server (default: public) and save it as a migration",
+	)
+	f.StringSliceVar(
+		&opts.includeSchemas,
+		"schema",
+		[]string{"public"},
+		"name of Postgres schema to export as a migration. provide multiple schemas with a comma separated list e.g. --schema public,user",
+	)
+	f.StringVar(
+		&opts.metaDataFile,
+		"metadata-from-file",
+		"",
+		"path to a hasura metadata file to be used for up actions",
+	)
+	f.BoolVar(
+		&opts.metaDataServer,
+		"metadata-from-server",
+		false,
+		"take metadata from the server and write it as an up migration file",
+	)
+	f.StringVar(
+		&opts.upSQL,
+		"up-sql",
+		"",
+		"sql string/query that is to be used to create an up migration",
+	)
+	f.StringVar(
+		&opts.downSQL,
+		"down-sql",
+		"",
+		"sql string/query that is to be used to create a down migration",
+	)
 
-	if err := f.MarkDeprecated("sql-from-server", "use --from-server instead"); err != nil {
+	err := f.MarkDeprecated("sql-from-server", "use --from-server instead")
+	if err != nil {
 		ec.Logger.Debugf("marking flag --sql-from-server as depricatef failed: %v", err)
 	}
-	if err := migrateCreateCmd.MarkFlagFilename("sql-from-file", "sql"); err != nil {
+
+	err = migrateCreateCmd.MarkFlagFilename("sql-from-file", "sql")
+	if err != nil {
 		ec.Logger.WithError(err).Errorf("error while using a dependency library")
 	}
-	if err := migrateCreateCmd.MarkFlagFilename("metadata-from-file", "json"); err != nil {
+
+	err = migrateCreateCmd.MarkFlagFilename("metadata-from-file", "json")
+	if err != nil {
 		ec.Logger.WithError(err).Errorf("error while using a dependency library")
 	}
 
@@ -155,6 +210,7 @@ type migrateCreateOptions struct {
 
 func (o *migrateCreateOptions) run() (version int64, err error) {
 	var op herrors.Op = "migrate.migrateCreateOptions.run"
+
 	timestamp := getTime()
 	createOptions := mig.New(timestamp, o.name, filepath.Join(o.EC.MigrationDir, o.Source.Name))
 
@@ -179,14 +235,24 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 			return 0, herrors.E(op, fmt.Errorf("cannot set sql file: %w", err))
 		}
 	}
+
 	if o.sqlServer {
-		data, err := migrateDrv.ExportSchemaDump(o.includeSchemas, o.excludeSchemas, o.Source.Name, o.Source.Kind)
+		data, err := migrateDrv.ExportSchemaDump(
+			o.includeSchemas,
+			o.excludeSchemas,
+			o.Source.Name,
+			o.Source.Kind,
+		)
 		if err != nil {
 			return 0, herrors.E(op, fmt.Errorf("cannot fetch schema dump: %w", err))
 		}
+
 		err = createOptions.SetSQLUp(string(data))
 		if err != nil {
-			return 0, herrors.E(op, fmt.Errorf("while writing data from server into the up.sql file: %w", err))
+			return 0, herrors.E(
+				op,
+				fmt.Errorf("while writing data from server into the up.sql file: %w", err),
+			)
 		}
 	}
 
@@ -194,14 +260,20 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 	if o.upSQLChanged {
 		err = createOptions.SetSQLUp(o.upSQL)
 		if err != nil {
-			return 0, herrors.E(op, fmt.Errorf("up migration with SQL string could not be created: %w", err))
+			return 0, herrors.E(
+				op,
+				fmt.Errorf("up migration with SQL string could not be created: %w", err),
+			)
 		}
 	}
 
 	if o.downSQLChanged {
 		err = createOptions.SetSQLDown(o.downSQL)
 		if err != nil {
-			return 0, herrors.E(op, fmt.Errorf("down migration with SQL string could not be created: %w", err))
+			return 0, herrors.E(
+				op,
+				fmt.Errorf("down migration with SQL string could not be created: %w", err),
+			)
 		}
 	}
 
@@ -210,6 +282,7 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 		if !o.upSQLChanged {
 			createOptions.SQLUp = []byte(``)
 		}
+
 		if !o.downSQLChanged {
 			createOptions.SQLDown = []byte(``)
 		}
@@ -217,34 +290,44 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 
 	defer func() {
 		if err != nil {
-			if err := createOptions.Delete(); err != nil {
+			err := createOptions.Delete()
+			if err != nil {
 				o.EC.Logger.Warnf("cannot delete dangling migrations: %v", err)
 			}
 		}
 	}()
+
 	err = createOptions.Create()
 	if err != nil {
 		return 0, herrors.E(op, fmt.Errorf("error creating migration files: %w", err))
 	}
+
 	o.EC.Spinner.Stop()
 	o.EC.Logger.Infof("Created Migrations")
+
 	if o.fromServer {
 		opts := &MigrateApplyOptions{
 			EC:               o.EC,
 			SkipExecution:    true,
-			VersionMigration: fmt.Sprintf("%d", timestamp),
+			VersionMigration: strconv.FormatInt(timestamp, 10),
 			Source:           o.Source,
 		}
+
 		err := opts.Run()
 		if err != nil {
 			o.EC.Logger.Warnf("cannot mark created migration %d as applied: %v", timestamp, err)
-			o.EC.Logger.Warnf("manually mark it as applied using command:  hasura migrate apply --skip-execution --version %d", timestamp)
+			o.EC.Logger.Warnf(
+				"manually mark it as applied using command:  hasura migrate apply --skip-execution --version %d",
+				timestamp,
+			)
 		}
 	}
+
 	return timestamp, nil
 }
 
 func getTime() int64 {
 	startTime := time.Now()
+
 	return startTime.UnixNano() / int64(time.Millisecond)
 }

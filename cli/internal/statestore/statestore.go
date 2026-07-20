@@ -13,7 +13,7 @@ type Version struct {
 	Dirty   bool
 }
 
-// Abstraction for the storage layer for migration state
+// Abstraction for the storage layer for migration state.
 type MigrationsStateStore interface {
 	InsertVersion(database string, version int64) error
 	RemoveVersion(database string, version int64) error
@@ -24,7 +24,7 @@ type MigrationsStateStore interface {
 	PrepareMigrationsStateStore(database string) error
 }
 
-// Abstraction for storage layer of CLI settings
+// Abstraction for storage layer of CLI settings.
 type SettingsStateStore interface {
 	GetSetting(name string) (value string, err error)
 	UpdateSetting(name string, value string) error
@@ -41,39 +41,47 @@ func NewCLICatalogState(client hasura.CatalogStateOperations) *CLICatalogState {
 }
 
 func (c *CLICatalogState) Get() (*CLIState, error) {
-	var op errors.Op = "statestore.CLICatalogState.Get"
-	var state struct {
-		CLIState *CLIState `json:"cli_state"`
-	}
+	var (
+		op    errors.Op = "statestore.CLICatalogState.Get"
+		state struct {
+			CLIState *CLIState `json:"cli_state"`
+		}
+	)
+
 	b, err := c.client.Get()
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
-	if err := json.NewDecoder(b).Decode(&state); err != nil {
+
+	err = json.NewDecoder(b).Decode(&state)
+	if err != nil {
 		return nil, errors.E(op, err)
 	}
+
 	return state.CLIState, nil
 }
 
 func (c *CLICatalogState) Set(state CLIState) (io.Reader, error) {
 	var op errors.Op = "statestore.CLICatalogState.Set"
+
 	r, err := c.client.Set("cli", state)
 	if err != nil {
 		return r, errors.E(op, err)
 	}
+
 	return r, nil
 }
 
-//
 // "default:
-//		Version			     Dirty
-//		--------------------------
-//		"12321312321321321": true
+//
+//	Version			     Dirty
+//	--------------------------
+//	"12321312321321321": true
 type MigrationsState map[string]map[string]bool
 
 type CLIState struct {
 	Migrations MigrationsState   `json:"migrations,omitempty" mapstructure:"migrations,omitempty"`
-	Settings   map[string]string `json:"settings" mapstructure:"settings"`
+	Settings   map[string]string `json:"settings"             mapstructure:"settings"`
 	// IsStateCopyCompleted is a utility variable
 	// pre config v3 state was stored in users database connected to hasura in `hdb_catalog.*` tables
 	// this variable is set to true when state copy happens from hdb_catalog.* tables
@@ -86,14 +94,17 @@ func (c *CLIState) Init() {
 	if c.Migrations == nil {
 		c.Migrations = map[string]map[string]bool{}
 	}
+
 	if c.Settings == nil {
 		c.Settings = map[string]string{}
 	}
 }
+
 func (c *CLIState) SetMigration(database, key string, value bool) {
 	if c.Migrations[database] == nil {
 		c.Migrations[database] = map[string]bool{}
 	}
+
 	c.Migrations[database][key] = value
 }
 
@@ -113,6 +124,7 @@ func (c *CLIState) SetSetting(key, value string) {
 	if c.Settings == nil {
 		c.Settings = map[string]string{}
 	}
+
 	c.Settings[key] = value
 }
 
@@ -121,6 +133,7 @@ func (c *CLIState) GetSetting(key string) string {
 	if !ok {
 		return ""
 	}
+
 	return v
 }
 
@@ -130,31 +143,39 @@ func (c *CLIState) GetSettings() map[string]string {
 
 func CopyMigrationState(src, dest MigrationsStateStore, srcdatabase, destdatabase string) error {
 	var op errors.Op = "statestore.CopyMigrationState"
+
 	versions, err := src.GetVersions(srcdatabase)
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	var vs []Version
 	for v, dirty := range versions {
 		vs = append(vs, Version{int64(v), dirty})
 	}
-	if err := dest.SetVersions(destdatabase, vs); err != nil {
+
+	err = dest.SetVersions(destdatabase, vs)
+	if err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
 func CopySettingsState(src, dest SettingsStateStore) error {
 	var op errors.Op = "statestore.CopySettingsState"
+
 	settings, err := src.GetAllSettings()
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	for k, v := range settings {
 		err := dest.UpdateSetting(k, v)
 		if err != nil {
 			return errors.E(op, err)
 		}
 	}
+
 	return nil
 }

@@ -12,7 +12,6 @@ import (
 )
 
 var _ = Describe("hasura metadata diff", func() {
-
 	var projectDirectory string
 	var teardown func()
 	BeforeEach(func() {
@@ -45,7 +44,10 @@ var _ = Describe("hasura metadata diff", func() {
 			Expect(stdout).Should(ContainSubstring("kind: postgres"))
 			Expect(stdout).Should(ContainSubstring("name: default"))
 
-			editMetadataFileInConfig(filepath.Join(projectDirectory, defaultConfigFilename), "metadata.yaml")
+			editMetadataFileInConfig(
+				filepath.Join(projectDirectory, defaultConfigFilename),
+				"metadata.yaml",
+			)
 			session = testutil.Hasura(testutil.CmdOpts{
 				Args:             []string{"metadata", "diff"},
 				WorkingDirectory: projectDirectory,
@@ -57,7 +59,10 @@ var _ = Describe("hasura metadata diff", func() {
 			Expect(stdout).Should(ContainSubstring("name: default"))
 			Expect(stdout).Should(ContainSubstring("tables: []"))
 
-			editMetadataFileInConfig(filepath.Join(projectDirectory, defaultConfigFilename), "metadata.json")
+			editMetadataFileInConfig(
+				filepath.Join(projectDirectory, defaultConfigFilename),
+				"metadata.json",
+			)
 			session = testutil.Hasura(testutil.CmdOpts{
 				Args:             []string{"metadata", "diff", "--no-color"},
 				WorkingDirectory: projectDirectory,

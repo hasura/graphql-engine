@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/Pallinder/go-randomdata"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -62,39 +61,52 @@ var commonMetadataCommandsTest = func(projectDirectory string) {
 	})
 	Context("Should apply metadata to server with inconsistencies allowed", func() {
 		session := testutil.Hasura(testutil.CmdOpts{
-			Args:             []string{"metadata", "apply", "--disallow-inconsistent-metadata=false",},
+			Args: []string{
+				"metadata",
+				"apply",
+				"--disallow-inconsistent-metadata=false",
+			},
 			WorkingDirectory: projectDirectory,
 		})
 		Eventually(session, timeout).Should(Exit(0))
 		Expect(session.Err.Contents()).Should(ContainSubstring("Metadata applied"))
 	})
-	Context("apply metadata to server and it should output the metadata of project to stdout", func() {
-		projectSession := testutil.Hasura(testutil.CmdOpts{
-			Args:             []string{"metadata", "apply", "--output", "json"},
-			WorkingDirectory: projectDirectory,
-		})
-		Eventually(projectSession, timeout).Should(Exit(0))
-		Eventually(isJSON(projectSession.Out.Contents())).Should(BeTrue())
-		projectStdout := projectSession.Out.Contents()
+	Context(
+		"apply metadata to server and it should output the metadata of project to stdout",
+		func() {
+			projectSession := testutil.Hasura(testutil.CmdOpts{
+				Args:             []string{"metadata", "apply", "--output", "json"},
+				WorkingDirectory: projectDirectory,
+			})
+			Eventually(projectSession, timeout).Should(Exit(0))
+			Eventually(isJSON(projectSession.Out.Contents())).Should(BeTrue())
+			projectStdout := projectSession.Out.Contents()
 
-		serverSession := testutil.Hasura(testutil.CmdOpts{
-			Args:             []string{"metadata", "export", "--output", "json"},
-			WorkingDirectory: projectDirectory,
-		})
-		Eventually(serverSession, timeout).Should(Exit(0))
-		Eventually(isJSON(serverSession.Out.Contents())).Should(BeTrue())
-		serverStdout := serverSession.Out.Contents()
-		Expect(serverStdout).Should(MatchJSON(projectStdout))
-	})
+			serverSession := testutil.Hasura(testutil.CmdOpts{
+				Args:             []string{"metadata", "export", "--output", "json"},
+				WorkingDirectory: projectDirectory,
+			})
+			Eventually(serverSession, timeout).Should(Exit(0))
+			Eventually(isJSON(serverSession.Out.Contents())).Should(BeTrue())
+			serverStdout := serverSession.Out.Contents()
+			Expect(serverStdout).Should(MatchJSON(projectStdout))
+		},
+	)
 	Context("metadata modes", func() {
-		editMetadataFileInConfig(filepath.Join(projectDirectory, defaultConfigFilename), "metadata.random")
+		editMetadataFileInConfig(
+			filepath.Join(projectDirectory, defaultConfigFilename),
+			"metadata.random",
+		)
 		session := testutil.Hasura(testutil.CmdOpts{
 			Args:             []string{"metadata", "apply"},
 			WorkingDirectory: projectDirectory,
 		})
 		Eventually(session, timeout).ShouldNot(Exit(0))
 
-		editMetadataFileInConfig(filepath.Join(projectDirectory, defaultConfigFilename), "metadata.json")
+		editMetadataFileInConfig(
+			filepath.Join(projectDirectory, defaultConfigFilename),
+			"metadata.json",
+		)
 		session = testutil.Hasura(testutil.CmdOpts{
 			Args:             []string{"metadata", "apply"},
 			WorkingDirectory: projectDirectory,
@@ -119,7 +131,9 @@ var inconsistentMetadataTestsForConfigV3 = func(projectDirectory string) {
 			WorkingDirectory: projectDirectory,
 		})
 		Eventually(session, timeout).Should(Exit(1))
-		Expect(session.Err.Contents()).Should(ContainSubstring("cannot continue due to inconsistent metadata"))
+		Expect(
+			session.Err.Contents(),
+		).Should(ContainSubstring("cannot continue due to inconsistent metadata"))
 	})
 }
 
@@ -134,11 +148,16 @@ var testConfigV2 = func(projectDirectory string) {
 }
 
 var verifyRequestTransformsMetadataIsApplied = func(hgeEndpoint string) {
-	response := assertHGEAPIRequestSucceedsAndGetResponseBody(hgeEndpoint, "v1/metadata", strings.NewReader(`{"type": "export_metadata", "args": {}}`))
+	response := assertHGEAPIRequestSucceedsAndGetResponseBody(
+		hgeEndpoint,
+		"v1/metadata",
+		strings.NewReader(`{"type": "export_metadata", "args": {}}`),
+	)
 	Expect(string(response)).To(ContainSubstring("request_transform"))
 	Expect(string(response)).To(ContainSubstring("$body.input.arg1.username"))
 	Expect(string(response)).To(ContainSubstring("actions_test_comment"))
 }
+
 var _ = Describe("hasura metadata apply (config v3)", func() {
 	var projectDirectory, hgeEndpoint string
 	var teardown func()
@@ -170,11 +189,11 @@ var _ = Describe("hasura metadata apply (config v3)", func() {
 		verifyRequestTransformsMetadataIsApplied(hgeEndpoint)
 	})
 
-	It("Make metadata inconsistent", func() {    
+	It("Make metadata inconsistent", func() {
 		file := fmt.Sprintf("%s/metadata/query_collections.yaml", projectDirectory)
-		err := os.WriteFile(file, []byte(inconsistent_query_collections), 0666)
+		err := os.WriteFile(file, []byte(inconsistent_query_collections), 0o666)
 		Expect(err).To(BeNil())
-		Context("inconsistent metadata apply", func ()  {
+		Context("inconsistent metadata apply", func() {
 			inconsistentMetadataTestsForConfigV3(projectDirectory)
 		})
 	})
@@ -189,13 +208,22 @@ var _ = Describe("hasura metadata apply (config v2)", func() {
 		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
 		hgeEndpoint = fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
 		copyTestConfigV2Project(projectDirectoryLatest)
-		editEndpointInConfig(filepath.Join(projectDirectoryLatest, defaultConfigFilename), hgeEndpoint)
+		editEndpointInConfig(
+			filepath.Join(projectDirectoryLatest, defaultConfigFilename),
+			hgeEndpoint,
+		)
 
 		projectDirectoryV13 = testutil.RandDirName()
-		hgeEndPortV13, teardownHGEV13 := testutil.StartHasura(GinkgoT(), "hasura/graphql-engine:v1.3.3")
+		hgeEndPortV13, teardownHGEV13 := testutil.StartHasura(
+			GinkgoT(),
+			"hasura/graphql-engine:v1.3.3",
+		)
 		hgeEndpointV13 := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPortV13)
 		copyTestConfigV2Project(projectDirectoryV13)
-		editEndpointInConfig(filepath.Join(projectDirectoryV13, defaultConfigFilename), hgeEndpointV13)
+		editEndpointInConfig(
+			filepath.Join(projectDirectoryV13, defaultConfigFilename),
+			hgeEndpointV13,
+		)
 
 		teardown = func() {
 			os.RemoveAll(projectDirectoryLatest)

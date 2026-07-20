@@ -1,16 +1,14 @@
 package metricsconfig
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
-
 	"github.com/sirupsen/logrus"
-
-	"github.com/hasura/graphql-engine/cli/v2"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 type MetricsConfigObject struct {
@@ -31,26 +29,34 @@ func (m *MetricsConfigObject) Validate() error {
 }
 
 func (m *MetricsConfigObject) CreateFiles() error {
-	var op errors.Op = "metricsconfig.MetricsConfigObject.CreateFiles"
-	var v interface{}
+	var (
+		op errors.Op = "metricsconfig.MetricsConfigObject.CreateFiles"
+		v  any
+	)
+
 	data, err := yaml.Marshal(v)
 	if err != nil {
 		return errors.E(op, err)
 	}
-	err = ioutil.WriteFile(filepath.Join(m.MetadataDir, m.Filename()), data, 0644)
+
+	err = os.WriteFile(filepath.Join(m.MetadataDir, m.Filename()), data, 0o644)
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
-func (m *MetricsConfigObject) Build() (map[string]interface{}, error) {
+func (m *MetricsConfigObject) Build() (map[string]any, error) {
 	var op errors.Op = "metricsconfig.MetricsConfigObject.Build"
+
 	data, err := metadataobject.ReadMetadataFile(filepath.Join(m.MetadataDir, m.Filename()))
 	if err != nil {
 		return nil, errors.E(op, m.error(err))
 	}
+
 	var obj map[string]yaml.Node
+
 	err = yaml.Unmarshal(data, &obj)
 	if err != nil {
 		return nil, errors.E(op, errors.KindBadInput, m.error(err))
@@ -73,15 +79,23 @@ func (m *MetricsConfigObject) Build() (map[string]interface{}, error) {
 	if len(obj) == 0 {
 		return nil, nil
 	}
-	return map[string]interface{}{m.Key(): obj}, nil
+
+	return map[string]any{m.Key(): obj}, nil
 }
 
 func (m *MetricsConfigObject) Export(metadata map[string]yaml.Node) (map[string][]byte, error) {
 	var op errors.Op = "metricsconfig.MetricsConfigObject.Export"
-	b, err := metadataobject.DefaultExport(m, metadata, m.error, metadataobject.DefaultObjectTypeMapping)
+
+	b, err := metadataobject.DefaultExport(
+		m,
+		metadata,
+		m.error,
+		metadataobject.DefaultObjectTypeMapping,
+	)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
+
 	return b, nil
 }
 
@@ -95,20 +109,27 @@ func (m *MetricsConfigObject) Filename() string {
 
 func (m *MetricsConfigObject) GetFiles() ([]string, error) {
 	var op errors.Op = "metricsconfig.MetricsConfigObject.GetFiles"
+
 	rootFile := filepath.Join(m.BaseDirectory(), m.Filename())
+
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {
 		return nil, errors.E(op, m.error(err))
 	}
+
 	return files, nil
 }
 
 func (m *MetricsConfigObject) WriteDiff(opts metadataobject.WriteDiffOpts) error {
 	var op errors.Op = "metricsconfig.MetricsConfigObject.WriteDiff"
-	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: m, WriteDiffOpts: opts})
+
+	err := metadataobject.DefaultWriteDiff(
+		metadataobject.DefaultWriteDiffOpts{From: m, WriteDiffOpts: opts},
+	)
 	if err != nil {
 		return errors.E(op, m.error(err))
 	}
+
 	return nil
 }
 
@@ -116,6 +137,9 @@ func (m *MetricsConfigObject) BaseDirectory() string {
 	return m.MetadataDir
 }
 
-func (m *MetricsConfigObject) error(err error, additionalContext ...string) metadataobject.ErrParsingMetadataObject {
+func (m *MetricsConfigObject) error(
+	err error,
+	additionalContext ...string,
+) metadataobject.ErrParsingMetadataObject {
 	return metadataobject.NewErrParsingMetadataObject(m, err, additionalContext...)
 }

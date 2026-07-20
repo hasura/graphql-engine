@@ -4,18 +4,15 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
-	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/migrations"
-	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/settings"
-
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1metadata"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1query"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v2query"
-
-	"github.com/hasura/graphql-engine/cli/v2"
-	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/migrations"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/settings"
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
-
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -107,10 +104,16 @@ func Test_getMigrationDirectoryNames(t *testing.T) {
 			args{
 				fs: func() afero.Fs {
 					fs := afero.NewMemMapFs()
-					if err := fs.MkdirAll("migrations/1604855964903_test2", os.ModePerm); err != nil {
+					if err := fs.MkdirAll(
+						"migrations/1604855964903_test2",
+						os.ModePerm,
+					); err != nil {
 						t.Fatal(err)
 					}
-					if err := fs.MkdirAll("migrations/1604255964903_test", os.ModePerm); err != nil {
+					if err := fs.MkdirAll(
+						"migrations/1604255964903_test",
+						os.ModePerm,
+					); err != nil {
 						t.Fatal(err)
 					}
 					if err := fs.MkdirAll("migrations/randomdir", os.ModePerm); err != nil {
@@ -164,16 +167,16 @@ func Test_moveMigrationsToDatabaseDirectory(t *testing.T) {
 			args{
 				fs: func() afero.Fs {
 					fs := afero.NewMemMapFs()
-					if err := fs.MkdirAll("1", 0755); err != nil {
+					if err := fs.MkdirAll("1", 0o755); err != nil {
 						t.Fatal(err)
 					}
-					if err := fs.MkdirAll("2", 0755); err != nil {
+					if err := fs.MkdirAll("2", 0o755); err != nil {
 						t.Fatal(err)
 					}
-					if err := fs.MkdirAll("3", 0755); err != nil {
+					if err := fs.MkdirAll("3", 0o755); err != nil {
 						t.Fatal(err)
 					}
-					if err := fs.MkdirAll("moved", 0755); err != nil {
+					if err := fs.MkdirAll("moved", 0o755); err != nil {
 						t.Fatal(err)
 					}
 
@@ -190,7 +193,12 @@ func Test_moveMigrationsToDatabaseDirectory(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := copyMigrations(tt.args.fs, tt.args.dirs, tt.args.parentMigrationsDirectory, tt.args.target)
+			err := copyMigrations(
+				tt.args.fs,
+				tt.args.dirs,
+				tt.args.parentMigrationsDirectory,
+				tt.args.target,
+			)
 			tt.assertErr(t, err)
 			if tt.wantErr {
 				return
@@ -220,13 +228,13 @@ func Test_removeDirectories(t *testing.T) {
 			args{
 				fs: func() afero.Fs {
 					fs := afero.NewMemMapFs()
-					if err := fs.MkdirAll("1/x/y", 0755); err != nil {
+					if err := fs.MkdirAll("1/x/y", 0o755); err != nil {
 						t.Fatal(err)
 					}
-					if err := fs.MkdirAll("2", 0755); err != nil {
+					if err := fs.MkdirAll("2", 0o755); err != nil {
 						t.Fatal(err)
 					}
-					if err := fs.MkdirAll("3", 0755); err != nil {
+					if err := fs.MkdirAll("3", 0o755); err != nil {
 						t.Fatal(err)
 					}
 					return fs
@@ -275,9 +283,18 @@ func Test_copyState(t *testing.T) {
 							Version: cli.V2,
 						},
 						APIClient: &hasura.Client{
-							V1Metadata: v1metadata.New(testutil.NewHttpcClient(t, port, nil), "v1/metadata"),
-							V1Query:    v1query.New(testutil.NewHttpcClient(t, port, nil), "v1/query"),
-							V2Query:    v2query.New(testutil.NewHttpcClient(t, port, nil), "v2/query"),
+							V1Metadata: v1metadata.New(
+								testutil.NewHttpcClient(t, port, nil),
+								"v1/metadata",
+							),
+							V1Query: v1query.New(
+								testutil.NewHttpcClient(t, port, nil),
+								"v1/query",
+							),
+							V2Query: v2query.New(
+								testutil.NewHttpcClient(t, port, nil),
+								"v2/query",
+							),
 						},
 					}
 				}(),
@@ -294,8 +311,12 @@ func Test_copyState(t *testing.T) {
 			srcMigrations := cli.GetMigrationsStateStore(tt.args.ec)
 			assert.NoError(t, srcMigrations.PrepareMigrationsStateStore("default"))
 
-			dstSettings := settings.NewStateStoreCatalog(statestore.NewCLICatalogState(tt.args.ec.APIClient.V1Metadata))
-			dstMigrations := migrations.NewCatalogStateStore(statestore.NewCLICatalogState(tt.args.ec.APIClient.V1Metadata))
+			dstSettings := settings.NewStateStoreCatalog(
+				statestore.NewCLICatalogState(tt.args.ec.APIClient.V1Metadata),
+			)
+			dstMigrations := migrations.NewCatalogStateStore(
+				statestore.NewCLICatalogState(tt.args.ec.APIClient.V1Metadata),
+			)
 			assert.NoError(t, srcSettings.UpdateSetting("test", "test"))
 			assert.NoError(t, srcMigrations.SetVersion("", 123, false))
 			err := CopyState(tt.args.ec, "default", tt.args.destdatabase)

@@ -6,7 +6,6 @@ import (
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
-
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 )
@@ -15,7 +14,12 @@ type mockDriver struct {
 	url string
 }
 
-func (m *mockDriver) Open(url string, isCmd bool, logger *logrus.Logger, hasuraOpts *HasuraOpts) (Driver, error) {
+func (m *mockDriver) Open(
+	url string,
+	isCmd bool,
+	logger *logrus.Logger,
+	hasuraOpts *HasuraOpts,
+) (Driver, error) {
 	return &mockDriver{
 		url: url,
 	}, nil
@@ -32,6 +36,7 @@ func (m *mockDriver) UnLock() error {
 func (m *mockDriver) Run(migration io.Reader, fileType, fileName string, noTransaction bool) error {
 	return nil
 }
+
 func (m *mockDriver) Lock() error {
 	return nil
 }
@@ -97,7 +102,12 @@ func (m *mockDriver) Squash(list *CustomList, ret chan<- interface{}) {
 func (m *mockDriver) EnableCheckMetadataConsistency(enabled bool) {
 }
 
-func (m *mockDriver) ExportSchemaDump(includeSchemas []string, excludeSchemas []string, sourceName string, sourceKind hasura.SourceKind) ([]byte, error) {
+func (m *mockDriver) ExportSchemaDump(
+	includeSchemas []string,
+	excludeSchemas []string,
+	sourceName string,
+	sourceKind hasura.SourceKind,
+) ([]byte, error) {
 	return nil, nil
 }
 
@@ -112,7 +122,12 @@ func (m *mockDriver) UpdateSetting(name string, value string) error {
 func (m *mockDriver) ApplySeed(interface{}) error {
 	return nil
 }
-func (m *mockDriver) ExportDataDump(tableNames []string, sourceName string, sourceKind hasura.SourceKind) ([]byte, error) {
+
+func (m *mockDriver) ExportDataDump(
+	tableNames []string,
+	sourceName string,
+	sourceKind hasura.SourceKind,
+) ([]byte, error) {
 	return nil, nil
 }
 

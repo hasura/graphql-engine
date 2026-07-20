@@ -25,17 +25,18 @@ func TestNewCLIVersionWithDev(t *testing.T) {
 }
 
 func TestSetVersions(t *testing.T) {
-	var one int64 = 1
-	var zero int64 = 0
+	one := new(uint64(1))
+	zero := new(uint64(0))
+
 	tt := []struct {
 		name  string
 		in    string
 		out   string
-		major *int64
-		minor *int64
+		major *uint64
+		minor *uint64
 	}{
-		{"valid semver without v", "1.0.1-alpha01", "v1.0.1-alpha01", &one, &zero},
-		{"valid semver with v", "v1.0.1-alpha01", "v1.0.1-alpha01", &one, &zero},
+		{"valid semver without v", "1.0.1-alpha01", "v1.0.1-alpha01", one, zero},
+		{"valid semver with v", "v1.0.1-alpha01", "v1.0.1-alpha01", one, zero},
 		{"invalid semver", "dev", "dev", nil, nil},
 		{"invalid semver", "build-system-1234abc", "build-system-1234abc", nil, nil},
 	}

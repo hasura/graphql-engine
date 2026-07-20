@@ -6,7 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// main is the entrypoint function
+// main is the entrypoint function.
 func main() {
 	err := commands.Execute()
 	if err != nil {

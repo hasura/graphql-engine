@@ -90,99 +90,10 @@ databases/default/tables/public_tracks.yaml
 remote_schemas.yaml
 
 countries.permissions.0.definition.schema
-  ± value change
-    - schema  { query: Query }
-
-      type Continent { code: ID!
-        countries: [Country!]!
-        name: String!
-      }
-
-      type Country { capital: String
-        code: ID!
-        continent: Continent!
-        currency: String
-        emoji: String!
-        emojiU: String!
-        languages: [Language!]!
-        name: String!
-        native: String!
-        phone: String!
-        states: [State!]!
-      }
-
-      type Language { code: ID!
-        name: String
-        native: String
-        rtl: Boolean!
-      }
-
-      type Query { continent(code: ID!): Continent
-        country(code: ID!): Country
-        languages(filter: LanguageFilterInput): [Language!]!
-      }
-
-      type State { code: String
-        country: Country!
-        name: String!
-      }
-
-      input LanguageFilterInput {code: StringQueryOperatorInput
-      }
-
-      input StringQueryOperatorInput {eq: String
-        glob: String
-        in: [String]
-        ne: String
-        nin: [String]
-        regex: String
-      }
-
-    + schema  { query: Query }
-
-      type Continent { code: ID!
-        countries: [Country!]!
-        name: String!
-      }
-
-      type Country { capital: String
-        code: ID!
-        continent: Continent!
-        currency: String
-        emoji: String!
-        emojiU: String!
-        languages: [Language!]!
-        name: String!
-        native: String!
-        phone: String!
-        states: [State!]!
-      }
-
-      type Language { code: ID!
-        name: String
-        native: String
-        rtl: Boolean!
-      }
-
-      type Query { country(code: ID!): Country
-        languages(filter: LanguageFilterInput): [Language!]!
-      }
-
-      type State { code: String
-        country: Country!
-        name: String!
-      }
-
-      input LanguageFilterInput {code: StringQueryOperatorInput
-      }
-
-      input StringQueryOperatorInput {eq: String
-        glob: String
-        in: [String]
-        ne: String
-        nin: [String]
-        regex: String
-      }
+  ± value change in multiline text (one insert, one deletion)
+    - type Query { continent(code: ID!): Continent
+    -   country(code: ID!): Country
+    + type Query { country(code: ID!): Country
 
 
 actions.yaml
@@ -205,11 +116,11 @@ actions
           template_engine: Kriti
 
 actions.graphql
-[36m@@ -1,10 +1,4 @@[0m
-[31m-  bar([0m
-[31m-    arg1: SampleInput![0m
-[31m-  ): SampleOutput[0m
-[31m-}[0m
-[31m-[0m
-[31m-type Mutation {[0m
+[0;36m@@ -1,10 +1,4 @@[0m
+[0;31m-  bar([0m
+[0;31m-    arg1: SampleInput![0m
+[0;31m-  ): SampleOutput[0m
+[0;31m-}[0m
+[0;31m-[0m
+[0;31m-type Mutation {[0m
 

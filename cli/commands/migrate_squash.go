@@ -2,22 +2,20 @@ package commands
 
 import (
 	"bytes"
+	stderrors "errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
 	"text/tabwriter"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
-	"github.com/hasura/graphql-engine/cli/v2/util"
-
-	"github.com/hasura/graphql-engine/cli/v2/migrate"
-
 	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/hasura/graphql-engine/cli/v2/migrate"
+	mig "github.com/hasura/graphql-engine/cli/v2/migrate/cmd"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-
-	mig "github.com/hasura/graphql-engine/cli/v2/migrate/cmd"
 )
 
 func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
@@ -38,21 +36,33 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "PreRunE")
-			if err := validateConfigV3Flags(cmd, ec); err != nil {
+
+			err := validateConfigV3Flags(cmd, ec)
+			if err != nil {
 				return errors.E(op, err)
 			}
+
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "RunE")
 			opts.newVersion = getTime()
+
 			opts.Source = ec.Source
 			if opts.EC.HasMetadataV3 && opts.EC.Config.Version < cli.V2 {
-				return errors.E(op, fmt.Errorf("squashing when using metadata V3 is supported from Config V2 only"))
+				return errors.E(
+					op,
+					stderrors.New(
+						"squashing when using metadata V3 is supported from Config V2 only",
+					),
+				)
 			}
-			if err := opts.run(); err != nil {
+
+			err := opts.run()
+			if err != nil {
 				return errors.E(op, err)
 			}
+
 			return nil
 		},
 	}
@@ -61,7 +71,12 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.Uint64Var(&opts.from, "from", 0, "start squashing from this version")
 	f.Int64Var(&opts.to, "to", -1, "squash up to this version")
 	f.StringVar(&opts.name, "name", "squashed", "name for the new squashed migration")
-	f.BoolVar(&opts.deleteSource, "delete-source", false, "delete the source files after squashing without any confirmation")
+	f.BoolVar(
+		&opts.deleteSource,
+		"delete-source",
+		false,
+		"delete the source files after squashing without any confirmation",
+	)
 
 	// mark flag as required
 	err := migrateSquashCmd.MarkFlagRequired("from")
@@ -86,53 +101,106 @@ type migrateSquashOptions struct {
 
 func (o *migrateSquashOptions) run() error {
 	var op errors.Op = "commands.migrateSquashOptions.run"
-	o.EC.Logger.Warnln("This command is currently experimental and hence in preview, correctness of squashed migration is not guaranteed!")
+
+	o.EC.Logger.Warnln(
+		"This command is currently experimental and hence in preview, correctness of squashed migration is not guaranteed!",
+	)
+
 	o.EC.Spin(fmt.Sprintf("Squashing migrations from %d to latest...", o.from))
 	defer o.EC.Spinner.Stop()
+
 	migrateDrv, err := migrate.NewMigrate(o.EC, true, o.Source.Name, o.Source.Kind)
 	if err != nil {
 		return errors.E(op, fmt.Errorf("unable to initialize migrations driver: %w", err))
 	}
+
 	status, err := migrateDrv.GetStatus()
 	if err != nil {
 		return errors.E(op, fmt.Errorf("finding status: %w", err))
 	}
+
 	var toMigration, fromMigration *migrate.MigrationStatus
+
 	fromMigration, ok := status.Read(o.from)
 	if !ok {
-		return errors.E(op, fmt.Errorf("validating 'from' migration failed. Make sure migration with version %v exists", o.from))
+		return errors.E(
+			op,
+			fmt.Errorf(
+				"validating 'from' migration failed. Make sure migration with version %v exists",
+				o.from,
+			),
+		)
 	}
+
 	if o.to == -1 {
 		toMigration = status.Migrations[status.Index[status.Index.Len()-1]]
 	} else {
 		var ok bool
+
 		if int64(o.from) > o.to {
-			return errors.E(op, fmt.Errorf("cannot squash from %v to %v: %v (from) should be less than %v (to)", o.from, o.to, o.from, o.to))
+			return errors.E(
+				op,
+				fmt.Errorf(
+					"cannot squash from %v to %v: %v (from) should be less than %v (to)",
+					o.from,
+					o.to,
+					o.from,
+					o.to,
+				),
+			)
 		}
+
 		toMigration, ok = status.Read(uint64(o.to))
 		if !ok {
-			return errors.E(op, fmt.Errorf("validating 'to' migration failed. Make sure migration with version %v exists", o.to))
+			return errors.E(
+				op,
+				fmt.Errorf(
+					"validating 'to' migration failed. Make sure migration with version %v exists",
+					o.to,
+				),
+			)
 		}
 	}
+
 	if err := validateMigrations(status, fromMigration.Version, toMigration.Version); err != nil {
 		return errors.E(op, err)
 	}
 
-	versions, err := mig.SquashCmd(migrateDrv, o.from, o.to, o.newVersion, o.name, filepath.Join(o.EC.MigrationDir, o.Source.Name))
+	versions, err := mig.SquashCmd(
+		migrateDrv,
+		o.from,
+		o.to,
+		o.newVersion,
+		o.name,
+		filepath.Join(o.EC.MigrationDir, o.Source.Name),
+	)
 	o.EC.Spinner.Stop()
+
 	if err != nil {
 		return errors.E(op, fmt.Errorf("unable to squash migrations: %w", err))
 	}
 
 	var uversions []uint64
+
 	for _, version := range versions {
 		if version < 0 {
-			return errors.E(op, fmt.Errorf("operation failed found version value should >= 0, which is not expected"))
+			return errors.E(
+				op,
+				stderrors.New(
+					"operation failed found version value should >= 0, which is not expected",
+				),
+			)
 		}
+
 		uversions = append(uversions, uint64(version))
 	}
 
-	newSquashedMigrationsDestination := filepath.Join(o.EC.MigrationDir, o.Source.Name, fmt.Sprintf("squashed_%d_to_%d", uversions[0], uversions[len(uversions)-1]))
+	newSquashedMigrationsDestination := filepath.Join(
+		o.EC.MigrationDir,
+		o.Source.Name,
+		fmt.Sprintf("squashed_%d_to_%d", uversions[0], uversions[len(uversions)-1]),
+	)
+
 	err = os.MkdirAll(newSquashedMigrationsDestination, os.ModePerm)
 	if err != nil {
 		return errors.E(op, fmt.Errorf("creating directory to move squashed migrations: %w", err))
@@ -142,23 +210,48 @@ func (o *migrateSquashOptions) run() error {
 	if err != nil {
 		return errors.E(op, fmt.Errorf("moving squashed migrations: %w", err))
 	}
-	oldPath := filepath.Join(o.EC.MigrationDir, o.Source.Name, fmt.Sprintf("%d_%s", o.newVersion, o.name))
-	newPath := filepath.Join(o.EC.MigrationDir, o.Source.Name, fmt.Sprintf("%d_%s", toMigration.Version, o.name))
+
+	oldPath := filepath.Join(
+		o.EC.MigrationDir,
+		o.Source.Name,
+		fmt.Sprintf("%d_%s", o.newVersion, o.name),
+	)
+	newPath := filepath.Join(
+		o.EC.MigrationDir,
+		o.Source.Name,
+		fmt.Sprintf("%d_%s", toMigration.Version, o.name),
+	)
+
 	err = os.Rename(oldPath, newPath)
 	if err != nil {
 		return errors.E(op, fmt.Errorf("renaming squashed migrations: %w", err))
 	}
 
-	o.EC.Logger.Infof("Created '%d_%s' after squashing '%d' till '%d'", toMigration.Version, o.name, versions[0], versions[len(versions)-1])
+	o.EC.Logger.Infof(
+		"Created '%d_%s' after squashing '%d' till '%d'",
+		toMigration.Version,
+		o.name,
+		versions[0],
+		versions[len(versions)-1],
+	)
 
 	if !o.deleteSource && o.EC.IsTerminal {
-		o.deleteSource = ask2confirmDeleteMigrations(versions, newSquashedMigrationsDestination, o.EC.Logger)
+		o.deleteSource = ask2confirmDeleteMigrations(
+			versions,
+			newSquashedMigrationsDestination,
+			o.EC.Logger,
+		)
 	}
+
 	if o.deleteSource {
 		// If the first argument is true then it deletes all the migration versions
 		err = os.RemoveAll(newSquashedMigrationsDestination)
 		if err != nil {
-			o.EC.Logger.Errorf("deleting directory %v failed: %v", newSquashedMigrationsDestination, err)
+			o.EC.Logger.Errorf(
+				"deleting directory %v failed: %v",
+				newSquashedMigrationsDestination,
+				err,
+			)
 		}
 
 		// remove everything but the last one from squashed migrations list from state store
@@ -184,59 +277,93 @@ func validateMigrations(status *migrate.Status, from uint64, to uint64) error {
 	// 2 not applied
 	// 3 applied
 	var fromIndex, toIndex int
+
 	for idx, m := range status.Index {
 		if m == from {
 			fromIndex = idx
 		}
+
 		if m == to {
 			toIndex = idx
 		}
 	}
+
 	prevApplied := status.Migrations[status.Index[fromIndex]].IsApplied
 	for idx := fromIndex + 1; idx <= toIndex; idx++ {
 		migration := status.Migrations[status.Index[idx]]
-		if !(migration.IsApplied == prevApplied && migration.IsPresent) {
-			return errors.E(op, fmt.Errorf("migrations are out of sync. all migrations selected to squash should be applied or all should be be unapplied. found first mismatch at %v. use 'hasura migrate status' to inspect", migration.Version))
+		if migration.IsApplied != prevApplied || !migration.IsPresent {
+			return errors.E(
+				op,
+				fmt.Errorf(
+					"migrations are out of sync. all migrations selected to squash should be applied or all should be unapplied. found first mismatch at %v. use 'hasura migrate status' to inspect",
+					migration.Version,
+				),
+			)
 		}
 	}
 
 	return nil
 }
 
-func moveMigrations(ec *cli.ExecutionContext, versions []uint64, source cli.Source, destination string) error {
+func moveMigrations(
+	ec *cli.ExecutionContext,
+	versions []uint64,
+	source cli.Source,
+	destination string,
+) error {
 	var op errors.Op = "commands.moveMigrations"
+
 	for _, v := range versions {
 		moveOpts := mig.CreateOptions{
 			Version:   strconv.FormatUint(v, 10),
 			Directory: filepath.Join(ec.MigrationDir, source.Name),
 		}
+
 		err := moveOpts.MoveToDir(destination)
 		if err != nil {
-			return errors.E(op, fmt.Errorf("unable to move migrations from project for: %v : %w", v, err))
+			return errors.E(
+				op,
+				fmt.Errorf("unable to move migrations from project for: %v : %w", v, err),
+			)
 		}
 	}
+
 	return nil
 }
 
-func ask2confirmDeleteMigrations(versions []int64, squashedDirectoryName string, log *logrus.Logger) bool {
+func ask2confirmDeleteMigrations(
+	versions []int64,
+	squashedDirectoryName string,
+	log *logrus.Logger,
+) bool {
 	log.Infof("The following migrations are squashed into a new one:")
 
 	out := new(tabwriter.Writer)
 	buf := &bytes.Buffer{}
 	out.Init(buf, 0, 8, 2, ' ', 0)
+
 	w := util.NewPrefixWriter(out)
 	for _, version := range versions {
 		w.Write(util.LEVEL_0, "%d\n",
 			version,
 		)
 	}
+
 	_ = out.Flush()
+
 	fmt.Println(buf.String())
-	question := fmt.Sprintf("migrations which were squashed is moved to %v. Delete them permanently?", filepath.Base(squashedDirectoryName))
+
+	question := fmt.Sprintf(
+		"migrations which were squashed is moved to %v. Delete them permanently?",
+		filepath.Base(squashedDirectoryName),
+	)
+
 	resp, err := util.GetYesNoPrompt(question)
 	if err != nil {
 		log.Errorf("error getting user input: %v", err)
+
 		return false
 	}
+
 	return resp
 }

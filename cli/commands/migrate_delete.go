@@ -1,6 +1,7 @@
 package commands
 
 import (
+	stderrors "errors"
 	"fmt"
 	"path/filepath"
 	"strconv"
@@ -31,44 +32,61 @@ func newMigrateDeleteCmd(ec *cli.ExecutionContext) *cobra.Command {
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "PreRunE")
+
 			ec.Logger.Warn("[PREVIEW] this command is in preview. usage may change in future\n")
-			if err := validateConfigV3FlagsWithAll(cmd, ec); err != nil {
+
+			err := validateConfigV3FlagsWithAll(cmd, ec)
+			if err != nil {
 				return errors.E(op, err)
 			}
+
 			if !cmd.Flags().Changed("all") && !cmd.Flags().Changed("version") {
-				return errors.E(op, fmt.Errorf("at least one flag [--all , --version] should be set"))
+				return errors.E(
+					op,
+					stderrors.New("at least one flag [--all , --version] should be set"),
+				)
 			}
+
 			if cmd.Flags().Changed("all") && cmd.Flags().Changed("version") {
-				return errors.E(op, fmt.Errorf("only one of [--all , --version] should be set"))
+				return errors.E(op, stderrors.New("only one of [--all , --version] should be set"))
 			}
+
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "RunE")
 			// exit if user inputs n for clearing migrations
 			if cmd.Flags().Changed("all") && !opts.Force && opts.EC.IsTerminal {
-				confirmation, err := util.GetYesNoPrompt("clear all migrations of database and it's history on the server?")
+				confirmation, err := util.GetYesNoPrompt(
+					"clear all migrations of database and it's history on the server?",
+				)
 				if err != nil {
 					return errors.E(op, fmt.Errorf("error getting user input: %w", err))
 				}
+
 				if !confirmation {
 					return nil
 				}
 			}
 
 			if ec.AllDatabases && !opts.Force {
-				confirmation, err := util.GetYesNoPrompt("clear all mentioned migrations of all databases and it's history on the server?")
+				confirmation, err := util.GetYesNoPrompt(
+					"clear all mentioned migrations of all databases and it's history on the server?",
+				)
 				if err != nil {
 					return errors.E(op, fmt.Errorf("error getting user input: %w", err))
 				}
+
 				if !confirmation {
 					return nil
 				}
 			}
 
-			if err := opts.Run(); err != nil {
+			err := opts.Run()
+			if err != nil {
 				return errors.E(op, fmt.Errorf("operation failed: %w", err))
 			}
+
 			return nil
 		},
 	}
@@ -94,31 +112,50 @@ type MigrateDeleteOptions struct {
 
 func (o *MigrateDeleteOptions) Run() error {
 	var op errors.Op = "commands.MigrateDeleteOptions.Run"
+
 	o.EC.Spin("Removing migrations")
 	defer o.EC.Spinner.Stop()
+
 	if o.EC.AllDatabases {
-		sourcesAndKind, err := metadatautil.GetSourcesAndKind(o.EC.APIClient.V1Metadata.ExportMetadata)
+		sourcesAndKind, err := metadatautil.GetSourcesAndKind(
+			o.EC.APIClient.V1Metadata.ExportMetadata,
+		)
 		if err != nil {
-			return errors.E(op, fmt.Errorf("got error while getting the sources list : %v", err))
+			return errors.E(op, fmt.Errorf("got error while getting the sources list : %w", err))
 		}
+
 		for _, source := range sourcesAndKind {
 			o.Source = cli.Source(source)
+
 			err := o.RunOnSource()
 			if err != nil {
-				return errors.E(op, fmt.Errorf("error while deleting status for database '%s': %v", o.Source.Name, err))
+				return errors.E(
+					op,
+					fmt.Errorf(
+						"error while deleting status for database '%s': %w",
+						o.Source.Name,
+						err,
+					),
+				)
 			}
 		}
+
 		return nil
 	}
+
 	o.Source = o.EC.Source
-	if err := o.RunOnSource(); err != nil {
+
+	err := o.RunOnSource()
+	if err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
 func (o *MigrateDeleteOptions) RunOnSource() error {
 	var op errors.Op = "commands.MigrateDeleteOptions.RunOnSource"
+
 	o.EC.Spin("Deleting migration...")
 
 	migrateDrv, err := migrate.NewMigrate(o.EC, true, o.Source.Name, o.Source.Kind)
@@ -139,6 +176,7 @@ func (o *MigrateDeleteOptions) RunOnSource() error {
 		if _, ok := status.Migrations[o.Version]; !ok {
 			return errors.E(op, fmt.Errorf("version %v not found", o.Version))
 		}
+
 		sourceVersions = []uint64{o.Version}
 		serverVersions = []uint64{o.Version}
 	} else if o.All {
@@ -146,6 +184,7 @@ func (o *MigrateDeleteOptions) RunOnSource() error {
 			if v.IsApplied {
 				serverVersions = append(serverVersions, k)
 			}
+
 			if v.IsPresent {
 				sourceVersions = append(sourceVersions, k)
 			}
@@ -165,22 +204,30 @@ func (o *MigrateDeleteOptions) RunOnSource() error {
 			return errors.E(op, fmt.Errorf("error removing migrations from project: %w", err))
 		}
 	}
+
 	o.EC.Spinner.Stop()
 	o.EC.Logger.Infof("Deleted migrations")
+
 	return nil
 }
 
 func DeleteVersions(ec *cli.ExecutionContext, versions []uint64, source cli.Source) error {
 	var op errors.Op = "commands.DeleteVersions"
+
 	for _, v := range versions {
 		delOptions := mig.CreateOptions{
 			Version:   strconv.FormatUint(v, 10),
 			Directory: filepath.Join(ec.MigrationDir, source.Name),
 		}
+
 		err := delOptions.Delete()
 		if err != nil {
-			return errors.E(op, fmt.Errorf("unable to delete migrations from project for: %v : %w", v, err))
+			return errors.E(
+				op,
+				fmt.Errorf("unable to delete migrations from project for: %v : %w", v, err),
+			)
 		}
 	}
+
 	return nil
 }

@@ -77,10 +77,11 @@ func (k Kind) String() string {
 	case KindNetwork:
 		return "network error"
 	}
+
 	return "unknown error kind"
 }
 
-func E(op Op, args ...interface{}) error {
+func E(op Op, args ...any) error {
 	_, file, line, _ := runtime.Caller(1)
 	e := &Error{
 		Op: op,
@@ -89,6 +90,7 @@ func E(op Op, args ...interface{}) error {
 			Line: line,
 		},
 	}
+
 	for _, arg := range args {
 		switch arg := arg.(type) {
 		case Kind:
@@ -101,16 +103,19 @@ func E(op Op, args ...interface{}) error {
 			log.Printf("errors.E: bad call from %s:%d:%v: %v", file, line, op, args)
 		}
 	}
+
 	return e
 }
 
 func IsKind(want Kind, err error) bool {
 	got := GetKind(err)
+
 	return got == want
 }
 
 func Ops(err *Error) []Op {
 	ops := []Op{err.Op}
+
 	for {
 		var embeddedErr *Error
 		if !errors.As(err.Err, &embeddedErr) {
@@ -126,11 +131,13 @@ func Ops(err *Error) []Op {
 
 func GetLocation(err error) ErrLocation {
 	var prevErr *Error
+
 	for {
 		var e *Error
 		if !errors.As(err, &e) {
 			return prevErr.Location
 		}
+
 		prevErr = e
 		err = e.Err
 	}
@@ -141,8 +148,10 @@ func GetKind(err error) Kind {
 	if !errors.As(err, &e) {
 		return KindOther
 	}
+
 	if e.Kind != 0 {
 		return e.Kind
 	}
+
 	return GetKind(e.Err)
 }

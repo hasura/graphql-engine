@@ -13,10 +13,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/kardianos/osext"
-
-	"github.com/Masterminds/semver"
-
+	"github.com/Masterminds/semver/v3"
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 )
 
@@ -29,19 +26,26 @@ type updateCheckResponse struct {
 
 func getLatestVersion() (*semver.Version, *semver.Version, error) {
 	var op errors.Op = "update.getLatestVersion"
+
 	res, err := http.Get(updateCheckURL)
 	if err != nil {
 		return nil, nil, errors.E(op, fmt.Errorf("update check request: %w", err))
 	}
 
 	defer res.Body.Close()
+
 	var response updateCheckResponse
+
 	err = json.NewDecoder(res.Body).Decode(&response)
 	if err != nil {
 		return nil, nil, errors.E(op, fmt.Errorf("decoding update check response: %w", err))
 	}
+
 	if response.Latest == nil && response.PreRelease == nil {
-		return nil, nil, errors.E(op, fmt.Errorf("expected version info not found at %s", updateCheckURL))
+		return nil, nil, errors.E(
+			op,
+			fmt.Errorf("expected version info not found at %s", updateCheckURL),
+		)
 	}
 
 	return response.Latest, response.PreRelease, nil
@@ -50,10 +54,12 @@ func getLatestVersion() (*semver.Version, *semver.Version, error) {
 func buildAssetURL(v string) string {
 	os := runtime.GOOS
 	arch := runtime.GOARCH
+
 	extension := ""
 	if os == "windows" {
 		extension = ".exe"
 	}
+
 	return fmt.Sprintf(
 		"https://github.com/hasura/graphql-engine/releases/download/v%s/cli-hasura-%s-%s%s",
 		v, os, arch, extension,
@@ -62,20 +68,21 @@ func buildAssetURL(v string) string {
 
 func downloadAsset(url, fileName, filePath string) (*os.File, error) {
 	var op errors.Op = "update.downloadAsset"
+
 	res, err := http.Get(url)
 	if err != nil {
 		return nil, errors.E(op, errors.KindNetwork, fmt.Errorf("downloading asset: %w", err))
 	}
 	defer res.Body.Close()
 
-	if res.StatusCode != 200 {
+	if res.StatusCode != http.StatusOK {
 		return nil, errors.E(op, errors.E("could not find the release asset"))
 	}
 
 	asset, err := os.OpenFile(
 		filepath.Join(filePath, fileName),
 		os.O_CREATE|os.O_WRONLY|os.O_TRUNC,
-		0755,
+		0o755,
 	)
 	if err != nil {
 		return nil, errors.E(op, fmt.Errorf("creating new binary file: %w", err))
@@ -91,11 +98,16 @@ func downloadAsset(url, fileName, filePath string) (*os.File, error) {
 }
 
 // HasUpdate tells us if there is a new stable or prerelease update available.
-func HasUpdate(currentVersion *semver.Version, timeFile string) (bool, *semver.Version, bool, *semver.Version, error) {
+func HasUpdate(
+	currentVersion *semver.Version,
+	timeFile string,
+) (bool, *semver.Version, bool, *semver.Version, error) {
 	var op errors.Op = "update.HasUpdate"
+
 	if timeFile != "" {
 		defer func() {
-			if err := writeTimeToFile(timeFile, time.Now().UTC()); err != nil {
+			err := writeTimeToFile(timeFile, time.Now().UTC())
+			if err != nil {
 				fmt.Fprintln(os.Stderr, "failed writing last update check time: ", err)
 			}
 		}()
@@ -106,14 +118,18 @@ func HasUpdate(currentVersion *semver.Version, timeFile string) (bool, *semver.V
 		return false, nil, false, nil, errors.E(op, fmt.Errorf("get latest version: %w", err))
 	}
 
-	return latestVersion.GreaterThan(currentVersion), latestVersion, preReleaseVersion.GreaterThan(currentVersion), preReleaseVersion, nil
+	return latestVersion.GreaterThan(
+			currentVersion,
+		), latestVersion, preReleaseVersion.GreaterThan(
+			currentVersion,
+		), preReleaseVersion, nil
 }
 
 // ApplyUpdate downloads and applies the update indicated by version v.
 func ApplyUpdate(v *semver.Version) error {
 	var op errors.Op = "update.ApplyUpdate"
 	// get the current executable
-	exe, err := osext.Executable()
+	exe, err := getExecutablePath()
 	if err != nil {
 		return errors.E(op, fmt.Errorf("find executable: %w", err))
 	}
@@ -151,7 +167,7 @@ func ApplyUpdate(v *semver.Version) error {
 	// rename the new binary as the current binary
 	err = os.Rename(newExe, exe)
 	if err != nil {
-		// rename unsuccessfull
+		// rename unsuccessful
 		//
 		// The filesystem is now in a bad state. We have successfully
 		// moved the existing binary to a new location, but we couldn't move the new
@@ -179,4 +195,20 @@ func ApplyUpdate(v *semver.Version) error {
 	}
 
 	return nil
+}
+
+// Returns an absolute path that can be used to
+// re-invoke the current program.
+func getExecutablePath() (string, error) {
+	execPath, err := os.Executable()
+	if err != nil {
+		return "", err
+	}
+
+	realPath, err := filepath.EvalSymlinks(execPath)
+	if err != nil {
+		realPath = execPath
+	}
+
+	return realPath, nil
 }

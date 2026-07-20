@@ -1,20 +1,18 @@
 package v2query
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
-	"github.com/stretchr/testify/require"
-
-	pg "github.com/hasura/graphql-engine/cli/v2/internal/hasura/sourceops/postgres"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/commonmetadata"
+	pg "github.com/hasura/graphql-engine/cli/v2/internal/hasura/sourceops/postgres"
 	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestClient_Send(t *testing.T) {
@@ -79,7 +77,7 @@ func TestClient_Send(t *testing.T) {
 			if !tt.wantErr {
 				assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-				b, err := ioutil.ReadAll(gotResponseBody)
+				b, err := io.ReadAll(gotResponseBody)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -90,7 +88,10 @@ func TestClient_Send(t *testing.T) {
 }
 
 func TestClient_Bulk(t *testing.T) {
-	port, mssqlSourceName, teardown := testutil.StartHasuraWithMSSQLSource(t, testutil.HasuraDockerImage)
+	port, mssqlSourceName, teardown := testutil.StartHasuraWithMSSQLSource(
+		t,
+		testutil.HasuraDockerImage,
+	)
 	defer teardown()
 	type fields struct {
 		Client *httpc.Client
@@ -188,7 +189,7 @@ func TestClient_Bulk(t *testing.T) {
 			tt.assertErr(t, err)
 			if !tt.wantErr {
 				require.NoError(t, err)
-				gotb, err := ioutil.ReadAll(got)
+				gotb, err := io.ReadAll(got)
 				require.NoError(t, err)
 				require.JSONEq(t, tt.want, string(gotb))
 			}

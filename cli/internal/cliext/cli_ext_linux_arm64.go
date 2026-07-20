@@ -1,5 +1,4 @@
-// +build linux
-// +build arm64
+//go:build linux && arm64
 
 package cliext
 

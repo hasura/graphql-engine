@@ -20,6 +20,7 @@ func (s StateStoreCatalog) GetSetting(key string) (value string, err error) {
 	if err != nil {
 		return "", errors.E(op, err)
 	}
+
 	return state.GetSetting(key), nil
 }
 
@@ -30,11 +31,14 @@ func (s StateStoreCatalog) UpdateSetting(name string, value string) error {
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	state.SetSetting(name, value)
+
 	_, err = s.client.Set(*state)
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
@@ -45,14 +49,18 @@ func (s StateStoreCatalog) GetAllSettings() (map[string]string, error) {
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
+
 	return state.GetSettings(), nil
 }
 
 func (s StateStoreCatalog) PrepareSettingsDriver() error {
 	var op errors.Op = "settings.StateStoreCatalog.PrepareSettingsDriver"
-	if err := s.setDefaults(); err != nil {
+
+	err := s.setDefaults()
+	if err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
@@ -63,14 +71,17 @@ func (s StateStoreCatalog) setDefaults() error {
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	for _, setting := range Settings {
 		if v := state.GetSetting(setting.GetName()); len(v) == 0 {
 			state.SetSetting(setting.GetName(), setting.GetDefaultValue())
 		}
 	}
+
 	_, err = s.client.Set(*state)
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }

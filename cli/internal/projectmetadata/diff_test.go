@@ -2,20 +2,16 @@ package projectmetadata
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/version"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
-
-	"github.com/sirupsen/logrus"
-
-	"github.com/hasura/graphql-engine/cli/v2/version"
-
-	"github.com/hasura/graphql-engine/cli/v2"
 )
 
 func TestPrintContextRichDiffBetweenProjectDirectories(t *testing.T) {
@@ -69,8 +65,8 @@ func TestPrintContextRichDiffBetweenProjectDirectories(t *testing.T) {
 			}
 			goldenFile := filepath.Join("testdata/diff", tt.name, "want")
 			// uncomment to update test snapshot file
-			//assert.NoError(t, ioutil.WriteFile(goldenFile, tt.out.Bytes(), os.ModePerm))
-			want, err := ioutil.ReadFile(goldenFile)
+			// assert.NoError(t, os.WriteFile(goldenFile, tt.out.Bytes(), os.ModePerm))
+			want, err := os.ReadFile(goldenFile)
 			assert.NoError(t, err)
 			assert.Equal(t, string(want), tt.out.String())
 		})

@@ -1,7 +1,7 @@
 package metadatautil
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -20,7 +20,7 @@ func BenchmarkJSONToYAML(b *testing.B) {
 	for _, f := range funcs {
 		b.Run(f.name, func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				input, err := ioutil.ReadFile("testdata/json/t2/metadata.json")
+				input, err := os.ReadFile("testdata/json/t2/metadata.json")
 				assert.NoError(b, err)
 				blackhole, err = f.f(input)
 				assert.NoError(b, err)
@@ -54,16 +54,16 @@ func TestJSONToYAML(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			input, err := ioutil.ReadFile(tt.inputFile)
+			input, err := os.ReadFile(tt.inputFile)
 			assert.NoError(t, err)
 			got, err := JSONToYAML(input)
 			tt.assertErr(t, err)
 			if !tt.wantErr {
 				assert.NoError(t, err)
 				// uncomment to update golden file
-				// assert.NoError(t, ioutil.WriteFile(tt.wantGoldenFile, got, os.ModePerm))
+				// assert.NoError(t, os.WriteFile(tt.wantGoldenFile, got, os.ModePerm))
 
-				want, err := ioutil.ReadFile(tt.wantGoldenFile)
+				want, err := os.ReadFile(tt.wantGoldenFile)
 				assert.NoError(t, err)
 				assert.Equal(t, string(want), string(got))
 			}

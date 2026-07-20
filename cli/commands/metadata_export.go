@@ -2,7 +2,7 @@ package commands
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
@@ -39,24 +39,36 @@ func newMetadataExportCmd(ec *cli.ExecutionContext) *cobra.Command {
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "RunE")
+
 			if len(opts.output) == 0 {
 				ec.Spin("Exporting metadata...")
 			}
+
 			err := opts.Run()
+
 			ec.Spinner.Stop()
+
 			if err != nil {
 				return errors.E(op, err)
 			}
+
 			if len(opts.output) == 0 {
 				ec.Logger.Info("Metadata exported")
 			}
+
 			return nil
 		},
 		Long: longHelpMetadataExportCmd,
 	}
 
 	f := metadataExportCmd.Flags()
-	f.StringVarP(&opts.output, "output", "o", "", `write metadata to standard output in given format for exported metadata (note: this won't modify project metadata) Allowed values: json, yaml")`)
+	f.StringVarP(
+		&opts.output,
+		"output",
+		"o",
+		"",
+		`write metadata to standard output in given format for exported metadata (note: this won't modify project metadata) Allowed values: json, yaml")`,
+	)
 
 	return metadataExportCmd
 }
@@ -69,31 +81,43 @@ type MetadataExportOptions struct {
 
 func (o *MetadataExportOptions) Run() error {
 	var op errors.Op = "commands.MetadataExportOptions.Run"
+
 	if len(o.output) != 0 {
-		if err := getMetadataFromServerAndWriteToStdoutByFormat(o.EC, rawOutputFormat(o.output)); err != nil {
+		err := getMetadataFromServerAndWriteToStdoutByFormat(o.EC, rawOutputFormat(o.output))
+		if err != nil {
 			return errors.E(op, err)
 		}
+
 		return nil
 	}
-	if err := getMetadataModeHandler(o.EC.MetadataMode).Export(o); err != nil {
+
+	err := getMetadataModeHandler(o.EC.MetadataMode).Export(o)
+	if err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
-func getMetadataFromServerAndWriteToStdoutByFormat(ec *cli.ExecutionContext, format rawOutputFormat) error {
+func getMetadataFromServerAndWriteToStdoutByFormat(
+	ec *cli.ExecutionContext,
+	format rawOutputFormat,
+) error {
 	var op errors.Op = "commands.getMetadataFromServerAndWriteToStdoutByFormat"
+
 	metadataReader, err := cli.GetCommonMetadataOps(ec).ExportMetadata()
 	if err != nil {
 		return errors.E(op, fmt.Errorf("failed to export metadata: %w", err))
 	}
 
-	jsonMetadata, err := ioutil.ReadAll(metadataReader)
+	jsonMetadata, err := io.ReadAll(metadataReader)
 	if err != nil {
 		return errors.E(op, fmt.Errorf("reading metadata failed: %w", err))
 	}
+
 	if err := writeByOutputFormat(ec.Stdout, jsonMetadata, format); err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }

@@ -1,14 +1,13 @@
 package metadatautil
 
 import (
-	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 func BenchmarkYAMLToJSON(b *testing.B) {
@@ -21,7 +20,7 @@ func BenchmarkYAMLToJSON(b *testing.B) {
 	for _, f := range funcs {
 		b.Run(f.name, func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				input, err := ioutil.ReadFile("testdata/yaml/t1/metadata.yaml")
+				input, err := os.ReadFile("testdata/yaml/t1/metadata.yaml")
 				assert.NoError(b, err)
 				_, err = f.f(input)
 				assert.NoError(b, err)
@@ -120,7 +119,7 @@ actions: "!include actions.yaml"
 				ctx: map[string]string{baseDirectoryKey: "testdata/metadata/databases"},
 				node: func() *yaml.Node {
 					v := new(yaml.Node)
-					b, err := ioutil.ReadFile("testdata/metadata/databases/databases.yaml")
+					b, err := os.ReadFile("testdata/metadata/databases/databases.yaml")
 					assert.Nil(t, err)
 					assert.NoError(t, yaml.Unmarshal(b, v))
 					return v
@@ -293,14 +292,17 @@ func TestGetIncludeTagFiles(t *testing.T) {
 					var testdoc struct {
 						Foo yaml.Node `yaml:"foo"`
 					}
-					file, err := ioutil.ReadFile("testdata/include_tags_children/root.yaml")
+					file, err := os.ReadFile("testdata/include_tags_children/root.yaml")
 					assert.NoError(t, err)
 					assert.NoError(t, yaml.Unmarshal(file, &testdoc))
 					return &testdoc.Foo
 				}(),
 				"testdata/include_tags_children",
 			},
-			[]string{"testdata/include_tags_children/bar/bar.yaml", "testdata/include_tags_children/bar/foo.yaml"},
+			[]string{
+				"testdata/include_tags_children/bar/bar.yaml",
+				"testdata/include_tags_children/bar/foo.yaml",
+			},
 			false,
 			require.NoError,
 		},

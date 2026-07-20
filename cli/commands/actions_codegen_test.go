@@ -12,7 +12,6 @@ import (
 )
 
 var _ = Describe("hasura actions codegen", func() {
-
 	var projectDirectory string
 	var teardown func()
 	BeforeEach(func() {
@@ -33,17 +32,31 @@ var _ = Describe("hasura actions codegen", func() {
 	AfterEach(func() { teardown() })
 
 	Context("actions codegen tests", func() {
-		It("creates the code for all actions specified framework and in directory as in config.yaml file", func() {
-			testutil.RunCommandAndSucceed(testutil.CmdOpts{
-				Args:             []string{"actions", "use-codegen", "--framework", "nodejs-express", "--output-dir", "codegen", "--with-starter-kit", "true"},
-				WorkingDirectory: projectDirectory,
-			})
-			session := testutil.Hasura(testutil.CmdOpts{
-				Args:             []string{"actions", "codegen"},
-				WorkingDirectory: projectDirectory,
-			})
-			Eventually(session, timeout).Should(Exit(0))
-			Expect(session.Err.Contents()).Should(ContainSubstring("Codegen files generated at codegen"))
-		})
+		It(
+			"creates the code for all actions specified framework and in directory as in config.yaml file",
+			func() {
+				testutil.RunCommandAndSucceed(testutil.CmdOpts{
+					Args: []string{
+						"actions",
+						"use-codegen",
+						"--framework",
+						"nodejs-express",
+						"--output-dir",
+						"codegen",
+						"--with-starter-kit",
+						"true",
+					},
+					WorkingDirectory: projectDirectory,
+				})
+				session := testutil.Hasura(testutil.CmdOpts{
+					Args:             []string{"actions", "codegen"},
+					WorkingDirectory: projectDirectory,
+				})
+				Eventually(session, timeout).Should(Exit(0))
+				Expect(
+					session.Err.Contents(),
+				).Should(ContainSubstring("Codegen files generated at codegen"))
+			},
+		)
 	})
 })

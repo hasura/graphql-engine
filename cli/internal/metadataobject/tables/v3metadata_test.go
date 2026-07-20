@@ -1,15 +1,13 @@
 package tables
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
-	"github.com/stretchr/testify/assert"
-
 	"github.com/sirupsen/logrus"
-
-	"gopkg.in/yaml.v3"
+	"github.com/stretchr/testify/assert"
+	"go.yaml.in/yaml/v3"
 )
 
 func TestV3MetadataTableConfig_Export(t *testing.T) {
@@ -38,7 +36,7 @@ func TestV3MetadataTableConfig_Export(t *testing.T) {
 			},
 			args: args{
 				metadata: func() map[string]yaml.Node {
-					bs, err := ioutil.ReadFile("testdata/v3_export_test/t1/metadata.json")
+					bs, err := os.ReadFile("testdata/v3_export_test/t1/metadata.json")
 					assert.NoError(t, err)
 					yamlbs, err := metadatautil.JSONToYAML(bs)
 					assert.NoError(t, err)
@@ -49,7 +47,7 @@ func TestV3MetadataTableConfig_Export(t *testing.T) {
 			},
 			want: map[string][]byte{
 				"testdata/metadata/tables.yaml": func() []byte {
-					bs, err := ioutil.ReadFile("testdata/v3_export_test/t1/want.tables.yaml")
+					bs, err := os.ReadFile("testdata/v3_export_test/t1/want.tables.yaml")
 					assert.NoError(t, err)
 					return bs
 				}(),
@@ -66,7 +64,7 @@ func TestV3MetadataTableConfig_Export(t *testing.T) {
 			},
 			args: args{
 				metadata: func() map[string]yaml.Node {
-					bs, err := ioutil.ReadFile("testdata/v3_export_test/t2/metadata.json")
+					bs, err := os.ReadFile("testdata/v3_export_test/t2/metadata.json")
 					assert.NoError(t, err)
 					yamlbs, err := metadatautil.JSONToYAML(bs)
 					assert.NoError(t, err)
@@ -77,7 +75,7 @@ func TestV3MetadataTableConfig_Export(t *testing.T) {
 			},
 			want: map[string][]byte{
 				"testdata/metadata/tables.yaml": func() []byte {
-					bs, err := ioutil.ReadFile("testdata/v3_export_test/t2/want.tables.yaml")
+					bs, err := os.ReadFile("testdata/v3_export_test/t2/want.tables.yaml")
 					assert.NoError(t, err)
 					return bs
 				}(),
@@ -94,7 +92,7 @@ func TestV3MetadataTableConfig_Export(t *testing.T) {
 			},
 			args: args{
 				metadata: func() map[string]yaml.Node {
-					bs, err := ioutil.ReadFile("testdata/v3_export_test/t3/metadata.json")
+					bs, err := os.ReadFile("testdata/v3_export_test/t3/metadata.json")
 					assert.NoError(t, err)
 					yamlbs, err := metadatautil.JSONToYAML(bs)
 					assert.NoError(t, err)
@@ -105,7 +103,7 @@ func TestV3MetadataTableConfig_Export(t *testing.T) {
 			},
 			want: map[string][]byte{
 				"testdata/metadata/tables.yaml": func() []byte {
-					bs, err := ioutil.ReadFile("testdata/v3_export_test/t3/want.tables.yaml")
+					bs, err := os.ReadFile("testdata/v3_export_test/t3/want.tables.yaml")
 					assert.NoError(t, err)
 					return bs
 				}(),
@@ -124,7 +122,7 @@ func TestV3MetadataTableConfig_Export(t *testing.T) {
 				for k, v := range got {
 					assert.Contains(t, tt.want, k)
 					// uncomment to update golden files
-					//assert.NoError(t, ioutil.WriteFile(fmt.Sprintf("testdata/v3_export_test/%v/want.%v", tt.id, filepath.Base(k)), v, os.ModePerm))
+					// assert.NoError(t, os.WriteFile(fmt.Sprintf("testdata/v3_export_test/%v/want.%v", tt.id, filepath.Base(k)), v, os.ModePerm))
 
 					assert.Equalf(t, string(tt.want[k]), string(v), "%v", k)
 				}

@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/Pallinder/go-randomdata"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -19,7 +18,15 @@ var testMigrateApply = func(projectDirectory string, globalFlags []string) {
 	Context("migrate apply", func() {
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
 			Args: append(
-				[]string{"migrate", "create", "schema_creation", "--up-sql", "create schema \"testing\";", "--down-sql", "drop schema \"testing\" cascade;"},
+				[]string{
+					"migrate",
+					"create",
+					"schema_creation",
+					"--up-sql",
+					"create schema \"testing\";",
+					"--down-sql",
+					"drop schema \"testing\" cascade;",
+				},
 				globalFlags...,
 			),
 			WorkingDirectory: projectDirectory,
@@ -46,7 +53,15 @@ var testMigrateApplyNonTransactional = func(projectDirectory string, globalFlags
 	Context("migrate apply", func() {
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
 			Args: append(
-				[]string{"migrate", "create", "concurrent_index", "--up-sql", `CREATE TABLE test (id SERIAL PRIMARY KEY, name TEXT); CREATE INDEX CONCURRENTLY idx_test_name ON test (name);`, "--down-sql", "DROP INDEX IF EXISTS idx_test_name; DROP TABLE IF EXISTS test;"},
+				[]string{
+					"migrate",
+					"create",
+					"concurrent_index",
+					"--up-sql",
+					`CREATE TABLE test (id SERIAL PRIMARY KEY, name TEXT); CREATE INDEX CONCURRENTLY idx_test_name ON test (name);`,
+					"--down-sql",
+					"DROP INDEX IF EXISTS idx_test_name; DROP TABLE IF EXISTS test;",
+				},
 				globalFlags...,
 			),
 			WorkingDirectory: projectDirectory,
@@ -73,51 +88,81 @@ var testMigrateApplyPerMigrationTransaction = func(projectDirectory string, glob
 	concurrentSQL := `CREATE TABLE test_pmt (id SERIAL PRIMARY KEY, name TEXT); CREATE INDEX CONCURRENTLY idx_test_pmt_name ON test_pmt (name);`
 	downSQL := `DROP INDEX IF EXISTS idx_test_pmt_name; DROP TABLE IF EXISTS test_pmt;`
 
-	Context("migrate apply --per-migration-transaction: comment-marked migration applies without transaction", func() {
-		testutil.RunCommandAndSucceed(testutil.CmdOpts{
-			Args: append(
-				[]string{"migrate", "create", "concurrent_index_pmt", "--up-sql", "-- hasura:no-transaction\n" + concurrentSQL, "--down-sql", "-- hasura:no-transaction\n" + downSQL},
-				globalFlags...,
-			),
-			WorkingDirectory: projectDirectory,
-		})
-		session := testutil.Hasura(testutil.CmdOpts{
-			Args: append(
-				[]string{"migrate", "apply", "--per-migration-transaction"},
-				globalFlags...,
-			),
-			WorkingDirectory: projectDirectory,
-		})
-		Eventually(session, timeout).Should(Exit(0))
-		Expect(session.Err.Contents()).Should(ContainSubstring("migrations applied"))
-	})
+	Context(
+		"migrate apply --per-migration-transaction: comment-marked migration applies without transaction",
+		func() {
+			testutil.RunCommandAndSucceed(testutil.CmdOpts{
+				Args: append(
+					[]string{
+						"migrate",
+						"create",
+						"concurrent_index_pmt",
+						"--up-sql",
+						"-- hasura:no-transaction\n" + concurrentSQL,
+						"--down-sql",
+						"-- hasura:no-transaction\n" + downSQL,
+					},
+					globalFlags...,
+				),
+				WorkingDirectory: projectDirectory,
+			})
+			session := testutil.Hasura(testutil.CmdOpts{
+				Args: append(
+					[]string{"migrate", "apply", "--per-migration-transaction"},
+					globalFlags...,
+				),
+				WorkingDirectory: projectDirectory,
+			})
+			Eventually(session, timeout).Should(Exit(0))
+			Expect(session.Err.Contents()).Should(ContainSubstring("migrations applied"))
+		},
+	)
 
-	Context("migrate apply: comment alone does nothing without --per-migration-transaction flag", func() {
-		testutil.RunCommandAndSucceed(testutil.CmdOpts{
-			Args: append(
-				[]string{"migrate", "create", "concurrent_index_no_flag", "--up-sql", "-- hasura:no-transaction\n" + concurrentSQL, "--down-sql", "-- hasura:no-transaction\n" + downSQL},
-				globalFlags...,
-			),
-			WorkingDirectory: projectDirectory,
-		})
-		session := testutil.Hasura(testutil.CmdOpts{
-			Args: append(
-				[]string{"migrate", "apply"},
-				globalFlags...,
-			),
-			WorkingDirectory: projectDirectory,
-		})
-		// Without --per-migration-transaction, the comment is ignored and the migration
-		// runs inside a transaction, which causes CREATE INDEX CONCURRENTLY to fail.
-		Eventually(session, timeout).Should(Exit(1))
-	})
+	Context(
+		"migrate apply: comment alone does nothing without --per-migration-transaction flag",
+		func() {
+			testutil.RunCommandAndSucceed(testutil.CmdOpts{
+				Args: append(
+					[]string{
+						"migrate",
+						"create",
+						"concurrent_index_no_flag",
+						"--up-sql",
+						"-- hasura:no-transaction\n" + concurrentSQL,
+						"--down-sql",
+						"-- hasura:no-transaction\n" + downSQL,
+					},
+					globalFlags...,
+				),
+				WorkingDirectory: projectDirectory,
+			})
+			session := testutil.Hasura(testutil.CmdOpts{
+				Args: append(
+					[]string{"migrate", "apply"},
+					globalFlags...,
+				),
+				WorkingDirectory: projectDirectory,
+			})
+			// Without --per-migration-transaction, the comment is ignored and the migration
+			// runs inside a transaction, which causes CREATE INDEX CONCURRENTLY to fail.
+			Eventually(session, timeout).Should(Exit(1))
+		},
+	)
 }
 
 var testMigrateApplySkipExecution = func(projectDirectory string, globalFlags []string) {
 	Context("migrate apply --skip-execution", func() {
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
 			Args: append(
-				[]string{"migrate", "create", "schema_creation", "--up-sql", "create schema \"testing\";", "--down-sql", "drop schema \"testing\" cascade;"},
+				[]string{
+					"migrate",
+					"create",
+					"schema_creation",
+					"--up-sql",
+					"create schema \"testing\";",
+					"--down-sql",
+					"drop schema \"testing\" cascade;",
+				},
 				globalFlags...,
 			),
 			WorkingDirectory: projectDirectory,
@@ -173,7 +218,6 @@ var testMigrateApplySkipExecution = func(projectDirectory string, globalFlags []
 		for _, keyword := range wantKeywordList {
 			Expect(session.Wait(timeout).Out).Should(Say(keyword))
 		}
-
 	})
 }
 
@@ -181,7 +225,17 @@ var testMigrateApplyAllDatabases = func(projectDirectory string, databases ...st
 	Context("migrate apply", func() {
 		for _, database := range databases {
 			testutil.RunCommandAndSucceed(testutil.CmdOpts{
-				Args:             []string{"migrate", "create", "schema_creation", "--up-sql", "create schema \"testing\";", "--down-sql", "drop schema \"testing\" cascade;", "--database-name", database},
+				Args: []string{
+					"migrate",
+					"create",
+					"schema_creation",
+					"--up-sql",
+					"create schema \"testing\";",
+					"--down-sql",
+					"drop schema \"testing\" cascade;",
+					"--database-name",
+					database,
+				},
 				WorkingDirectory: projectDirectory,
 			})
 		}
@@ -205,14 +259,34 @@ var testMigrateApplyAllDatabasesWithError = func(projectDirectory string, databa
 	Context("migrate apply", func() {
 		for _, database := range databases {
 			testutil.RunCommandAndSucceed(testutil.CmdOpts{
-				Args:             []string{"migrate", "create", "schema_creation", "--up-sql", "create schema \"testing\";", "--down-sql", "drop schema \"testing\" cascade;", "--database-name", database},
+				Args: []string{
+					"migrate",
+					"create",
+					"schema_creation",
+					"--up-sql",
+					"create schema \"testing\";",
+					"--down-sql",
+					"drop schema \"testing\" cascade;",
+					"--database-name",
+					database,
+				},
 				WorkingDirectory: projectDirectory,
 			})
 		}
 
 		if len(databases) > 0 {
 			testutil.RunCommandAndSucceed(testutil.CmdOpts{
-				Args:             []string{"migrate", "create", "schema_creation", "--up-sql", "create schema \"testing\";", "--down-sql", "drop schema \"testing\" cascade;", "--database-name", databases[0]},
+				Args: []string{
+					"migrate",
+					"create",
+					"schema_creation",
+					"--up-sql",
+					"create schema \"testing\";",
+					"--down-sql",
+					"drop schema \"testing\" cascade;",
+					"--database-name",
+					databases[0],
+				},
 				WorkingDirectory: projectDirectory,
 			})
 		}
@@ -233,7 +307,6 @@ var testMigrateApplyAllDatabasesWithError = func(projectDirectory string, databa
 		} else {
 			Eventually(session, timeout).Should(Exit(0))
 		}
-
 	})
 }
 
@@ -241,7 +314,15 @@ var testProgressBar = func(projectDirectory string) {
 	progressBar := "Applying migrations:  . / 8 .*%"
 	Context("migrate apply should display progress bar", func() {
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
-			Args:             []string{"migrate", "create", "schema_creation", "--up-sql", "create schema \"testing\";", "--down-sql", "drop schema \"testing\" cascade;"},
+			Args: []string{
+				"migrate",
+				"create",
+				"schema_creation",
+				"--up-sql",
+				"create schema \"testing\";",
+				"--down-sql",
+				"drop schema \"testing\" cascade;",
+			},
 			WorkingDirectory: projectDirectory,
 		})
 		session := testutil.Hasura(testutil.CmdOpts{
@@ -258,15 +339,18 @@ var testProgressBar = func(projectDirectory string) {
 			Eventually(session.Err, 60*40).Should(Say(keyword))
 		}
 	})
-	Context("migrate apply shouldn't display progress bar in non-terminal (default behaviour)", func() {
-		session := testutil.Hasura(testutil.CmdOpts{
-			Args:             []string{"migrate", "apply", "--down", "all"},
-			WorkingDirectory: projectDirectory,
-		})
+	Context(
+		"migrate apply shouldn't display progress bar in non-terminal (default behaviour)",
+		func() {
+			session := testutil.Hasura(testutil.CmdOpts{
+				Args:             []string{"migrate", "apply", "--down", "all"},
+				WorkingDirectory: projectDirectory,
+			})
 
-		Eventually(session.Err, 60*40).ShouldNot(Say(progressBar))
-		Eventually(session, 60*40).Should(Exit(0))
-	})
+			Eventually(session.Err, 60*40).ShouldNot(Say(progressBar))
+			Eventually(session, 60*40).Should(Exit(0))
+		},
+	)
 }
 
 var _ = Describe("hasura migrate apply", func() {
@@ -323,16 +407,29 @@ var _ = Describe("hasura migrate apply (config v3)", func() {
 	var projectDirectory string
 	var hgeEndpoint string
 	var teardown func()
-	var pgSource = randomdata.SillyName()
-	var citusSource = randomdata.SillyName()
-	var mssqlSource = randomdata.SillyName()
+	pgSource := randomdata.SillyName()
+	citusSource := randomdata.SillyName()
+	mssqlSource := randomdata.SillyName()
 	BeforeEach(func() {
 		projectDirectory = testutil.RandDirName()
-		hgeEndPort, teardownHGE := testutil.StartHasuraWithMetadataDatabase(GinkgoT(), testutil.HasuraDockerImage)
+		hgeEndPort, teardownHGE := testutil.StartHasuraWithMetadataDatabase(
+			GinkgoT(),
+			testutil.HasuraDockerImage,
+		)
 		hgeEndpoint = fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
 		_, teardownPG := testutil.AddDatabaseToHasura(GinkgoT(), hgeEndpoint, pgSource, "postgres")
-		_, teardownCitus := testutil.AddDatabaseToHasura(GinkgoT(), hgeEndpoint, citusSource, "citus")
-		_, teardownMSSQL := testutil.AddDatabaseToHasura(GinkgoT(), hgeEndpoint, mssqlSource, "mssql")
+		_, teardownCitus := testutil.AddDatabaseToHasura(
+			GinkgoT(),
+			hgeEndpoint,
+			citusSource,
+			"citus",
+		)
+		_, teardownMSSQL := testutil.AddDatabaseToHasura(
+			GinkgoT(),
+			hgeEndpoint,
+			mssqlSource,
+			"mssql",
+		)
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
 			Args: []string{"init", projectDirectory},
 		})
@@ -356,7 +453,10 @@ var _ = Describe("hasura migrate apply (config v3)", func() {
 		testMigrateApplyNonTransactional(projectDirectory, []string{"--database-name", pgSource})
 	})
 	It("should apply per-migration non-transactional migrations via SQL comment", func() {
-		testMigrateApplyPerMigrationTransaction(projectDirectory, []string{"--database-name", pgSource})
+		testMigrateApplyPerMigrationTransaction(
+			projectDirectory,
+			[]string{"--database-name", pgSource},
+		)
 	})
 	It("should mark the migrations as applied ", func() {
 		testMigrateApplySkipExecution(projectDirectory, []string{"--database-name", pgSource})
@@ -398,9 +498,16 @@ var _ = Describe("hasura migrate apply (config v3)", func() {
 		createTable = strings.NewReader(citusBody)
 		assertHGEAPIRequestSucceedsAndGetResponseBody(hgeEndpoint, "v2/query", createTable)
 	})
-	It("should the migrations on all-databases except first database and it should exit with code 1", func() {
-		testMigrateApplyAllDatabasesWithError(projectDirectory, pgSource, citusSource, mssqlSource)
-		citusBody := fmt.Sprintf(`
+	It(
+		"should the migrations on all-databases except first database and it should exit with code 1",
+		func() {
+			testMigrateApplyAllDatabasesWithError(
+				projectDirectory,
+				pgSource,
+				citusSource,
+				mssqlSource,
+			)
+			citusBody := fmt.Sprintf(`
 {
     "type": "citus_run_sql",
     "args": {
@@ -409,9 +516,10 @@ var _ = Describe("hasura migrate apply (config v3)", func() {
     }
 }
 `, citusSource)
-		createTable := strings.NewReader(citusBody)
-		assertHGEAPIRequestSucceedsAndGetResponseBody(hgeEndpoint, "v2/query", createTable)
-	})
+			createTable := strings.NewReader(citusBody)
+			assertHGEAPIRequestSucceedsAndGetResponseBody(hgeEndpoint, "v2/query", createTable)
+		},
+	)
 })
 
 var _ = Describe("hasura migrate apply progress bar", func() {

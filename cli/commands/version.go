@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// NewVersionCmd returns the version command
+// NewVersionCmd returns the version command.
 func NewVersionCmd(ec *cli.ExecutionContext) *cobra.Command {
 	versionCmd := &cobra.Command{
 		Use:          "version",
@@ -17,21 +17,29 @@ func NewVersionCmd(ec *cli.ExecutionContext) *cobra.Command {
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "PreRunE")
+
 			ec.Viper = viper.New()
-			if err := ec.Prepare(); err != nil {
+
+			err := ec.Prepare()
+			if err != nil {
 				return errors.E(op, err)
 			}
+
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			logger := logrus.New()
 			logger.SetOutput(ec.Stdout)
-			logger.SetFormatter(&logrus.TextFormatter{DisableTimestamp: true, DisableColors: ec.NoColor})
+			logger.SetFormatter(
+				&logrus.TextFormatter{DisableTimestamp: true, DisableColors: ec.NoColor},
+			)
+
 			if !ec.IsTerminal {
 				logger.SetFormatter(&logrus.JSONFormatter{PrettyPrint: false})
 			}
 
 			logger.WithField("version", ec.Version.GetCLIVersion()).Info("hasura cli")
+
 			err := ec.Validate()
 			if err == nil {
 				logger.
@@ -39,8 +47,10 @@ func NewVersionCmd(ec *cli.ExecutionContext) *cobra.Command {
 					WithField("version", ec.Version.GetServerVersion()).
 					Info("hasura graphql engine")
 			}
+
 			return nil
 		},
 	}
+
 	return versionCmd
 }

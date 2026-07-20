@@ -2,12 +2,10 @@ package commands
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	"github.com/Pallinder/go-randomdata"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -36,31 +34,38 @@ var testExportMetadataToStdout = func(projectDirectory string) {
 
 var testMetadataFileMode = func(projectDirectory string) {
 	Context("metadata file mode", func() {
-		editMetadataFileInConfig(filepath.Join(projectDirectory, defaultConfigFilename), "metadata.json")
+		editMetadataFileInConfig(
+			filepath.Join(projectDirectory, defaultConfigFilename),
+			"metadata.json",
+		)
 		session := testutil.Hasura(testutil.CmdOpts{
 			Args:             []string{"metadata", "export"},
 			WorkingDirectory: projectDirectory,
 		})
 		Eventually(session, timeout).Should(Exit(0))
-		fileContents, err := ioutil.ReadFile(filepath.Join(projectDirectory, "metadata.json"))
+		fileContents, err := os.ReadFile(filepath.Join(projectDirectory, "metadata.json"))
 		Expect(err).To(BeNil())
 		Eventually(isJSON(fileContents)).Should(BeTrue())
 
-		editMetadataFileInConfig(filepath.Join(projectDirectory, defaultConfigFilename), "metadata.yaml")
+		editMetadataFileInConfig(
+			filepath.Join(projectDirectory, defaultConfigFilename),
+			"metadata.yaml",
+		)
 		session = testutil.Hasura(testutil.CmdOpts{
 			Args:             []string{"metadata", "export"},
 			WorkingDirectory: projectDirectory,
 		})
 		Eventually(session, timeout).Should(Exit(0))
-		fileContents, err = ioutil.ReadFile(filepath.Join(projectDirectory, "metadata.json"))
+		fileContents, err = os.ReadFile(filepath.Join(projectDirectory, "metadata.json"))
 		Expect(err).To(BeNil())
 		Eventually(isYAML(fileContents)).Should(BeTrue())
 	})
 }
+
 var verifyRequestTransformsMetadataIsExported = func(projectDirectory string) {
 	actionsMetadata := filepath.Join(projectDirectory, "metadata", "actions.yaml")
 	Expect(actionsMetadata).To(BeAnExistingFile())
-	b, err := ioutil.ReadFile(actionsMetadata)
+	b, err := os.ReadFile(actionsMetadata)
 	Expect(err).To(BeNil())
 	Expect(string(b)).To(ContainSubstring("request_transform"))
 }
@@ -71,10 +76,18 @@ var _ = Describe("hasura metadata export (config v3)", func() {
 	sourceName := randomdata.SillyName()
 	BeforeEach(func() {
 		projectDirectory = testutil.RandDirName()
-		hgeEndPort, teardownHGE := testutil.StartHasuraWithMetadataDatabase(GinkgoT(), testutil.HasuraDockerImage)
+		hgeEndPort, teardownHGE := testutil.StartHasuraWithMetadataDatabase(
+			GinkgoT(),
+			testutil.HasuraDockerImage,
+		)
 		hgeEndpoint = fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
 
-		connectionString, teardownPG := testutil.AddDatabaseToHasura(GinkgoT(), hgeEndpoint, sourceName, "postgres")
+		connectionString, teardownPG := testutil.AddDatabaseToHasura(
+			GinkgoT(),
+			hgeEndpoint,
+			sourceName,
+			"postgres",
+		)
 
 		// clone template project directory as test project directory
 		copyTestConfigV3Project(projectDirectory)
@@ -85,7 +98,9 @@ var _ = Describe("hasura metadata export (config v3)", func() {
 			WorkingDirectory: projectDirectory,
 		})
 		// remove the directory after apply to check if it gets recreated after a successful export
-		Expect(os.RemoveAll(filepath.Join(projectDirectory, "metadata", "databases", sourceName))).To(BeNil())
+		Expect(
+			os.RemoveAll(filepath.Join(projectDirectory, "metadata", "databases", sourceName)),
+		).To(BeNil())
 
 		teardown = func() {
 			os.RemoveAll(projectDirectory)
@@ -104,13 +119,21 @@ var _ = Describe("hasura metadata export (config v3)", func() {
 			})
 			Eventually(session, timeout).Should(Exit(0))
 			Expect(session.Err.Contents()).Should(ContainSubstring("Metadata exported"))
-			Expect(filepath.Join(projectDirectory, "metadata", "databases", sourceName, "tables", "public_albums.yaml")).Should(BeAnExistingFile())
+			Expect(
+				filepath.Join(
+					projectDirectory,
+					"metadata",
+					"databases",
+					sourceName,
+					"tables",
+					"public_albums.yaml",
+				),
+			).Should(BeAnExistingFile())
 			verifyRequestTransformsMetadataIsExported(projectDirectory)
 		})
 		testExportMetadataToStdout(projectDirectory)
 		testMetadataFileMode(projectDirectory)
 	})
-
 })
 
 var _ = Describe("hasura metadata export (config v2)", func() {
@@ -150,12 +173,13 @@ var _ = Describe("hasura metadata export (config v2)", func() {
 			})
 			Eventually(session, timeout).Should(Exit(0))
 			Expect(session.Err.Contents()).Should(ContainSubstring("Metadata exported"))
-			Expect(filepath.Join(projectDirectory, "metadata", "tables.yaml")).Should(BeAnExistingFile())
+			Expect(
+				filepath.Join(projectDirectory, "metadata", "tables.yaml"),
+			).Should(BeAnExistingFile())
 
 			verifyRequestTransformsMetadataIsExported(projectDirectory)
 		})
 		testExportMetadataToStdout(projectDirectory)
 		testMetadataFileMode(projectDirectory)
 	})
-
 })

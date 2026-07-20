@@ -1,6 +1,7 @@
 package migrate
 
 import (
+	stderrors "errors"
 	"fmt"
 	nurl "net/url"
 	"os"
@@ -25,22 +26,26 @@ type MultiError struct {
 // NewMultiError returns an error type holding multiple errors.
 func NewMultiError(errs ...error) MultiError {
 	compactErrs := make([]error, 0)
+
 	for _, e := range errs {
 		if e != nil {
 			compactErrs = append(compactErrs, e)
 		}
 	}
+
 	return MultiError{compactErrs}
 }
 
-// Error implements error. Mulitple errors are concatenated with 'and's.
+// Error implements error. Multiple errors are concatenated with 'and's.
 func (m MultiError) Error() string {
-	var strs = make([]string, 0)
+	strs := make([]string, 0)
+
 	for _, e := range m.Errs {
 		if len(e.Error()) > 0 {
 			strs = append(strs, e.Error())
 		}
 	}
+
 	return strings.Join(strs, " and ")
 }
 
@@ -51,6 +56,7 @@ func suint64(n int64) uint64 {
 	if n < 0 {
 		panic(fmt.Sprintf("suint(%v) expects input >= 0", n))
 	}
+
 	return uint64(n)
 }
 
@@ -84,11 +90,12 @@ func (b *slowReader) Close() error {
 	return b.rx.Close()
 } */
 
-var errNoScheme = fmt.Errorf("no scheme")
+var errNoScheme = stderrors.New("no scheme")
 
-// schemeFromUrl returns the scheme from a URL string
+// schemeFromUrl returns the scheme from a URL string.
 func schemeFromUrl(url string) (string, error) {
 	var op errors.Op = "migrate.schemeFromUrl"
+
 	u, err := nurl.Parse(url)
 	if err != nil {
 		return "", errors.E(op, err)
@@ -101,32 +108,41 @@ func schemeFromUrl(url string) (string, error) {
 	return u.Scheme, nil
 }
 
-// FilterCustomQuery filters all query values starting with `x-`
+// FilterCustomQuery filters all query values starting with `x-`.
 func FilterCustomQuery(u *nurl.URL) *nurl.URL {
 	ux := *u
 	vx := make(nurl.Values)
+
 	for k, v := range ux.Query() {
 		if len(k) <= 1 || (len(k) > 1 && k[0:2] != "x-") {
 			vx[k] = v
 		}
 	}
+
 	ux.RawQuery = vx.Encode()
+
 	return &ux
 }
 
-func NewMigrate(ec *cli.ExecutionContext, isCmd bool, sourceName string, sourceKind hasura.SourceKind) (*Migrate, error) {
+func NewMigrate(
+	ec *cli.ExecutionContext,
+	isCmd bool,
+	sourceName string,
+	sourceKind hasura.SourceKind,
+) (*Migrate, error) {
 	var op errors.Op = "migrate.NewMigrate"
 	// set a default source kind
 	if len(sourceKind) < 1 {
-		return nil, errors.E(op, fmt.Errorf("invalid source kind"))
+		return nil, errors.E(op, stderrors.New("invalid source kind"))
 	}
 	// create a new directory for the database if it doesn't exists
 	if f, _ := os.Stat(filepath.Join(ec.MigrationDir, sourceName)); f == nil {
-		err := os.MkdirAll(filepath.Join(ec.MigrationDir, sourceName), 0755)
+		err := os.MkdirAll(filepath.Join(ec.MigrationDir, sourceName), 0o755)
 		if err != nil {
 			return nil, errors.E(op, err)
 		}
 	}
+
 	dbURL := GetDataPath(ec)
 	fileURL := GetFilePath(filepath.Join(ec.MigrationDir, sourceName))
 	opts := NewMigrateOpts{
@@ -145,6 +161,7 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool, sourceName string, sourceK
 				if ec.Config.Version >= cli.V3 {
 					return ec.APIClient.V1Metadata
 				}
+
 				return nil
 			}(),
 			MetadataOps:          cli.GetCommonMetadataOps(ec),
@@ -152,6 +169,7 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool, sourceName string, sourceK
 			SettingsStateStore:   cli.GetSettingsStateStore(ec, sourceName),
 		},
 	}
+
 	opts.hasuraOpts.PGDumpClient = ec.APIClient.PGDump
 	if ec.HasMetadataV3 {
 		opts.hasuraOpts.PGSourceOps = ec.APIClient.V2Query
@@ -168,21 +186,25 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool, sourceName string, sourceK
 	if err != nil {
 		return nil, errors.E(op, fmt.Errorf("cannot create migrate instance: %w", err))
 	}
+
 	if ec.Config.Version >= cli.V2 {
 		t.databaseDrv.EnableCheckMetadataConsistency(true)
 	}
+
 	if ok, err := copyStateToCatalogStateAPIIfRequired(ec, sourceName); err != nil {
 		ec.Logger.Warn(err)
 	} else if ok {
-		if err := t.ReScan(); err != nil {
+		err := t.ReScan()
+		if err != nil {
 			return nil, errors.E(op, err)
 		}
 	}
+
 	return t, nil
 }
 
 func GetDataPath(ec *cli.ExecutionContext) *nurl.URL {
-	url := ec.Config.ServerConfig.ParsedEndpoint
+	url := ec.Config.ParsedEndpoint
 	host := &nurl.URL{
 		Scheme:   "hasuradb",
 		Host:     url.Host,
@@ -197,10 +219,13 @@ func GetDataPath(ec *cli.ExecutionContext) *nurl.URL {
 	default:
 		q.Set("sslmode", "disable")
 	}
+
 	for k, v := range ec.HGEHeaders {
 		q.Add("headers", fmt.Sprintf("%s:%s", k, v))
 	}
+
 	host.RawQuery = q.Encode()
+
 	return host
 }
 
@@ -214,6 +239,7 @@ func GetFilePath(dir string) *nurl.URL {
 	if runtime.GOOS == "windows" && !strings.HasPrefix(host.Path, "/") {
 		host.Path = "/" + host.Path
 	}
+
 	return host
 }
 
@@ -226,10 +252,14 @@ func IsMigrationsSupported(kind hasura.SourceKind) bool {
 		hasura.SourceKindBigQuery:
 		return true
 	}
+
 	return false
 }
 
-func copyStateToCatalogStateAPIIfRequired(ec *cli.ExecutionContext, sourceName string) (bool, error) {
+func copyStateToCatalogStateAPIIfRequired(
+	ec *cli.ExecutionContext,
+	sourceName string,
+) (bool, error) {
 	var op errors.Op = "migrate.copyStateToCatalogStateAPIIfRequired"
 	// if
 	//		the project is in config v3
@@ -238,17 +268,21 @@ func copyStateToCatalogStateAPIIfRequired(ec *cli.ExecutionContext, sourceName s
 	if !ec.DisableAutoStateMigration && ec.Config.Version >= cli.V3 {
 		// get cli catalog and check isStateCopyCompleted is false
 		cs := statestore.NewCLICatalogState(ec.APIClient.V1Metadata)
+
 		state, err := cs.Get()
 		if err != nil {
 			return false, errors.E(op, err)
 		}
+
 		markStateMigrationCompleted := func() error {
 			state.IsStateCopyCompleted = true
 			if _, err := cs.Set(*state); err != nil {
-				return errors.E(op, fmt.Errorf("error settting state: %w", err))
+				return errors.E(op, fmt.Errorf("error setting state: %w", err))
 			}
+
 			return nil
 		}
+
 		if !state.IsStateCopyCompleted {
 			// if control reaches this block we'll set IsStateCopyCompleted to true
 			// this makes sure we only attempt to automatically do the state migration once
@@ -270,35 +304,68 @@ func copyStateToCatalogStateAPIIfRequired(ec *cli.ExecutionContext, sourceName s
 
 			runsqlResp, err := ec.APIClient.V2Query.PGRunSQL(query)
 			if err != nil {
-				ec.Logger.Debug("encountered error when trying to move migrations from hdb_catalog.schema_migrations to catalog state\n", err,
-					"\nnote: ignore this if you are not updating your project from config v2 -> config v3")
-				ec.Logger.Debug("marking IsStateCopyCompleted as true %w", markStateMigrationCompleted())
+				ec.Logger.Debug(
+					"encountered error when trying to move migrations from hdb_catalog.schema_migrations to catalog state\n",
+					err,
+					"\nnote: ignore this if you are not updating your project from config v2 -> config v3",
+				)
+				ec.Logger.Debug(
+					"marking IsStateCopyCompleted as true %w",
+					markStateMigrationCompleted(),
+				)
+
 				return false, nil
 			}
 
 			if runsqlResp.ResultType != hasura.TuplesOK {
-				ec.Logger.Debug("encountered error when trying to move migrations from hdb_catalog.schema_migrations to catalog state", fmt.Errorf("invalid result Type %s", runsqlResp.ResultType),
-					"\nnote: ignore this if you are not updating your project from config v2 -> config v3")
-				ec.Logger.Debug("marking IsStateCopyCompleted as true %w", markStateMigrationCompleted())
+				ec.Logger.Debug(
+					"encountered error when trying to move migrations from hdb_catalog.schema_migrations to catalog state",
+					fmt.Errorf("invalid result Type %s", runsqlResp.ResultType),
+					"\nnote: ignore this if you are not updating your project from config v2 -> config v3",
+				)
+				ec.Logger.Debug(
+					"marking IsStateCopyCompleted as true %w",
+					markStateMigrationCompleted(),
+				)
+
 				return false, nil
 			}
+
 			result := runsqlResp.Result
 			if result[1][0] == "0" {
 				// hdb_catalog.schema_migrations doesn't exist
-				ec.Logger.Debug("hdb_catalog.schema_migrations was not found, skipping state migration")
-				ec.Logger.Debug("marking IsStateCopyCompleted as true %w", markStateMigrationCompleted())
+				ec.Logger.Debug(
+					"hdb_catalog.schema_migrations was not found, skipping state migration",
+				)
+				ec.Logger.Debug(
+					"marking IsStateCopyCompleted as true %w",
+					markStateMigrationCompleted(),
+				)
+
 				return false, nil
 			}
+
 			ec.Logger.Debug("copying cli state from hdb_catalog.schema_migrations to catalog state")
 			// COPY STATE
 			if err := scripts.CopyState(ec, sourceName, sourceName); err != nil {
 				return false, errors.E(op, err)
 			}
-			ec.Logger.Debug("copying cli state from hdb_catalog.schema_migrations to catalog state success")
+
+			ec.Logger.Debug(
+				"copying cli state from hdb_catalog.schema_migrations to catalog state success",
+			)
+
 			return true, nil
 		}
-		ec.Logger.Debugf("skipping state migration, found IsStateCopyCompleted: %v Migrations: %v", state.IsStateCopyCompleted, state.Migrations)
+
+		ec.Logger.Debugf(
+			"skipping state migration, found IsStateCopyCompleted: %v Migrations: %v",
+			state.IsStateCopyCompleted,
+			state.Migrations,
+		)
+
 		return false, nil
 	}
+
 	return false, nil
 }

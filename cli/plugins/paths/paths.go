@@ -27,7 +27,7 @@ const (
 	ManifestFile      string = "manifest.yaml"
 )
 
-// Paths contains all important environment paths
+// Paths contains all important environment paths.
 type Paths struct {
 	base string
 	tmp  string
@@ -42,23 +42,23 @@ func (p Paths) BasePath() string { return p.base }
 
 // IndexPath returns the base directory where plugin index repository is cloned.
 //
-// e.g. {BasePath}/index/
+// e.g. {BasePath}/index/.
 func (p Paths) IndexPath() string { return filepath.Join(p.base, "index") }
 
 // IndexPluginsPath returns the plugins directory of the index repository.
 //
-// e.g. {BasePath}/index/plugins/
+// e.g. {BasePath}/index/plugins/.
 func (p Paths) IndexPluginsPath() string { return filepath.Join(p.base, "index", "plugins") }
 
 // InstallReceiptsPath returns the base directory where plugin receipts are stored.
 //
-// e.g. {BasePath}/receipts
+// e.g. {BasePath}/receipts.
 func (p Paths) InstallReceiptsPath() string { return filepath.Join(p.base, "receipts") }
 
 // BinPath returns the path where plugin executable symbolic links are found.
 // This path should be added to $PATH in client machine.
 //
-// e.g. {BasePath}/bin
+// e.g. {BasePath}/bin.
 func (p Paths) BinPath() string { return filepath.Join(p.base, "bin") }
 
 // DownloadPath returns a temporary directory for downloading plugins. It does
@@ -67,19 +67,19 @@ func (p Paths) DownloadPath() string { return filepath.Join(p.tmp, "plugins-down
 
 // InstallPath returns the base directory for plugin installations.
 //
-// e.g. {BasePath}/store
+// e.g. {BasePath}/store.
 func (p Paths) InstallPath() string { return filepath.Join(p.base, "store") }
 
 // PluginInstallPath returns the path to install the plugin.
 //
-// e.g. {InstallPath}/{version}/{..files..}
+// e.g. {InstallPath}/{version}/{..files..}.
 func (p Paths) PluginInstallPath(plugin string) string {
 	return filepath.Join(p.InstallPath(), plugin)
 }
 
 // PluginInstallReceiptPath returns the path to the install receipt for plugin.
 //
-// e.g. {InstallReceiptsPath}/{plugin}.yaml
+// e.g. {InstallReceiptsPath}/{plugin}.yaml.
 func (p Paths) PluginInstallReceiptPath(plugin string) string {
 	return filepath.Join(p.InstallReceiptsPath(), plugin+ManifestExtension)
 }
@@ -87,7 +87,7 @@ func (p Paths) PluginInstallReceiptPath(plugin string) string {
 // PluginVersionInstallPath returns the path to the specified version of specified
 // plugin.
 //
-// e.g. {PluginInstallPath}/{plugin}/{version}
+// e.g. {PluginInstallPath}/{plugin}/{version}.
 func (p Paths) PluginVersionInstallPath(plugin, version string) string {
 	return filepath.Join(p.InstallPath(), plugin, version)
 }
@@ -96,18 +96,30 @@ func (p Paths) PluginVersionInstallPath(plugin, version string) string {
 // returns the cleaned path. Symbolic links with relative paths return error.
 func Realpath(path string) (string, error) {
 	var op errors.Op = "paths.Realpath"
+
 	s, err := os.Lstat(path)
 	if err != nil {
-		return "", errors.E(op, fmt.Errorf("failed to stat the currently executed path (%q): %w", path, err))
+		return "", errors.E(
+			op,
+			fmt.Errorf("failed to stat the currently executed path (%q): %w", path, err),
+		)
 	}
 
 	if s.Mode()&os.ModeSymlink != 0 {
 		if path, err = os.Readlink(path); err != nil {
-			return "", errors.E(op, fmt.Errorf("failed to resolve the symlink of the currently executed version: %w", err))
+			return "", errors.E(
+				op,
+				fmt.Errorf(
+					"failed to resolve the symlink of the currently executed version: %w",
+					err,
+				),
+			)
 		}
+
 		if !filepath.IsAbs(path) {
 			return "", errors.E(op, fmt.Errorf("symbolic link is relative (%s): %w", path, err))
 		}
 	}
+
 	return filepath.Clean(path), nil
 }

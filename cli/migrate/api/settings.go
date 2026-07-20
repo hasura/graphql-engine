@@ -24,23 +24,29 @@ func SettingsAPI(c *gin.Context) {
 
 	// Switch on request method
 	switch c.Request.Method {
-	case "GET":
+	case http.MethodGet:
 		name := "migration_mode"
+
 		setting, err := t.GetSetting(name)
 		if err != nil {
 			if strings.HasPrefix(err.Error(), DataAPIError) {
 				c.JSON(500, &Response{Code: "data_api_error", Message: err.Error()})
+
 				return
 			}
+
 			c.JSON(500, &Response{Code: "internal_error", Message: err.Error()})
+
 			return
 		}
+
 		c.JSON(200, &gin.H{name: setting})
-	case "PUT":
+	case http.MethodPut:
 		var request SettingRequest
 		// Bind Request body to Request struct
 		if c.BindJSON(&request) != nil {
 			c.JSON(500, &Response{Code: "internal_error", Message: "Something went wrong"})
+
 			return
 		}
 
@@ -48,12 +54,16 @@ func SettingsAPI(c *gin.Context) {
 		if err != nil {
 			if strings.HasPrefix(err.Error(), DataAPIError) {
 				c.JSON(500, &Response{Code: "data_api_error", Message: err.Error()})
+
 				return
 			}
+
 			c.JSON(500, &Response{Code: "internal_error", Message: err.Error()})
+
 			return
 		}
-		c.JSON(200, &Response{Message: "Successfuly set"})
+
+		c.JSON(200, &Response{Message: "Successfully set"})
 	default:
 		c.JSON(http.StatusMethodNotAllowed, &gin.H{"message": "Method not allowed"})
 	}

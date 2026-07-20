@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Masterminds/semver"
-
+	"github.com/Masterminds/semver/v3"
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/update"
-
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -39,16 +37,22 @@ func NewUpdateCLICmd(ec *cli.ExecutionContext) *cobra.Command {
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "PreRunE")
-			if err := ec.Prepare(); err != nil {
+
+			err := ec.Prepare()
+			if err != nil {
 				return errors.E(op, err)
 			}
+
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "RunE")
-			if err := opts.run(false); err != nil {
+
+			err := opts.run(false)
+			if err != nil {
 				return errors.E(op, err)
 			}
+
 			return nil
 		},
 		Example: updateCLICmdExample,
@@ -68,9 +72,13 @@ type updateOptions struct {
 
 func (o *updateOptions) run(showPrompt bool) (err error) {
 	var op errors.Op = "commands.updateOptions.run"
+
 	currentVersion := o.EC.Version.CLISemver
 	if currentVersion == nil {
-		return errors.E(op, fmt.Errorf("cannot update from a non-semver version: %s", o.EC.Version.GetCLIVersion()))
+		return errors.E(
+			op,
+			fmt.Errorf("cannot update from a non-semver version: %s", o.EC.Version.GetCLIVersion()),
+		)
 	}
 
 	var versionToBeInstalled *semver.Version
@@ -82,19 +90,38 @@ func (o *updateOptions) run(showPrompt bool) (err error) {
 		}
 	} else {
 		o.EC.Spin("Checking for update... ")
-		hasUpdate, latestVersion, hasPreReleaseUpdate, preReleaseVersion, err := update.HasUpdate(currentVersion, o.EC.LastUpdateCheckFile)
+		hasUpdate, latestVersion, hasPreReleaseUpdate, preReleaseVersion, err := update.HasUpdate(
+			currentVersion,
+			o.EC.LastUpdateCheckFile,
+		)
 		o.EC.Spinner.Stop()
+
 		if err != nil {
 			return errors.E(op, fmt.Errorf("command: check update: %w", err))
 		}
 
-		ec.Logger.Debugln("hasUpdate: ", hasUpdate, "latestVersion: ", latestVersion, "hasPreReleaseUpdate: ", hasPreReleaseUpdate, "preReleaseVersion: ", preReleaseVersion, "currentVersion:", currentVersion)
+		ec.Logger.Debugln(
+			"hasUpdate: ",
+			hasUpdate,
+			"latestVersion: ",
+			latestVersion,
+			"hasPreReleaseUpdate: ",
+			hasPreReleaseUpdate,
+			"preReleaseVersion: ",
+			preReleaseVersion,
+			"currentVersion:",
+			currentVersion,
+		)
 
 		if showPrompt {
 			switch {
 			case hasUpdate:
-                o.EC.Logger.Infof("A new version (v%s) is available for CLI, you can update it by running 'hasura update-cli'", latestVersion.String())
-                return nil
+				o.EC.Logger.Infof(
+					"A new version (v%s) is available for CLI, you can update it by running 'hasura update-cli'",
+					latestVersion.String(),
+				)
+
+				return nil
 			case hasPreReleaseUpdate:
 				o.EC.Logger.WithFields(logrus.Fields{
 					"version":   preReleaseVersion.Original(),
@@ -105,17 +132,17 @@ func (o *updateOptions) run(showPrompt bool) (err error) {
   hasura update-cli --version %s
 
 `, preReleaseVersion.Original())
+
 				return nil
 			}
-		} else {
-			if hasUpdate {
-				versionToBeInstalled = latestVersion
-			}
+		} else if hasUpdate {
+			versionToBeInstalled = latestVersion
 		}
 	}
 
 	if versionToBeInstalled == nil {
 		o.EC.Logger.WithField("version", currentVersion).Info("hasura cli is up to date")
+
 		return nil
 	}
 
@@ -123,18 +150,23 @@ func (o *updateOptions) run(showPrompt bool) (err error) {
 
 	o.EC.Spin(fmt.Sprintf("Updating cli to v%s... ", versionToBeInstalled.String()))
 	err = update.ApplyUpdate(versionToBeInstalled)
+
 	o.EC.Spinner.Stop()
+
 	if err != nil {
 		if os.IsPermission(err) {
 			return errors.E(op, "permission denied, try again as admin or with sudo")
 		}
+
 		return errors.E(op, fmt.Errorf("apply update: %w", err))
 	}
 
-	o.EC.Logger.WithField("version", "v"+versionToBeInstalled.String()).Info("Updated to latest version")
+	o.EC.Logger.WithField("version", "v"+versionToBeInstalled.String()).
+		Info("Updated to latest version")
+
 	return nil
 }
 
 func getChangeLogLink(version *semver.Version) string {
-	return fmt.Sprintf("https://github.com/hasura/graphql-engine/releases/tag/%s", version.Original())
+	return "https://github.com/hasura/graphql-engine/releases/tag/" + version.Original()
 }

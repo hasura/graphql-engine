@@ -3,7 +3,6 @@ package util
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 
@@ -12,22 +11,27 @@ import (
 
 func FSCheckIfDirPathExists(path string) error {
 	var op errors.Op = "util.FSCheckIfDirPathExists"
+
 	stat, err := os.Lstat(path)
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	if !stat.IsDir() {
 		err = errors.E(op, "no such directory")
 	}
+
 	return err
 }
 
 func FSCopyFile(src, dst string) error {
-	var op errors.Op = "util.FSCopyFile"
-	var err error
-	var srcfd *os.File
-	var dstfd *os.File
-	var srcinfo os.FileInfo
+	var (
+		op      errors.Op = "util.FSCopyFile"
+		err     error
+		srcfd   *os.File
+		dstfd   *os.File
+		srcinfo os.FileInfo
+	)
 
 	if srcfd, err = os.Open(src); err != nil {
 		return errors.E(op, err)
@@ -42,21 +46,26 @@ func FSCopyFile(src, dst string) error {
 	if _, err = io.Copy(dstfd, srcfd); err != nil {
 		return errors.E(op, err)
 	}
+
 	if srcinfo, err = os.Stat(src); err != nil {
 		return errors.E(op, err)
 	}
+
 	err = os.Chmod(dst, srcinfo.Mode())
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
 func FSCopyDir(src string, dst string) error {
-	var op errors.Op = "util.FSCopyDir"
-	var err error
-	var fds []os.FileInfo
-	var srcinfo os.FileInfo
+	var (
+		op      errors.Op = "util.FSCopyDir"
+		err     error
+		fds     []os.DirEntry
+		srcinfo os.FileInfo
+	)
 
 	if srcinfo, err = os.Stat(src); err != nil {
 		return errors.E(op, err)
@@ -66,22 +75,26 @@ func FSCopyDir(src string, dst string) error {
 		return errors.E(op, err)
 	}
 
-	if fds, err = ioutil.ReadDir(src); err != nil {
+	if fds, err = os.ReadDir(src); err != nil {
 		return errors.E(op, err)
 	}
+
 	for _, fd := range fds {
 		srcfp := path.Join(src, fd.Name())
 		dstfp := path.Join(dst, fd.Name())
 
 		if fd.IsDir() {
-			if err = FSCopyDir(srcfp, dstfp); err != nil {
+			err = FSCopyDir(srcfp, dstfp)
+			if err != nil {
 				fmt.Println(err)
 			}
 		} else {
-			if err = FSCopyFile(srcfp, dstfp); err != nil {
+			err = FSCopyFile(srcfp, dstfp)
+			if err != nil {
 				fmt.Println(err)
 			}
 		}
 	}
+
 	return nil
 }

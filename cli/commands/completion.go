@@ -54,24 +54,34 @@ func NewCompletionCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Example:      completionCmdExample,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "PreRunE")
+
 			ec.Viper = viper.New()
-			if err := ec.Prepare(); err != nil {
+
+			err := ec.Prepare()
+			if err != nil {
 				return errors.E(op, err)
 			}
+
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "RunE")
 			opts.Shell = args[0]
+
 			opts.Cmd = cmd
-			if err := opts.run(); err != nil {
+
+			err := opts.run()
+			if err != nil {
 				return errors.E(op, err)
 			}
+
 			return nil
 		},
 	}
 
-	completionCmd.Flags().StringVar(&opts.File, "file", "", "file to which output has to be written")
+	completionCmd.Flags().
+		StringVar(&opts.File, "file", "", "file to which output has to be written")
+
 	return completionCmd
 }
 
@@ -84,8 +94,11 @@ type completionOptions struct {
 }
 
 func (o *completionOptions) run() error {
-	var op errors.Op = "commands.completionOptions.run"
-	var err error
+	var (
+		op  errors.Op = "commands.completionOptions.run"
+		err error
+	)
+
 	switch o.Shell {
 	case "bash":
 		if o.File != "" {
@@ -102,8 +115,10 @@ func (o *completionOptions) run() error {
 	default:
 		err = fmt.Errorf("unknown shell: %s. Use bash or zsh", o.Shell)
 	}
+
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }

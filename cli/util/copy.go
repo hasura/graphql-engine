@@ -2,16 +2,13 @@ package util
 
 import (
 	stderrors "errors"
-	"fmt"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	"github.com/spf13/afero"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/spf13/afero"
 )
 
 // from https://gist.github.com/r0l1/92462b38df26839a3ca324697c8cba04
@@ -23,6 +20,7 @@ import (
 // the copied data is synced/flushed to stable storage.
 func CopyFile(src, dst string) error {
 	var op errors.Op = "util.CopyFile"
+
 	in, err := os.Open(src)
 	if err != nil {
 		return errors.E(op, err)
@@ -34,7 +32,8 @@ func CopyFile(src, dst string) error {
 		return errors.E(op, err)
 	}
 	defer func() {
-		if e := out.Close(); e != nil {
+		e := out.Close()
+		if e != nil {
 			err = errors.E(op, e)
 		}
 	}()
@@ -53,10 +52,12 @@ func CopyFile(src, dst string) error {
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	err = os.Chmod(dst, si.Mode())
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
@@ -65,6 +66,7 @@ func CopyFile(src, dst string) error {
 // Symlinks are ignored and skipped.
 func CopyDir(src string, dst string) error {
 	var op errors.Op = "util.CopyDir"
+
 	src = filepath.Clean(src)
 	dst = filepath.Clean(dst)
 
@@ -72,16 +74,18 @@ func CopyDir(src string, dst string) error {
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	if !si.IsDir() {
-		return errors.E(op, fmt.Errorf("source is not a directory"))
+		return errors.E(op, stderrors.New("source is not a directory"))
 	}
 
 	_, err = os.Stat(dst)
 	if err != nil && !stderrors.Is(err, fs.ErrNotExist) {
 		return errors.E(op, err)
 	}
+
 	if err == nil {
-		return errors.E(op, fmt.Errorf("destination already exists"))
+		return errors.E(op, stderrors.New("destination already exists"))
 	}
 
 	err = os.MkdirAll(dst, si.Mode())
@@ -89,7 +93,7 @@ func CopyDir(src string, dst string) error {
 		return errors.E(op, err)
 	}
 
-	entries, err := ioutil.ReadDir(src)
+	entries, err := os.ReadDir(src)
 	if err != nil {
 		return errors.E(op, err)
 	}
@@ -105,7 +109,7 @@ func CopyDir(src string, dst string) error {
 			}
 		} else {
 			// Skip symlinks.
-			if entry.Mode()&os.ModeSymlink != 0 {
+			if entry.Type() == os.ModeSymlink {
 				continue
 			}
 
@@ -115,12 +119,14 @@ func CopyDir(src string, dst string) error {
 			}
 		}
 	}
+
 	return nil
 }
 
-// CopyFile but with Afero
+// CopyFile but with Afero.
 func CopyFileAfero(fs afero.Fs, src, dst string) error {
 	var op errors.Op = "util.CopyFileAfero"
+
 	in, err := fs.Open(src)
 	if err != nil {
 		return errors.E(op, err)
@@ -132,7 +138,8 @@ func CopyFileAfero(fs afero.Fs, src, dst string) error {
 		return errors.E(op, err)
 	}
 	defer func() {
-		if e := out.Close(); e != nil {
+		e := out.Close()
+		if e != nil {
 			err = errors.E(op, e)
 		}
 	}()
@@ -151,16 +158,19 @@ func CopyFileAfero(fs afero.Fs, src, dst string) error {
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	err = fs.Chmod(dst, si.Mode())
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
-// CopyDir but with afero
+// CopyDir but with afero.
 func CopyDirAfero(afs afero.Fs, src string, dst string) error {
 	var op errors.Op = "util.CopyDirAfero"
+
 	src = filepath.Clean(src)
 	dst = filepath.Clean(dst)
 
@@ -168,16 +178,18 @@ func CopyDirAfero(afs afero.Fs, src string, dst string) error {
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	if !si.IsDir() {
-		return errors.E(op, fmt.Errorf("source is not a directory"))
+		return errors.E(op, stderrors.New("source is not a directory"))
 	}
 
 	_, err = afs.Stat(dst)
 	if err != nil && !stderrors.Is(err, fs.ErrNotExist) {
 		return errors.E(op, err)
 	}
+
 	if err == nil {
-		return errors.E(op, fmt.Errorf("destination already exists"))
+		return errors.E(op, stderrors.New("destination already exists"))
 	}
 
 	err = afs.MkdirAll(dst, si.Mode())
@@ -211,5 +223,6 @@ func CopyDirAfero(afs afero.Fs, src string, dst string) error {
 			}
 		}
 	}
+
 	return nil
 }

@@ -1,16 +1,15 @@
 package apilimits
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
 
 	goyaml "github.com/goccy/go-yaml"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
-	"gopkg.in/yaml.v3"
-
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.yaml.in/yaml/v3"
 )
 
 func TestMetadataObject_Build(t *testing.T) {
@@ -54,8 +53,8 @@ func TestMetadataObject_Build(t *testing.T) {
 				assert.NoError(t, err)
 
 				// uncomment following lines to update golden file
-				//assert.NoError(t, ioutil.WriteFile(tt.wantGolden, jsonbs, os.ModePerm))
-				wantbs, err := ioutil.ReadFile(tt.wantGolden)
+				// assert.NoError(t, os.WriteFile(tt.wantGolden, jsonbs, os.ModePerm))
+				wantbs, err := os.ReadFile(tt.wantGolden)
 				assert.NoError(t, err)
 				assert.Equal(t, string(wantbs), string(jsonbs))
 			}
@@ -89,7 +88,7 @@ func TestMetadataObject_Export(t *testing.T) {
 			},
 			args{
 				metadata: func() map[string]yaml.Node {
-					bs, err := ioutil.ReadFile("testdata/export_test/metadata.json")
+					bs, err := os.ReadFile("testdata/export_test/metadata.json")
 					assert.NoError(t, err)
 					yamlbs, err := metadatautil.JSONToYAML(bs)
 					assert.NoError(t, err)
@@ -124,7 +123,8 @@ batch_limit:
   global: 5
   per_role:
     user: 2
-`)},
+`),
+			},
 			false,
 			require.NoError,
 		},

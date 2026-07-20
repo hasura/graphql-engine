@@ -45,6 +45,7 @@ func (i *Status) Append(m *MigrationStatus) (ok bool) {
 	}
 
 	i.buildIndex()
+
 	return true
 }
 
@@ -53,6 +54,7 @@ func (i *Status) buildIndex() {
 	for version := range i.Migrations {
 		i.Index = append(i.Index, version)
 	}
+
 	sort.Sort(i.Index)
 }
 
@@ -60,6 +62,7 @@ func (i *Status) Read(version uint64) (m *MigrationStatus, ok bool) {
 	if mx, ok := i.Migrations[version]; ok {
 		return mx, true
 	}
+
 	return nil, false
 }
 

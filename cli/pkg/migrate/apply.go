@@ -13,6 +13,7 @@ type projectMigrationsApplier struct {
 
 func newProjectMigrationsApplier(ec *cli.ExecutionContext) *projectMigrationsApplier {
 	p := &projectMigrationsApplier{ec: ec, opts: commands.MigrateApplyOptions{EC: ec}}
+
 	return p
 }
 
@@ -38,8 +39,10 @@ func ApplyWithSkipExecution() ProjectMigrationApplierOption {
 
 type MigrationDirection string
 
-const MigrationDirectionUp MigrationDirection = "up"
-const MigrationDirectionDown MigrationDirection = "down"
+const (
+	MigrationDirectionUp   MigrationDirection = "up"
+	MigrationDirectionDown MigrationDirection = "down"
+)
 
 func ApplyVersion(version string, direction MigrationDirection) ProjectMigrationApplierOption {
 	return func(p *projectMigrationsApplier) {
@@ -48,18 +51,25 @@ func ApplyVersion(version string, direction MigrationDirection) ProjectMigration
 	}
 }
 
-func (p *projectMigrationsApplier) apply(opts ...ProjectMigrationApplierOption) ([]ApplyResult, error) {
+func (p *projectMigrationsApplier) apply(
+	opts ...ProjectMigrationApplierOption,
+) ([]ApplyResult, error) {
 	var op errors.Op = "migrate.projectMigrationsApplier.apply"
+
 	for _, opt := range opts {
 		opt(p)
 	}
+
 	var results []ApplyResult
+
 	resultChan, err := p.opts.Apply()
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
+
 	for v := range resultChan {
 		results = append(results, ApplyResult(v))
 	}
+
 	return results, nil
 }

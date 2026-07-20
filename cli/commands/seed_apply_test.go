@@ -2,12 +2,10 @@ package commands
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	"github.com/Pallinder/go-randomdata"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -25,7 +23,9 @@ var test = func(projectDirectory string, globalFlags []string, databaseKind stri
 	}
 
 	testutil.RunCommandAndSucceed(testutil.CmdOpts{
-		Args:             append([]string{"migrate", "create", "table1", "--up-sql", upSql, "--down-sql", downSql}, globalFlags...),
+		Args: append(
+			[]string{"migrate", "create", "table1", "--up-sql", upSql, "--down-sql", downSql},
+			globalFlags...),
 		WorkingDirectory: projectDirectory,
 	})
 	testutil.RunCommandAndSucceed(testutil.CmdOpts{
@@ -33,7 +33,9 @@ var test = func(projectDirectory string, globalFlags []string, databaseKind stri
 		WorkingDirectory: projectDirectory,
 	})
 	session := testutil.Hasura(testutil.CmdOpts{
-		Args:             append([]string{"seed", "apply", "--file", "table_seed.sql"}, globalFlags...),
+		Args: append(
+			[]string{"seed", "apply", "--file", "table_seed.sql"},
+			globalFlags...),
 		WorkingDirectory: projectDirectory,
 	})
 	Eventually(session, timeout).Should(Exit(0))
@@ -60,9 +62,12 @@ var _ = Describe("seed apply (config v2)", func() {
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
 			Args: []string{"init", projectDirectoryConfigV2, "--version", "2"},
 		})
-		editEndpointInConfig(filepath.Join(projectDirectoryConfigV2, defaultConfigFilename), hgeEndpoint)
+		editEndpointInConfig(
+			filepath.Join(projectDirectoryConfigV2, defaultConfigFilename),
+			hgeEndpoint,
+		)
 
-		err := os.MkdirAll(filepath.Join(filepath.Join(projectDirectoryConfigV2, "seeds")), 0755)
+		err := os.MkdirAll(filepath.Join(filepath.Join(projectDirectoryConfigV2, "seeds")), 0o755)
 		Expect(err).To(BeNil())
 		file, err := os.Create(filepath.Join(projectDirectoryConfigV2, "seeds", "table_seed.sql"))
 		Expect(err).To(BeNil())
@@ -82,16 +87,29 @@ var _ = Describe("seed apply (config v3)", func() {
 	// automatic state migration should not affect new config v3 projects
 	var projectDirectory string
 	var teardown func()
-	var pgSource = randomdata.SillyName()
-	var citusSource = randomdata.SillyName()
-	var mssqlSource = randomdata.SillyName()
+	pgSource := randomdata.SillyName()
+	citusSource := randomdata.SillyName()
+	mssqlSource := randomdata.SillyName()
 	BeforeEach(func() {
 		projectDirectory = testutil.RandDirName()
-		hgeEndPort, teardownHGE := testutil.StartHasuraWithMetadataDatabase(GinkgoT(), testutil.HasuraDockerImage)
+		hgeEndPort, teardownHGE := testutil.StartHasuraWithMetadataDatabase(
+			GinkgoT(),
+			testutil.HasuraDockerImage,
+		)
 		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
 		_, teardownPG := testutil.AddDatabaseToHasura(GinkgoT(), hgeEndpoint, pgSource, "postgres")
-		_, teardownCitus := testutil.AddDatabaseToHasura(GinkgoT(), hgeEndpoint, citusSource, "citus")
-		_, teardownMSSQL := testutil.AddDatabaseToHasura(GinkgoT(), hgeEndpoint, mssqlSource, "mssql")
+		_, teardownCitus := testutil.AddDatabaseToHasura(
+			GinkgoT(),
+			hgeEndpoint,
+			citusSource,
+			"citus",
+		)
+		_, teardownMSSQL := testutil.AddDatabaseToHasura(
+			GinkgoT(),
+			hgeEndpoint,
+			mssqlSource,
+			"mssql",
+		)
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
 			Args: []string{"init", projectDirectory},
 		})
@@ -107,7 +125,7 @@ var _ = Describe("seed apply (config v3)", func() {
 	AfterEach(func() { teardown() })
 
 	It("can apply seeds in config v3", func() {
-		err := os.MkdirAll(filepath.Join(filepath.Join(projectDirectory, "seeds", pgSource)), 0755)
+		err := os.MkdirAll(filepath.Join(filepath.Join(projectDirectory, "seeds", pgSource)), 0o755)
 		Expect(err).To(BeNil())
 		data := []byte(`INSERT INTO public.table1 (id) VALUES (1);
 		INSERT INTO public.table1 (id) VALUES (2);
@@ -119,21 +137,38 @@ var _ = Describe("seed apply (config v3)", func() {
 		INSERT INTO "test"."table1" (id) VALUES (3);
 		INSERT INTO "test"."table1" (id) VALUES (4);`)
 
-		err = ioutil.WriteFile(filepath.Join(projectDirectory, "seeds", pgSource, "table_seed.sql"), data, 0655)
+		err = os.WriteFile(
+			filepath.Join(projectDirectory, "seeds", pgSource, "table_seed.sql"),
+			data,
+			0o655,
+		)
 		Expect(err).To(BeNil())
 		test(projectDirectory, []string{"--database-name", pgSource}, "postgres")
 
-		err = os.MkdirAll(filepath.Join(filepath.Join(projectDirectory, "seeds", citusSource)), 0755)
+		err = os.MkdirAll(
+			filepath.Join(filepath.Join(projectDirectory, "seeds", citusSource)),
+			0o755,
+		)
 		Expect(err).To(BeNil())
-		err = ioutil.WriteFile(filepath.Join(projectDirectory, "seeds", citusSource, "table_seed.sql"), data, 0655)
+		err = os.WriteFile(
+			filepath.Join(projectDirectory, "seeds", citusSource, "table_seed.sql"),
+			data,
+			0o655,
+		)
 		Expect(err).To(BeNil())
 		test(projectDirectory, []string{"--database-name", citusSource}, "citus")
 
-		err = os.MkdirAll(filepath.Join(filepath.Join(projectDirectory, "seeds", mssqlSource)), 0755)
+		err = os.MkdirAll(
+			filepath.Join(filepath.Join(projectDirectory, "seeds", mssqlSource)),
+			0o755,
+		)
 		Expect(err).To(BeNil())
-		err = ioutil.WriteFile(filepath.Join(projectDirectory, "seeds", mssqlSource, "table_seed.sql"), mssqlData, 0655)
+		err = os.WriteFile(
+			filepath.Join(projectDirectory, "seeds", mssqlSource, "table_seed.sql"),
+			mssqlData,
+			0o655,
+		)
 		Expect(err).To(BeNil())
 		test(projectDirectory, []string{"--database-name", mssqlSource}, "mssql")
 	})
-
 })

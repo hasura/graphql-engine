@@ -37,7 +37,17 @@ var _ = Describe("hasura migrate status", func() {
 	Context("migrate status test", func() {
 		It("should show the status of migrations between local and server ", func() {
 			testutil.RunCommandAndSucceed(testutil.CmdOpts{
-				Args:             []string{"migrate", "create", "schema_creation", "--up-sql", "create schema \"testing\";", "--down-sql", "drop schema \"testing\" cascade;", "--database-name", "default"},
+				Args: []string{
+					"migrate",
+					"create",
+					"schema_creation",
+					"--up-sql",
+					"create schema \"testing\";",
+					"--down-sql",
+					"drop schema \"testing\" cascade;",
+					"--database-name",
+					"default",
+				},
 				WorkingDirectory: dirName,
 			})
 			session = testutil.Hasura(testutil.CmdOpts{
@@ -58,5 +68,4 @@ var _ = Describe("hasura migrate status", func() {
 			Eventually(session, timeout).Should(Exit(0))
 		})
 	})
-
 })

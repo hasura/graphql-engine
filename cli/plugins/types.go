@@ -12,15 +12,14 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/Masterminds/semver"
-
+	"github.com/Masterminds/semver/v3"
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 )
 
-// Plugins - holds multiple plugins
+// Plugins - holds multiple plugins.
 type Plugins map[string]*PluginVersions
 
-// PluginVersions holds manifest data for multiple versions of a plugin
+// PluginVersions holds manifest data for multiple versions of a plugin.
 type PluginVersions struct {
 	Index    versionSlice
 	Versions map[*semver.Version]Plugin
@@ -36,11 +35,15 @@ func NewPluginVersions() *PluginVersions {
 func (i *PluginVersions) Append(p Plugin) (err error) {
 	var op errors.Op = "plugins.PluginVersions.Append"
 	if _, ok := i.Versions[p.ParsedVersion]; ok {
-		return errors.E(op, fmt.Errorf("found duplicate versions for plugin %s - %s", p.Name, p.Version))
+		return errors.E(
+			op,
+			fmt.Errorf("found duplicate versions for plugin %s - %s", p.Name, p.Version),
+		)
 	}
 
 	i.Versions[p.ParsedVersion] = p
 	i.buildIndex()
+
 	return nil
 }
 
@@ -49,6 +52,7 @@ func (i *PluginVersions) buildIndex() {
 	for version := range i.Versions {
 		i.Index = append(i.Index, version)
 	}
+
 	sort.Sort(i.Index)
 }
 
@@ -75,13 +79,14 @@ func (v versionSlice) Less(i, j int) bool {
 	return v[i].LessThan(v[j])
 }
 
-// Search is needed to search a particular version
+// Search is needed to search a particular version.
 func (v versionSlice) Search(x *semver.Version) *semver.Version {
 	for _, ver := range v {
 		if ver.String() == x.String() {
 			return ver
 		}
 	}
+
 	return nil
 }
 
@@ -97,13 +102,15 @@ type Plugin struct {
 	ParsedVersion *semver.Version `json:"-"`
 }
 
-// ParseVersion - ensures the version is valid
+// ParseVersion - ensures the version is valid.
 func (p *Plugin) ParseVersion() {
 	v, err := semver.NewVersion(p.Version)
 	if err != nil {
 		p.ParsedVersion = semver.MustParse("0.0.0-dev")
+
 		return
 	}
+
 	p.ParsedVersion = v
 }
 
@@ -112,28 +119,43 @@ func (p *Plugin) ParseVersion() {
 func (p Plugin) ValidatePlugin(name string) error {
 	var op errors.Op = "plugins.Plugin.ValidatePlugin"
 	if !IsSafePluginName(name) {
-		return errors.E(op, fmt.Errorf("the plugin name %q is not allowed, must match %q", name, safePluginRegexp.String()))
+		return errors.E(
+			op,
+			fmt.Errorf(
+				"the plugin name %q is not allowed, must match %q",
+				name,
+				safePluginRegexp.String(),
+			),
+		)
 	}
+
 	if p.Name != name {
 		return errors.E(op, fmt.Errorf("plugin should be named %q, not %q", name, p.Name))
 	}
+
 	if p.ShortDescription == "" {
 		return errors.E(op, "should have a short description")
 	}
+
 	if strings.ContainsAny(p.ShortDescription, "\r\n") {
 		return errors.E(op, "should not have line breaks in short description")
 	}
+
 	if len(p.Platforms) == 0 {
 		return errors.E(op, "should have a platform specified")
 	}
+
 	if p.Version == "" {
 		return errors.E(op, "should have a version specified")
 	}
+
 	for _, pl := range p.Platforms {
-		if err := validatePlatform(pl); err != nil {
+		err := validatePlatform(pl)
+		if err != nil {
 			return errors.E(op, fmt.Errorf("platform (%+v) is badly constructed: %w", pl, err))
 		}
 	}
+
 	return nil
 }
 

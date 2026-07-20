@@ -13,7 +13,6 @@ import (
 )
 
 var _ = Describe("hasura metadata inconsistency status", func() {
-
 	var projectDirectory string
 	var sourceName string
 	var teardown func()
@@ -23,7 +22,12 @@ var _ = Describe("hasura metadata inconsistency status", func() {
 		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
 
 		sourceName = randomdata.SillyName()
-		connectionString, teardownPG := testutil.AddDatabaseToHasura(GinkgoT(), hgeEndpoint, sourceName, "postgres")
+		connectionString, teardownPG := testutil.AddDatabaseToHasura(
+			GinkgoT(),
+			hgeEndpoint,
+			sourceName,
+			"postgres",
+		)
 		copyTestConfigV3Project(projectDirectory)
 		editEndpointInConfig(filepath.Join(projectDirectory, defaultConfigFilename), hgeEndpoint)
 		editSourceNameInConfigV3ProjectTemplate(projectDirectory, sourceName, connectionString)

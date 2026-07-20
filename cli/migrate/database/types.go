@@ -2,33 +2,20 @@ package database
 
 import (
 	"container/list"
-
-	"github.com/ahmetb/go-linq"
+	"iter"
 )
 
 type CustomList struct {
 	List *list.List
 }
 
-func (c *CustomList) Iterate() linq.Iterator {
-	length := c.List.Len()
-	var prevElem *list.Element
-	i := 0
-	return func() (item interface{}, ok bool) {
-		if length == 0 {
-			return
-		}
-
-		if i == 0 {
-			prevElem = c.List.Front()
-			i++
-		} else {
-			prevElem = prevElem.Next()
-			if prevElem == nil {
+func (c *CustomList) Iterate() iter.Seq[any] {
+	return func(yield func(any) bool) {
+		for e := c.List.Front(); e != nil; e = e.Next() {
+			if !yield(e.Value) {
 				return
 			}
 		}
-		return prevElem, true
 	}
 }
 

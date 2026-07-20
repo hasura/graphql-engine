@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"io"
+	"strings"
 )
 
 const (
@@ -15,14 +16,14 @@ const (
 // PrefixWriter can write text at various indentation levels.
 type PrefixWriter interface {
 	// Write writes text with the specified indentation level.
-	Write(level int, format string, a ...interface{})
+	Write(level int, format string, a ...any)
 	// WriteLine writes an entire line with no indentation level.
-	WriteLine(a ...interface{})
+	WriteLine(a ...any)
 	// Flush forces indendation to be reset.
 	Flush()
 }
 
-// prefixWriter implements PrefixWriter
+// prefixWriter implements PrefixWriter.
 type prefixWriter struct {
 	out io.Writer
 }
@@ -34,16 +35,22 @@ func NewPrefixWriter(out io.Writer) PrefixWriter {
 	return &prefixWriter{out: out}
 }
 
-func (pw *prefixWriter) Write(level int, format string, a ...interface{}) {
+func (pw *prefixWriter) Write(level int, format string, a ...any) {
 	levelSpace := "  "
+
 	prefix := ""
-	for i := 0; i < level; i++ {
-		prefix += levelSpace
+
+	var prefixSb40 strings.Builder
+	for range level {
+		prefixSb40.WriteString(levelSpace)
 	}
+
+	prefix += prefixSb40.String()
+
 	fmt.Fprintf(pw.out, prefix+format, a...)
 }
 
-func (pw *prefixWriter) WriteLine(a ...interface{}) {
+func (pw *prefixWriter) WriteLine(a ...any) {
 	fmt.Fprintln(pw.out, a...)
 }
 

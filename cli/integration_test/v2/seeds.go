@@ -9,14 +9,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/v2/commands"
-
-	"github.com/spf13/afero"
-
-	"github.com/hasura/graphql-engine/cli/v2/seed"
-
 	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/commands"
+	"github.com/hasura/graphql-engine/cli/v2/seed"
 	"github.com/hasura/graphql-engine/cli/v2/util"
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,15 +24,19 @@ type seedCreateInterface interface {
 func TestSeedsCreateCmd(t *testing.T, ec *cli.ExecutionContext) {
 	// copy migrations to ec.Execution.Directory/migrations
 	os.RemoveAll(ec.SeedsDirectory)
+
 	currDir, _ := os.Getwd()
+
 	err := util.CopyDir(filepath.Join(currDir, "v2/seeds"), ec.SeedsDirectory)
 	if err != nil {
 		t.Fatalf("unable to copy migrations directory %v", err)
 	}
+
 	type args struct {
 		fs   afero.Fs
 		opts seed.CreateSeedOpts
 	}
+
 	tt := []struct {
 		name         string
 		args         args
@@ -47,23 +48,32 @@ func TestSeedsCreateCmd(t *testing.T, ec *cli.ExecutionContext) {
 			args{
 				fs: afero.NewMemMapFs(),
 				opts: seed.CreateSeedOpts{
-					DirectoryPath:        "seeds/",
-					Data:                 strings.NewReader("INSERT INTO account1 (username, password, email) values ('scriptonist', 'no you cant guess it', 'hello@drogon.com');"),
+					DirectoryPath: "seeds/",
+					Data: strings.NewReader(
+						"INSERT INTO account1 (username, password, email) values ('scriptonist', 'no you cant guess it', 'hello@drogon.com');",
+					),
 					UserProvidedSeedName: "can_we_create_seed_files",
 				},
 			},
 			false,
-			func() *string { s := "test/test"; return &s }(),
+			func() *string {
+				s := "test/test"
+
+				return &s
+			}(),
 		},
 	}
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
 			var inData bytes.Buffer
+
 			tc.args.opts.Data = io.TeeReader(tc.args.opts.Data, &inData)
+
 			gotFilename, err := seed.CreateSeedFile(tc.args.fs, tc.args.opts)
 			if (err != nil) && !tc.wantErr {
 				t.Errorf("CreateSeedFile() error = %v, wantErr %v", err, tc.wantErr)
+
 				return
 			}
 
@@ -72,7 +82,8 @@ func TestSeedsCreateCmd(t *testing.T, ec *cli.ExecutionContext) {
 			}
 			// Do a regex match for filename returned
 			// check if it is in required format
-			var re = regexp.MustCompile(`^([a-z]+\/)([0-9]+)\_(.+)(\.sql)$`)
+			re := regexp.MustCompile(`^([a-z]+\/)([0-9]+)\_(.+)(\.sql)$`)
+
 			*gotFilename = filepath.ToSlash(*gotFilename)
 			regexGroups := re.FindStringSubmatch(*gotFilename)
 
@@ -85,15 +96,19 @@ func TestSeedsCreateCmd(t *testing.T, ec *cli.ExecutionContext) {
 			// element 3: filename
 			// element 4: extension
 			if len(regexGroups) != 5 {
-				t.Fatalf("CreateSeedFile() = %v, but want filepath of form"+` [a-z]+\/[0-9]+\_[a-zA-Z]+\.sql`, *gotFilename)
+				t.Fatalf(
+					"CreateSeedFile() = %v, but want filepath of form"+` [a-z]+\/[0-9]+\_[a-zA-Z]+\.sql`,
+					*gotFilename,
+				)
 			}
+
 			gotDirectoryPath := regexGroups[1]
 			gotUserProvidedFilename := regexGroups[3]
 			gotFileExtension := regexGroups[4]
 
 			assert.Equal(t, gotDirectoryPath, tc.args.opts.DirectoryPath)
 			assert.Equal(t, gotUserProvidedFilename, tc.args.opts.UserProvidedSeedName)
-			assert.Equal(t, gotFileExtension, ".sql")
+			assert.Equal(t, ".sql", gotFileExtension)
 
 			// test if a filewith the filename was created
 			if s, err := tc.args.fs.Stat(*gotFilename); err != nil {
@@ -109,14 +124,18 @@ func TestSeedsCreateCmd(t *testing.T, ec *cli.ExecutionContext) {
 		})
 	}
 }
+
 func TestSeedsApplyCmd(t *testing.T, ec *cli.ExecutionContext) {
 	// copy migrations to ec.Execution.Directory/migrations
 	os.RemoveAll(ec.SeedsDirectory)
+
 	currDir, _ := os.Getwd()
+
 	err := util.CopyDir(filepath.Join(currDir, "v2/seeds"), ec.SeedsDirectory)
 	if err != nil {
 		t.Fatalf("unable to copy migrations directory %v", err)
 	}
+
 	tt := []struct {
 		name    string
 		opts    seedCreateInterface

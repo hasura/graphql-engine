@@ -1,22 +1,19 @@
 package v1query
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
-
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/commonmetadata"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/sourceops/postgres"
 	pg "github.com/hasura/graphql-engine/cli/v2/internal/hasura/sourceops/postgres"
-
-	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/commonmetadata"
 	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestClient_Send(t *testing.T) {
@@ -59,9 +56,11 @@ func TestClient_Send(t *testing.T) {
   "version": 2,
   "tables": []
 }`,
-			assert.ComparisonAssertionFunc(func(tt assert.TestingT, i1, i2 interface{}, i3 ...interface{}) bool {
-				return assert.JSONEq(t, i1.(string), i2.(string))
-			}),
+			assert.ComparisonAssertionFunc(
+				func(tt assert.TestingT, i1, i2 interface{}, i3 ...interface{}) bool {
+					return assert.JSONEq(t, i1.(string), i2.(string))
+				},
+			),
 			http.StatusOK,
 			assert.Equal,
 			require.NoError,
@@ -81,9 +80,11 @@ func TestClient_Send(t *testing.T) {
 				},
 			},
 			"",
-			assert.ComparisonAssertionFunc(func(tt assert.TestingT, _, _ interface{}, _ ...interface{}) bool {
-				return true
-			}),
+			assert.ComparisonAssertionFunc(
+				func(tt assert.TestingT, _, _ interface{}, _ ...interface{}) bool {
+					return true
+				},
+			),
 			http.StatusBadRequest,
 			assert.Equal,
 			require.NoError,
@@ -102,7 +103,7 @@ func TestClient_Send(t *testing.T) {
 
 			tt.assertResponseCode(t, tt.wantCode, resp.StatusCode)
 
-			b, err := ioutil.ReadAll(gotResponseBody)
+			b, err := io.ReadAll(gotResponseBody)
 			assert.NoError(t, err)
 
 			tt.assertResponse(t, tt.wantJSONResponseBody, string(b))
@@ -233,7 +234,7 @@ func TestClient_Bulk(t *testing.T) {
 			got, err := c.Bulk(tt.args.args)
 			tt.assertErr(t, err)
 			if !tt.wantErr {
-				gotb, err := ioutil.ReadAll(got)
+				gotb, err := io.ReadAll(got)
 				require.NoError(t, err)
 				require.NotNil(t, got)
 				tt.assertResponse(t, tt.want, string(gotb))

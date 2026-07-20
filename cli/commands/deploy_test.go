@@ -3,19 +3,16 @@ package commands
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	"github.com/spf13/viper"
-
-	"github.com/hasura/graphql-engine/cli/v2"
-
 	"github.com/Pallinder/go-randomdata"
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gexec"
+	"github.com/spf13/viper"
 )
 
 var commonDeployCommandsTest = func(projectDirectory string, databaseFlags []string, deployFlags []string) {
@@ -82,7 +79,11 @@ var _ = Describe("hasura deploy config v3", func() {
 	})
 
 	It("deploy", func() {
-		commonDeployCommandsTest(projectDirectory, []string{"--database-name", sourceName}, []string{})
+		commonDeployCommandsTest(
+			projectDirectory,
+			[]string{"--database-name", sourceName},
+			[]string{},
+		)
 	})
 })
 
@@ -114,9 +115,14 @@ var _ = Describe("hasura deploy config v3 (concurrent migrations)", func() {
 	})
 
 	It("deploy", func() {
-		commonDeployCommandsTest(projectDirectory, []string{"--database-name", sourceName}, []string{"--no-transaction"})
+		commonDeployCommandsTest(
+			projectDirectory,
+			[]string{"--database-name", sourceName},
+			[]string{"--no-transaction"},
+		)
 	})
 })
+
 var _ = Describe("hasura deploy config v2", func() {
 	var projectDirectory string
 	var teardown func()
@@ -144,7 +150,6 @@ var _ = Describe("hasura deploy config v2", func() {
 })
 
 var _ = Describe("fsm state transitions: config v2", func() {
-
 	var projectDirectory string
 	var teardown, teardownHGE func()
 
@@ -171,19 +176,23 @@ var _ = Describe("fsm state transitions: config v2", func() {
 		ctx.ec = cli.NewExecutionContext()
 		ctx.ec.Viper = viper.New()
 		ctx.ec.ExecutionDirectory = projectDirectory
-		//ctx.ec.LogLevel = "DEBUG"
+		// ctx.ec.LogLevel = "DEBUG"
 		Expect(ctx.ec.Prepare()).Should(BeNil())
-		//ctx.ec.Stderr = io.Discard
+		// ctx.ec.Stderr = io.Discard
 		Expect(ctx.ec.Validate()).Should(BeNil())
 		ctx.logger = ctx.ec.Logger
 
 		// bad sql migration
 		configV2FSM := newConfigV2DeployFSM()
-		migrationFilePath := filepath.Join(projectDirectory, "migrations", "1620138136207_create_table_public_t1/up.sql")
-		upSQL, err := ioutil.ReadFile(migrationFilePath)
+		migrationFilePath := filepath.Join(
+			projectDirectory,
+			"migrations",
+			"1620138136207_create_table_public_t1/up.sql",
+		)
+		upSQL, err := os.ReadFile(migrationFilePath)
 		Expect(err).To(BeNil())
 		badUpSQL := []byte(string(upSQL) + "SOME GARBAGE;")
-		Expect(ioutil.WriteFile(migrationFilePath, badUpSQL, 0755)).To(BeNil())
+		Expect(os.WriteFile(migrationFilePath, badUpSQL, 0o755)).To(BeNil())
 
 		Expect(configV2FSM.SendEvent(applyMigrations, ctx)).To(BeNil())
 		Expect(configV2FSM.Current).Should(Equal(failedOperation))
@@ -191,17 +200,17 @@ var _ = Describe("fsm state transitions: config v2", func() {
 		ctx.ec.Logger.Debugf("error: %v", ctx.err)
 		Expect(ctx.err).Should(Not(BeNil()))
 		// reset file contents
-		Expect(ioutil.WriteFile(migrationFilePath, upSQL, 0755)).To(BeNil())
+		Expect(os.WriteFile(migrationFilePath, upSQL, 0o755)).To(BeNil())
 
 		// bad metadata yaml file
 		tablesYamlFilepath := filepath.Join(projectDirectory, "metadata", "tables.yaml")
-		tablesYaml, err := ioutil.ReadFile(tablesYamlFilepath)
+		tablesYaml, err := os.ReadFile(tablesYamlFilepath)
 		Expect(err).To(BeNil())
 
 		// user error in tables.yaml
 		configV2FSM = newConfigV2DeployFSM()
 		badTablesYaml := []byte(`some: key`)
-		Expect(ioutil.WriteFile(tablesYamlFilepath, badTablesYaml, 0755)).To(BeNil())
+		Expect(os.WriteFile(tablesYamlFilepath, badTablesYaml, 0o755)).To(BeNil())
 		Expect(configV2FSM.SendEvent(applyMigrations, ctx)).To(BeNil())
 		Expect(configV2FSM.Current).Should(Equal(failedOperation))
 		Expect(configV2FSM.Previous).Should(Equal(applyingMetadataFailed))
@@ -216,14 +225,14 @@ var _ = Describe("fsm state transitions: config v2", func() {
 # this should be a string not a number
     name: 1
 `)
-		Expect(ioutil.WriteFile(tablesYamlFilepath, badTablesYaml, 0755)).To(BeNil())
+		Expect(os.WriteFile(tablesYamlFilepath, badTablesYaml, 0o755)).To(BeNil())
 		Expect(configV2FSM.SendEvent(applyMigrations, ctx)).To(BeNil())
 		ctx.ec.Logger.Debugf("error: %v", ctx.err)
 		Expect(configV2FSM.Current).Should(Equal(failedOperation))
 		Expect(configV2FSM.Previous).Should(Equal(applyingMetadataFailed))
 		Expect(ctx.err).Should(Not(BeNil()))
 		// reset file contents
-		Expect(ioutil.WriteFile(tablesYamlFilepath, tablesYaml, 0755)).To(BeNil())
+		Expect(os.WriteFile(tablesYamlFilepath, tablesYaml, 0o755)).To(BeNil())
 
 		// happy path
 		configV2FSM = newConfigV2DeployFSM()
@@ -246,7 +255,10 @@ var _ = Describe("fsm state transitions: config v3", func() {
 	BeforeEach(func() {
 		projectDirectory = testutil.RandDirName()
 		var hgeEndPort string
-		hgeEndPort, teardownHGE = testutil.StartHasuraWithMetadataDatabase(GinkgoT(), testutil.HasuraDockerImage)
+		hgeEndPort, teardownHGE = testutil.StartHasuraWithMetadataDatabase(
+			GinkgoT(),
+			testutil.HasuraDockerImage,
+		)
 		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
 
 		connectionString, teardownPG := testutil.StartPGContainer(GinkgoT())
@@ -271,7 +283,7 @@ var _ = Describe("fsm state transitions: config v3", func() {
 		ctx.ec = cli.NewExecutionContext()
 		ctx.ec.Viper = viper.New()
 		ctx.ec.ExecutionDirectory = projectDirectory
-		//ctx.ec.LogLevel = "DEBUG"
+		// ctx.ec.LogLevel = "DEBUG"
 		Expect(ctx.ec.Prepare()).Should(BeNil())
 		ctx.ec.Stderr = io.Discard
 		Expect(ctx.ec.Validate()).Should(BeNil())
@@ -279,11 +291,16 @@ var _ = Describe("fsm state transitions: config v3", func() {
 
 		// bad sql migration
 		configV3DeployFSM := newConfigV3DeployFSM()
-		migrationFilePath := filepath.Join(projectDirectory, "migrations", sourceName, "1622047079431_chinook/up.sql")
-		upSQL, err := ioutil.ReadFile(migrationFilePath)
+		migrationFilePath := filepath.Join(
+			projectDirectory,
+			"migrations",
+			sourceName,
+			"1622047079431_chinook/up.sql",
+		)
+		upSQL, err := os.ReadFile(migrationFilePath)
 		Expect(err).To(BeNil())
 		badUpSQL := []byte("SOME GARBAGE;")
-		Expect(ioutil.WriteFile(migrationFilePath, badUpSQL, 0755)).To(BeNil())
+		Expect(os.WriteFile(migrationFilePath, badUpSQL, 0o755)).To(BeNil())
 
 		Expect(configV3DeployFSM.SendEvent(applyInitialMetadata, ctx)).To(BeNil())
 		Expect(configV3DeployFSM.Current).Should(Equal(failedOperation))
@@ -291,17 +308,24 @@ var _ = Describe("fsm state transitions: config v3", func() {
 		ctx.ec.Logger.Debugf("error: %v", ctx.err)
 		Expect(ctx.err).Should(Not(BeNil()))
 		// reset file contents
-		Expect(ioutil.WriteFile(migrationFilePath, upSQL, 0755)).To(BeNil())
+		Expect(os.WriteFile(migrationFilePath, upSQL, 0o755)).To(BeNil())
 
 		// bad metadata yaml file
-		tablesYamlFilepath := filepath.Join(projectDirectory, "metadata", "databases", sourceName, "tables", "tables.yaml")
-		tablesYaml, err := ioutil.ReadFile(tablesYamlFilepath)
+		tablesYamlFilepath := filepath.Join(
+			projectDirectory,
+			"metadata",
+			"databases",
+			sourceName,
+			"tables",
+			"tables.yaml",
+		)
+		tablesYaml, err := os.ReadFile(tablesYamlFilepath)
 		Expect(err).To(BeNil())
 
 		// user error in tables.yaml
 		configV3DeployFSM = newConfigV3DeployFSM()
 		badTablesYaml := []byte(`some: key`)
-		Expect(ioutil.WriteFile(tablesYamlFilepath, badTablesYaml, 0755)).To(BeNil())
+		Expect(os.WriteFile(tablesYamlFilepath, badTablesYaml, 0o755)).To(BeNil())
 		Expect(configV3DeployFSM.SendEvent(applyInitialMetadata, ctx)).To(BeNil())
 		Expect(configV3DeployFSM.Current).Should(Equal(failedOperation))
 		Expect(configV3DeployFSM.Previous).Should(Equal(applyingInitialMetadataFailed))
@@ -316,14 +340,14 @@ var _ = Describe("fsm state transitions: config v3", func() {
 # this should be a string not a number
     name: 1
 `)
-		Expect(ioutil.WriteFile(tablesYamlFilepath, badTablesYaml, 0755)).To(BeNil())
+		Expect(os.WriteFile(tablesYamlFilepath, badTablesYaml, 0o755)).To(BeNil())
 		Expect(configV3DeployFSM.SendEvent(applyInitialMetadata, ctx)).To(BeNil())
 		ctx.ec.Logger.Debugf("error: %v", ctx.err)
 		Expect(configV3DeployFSM.Current).Should(Equal(failedOperation))
 		Expect(configV3DeployFSM.Previous).Should(Equal(applyingInitialMetadataFailed))
 		Expect(ctx.err).Should(Not(BeNil()))
 		// reset file contents
-		Expect(ioutil.WriteFile(tablesYamlFilepath, tablesYaml, 0755)).To(BeNil())
+		Expect(os.WriteFile(tablesYamlFilepath, tablesYaml, 0o755)).To(BeNil())
 
 		// happy path
 		configV3DeployFSM = newConfigV3DeployFSM()
