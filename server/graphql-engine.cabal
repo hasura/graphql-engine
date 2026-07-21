@@ -1141,6 +1141,7 @@ test-suite graphql-engine-tests
     , monad-control
     , mtl
     , network-uri
+    , odbc
     , openapi3
     , optparse-applicative
     , pg-client
@@ -1208,6 +1209,7 @@ test-suite graphql-engine-tests
     Hasura.Backends.DataConnector.API.V0.SchemaSpec
     Hasura.Backends.DataConnector.API.V0.TableSpec
     Hasura.Backends.DataConnector.API.V0.TargetSpec
+    Hasura.Backends.MSSQL.FromIr.QuerySpec
     Hasura.Backends.Postgres.Connection.VersionCheckSpec
     Hasura.Backends.Postgres.Execute.PrepareSpec
     Hasura.Backends.Postgres.NativeQueries.NativeQueriesSpec
