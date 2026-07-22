@@ -37,5 +37,5 @@ quicktype_config:
   # rust: ~
   schema: ~
   # swift: ~
-  # typescript:
+  typescript:
   # just-types: true

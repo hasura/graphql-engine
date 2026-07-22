@@ -9,6 +9,8 @@ import {
   TableEntry,
 } from "./HasuraMetadataV2"
 
+export * from "./HasuraMetadataV2"
+
 /**
  * https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#fromenv
  */
@@ -165,56 +167,56 @@ interface BigQuerySource extends BaseSource {
 export type Source = PGSource | MsSQLSource | BigQuerySource
 
 export interface APILimits {
-  depth_limit?: DepthLimit;
-  disabled: boolean;
-  rate_limit?: RateLimit;
-  node_limit?: NodeLimit;
+  depth_limit?: DepthLimit
+  disabled: boolean
+  rate_limit?: RateLimit
+  node_limit?: NodeLimit
 }
 
 export interface DepthLimit {
-  global: number;
+  global: number
   per_role: {
-    [role: string]: number;
-  };
+    [role: string]: number
+  }
 }
 
 export interface RateLimit {
-  global: RateLimitRule;
+  global: RateLimitRule
   per_role: {
-    [role: string]: RateLimitRule;
-  };
+    [role: string]: RateLimitRule
+  }
 }
 
 export interface RateLimitRule {
-  unique_params: null | 'IP' | string[];
-  max_reqs_per_min: number;
+  unique_params: null | "IP" | string[]
+  max_reqs_per_min: number
 }
 
 export interface NodeLimit {
-  global: number;
+  global: number
   per_role: {
-    [role: string]: number;
-  };
+    [role: string]: number
+  }
 }
 
 export interface RestEndpoint {
-  name: string;
-  url: string;
-  methods: ('POST' | 'PUT' | 'PATCH')[];
-  definition: RestEndpointDefinition;
-  comment?: string;
+  name: string
+  url: string
+  methods: ("POST" | "PUT" | "PATCH")[]
+  definition: RestEndpointDefinition
+  comment?: string
 }
 
 export interface RestEndpointDefinition {
   query: {
-    query_name: string;
-    collection_name: string;
-  };
+    query_name: string
+    collection_name: string
+  }
 }
 
 export interface InheritedRole {
-  role_name: string;
-  role_set: string[];
+  role_name: string
+  role_set: string[]
 }
 
 // quicktype code generator can't handle Typescript's "Omit<T>" type
