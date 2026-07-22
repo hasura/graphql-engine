@@ -25,5 +25,5 @@ touch with the maintainers in the `GraphQL Engine`->`contrib` channel in the com
 ## Notes
 
 - Docs are currently deployed manually. Changes will not reflect immediately after a PR gets merged.
-- The search is powered by [Algolia](https://www.algolia.com/) and is updated everyday. Your local changes will not be
+- The search is powered by [Algolia](https://www.algolia.com/) and is updated every day. Your local changes will not be
   reflected in search results.

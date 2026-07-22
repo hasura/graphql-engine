@@ -92,7 +92,7 @@ with less effort is an important enabler of this.
 
 Our ability to achieve this (and thus the quality of the finished product)
 is affected by our choices of the abstractions that we use to express our solution.
-Therefore it's important we pick those that enable us rather than hamper us.
+Therefore, it's important we pick those that enable us rather than hamper us.
 
 ### Success
 
