@@ -1,4 +1,4 @@
-# DATE VERSION: 2025-06-30
+# DATE VERSION: 2026-07-23
 # Modify the above date version (YYYY-MM-DD) if you want to rebuild the image
 
 FROM registry.access.redhat.com/ubi9-minimal:9.6-1751286687 as pg_dump_source
@@ -36,7 +36,7 @@ RUN ln -s /usr/lib64/libpcre.so.1 /usr/lib64/libpcre.so.3
 
 RUN set -ex; \
   # deps needed for graphql-engine
-  microdnf install -y krb5-libs 'libpq-13.23-1.el9_7.*' numactl-libs; \
+  microdnf install -y krb5-libs libpq numactl-libs; \
   # deps for cli-migrations
   microdnf install -y nc
 
