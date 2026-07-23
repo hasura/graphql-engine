@@ -65,8 +65,8 @@ Note: If you are using a hybrid setup of native and docker services (especially 
 While the reference agent should provide a fleshed out example of how an agent can be developed and what capabilities are possible, the following principles should also provide guidance how we recommend an agent be developed and structured:
 
 * Capabilities & Self Describing - Your agent should describe itself via the `capabilities` feature.
-* Stateless - Your agent should be (transparently) stateless, each request carries all the infomation required
-* Defer logic to backend - Your agent should endevour to offload processing to its backend if possible
+* Stateless - Your agent should be (transparently) stateless, each request carries all the information required
+* Defer logic to backend - Your agent should endeavour to offload processing to its backend if possible
 * Type-safe - Your agent should expect and return types as described in the OpenAPI schema
 * Backwards compatible - Your agent should preserve backwards compatibility as it evolves
 * Testing - Your agent should be tested with the provided test-suite
