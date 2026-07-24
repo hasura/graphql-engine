@@ -6,6 +6,24 @@ ARG TARGETPLATFORM
 
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 
+# Do not auto-load the OpenSSL FIPS provider based on the host kernel flag.
+#
+# On Ubuntu Noble, OpenSSL inspects the host's /proc/sys/crypto/fips_enabled and,
+# when it is 1 (FIPS-enabled host AMIs), tries to dlopen the FIPS provider
+# (fips.so from the openssl-fips-module package). Stock Noble containers -- and
+# this image -- do not ship that module, so the DSO load hard-fails during
+# libpq's SSL context init ("could not create SSL context: could not load the
+# shared library"). libpq then silently falls back to a cleartext connection,
+# which managed Postgres (e.g. RDS with require-SSL pg_hba) rejects.
+#
+# HGE's own HTTP TLS is pure-Haskell and unaffected; this only concerns the
+# libpq -> OpenSSL path baked into the image. Forcing FIPS mode off keeps the
+# container bootable on FIPS-enabled hosts. This does NOT make the container a
+# FIPS-validated crypto module -- it only prevents OpenSSL from trying to load a
+# provider we do not ship. See upstream Ubuntu bug LP#2141933 (workaround:
+# OPENSSL_FORCE_FIPS_MODE=0) and related LP#2066990.
+ENV OPENSSL_FORCE_FIPS_MODE=0
+
 RUN set -ex; \
     groupadd -g 1001 hasura; \
     useradd -m -u 1001 -g hasura hasura
