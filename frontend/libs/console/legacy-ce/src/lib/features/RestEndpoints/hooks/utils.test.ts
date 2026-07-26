@@ -1,4 +1,3 @@
-import { formatSdl } from 'format-graphql';
 import { Microfiber } from 'microfiber';
 import introspectionNoCustom from './mocks/introspectionWithoutCustomizations.json';
 import introspectionCustom from './mocks/introspectionWithCustomizations.json';
@@ -11,6 +10,7 @@ import {
   generateViewEndpoint,
 } from './utils';
 import { getOperations } from './useRestEndpointDefinitions';
+import { formatGraphQL } from '../../../utils/formatGraphQL';
 
 const microfiberNoCustom = new Microfiber(introspectionNoCustom);
 const operationsWithoutCustom = getOperations('', microfiberNoCustom);
@@ -30,7 +30,7 @@ describe('generateViewEndpoint', () => {
 
     expect(query).toEqual({
       name: 'user_by_pk',
-      query: formatSdl(`query user_by_pk($id: Int!) {
+      query: formatGraphQL(`query user_by_pk($id: Int!) {
       user_by_pk(id: $id) {
         address
         bool
@@ -68,7 +68,7 @@ describe('generateViewEndpoint', () => {
 
     expect(query).toEqual({
       name: 'a_user_by_pk_b',
-      query: formatSdl(`query a_user_by_pk_b($id: Int!) {
+      query: formatGraphQL(`query a_user_by_pk_b($id: Int!) {
       root_ {
         a_user_by_pk_b(id: $id) {
           address
@@ -110,7 +110,7 @@ describe('generateViewAllEndpoint', () => {
 
     expect(query).toEqual({
       name: 'user',
-      query: formatSdl(`query user {
+      query: formatGraphQL(`query user {
       user {
         address
         bool
@@ -148,7 +148,7 @@ describe('generateViewAllEndpoint', () => {
 
     expect(query).toEqual({
       name: 'a_user_b',
-      query: formatSdl(`query a_user_b {
+      query: formatGraphQL(`query a_user_b {
       root_ {
         a_user_b {
           address
@@ -190,7 +190,7 @@ describe('generateDeleteEndpoint', () => {
 
     expect(query).toEqual({
       name: 'delete_user_by_pk',
-      query: formatSdl(`mutation delete_user_by_pk($id: Int!) {
+      query: formatGraphQL(`mutation delete_user_by_pk($id: Int!) {
       delete_user_by_pk(id: $id) {
         address
         bool
@@ -228,7 +228,7 @@ describe('generateDeleteEndpoint', () => {
 
     expect(query).toEqual({
       name: 'a_delete_user_by_pk_b',
-      query: formatSdl(`mutation a_delete_user_by_pk_b($id: Int!) {
+      query: formatGraphQL(`mutation a_delete_user_by_pk_b($id: Int!) {
       root_ {
         a_delete_user_by_pk_b(id: $id) {
           address
@@ -271,7 +271,7 @@ describe('generateUpdateEndpoint', () => {
     expect(query).toEqual({
       name: 'update_user_by_pk',
       query:
-        formatSdl(`mutation update_user_by_pk($id: Int!, $object: user_set_input!) {
+        formatGraphQL(`mutation update_user_by_pk($id: Int!, $object: user_set_input!) {
       update_user_by_pk(pk_columns: {id: $id}, _set: $object) {
         address
         bool
@@ -310,7 +310,7 @@ describe('generateUpdateEndpoint', () => {
     expect(query).toEqual({
       name: 'a_update_user_by_pk_b',
       query:
-        formatSdl(`mutation a_update_user_by_pk_b($id: Int!, $object: c_user_set_input_d!) {
+        formatGraphQL(`mutation a_update_user_by_pk_b($id: Int!, $object: c_user_set_input_d!) {
       root_ {
         a_update_user_by_pk_b(pk_columns: {id: $id}, _set: $object) {
           address
@@ -352,7 +352,8 @@ describe('generateInsertEndpoint', () => {
 
     expect(query).toEqual({
       name: 'insert_user_one',
-      query: formatSdl(`mutation insert_user_one($object: user_insert_input!) {
+      query:
+        formatGraphQL(`mutation insert_user_one($object: user_insert_input!) {
       insert_user_one(object: $object) {
         address
         bool
@@ -391,7 +392,7 @@ describe('generateInsertEndpoint', () => {
     expect(query).toEqual({
       name: 'a_insert_user_one_b',
       query:
-        formatSdl(`mutation a_insert_user_one_b($object: c_user_insert_input_d!) {
+        formatGraphQL(`mutation a_insert_user_one_b($object: c_user_insert_input_d!) {
       root_ {
         a_insert_user_one_b(object: $object) {
           address

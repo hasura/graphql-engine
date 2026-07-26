@@ -1,4 +1,4 @@
-import { formatSdl } from 'format-graphql';
+import { formatGraphQL } from '../../../utils/formatGraphQL';
 import { generateGraphQLDeleteByPrimaryKeyMutation } from './generateGraphQLDeleteByPrimaryKeyMutation';
 
 describe('generateGraphQLDeleteByPrimaryKeyMutation for table with', () => {
@@ -16,7 +16,7 @@ describe('generateGraphQLDeleteByPrimaryKeyMutation for table with', () => {
       }
     }
     `;
-    expect(result.query).toMatch(formatSdl(expectedGqlQuery));
+    expect(result.query).toMatch(formatGraphQL(expectedGqlQuery));
   });
 
   it('with composite primary key', () => {
@@ -34,7 +34,7 @@ describe('generateGraphQLDeleteByPrimaryKeyMutation for table with', () => {
       }
     }
     `;
-    expect(result.query).toMatch(formatSdl(expectedGqlQuery));
+    expect(result.query).toMatch(formatGraphQL(expectedGqlQuery));
   });
 
   it('with custom table name', () => {
@@ -54,7 +54,7 @@ describe('generateGraphQLDeleteByPrimaryKeyMutation for table with', () => {
       }
     }
     `;
-    expect(result.query).toMatch(formatSdl(expectedGqlQuery));
+    expect(result.query).toMatch(formatGraphQL(expectedGqlQuery));
   });
 
   it('with custom delete mutation root', () => {
@@ -76,7 +76,7 @@ describe('generateGraphQLDeleteByPrimaryKeyMutation for table with', () => {
       }
     }
     `;
-    expect(result.query).toMatch(formatSdl(expectedGqlQuery));
+    expect(result.query).toMatch(formatGraphQL(expectedGqlQuery));
   });
 
   it('with custom delete mutation root + source namespace', () => {
@@ -105,6 +105,6 @@ describe('generateGraphQLDeleteByPrimaryKeyMutation for table with', () => {
       }
     }
     `;
-    expect(result.query).toMatch(formatSdl(expectedGqlQuery));
+    expect(result.query).toMatch(formatGraphQL(expectedGqlQuery));
   });
 });

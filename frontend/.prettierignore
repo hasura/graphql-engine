@@ -7,3 +7,5 @@
 /apps/console-ee/src/assets/
 /apps/console-ce-e2e/**/snapshots.js
 /snapshots.js
+/.yarn
+/tmp

@@ -1,4 +1,4 @@
-import jwt_decode from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 
 import { NotificationsState } from '../../telemetry/state';
 import { getLSItem, LS_KEYS, setLSItem } from '../../utils/localStorage';
@@ -90,7 +90,7 @@ const getUserType = (token: string) => {
   }
   const jwtToken = token.split(IDToken)[1];
   try {
-    const decodedToken: DecodedJWT = jwt_decode(jwtToken);
+    const decodedToken: DecodedJWT = jwtDecode(jwtToken);
     if (!decodedToken.sub) {
       return 'admin';
     }

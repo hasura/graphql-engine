@@ -17,7 +17,6 @@ import {
 } from '@hasura/open-api-to-graphql';
 import { ReferenceObject, SchemaObject } from '@hasura/open-api-to-graphql';
 import { Microfiber } from 'microfiber';
-import { formatSdl } from 'format-graphql';
 import { getActionRequestSampleInput } from '../../../../components/Services/Actions/Add/utils';
 import {
   DataDefinition,
@@ -30,6 +29,7 @@ import {
 } from './types';
 import { RequestTransformBody } from '../../../../metadata/types';
 import camelCase from 'lodash/camelCase';
+import { formatGraphQL } from '../../../../utils/formatGraphQL';
 
 const parseRequestMethod = (method: string): RequestTransformMethod => {
   switch (method.toLowerCase()) {
@@ -54,7 +54,7 @@ const lastOfArray = (arr: string[]): string => {
 
 export const formatQuery = (query?: string): string => {
   try {
-    return !query || query.trim() === '' ? '' : formatSdl(query);
+    return !query || query.trim() === '' ? '' : formatGraphQL(query);
   } catch (e) {
     return query ?? '';
   }

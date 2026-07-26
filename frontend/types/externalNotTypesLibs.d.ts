@@ -1,7 +1,3 @@
-declare module 'format-graphql' {
-  export function formatSdl(query: string): string;
-}
-
 declare module 'graphiql-code-exporter/lib/snippets';
 declare module 'graphiql-code-exporter';
 

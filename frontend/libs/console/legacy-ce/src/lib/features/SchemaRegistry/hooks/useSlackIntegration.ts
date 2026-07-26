@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useDeleteSlackApp } from './useDeleteSlackApp';
 import { useSlackOAuth } from './useSlackOAuth';
 
-export { SlackOauthStatus } from './useSlackOAuth';
+export type { SlackOauthStatus } from './useSlackOAuth';
 
 export const useSlackIntegration = (
   onDeleteClose: () => void,
