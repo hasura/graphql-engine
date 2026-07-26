@@ -1,8 +1,8 @@
-import jwt from 'jsonwebtoken';
+import { jwtDecode } from 'jwt-decode';
 import { PRIVILEGES } from '../constants';
 
 export const decodeToken = idToken => {
-  const decoded = jwt.decode(idToken, { complete: true });
+  const decoded = jwtDecode(idToken);
   return decoded;
 };
 

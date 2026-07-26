@@ -1,4 +1,4 @@
-import { formatSdl } from 'format-graphql';
+import { formatGraphQL } from '../../../utils/formatGraphQL';
 import { generateGraphQLInsertMutation } from './generateGraphQLInsertMutation';
 
 describe('generateGraphQLInsertMutation for table with', () => {
@@ -18,7 +18,7 @@ describe('generateGraphQLInsertMutation for table with', () => {
       }
     }
     `;
-    expect(result.query).toMatch(formatSdl(expectedGqlQuery));
+    expect(result.query).toMatch(formatGraphQL(expectedGqlQuery));
   });
 
   it('with table customization (only custom name) + no source customization', () => {
@@ -40,7 +40,7 @@ describe('generateGraphQLInsertMutation for table with', () => {
       }
     }
     `;
-    expect(result.query).toMatch(formatSdl(expectedGqlQuery));
+    expect(result.query).toMatch(formatGraphQL(expectedGqlQuery));
   });
 
   it('with table customization (custom insert root) + no source customization', () => {
@@ -62,7 +62,7 @@ describe('generateGraphQLInsertMutation for table with', () => {
       }
     }
     `;
-    expect(result.query).toMatch(formatSdl(expectedGqlQuery));
+    expect(result.query).toMatch(formatGraphQL(expectedGqlQuery));
   });
 
   it('with table customization (custom name + custom insert root) + no source customization', () => {
@@ -85,7 +85,7 @@ describe('generateGraphQLInsertMutation for table with', () => {
       }
     }
     `;
-    expect(result.query).toMatch(formatSdl(expectedGqlQuery));
+    expect(result.query).toMatch(formatGraphQL(expectedGqlQuery));
   });
 
   it('with table customization (custom name + custom insert root) + source customization', () => {
@@ -115,6 +115,6 @@ describe('generateGraphQLInsertMutation for table with', () => {
       }
     }
     `;
-    expect(result.query).toMatch(formatSdl(expectedGqlQuery));
+    expect(result.query).toMatch(formatGraphQL(expectedGqlQuery));
   });
 });

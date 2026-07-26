@@ -1,4 +1,4 @@
-import { formatSdl } from 'format-graphql';
+import { formatGraphQL } from '../../../utils/formatGraphQL';
 import { Query, RestEndpoint } from '../../hasura-metadata-types';
 import { Generator } from './useRestEndpointDefinitions';
 
@@ -90,7 +90,7 @@ export const generateViewEndpoint: Generator['generator'] = (
 
   const query: Query = {
     name: operation.name,
-    query: formatSdl(`
+    query: formatGraphQL(`
       query ${operation.name}(${queryArgs}) {
           ${wrapRoot(root, grapqhlOperation)}
       }`),
@@ -129,7 +129,7 @@ export const generateViewAllEndpoint: Generator['generator'] = (
 
   const query: Query = {
     name: operation.name,
-    query: formatSdl(`
+    query: formatGraphQL(`
       query ${operation.name} {
         ${wrapRoot(root, grapqhlOperation)}
       }`),
@@ -170,7 +170,7 @@ export const generateDeleteEndpoint: Generator['generator'] = (
 
   const query: Query = {
     name: operation.name,
-    query: formatSdl(`
+    query: formatGraphQL(`
       mutation ${operation.name}(${queryArgs}) {
           ${wrapRoot(root, grapqhlOperation)}
       }`),
@@ -212,7 +212,7 @@ export const generateInsertEndpoint: Generator['generator'] = (
 
   const query: Query = {
     name: operation.name,
-    query: formatSdl(`
+    query: formatGraphQL(`
       mutation ${operation.name}($object: ${inputType}!) {
           ${wrapRoot(root, grapqhlOperation)}
       }`),
@@ -275,7 +275,7 @@ export const generateUpdateEndpoint: Generator['generator'] = (
 
   const query: Query = {
     name: operation.name,
-    query: formatSdl(`
+    query: formatGraphQL(`
       mutation ${operation.name}(${queryArgs}, $object: ${inputType}!) {
           ${wrapRoot(root, grapqhlOperation)}
       }`),

@@ -16,10 +16,10 @@ import {
   generateViewAllEndpoint,
   generateViewEndpoint,
 } from './utils';
-import { formatSdl } from 'format-graphql';
 import { areTablesEqual, useMetadata } from '../../hasura-metadata-api';
 import camelCase from 'lodash/camelCase';
 import { PostgresTable } from '../../DataSource';
+import { formatGraphQL } from '../../../utils/formatGraphQL';
 
 const toPascalCase = (str: string) => {
   return str
@@ -301,7 +301,7 @@ export const useRestEndpointDefinitions = ({
         );
 
         if (definition.query.query) {
-          definition.query.query = formatSdl(definition.query.query);
+          definition.query.query = formatGraphQL(definition.query.query);
         }
 
         response[tableName] = {

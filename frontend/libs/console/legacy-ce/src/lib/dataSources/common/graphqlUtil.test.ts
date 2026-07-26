@@ -1,5 +1,5 @@
+import { formatGraphQL } from '../../utils/formatGraphQL';
 import { getQueryWithNamespace, getFullQueryNameBase } from './graphqlUtil';
-import { formatSdl } from 'format-graphql';
 
 describe('getQueryWithNamespace', () => {
   it('returns a query with namespace', () => {
@@ -8,7 +8,7 @@ describe('getQueryWithNamespace', () => {
       queryName: 'query Rows',
       innerQuery: 'Album { id }',
     });
-    const expected = formatSdl(`query Rows
+    const expected = formatGraphQL(`query Rows
     {
       namespace {
         Album { id }
@@ -24,7 +24,7 @@ describe('getQueryWithNamespace', () => {
       innerQuery: 'Album { id }',
     });
 
-    const expected = formatSdl(`query Rows
+    const expected = formatGraphQL(`query Rows
     {
       Album { id }
     }`);
