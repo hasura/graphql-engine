@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "private": true,
   "engines": {
-    "node": ">=16.14"
+    "node": ">=24.0"
   },
   "scripts": {
     "docusaurus": "docusaurus",
@@ -24,35 +24,48 @@
     "format": "prettier --write \"**/*.+(js|jsx|css|`json|md|mdx)\""
   },
   "dependencies": {
-    "@docusaurus/core": "^2.2.0",
-    "@docusaurus/preset-classic": "^2.2.0",
+    "@docusaurus/core": "2.4.3",
+    "@docusaurus/preset-classic": "2.4.3",
     "@mdx-js/react": "^1.6.22",
-    "algoliasearch": "^4.14.2",
-    "algoliasearch-helper": "^3.7.4",
-    "clsx": "^1.2.1",
+    "algoliasearch": "4.27.0",
+    "algoliasearch-helper": "3.29.2",
+    "clsx": "2.1.1",
     "cspell": "^6.18.1",
-    "docusaurus-plugin-sass": "^0.2.2",
-    "dompurify": "^3.1.5",
-    "graphiql": "^1.5.1",
-    "graphql": "^15.7.2",
-    "graphql-ws": "^5.11.2",
-    "markdown-to-jsx": "^7.3.2",
+    "docusaurus-plugin-sass": "0.2.6",
+    "dompurify": "^3.4.12",
+    "graphiql": "2.4.7",
+    "graphql": "16.14.2",
+    "markdown-to-jsx": "7.7.17",
     "prism-react-renderer": "^1.3.5",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-transition-group": "^4.4.2",
-    "sass": "^1.49.8",
+    "sass": "1.102.0",
     "usehooks-ts": "^2.9.1",
-    "uuid": "^9.0.0"
+    "uuid": "14.0.1"
   },
   "devDependencies": {
-    "@docusaurus/module-type-aliases": "^2.1.0",
-    "@swc/core": "^1.3.23",
-    "@tsconfig/docusaurus": "^1.0.6",
-    "prettier": "^3.0.0",
-    "swc-loader": "^0.2.3",
-    "typescript": "^4.8.4",
-    "wrangler": "^3.112.0"
+    "@docusaurus/module-type-aliases": "2.4.3",
+    "@swc/core": "1.15.46",
+    "@tsconfig/docusaurus": "1.0.7",
+    "prettier": "3.9.6",
+    "swc-loader": "0.2.7",
+    "typescript": "4.9.5"
+  },
+  "resolutions": {
+    "axios": "0.33.0",
+    "brace-expansion": "2.1.2",
+    "dompurify": "3.4.12",
+    "follow-redirects": "1.16.0",
+    "immutable": "4.3.9",
+    "lodash": "4.18.1",
+    "node-forge": "1.4.0",
+    "postcss": "8.5.18",
+    "serialize-javascript": "6.0.2",
+    "sharp": "0.35.0",
+    "shell-quote": "1.9.0",
+    "svgo": "2.8.3",
+    "tar": "7.5.21"
   },
   "browserslist": {
     "production": [
@@ -66,5 +79,5 @@
       "last 1 safari version"
     ]
   },
-  "packageManager": "yarn@3.2.4"
+  "packageManager": "yarn@4.17.1"
 }

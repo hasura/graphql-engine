@@ -22,7 +22,6 @@ const GraphiQLIDE = ({ query, variables, response, viewOnly = true }) => {
     >
       <GraphiQL
         readOnly={false}
-        editorTheme={'dracula'}
         schema={null}
         fetcher={notReal}
         query={query}
