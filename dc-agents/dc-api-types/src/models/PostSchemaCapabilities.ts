@@ -2,6 +2,4 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type PostSchemaCapabilities = {
-};
-
+export type PostSchemaCapabilities = {};

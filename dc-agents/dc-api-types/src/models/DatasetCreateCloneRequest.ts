@@ -7,4 +7,3 @@ import type { DatasetTemplateName } from './DatasetTemplateName';
 export type DatasetCreateCloneRequest = {
   from: DatasetTemplateName;
 };
-

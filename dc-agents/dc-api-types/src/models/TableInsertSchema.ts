@@ -16,4 +16,3 @@ export type TableInsertSchema = {
   primary_key?: Array<string> | null;
   table: TableName;
 };
-

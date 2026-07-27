@@ -8,4 +8,3 @@ export type ConfigSchemaResponse = {
   config_schema: OpenApiSchema;
   other_schemas: Record<string, OpenApiSchema>;
 };
-

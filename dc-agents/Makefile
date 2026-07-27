@@ -59,4 +59,4 @@ update-api-types-deps:
 .PHONY: derive-lockfiles
 ## derive-lockfiles: Derives individual lockfiles for the workspace packages from the lockfile in the root project
 derive-lockfiles:
-	npx ts-node ./scripts/derive-lockfile.ts -l package-lock.json -w reference -w sqlite
+	npm run derive-lockfiles

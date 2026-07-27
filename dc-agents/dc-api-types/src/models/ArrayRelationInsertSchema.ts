@@ -9,4 +9,3 @@ export type ArrayRelationInsertSchema = {
   relationship: string;
   type: 'array_relation';
 };
-

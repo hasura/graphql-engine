@@ -16,4 +16,3 @@ export type SingleColumnAggregate = {
   result_type: ScalarType;
   type: 'single_column';
 };
-

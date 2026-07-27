@@ -8,4 +8,3 @@ export type AnotherColumnComparison = {
   column: ComparisonColumn;
   type: 'column';
 };
-

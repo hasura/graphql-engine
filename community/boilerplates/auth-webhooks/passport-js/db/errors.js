@@ -5,7 +5,6 @@ const {
 
 const {
   DBError,
-  ConstraintViolationError,
   UniqueViolationError,
   NotNullViolationError,
   ForeignKeyViolationError,

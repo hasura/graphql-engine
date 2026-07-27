@@ -18,4 +18,3 @@ export type ColumnInsertSchema = {
   type: 'column';
   value_generated?: ColumnValueGenerationStrategy;
 };
-

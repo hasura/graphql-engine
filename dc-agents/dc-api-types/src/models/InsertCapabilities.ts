@@ -8,4 +8,3 @@ export type InsertCapabilities = {
    */
   supports_nested_inserts?: boolean;
 };
-

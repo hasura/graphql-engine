@@ -35,4 +35,3 @@ export type Capabilities = {
   subscriptions?: SubscriptionCapabilities;
   user_defined_functions?: UserDefinedFunctionCapabilities;
 };
-

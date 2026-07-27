@@ -29,8 +29,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
-    "@tsconfig/node16": "^1.0.3",
-    "@types/node": "^16.11.49",
-    "typescript": "^4.7.4"
+    "@types/node": "24.1.0",
+    "typescript": "^5.9.3"
   }
 }

@@ -8,4 +8,3 @@ export type RawRequest = {
    */
   query: string;
 };
-

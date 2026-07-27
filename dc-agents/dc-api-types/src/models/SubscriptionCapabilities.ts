@@ -2,6 +2,4 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type SubscriptionCapabilities = {
-};
-
+export type SubscriptionCapabilities = {};

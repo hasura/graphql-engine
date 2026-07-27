@@ -6,5 +6,4 @@ import type { TFunction } from './TFunction';
 import type { TInterpolated } from './TInterpolated';
 import type { TTable } from './TTable';
 
-export type Target = (TTable | TInterpolated | TFunction);
-
+export type Target = TTable | TInterpolated | TFunction;

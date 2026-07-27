@@ -3,6 +3,7 @@
     "target": "es2017",
     "module": "commonjs",
     "strict": true,
+    "types": ["node"],
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,

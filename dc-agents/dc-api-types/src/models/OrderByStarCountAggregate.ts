@@ -5,4 +5,3 @@
 export type OrderByStarCountAggregate = {
   type: 'star_count_aggregate';
 };
-

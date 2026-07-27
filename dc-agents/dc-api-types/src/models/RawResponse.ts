@@ -8,4 +8,3 @@ export type RawResponse = {
    */
   rows: Array<Record<string, any>>;
 };
-

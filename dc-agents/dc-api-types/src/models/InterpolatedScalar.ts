@@ -9,4 +9,3 @@ export type InterpolatedScalar = {
   value: any;
   value_type: ScalarType;
 };
-

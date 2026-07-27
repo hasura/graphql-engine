@@ -11,4 +11,3 @@ export type CapabilitiesResponse = {
   display_name?: string;
   release_name?: string;
 };
-

@@ -9,4 +9,3 @@ export type ScalarValueComparison = {
   value: any;
   value_type: ScalarType;
 };
-

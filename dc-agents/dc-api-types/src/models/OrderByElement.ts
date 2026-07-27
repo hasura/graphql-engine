@@ -13,4 +13,3 @@ export type OrderByElement = {
    */
   target_path: Array<string>;
 };
-

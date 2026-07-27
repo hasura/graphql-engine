@@ -21,4 +21,3 @@ export type UpdateMutationOperation = {
   updates: Array<RowUpdate>;
   where?: Expression;
 };
-

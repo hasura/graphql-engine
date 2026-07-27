@@ -6,4 +6,3 @@ export type ColumnTypeObject = {
   name: string;
   type: 'object';
 };
-

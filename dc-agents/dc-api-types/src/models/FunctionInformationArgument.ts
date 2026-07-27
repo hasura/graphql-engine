@@ -15,4 +15,3 @@ export type FunctionInformationArgument = {
   optional?: boolean;
   type: ScalarType;
 };
-

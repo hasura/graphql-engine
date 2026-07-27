@@ -13,4 +13,3 @@ export type FunctionRelationships = {
   source_function: FunctionName;
   type: 'function';
 };
-

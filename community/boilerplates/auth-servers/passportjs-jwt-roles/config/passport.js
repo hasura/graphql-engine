@@ -14,7 +14,7 @@ passport.use(
       User.query()
         .where('username', username)
         .first()
-        .eager('roles')
+        .withGraphFetched('roles')
         .then(function(user) {
           if (!user) {
             return done('Unknown user')

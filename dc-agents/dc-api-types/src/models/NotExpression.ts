@@ -8,4 +8,3 @@ export type NotExpression = {
   expression: Expression;
   type: 'not';
 };
-

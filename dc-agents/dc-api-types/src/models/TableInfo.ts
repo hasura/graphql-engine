@@ -39,4 +39,3 @@ export type TableInfo = {
    */
   updatable?: boolean;
 };
-

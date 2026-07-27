@@ -12,4 +12,3 @@ export type NamedArgument = {
   type: 'named';
   value: ArgumentValue;
 };
-

@@ -12,4 +12,3 @@ export type RelationshipField = {
   relationship: string;
   type: 'relationship';
 };
-

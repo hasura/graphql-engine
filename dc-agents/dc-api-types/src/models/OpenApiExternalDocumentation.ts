@@ -6,4 +6,3 @@ export type OpenApiExternalDocumentation = {
   description?: string;
   url: string;
 };
-

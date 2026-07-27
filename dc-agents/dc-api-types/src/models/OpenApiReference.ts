@@ -5,4 +5,3 @@
 export type OpenApiReference = {
   $ref: string;
 };
-

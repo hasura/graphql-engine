@@ -12,4 +12,3 @@ export type ApplyBinaryComparisonOperator = {
   type: 'binary_op';
   value: ComparisonValue;
 };
-

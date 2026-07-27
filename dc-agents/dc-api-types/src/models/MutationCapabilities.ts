@@ -15,4 +15,3 @@ export type MutationCapabilities = {
   returning?: ReturningCapabilities;
   update?: UpdateCapabilities;
 };
-

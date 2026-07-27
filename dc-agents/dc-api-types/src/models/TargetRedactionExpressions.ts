@@ -12,4 +12,3 @@ export type TargetRedactionExpressions = {
   expressions: Record<string, Expression>;
   target: TargetName;
 };
-

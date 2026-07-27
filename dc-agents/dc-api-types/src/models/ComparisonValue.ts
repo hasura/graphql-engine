@@ -5,5 +5,4 @@
 import type { AnotherColumnComparison } from './AnotherColumnComparison';
 import type { ScalarValueComparison } from './ScalarValueComparison';
 
-export type ComparisonValue = (ScalarValueComparison | AnotherColumnComparison);
-
+export type ComparisonValue = ScalarValueComparison | AnotherColumnComparison;

@@ -25,4 +25,3 @@ export type MutationRequest = {
    */
   relationships: Array<Relationships>;
 };
-

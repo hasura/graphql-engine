@@ -10,4 +10,3 @@ export type MutationResponse = {
    */
   operation_results: Array<MutationOperationResults>;
 };
-

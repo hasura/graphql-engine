@@ -144,8 +144,8 @@ For example:
 ```ts
 // myTypes.ts
 interface MyType {
-  name: string
-  age: number
+  name: string;
+  age: number;
 }
 ```
 
@@ -178,21 +178,21 @@ This allows for customizing behavior, IE for CI/CD pipelines. Here is one exampl
 ```ts
 generateTypes()
   .then((outputs) => {
-    console.log('Finished generateTypes(), outputs are', outputs)
+    console.log('Finished generateTypes(), outputs are', outputs);
     for (let output of outputs) {
       // This is the input file path
-      console.log('File:', output.file)
+      console.log('File:', output.file);
       // This contains the generated text
-      console.log('Results:', output.results)
+      console.log('Results:', output.results);
     }
   })
   .catch((err) => {
-    console.log('Got error', err)
+    console.log('Got error', err);
   })
   .finally(async () => {
     // Convert the generated JSON Schema to YAML, for example
-    const generatedFolder = path.join(pathFromRoot, 'generated', '/')
-    const jsonSchemas = await glob(generatedFolder + '**.json')
-    jsonSchemas.forEach(jsonSchemaToYAML)
-  })
+    const generatedFolder = path.join(pathFromRoot, 'generated', '/');
+    const jsonSchemas = await glob(generatedFolder + '**.json');
+    jsonSchemas.forEach(jsonSchemaToYAML);
+  });
 ```

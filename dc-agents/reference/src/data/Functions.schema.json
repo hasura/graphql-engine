@@ -86,7 +86,7 @@
     {
       "name": ["Fibonacci"],
       "type": "read",
-      "returns": {"type": "table", "table": ["Result"]},
+      "returns": { "type": "table", "table": ["Result"] },
       "response_cardinality": "many",
       "args": [
         { "name": "take", "type": "number" },
@@ -97,11 +97,9 @@
     {
       "name": ["SearchArticles"],
       "type": "read",
-      "returns": {"type": "table", "table": ["Articles"]},
+      "returns": { "type": "table", "table": ["Articles"] },
       "response_cardinality": "many",
-      "args": [
-        { "name": "query", "type": "string" }
-      ],
+      "args": [{ "name": "query", "type": "string" }],
       "description": "Search Articles for query."
     }
   ]

@@ -1,4 +1,3 @@
-const { promisify } = require('util')
 const Knex = require('knex')
 const connection = require('../knexfile')
 const { Model } = require('objection')
@@ -89,7 +88,7 @@ class User extends Model {
   }
 
   async $beforeUpdate() {
-    await $beforeInsert()
+    await this.$beforeInsert()
   }
 
   verifyPassword(password, callback) {

@@ -1,1 +1,1 @@
-export * from "../dist/HasuraMetadataV2"
+export * from '../dist/HasuraMetadataV2';

@@ -5,4 +5,3 @@
 export type AutoIncrementGenerationStrategy = {
   type: 'auto_increment';
 };
-

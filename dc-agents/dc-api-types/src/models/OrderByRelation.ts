@@ -11,4 +11,3 @@ export type OrderByRelation = {
   subrelations: Record<string, OrderByRelation>;
   where?: Expression;
 };
-

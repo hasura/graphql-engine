@@ -9,4 +9,3 @@ export type NestedObjField = {
   query: Query;
   type: 'object';
 };
-

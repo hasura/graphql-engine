@@ -5,4 +5,3 @@
 export type FunctionReturnsUnknown = {
   type: 'unknown';
 };
-

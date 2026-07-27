@@ -8,4 +8,3 @@ export type TNFunction = {
   function: FunctionName;
   type: 'function';
 };
-

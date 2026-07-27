@@ -8,4 +8,3 @@ export type OrExpression = {
   expressions: Array<Expression>;
   type: 'or';
 };
-

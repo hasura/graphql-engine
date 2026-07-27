@@ -6,10 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "graphql-request": "*",
-    "node-jose": "^1.1.0"
+    "node-jose": "^2.2.0"
   }
 }

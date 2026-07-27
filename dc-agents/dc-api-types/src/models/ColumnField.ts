@@ -11,4 +11,3 @@ export type ColumnField = {
   redaction_expression?: RedactionExpressionName;
   type: 'column';
 };
-

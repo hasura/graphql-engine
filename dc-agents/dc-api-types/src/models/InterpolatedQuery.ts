@@ -14,4 +14,3 @@ export type InterpolatedQuery = {
    */
   items: Array<InterpolatedItem>;
 };
-

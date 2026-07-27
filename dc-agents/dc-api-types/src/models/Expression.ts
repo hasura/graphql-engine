@@ -10,5 +10,11 @@ import type { ExistsExpression } from './ExistsExpression';
 import type { NotExpression } from './NotExpression';
 import type { OrExpression } from './OrExpression';
 
-export type Expression = (OrExpression | ApplyBinaryComparisonOperator | ExistsExpression | NotExpression | ApplyBinaryArrayComparisonOperator | ApplyUnaryComparisonOperator | AndExpression);
-
+export type Expression =
+  | OrExpression
+  | ApplyBinaryComparisonOperator
+  | ExistsExpression
+  | NotExpression
+  | ApplyBinaryArrayComparisonOperator
+  | ApplyUnaryComparisonOperator
+  | AndExpression;

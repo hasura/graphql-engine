@@ -20,4 +20,3 @@ export type SchemaResponse = {
    */
   tables: Array<TableInfo>;
 };
-

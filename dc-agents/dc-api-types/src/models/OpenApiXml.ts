@@ -9,4 +9,3 @@ export type OpenApiXml = {
   prefix?: string;
   wrapped?: boolean;
 };
-

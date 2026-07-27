@@ -29,4 +29,3 @@ export type ColumnInfo = {
   updatable?: boolean;
   value_generated?: ColumnValueGenerationStrategy;
 };
-

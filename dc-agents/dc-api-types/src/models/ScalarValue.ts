@@ -8,4 +8,3 @@ export type ScalarValue = {
   value: any;
   value_type: ScalarType;
 };
-

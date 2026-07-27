@@ -13,4 +13,3 @@ export type ApplyBinaryArrayComparisonOperator = {
   value_type: ScalarType;
   values: Array<any>;
 };
-

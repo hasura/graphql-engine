@@ -13,6 +13,7 @@ export type QueryResponse = {
   /**
    * The rows returned by the query, corresponding to the query's fields
    */
-  rows?: Array<Record<string, (ColumnFieldValue | QueryResponse | NullColumnFieldValue)>> | null;
+  rows?: Array<
+    Record<string, ColumnFieldValue | QueryResponse | NullColumnFieldValue>
+  > | null;
 };
-

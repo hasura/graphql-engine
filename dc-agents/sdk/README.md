@@ -4,7 +4,6 @@ This SDK serves as a pack of documentation and resources for understanding, buil
 
 In addition to the SDK archive, some information may be mirrored in the [docs.hasura](https://hasura.io/docs/latest/graphql/core/index/) documentation.
 
-
 ## What is a Data Connector (Agent)?
 
 A Hasura GraphQL Engine Data Connector Agent is a service that abstracts a datasource behind a REST API and well-defined wire format. Further information can be found in `README_DATA_CONNECTORS.md` which describes the design and architecture of the feature. An agent facilitates the extension of database support for Hasura GraphQL Engine by allowing configuration of Agents at runtime through the HGE Metadata APIs without requiring any changes to the core HGE codebase. This allows connection to new (previously unsupported) databases by using an agent as middleware. In addition to this an agent can directly support new functionality without any other database upstream.
@@ -17,14 +16,14 @@ This SDK is intended to be used for the purposes or authoring new Data Connector
 
 The recommended workflow is as follows:
 
-* Spin up the stack with `docker compose up`
-* Check that the tests passed
-* Make changes to the reference agent as required for your use-case (if you wish to use Typescript), or...
-* Replace the reference agent with your own agent
-* Rebuild the agent as required
-* Rerun the tests with `docker compose run tests`
-* Interact with the agent via GraphQL Engine exposed on http://localhost:8080
-* Browse the OpenAPI schema on http://localhost:8300
+- Spin up the stack with `docker compose up`
+- Check that the tests passed
+- Make changes to the reference agent as required for your use-case (if you wish to use Typescript), or...
+- Replace the reference agent with your own agent
+- Rebuild the agent as required
+- Rerun the tests with `docker compose run tests`
+- Interact with the agent via GraphQL Engine exposed on http://localhost:8080
+- Browse the OpenAPI schema on http://localhost:8300
 
 The entire SDK is meant to serve as a template, so feel free to modify/remove any components as required.
 
@@ -37,20 +36,20 @@ A guide to following this modification process is currently in development.
 
 ## SDK Components
 
-* Documentation (`README.md` (this document), `README_DATA_CONNECTORS.md`) specifying:
-    * How the components of the SDK have been assembled
-    * How to spin up and run the tests
-    * The architecture of the Data Connector feature
-* OpenAPI types (`agent.openapi.json`)
-* Reference Agent in Typescript (`reference-agent/`)
-* Docker-Compose File Specifying:
-    * Docker Image URI for Hasura GraphQL Engine (HGE)
-    * Docker Image URI for Postgres DB (HGE Metadata Storage)
-    * Docker Image URI for the Data Connector Agent Test Suite
-    * Docker Image URI for the Data Connector Reference Agent
-    * Docker Image URI for SwaggerUI hosting of Agent Schema Explorer
-* A `.env` file that specifies the current build-version of the SDK resources
-* Hasura GraphQL Engine Metadata for bootstrapping by adding the reference agent (`metadata/`)
+- Documentation (`README.md` (this document), `README_DATA_CONNECTORS.md`) specifying:
+  - How the components of the SDK have been assembled
+  - How to spin up and run the tests
+  - The architecture of the Data Connector feature
+- OpenAPI types (`agent.openapi.json`)
+- Reference Agent in Typescript (`reference-agent/`)
+- Docker-Compose File Specifying:
+  - Docker Image URI for Hasura GraphQL Engine (HGE)
+  - Docker Image URI for Postgres DB (HGE Metadata Storage)
+  - Docker Image URI for the Data Connector Agent Test Suite
+  - Docker Image URI for the Data Connector Reference Agent
+  - Docker Image URI for SwaggerUI hosting of Agent Schema Explorer
+- A `.env` file that specifies the current build-version of the SDK resources
+- Hasura GraphQL Engine Metadata for bootstrapping by adding the reference agent (`metadata/`)
 
 ### Component Breakdown
 
@@ -64,12 +63,12 @@ Note: If you are using a hybrid setup of native and docker services (especially 
 
 While the reference agent should provide a fleshed out example of how an agent can be developed and what capabilities are possible, the following principles should also provide guidance how we recommend an agent be developed and structured:
 
-* Capabilities & Self Describing - Your agent should describe itself via the `capabilities` feature.
-* Stateless - Your agent should be (transparently) stateless, each request carries all the infomation required
-* Defer logic to backend - Your agent should endevour to offload processing to its backend if possible
-* Type-safe - Your agent should expect and return types as described in the OpenAPI schema
-* Backwards compatible - Your agent should preserve backwards compatibility as it evolves
-* Testing - Your agent should be tested with the provided test-suite
+- Capabilities & Self Describing - Your agent should describe itself via the `capabilities` feature.
+- Stateless - Your agent should be (transparently) stateless, each request carries all the infomation required
+- Defer logic to backend - Your agent should endevour to offload processing to its backend if possible
+- Type-safe - Your agent should expect and return types as described in the OpenAPI schema
+- Backwards compatible - Your agent should preserve backwards compatibility as it evolves
+- Testing - Your agent should be tested with the provided test-suite
 
 ### OpenAPI Schema / Types
 
@@ -77,29 +76,26 @@ The OpenAPI Schema and Types are described in a formatted JSON file: `agent.open
 
 In addition to the OpenAPI schema file, a SwaggerUI interface is included in the `docker-compose.yaml` and is exposed on `http://localhost:8300`.
 
-
 ### Running the Tests
 
 The architecture of the tests requires that a running agent is available. Once it is running the test-suite can be pointed to the agent to perform a suite of integration tests.
 
 The tests will exercise various scenarios and agent capabilities according to the following logic:
 
-* First, several mandatory scenarios will be run against the agent.
-* If no additional options are given to the test-suite, then the test-suite will discover the agent’s capabilities (See Capabilities Section of README_DATA_CONNECTORS.md)
-    * The agent’s advertised capabilities will then be enumerated over and the corresponding tests will be run to ensure that they are implemented correctly
-    * If invalid capabilities are advertised then errors will be reported
-* Capabilities can also be listed explicitly via CLI options to the test-suite
-    * If this is done then the listed capabilities will be tested regardless of what the agent advertises
-    * The difference in listed and advertised capabilities will be shown
-    * This is useful to ensure that the agents advertised capabilities match your expectations of the agent
-* If errors are found then they will be printed as the tests run.
-* An error status code will be set if any errors are encountered.
-
+- First, several mandatory scenarios will be run against the agent.
+- If no additional options are given to the test-suite, then the test-suite will discover the agent’s capabilities (See Capabilities Section of README_DATA_CONNECTORS.md)
+  - The agent’s advertised capabilities will then be enumerated over and the corresponding tests will be run to ensure that they are implemented correctly
+  - If invalid capabilities are advertised then errors will be reported
+- Capabilities can also be listed explicitly via CLI options to the test-suite
+  - If this is done then the listed capabilities will be tested regardless of what the agent advertises
+  - The difference in listed and advertised capabilities will be shown
+  - This is useful to ensure that the agents advertised capabilities match your expectations of the agent
+- If errors are found then they will be printed as the tests run.
+- An error status code will be set if any errors are encountered.
 
 #### Running the Tests with Docker
 
 To run the tests against the reference agent, run `docker compose run tests` (this is also run on startup of `docker compose up`).
-
 
 ### Reference Agent
 
