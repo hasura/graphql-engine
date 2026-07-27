@@ -1,0 +1,23 @@
+- description: Track table test_t1
+  url: /v1/query
+  status: 200
+  query:
+    type: track_table
+    args:
+      schema: hge_tests
+      name: test_t1
+- description: 'Create event trigger with an illegal name: Error'
+  url: /v1/query
+  status: 400
+  response:
+    error: only alphanumeric and underscore and hyphens allowed for name
+    code: parse-failed
+    path: $
+  query:
+    type: create_event_trigger
+    args:
+      name: "bad'name"
+      table:
+        schema: hge_tests
+        name: test_t1
+      enable_manual: true

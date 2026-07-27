@@ -6,7 +6,7 @@ import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
 import Data.Maybe qualified as Maybe
 import Harness.Backend.Postgres qualified as Postgres
-import Harness.GraphqlEngine (postMetadata, postMetadataWithStatus, postMetadata_)
+import Harness.GraphqlEngine (postMetadataWithStatus, postMetadata_)
 import Harness.Quoter.Yaml
 import Harness.Schema qualified as Schema
 import Harness.Test.BackendType qualified as BackendType
@@ -33,38 +33,31 @@ spec =
 table :: Schema.Table
 table = (Schema.table "table1") {Schema.tableColumns = [Schema.column "id" Schema.TInt]}
 
+-- | NOTE: these no longer test warnings. The current state represents a shift
+-- in behavior from warnings to errors for the cases below
 tests :: SpecWith TestEnvironment
 tests = do
   describe "replace_metadata warnings for event trigger name" do
-    it "should fail for creating trigger with invalid name and not allowing warnings" \testEnvironment -> do
+    it "should fail for creating trigger with invalid name" \testEnvironment -> do
       Postgres.createTable testEnvironment table
       resp <- postMetadataWithStatus 400 testEnvironment (setupMetadataWithTableAndEventTrigger testEnvironment "weird$name" False)
       Postgres.dropTable testEnvironment table
       resp
         `shouldBe` [yaml|
-          code: metadata-warnings
-          error: failed due to metadata warnings
-          internal:
-          - code: illegal-event-trigger-name
-            message: The event trigger with name "weird$name" may not work as expected, hasura suggests to use only alphanumeric, underscore and hyphens in an event trigger name
-            name: event_trigger weird$name in table hasura.table1 in source postgres
-            type: event_trigger
+          code: not-supported
+          error: Starting in v2.50 only alphanumeric and underscore and hyphens allowed for name
           path: $.args
         |]
 
-    it "should succeed with warning for creating trigger with invalid name and allowing warnings" \testEnvironment -> do
+    it "should fail for creating trigger with invalid name even when allowing warnings" \testEnvironment -> do
       Postgres.createTable testEnvironment table
-      resp <- postMetadata testEnvironment (setupMetadataWithTableAndEventTrigger testEnvironment "weird$name" True)
+      resp <- postMetadataWithStatus 400 testEnvironment (setupMetadataWithTableAndEventTrigger testEnvironment "weird$name" True)
       Postgres.dropTable testEnvironment table
       resp
         `shouldBe` [yaml|
-          is_consistent: true
-          inconsistent_objects: []
-          warnings:
-          - code: illegal-event-trigger-name
-            message: The event trigger with name "weird$name" may not work as expected, hasura suggests to use only alphanumeric, underscore and hyphens in an event trigger name
-            name: event_trigger weird$name in table hasura.table1 in source postgres
-            type: event_trigger
+          code: not-supported
+          error: Starting in v2.50 only alphanumeric and underscore and hyphens allowed for name
+          path: $.args
         |]
 
 setupMetadataWithTableAndEventTrigger :: TestEnvironment -> Text -> Bool -> Value

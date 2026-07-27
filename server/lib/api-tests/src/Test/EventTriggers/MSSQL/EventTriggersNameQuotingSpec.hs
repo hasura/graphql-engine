@@ -67,29 +67,27 @@ authorsTable tableName =
 
 -- ** Tests
 
+-- | Weird (non-alphanumeric/underscore/hyphen) trigger names used to be allowed, only
+-- producing a warning -- there's no documented reason that permissiveness was
+-- desirable, and it turned out to be the root of a SQL injection vulnerability
+-- (the name is interpolated into generated trigger SQL), so it's now a hard error.
 tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-tests = describe "weird trigger names are allowed" do
-  it "metadata_api: allow creating an event trigger with weird name via replace_metadata"
+tests = describe "weird trigger names are disallowed" do
+  it "metadata_api: disallow creating an event trigger with weird name via replace_metadata"
     $ \(testEnvironment, (webhookServer, _)) -> do
       let createEventTriggerWithWeirdName =
             addEventTriggerViaReplaceMetadata testEnvironment "weird]name]" webhookServer
           createEventTriggerWithWeirdNameExpectedResponse =
             [yaml|
-              message: success
-              warnings:
-                - code: illegal-event-trigger-name
-                  message: >-
-                    The event trigger with name "weird]name]" may not work as expected,
-                    hasura suggests to use only alphanumeric, underscore and hyphens in
-                    an event trigger name
-                  type: event_trigger
-                  name: event_trigger weird]name] in table hasura.authors in source mssql
+              code: not-supported
+              error: Starting in v2.50 only alphanumeric and underscore and hyphens allowed for name
+              path: $.args
             |]
 
-      -- Creating a event trigger with weird name should succeed
+      -- Creating a event trigger with weird name should fail
       shouldReturnYaml
         testEnvironment
-        (GraphqlEngine.postMetadataWithStatus 200 testEnvironment createEventTriggerWithWeirdName)
+        (GraphqlEngine.postMetadataWithStatus 400 testEnvironment createEventTriggerWithWeirdName)
         createEventTriggerWithWeirdNameExpectedResponse
 
       let checkAllSQLTriggersQuery =
@@ -103,15 +101,15 @@ tests = describe "weird trigger names are allowed" do
                 WHERE t.name in ('authors');
           |]
 
-      -- Check if the trigger is created on the database
+      -- Check that no trigger was created on the database. Note: unlike a query
+      -- that returns rows (TuplesOk), a SELECT matching zero rows is reported by
+      -- the MSSQL ODBC driver as CommandOk with a null result.
       shouldReturnYaml
         testEnvironment
         (GraphqlEngine.postV2Query 200 testEnvironment checkAllSQLTriggersQuery)
         [yaml|
-          result_type: TuplesOk
-          result:
-            - - TriggerName
-            - - notify_hasura_weird]name]_INSERT
+          result_type: CommandOk
+          result: null
         |]
 
 --------------------------------------------------------------------------------

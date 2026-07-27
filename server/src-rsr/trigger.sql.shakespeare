@@ -24,11 +24,11 @@ CREATE OR REPLACE function hdb_catalog.#{qualifiedTriggerName}() RETURNS trigger
     get the event trigger configuration from the schema, this fails because the event trigger is only created
     on the original table.  */
       IF (TG_OP <> 'UPDATE') OR (_old <> _new) THEN
-        PERFORM hdb_catalog.insert_event_log(CAST(#{schemaName} AS text), CAST(#{tableName} AS text), CAST('#{name}' AS text), TG_OP, _data);
+        PERFORM hdb_catalog.insert_event_log(CAST(#{schemaName} AS text), CAST(#{tableName} AS text), CAST(#{name} AS text), TG_OP, _data);
       END IF;
       EXCEPTION WHEN undefined_function THEN
         IF (TG_OP <> 'UPDATE') OR (_old *<> _new) THEN
-          PERFORM hdb_catalog.insert_event_log(CAST(#{schemaName} AS text), CAST(#{tableName} AS text), CAST('#{name}' AS text), TG_OP, _data);
+          PERFORM hdb_catalog.insert_event_log(CAST(#{schemaName} AS text), CAST(#{tableName} AS text), CAST(#{name} AS text), TG_OP, _data);
         END IF;
     END;
 

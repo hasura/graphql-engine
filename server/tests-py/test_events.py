@@ -117,6 +117,13 @@ class TestEventCreateAndDelete:
     def test_create_operation_spec_not_provider_err(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/create_trigger_operation_specs_not_provided_err.yaml")
 
+    """create_event_trigger hard-rejects names containing characters outside
+    [A-Za-z0-9_-]. Contrast with replace_metadata, which currently only warns
+    on the same illegal name (see test_replace_metadata_illegal_event_trigger_name
+    in test_metadata.py) -- the fix should make replace_metadata hard-reject too."""
+    def test_create_illegal_name_err(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/create_trigger_illegal_name_err.yaml")
+
     @classmethod
     def dir(cls):
         return 'queries/event_triggers/create-delete'

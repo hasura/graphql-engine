@@ -483,14 +483,6 @@ checkIfTriggerNameExists sourceName triggerName = do
     Nothing -> pure False
     _ -> pure True
 
--- This change helps us create functions for the event triggers
--- without the function name being truncated by PG, since PG allows
--- for only 63 chars for identifiers.
--- Reasoning for the 42 characters:
--- 63 - (notify_hasura_) - (_INSERT | _UPDATE | _DELETE)
-maxTriggerNameLength :: Int
-maxTriggerNameLength = 42
-
 -- Consists of a list of environment variables with invalid/missing values
 newtype ResolveHeaderError = ResolveHeaderError {unResolveHeaderError :: [Text]} deriving (Show)
 

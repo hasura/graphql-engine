@@ -37,7 +37,7 @@ import Data.Map.Strict qualified as Map
 import Data.SerializableBlob qualified as SB
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
-import Data.Text.Extended (dquote, dquoteList, (<<>))
+import Data.Text.Extended (dquoteList, (<<>))
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Eventing.Backend (BackendEventTrigger (..))
@@ -88,7 +88,6 @@ import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Server.Logging (MetadataLog (..))
 import Hasura.Server.Types (MonadGetPolicies (..))
 import Hasura.StoredProcedure.API (dropStoredProcedureInMetadata)
-import Hasura.Table.Metadata (TableMetadata (..))
 import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.Types.Extended
 
@@ -320,28 +319,26 @@ runReplaceMetadataV2' ReplaceMetadataV2 {..} = do
 
   let (oldSources, newSources) = (_metaSources oldMetadata, _metaSources metadata)
 
-  -- Check for duplicate and illegal trigger names in the new source metadata
-  for_ (InsOrdHashMap.toList newSources) $ \(source, newBackendSourceMetadata) -> do
-    for_ (InsOrdHashMap.lookup source oldSources) $ \oldBackendSourceMetadata ->
-      AB.dispatchAnyBackend @BackendEventTrigger (unBackendSourceMetadata newBackendSourceMetadata) \(newSourceMetadata :: SourceMetadata b) -> do
-        let newTriggerNames = concatMap (InsOrdHashMap.keys . _tmEventTriggers) (InsOrdHashMap.elems $ _smTables newSourceMetadata)
-            duplicateTriggerNamesInNewMetadata = newTriggerNames \\ (L.uniques newTriggerNames)
-        unless (null duplicateTriggerNamesInNewMetadata) $ do
-          throw400 NotSupported ("Event trigger with duplicate names not allowed: " <> dquoteList (map triggerNameToTxt duplicateTriggerNamesInNewMetadata))
-        dispatch oldBackendSourceMetadata \oldSourceMetadata -> do
-          let oldTriggersMap = getTriggersMap oldSourceMetadata
-              addedTriggerNames = filter (\(_, n) -> not (InsOrdHashMap.member n oldTriggersMap)) $ getSourceTableAndTriggers newSourceMetadata
-              newIllegalTriggerNamesInNewMetadata = filter (isIllegalTriggerName . snd) addedTriggerNames
-              mkEventTriggerObjID tableName triggerName = MOSourceObjId source $ AB.mkAnyBackend $ SMOTableObj @b tableName $ MTOTrigger triggerName
-              mkIllegalEventTriggerNameWarning (tableName, triggerName) =
-                -- TODO: capture the path as well
-                MetadataWarning WCIllegalEventTriggerName (mkEventTriggerObjID tableName triggerName)
-                  $ "The event trigger with name "
-                  <> dquote (triggerNameToTxt triggerName)
-                  <> " may not work as expected, hasura suggests to use only alphanumeric, underscore and hyphens in an event trigger name"
-
-          unless (null newIllegalTriggerNamesInNewMetadata) $ do
-            traverse_ (warn . mkIllegalEventTriggerNameWarning) newIllegalTriggerNamesInNewMetadata
+  -- Check for duplicate and illegal trigger names in the new source metadata.
+  -- Illegal names are hard-rejected (matching create_event_trigger) rather than
+  -- merely warned about, because the name is interpolated into the SQL of the
+  -- generated trigger function. This validates every trigger name present in
+  -- the incoming metadata, old or new, so upgrading with a pre-existing illegal
+  -- name already in storage keeps working -- decoding stored metadata doesn't
+  -- go through this check, only a fresh replace_metadata call does -- but
+  -- re-submitting that same metadata will fail until the name is fixed.
+  for_ (InsOrdHashMap.toList newSources) $ \(_source, newBackendSourceMetadata) ->
+    AB.dispatchAnyBackend @BackendEventTrigger (unBackendSourceMetadata newBackendSourceMetadata) \(newSourceMetadata :: SourceMetadata b) -> do
+      let sourceTableAndTriggers = getSourceTableAndTriggers newSourceMetadata
+          newTriggerNames = map snd sourceTableAndTriggers
+          duplicateTriggerNamesInNewMetadata = newTriggerNames \\ (L.uniques newTriggerNames)
+      unless (null duplicateTriggerNamesInNewMetadata) $ do
+        throw400 NotSupported ("Event trigger with duplicate names not allowed: " <> dquoteList (map triggerNameToTxt duplicateTriggerNamesInNewMetadata))
+      for_ sourceTableAndTriggers $ \(_, triggerName) -> do
+        when (isIllegalTriggerName triggerName)
+          $ throw400 NotSupported "Starting in v2.50 only alphanumeric and underscore and hyphens allowed for name"
+        unless (T.length (triggerNameToTxt triggerName) <= maxTriggerNameLength)
+          $ throw400 NotSupported "event trigger name can be at most 42 characters"
 
   -- Throw a warning if the API time limit exceeds the system limit
   let userTimeLimitAPILimit = _lGlobal <$> _alTimeLimit (_metaApiLimits metadata)
