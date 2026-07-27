@@ -4,16 +4,14 @@
   "description": "",
   "main": "server.js",
   "engines": {
-    "node": "10.16.x"
+    "node": "24.x.x"
   },
   "scripts": {
     "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "wawhal",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
-    "express": "^4.16.3",
-    "request": "^2.87.0"
+    "express": "^4.22.2"
   }
 }

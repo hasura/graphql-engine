@@ -31,4 +31,3 @@ export type Query = {
   order_by?: OrderBy;
   where?: Expression;
 };
-

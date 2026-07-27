@@ -5,4 +5,3 @@
 export type UniqueIdentifierGenerationStrategy = {
   type: 'unique_identifier';
 };
-

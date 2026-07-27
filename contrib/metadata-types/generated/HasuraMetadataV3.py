@@ -1,107 +1,3 @@
-# To use this code, make sure you
-#
-#     import json
-#
-# and then, to convert JSON from a string, do
-#
-#     result = pg_column_from_dict(json.loads(json_string))
-#     result = computed_field_name_from_dict(json.loads(json_string))
-#     result = role_name_from_dict(json.loads(json_string))
-#     result = trigger_name_from_dict(json.loads(json_string))
-#     result = remote_relationship_name_from_dict(json.loads(json_string))
-#     result = remote_schema_name_from_dict(json.loads(json_string))
-#     result = collection_name_from_dict(json.loads(json_string))
-#     result = graph_ql_name_from_dict(json.loads(json_string))
-#     result = graph_ql_type_from_dict(json.loads(json_string))
-#     result = relationship_name_from_dict(json.loads(json_string))
-#     result = action_name_from_dict(json.loads(json_string))
-#     result = webhook_url_from_dict(json.loads(json_string))
-#     result = table_name_from_dict(json.loads(json_string))
-#     result = qualified_table_from_dict(json.loads(json_string))
-#     result = table_config_from_dict(json.loads(json_string))
-#     result = table_entry_from_dict(json.loads(json_string))
-#     result = custom_root_fields_from_dict(json.loads(json_string))
-#     result = custom_column_names_from_dict(json.loads(json_string))
-#     result = function_name_from_dict(json.loads(json_string))
-#     result = qualified_function_from_dict(json.loads(json_string))
-#     result = custom_function_from_dict(json.loads(json_string))
-#     result = function_configuration_from_dict(json.loads(json_string))
-#     result = object_relationship_from_dict(json.loads(json_string))
-#     result = obj_rel_using_from_dict(json.loads(json_string))
-#     result = obj_rel_using_manual_mapping_from_dict(json.loads(json_string))
-#     result = array_relationship_from_dict(json.loads(json_string))
-#     result = arr_rel_using_from_dict(json.loads(json_string))
-#     result = arr_rel_using_f_key_on_from_dict(json.loads(json_string))
-#     result = arr_rel_using_manual_mapping_from_dict(json.loads(json_string))
-#     result = column_presets_expression_from_dict(json.loads(json_string))
-#     result = insert_permission_entry_from_dict(json.loads(json_string))
-#     result = insert_permission_from_dict(json.loads(json_string))
-#     result = select_permission_entry_from_dict(json.loads(json_string))
-#     result = select_permission_from_dict(json.loads(json_string))
-#     result = update_permission_entry_from_dict(json.loads(json_string))
-#     result = update_permission_from_dict(json.loads(json_string))
-#     result = delete_permission_entry_from_dict(json.loads(json_string))
-#     result = delete_permission_from_dict(json.loads(json_string))
-#     result = computed_field_from_dict(json.loads(json_string))
-#     result = computed_field_definition_from_dict(json.loads(json_string))
-#     result = event_trigger_from_dict(json.loads(json_string))
-#     result = event_trigger_definition_from_dict(json.loads(json_string))
-#     result = event_trigger_columns_from_dict(json.loads(json_string))
-#     result = operation_spec_from_dict(json.loads(json_string))
-#     result = header_from_value_from_dict(json.loads(json_string))
-#     result = header_from_env_from_dict(json.loads(json_string))
-#     result = retry_conf_from_dict(json.loads(json_string))
-#     result = cron_trigger_from_dict(json.loads(json_string))
-#     result = retry_conf_st_from_dict(json.loads(json_string))
-#     result = remote_schema_from_dict(json.loads(json_string))
-#     result = remote_schema_def_from_dict(json.loads(json_string))
-#     result = remote_relationship_from_dict(json.loads(json_string))
-#     result = remote_relationship_def_from_dict(json.loads(json_string))
-#     result = remote_field_from_dict(json.loads(json_string))
-#     result = input_arguments_from_dict(json.loads(json_string))
-#     result = query_collection_entry_from_dict(json.loads(json_string))
-#     result = query_collection_from_dict(json.loads(json_string))
-#     result = allow_list_from_dict(json.loads(json_string))
-#     result = custom_types_from_dict(json.loads(json_string))
-#     result = input_object_type_from_dict(json.loads(json_string))
-#     result = input_object_field_from_dict(json.loads(json_string))
-#     result = object_type_from_dict(json.loads(json_string))
-#     result = object_field_from_dict(json.loads(json_string))
-#     result = custom_type_object_relationship_from_dict(json.loads(json_string))
-#     result = scalar_type_from_dict(json.loads(json_string))
-#     result = enum_type_from_dict(json.loads(json_string))
-#     result = enum_value_from_dict(json.loads(json_string))
-#     result = action_from_dict(json.loads(json_string))
-#     result = action_definition_from_dict(json.loads(json_string))
-#     result = input_argument_from_dict(json.loads(json_string))
-#     result = hasura_metadata_v2_from_dict(json.loads(json_string))
-#     result = from_env_from_dict(json.loads(json_string))
-#     result = pg_configuration_from_dict(json.loads(json_string))
-#     result = mssql_configuration_from_dict(json.loads(json_string))
-#     result = big_query_configuration_from_dict(json.loads(json_string))
-#     result = pg_source_connection_info_from_dict(json.loads(json_string))
-#     result = mssql_source_connection_info_from_dict(json.loads(json_string))
-#     result = pg_connection_parameters_from_dict(json.loads(json_string))
-#     result = pg_pool_settings_from_dict(json.loads(json_string))
-#     result = pgcert_settings_from_dict(json.loads(json_string))
-#     result = mssql_pool_settings_from_dict(json.loads(json_string))
-#     result = backend_kind_from_dict(json.loads(json_string))
-#     result = base_source_from_dict(json.loads(json_string))
-#     result = pg_source_from_dict(json.loads(json_string))
-#     result = mssql_source_from_dict(json.loads(json_string))
-#     result = big_query_source_from_dict(json.loads(json_string))
-#     result = source_from_dict(json.loads(json_string))
-#     result = api_limits_from_dict(json.loads(json_string))
-#     result = depth_limit_from_dict(json.loads(json_string))
-#     result = rate_limit_from_dict(json.loads(json_string))
-#     result = rate_limit_rule_from_dict(json.loads(json_string))
-#     result = node_limit_from_dict(json.loads(json_string))
-#     result = rest_endpoint_from_dict(json.loads(json_string))
-#     result = rest_endpoint_definition_from_dict(json.loads(json_string))
-#     result = inherited_role_from_dict(json.loads(json_string))
-#     result = hasura_metadata_v3_from_dict(json.loads(json_string))
-#     result = record_string_any_from_dict(json.loads(json_string))
-
 from dataclasses import dataclass
 from typing import Any, Optional, List, Dict, Union, TypeVar, Callable, Type, cast
 from enum import Enum
@@ -166,7 +62,7 @@ def from_float(x: Any) -> float:
 
 
 def to_float(x: Any) -> float:
-    assert isinstance(x, float)
+    assert isinstance(x, (int, float))
     return x
 
 
@@ -175,10 +71,11 @@ class HeaderFromValue:
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#headerfromvalue
     """
-    """Name of the header"""
     name: str
-    """Value of the header"""
+    """Name of the header"""
+
     value: str
+    """Value of the header"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'HeaderFromValue':
@@ -199,10 +96,11 @@ class HeaderFromEnv:
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#headerfromenv
     """
-    """Name of the header"""
     name: str
-    """Name of the environment variable which holds the value of the header"""
+    """Name of the header"""
+
     value_from_env: str
+    """Name of the environment variable which holds the value of the header"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'HeaderFromEnv':
@@ -223,12 +121,14 @@ class ObjectField:
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#objectfield
     """
-    """Name of the Input object type"""
     name: str
-    """GraphQL type of the Input object type"""
+    """Name of the Input object type"""
+
     type: str
-    """Description of the Input object type"""
+    """GraphQL type of the Input object type"""
+
     description: Optional[str] = None
+    """Description of the Input object type"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'ObjectField':
@@ -242,7 +142,8 @@ class ObjectField:
         result: dict = {}
         result["name"] = from_str(self.name)
         result["type"] = from_str(self.type)
-        result["description"] = from_union([from_str, from_none], self.description)
+        if self.description is not None:
+            result["description"] = from_union([from_str, from_none], self.description)
         return result
 
 
@@ -276,12 +177,14 @@ class Header:
     
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#headerfromenv
     """
-    """Name of the header"""
     name: str
-    """Value of the header"""
+    """Name of the header"""
+
     value: Optional[str] = None
-    """Name of the environment variable which holds the value of the header"""
+    """Value of the header"""
+
     value_from_env: Optional[str] = None
+    """Name of the environment variable which holds the value of the header"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'Header':
@@ -294,8 +197,10 @@ class Header:
     def to_dict(self) -> dict:
         result: dict = {}
         result["name"] = from_str(self.name)
-        result["value"] = from_union([from_str, from_none], self.value)
-        result["value_from_env"] = from_union([from_str, from_none], self.value_from_env)
+        if self.value is not None:
+            result["value"] = from_union([from_str, from_none], self.value)
+        if self.value_from_env is not None:
+            result["value_from_env"] = from_union([from_str, from_none], self.value_from_env)
         return result
 
 
@@ -311,10 +216,10 @@ class ActionDefinition:
     
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/actions.html#actiondefinition
     """
+    handler: str
     """A String value which supports templating environment variables enclosed in {{ and }}.
     Template example: https://{{ACTION_API_DOMAIN}}/create-user
     """
-    handler: str
     arguments: Optional[List[InputArgument]] = None
     forward_client_headers: Optional[bool] = None
     headers: Optional[List[Header]] = None
@@ -337,12 +242,18 @@ class ActionDefinition:
     def to_dict(self) -> dict:
         result: dict = {}
         result["handler"] = from_str(self.handler)
-        result["arguments"] = from_union([lambda x: from_list(lambda x: to_class(InputArgument, x), x), from_none], self.arguments)
-        result["forward_client_headers"] = from_union([from_bool, from_none], self.forward_client_headers)
-        result["headers"] = from_union([lambda x: from_list(lambda x: to_class(Header, x), x), from_none], self.headers)
-        result["kind"] = from_union([from_str, from_none], self.kind)
-        result["output_type"] = from_union([from_str, from_none], self.output_type)
-        result["type"] = from_union([lambda x: to_enum(ActionDefinitionType, x), from_none], self.type)
+        if self.arguments is not None:
+            result["arguments"] = from_union([lambda x: from_list(lambda x: to_class(InputArgument, x), x), from_none], self.arguments)
+        if self.forward_client_headers is not None:
+            result["forward_client_headers"] = from_union([from_bool, from_none], self.forward_client_headers)
+        if self.headers is not None:
+            result["headers"] = from_union([lambda x: from_list(lambda x: to_class(Header, x), x), from_none], self.headers)
+        if self.kind is not None:
+            result["kind"] = from_union([from_str, from_none], self.kind)
+        if self.output_type is not None:
+            result["output_type"] = from_union([from_str, from_none], self.output_type)
+        if self.type is not None:
+            result["type"] = from_union([lambda x: to_enum(ActionDefinitionType, x), from_none], self.type)
         return result
 
 
@@ -367,14 +278,17 @@ class Action:
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/actions.html#args-syntax
     """
-    """Definition of the action"""
     definition: ActionDefinition
-    """Name of the action"""
+    """Definition of the action"""
+
     name: str
-    """Comment"""
+    """Name of the action"""
+
     comment: Optional[str] = None
-    """Permissions of the action"""
+    """Comment"""
+
     permissions: Optional[List[Permission]] = None
+    """Permissions of the action"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'Action':
@@ -389,8 +303,10 @@ class Action:
         result: dict = {}
         result["definition"] = to_class(ActionDefinition, self.definition)
         result["name"] = from_str(self.name)
-        result["comment"] = from_union([from_str, from_none], self.comment)
-        result["permissions"] = from_union([lambda x: from_list(lambda x: to_class(Permission, x), x), from_none], self.permissions)
+        if self.comment is not None:
+            result["comment"] = from_union([from_str, from_none], self.comment)
+        if self.permissions is not None:
+            result["permissions"] = from_union([lambda x: from_list(lambda x: to_class(Permission, x), x), from_none], self.permissions)
         return result
 
 
@@ -399,8 +315,8 @@ class AllowList:
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/query-collections.html#add-collection-to-allowlist-syntax
     """
-    """Name of a query collection to be added to the allow-list"""
     collection: str
+    """Name of a query collection to be added to the allow-list"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'AllowList':
@@ -421,23 +337,23 @@ class RetryConfST:
     
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/scheduled-triggers.html#retryconfst
     """
+    num_retries: Optional[int] = None
     """Number of times to retry delivery.
     Default: 0
     """
-    num_retries: Optional[int] = None
+    retry_interval_seconds: Optional[int] = None
     """Number of seconds to wait between each retry.
     Default: 10
     """
-    retry_interval_seconds: Optional[int] = None
+    timeout_seconds: Optional[int] = None
     """Number of seconds to wait for response before timing out.
     Default: 60
     """
-    timeout_seconds: Optional[int] = None
+    tolerance_seconds: Optional[int] = None
     """Number of seconds between scheduled time and actual delivery time that is acceptable. If
     the time difference is more than this, then the event is dropped.
     Default: 21600 (6 hours)
     """
-    tolerance_seconds: Optional[int] = None
 
     @staticmethod
     def from_dict(obj: Any) -> 'RetryConfST':
@@ -450,10 +366,14 @@ class RetryConfST:
 
     def to_dict(self) -> dict:
         result: dict = {}
-        result["num_retries"] = from_union([from_int, from_none], self.num_retries)
-        result["retry_interval_seconds"] = from_union([from_int, from_none], self.retry_interval_seconds)
-        result["timeout_seconds"] = from_union([from_int, from_none], self.timeout_seconds)
-        result["tolerance_seconds"] = from_union([from_int, from_none], self.tolerance_seconds)
+        if self.num_retries is not None:
+            result["num_retries"] = from_union([from_int, from_none], self.num_retries)
+        if self.retry_interval_seconds is not None:
+            result["retry_interval_seconds"] = from_union([from_int, from_none], self.retry_interval_seconds)
+        if self.timeout_seconds is not None:
+            result["timeout_seconds"] = from_union([from_int, from_none], self.timeout_seconds)
+        if self.tolerance_seconds is not None:
+            result["tolerance_seconds"] = from_union([from_int, from_none], self.tolerance_seconds)
         return result
 
 
@@ -462,25 +382,31 @@ class CronTrigger:
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/scheduled-triggers.html#create-cron-trigger
     """
-    """List of headers to be sent with the webhook"""
     headers: List[Header]
+    """List of headers to be sent with the webhook"""
+
+    include_in_metadata: bool
     """Flag to indicate whether a trigger should be included in the metadata. When a cron
     trigger is included in the metadata, the user will be able to export it when the metadata
     of the graphql-engine is exported.
     """
-    include_in_metadata: bool
-    """Name of the cron trigger"""
     name: str
-    """Cron expression at which the trigger should be invoked."""
+    """Name of the cron trigger"""
+
     schedule: str
-    """URL of the webhook"""
+    """Cron expression at which the trigger should be invoked."""
+
     webhook: str
-    """Custom comment."""
+    """URL of the webhook"""
+
     comment: Optional[str] = None
-    """Any JSON payload which will be sent when the webhook is invoked."""
+    """Custom comment."""
+
     payload: Optional[Dict[str, Any]] = None
-    """Retry configuration if scheduled invocation delivery fails"""
+    """Any JSON payload which will be sent when the webhook is invoked."""
+
     retry_conf: Optional[RetryConfST] = None
+    """Retry configuration if scheduled invocation delivery fails"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'CronTrigger':
@@ -502,9 +428,12 @@ class CronTrigger:
         result["name"] = from_str(self.name)
         result["schedule"] = from_str(self.schedule)
         result["webhook"] = from_str(self.webhook)
-        result["comment"] = from_union([from_str, from_none], self.comment)
-        result["payload"] = from_union([lambda x: from_dict(lambda x: x, x), from_none], self.payload)
-        result["retry_conf"] = from_union([lambda x: to_class(RetryConfST, x), from_none], self.retry_conf)
+        if self.comment is not None:
+            result["comment"] = from_union([from_str, from_none], self.comment)
+        if self.payload is not None:
+            result["payload"] = from_union([lambda x: from_dict(lambda x: x, x), from_none], self.payload)
+        if self.retry_conf is not None:
+            result["retry_conf"] = from_union([lambda x: to_class(RetryConfST, x), from_none], self.retry_conf)
         return result
 
 
@@ -513,12 +442,14 @@ class EnumValue:
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#enumvalue
     """
-    """Value of the Enum type"""
     value: str
-    """Description of the Enum value"""
+    """Value of the Enum type"""
+
     description: Optional[str] = None
-    """If set to true, the enum value is marked as deprecated"""
+    """Description of the Enum value"""
+
     is_deprecated: Optional[bool] = None
+    """If set to true, the enum value is marked as deprecated"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'EnumValue':
@@ -531,8 +462,10 @@ class EnumValue:
     def to_dict(self) -> dict:
         result: dict = {}
         result["value"] = from_str(self.value)
-        result["description"] = from_union([from_str, from_none], self.description)
-        result["is_deprecated"] = from_union([from_bool, from_none], self.is_deprecated)
+        if self.description is not None:
+            result["description"] = from_union([from_str, from_none], self.description)
+        if self.is_deprecated is not None:
+            result["is_deprecated"] = from_union([from_bool, from_none], self.is_deprecated)
         return result
 
 
@@ -541,12 +474,14 @@ class EnumType:
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#enumtype
     """
-    """Name of the Enum type"""
     name: str
-    """Values of the Enum type"""
+    """Name of the Enum type"""
+
     values: List[EnumValue]
-    """Description of the Enum type"""
+    """Values of the Enum type"""
+
     description: Optional[str] = None
+    """Description of the Enum type"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'EnumType':
@@ -560,7 +495,8 @@ class EnumType:
         result: dict = {}
         result["name"] = from_str(self.name)
         result["values"] = from_list(lambda x: to_class(EnumValue, x), self.values)
-        result["description"] = from_union([from_str, from_none], self.description)
+        if self.description is not None:
+            result["description"] = from_union([from_str, from_none], self.description)
         return result
 
 
@@ -569,12 +505,14 @@ class InputObjectField:
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#inputobjectfield
     """
-    """Name of the Input object type"""
     name: str
-    """GraphQL type of the Input object type"""
+    """Name of the Input object type"""
+
     type: str
-    """Description of the Input object type"""
+    """GraphQL type of the Input object type"""
+
     description: Optional[str] = None
+    """Description of the Input object type"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'InputObjectField':
@@ -588,7 +526,8 @@ class InputObjectField:
         result: dict = {}
         result["name"] = from_str(self.name)
         result["type"] = from_str(self.type)
-        result["description"] = from_union([from_str, from_none], self.description)
+        if self.description is not None:
+            result["description"] = from_union([from_str, from_none], self.description)
         return result
 
 
@@ -597,12 +536,14 @@ class InputObjectType:
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#inputobjecttype
     """
-    """Fields of the Input object type"""
     fields: List[InputObjectField]
-    """Name of the Input object type"""
+    """Fields of the Input object type"""
+
     name: str
-    """Description of the Input object type"""
+    """Name of the Input object type"""
+
     description: Optional[str] = None
+    """Description of the Input object type"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'InputObjectType':
@@ -616,7 +557,8 @@ class InputObjectType:
         result: dict = {}
         result["fields"] = from_list(lambda x: to_class(InputObjectField, x), self.fields)
         result["name"] = from_str(self.name)
-        result["description"] = from_union([from_str, from_none], self.description)
+        if self.description is not None:
+            result["description"] = from_union([from_str, from_none], self.description)
         return result
 
 
@@ -641,6 +583,7 @@ class QualifiedTable:
 
 class CustomTypeObjectRelationshipType(Enum):
     """Type of the relationship"""
+
     ARRAY = "array"
     OBJECT = "object"
 
@@ -650,14 +593,17 @@ class CustomTypeObjectRelationship:
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#objectrelationship
     """
-    """Mapping of fields of object type to columns of remote table"""
     field_mapping: Dict[str, str]
-    """Name of the relationship, shouldn’t conflict with existing field names"""
+    """Mapping of fields of object type to columns of remote table"""
+
     name: str
-    """The table to which relationship is defined"""
+    """Name of the relationship, shouldn’t conflict with existing field names"""
+
     remote_table: Union[QualifiedTable, str]
-    """Type of the relationship"""
+    """The table to which relationship is defined"""
+
     type: CustomTypeObjectRelationshipType
+    """Type of the relationship"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'CustomTypeObjectRelationship':
@@ -682,14 +628,17 @@ class ObjectType:
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#objecttype
     """
-    """Fields of the Input object type"""
     fields: List[InputObjectField]
-    """Name of the Input object type"""
+    """Fields of the Input object type"""
+
     name: str
-    """Description of the Input object type"""
+    """Name of the Input object type"""
+
     description: Optional[str] = None
-    """Relationships of the Object type to tables"""
+    """Description of the Input object type"""
+
     relationships: Optional[List[CustomTypeObjectRelationship]] = None
+    """Relationships of the Object type to tables"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'ObjectType':
@@ -704,8 +653,10 @@ class ObjectType:
         result: dict = {}
         result["fields"] = from_list(lambda x: to_class(InputObjectField, x), self.fields)
         result["name"] = from_str(self.name)
-        result["description"] = from_union([from_str, from_none], self.description)
-        result["relationships"] = from_union([lambda x: from_list(lambda x: to_class(CustomTypeObjectRelationship, x), x), from_none], self.relationships)
+        if self.description is not None:
+            result["description"] = from_union([from_str, from_none], self.description)
+        if self.relationships is not None:
+            result["relationships"] = from_union([lambda x: from_list(lambda x: to_class(CustomTypeObjectRelationship, x), x), from_none], self.relationships)
         return result
 
 
@@ -714,10 +665,11 @@ class ScalarType:
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#scalartype
     """
-    """Name of the Scalar type"""
     name: str
-    """Description of the Scalar type"""
+    """Name of the Scalar type"""
+
     description: Optional[str] = None
+    """Description of the Scalar type"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'ScalarType':
@@ -729,7 +681,8 @@ class ScalarType:
     def to_dict(self) -> dict:
         result: dict = {}
         result["name"] = from_str(self.name)
-        result["description"] = from_union([from_str, from_none], self.description)
+        if self.description is not None:
+            result["description"] = from_union([from_str, from_none], self.description)
         return result
 
 
@@ -751,10 +704,14 @@ class CustomTypes:
 
     def to_dict(self) -> dict:
         result: dict = {}
-        result["enums"] = from_union([lambda x: from_list(lambda x: to_class(EnumType, x), x), from_none], self.enums)
-        result["input_objects"] = from_union([lambda x: from_list(lambda x: to_class(InputObjectType, x), x), from_none], self.input_objects)
-        result["objects"] = from_union([lambda x: from_list(lambda x: to_class(ObjectType, x), x), from_none], self.objects)
-        result["scalars"] = from_union([lambda x: from_list(lambda x: to_class(ScalarType, x), x), from_none], self.scalars)
+        if self.enums is not None:
+            result["enums"] = from_union([lambda x: from_list(lambda x: to_class(EnumType, x), x), from_none], self.enums)
+        if self.input_objects is not None:
+            result["input_objects"] = from_union([lambda x: from_list(lambda x: to_class(InputObjectType, x), x), from_none], self.input_objects)
+        if self.objects is not None:
+            result["objects"] = from_union([lambda x: from_list(lambda x: to_class(ObjectType, x), x), from_none], self.objects)
+        if self.scalars is not None:
+            result["scalars"] = from_union([lambda x: from_list(lambda x: to_class(ScalarType, x), x), from_none], self.scalars)
         return result
 
 
@@ -766,6 +723,7 @@ class FunctionConfiguration:
     
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#function-configuration
     """
+    session_argument: Optional[str] = None
     """Function argument which accepts session info JSON
     Currently, only functions which satisfy the following constraints can be exposed over the
     GraphQL API (terminology from Postgres docs):
@@ -773,7 +731,6 @@ class FunctionConfiguration:
     - Return type: MUST be `SETOF <table-name>`
     - Argument modes: ONLY `IN`
     """
-    session_argument: Optional[str] = None
 
     @staticmethod
     def from_dict(obj: Any) -> 'FunctionConfiguration':
@@ -783,7 +740,8 @@ class FunctionConfiguration:
 
     def to_dict(self) -> dict:
         result: dict = {}
-        result["session_argument"] = from_union([from_str, from_none], self.session_argument)
+        if self.session_argument is not None:
+            result["session_argument"] = from_union([from_str, from_none], self.session_argument)
         return result
 
 
@@ -812,10 +770,11 @@ class CustomFunction:
     
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#args-syntax
     """
-    """Name of the SQL function"""
     function: Union[QualifiedFunction, str]
-    """Configuration for the SQL function"""
+    """Name of the SQL function"""
+
     configuration: Optional[FunctionConfiguration] = None
+    """Configuration for the SQL function"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'CustomFunction':
@@ -827,7 +786,8 @@ class CustomFunction:
     def to_dict(self) -> dict:
         result: dict = {}
         result["function"] = from_union([lambda x: to_class(QualifiedFunction, x), from_str], self.function)
-        result["configuration"] = from_union([lambda x: to_class(FunctionConfiguration, x), from_none], self.configuration)
+        if self.configuration is not None:
+            result["configuration"] = from_union([lambda x: to_class(FunctionConfiguration, x), from_none], self.configuration)
         return result
 
 
@@ -856,6 +816,7 @@ class QueryCollection:
 @dataclass
 class Definition:
     """List of queries"""
+
     queries: List[QueryCollection]
 
     @staticmethod
@@ -875,12 +836,14 @@ class QueryCollectionEntry:
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/query-collections.html#args-syntax
     """
-    """List of queries"""
     definition: Definition
-    """Name of the query collection"""
+    """List of queries"""
+
     name: str
-    """Comment"""
+    """Name of the query collection"""
+
     comment: Optional[str] = None
+    """Comment"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'QueryCollectionEntry':
@@ -894,7 +857,8 @@ class QueryCollectionEntry:
         result: dict = {}
         result["definition"] = to_class(Definition, self.definition)
         result["name"] = from_str(self.name)
-        result["comment"] = from_union([from_str, from_none], self.comment)
+        if self.comment is not None:
+            result["comment"] = from_union([from_str, from_none], self.comment)
         return result
 
 
@@ -923,11 +887,16 @@ class RemoteSchemaDef:
 
     def to_dict(self) -> dict:
         result: dict = {}
-        result["forward_client_headers"] = from_union([from_bool, from_none], self.forward_client_headers)
-        result["headers"] = from_union([lambda x: from_list(lambda x: to_class(Header, x), x), from_none], self.headers)
-        result["timeout_seconds"] = from_union([to_float, from_none], self.timeout_seconds)
-        result["url"] = from_union([from_str, from_none], self.url)
-        result["url_from_env"] = from_union([from_str, from_none], self.url_from_env)
+        if self.forward_client_headers is not None:
+            result["forward_client_headers"] = from_union([from_bool, from_none], self.forward_client_headers)
+        if self.headers is not None:
+            result["headers"] = from_union([lambda x: from_list(lambda x: to_class(Header, x), x), from_none], self.headers)
+        if self.timeout_seconds is not None:
+            result["timeout_seconds"] = from_union([to_float, from_none], self.timeout_seconds)
+        if self.url is not None:
+            result["url"] = from_union([from_str, from_none], self.url)
+        if self.url_from_env is not None:
+            result["url_from_env"] = from_union([from_str, from_none], self.url_from_env)
         return result
 
 
@@ -936,12 +905,14 @@ class RemoteSchema:
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-schemas.html#add-remote-schema
     """
-    """Name of the remote schema"""
     definition: RemoteSchemaDef
     """Name of the remote schema"""
+
     name: str
-    """Comment"""
+    """Name of the remote schema"""
+
     comment: Optional[str] = None
+    """Comment"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'RemoteSchema':
@@ -955,7 +926,8 @@ class RemoteSchema:
         result: dict = {}
         result["definition"] = to_class(RemoteSchemaDef, self.definition)
         result["name"] = from_str(self.name)
-        result["comment"] = from_union([from_str, from_none], self.comment)
+        if self.comment is not None:
+            result["comment"] = from_union([from_str, from_none], self.comment)
         return result
 
 
@@ -992,10 +964,11 @@ class ArrRelUsingManualMapping:
     
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#arrrelusingmanualmapping
     """
-    """Mapping of columns from current table to remote table"""
     column_mapping: Dict[str, str]
-    """The table to which the relationship has to be established"""
+    """Mapping of columns from current table to remote table"""
+
     remote_table: Union[QualifiedTable, str]
+    """The table to which the relationship has to be established"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'ArrRelUsingManualMapping':
@@ -1019,10 +992,11 @@ class ArrRelUsing:
     
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#arrrelusing
     """
-    """The column with foreign key constraint"""
     foreign_key_constraint_on: Optional[ArrRelUsingFKeyOn] = None
-    """Manual mapping of table and columns"""
+    """The column with foreign key constraint"""
+
     manual_configuration: Optional[ArrRelUsingManualMapping] = None
+    """Manual mapping of table and columns"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'ArrRelUsing':
@@ -1033,8 +1007,10 @@ class ArrRelUsing:
 
     def to_dict(self) -> dict:
         result: dict = {}
-        result["foreign_key_constraint_on"] = from_union([lambda x: to_class(ArrRelUsingFKeyOn, x), from_none], self.foreign_key_constraint_on)
-        result["manual_configuration"] = from_union([lambda x: to_class(ArrRelUsingManualMapping, x), from_none], self.manual_configuration)
+        if self.foreign_key_constraint_on is not None:
+            result["foreign_key_constraint_on"] = from_union([lambda x: to_class(ArrRelUsingFKeyOn, x), from_none], self.foreign_key_constraint_on)
+        if self.manual_configuration is not None:
+            result["manual_configuration"] = from_union([lambda x: to_class(ArrRelUsingManualMapping, x), from_none], self.manual_configuration)
         return result
 
 
@@ -1043,12 +1019,14 @@ class ArrayRelationship:
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#create-array-relationship-syntax
     """
-    """Name of the new relationship"""
     name: str
-    """Use one of the available ways to define an array relationship"""
+    """Name of the new relationship"""
+
     using: ArrRelUsing
-    """Comment"""
+    """Use one of the available ways to define an array relationship"""
+
     comment: Optional[str] = None
+    """Comment"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'ArrayRelationship':
@@ -1062,7 +1040,8 @@ class ArrayRelationship:
         result: dict = {}
         result["name"] = from_str(self.name)
         result["using"] = to_class(ArrRelUsing, self.using)
-        result["comment"] = from_union([from_str, from_none], self.comment)
+        if self.comment is not None:
+            result["comment"] = from_union([from_str, from_none], self.comment)
         return result
 
 
@@ -1073,16 +1052,17 @@ class ComputedFieldDefinition:
     
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/computed-field.html#computedfielddefinition
     """
-    """The SQL function"""
     function: Union[QualifiedFunction, str]
+    """The SQL function"""
+
+    session_argument: Optional[str] = None
     """Name of the argument which accepts the Hasura session object as a JSON/JSONB value. If
     omitted, the Hasura session object is not passed to the function
     """
-    session_argument: Optional[str] = None
+    table_argument: Optional[str] = None
     """Name of the argument which accepts a table row type. If omitted, the first argument is
     considered a table argument
     """
-    table_argument: Optional[str] = None
 
     @staticmethod
     def from_dict(obj: Any) -> 'ComputedFieldDefinition':
@@ -1095,8 +1075,10 @@ class ComputedFieldDefinition:
     def to_dict(self) -> dict:
         result: dict = {}
         result["function"] = from_union([lambda x: to_class(QualifiedFunction, x), from_str], self.function)
-        result["session_argument"] = from_union([from_str, from_none], self.session_argument)
-        result["table_argument"] = from_union([from_str, from_none], self.table_argument)
+        if self.session_argument is not None:
+            result["session_argument"] = from_union([from_str, from_none], self.session_argument)
+        if self.table_argument is not None:
+            result["table_argument"] = from_union([from_str, from_none], self.table_argument)
         return result
 
 
@@ -1105,12 +1087,14 @@ class ComputedField:
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/computed-field.html#args-syntax
     """
-    """The computed field definition"""
     definition: ComputedFieldDefinition
-    """Name of the new computed field"""
+    """The computed field definition"""
+
     name: str
-    """Comment"""
+    """Name of the new computed field"""
+
     comment: Optional[str] = None
+    """Comment"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'ComputedField':
@@ -1124,7 +1108,8 @@ class ComputedField:
         result: dict = {}
         result["definition"] = to_class(ComputedFieldDefinition, self.definition)
         result["name"] = from_str(self.name)
-        result["comment"] = from_union([from_str, from_none], self.comment)
+        if self.comment is not None:
+            result["comment"] = from_union([from_str, from_none], self.comment)
         return result
 
 
@@ -1136,24 +1121,32 @@ class CustomRootFields:
     
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/table-view.html#custom-root-fields
     """
-    """Customise the `delete_<table-name>` root field"""
     delete: Optional[str] = None
-    """Customise the `delete_<table-name>_by_pk` root field"""
+    """Customise the `delete_<table-name>` root field"""
+
     delete_by_pk: Optional[str] = None
-    """Customise the `insert_<table-name>` root field"""
+    """Customise the `delete_<table-name>_by_pk` root field"""
+
     insert: Optional[str] = None
-    """Customise the `insert_<table-name>_one` root field"""
+    """Customise the `insert_<table-name>` root field"""
+
     insert_one: Optional[str] = None
-    """Customise the `<table-name>` root field"""
+    """Customise the `insert_<table-name>_one` root field"""
+
     select: Optional[str] = None
-    """Customise the `<table-name>_aggregate` root field"""
+    """Customise the `<table-name>` root field"""
+
     select_aggregate: Optional[str] = None
-    """Customise the `<table-name>_by_pk` root field"""
+    """Customise the `<table-name>_aggregate` root field"""
+
     select_by_pk: Optional[str] = None
-    """Customise the `update_<table-name>` root field"""
+    """Customise the `<table-name>_by_pk` root field"""
+
     update: Optional[str] = None
-    """Customise the `update_<table-name>_by_pk` root field"""
+    """Customise the `update_<table-name>` root field"""
+
     update_by_pk: Optional[str] = None
+    """Customise the `update_<table-name>_by_pk` root field"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'CustomRootFields':
@@ -1171,15 +1164,24 @@ class CustomRootFields:
 
     def to_dict(self) -> dict:
         result: dict = {}
-        result["delete"] = from_union([from_str, from_none], self.delete)
-        result["delete_by_pk"] = from_union([from_str, from_none], self.delete_by_pk)
-        result["insert"] = from_union([from_str, from_none], self.insert)
-        result["insert_one"] = from_union([from_str, from_none], self.insert_one)
-        result["select"] = from_union([from_str, from_none], self.select)
-        result["select_aggregate"] = from_union([from_str, from_none], self.select_aggregate)
-        result["select_by_pk"] = from_union([from_str, from_none], self.select_by_pk)
-        result["update"] = from_union([from_str, from_none], self.update)
-        result["update_by_pk"] = from_union([from_str, from_none], self.update_by_pk)
+        if self.delete is not None:
+            result["delete"] = from_union([from_str, from_none], self.delete)
+        if self.delete_by_pk is not None:
+            result["delete_by_pk"] = from_union([from_str, from_none], self.delete_by_pk)
+        if self.insert is not None:
+            result["insert"] = from_union([from_str, from_none], self.insert)
+        if self.insert_one is not None:
+            result["insert_one"] = from_union([from_str, from_none], self.insert_one)
+        if self.select is not None:
+            result["select"] = from_union([from_str, from_none], self.select)
+        if self.select_aggregate is not None:
+            result["select_aggregate"] = from_union([from_str, from_none], self.select_aggregate)
+        if self.select_by_pk is not None:
+            result["select_by_pk"] = from_union([from_str, from_none], self.select_by_pk)
+        if self.update is not None:
+            result["update"] = from_union([from_str, from_none], self.update)
+        if self.update_by_pk is not None:
+            result["update_by_pk"] = from_union([from_str, from_none], self.update_by_pk)
         return result
 
 
@@ -1189,12 +1191,14 @@ class TableConfig:
     
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/table-view.html#table-config
     """
-    """Customise the column names"""
     custom_column_names: Optional[Dict[str, str]] = None
-    """Customise the table name"""
+    """Customise the column names"""
+
     custom_name: Optional[str] = None
-    """Customise the root fields"""
+    """Customise the table name"""
+
     custom_root_fields: Optional[CustomRootFields] = None
+    """Customise the root fields"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'TableConfig':
@@ -1206,9 +1210,12 @@ class TableConfig:
 
     def to_dict(self) -> dict:
         result: dict = {}
-        result["custom_column_names"] = from_union([lambda x: from_dict(from_str, x), from_none], self.custom_column_names)
-        result["custom_name"] = from_union([from_str, from_none], self.custom_name)
-        result["custom_root_fields"] = from_union([lambda x: to_class(CustomRootFields, x), from_none], self.custom_root_fields)
+        if self.custom_column_names is not None:
+            result["custom_column_names"] = from_union([lambda x: from_dict(from_str, x), from_none], self.custom_column_names)
+        if self.custom_name is not None:
+            result["custom_name"] = from_union([from_str, from_none], self.custom_name)
+        if self.custom_root_fields is not None:
+            result["custom_root_fields"] = from_union([lambda x: to_class(CustomRootFields, x), from_none], self.custom_root_fields)
         return result
 
 
@@ -1219,8 +1226,8 @@ class DeletePermission:
     
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#deletepermission
     """
+    filter: Optional[Dict[str, Union[Dict[str, Any], float, str]]] = None
     """Only the rows where this precondition holds true are updatable"""
-    filter: Optional[Dict[str, Union[float, Dict[str, Any], str]]] = None
 
     @staticmethod
     def from_dict(obj: Any) -> 'DeletePermission':
@@ -1230,7 +1237,8 @@ class DeletePermission:
 
     def to_dict(self) -> dict:
         result: dict = {}
-        result["filter"] = from_union([lambda x: from_dict(lambda x: from_union([lambda x: from_dict(lambda x: x, x), to_float, from_str], x), x), from_none], self.filter)
+        if self.filter is not None:
+            result["filter"] = from_union([lambda x: from_dict(lambda x: from_union([lambda x: from_dict(lambda x: x, x), to_float, from_str], x), x), from_none], self.filter)
         return result
 
 
@@ -1239,12 +1247,14 @@ class DeletePermissionEntry:
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#create-delete-permission-syntax
     """
-    """The permission definition"""
     permission: DeletePermission
-    """Role"""
+    """The permission definition"""
+
     role: str
-    """Comment"""
+    """Role"""
+
     comment: Optional[str] = None
+    """Comment"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'DeletePermissionEntry':
@@ -1258,7 +1268,8 @@ class DeletePermissionEntry:
         result: dict = {}
         result["permission"] = to_class(DeletePermission, self.permission)
         result["role"] = from_str(self.role)
-        result["comment"] = from_union([from_str, from_none], self.comment)
+        if self.comment is not None:
+            result["comment"] = from_union([from_str, from_none], self.comment)
         return result
 
 
@@ -1271,14 +1282,11 @@ class OperationSpec:
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec
     """
-    """
-    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns
-    """
     columns: Union[List[str], EventTriggerColumnsEnum]
+    payload: Optional[Union[List[str], EventTriggerColumnsEnum]] = None
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns
     """
-    payload: Union[List[str], EventTriggerColumnsEnum, None]
 
     @staticmethod
     def from_dict(obj: Any) -> 'OperationSpec':
@@ -1290,17 +1298,16 @@ class OperationSpec:
     def to_dict(self) -> dict:
         result: dict = {}
         result["columns"] = from_union([lambda x: from_list(from_str, x), lambda x: to_enum(EventTriggerColumnsEnum, x)], self.columns)
-        result["payload"] = from_union([lambda x: from_list(from_str, x), lambda x: to_enum(EventTriggerColumnsEnum, x), from_none], self.payload)
+        if self.payload is not None:
+            result["payload"] = from_union([lambda x: from_list(from_str, x), lambda x: to_enum(EventTriggerColumnsEnum, x), from_none], self.payload)
         return result
 
 
 @dataclass
 class EventTriggerDefinition:
     """The SQL function"""
+
     enable_manual: bool
-    """
-    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec
-    """
     delete: Optional[OperationSpec] = None
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec
@@ -1310,6 +1317,9 @@ class EventTriggerDefinition:
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec
     """
     update: Optional[OperationSpec] = None
+    """
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec
+    """
 
     @staticmethod
     def from_dict(obj: Any) -> 'EventTriggerDefinition':
@@ -1323,9 +1333,12 @@ class EventTriggerDefinition:
     def to_dict(self) -> dict:
         result: dict = {}
         result["enable_manual"] = from_bool(self.enable_manual)
-        result["delete"] = from_union([lambda x: to_class(OperationSpec, x), from_none], self.delete)
-        result["insert"] = from_union([lambda x: to_class(OperationSpec, x), from_none], self.insert)
-        result["update"] = from_union([lambda x: to_class(OperationSpec, x), from_none], self.update)
+        if self.delete is not None:
+            result["delete"] = from_union([lambda x: to_class(OperationSpec, x), from_none], self.delete)
+        if self.insert is not None:
+            result["insert"] = from_union([lambda x: to_class(OperationSpec, x), from_none], self.insert)
+        if self.update is not None:
+            result["update"] = from_union([lambda x: to_class(OperationSpec, x), from_none], self.update)
         return result
 
 
@@ -1336,18 +1349,18 @@ class RetryConf:
     
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#retryconf
     """
+    interval_sec: Optional[int] = None
     """Number of seconds to wait between each retry.
     Default: 10
     """
-    interval_sec: Optional[int] = None
+    num_retries: Optional[int] = None
     """Number of times to retry delivery.
     Default: 0
     """
-    num_retries: Optional[int] = None
+    timeout_sec: Optional[int] = None
     """Number of seconds to wait for response before timing out.
     Default: 60
     """
-    timeout_sec: Optional[int] = None
 
     @staticmethod
     def from_dict(obj: Any) -> 'RetryConf':
@@ -1359,9 +1372,12 @@ class RetryConf:
 
     def to_dict(self) -> dict:
         result: dict = {}
-        result["interval_sec"] = from_union([from_int, from_none], self.interval_sec)
-        result["num_retries"] = from_union([from_int, from_none], self.num_retries)
-        result["timeout_sec"] = from_union([from_int, from_none], self.timeout_sec)
+        if self.interval_sec is not None:
+            result["interval_sec"] = from_union([from_int, from_none], self.interval_sec)
+        if self.num_retries is not None:
+            result["num_retries"] = from_union([from_int, from_none], self.num_retries)
+        if self.timeout_sec is not None:
+            result["timeout_sec"] = from_union([from_int, from_none], self.timeout_sec)
         return result
 
 
@@ -1371,16 +1387,21 @@ class EventTrigger:
     
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#create-event-trigger
     """
-    """The SQL function"""
     definition: EventTriggerDefinition
-    """Name of the event trigger"""
-    name: str
     """The SQL function"""
+
+    name: str
+    """Name of the event trigger"""
+
     retry_conf: RetryConf
     """The SQL function"""
+
     headers: Optional[List[Header]] = None
     """The SQL function"""
+
     webhook: Optional[str] = None
+    """The SQL function"""
+
     webhook_from_env: Optional[str] = None
 
     @staticmethod
@@ -1399,9 +1420,12 @@ class EventTrigger:
         result["definition"] = to_class(EventTriggerDefinition, self.definition)
         result["name"] = from_str(self.name)
         result["retry_conf"] = to_class(RetryConf, self.retry_conf)
-        result["headers"] = from_union([lambda x: from_list(lambda x: to_class(Header, x), x), from_none], self.headers)
-        result["webhook"] = from_union([from_str, from_none], self.webhook)
-        result["webhook_from_env"] = from_union([from_str, from_none], self.webhook_from_env)
+        if self.headers is not None:
+            result["headers"] = from_union([lambda x: from_list(lambda x: to_class(Header, x), x), from_none], self.headers)
+        if self.webhook is not None:
+            result["webhook"] = from_union([from_str, from_none], self.webhook)
+        if self.webhook_from_env is not None:
+            result["webhook_from_env"] = from_union([from_str, from_none], self.webhook_from_env)
         return result
 
 
@@ -1412,18 +1436,20 @@ class InsertPermission:
     
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#insertpermission
     """
-    """Can insert into only these columns (or all when '*' is specified)"""
     columns: Union[List[str], EventTriggerColumnsEnum]
+    """Can insert into only these columns (or all when '*' is specified)"""
+
+    backend_only: Optional[bool] = None
     """When set to true the mutation is accessible only if x-hasura-use-backend-only-permissions
     session variable exists
     and is set to true and request is made with x-hasura-admin-secret set if any auth is
     configured
     """
-    backend_only: Optional[bool] = None
+    check: Optional[Dict[str, Union[Dict[str, Any], float, str]]] = None
     """This expression has to hold true for every new row that is inserted"""
-    check: Optional[Dict[str, Union[float, Dict[str, Any], str]]] = None
-    """Preset values for columns that can be sourced from session variables or static values"""
+
     set: Optional[Dict[str, str]] = None
+    """Preset values for columns that can be sourced from session variables or static values"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'InsertPermission':
@@ -1437,9 +1463,12 @@ class InsertPermission:
     def to_dict(self) -> dict:
         result: dict = {}
         result["columns"] = from_union([lambda x: from_list(from_str, x), lambda x: to_enum(EventTriggerColumnsEnum, x)], self.columns)
-        result["backend_only"] = from_union([from_bool, from_none], self.backend_only)
-        result["check"] = from_union([lambda x: from_dict(lambda x: from_union([lambda x: from_dict(lambda x: x, x), to_float, from_str], x), x), from_none], self.check)
-        result["set"] = from_union([lambda x: from_dict(from_str, x), from_none], self.set)
+        if self.backend_only is not None:
+            result["backend_only"] = from_union([from_bool, from_none], self.backend_only)
+        if self.check is not None:
+            result["check"] = from_union([lambda x: from_dict(lambda x: from_union([lambda x: from_dict(lambda x: x, x), to_float, from_str], x), x), from_none], self.check)
+        if self.set is not None:
+            result["set"] = from_union([lambda x: from_dict(from_str, x), from_none], self.set)
         return result
 
 
@@ -1448,12 +1477,14 @@ class InsertPermissionEntry:
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#args-syntax
     """
-    """The permission definition"""
     permission: InsertPermission
-    """Role"""
+    """The permission definition"""
+
     role: str
-    """Comment"""
+    """Role"""
+
     comment: Optional[str] = None
+    """Comment"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'InsertPermissionEntry':
@@ -1467,7 +1498,8 @@ class InsertPermissionEntry:
         result: dict = {}
         result["permission"] = to_class(InsertPermission, self.permission)
         result["role"] = from_str(self.role)
-        result["comment"] = from_union([from_str, from_none], self.comment)
+        if self.comment is not None:
+            result["comment"] = from_union([from_str, from_none], self.comment)
         return result
 
 
@@ -1479,10 +1511,11 @@ class ObjRelUsingManualMapping:
     
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#objrelusingmanualmapping
     """
-    """Mapping of columns from current table to remote table"""
     column_mapping: Dict[str, str]
-    """The table to which the relationship has to be established"""
+    """Mapping of columns from current table to remote table"""
+
     remote_table: Union[QualifiedTable, str]
+    """The table to which the relationship has to be established"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'ObjRelUsingManualMapping':
@@ -1506,10 +1539,11 @@ class ObjRelUsing:
     
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#objrelusing
     """
-    """The column with foreign key constraint"""
     foreign_key_constraint_on: Optional[str] = None
-    """Manual mapping of table and columns"""
+    """The column with foreign key constraint"""
+
     manual_configuration: Optional[ObjRelUsingManualMapping] = None
+    """Manual mapping of table and columns"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'ObjRelUsing':
@@ -1520,8 +1554,10 @@ class ObjRelUsing:
 
     def to_dict(self) -> dict:
         result: dict = {}
-        result["foreign_key_constraint_on"] = from_union([from_str, from_none], self.foreign_key_constraint_on)
-        result["manual_configuration"] = from_union([lambda x: to_class(ObjRelUsingManualMapping, x), from_none], self.manual_configuration)
+        if self.foreign_key_constraint_on is not None:
+            result["foreign_key_constraint_on"] = from_union([from_str, from_none], self.foreign_key_constraint_on)
+        if self.manual_configuration is not None:
+            result["manual_configuration"] = from_union([lambda x: to_class(ObjRelUsingManualMapping, x), from_none], self.manual_configuration)
         return result
 
 
@@ -1530,12 +1566,14 @@ class ObjectRelationship:
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#args-syntax
     """
-    """Name of the new relationship"""
     name: str
-    """Use one of the available ways to define an object relationship"""
+    """Name of the new relationship"""
+
     using: ObjRelUsing
-    """Comment"""
+    """Use one of the available ways to define an object relationship"""
+
     comment: Optional[str] = None
+    """Comment"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'ObjectRelationship':
@@ -1549,20 +1587,21 @@ class ObjectRelationship:
         result: dict = {}
         result["name"] = from_str(self.name)
         result["using"] = to_class(ObjRelUsing, self.using)
-        result["comment"] = from_union([from_str, from_none], self.comment)
+        if self.comment is not None:
+            result["comment"] = from_union([from_str, from_none], self.comment)
         return result
 
 
 @dataclass
 class RemoteFieldValue:
     arguments: Dict[str, str]
+    field: Optional[Dict[str, 'RemoteFieldValue']] = None
     """A recursive tree structure that points to the field in the remote schema that needs to be
     joined with.
     It is recursive because the remote field maybe nested deeply in the remote schema.
     
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-relationships.html#remotefield
     """
-    field: Optional[Dict[str, 'RemoteFieldValue']] = None
 
     @staticmethod
     def from_dict(obj: Any) -> 'RemoteFieldValue':
@@ -1574,21 +1613,24 @@ class RemoteFieldValue:
     def to_dict(self) -> dict:
         result: dict = {}
         result["arguments"] = from_dict(from_str, self.arguments)
-        result["field"] = from_union([lambda x: from_dict(lambda x: to_class(RemoteFieldValue, x), x), from_none], self.field)
+        if self.field is not None:
+            result["field"] = from_union([lambda x: from_dict(lambda x: to_class(RemoteFieldValue, x), x), from_none], self.field)
         return result
 
 
 @dataclass
 class RemoteRelationshipDef:
     """Definition object"""
+
+    hasura_fields: List[str]
     """Column(s) in the table that is used for joining with remote schema field.
     All join keys in remote_field must appear here.
     """
-    hasura_fields: List[str]
-    """The schema tree ending at the field in remote schema which needs to be joined with."""
     remote_field: Dict[str, RemoteFieldValue]
-    """Name of the remote schema to join with"""
+    """The schema tree ending at the field in remote schema which needs to be joined with."""
+
     remote_schema: str
+    """Name of the remote schema to join with"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'RemoteRelationshipDef':
@@ -1611,10 +1653,11 @@ class RemoteRelationship:
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-relationships.html#args-syntax
     """
-    """Definition object"""
     definition: RemoteRelationshipDef
-    """Name of the remote relationship"""
+    """Definition object"""
+
     name: str
+    """Name of the remote relationship"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'RemoteRelationship':
@@ -1637,16 +1680,20 @@ class SelectPermission:
     
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#selectpermission
     """
-    """Only these columns are selectable (or all when '*' is specified)"""
     columns: Union[List[str], EventTriggerColumnsEnum]
-    """Toggle allowing aggregate queries"""
+    """Only these columns are selectable (or all when '*' is specified)"""
+
     allow_aggregations: Optional[bool] = None
-    """Only these computed fields are selectable"""
+    """Toggle allowing aggregate queries"""
+
     computed_fields: Optional[List[str]] = None
+    """Only these computed fields are selectable"""
+
+    filter: Optional[Dict[str, Union[Dict[str, Any], float, str]]] = None
     """Only the rows where this precondition holds true are selectable"""
-    filter: Optional[Dict[str, Union[float, Dict[str, Any], str]]] = None
-    """The maximum number of rows that can be returned"""
+
     limit: Optional[int] = None
+    """The maximum number of rows that can be returned"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'SelectPermission':
@@ -1661,10 +1708,14 @@ class SelectPermission:
     def to_dict(self) -> dict:
         result: dict = {}
         result["columns"] = from_union([lambda x: from_list(from_str, x), lambda x: to_enum(EventTriggerColumnsEnum, x)], self.columns)
-        result["allow_aggregations"] = from_union([from_bool, from_none], self.allow_aggregations)
-        result["computed_fields"] = from_union([lambda x: from_list(from_str, x), from_none], self.computed_fields)
-        result["filter"] = from_union([lambda x: from_dict(lambda x: from_union([lambda x: from_dict(lambda x: x, x), to_float, from_str], x), x), from_none], self.filter)
-        result["limit"] = from_union([from_int, from_none], self.limit)
+        if self.allow_aggregations is not None:
+            result["allow_aggregations"] = from_union([from_bool, from_none], self.allow_aggregations)
+        if self.computed_fields is not None:
+            result["computed_fields"] = from_union([lambda x: from_list(from_str, x), from_none], self.computed_fields)
+        if self.filter is not None:
+            result["filter"] = from_union([lambda x: from_dict(lambda x: from_union([lambda x: from_dict(lambda x: x, x), to_float, from_str], x), x), from_none], self.filter)
+        if self.limit is not None:
+            result["limit"] = from_union([from_int, from_none], self.limit)
         return result
 
 
@@ -1673,12 +1724,14 @@ class SelectPermissionEntry:
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#create-select-permission-syntax
     """
-    """The permission definition"""
     permission: SelectPermission
-    """Role"""
+    """The permission definition"""
+
     role: str
-    """Comment"""
+    """Role"""
+
     comment: Optional[str] = None
+    """Comment"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'SelectPermissionEntry':
@@ -1692,7 +1745,8 @@ class SelectPermissionEntry:
         result: dict = {}
         result["permission"] = to_class(SelectPermission, self.permission)
         result["role"] = from_str(self.role)
-        result["comment"] = from_union([from_str, from_none], self.comment)
+        if self.comment is not None:
+            result["comment"] = from_union([from_str, from_none], self.comment)
         return result
 
 
@@ -1703,14 +1757,17 @@ class UpdatePermission:
     
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#updatepermission
     """
-    """Only these columns are selectable (or all when '*' is specified)"""
     columns: Union[List[str], EventTriggerColumnsEnum]
+    """Only these columns are selectable (or all when '*' is specified)"""
+
+    check: Optional[Dict[str, Union[Dict[str, Any], float, str]]] = None
     """Postcondition which must be satisfied by rows which have been updated"""
-    check: Optional[Dict[str, Union[float, Dict[str, Any], str]]] = None
+
+    filter: Optional[Dict[str, Union[Dict[str, Any], float, str]]] = None
     """Only the rows where this precondition holds true are updatable"""
-    filter: Optional[Dict[str, Union[float, Dict[str, Any], str]]] = None
-    """Preset values for columns that can be sourced from session variables or static values"""
+
     set: Optional[Dict[str, str]] = None
+    """Preset values for columns that can be sourced from session variables or static values"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'UpdatePermission':
@@ -1724,9 +1781,12 @@ class UpdatePermission:
     def to_dict(self) -> dict:
         result: dict = {}
         result["columns"] = from_union([lambda x: from_list(from_str, x), lambda x: to_enum(EventTriggerColumnsEnum, x)], self.columns)
-        result["check"] = from_union([lambda x: from_dict(lambda x: from_union([lambda x: from_dict(lambda x: x, x), to_float, from_str], x), x), from_none], self.check)
-        result["filter"] = from_union([lambda x: from_dict(lambda x: from_union([lambda x: from_dict(lambda x: x, x), to_float, from_str], x), x), from_none], self.filter)
-        result["set"] = from_union([lambda x: from_dict(from_str, x), from_none], self.set)
+        if self.check is not None:
+            result["check"] = from_union([lambda x: from_dict(lambda x: from_union([lambda x: from_dict(lambda x: x, x), to_float, from_str], x), x), from_none], self.check)
+        if self.filter is not None:
+            result["filter"] = from_union([lambda x: from_dict(lambda x: from_union([lambda x: from_dict(lambda x: x, x), to_float, from_str], x), x), from_none], self.filter)
+        if self.set is not None:
+            result["set"] = from_union([lambda x: from_dict(from_str, x), from_none], self.set)
         return result
 
 
@@ -1735,12 +1795,14 @@ class UpdatePermissionEntry:
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#create-update-permission-syntax
     """
-    """The permission definition"""
     permission: UpdatePermission
-    """Role"""
+    """The permission definition"""
+
     role: str
-    """Comment"""
+    """Role"""
+
     comment: Optional[str] = None
+    """Comment"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'UpdatePermissionEntry':
@@ -1754,21 +1816,23 @@ class UpdatePermissionEntry:
         result: dict = {}
         result["permission"] = to_class(UpdatePermission, self.permission)
         result["role"] = from_str(self.role)
-        result["comment"] = from_union([from_str, from_none], self.comment)
+        if self.comment is not None:
+            result["comment"] = from_union([from_str, from_none], self.comment)
         return result
 
 
 @dataclass
 class TableEntry:
     """Representation of a table in metadata, 'tables.yaml' and 'metadata.json'"""
+
     table: QualifiedTable
     array_relationships: Optional[List[ArrayRelationship]] = None
     computed_fields: Optional[List[ComputedField]] = None
+    configuration: Optional[TableConfig] = None
     """Configuration for the table/view
     
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/table-view.html#table-config
     """
-    configuration: Optional[TableConfig] = None
     delete_permissions: Optional[List[DeletePermissionEntry]] = None
     event_triggers: Optional[List[EventTrigger]] = None
     insert_permissions: Optional[List[InsertPermissionEntry]] = None
@@ -1798,17 +1862,28 @@ class TableEntry:
     def to_dict(self) -> dict:
         result: dict = {}
         result["table"] = to_class(QualifiedTable, self.table)
-        result["array_relationships"] = from_union([lambda x: from_list(lambda x: to_class(ArrayRelationship, x), x), from_none], self.array_relationships)
-        result["computed_fields"] = from_union([lambda x: from_list(lambda x: to_class(ComputedField, x), x), from_none], self.computed_fields)
-        result["configuration"] = from_union([lambda x: to_class(TableConfig, x), from_none], self.configuration)
-        result["delete_permissions"] = from_union([lambda x: from_list(lambda x: to_class(DeletePermissionEntry, x), x), from_none], self.delete_permissions)
-        result["event_triggers"] = from_union([lambda x: from_list(lambda x: to_class(EventTrigger, x), x), from_none], self.event_triggers)
-        result["insert_permissions"] = from_union([lambda x: from_list(lambda x: to_class(InsertPermissionEntry, x), x), from_none], self.insert_permissions)
-        result["is_enum"] = from_union([from_bool, from_none], self.is_enum)
-        result["object_relationships"] = from_union([lambda x: from_list(lambda x: to_class(ObjectRelationship, x), x), from_none], self.object_relationships)
-        result["remote_relationships"] = from_union([lambda x: from_list(lambda x: to_class(RemoteRelationship, x), x), from_none], self.remote_relationships)
-        result["select_permissions"] = from_union([lambda x: from_list(lambda x: to_class(SelectPermissionEntry, x), x), from_none], self.select_permissions)
-        result["update_permissions"] = from_union([lambda x: from_list(lambda x: to_class(UpdatePermissionEntry, x), x), from_none], self.update_permissions)
+        if self.array_relationships is not None:
+            result["array_relationships"] = from_union([lambda x: from_list(lambda x: to_class(ArrayRelationship, x), x), from_none], self.array_relationships)
+        if self.computed_fields is not None:
+            result["computed_fields"] = from_union([lambda x: from_list(lambda x: to_class(ComputedField, x), x), from_none], self.computed_fields)
+        if self.configuration is not None:
+            result["configuration"] = from_union([lambda x: to_class(TableConfig, x), from_none], self.configuration)
+        if self.delete_permissions is not None:
+            result["delete_permissions"] = from_union([lambda x: from_list(lambda x: to_class(DeletePermissionEntry, x), x), from_none], self.delete_permissions)
+        if self.event_triggers is not None:
+            result["event_triggers"] = from_union([lambda x: from_list(lambda x: to_class(EventTrigger, x), x), from_none], self.event_triggers)
+        if self.insert_permissions is not None:
+            result["insert_permissions"] = from_union([lambda x: from_list(lambda x: to_class(InsertPermissionEntry, x), x), from_none], self.insert_permissions)
+        if self.is_enum is not None:
+            result["is_enum"] = from_union([from_bool, from_none], self.is_enum)
+        if self.object_relationships is not None:
+            result["object_relationships"] = from_union([lambda x: from_list(lambda x: to_class(ObjectRelationship, x), x), from_none], self.object_relationships)
+        if self.remote_relationships is not None:
+            result["remote_relationships"] = from_union([lambda x: from_list(lambda x: to_class(RemoteRelationship, x), x), from_none], self.remote_relationships)
+        if self.select_permissions is not None:
+            result["select_permissions"] = from_union([lambda x: from_list(lambda x: to_class(SelectPermissionEntry, x), x), from_none], self.select_permissions)
+        if self.update_permissions is not None:
+            result["update_permissions"] = from_union([lambda x: from_list(lambda x: to_class(UpdatePermissionEntry, x), x), from_none], self.update_permissions)
         return result
 
 
@@ -1846,13 +1921,36 @@ class HasuraMetadataV2:
         result: dict = {}
         result["tables"] = from_list(lambda x: to_class(TableEntry, x), self.tables)
         result["version"] = to_float(self.version)
-        result["actions"] = from_union([lambda x: from_list(lambda x: to_class(Action, x), x), from_none], self.actions)
-        result["allowlist"] = from_union([lambda x: from_list(lambda x: to_class(AllowList, x), x), from_none], self.allowlist)
-        result["cron_triggers"] = from_union([lambda x: from_list(lambda x: to_class(CronTrigger, x), x), from_none], self.cron_triggers)
-        result["custom_types"] = from_union([lambda x: to_class(CustomTypes, x), from_none], self.custom_types)
-        result["functions"] = from_union([lambda x: from_list(lambda x: to_class(CustomFunction, x), x), from_none], self.functions)
-        result["query_collections"] = from_union([lambda x: from_list(lambda x: to_class(QueryCollectionEntry, x), x), from_none], self.query_collections)
-        result["remote_schemas"] = from_union([lambda x: from_list(lambda x: to_class(RemoteSchema, x), x), from_none], self.remote_schemas)
+        if self.actions is not None:
+            result["actions"] = from_union([lambda x: from_list(lambda x: to_class(Action, x), x), from_none], self.actions)
+        if self.allowlist is not None:
+            result["allowlist"] = from_union([lambda x: from_list(lambda x: to_class(AllowList, x), x), from_none], self.allowlist)
+        if self.cron_triggers is not None:
+            result["cron_triggers"] = from_union([lambda x: from_list(lambda x: to_class(CronTrigger, x), x), from_none], self.cron_triggers)
+        if self.custom_types is not None:
+            result["custom_types"] = from_union([lambda x: to_class(CustomTypes, x), from_none], self.custom_types)
+        if self.functions is not None:
+            result["functions"] = from_union([lambda x: from_list(lambda x: to_class(CustomFunction, x), x), from_none], self.functions)
+        if self.query_collections is not None:
+            result["query_collections"] = from_union([lambda x: from_list(lambda x: to_class(QueryCollectionEntry, x), x), from_none], self.query_collections)
+        if self.remote_schemas is not None:
+            result["remote_schemas"] = from_union([lambda x: from_list(lambda x: to_class(RemoteSchema, x), x), from_none], self.remote_schemas)
+        return result
+
+
+@dataclass
+class AnyRecord:
+    """Alias of an object."""
+
+    pass
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'AnyRecord':
+        assert isinstance(obj, dict)
+        return AnyRecord()
+
+    def to_dict(self) -> dict:
+        result: dict = {}
         return result
 
 
@@ -1861,16 +1959,20 @@ class PGConnectionParameters:
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgconnectionparameters
     """
-    """The database name"""
     database: str
-    """The name of the host to connect to"""
+    """The database name"""
+
     host: str
-    """The port number to connect with, at the server host"""
+    """The name of the host to connect to"""
+
     port: float
-    """The Postgres user to be connected"""
+    """The port number to connect with, at the server host"""
+
     username: str
-    """The Postgres user’s password"""
+    """The Postgres user to be connected"""
+
     password: Optional[str] = None
+    """The Postgres user’s password"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'PGConnectionParameters':
@@ -1888,7 +1990,8 @@ class PGConnectionParameters:
         result["host"] = from_str(self.host)
         result["port"] = to_float(self.port)
         result["username"] = from_str(self.username)
-        result["password"] = from_union([from_str, from_none], self.password)
+        if self.password is not None:
+            result["password"] = from_union([from_str, from_none], self.password)
         return result
 
 
@@ -1910,12 +2013,13 @@ class BaseSource:
         result: dict = {}
         result["name"] = from_str(self.name)
         result["tables"] = from_list(lambda x: to_class(TableEntry, x), self.tables)
-        result["functions"] = from_union([lambda x: from_list(lambda x: to_class(CustomFunction, x), x), from_none], self.functions)
+        if self.functions is not None:
+            result["functions"] = from_union([lambda x: from_list(lambda x: to_class(CustomFunction, x), x), from_none], self.functions)
         return result
 
 
 @dataclass
-class PGConnectionParametersClass:
+class FromEnvClass:
     """https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#fromenv
     
     Environment variable which stores the client certificate.
@@ -1927,21 +2031,26 @@ class PGConnectionParametersClass:
     
     https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgconnectionparameters
     """
-    """Name of the environment variable"""
     from_env: Optional[str] = None
-    """The database name"""
+    """Name of the environment variable"""
+
     database: Optional[str] = None
-    """The name of the host to connect to"""
+    """The database name"""
+
     host: Optional[str] = None
-    """The Postgres user’s password"""
+    """The name of the host to connect to"""
+
     password: Optional[str] = None
-    """The port number to connect with, at the server host"""
+    """The Postgres user’s password"""
+
     port: Optional[float] = None
-    """The Postgres user to be connected"""
+    """The port number to connect with, at the server host"""
+
     username: Optional[str] = None
+    """The Postgres user to be connected"""
 
     @staticmethod
-    def from_dict(obj: Any) -> 'PGConnectionParametersClass':
+    def from_dict(obj: Any) -> 'FromEnvClass':
         assert isinstance(obj, dict)
         from_env = from_union([from_str, from_none], obj.get("from_env"))
         database = from_union([from_str, from_none], obj.get("database"))
@@ -1949,16 +2058,22 @@ class PGConnectionParametersClass:
         password = from_union([from_str, from_none], obj.get("password"))
         port = from_union([from_float, from_none], obj.get("port"))
         username = from_union([from_str, from_none], obj.get("username"))
-        return PGConnectionParametersClass(from_env, database, host, password, port, username)
+        return FromEnvClass(from_env, database, host, password, port, username)
 
     def to_dict(self) -> dict:
         result: dict = {}
-        result["from_env"] = from_union([from_str, from_none], self.from_env)
-        result["database"] = from_union([from_str, from_none], self.database)
-        result["host"] = from_union([from_str, from_none], self.host)
-        result["password"] = from_union([from_str, from_none], self.password)
-        result["port"] = from_union([to_float, from_none], self.port)
-        result["username"] = from_union([from_str, from_none], self.username)
+        if self.from_env is not None:
+            result["from_env"] = from_union([from_str, from_none], self.from_env)
+        if self.database is not None:
+            result["database"] = from_union([from_str, from_none], self.database)
+        if self.host is not None:
+            result["host"] = from_union([from_str, from_none], self.host)
+        if self.password is not None:
+            result["password"] = from_union([from_str, from_none], self.password)
+        if self.port is not None:
+            result["port"] = from_union([to_float, from_none], self.port)
+        if self.username is not None:
+            result["username"] = from_union([from_str, from_none], self.username)
         return result
 
 
@@ -1977,21 +2092,23 @@ class PGPoolSettings:
     
     https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgpoolsettings
     """
+    connection_lifetime: Optional[float] = None
     """Time from connection creation after which the connection should be destroyed and a new
     one created. A value of 0 indicates we should never destroy an active connection. If 0 is
     passed, memory from large query results may not be reclaimed. (default: 600 sec)
     """
-    connection_lifetime: Optional[float] = None
-    """The idle timeout (in seconds) per connection (default: 180)"""
     idle_timeout: Optional[float] = None
-    """Maximum number of connections to be kept in the pool (default: 50)"""
+    """The idle timeout (in seconds) per connection (default: 180)"""
+
     max_connections: Optional[float] = None
+    """Maximum number of connections to be kept in the pool (default: 50)"""
+
+    pool_timeout: Optional[float] = None
     """Maximum time to wait while acquiring a Postgres connection from the pool, in seconds
     (default: forever)
     """
-    pool_timeout: Optional[float] = None
-    """Number of retries to perform (default: 1)"""
     retries: Optional[float] = None
+    """Number of retries to perform (default: 1)"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'PGPoolSettings':
@@ -2005,11 +2122,16 @@ class PGPoolSettings:
 
     def to_dict(self) -> dict:
         result: dict = {}
-        result["connection_lifetime"] = from_union([to_float, from_none], self.connection_lifetime)
-        result["idle_timeout"] = from_union([to_float, from_none], self.idle_timeout)
-        result["max_connections"] = from_union([to_float, from_none], self.max_connections)
-        result["pool_timeout"] = from_union([to_float, from_none], self.pool_timeout)
-        result["retries"] = from_union([to_float, from_none], self.retries)
+        if self.connection_lifetime is not None:
+            result["connection_lifetime"] = from_union([to_float, from_none], self.connection_lifetime)
+        if self.idle_timeout is not None:
+            result["idle_timeout"] = from_union([to_float, from_none], self.idle_timeout)
+        if self.max_connections is not None:
+            result["max_connections"] = from_union([to_float, from_none], self.max_connections)
+        if self.pool_timeout is not None:
+            result["pool_timeout"] = from_union([to_float, from_none], self.pool_timeout)
+        if self.retries is not None:
+            result["retries"] = from_union([to_float, from_none], self.retries)
         return result
 
 
@@ -2023,8 +2145,8 @@ class FromEnv:
     
     Environment variable which stores trusted certificate authorities.
     """
-    """Name of the environment variable"""
     from_env: str
+    """Name of the environment variable"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'FromEnv':
@@ -2044,18 +2166,21 @@ class PGCERTSettings:
     
     https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgcertsettings
     """
-    """Environment variable which stores the client certificate."""
     sslcert: FromEnv
-    """Environment variable which stores the client private key."""
+    """Environment variable which stores the client certificate."""
+
     sslkey: FromEnv
+    """Environment variable which stores the client private key."""
+
+    sslmode: str
     """The SSL connection mode. See the libpq ssl support docs
     <https://www.postgresql.org/docs/9.1/libpq-ssl.html> for more details.
     """
-    sslmode: str
-    """Password in the case where the sslkey is encrypted."""
-    sslpassword: Union[FromEnv, None, str]
-    """Environment variable which stores trusted certificate authorities."""
     sslrootcert: FromEnv
+    """Environment variable which stores trusted certificate authorities."""
+
+    sslpassword: Optional[Union[FromEnv, str]] = None
+    """Password in the case where the sslkey is encrypted."""
 
     @staticmethod
     def from_dict(obj: Any) -> 'PGCERTSettings':
@@ -2063,17 +2188,18 @@ class PGCERTSettings:
         sslcert = FromEnv.from_dict(obj.get("sslcert"))
         sslkey = FromEnv.from_dict(obj.get("sslkey"))
         sslmode = from_str(obj.get("sslmode"))
-        sslpassword = from_union([FromEnv.from_dict, from_str, from_none], obj.get("sslpassword"))
         sslrootcert = FromEnv.from_dict(obj.get("sslrootcert"))
-        return PGCERTSettings(sslcert, sslkey, sslmode, sslpassword, sslrootcert)
+        sslpassword = from_union([FromEnv.from_dict, from_str, from_none], obj.get("sslpassword"))
+        return PGCERTSettings(sslcert, sslkey, sslmode, sslrootcert, sslpassword)
 
     def to_dict(self) -> dict:
         result: dict = {}
         result["sslcert"] = to_class(FromEnv, self.sslcert)
         result["sslkey"] = to_class(FromEnv, self.sslkey)
         result["sslmode"] = from_str(self.sslmode)
-        result["sslpassword"] = from_union([lambda x: to_class(FromEnv, x), from_str, from_none], self.sslpassword)
         result["sslrootcert"] = to_class(FromEnv, self.sslrootcert)
+        if self.sslpassword is not None:
+            result["sslpassword"] = from_union([lambda x: to_class(FromEnv, x), from_str, from_none], self.sslpassword)
         return result
 
 
@@ -2084,27 +2210,29 @@ class PGSourceConnectionInfo:
     
     https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgsourceconnectioninfo
     """
+    database_url: Union[FromEnvClass, str]
     """The database connection URL as a string, as an environment variable, or as connection
     parameters.
     """
-    database_url: Union[PGConnectionParametersClass, str]
+    isolation_level: Optional[IsolationLevel] = None
     """The transaction isolation level in which the queries made to the source will be run with
     (default: read-committed).
     """
-    isolation_level: Optional[IsolationLevel] = None
-    """Connection pool settings"""
     pool_settings: Optional[PGPoolSettings] = None
-    """The client SSL certificate settings for the database (Only available in Cloud)."""
+    """Connection pool settings"""
+
     ssl_configuration: Optional[PGCERTSettings] = None
+    """The client SSL certificate settings for the database (Only available in Cloud)."""
+
+    use_prepared_statements: Optional[bool] = None
     """If set to true the server prepares statement before executing on the source database
     (default: false). For more details, refer to the Postgres docs
     """
-    use_prepared_statements: Optional[bool] = None
 
     @staticmethod
     def from_dict(obj: Any) -> 'PGSourceConnectionInfo':
         assert isinstance(obj, dict)
-        database_url = from_union([PGConnectionParametersClass.from_dict, from_str], obj.get("database_url"))
+        database_url = from_union([FromEnvClass.from_dict, from_str], obj.get("database_url"))
         isolation_level = from_union([IsolationLevel, from_none], obj.get("isolation_level"))
         pool_settings = from_union([PGPoolSettings.from_dict, from_none], obj.get("pool_settings"))
         ssl_configuration = from_union([PGCERTSettings.from_dict, from_none], obj.get("ssl_configuration"))
@@ -2113,21 +2241,27 @@ class PGSourceConnectionInfo:
 
     def to_dict(self) -> dict:
         result: dict = {}
-        result["database_url"] = from_union([lambda x: to_class(PGConnectionParametersClass, x), from_str], self.database_url)
-        result["isolation_level"] = from_union([lambda x: to_enum(IsolationLevel, x), from_none], self.isolation_level)
-        result["pool_settings"] = from_union([lambda x: to_class(PGPoolSettings, x), from_none], self.pool_settings)
-        result["ssl_configuration"] = from_union([lambda x: to_class(PGCERTSettings, x), from_none], self.ssl_configuration)
-        result["use_prepared_statements"] = from_union([from_bool, from_none], self.use_prepared_statements)
+        result["database_url"] = from_union([lambda x: to_class(FromEnvClass, x), from_str], self.database_url)
+        if self.isolation_level is not None:
+            result["isolation_level"] = from_union([lambda x: to_enum(IsolationLevel, x), from_none], self.isolation_level)
+        if self.pool_settings is not None:
+            result["pool_settings"] = from_union([lambda x: to_class(PGPoolSettings, x), from_none], self.pool_settings)
+        if self.ssl_configuration is not None:
+            result["ssl_configuration"] = from_union([lambda x: to_class(PGCERTSettings, x), from_none], self.ssl_configuration)
+        if self.use_prepared_statements is not None:
+            result["use_prepared_statements"] = from_union([from_bool, from_none], self.use_prepared_statements)
         return result
 
 
 @dataclass
 class PGConfiguration:
     """https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgconfiguration"""
-    """Connection parameters for the source"""
+
     connection_info: PGSourceConnectionInfo
-    """Optional list of read replica configuration (supported only in cloud/enterprise versions)"""
+    """Connection parameters for the source"""
+
     read_replicas: Optional[List[PGSourceConnectionInfo]] = None
+    """Optional list of read replica configuration (supported only in cloud/enterprise versions)"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'PGConfiguration':
@@ -2139,7 +2273,8 @@ class PGConfiguration:
     def to_dict(self) -> dict:
         result: dict = {}
         result["connection_info"] = to_class(PGSourceConnectionInfo, self.connection_info)
-        result["read_replicas"] = from_union([lambda x: from_list(lambda x: to_class(PGSourceConnectionInfo, x), x), from_none], self.read_replicas)
+        if self.read_replicas is not None:
+            result["read_replicas"] = from_union([lambda x: from_list(lambda x: to_class(PGSourceConnectionInfo, x), x), from_none], self.read_replicas)
         return result
 
 
@@ -2172,7 +2307,8 @@ class PGSource:
         result["kind"] = to_enum(PGSourceKind, self.kind)
         result["name"] = from_str(self.name)
         result["tables"] = from_list(lambda x: to_class(TableEntry, x), self.tables)
-        result["functions"] = from_union([lambda x: from_list(lambda x: to_class(CustomFunction, x), x), from_none], self.functions)
+        if self.functions is not None:
+            result["functions"] = from_union([lambda x: from_list(lambda x: to_class(CustomFunction, x), x), from_none], self.functions)
         return result
 
 
@@ -2183,10 +2319,11 @@ class MSSQLPoolSettings:
     
     https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#mssqlpoolsettings
     """
-    """The idle timeout (in seconds) per connection (default: 180)"""
     idle_timeout: Optional[float] = None
-    """Maximum number of connections to be kept in the pool (default: 50)"""
+    """The idle timeout (in seconds) per connection (default: 180)"""
+
     max_connections: Optional[float] = None
+    """Maximum number of connections to be kept in the pool (default: 50)"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'MSSQLPoolSettings':
@@ -2197,8 +2334,10 @@ class MSSQLPoolSettings:
 
     def to_dict(self) -> dict:
         result: dict = {}
-        result["idle_timeout"] = from_union([to_float, from_none], self.idle_timeout)
-        result["max_connections"] = from_union([to_float, from_none], self.max_connections)
+        if self.idle_timeout is not None:
+            result["idle_timeout"] = from_union([to_float, from_none], self.idle_timeout)
+        if self.max_connections is not None:
+            result["max_connections"] = from_union([to_float, from_none], self.max_connections)
         return result
 
 
@@ -2209,10 +2348,11 @@ class MSSQLSourceConnectionInfo:
     
     https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#mssqlsourceconnectioninfo
     """
-    """The database connection string, or as an environment variable"""
     connection_string: Union[FromEnv, str]
-    """Connection pool settings"""
+    """The database connection string, or as an environment variable"""
+
     pool_settings: Optional[MSSQLPoolSettings] = None
+    """Connection pool settings"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'MSSQLSourceConnectionInfo':
@@ -2224,7 +2364,8 @@ class MSSQLSourceConnectionInfo:
     def to_dict(self) -> dict:
         result: dict = {}
         result["connection_string"] = from_union([lambda x: to_class(FromEnv, x), from_str], self.connection_string)
-        result["pool_settings"] = from_union([lambda x: to_class(MSSQLPoolSettings, x), from_none], self.pool_settings)
+        if self.pool_settings is not None:
+            result["pool_settings"] = from_union([lambda x: to_class(MSSQLPoolSettings, x), from_none], self.pool_settings)
         return result
 
 
@@ -2233,8 +2374,8 @@ class MSSQLConfiguration:
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#mssqlsourceconnectioninfo
     """
-    """Connection parameters for the source"""
     connection_info: MSSQLSourceConnectionInfo
+    """Connection parameters for the source"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'MSSQLConfiguration':
@@ -2276,13 +2417,16 @@ class MSSQLSource:
         result["kind"] = to_enum(MSSQLSourceKind, self.kind)
         result["name"] = from_str(self.name)
         result["tables"] = from_list(lambda x: to_class(TableEntry, x), self.tables)
-        result["functions"] = from_union([lambda x: from_list(lambda x: to_class(CustomFunction, x), x), from_none], self.functions)
+        if self.functions is not None:
+            result["functions"] = from_union([lambda x: from_list(lambda x: to_class(CustomFunction, x), x), from_none], self.functions)
         return result
 
 
 @dataclass
-class RecordStringAnyClass:
-    """https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#fromenv
+class AnyRecordClass:
+    """Alias of an object.
+    
+    https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#fromenv
     
     Environment variable which stores the client certificate.
     
@@ -2290,18 +2434,19 @@ class RecordStringAnyClass:
     
     Environment variable which stores trusted certificate authorities.
     """
-    """Name of the environment variable"""
     from_env: Optional[str] = None
+    """Name of the environment variable"""
 
     @staticmethod
-    def from_dict(obj: Any) -> 'RecordStringAnyClass':
+    def from_dict(obj: Any) -> 'AnyRecordClass':
         assert isinstance(obj, dict)
         from_env = from_union([from_str, from_none], obj.get("from_env"))
-        return RecordStringAnyClass(from_env)
+        return AnyRecordClass(from_env)
 
     def to_dict(self) -> dict:
         result: dict = {}
-        result["from_env"] = from_union([from_str, from_none], self.from_env)
+        if self.from_env is not None:
+            result["from_env"] = from_union([from_str, from_none], self.from_env)
         return result
 
 
@@ -2310,26 +2455,28 @@ class BigQueryConfiguration:
     """
     https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#bigqueryconfiguration
     """
-    """List of BigQuery datasets"""
     datasets: Union[List[str], FromEnv]
-    """Project Id for BigQuery database"""
+    """List of BigQuery datasets"""
+
     project_id: Union[FromEnv, str]
+    """Project Id for BigQuery database"""
+
+    service_account: Union[AnyRecordClass, str]
     """Service account for BigQuery database"""
-    service_account: Union[RecordStringAnyClass, str]
 
     @staticmethod
     def from_dict(obj: Any) -> 'BigQueryConfiguration':
         assert isinstance(obj, dict)
         datasets = from_union([lambda x: from_list(from_str, x), FromEnv.from_dict], obj.get("datasets"))
         project_id = from_union([FromEnv.from_dict, from_str], obj.get("project_id"))
-        service_account = from_union([RecordStringAnyClass.from_dict, from_str], obj.get("service_account"))
+        service_account = from_union([AnyRecordClass.from_dict, from_str], obj.get("service_account"))
         return BigQueryConfiguration(datasets, project_id, service_account)
 
     def to_dict(self) -> dict:
         result: dict = {}
         result["datasets"] = from_union([lambda x: from_list(from_str, x), lambda x: to_class(FromEnv, x)], self.datasets)
         result["project_id"] = from_union([lambda x: to_class(FromEnv, x), from_str], self.project_id)
-        result["service_account"] = from_union([lambda x: to_class(RecordStringAnyClass, x), from_str], self.service_account)
+        result["service_account"] = from_union([lambda x: to_class(AnyRecordClass, x), from_str], self.service_account)
         return result
 
 
@@ -2361,7 +2508,8 @@ class BigQuerySource:
         result["kind"] = to_enum(BigQuerySourceKind, self.kind)
         result["name"] = from_str(self.name)
         result["tables"] = from_list(lambda x: to_class(TableEntry, x), self.tables)
-        result["functions"] = from_union([lambda x: from_list(lambda x: to_class(CustomFunction, x), x), from_none], self.functions)
+        if self.functions is not None:
+            result["functions"] = from_union([lambda x: from_list(lambda x: to_class(CustomFunction, x), x), from_none], self.functions)
         return result
 
 
@@ -2410,7 +2558,7 @@ class UniqueParamsEnum(Enum):
 @dataclass
 class RateLimitRule:
     max_reqs_per_min: float
-    unique_params: Union[List[str], UniqueParamsEnum, None]
+    unique_params: Optional[Union[List[str], UniqueParamsEnum]] = None
 
     @staticmethod
     def from_dict(obj: Any) -> 'RateLimitRule':
@@ -2464,9 +2612,12 @@ class APILimits:
     def to_dict(self) -> dict:
         result: dict = {}
         result["disabled"] = from_bool(self.disabled)
-        result["depth_limit"] = from_union([lambda x: to_class(DepthLimit, x), from_none], self.depth_limit)
-        result["node_limit"] = from_union([lambda x: to_class(NodeLimit, x), from_none], self.node_limit)
-        result["rate_limit"] = from_union([lambda x: to_class(RateLimit, x), from_none], self.rate_limit)
+        if self.depth_limit is not None:
+            result["depth_limit"] = from_union([lambda x: to_class(DepthLimit, x), from_none], self.depth_limit)
+        if self.node_limit is not None:
+            result["node_limit"] = from_union([lambda x: to_class(NodeLimit, x), from_none], self.node_limit)
+        if self.rate_limit is not None:
+            result["rate_limit"] = from_union([lambda x: to_class(RateLimit, x), from_none], self.rate_limit)
         return result
 
 
@@ -2554,7 +2705,8 @@ class RESTEndpoint:
         result["methods"] = from_list(lambda x: to_enum(Method, x), self.methods)
         result["name"] = from_str(self.name)
         result["url"] = from_str(self.url)
-        result["comment"] = from_union([from_str, from_none], self.comment)
+        if self.comment is not None:
+            result["comment"] = from_union([from_str, from_none], self.comment)
         return result
 
 
@@ -2567,21 +2719,23 @@ class PoolSettings:
     
     https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#mssqlpoolsettings
     """
+    connection_lifetime: Optional[float] = None
     """Time from connection creation after which the connection should be destroyed and a new
     one created. A value of 0 indicates we should never destroy an active connection. If 0 is
     passed, memory from large query results may not be reclaimed. (default: 600 sec)
     """
-    connection_lifetime: Optional[float] = None
-    """The idle timeout (in seconds) per connection (default: 180)"""
     idle_timeout: Optional[float] = None
-    """Maximum number of connections to be kept in the pool (default: 50)"""
+    """The idle timeout (in seconds) per connection (default: 180)"""
+
     max_connections: Optional[float] = None
+    """Maximum number of connections to be kept in the pool (default: 50)"""
+
+    pool_timeout: Optional[float] = None
     """Maximum time to wait while acquiring a Postgres connection from the pool, in seconds
     (default: forever)
     """
-    pool_timeout: Optional[float] = None
-    """Number of retries to perform (default: 1)"""
     retries: Optional[float] = None
+    """Number of retries to perform (default: 1)"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'PoolSettings':
@@ -2595,11 +2749,16 @@ class PoolSettings:
 
     def to_dict(self) -> dict:
         result: dict = {}
-        result["connection_lifetime"] = from_union([to_float, from_none], self.connection_lifetime)
-        result["idle_timeout"] = from_union([to_float, from_none], self.idle_timeout)
-        result["max_connections"] = from_union([to_float, from_none], self.max_connections)
-        result["pool_timeout"] = from_union([to_float, from_none], self.pool_timeout)
-        result["retries"] = from_union([to_float, from_none], self.retries)
+        if self.connection_lifetime is not None:
+            result["connection_lifetime"] = from_union([to_float, from_none], self.connection_lifetime)
+        if self.idle_timeout is not None:
+            result["idle_timeout"] = from_union([to_float, from_none], self.idle_timeout)
+        if self.max_connections is not None:
+            result["max_connections"] = from_union([to_float, from_none], self.max_connections)
+        if self.pool_timeout is not None:
+            result["pool_timeout"] = from_union([to_float, from_none], self.pool_timeout)
+        if self.retries is not None:
+            result["retries"] = from_union([to_float, from_none], self.retries)
         return result
 
 
@@ -2613,44 +2772,52 @@ class SourceConnectionInfo:
     
     https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#mssqlsourceconnectioninfo
     """
+    database_url: Optional[Union[FromEnvClass, str]] = None
     """The database connection URL as a string, as an environment variable, or as connection
     parameters.
     """
-    database_url: Union[PGConnectionParametersClass, None, str]
-    """The database connection string, or as an environment variable"""
-    connection_string: Union[FromEnv, None, str]
+    isolation_level: Optional[IsolationLevel] = None
     """The transaction isolation level in which the queries made to the source will be run with
     (default: read-committed).
     """
-    isolation_level: Optional[IsolationLevel] = None
-    """Connection pool settings"""
     pool_settings: Optional[PoolSettings] = None
-    """The client SSL certificate settings for the database (Only available in Cloud)."""
+    """Connection pool settings"""
+
     ssl_configuration: Optional[PGCERTSettings] = None
+    """The client SSL certificate settings for the database (Only available in Cloud)."""
+
+    use_prepared_statements: Optional[bool] = None
     """If set to true the server prepares statement before executing on the source database
     (default: false). For more details, refer to the Postgres docs
     """
-    use_prepared_statements: Optional[bool] = None
+    connection_string: Optional[Union[FromEnv, str]] = None
+    """The database connection string, or as an environment variable"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'SourceConnectionInfo':
         assert isinstance(obj, dict)
-        database_url = from_union([PGConnectionParametersClass.from_dict, from_str, from_none], obj.get("database_url"))
-        connection_string = from_union([FromEnv.from_dict, from_str, from_none], obj.get("connection_string"))
+        database_url = from_union([FromEnvClass.from_dict, from_str, from_none], obj.get("database_url"))
         isolation_level = from_union([IsolationLevel, from_none], obj.get("isolation_level"))
         pool_settings = from_union([PoolSettings.from_dict, from_none], obj.get("pool_settings"))
         ssl_configuration = from_union([PGCERTSettings.from_dict, from_none], obj.get("ssl_configuration"))
         use_prepared_statements = from_union([from_bool, from_none], obj.get("use_prepared_statements"))
-        return SourceConnectionInfo(database_url, connection_string, isolation_level, pool_settings, ssl_configuration, use_prepared_statements)
+        connection_string = from_union([FromEnv.from_dict, from_str, from_none], obj.get("connection_string"))
+        return SourceConnectionInfo(database_url, isolation_level, pool_settings, ssl_configuration, use_prepared_statements, connection_string)
 
     def to_dict(self) -> dict:
         result: dict = {}
-        result["database_url"] = from_union([lambda x: to_class(PGConnectionParametersClass, x), from_str, from_none], self.database_url)
-        result["connection_string"] = from_union([lambda x: to_class(FromEnv, x), from_str, from_none], self.connection_string)
-        result["isolation_level"] = from_union([lambda x: to_enum(IsolationLevel, x), from_none], self.isolation_level)
-        result["pool_settings"] = from_union([lambda x: to_class(PoolSettings, x), from_none], self.pool_settings)
-        result["ssl_configuration"] = from_union([lambda x: to_class(PGCERTSettings, x), from_none], self.ssl_configuration)
-        result["use_prepared_statements"] = from_union([from_bool, from_none], self.use_prepared_statements)
+        if self.database_url is not None:
+            result["database_url"] = from_union([lambda x: to_class(FromEnvClass, x), from_str, from_none], self.database_url)
+        if self.isolation_level is not None:
+            result["isolation_level"] = from_union([lambda x: to_enum(IsolationLevel, x), from_none], self.isolation_level)
+        if self.pool_settings is not None:
+            result["pool_settings"] = from_union([lambda x: to_class(PoolSettings, x), from_none], self.pool_settings)
+        if self.ssl_configuration is not None:
+            result["ssl_configuration"] = from_union([lambda x: to_class(PGCERTSettings, x), from_none], self.ssl_configuration)
+        if self.use_prepared_statements is not None:
+            result["use_prepared_statements"] = from_union([from_bool, from_none], self.use_prepared_statements)
+        if self.connection_string is not None:
+            result["connection_string"] = from_union([lambda x: to_class(FromEnv, x), from_str, from_none], self.connection_string)
         return result
 
 
@@ -2665,34 +2832,43 @@ class Configuration:
     
     https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#bigqueryconfiguration
     """
-    """List of BigQuery datasets"""
-    datasets: Union[List[str], FromEnv, None]
-    """Project Id for BigQuery database"""
-    project_id: Union[FromEnv, None, str]
-    """Service account for BigQuery database"""
-    service_account: Union[RecordStringAnyClass, None, str]
-    """Connection parameters for the source"""
     connection_info: Optional[SourceConnectionInfo] = None
-    """Optional list of read replica configuration (supported only in cloud/enterprise versions)"""
+    """Connection parameters for the source"""
+
     read_replicas: Optional[List[PGSourceConnectionInfo]] = None
+    """Optional list of read replica configuration (supported only in cloud/enterprise versions)"""
+
+    datasets: Optional[Union[List[str], FromEnv]] = None
+    """List of BigQuery datasets"""
+
+    project_id: Optional[Union[FromEnv, str]] = None
+    """Project Id for BigQuery database"""
+
+    service_account: Optional[Union[AnyRecordClass, str]] = None
+    """Service account for BigQuery database"""
 
     @staticmethod
     def from_dict(obj: Any) -> 'Configuration':
         assert isinstance(obj, dict)
-        datasets = from_union([lambda x: from_list(from_str, x), FromEnv.from_dict, from_none], obj.get("datasets"))
-        project_id = from_union([FromEnv.from_dict, from_str, from_none], obj.get("project_id"))
-        service_account = from_union([RecordStringAnyClass.from_dict, from_str, from_none], obj.get("service_account"))
         connection_info = from_union([SourceConnectionInfo.from_dict, from_none], obj.get("connection_info"))
         read_replicas = from_union([lambda x: from_list(PGSourceConnectionInfo.from_dict, x), from_none], obj.get("read_replicas"))
-        return Configuration(datasets, project_id, service_account, connection_info, read_replicas)
+        datasets = from_union([lambda x: from_list(from_str, x), FromEnv.from_dict, from_none], obj.get("datasets"))
+        project_id = from_union([FromEnv.from_dict, from_str, from_none], obj.get("project_id"))
+        service_account = from_union([AnyRecordClass.from_dict, from_str, from_none], obj.get("service_account"))
+        return Configuration(connection_info, read_replicas, datasets, project_id, service_account)
 
     def to_dict(self) -> dict:
         result: dict = {}
-        result["datasets"] = from_union([lambda x: from_list(from_str, x), lambda x: to_class(FromEnv, x), from_none], self.datasets)
-        result["project_id"] = from_union([lambda x: to_class(FromEnv, x), from_str, from_none], self.project_id)
-        result["service_account"] = from_union([lambda x: to_class(RecordStringAnyClass, x), from_str, from_none], self.service_account)
-        result["connection_info"] = from_union([lambda x: to_class(SourceConnectionInfo, x), from_none], self.connection_info)
-        result["read_replicas"] = from_union([lambda x: from_list(lambda x: to_class(PGSourceConnectionInfo, x), x), from_none], self.read_replicas)
+        if self.connection_info is not None:
+            result["connection_info"] = from_union([lambda x: to_class(SourceConnectionInfo, x), from_none], self.connection_info)
+        if self.read_replicas is not None:
+            result["read_replicas"] = from_union([lambda x: from_list(lambda x: to_class(PGSourceConnectionInfo, x), x), from_none], self.read_replicas)
+        if self.datasets is not None:
+            result["datasets"] = from_union([lambda x: from_list(from_str, x), lambda x: to_class(FromEnv, x), from_none], self.datasets)
+        if self.project_id is not None:
+            result["project_id"] = from_union([lambda x: to_class(FromEnv, x), from_str, from_none], self.project_id)
+        if self.service_account is not None:
+            result["service_account"] = from_union([lambda x: to_class(AnyRecordClass, x), from_str, from_none], self.service_account)
         return result
 
 
@@ -2727,7 +2903,8 @@ class Source:
         result["kind"] = to_enum(BackendKind, self.kind)
         result["name"] = from_str(self.name)
         result["tables"] = from_list(lambda x: to_class(TableEntry, x), self.tables)
-        result["functions"] = from_union([lambda x: from_list(lambda x: to_class(CustomFunction, x), x), from_none], self.functions)
+        if self.functions is not None:
+            result["functions"] = from_union([lambda x: from_list(lambda x: to_class(CustomFunction, x), x), from_none], self.functions)
         return result
 
 
@@ -2766,14 +2943,22 @@ class HasuraMetadataV3:
         result["rest_endpoints"] = from_list(lambda x: to_class(RESTEndpoint, x), self.rest_endpoints)
         result["sources"] = from_list(lambda x: to_class(Source, x), self.sources)
         result["version"] = to_float(self.version)
-        result["actions"] = from_union([lambda x: from_list(lambda x: to_class(Action, x), x), from_none], self.actions)
-        result["allowlist"] = from_union([lambda x: from_list(lambda x: to_class(AllowList, x), x), from_none], self.allowlist)
-        result["api_limits"] = from_union([lambda x: to_class(APILimits, x), from_none], self.api_limits)
-        result["cron_triggers"] = from_union([lambda x: from_list(lambda x: to_class(CronTrigger, x), x), from_none], self.cron_triggers)
-        result["custom_types"] = from_union([lambda x: to_class(CustomTypes, x), from_none], self.custom_types)
-        result["inherited_roles"] = from_union([lambda x: from_list(lambda x: to_class(InheritedRole, x), x), from_none], self.inherited_roles)
-        result["query_collections"] = from_union([lambda x: from_list(lambda x: to_class(QueryCollectionEntry, x), x), from_none], self.query_collections)
-        result["remote_schemas"] = from_union([lambda x: from_list(lambda x: to_class(RemoteSchema, x), x), from_none], self.remote_schemas)
+        if self.actions is not None:
+            result["actions"] = from_union([lambda x: from_list(lambda x: to_class(Action, x), x), from_none], self.actions)
+        if self.allowlist is not None:
+            result["allowlist"] = from_union([lambda x: from_list(lambda x: to_class(AllowList, x), x), from_none], self.allowlist)
+        if self.api_limits is not None:
+            result["api_limits"] = from_union([lambda x: to_class(APILimits, x), from_none], self.api_limits)
+        if self.cron_triggers is not None:
+            result["cron_triggers"] = from_union([lambda x: from_list(lambda x: to_class(CronTrigger, x), x), from_none], self.cron_triggers)
+        if self.custom_types is not None:
+            result["custom_types"] = from_union([lambda x: to_class(CustomTypes, x), from_none], self.custom_types)
+        if self.inherited_roles is not None:
+            result["inherited_roles"] = from_union([lambda x: from_list(lambda x: to_class(InheritedRole, x), x), from_none], self.inherited_roles)
+        if self.query_collections is not None:
+            result["query_collections"] = from_union([lambda x: from_list(lambda x: to_class(QueryCollectionEntry, x), x), from_none], self.query_collections)
+        if self.remote_schemas is not None:
+            result["remote_schemas"] = from_union([lambda x: from_list(lambda x: to_class(RemoteSchema, x), x), from_none], self.remote_schemas)
         return result
 
 
@@ -3345,6 +3530,14 @@ def hasura_metadata_v2_to_dict(x: HasuraMetadataV2) -> Any:
     return to_class(HasuraMetadataV2, x)
 
 
+def any_record_from_dict(s: Any) -> AnyRecord:
+    return AnyRecord.from_dict(s)
+
+
+def any_record_to_dict(x: AnyRecord) -> Any:
+    return to_class(AnyRecord, x)
+
+
 def from_env_from_dict(s: Any) -> FromEnv:
     return FromEnv.from_dict(s)
 
@@ -3543,11 +3736,3 @@ def hasura_metadata_v3_from_dict(s: Any) -> HasuraMetadataV3:
 
 def hasura_metadata_v3_to_dict(x: HasuraMetadataV3) -> Any:
     return to_class(HasuraMetadataV3, x)
-
-
-def record_string_any_from_dict(s: Any) -> Dict[str, Any]:
-    return from_dict(lambda x: x, s)
-
-
-def record_string_any_to_dict(x: Dict[str, Any]) -> Any:
-    return from_dict(lambda x: x, x)

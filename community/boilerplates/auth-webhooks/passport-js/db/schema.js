@@ -1,4 +1,3 @@
-const { promisify } = require('util');
 const Knex = require('knex');
 const connection = require('../knexfile');
 const { Model } = require('objection');
@@ -6,7 +5,17 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 
 const knexConnection = Knex(connection);
-const randomBytesAsync = promisify(crypto.randomBytes);
+const randomBytesAsync = (size) => {
+  return new Promise((resolve, reject) => {
+    crypto.randomBytes(size, (err, buf) => {
+      if (err) {
+        return reject(err);
+      }
+
+      return resolve(buf);
+    })
+  });
+}
 
 Model.knex(knexConnection);
 

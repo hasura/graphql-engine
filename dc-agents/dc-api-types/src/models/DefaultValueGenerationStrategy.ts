@@ -5,4 +5,3 @@
 export type DefaultValueGenerationStrategy = {
   type: 'default_value';
 };
-

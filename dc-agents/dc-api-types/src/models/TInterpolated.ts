@@ -9,4 +9,3 @@ export type TInterpolated = {
   id: string;
   type: 'interpolated';
 };
-

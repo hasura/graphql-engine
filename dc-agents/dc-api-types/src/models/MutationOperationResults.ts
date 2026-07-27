@@ -14,6 +14,7 @@ export type MutationOperationResults = {
   /**
    * The rows affected by the mutation operation
    */
-  returning?: Array<Record<string, (ColumnFieldValue | QueryResponse | NullColumnFieldValue)>> | null;
+  returning?: Array<
+    Record<string, ColumnFieldValue | QueryResponse | NullColumnFieldValue>
+  > | null;
 };
-

@@ -8,4 +8,3 @@ export type AndExpression = {
   expressions: Array<Expression>;
   type: 'and';
 };
-

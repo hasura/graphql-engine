@@ -16,4 +16,3 @@ export type ColumnCountAggregate = {
   redaction_expression?: RedactionExpressionName;
   type: 'column_count';
 };
-

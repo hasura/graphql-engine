@@ -9,4 +9,3 @@ export type QueryCapabilities = {
   foreach?: ForeachCapabilities;
   redaction?: RedactionCapabilities;
 };
-

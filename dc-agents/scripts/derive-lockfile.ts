@@ -57,51 +57,52 @@
  * Derive lockfiles for both the `reference` and `sqlite` workspace packages
  * > npx ts-node ./scripts/derive-lockfile.ts -l package-lock.json -w reference -w sqlite
  */
-import fs from "fs/promises";
-import os from "os";
-import path from "path";
-import * as yargs from "yargs";
+import { readFileSync, writeFileSync } from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
 
 type Lockfile = {
-  name: string,
-  version?: string,
-  requires: boolean,
-  lockfileVersion: number,
-  packages: Record<string, Package>,
-  dependencies?: Record<string, unknown>,
-}
+  name: string;
+  version?: string;
+  requires: boolean;
+  lockfileVersion: number;
+  packages: Record<string, Package>;
+  dependencies?: Record<string, unknown>;
+};
 
 type Package = {
-  link?: true,
-  resolved?: string
-  name?: string,
-  version?: string,
-  dependencies?: Record<string, string>,
-  devDependencies?: Record<string, string>,
-  peerDependencies?: Record<string, string>,
-  peerDependenciesMeta?: Record<string, { optional?: boolean }>,
-}
+  link?: true;
+  resolved?: string;
+  name?: string;
+  version?: string;
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+  peerDependenciesMeta?: Record<string, { optional?: boolean }>;
+};
 
 type LocatedPackage = {
-  dependantPackagePath: PackagePath,
-  packagePath: PackagePath,
-  package: Package,
-}
+  dependantPackagePath: PackagePath;
+  packagePath: PackagePath;
+  package: Package;
+};
 
 type Dependency = {
-  name: string,
-  package: LocatedPackage,
-}
+  name: string;
+  package: LocatedPackage;
+};
 
 // Example paths:
 //  reference/node_modules/avvio/node_modules/debug -> { workspace: "reference", path: ["avvio", "debug"] }
 //  node_modules/ts-node -> { workspace: null, path: ["ts-node"] }
 type PackagePath = {
   // Workspace folder name, if any
-  workspace: string | null,
+  workspace: string | null;
   // Path of package names
-  path: string[]
-}
+  path: string[];
+};
 
 /**
  * Locates a package dependency searching first in the dependant package's node_modules and then
@@ -112,28 +113,54 @@ type PackagePath = {
  * @param packageName The name of the packge being located
  * @returns The located package or undefined if it could not be found
  */
-function locatePackageDependency(lockfile: Lockfile, dependantPackagePath: PackagePath, packageName: string): LocatedPackage | undefined {
-  const workspacePrefix = dependantPackagePath.workspace !== null ? dependantPackagePath.workspace + "/" : "";
+function locatePackageDependency(
+  lockfile: Lockfile,
+  dependantPackagePath: PackagePath,
+  packageName: string,
+): LocatedPackage | undefined {
+  const workspacePrefix =
+    dependantPackagePath.workspace !== null
+      ? dependantPackagePath.workspace + '/'
+      : '';
 
   function locate(packageSearchPath: PackagePath): LocatedPackage | undefined {
     if (packageSearchPath.path.length === 0) {
-      const pkgPath = workspacePrefix + "node_modules/" + packageName;
+      const pkgPath = workspacePrefix + 'node_modules/' + packageName;
       const pkg = lockfile.packages[pkgPath];
       return pkg !== undefined
-        ? { dependantPackagePath,
+        ? {
+            dependantPackagePath,
             packagePath: packageSearchPath,
-            package: pkg }
+            package: pkg,
+          }
         : packageSearchPath.workspace !== null
-          ? locatePackageDependency(lockfile, { workspace: null, path: [] }, packageName) // If there's no package in the workspace, try the above the workspace
+          ? locatePackageDependency(
+              lockfile,
+              { workspace: null, path: [] },
+              packageName,
+            ) // If there's no package in the workspace, try the above the workspace
           : undefined;
     } else {
-      const pkgPath = workspacePrefix + "node_modules/" + packageSearchPath.path.join("/node_modules/") + "/node_modules/" + packageName;
+      const pkgPath =
+        workspacePrefix +
+        'node_modules/' +
+        packageSearchPath.path.join('/node_modules/') +
+        '/node_modules/' +
+        packageName;
       const pkg = lockfile.packages[pkgPath];
       return pkg !== undefined
-        ? { dependantPackagePath,
+        ? {
+            dependantPackagePath,
             packagePath: packageSearchPath,
-            package: pkg }
-        : locate({...packageSearchPath, path: packageSearchPath.path.slice(0, packageSearchPath.path.length - 1)});
+            package: pkg,
+          }
+        : locate({
+            ...packageSearchPath,
+            path: packageSearchPath.path.slice(
+              0,
+              packageSearchPath.path.length - 1,
+            ),
+          });
     }
   }
 
@@ -143,30 +170,47 @@ function locatePackageDependency(lockfile: Lockfile, dependantPackagePath: Packa
 /**
  * Given the specified package and its package path, find all transitive dependencies.
  */
-function collectDeps(lockfile: Lockfile, packagePath: PackagePath, pkg: Package): Dependency[] {
-  const deps =
-    [ ...(Object.keys(pkg.dependencies ?? {}).map<[string, boolean]>(d => [d, false])),
-      ...(Object.keys(pkg.devDependencies ?? {}).map<[string, boolean]>(d => [d, false])),
-      ...(Object.keys(pkg.peerDependencies ?? {})
-          .map<[string, boolean]>(peerDep => {
-            const optional = pkg.peerDependenciesMeta?.[peerDep]?.optional === true;
-            return [peerDep, optional];
-          }))
-    ];
+function collectDeps(
+  lockfile: Lockfile,
+  packagePath: PackagePath,
+  pkg: Package,
+): Dependency[] {
+  const deps = [
+    ...Object.keys(pkg.dependencies ?? {}).map<[string, boolean]>((d) => [
+      d,
+      false,
+    ]),
+    ...Object.keys(pkg.devDependencies ?? {}).map<[string, boolean]>((d) => [
+      d,
+      false,
+    ]),
+    ...Object.keys(pkg.peerDependencies ?? {}).map<[string, boolean]>(
+      (peerDep) => {
+        const optional = pkg.peerDependenciesMeta?.[peerDep]?.optional === true;
+        return [peerDep, optional];
+      },
+    ),
+  ];
   return deps.flatMap(([depPkgName, optional]) => {
-    const locatedDep = locatePackageDependency(lockfile, packagePath, depPkgName);
+    const locatedDep = locatePackageDependency(
+      lockfile,
+      packagePath,
+      depPkgName,
+    );
     if (locatedDep === undefined) {
-      if (optional)
-        return [];
-      else
-        throw new Error(`Can't locate package '${depPkgName}'`);
+      if (optional) return [];
+      else throw new Error(`Can't locate package '${depPkgName}'`);
     } else if (locatedDep.package.link === true) {
       if (locatedDep.package.resolved === undefined)
-        throw new Error(`Linked package '${depPkgName}' does not have a resolved property`);
+        throw new Error(
+          `Linked package '${depPkgName}' does not have a resolved property`,
+        );
 
       const linkedPkg = { ...lockfile.packages[locatedDep.package.resolved] };
       if (linkedPkg === undefined)
-        throw new Error(`Cannot file package '${locatedDep.package.resolved}' resolved from linked package '${depPkgName}'`);
+        throw new Error(
+          `Cannot file package '${locatedDep.package.resolved}' resolved from linked package '${depPkgName}'`,
+        );
 
       delete linkedPkg.name;
 
@@ -174,18 +218,37 @@ function collectDeps(lockfile: Lockfile, packagePath: PackagePath, pkg: Package)
         name: depPkgName,
         package: {
           ...locatedDep,
-          package: linkedPkg
-        }
+          package: linkedPkg,
+        },
       };
 
-      return [dependency, ...collectDeps(lockfile, {...locatedDep.packagePath, path: [...locatedDep.packagePath.path, depPkgName]}, linkedPkg)];
-
+      return [
+        dependency,
+        ...collectDeps(
+          lockfile,
+          {
+            ...locatedDep.packagePath,
+            path: [...locatedDep.packagePath.path, depPkgName],
+          },
+          linkedPkg,
+        ),
+      ];
     } else {
       const dependency = {
         name: depPkgName,
-        package: locatedDep
+        package: locatedDep,
       };
-      return [dependency, ...collectDeps(lockfile, {...locatedDep.packagePath, path: [...locatedDep.packagePath.path, depPkgName]}, locatedDep.package)];
+      return [
+        dependency,
+        ...collectDeps(
+          lockfile,
+          {
+            ...locatedDep.packagePath,
+            path: [...locatedDep.packagePath.path, depPkgName],
+          },
+          locatedDep.package,
+        ),
+      ];
     }
   });
 }
@@ -195,20 +258,19 @@ function collectDeps(lockfile: Lockfile, packagePath: PackagePath, pkg: Package)
  * where they ought to live for the derived lockfile
  */
 function relocateWorkspacePackagesToRoot(dependencies: Dependency[]) {
-  return dependencies.map(dep => {
+  return dependencies.map((dep) => {
     if (dep.package.packagePath.workspace !== null) {
-
       // If the package is found at both the root and directly within the workspace
       // then we're going to have a conflict and the workspace package needs to pushed
       // into the node_modules folder of the dependency one down from the workspace
       // to prevent it from conflicting
       if (dep.package.packagePath.path.length === 0) {
-        const conflictingPackageAlreadyAtRoot =
-          dependencies.find(d =>
-            d.name === dep.name
-            && d.package.packagePath.workspace === null
-            && d.package.packagePath.path.length === 0
-          );
+        const conflictingPackageAlreadyAtRoot = dependencies.find(
+          (d) =>
+            d.name === dep.name &&
+            d.package.packagePath.workspace === null &&
+            d.package.packagePath.path.length === 0,
+        );
         if (conflictingPackageAlreadyAtRoot !== undefined) {
           return {
             ...dep,
@@ -217,9 +279,9 @@ function relocateWorkspacePackagesToRoot(dependencies: Dependency[]) {
               packagePath: {
                 workspace: null,
                 path: dep.package.dependantPackagePath.path.slice(0, 1),
-              }
-            }
-          }
+              },
+            },
+          };
         }
       }
 
@@ -231,8 +293,8 @@ function relocateWorkspacePackagesToRoot(dependencies: Dependency[]) {
           packagePath: {
             ...dep.package.packagePath,
             workspace: null,
-          }
-        }
+          },
+        },
       };
     } else {
       // Already at root
@@ -255,11 +317,19 @@ function deriveLockfile(lockfile: Lockfile, workspace: string): Lockfile {
   }
   const deps = collectDeps(lockfile, { workspace, path: [] }, workspacePackage);
   const relocatedDeps = relocateWorkspacePackagesToRoot(deps);
-  const packages = Object.fromEntries(relocatedDeps.map<[string, Package]>(dep => {
-    return dep.package.packagePath.path.length === 0
-      ? ["node_modules/" + dep.name, dep.package.package]
-      : ["node_modules/" + dep.package.packagePath.path.join("/node_modules/") + "/node_modules/" + dep.name, dep.package.package]
-  }));
+  const packages = Object.fromEntries(
+    relocatedDeps.map<[string, Package]>((dep) => {
+      return dep.package.packagePath.path.length === 0
+        ? ['node_modules/' + dep.name, dep.package.package]
+        : [
+            'node_modules/' +
+              dep.package.packagePath.path.join('/node_modules/') +
+              '/node_modules/' +
+              dep.name,
+            dep.package.package,
+          ];
+    }),
+  );
 
   return {
     name: workspacePackage.name,
@@ -271,39 +341,47 @@ function deriveLockfile(lockfile: Lockfile, workspace: string): Lockfile {
     lockfileVersion: 3,
     requires: true,
     packages: {
-      "": workspacePackage,
-      ...packages
-    }
+      '': workspacePackage,
+      ...packages,
+    },
   };
 }
 
-const argParser = yargs
-  .option("lockfile", {
-    alias: "l",
-    describe: "The worktree lockfile",
-    type: "string"
-  })
-  .option("workspace", {
-    alias: "w",
-    describe: "The workspace you want to derive a lockfile for",
-    type: "string"
-  })
-  .array("workspace")
-  .demandOption(["lockfile", "workspace"])
-  .help();
-
 (async () => {
+  const argParser = yargs(hideBin(process.argv))
+    .option('lockfile', {
+      alias: 'l',
+      describe: 'The worktree lockfile',
+      type: 'string',
+    })
+    .option('workspace', {
+      alias: 'w',
+      describe: 'The workspace you want to derive a lockfile for',
+      type: 'string',
+    })
+    .array('workspace')
+    .demandOption(['lockfile', 'workspace']);
+
   const args = await argParser.argv;
   console.log(`Reading lockfile '${args.lockfile}'...`);
-  const lockfile = JSON.parse(await fs.readFile(args.lockfile, "utf-8"));
+  const lockfile = JSON.parse(readFileSync(args.lockfile, 'utf-8'));
 
   for (const workspace of args.workspace) {
-    const outputFile = path.join(path.dirname(args.lockfile), `./${workspace}/package-lock.json`);
+    const outputFile = path.join(
+      path.dirname(args.lockfile),
+      `./${workspace}/package-lock.json`,
+    );
 
     console.log(`Deriving lockfile for workspace '${workspace}'...`);
     const workspaceLockfile = deriveLockfile(lockfile, workspace);
     console.log(`Writing derived lockfile to '${outputFile}'...`);
-    await fs.writeFile(outputFile, JSON.stringify(workspaceLockfile, null, 2) + os.EOL, "utf-8");
+    writeFileSync(
+      outputFile,
+      JSON.stringify(workspaceLockfile, null, 2) + os.EOL,
+      'utf-8',
+    );
   }
-  console.log("Done deriving lockfile" + (args.workspace.length > 1 ? "s" : ""))
+  console.log(
+    'Done deriving lockfile' + (args.workspace.length > 1 ? 's' : ''),
+  );
 })();

@@ -19,4 +19,3 @@ export type DataSchemaCapabilities = {
    */
   supports_schemaless_tables?: boolean;
 };
-

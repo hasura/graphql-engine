@@ -20,4 +20,3 @@ export type InsertMutationOperation = {
   table: TableName;
   type: 'insert';
 };
-

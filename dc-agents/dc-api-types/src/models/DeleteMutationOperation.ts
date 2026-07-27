@@ -15,4 +15,3 @@ export type DeleteMutationOperation = {
   type: 'delete';
   where?: Expression;
 };
-

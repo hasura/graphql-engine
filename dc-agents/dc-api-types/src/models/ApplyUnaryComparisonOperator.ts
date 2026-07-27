@@ -10,4 +10,3 @@ export type ApplyUnaryComparisonOperator = {
   operator: UnaryComparisonOperator;
   type: 'unary_op';
 };
-

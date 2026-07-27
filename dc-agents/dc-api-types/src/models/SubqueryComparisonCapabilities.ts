@@ -8,4 +8,3 @@ export type SubqueryComparisonCapabilities = {
    */
   supports_relations?: boolean;
 };
-

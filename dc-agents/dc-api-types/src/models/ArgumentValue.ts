@@ -5,4 +5,3 @@
 import type { ScalarArgumentValue } from './ScalarArgumentValue';
 
 export type ArgumentValue = ScalarArgumentValue;
-

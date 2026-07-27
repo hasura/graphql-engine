@@ -12,4 +12,3 @@ export type ExplainResponse = {
    */
   query: string;
 };
-

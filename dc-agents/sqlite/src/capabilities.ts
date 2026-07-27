@@ -1,25 +1,23 @@
-import { configSchema } from "./config"
-import { DATASETS, METRICS, MUTATIONS } from "./environment"
+import { configSchema } from './config';
+import { DATASETS, METRICS, MUTATIONS } from './environment';
 
-import { CapabilitiesResponse, ScalarTypeCapabilities } from "@hasura/dc-api-types"
+import {
+  CapabilitiesResponse,
+  ScalarTypeCapabilities,
+} from '@hasura/dc-api-types';
 
 // NOTE: This should cover all possible schema types.
 //       This type should be a subtype of ScalarType.
-export type ScalarTypeKey
-  = 'DateTime'
-  | 'string'
-  | 'number'
-  | 'decimal'
-  | 'bool'
-  ;
+export type ScalarTypeKey =
+  'DateTime' | 'string' | 'number' | 'decimal' | 'bool';
 
 // TODO: How can we ensure that we have covered all of the operator keys in the query module?
 const scalar_types: Record<ScalarTypeKey, ScalarTypeCapabilities> = {
   DateTime: {
     comparison_operators: {
-      _in_year: 'int'
+      _in_year: 'int',
     },
-    graphql_type: "String",
+    graphql_type: 'String',
   },
   string: {
     comparison_operators: {
@@ -30,9 +28,9 @@ const scalar_types: Record<ScalarTypeKey, ScalarTypeCapabilities> = {
     },
     aggregate_functions: {
       max: 'string',
-      min: 'string'
+      min: 'string',
     },
-    graphql_type: "String"
+    graphql_type: 'String',
   },
   // TODO: Why do we need a seperate 'decimal' type?
   decimal: {
@@ -42,17 +40,17 @@ const scalar_types: Record<ScalarTypeKey, ScalarTypeCapabilities> = {
     aggregate_functions: {
       max: 'decimal',
       min: 'decimal',
-      sum: 'decimal'
+      sum: 'decimal',
     },
     update_column_operators: {
       inc: {
-        argument_type: 'decimal'
+        argument_type: 'decimal',
       },
       dec: {
-        argument_type: 'decimal'
-      }
+        argument_type: 'decimal',
+      },
     },
-    graphql_type: "Float"
+    graphql_type: 'Float',
   },
   number: {
     comparison_operators: {
@@ -61,17 +59,17 @@ const scalar_types: Record<ScalarTypeKey, ScalarTypeCapabilities> = {
     aggregate_functions: {
       max: 'number',
       min: 'number',
-      sum: 'number'
+      sum: 'number',
     },
     update_column_operators: {
       inc: {
-        argument_type: 'number'
+        argument_type: 'number',
       },
       dec: {
-        argument_type: 'number'
-      }
+        argument_type: 'number',
+      },
     },
-    graphql_type: "Float"
+    graphql_type: 'Float',
   },
   bool: {
     comparison_operators: {
@@ -80,8 +78,8 @@ const scalar_types: Record<ScalarTypeKey, ScalarTypeCapabilities> = {
       _nand: 'bool',
       _xor: 'bool',
     },
-    graphql_type: "Boolean"
-  }
+    graphql_type: 'Boolean',
+  },
 };
 
 export const capabilitiesResponse: CapabilitiesResponse = {
@@ -92,36 +90,34 @@ export const capabilitiesResponse: CapabilitiesResponse = {
     data_schema: {
       supports_primary_keys: true,
       supports_foreign_keys: true,
-      column_nullability: "nullable_and_non_nullable",
+      column_nullability: 'nullable_and_non_nullable',
     },
     post_schema: {},
     scalar_types,
     queries: {
-      foreach: {}
+      foreach: {},
     },
     relationships: {},
     interpolated_queries: {},
     comparisons: {
       subquery: {
-        supports_relations: true
-      }
+        supports_relations: true,
+      },
     },
-    ... (
-      MUTATIONS
-        ? {
+    ...(MUTATIONS
+      ? {
           mutations: {
-            atomicity_support_level: "heterogeneous_operations",
+            atomicity_support_level: 'heterogeneous_operations',
             insert: { supports_nested_inserts: true },
             update: {},
             delete: {},
             returning: {},
-          }
+          },
         }
-        : {}
-    ),
+      : {}),
     explain: {},
     raw: {},
-    ... (DATASETS ? { datasets: {} } : {}),
-    ... (METRICS ? { metrics: {} } : {})
+    ...(DATASETS ? { datasets: {} } : {}),
+    ...(METRICS ? { metrics: {} } : {}),
   },
-}
+};

@@ -8,4 +8,3 @@ export type TNTable = {
   table: TableName;
   type: 'table';
 };
-

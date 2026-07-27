@@ -13,4 +13,3 @@ export type TFunction = {
   name: FunctionName;
   type: 'function';
 };
-

@@ -24,4 +24,3 @@ export type FunctionInfo = {
   returns?: FunctionReturnType;
   type: FunctionType;
 };
-

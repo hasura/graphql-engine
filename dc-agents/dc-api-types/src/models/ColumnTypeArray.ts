@@ -9,4 +9,3 @@ export type ColumnTypeArray = {
   nullable: boolean;
   type: 'array';
 };
-

@@ -8,4 +8,3 @@ export type DatasetGetTemplateResponse = {
    */
   exists: boolean;
 };
-

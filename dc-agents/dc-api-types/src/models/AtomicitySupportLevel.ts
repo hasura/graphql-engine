@@ -10,4 +10,8 @@
  * 'heterogeneous_operations': If multiple operations of any type exist in the one mutation request, a failure in one will result in all changes being reverted
  *
  */
-export type AtomicitySupportLevel = 'row' | 'single_operation' | 'homogeneous_operations' | 'heterogeneous_operations';
+export type AtomicitySupportLevel =
+  | 'row'
+  | 'single_operation'
+  | 'homogeneous_operations'
+  | 'heterogeneous_operations';

@@ -15,4 +15,3 @@ export type ErrorResponse = {
   message: string;
   type?: ErrorResponseType;
 };
-

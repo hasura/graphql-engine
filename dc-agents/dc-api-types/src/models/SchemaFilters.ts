@@ -15,4 +15,3 @@ export type SchemaFilters = {
    */
   only_tables?: Array<TableName>;
 };
-

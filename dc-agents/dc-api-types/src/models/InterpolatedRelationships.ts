@@ -15,4 +15,3 @@ export type InterpolatedRelationships = {
   source_interpolated_query: string;
   type: 'interpolated';
 };
-

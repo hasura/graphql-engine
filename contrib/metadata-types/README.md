@@ -11,7 +11,11 @@ yarn add @hasura/metadata # npm i @hasura/metadata
 ## Usage
 
 ```ts
-import { HasuraMetadataV2, Action, ComputedField } from "@hasura/metadata-types"
+import {
+  HasuraMetadataV2,
+  Action,
+  ComputedField,
+} from '@hasura/metadata-types';
 ```
 
 # Metadata SDK
@@ -89,10 +93,10 @@ This class can be extended from another file to add extra functionality. Here is
 
 ```ts
 // customMetadataConverter.ts
-import fs from "fs"
-import { load, dump } from "js-yaml"
-import { createPatch } from "diff"
-import { detailedDiff } from "deep-object-diff"
+import fs from 'fs';
+import { load, dump } from 'js-yaml';
+import { createPatch } from 'diff';
+import { detailedDiff } from 'deep-object-diff';
 import {
   Convert as _Convert,
   TableEntry,
@@ -100,51 +104,51 @@ import {
   CustomTypes,
   CronTrigger,
   HasuraMetadataV2,
-} from "../generated/HasuraMetadataV2"
+} from '../generated/HasuraMetadataV2';
 
 interface DiffOutput {
-  structuralDiff: object
-  textDiff: string
+  structuralDiff: object;
+  textDiff: string;
 }
 
 interface WriteDiffOpts {
-  folder: string
-  file: string
-  diffs: DiffOutput
+  folder: string;
+  file: string;
+  diffs: DiffOutput;
 }
 
 export class Convert extends _Convert {
-  public static loadYAML = load
-  public static dumpYAML = dump
-  public static diffYaml = createPatch
-  public static diffJson = detailedDiff
+  public static loadYAML = load;
+  public static dumpYAML = dump;
+  public static diffYaml = createPatch;
+  public static diffJson = detailedDiff;
 
   public static clone(obj: any) {
-    if (obj == null || typeof obj != "object") return obj
-    let temp = new obj.constructor()
+    if (obj == null || typeof obj != 'object') return obj;
+    let temp = new obj.constructor();
     for (var key in obj) {
       if (obj.hasOwnProperty(key)) {
-        temp[key] = Convert.clone(obj[key])
+        temp[key] = Convert.clone(obj[key]);
       }
     }
-    return temp
+    return temp;
   }
 
   public static diff(before: object, after: object): DiffOutput {
-    const originalYaml = Convert.metadataToYaml(before)
-    const updatedYaml = Convert.metadataToYaml(after)
-    const structuralDiff = Convert.diffJson(before, after)
-    const textDiff = Convert.diffYaml("", originalYaml, updatedYaml)
-    return { structuralDiff, textDiff }
+    const originalYaml = Convert.metadataToYaml(before);
+    const updatedYaml = Convert.metadataToYaml(after);
+    const structuralDiff = Convert.diffJson(before, after);
+    const textDiff = Convert.diffYaml('', originalYaml, updatedYaml);
+    return { structuralDiff, textDiff };
   }
 
   public static writeDiff(opts: WriteDiffOpts) {
-    const { file, folder, diffs } = opts
-    fs.writeFileSync(`${folder}/${file}.diff`, diffs.textDiff)
+    const { file, folder, diffs } = opts;
+    fs.writeFileSync(`${folder}/${file}.diff`, diffs.textDiff);
     fs.writeFileSync(
       `${folder}/${file}.json`,
-      JSON.stringify(diffs.structuralDiff, null, 2)
-    )
+      JSON.stringify(diffs.structuralDiff, null, 2),
+    );
   }
 
   /**
@@ -152,7 +156,7 @@ export class Convert extends _Convert {
    */
   public static metadataToYaml(value: object): string {
     // JSON Stringify + Parse to remove "undefined" key/values from YAML
-    return dump(JSON.parse(JSON.stringify(value)))
+    return dump(JSON.parse(JSON.stringify(value)));
   }
 }
 ```
@@ -167,77 +171,77 @@ Below is an example to demonstrate the common usecases you may encounter when wa
 - Repeating the above process for `metadata.json` (could be `metadata.yaml` as well)
 
 ```ts
-import { Convert } from "./customMetadataConverter"
+import { Convert } from './customMetadataConverter';
 import {
   TableEntry,
   Action,
   CustomTypes,
   HasuraMetadataV2,
-} from "../generated/HasuraMetadataV2"
+} from '../generated/HasuraMetadataV2';
 
 // Read "tables.yaml" file as text from filesystem
-const tablesMetadataFile = fs.readFileSync("./metadata/tables.yaml", "utf8")
+const tablesMetadataFile = fs.readFileSync('./metadata/tables.yaml', 'utf8');
 // Convert it to JSON object with type annotation using loadYAML utility
-const tablesMetadata: TableEntry[] = Convert.loadYAML(tablesMetadataFile)
-tablesMetadata.forEach(console.log)
+const tablesMetadata: TableEntry[] = Convert.loadYAML(tablesMetadataFile);
+tablesMetadata.forEach(console.log);
 
 // Read "actions.yaml" file as text from filesystem
-const actionMetadataFile = fs.readFileSync("./metadata/actions.yaml", "utf8")
+const actionMetadataFile = fs.readFileSync('./metadata/actions.yaml', 'utf8');
 // Convert it to JSON object with type annotation using loadYAML utility
 const actionMetadata: {
-  actions: Action[]
-  custom_types: CustomTypes
-} = Convert.loadYAML(actionMetadataFile)
-actionMetadata.actions.forEach(console.log)
-console.log(actionMetadata.custom_types)
+  actions: Action[];
+  custom_types: CustomTypes;
+} = Convert.loadYAML(actionMetadataFile);
+actionMetadata.actions.forEach(console.log);
+console.log(actionMetadata.custom_types);
 
 // Make a new table object
 const newTable: TableEntry = {
-  table: { schema: "public", name: "user" },
+  table: { schema: 'public', name: 'user' },
   select_permissions: [
     {
-      role: "user",
+      role: 'user',
       permission: {
         limit: 100,
         allow_aggregations: false,
-        columns: ["id", "name", "etc"],
-        computed_fields: ["my_computed_field"],
+        columns: ['id', 'name', 'etc'],
+        computed_fields: ['my_computed_field'],
         filter: {
-          id: { _eq: "X-Hasura-User-ID" },
+          id: { _eq: 'X-Hasura-User-ID' },
         },
       },
     },
   ],
-}
+};
 
 // Clone the tables for comparison after changes using diff()
-const originalTablesMetadata = Convert.clone(tablesMetadata)
+const originalTablesMetadata = Convert.clone(tablesMetadata);
 // Add the new table to tables metadata
-tablesMetadata.push(newTable)
+tablesMetadata.push(newTable);
 
 // Generate a structural and text diff from the changes between original and now
-const tableDiff = Convert.diff(originalTablesMetadata, tablesMetadata)
+const tableDiff = Convert.diff(originalTablesMetadata, tablesMetadata);
 // Write the diffs to /diffs folder, will output "tables.json" and "tables.diff"
-Convert.writeDiff({ folder: "diffs", file: "tables", diffs: tableDiff })
+Convert.writeDiff({ folder: 'diffs', file: 'tables', diffs: tableDiff });
 // Ouput the updated "tables.yaml" to filesystem
 fs.writeFileSync(
-  "./tables-updated.yaml",
-  Convert.metadataToYAML(tablesMetadata)
-)
+  './tables-updated.yaml',
+  Convert.metadataToYAML(tablesMetadata),
+);
 
 // Read "metadata.json"
-const metadataFile = fs.readFileSync("./metadata.json", "utf-8")
+const metadataFile = fs.readFileSync('./metadata.json', 'utf-8');
 // Convert.to<typeName> does runtime validation of the type
-const allMetadata: HasuraMetadataV2 = Convert.toHasuraMetadataV2(metadataFile)
-console.log(allMetadata)
+const allMetadata: HasuraMetadataV2 = Convert.toHasuraMetadataV2(metadataFile);
+console.log(allMetadata);
 
 // Clone, add table
-const beforeMetadataChanges = Convert.clone(allMetadata)
-allMetadata.tables.push(newTable)
+const beforeMetadataChanges = Convert.clone(allMetadata);
+allMetadata.tables.push(newTable);
 
 // Diff, write diff
-const metadataDiff = Convert.diff(beforeMetadataChanges, allMetadata)
-Convert.writeDiff({ folder: "diffs", file: "metadata", diffs: metadataDiff })
+const metadataDiff = Convert.diff(beforeMetadataChanges, allMetadata);
+Convert.writeDiff({ folder: 'diffs', file: 'metadata', diffs: metadataDiff });
 ```
 
 ## Generator Config File Options
@@ -260,11 +264,11 @@ selected_input_language: TypeScript
 # Only the matching SELECTED INPUT LANGUAGE file expression will be used
 input_files:
   # Paths can be either a string, or an array of strings
-  JsonSchema: "./src/types/**.schema.json"
-  TypeScript: ["./src/types/**.ts", "./src/otherfolder/**.ts"]
+  JsonSchema: './src/types/**.schema.json'
+  TypeScript: ['./src/types/**.ts', './src/otherfolder/**.ts']
 
 # Output file directory
-output_directory: "./generated"
+output_directory: './generated'
 
 # Quicktype config per-language
 # Config is an object of type "rendererOptions"
@@ -287,7 +291,7 @@ quicktype_config:
   # objective-c: ~
   # pike: ~
   python:
-    python-version: "3.7"
+    python-version: '3.7'
   # ruby: ~
   # rust: ~
   schema: ~
@@ -310,8 +314,8 @@ For example:
 ```ts
 // myTypes.ts
 interface MyType {
-  name: string
-  age: number
+  name: string;
+  age: number;
 }
 ```
 
@@ -327,9 +331,9 @@ This is what the definition looks like:
 
 ```yaml
 ---
-- typeDefinitionFile: "./generated/HasuraMetadataV2.ts"
+- typeDefinitionFile: './generated/HasuraMetadataV2.ts'
   jsonInputTests:
-    - files: "./src/tests/**.json"
+    - files: './src/tests/**.json'
       # This gets called as "Convert.to(expectType)" -> e.g "Convert.toHasuraMetadataV2" in generated TS SDK
       expectType: HasuraMetadataV2
 ```
@@ -344,23 +348,23 @@ This allows for customizing behavior, IE for CI/CD pipelines. Here is one exampl
 ```ts
 generateTypes()
   .then((outputs) => {
-    console.log("Finished generateTypes(), outputs are", outputs)
+    console.log('Finished generateTypes(), outputs are', outputs);
     for (let output of outputs) {
       // This is the input file path
-      console.log("File:", output.file)
+      console.log('File:', output.file);
       // This contains the generated text
-      console.log("Results:", output.results)
+      console.log('Results:', output.results);
     }
   })
   .catch((err) => {
-    console.log("Got error", err)
+    console.log('Got error', err);
   })
   .finally(async () => {
     // Convert the generated JSON Schema to YAML, for example
-    const generatedFolder = path.join(pathFromRoot, "generated", "/")
-    const jsonSchemas = await glob(generatedFolder + "**.json")
-    jsonSchemas.forEach(jsonSchemaToYAML)
-  })
+    const generatedFolder = path.join(pathFromRoot, 'generated', '/');
+    const jsonSchemas = await glob(generatedFolder + '**.json');
+    jsonSchemas.forEach(jsonSchemaToYAML);
+  });
 ```
 
 ## Metadata IDE Type-Checking Integration

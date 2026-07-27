@@ -1,4 +1,4 @@
-$schema: 'http://json-schema.org/draft-07/schema#'
+$schema: http://json-schema.org/draft-07/schema#
 definitions:
   PGColumn:
     type: string
@@ -30,6 +30,7 @@ definitions:
       Template example: https://{{ACTION_API_DOMAIN}}/create-user
     type: string
   TableName:
+    title: TableName
     anyOf:
       - $ref: '#/definitions/QualifiedTable'
       - type: string
@@ -43,6 +44,7 @@ definitions:
       schema:
         type: string
         title: schema
+    additionalProperties: false
     required:
       - name
       - schema
@@ -66,8 +68,9 @@ definitions:
         description: Customise the column names
         $ref: '#/definitions/CustomColumnNames'
         title: custom_column_names
+    additionalProperties: false
   TableEntry:
-    description: 'Representation of a table in metadata, ''tables.yaml'' and ''metadata.json'''
+    description: Representation of a table in metadata, 'tables.yaml' and 'metadata.json'
     title: TableEntry
     type: object
     properties:
@@ -129,6 +132,7 @@ definitions:
         items:
           $ref: '#/definitions/DeletePermissionEntry'
         title: delete_permissions
+    additionalProperties: false
     required:
       - table
   CustomRootFields:
@@ -175,6 +179,7 @@ definitions:
         description: Customise the `delete_<table-name>_by_pk` root field
         type: string
         title: delete_by_pk
+    additionalProperties: false
   CustomColumnNames:
     description: A JSON Object of Postgres column name to GraphQL name mapping
     title: CustomColumnNames
@@ -182,6 +187,7 @@ definitions:
     additionalProperties:
       type: string
   FunctionName:
+    title: FunctionName
     anyOf:
       - $ref: '#/definitions/QualifiedFunction'
       - type: string
@@ -195,6 +201,7 @@ definitions:
       schema:
         type: string
         title: schema
+    additionalProperties: false
     required:
       - name
       - schema
@@ -207,15 +214,14 @@ definitions:
     type: object
     properties:
       function:
+        $ref: '#/definitions/FunctionName'
         description: Name of the SQL function
-        anyOf:
-          - $ref: '#/definitions/QualifiedFunction'
-          - type: string
         title: function
       configuration:
         description: Configuration for the SQL function
         $ref: '#/definitions/FunctionConfiguration'
         title: configuration
+    additionalProperties: false
     required:
       - function
   FunctionConfiguration:
@@ -240,6 +246,7 @@ definitions:
           - Argument modes: ONLY `IN`
         type: string
         title: session_argument
+    additionalProperties: false
   ObjectRelationship:
     description: >-
       https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#args-syntax
@@ -258,6 +265,7 @@ definitions:
         description: Comment
         type: string
         title: comment
+    additionalProperties: false
     required:
       - name
       - using
@@ -277,6 +285,7 @@ definitions:
         description: Manual mapping of table and columns
         $ref: '#/definitions/ObjRelUsingManualMapping'
         title: manual_configuration
+    additionalProperties: false
   ObjRelUsingManualMapping:
     description: >-
       Manual mapping of table and columns
@@ -286,10 +295,8 @@ definitions:
     type: object
     properties:
       remote_table:
+        $ref: '#/definitions/TableName'
         description: The table to which the relationship has to be established
-        anyOf:
-          - $ref: '#/definitions/QualifiedTable'
-          - type: string
         title: remote_table
       column_mapping:
         description: Mapping of columns from current table to remote table
@@ -297,6 +304,7 @@ definitions:
         additionalProperties:
           type: string
         title: column_mapping
+    additionalProperties: false
     required:
       - column_mapping
       - remote_table
@@ -318,6 +326,7 @@ definitions:
         description: Comment
         type: string
         title: comment
+    additionalProperties: false
     required:
       - name
       - using
@@ -337,6 +346,7 @@ definitions:
         description: Manual mapping of table and columns
         $ref: '#/definitions/ArrRelUsingManualMapping'
         title: manual_configuration
+    additionalProperties: false
   ArrRelUsingFKeyOn:
     description: >-
       The column with foreign key constraint
@@ -349,10 +359,9 @@ definitions:
         type: string
         title: column
       table:
-        anyOf:
-          - $ref: '#/definitions/QualifiedTable'
-          - type: string
+        $ref: '#/definitions/TableName'
         title: table
+    additionalProperties: false
     required:
       - column
       - table
@@ -365,10 +374,8 @@ definitions:
     type: object
     properties:
       remote_table:
+        $ref: '#/definitions/TableName'
         description: The table to which the relationship has to be established
-        anyOf:
-          - $ref: '#/definitions/QualifiedTable'
-          - type: string
         title: remote_table
       column_mapping:
         description: Mapping of columns from current table to remote table
@@ -376,6 +383,7 @@ definitions:
         additionalProperties:
           type: string
         title: column_mapping
+    additionalProperties: false
     required:
       - column_mapping
       - remote_table
@@ -407,6 +415,7 @@ definitions:
         description: Comment
         type: string
         title: comment
+    additionalProperties: false
     required:
       - permission
       - role
@@ -440,8 +449,7 @@ definitions:
           - type: array
             items:
               type: string
-          - enum:
-              - '*'
+          - const: '*'
             type: string
         title: columns
       backend_only:
@@ -453,6 +461,7 @@ definitions:
           if any auth is configured
         type: boolean
         title: backend_only
+    additionalProperties: false
     required:
       - columns
   SelectPermissionEntry:
@@ -473,6 +482,7 @@ definitions:
         description: Comment
         type: string
         title: comment
+    additionalProperties: false
     required:
       - permission
       - role
@@ -488,8 +498,7 @@ definitions:
           - type: array
             items:
               type: string
-          - enum:
-              - '*'
+          - const: '*'
             type: string
         title: columns
       computed_fields:
@@ -518,6 +527,7 @@ definitions:
                 - string
                 - number
         title: filter
+    additionalProperties: false
     required:
       - columns
   UpdatePermissionEntry:
@@ -538,6 +548,7 @@ definitions:
         description: Comment
         type: string
         title: comment
+    additionalProperties: false
     required:
       - permission
       - role
@@ -571,8 +582,7 @@ definitions:
           - type: array
             items:
               type: string
-          - enum:
-              - '*'
+          - const: '*'
             type: string
         title: columns
       filter:
@@ -587,6 +597,7 @@ definitions:
                 - string
                 - number
         title: filter
+    additionalProperties: false
     required:
       - columns
   DeletePermissionEntry:
@@ -607,6 +618,7 @@ definitions:
         description: Comment
         type: string
         title: comment
+    additionalProperties: false
     required:
       - permission
       - role
@@ -628,6 +640,7 @@ definitions:
                 - string
                 - number
         title: filter
+    additionalProperties: false
   ComputedField:
     description: >-
       https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/computed-field.html#args-syntax
@@ -646,6 +659,7 @@ definitions:
         description: Comment
         type: string
         title: comment
+    additionalProperties: false
     required:
       - definition
       - name
@@ -656,10 +670,8 @@ definitions:
     type: object
     properties:
       function:
+        $ref: '#/definitions/FunctionName'
         description: The SQL function
-        anyOf:
-          - $ref: '#/definitions/QualifiedFunction'
-          - type: string
         title: function
       table_argument:
         description: >-
@@ -674,6 +686,7 @@ definitions:
           to the function
         type: string
         title: session_argument
+    additionalProperties: false
     required:
       - function
   EventTrigger:
@@ -711,6 +724,7 @@ definitions:
             - $ref: '#/definitions/HeaderFromValue'
             - $ref: '#/definitions/HeaderFromEnv'
         title: headers
+    additionalProperties: false
     required:
       - definition
       - name
@@ -737,15 +751,18 @@ definitions:
           https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec
         $ref: '#/definitions/OperationSpec'
         title: update
+    additionalProperties: false
     required:
       - enable_manual
   EventTriggerColumns:
+    description: >-
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns
+    title: EventTriggerColumns
     anyOf:
       - type: array
         items:
           type: string
-      - enum:
-          - '*'
+      - const: '*'
         type: string
   OperationSpec:
     description: >-
@@ -754,15 +771,7 @@ definitions:
     type: object
     properties:
       columns:
-        description: >-
-          https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns
-        anyOf:
-          - type: array
-            items:
-              type: string
-          - enum:
-              - '*'
-            type: string
+        $ref: '#/definitions/EventTriggerColumns'
         title: columns
       payload:
         description: >-
@@ -771,10 +780,10 @@ definitions:
           - type: array
             items:
               type: string
-          - enum:
-              - '*'
+          - const: '*'
             type: string
         title: payload
+    additionalProperties: false
     required:
       - columns
   HeaderFromValue:
@@ -791,6 +800,7 @@ definitions:
         description: Value of the header
         type: string
         title: value
+    additionalProperties: false
     required:
       - name
       - value
@@ -808,6 +818,7 @@ definitions:
         description: Name of the environment variable which holds the value of the header
         type: string
         title: value_from_env
+    additionalProperties: false
     required:
       - name
       - value_from_env
@@ -835,6 +846,7 @@ definitions:
           Default: 60
         type: integer
         title: timeout_sec
+    additionalProperties: false
   CronTrigger:
     description: >-
       https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/scheduled-triggers.html#create-cron-trigger
@@ -882,6 +894,7 @@ definitions:
         description: Custom comment.
         type: string
         title: comment
+    additionalProperties: false
     required:
       - headers
       - include_in_metadata
@@ -921,6 +934,7 @@ definitions:
           Default: 21600 (6 hours)
         type: integer
         title: tolerance_seconds
+    additionalProperties: false
   RemoteSchema:
     description: >-
       https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-schemas.html#add-remote-schema
@@ -939,6 +953,7 @@ definitions:
         description: Comment
         type: string
         title: comment
+    additionalProperties: false
     required:
       - definition
       - name
@@ -967,6 +982,7 @@ definitions:
       timeout_seconds:
         type: number
         title: timeout_seconds
+    additionalProperties: false
   RemoteRelationship:
     description: >-
       https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-relationships.html#args-syntax
@@ -981,6 +997,7 @@ definitions:
         $ref: '#/definitions/RemoteRelationshipDef'
         description: Definition object
         title: definition
+    additionalProperties: false
     required:
       - definition
       - name
@@ -1008,6 +1025,7 @@ definitions:
           The schema tree ending at the field in remote schema which needs to be
           joined with.
         title: remote_field
+    additionalProperties: false
     required:
       - hasura_fields
       - remote_field
@@ -1040,6 +1058,7 @@ definitions:
             https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-relationships.html#remotefield
           $ref: '#/definitions/RemoteField'
           title: field
+      additionalProperties: false
       required:
         - arguments
   InputArguments:
@@ -1070,6 +1089,7 @@ definitions:
             items:
               $ref: '#/definitions/QueryCollection'
             title: queries
+        additionalProperties: false
         required:
           - queries
         title: definition
@@ -1077,6 +1097,7 @@ definitions:
         description: Comment
         type: string
         title: comment
+    additionalProperties: false
     required:
       - definition
       - name
@@ -1092,6 +1113,7 @@ definitions:
       query:
         type: string
         title: query
+    additionalProperties: false
     required:
       - name
       - query
@@ -1105,6 +1127,7 @@ definitions:
         description: Name of a query collection to be added to the allow-list
         type: string
         title: collection
+    additionalProperties: false
     required:
       - collection
   CustomTypes:
@@ -1131,6 +1154,7 @@ definitions:
         items:
           $ref: '#/definitions/EnumType'
         title: enums
+    additionalProperties: false
   InputObjectType:
     description: >-
       https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#inputobjecttype
@@ -1151,6 +1175,7 @@ definitions:
         items:
           $ref: '#/definitions/InputObjectField'
         title: fields
+    additionalProperties: false
     required:
       - fields
       - name
@@ -1172,6 +1197,7 @@ definitions:
         description: GraphQL type of the Input object type
         type: string
         title: type
+    additionalProperties: false
     required:
       - name
       - type
@@ -1201,6 +1227,7 @@ definitions:
         items:
           $ref: '#/definitions/CustomTypeObjectRelationship'
         title: relationships
+    additionalProperties: false
     required:
       - fields
       - name
@@ -1222,6 +1249,7 @@ definitions:
         description: GraphQL type of the Input object type
         type: string
         title: type
+    additionalProperties: false
     required:
       - name
       - type
@@ -1232,7 +1260,7 @@ definitions:
     type: object
     properties:
       name:
-        description: 'Name of the relationship, shouldn’t conflict with existing field names'
+        description: Name of the relationship, shouldn’t conflict with existing field names
         type: string
         title: name
       type:
@@ -1243,10 +1271,8 @@ definitions:
         type: string
         title: type
       remote_table:
+        $ref: '#/definitions/TableName'
         description: The table to which relationship is defined
-        anyOf:
-          - $ref: '#/definitions/QualifiedTable'
-          - type: string
         title: remote_table
       field_mapping:
         description: Mapping of fields of object type to columns of remote table
@@ -1254,6 +1280,7 @@ definitions:
         additionalProperties:
           type: string
         title: field_mapping
+    additionalProperties: false
     required:
       - field_mapping
       - name
@@ -1273,6 +1300,7 @@ definitions:
         description: Description of the Scalar type
         type: string
         title: description
+    additionalProperties: false
     required:
       - name
   EnumType:
@@ -1295,6 +1323,7 @@ definitions:
         items:
           $ref: '#/definitions/EnumValue'
         title: values
+    additionalProperties: false
     required:
       - name
       - values
@@ -1313,9 +1342,10 @@ definitions:
         type: string
         title: description
       is_deprecated:
-        description: 'If set to true, the enum value is marked as deprecated'
+        description: If set to true, the enum value is marked as deprecated
         type: boolean
         title: is_deprecated
+    additionalProperties: false
     required:
       - value
   Action:
@@ -1345,9 +1375,11 @@ definitions:
             role:
               type: string
               title: role
+          additionalProperties: false
           required:
             - role
         title: permissions
+    additionalProperties: false
     required:
       - definition
       - name
@@ -1392,6 +1424,7 @@ definitions:
           - query
         type: string
         title: type
+    additionalProperties: false
     required:
       - handler
   InputArgument:
@@ -1406,6 +1439,7 @@ definitions:
       type:
         type: string
         title: type
+    additionalProperties: false
     required:
       - name
       - type
@@ -1458,6 +1492,7 @@ definitions:
         items:
           $ref: '#/definitions/CronTrigger'
         title: cron_triggers
+    additionalProperties: false
     required:
       - tables
       - version

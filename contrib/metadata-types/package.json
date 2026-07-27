@@ -1,5 +1,5 @@
 {
-  "name": "",
+  "name": "@hasura/metadata",
   "version": "1.0.2",
   "main": "index.js",
   "private": false,
@@ -12,24 +12,23 @@
     "dist"
   ],
   "scripts": {
-    "generate-types": "ts-node ./src/generateTypes.ts",
+    "generate-types-only": "ts-node ./src/generateTypes.ts",
+    "generate-types": "npm run generate-types-only && npm run format",
     "test": "./node_modules/.bin/ava --verbose",
-    "build": "tsc -p tsconfig.lib.json"
+    "build": "tsc -p tsconfig.lib.json",
+    "format": "npx prettier --write \"**/*.+(js|ts|json|md|mdx)\""
   },
   "devDependencies": {
-    "@types/js-yaml": "^3.12.5",
-    "@types/node": "^16.10.3",
-    "ava": "^3.9.0",
-    "fast-glob": "^3.2.4",
-    "js-yaml": "^3.14.0",
-    "microbundle": "^0.12.3",
-    "prettier": "^2.4.1",
-    "quicktype": "^15.0.260",
-    "quicktype-core": "^6.0.70",
-    "quicktype-typescript-input": "^0.0.11",
+    "@types/node": "24.1.0",
+    "ava": "7.0.0",
+    "glob": "^13.0.6",
+    "js-yaml": "5.2.2",
+    "quicktype": "26.0.0",
+    "quicktype-core": "26.0.0",
+    "quicktype-typescript-input": "26.0.0",
     "ts-node": "^10.2.1",
-    "tsd": "^0.12.1",
-    "typescript": "^4.4.3"
+    "tsd": "0.33.0",
+    "typescript": "^5.9.3"
   },
   "ava": {
     "extensions": [

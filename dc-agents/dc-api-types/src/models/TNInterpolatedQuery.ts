@@ -9,4 +9,3 @@ export type TNInterpolatedQuery = {
   interpolated: string;
   type: 'interpolated';
 };
-

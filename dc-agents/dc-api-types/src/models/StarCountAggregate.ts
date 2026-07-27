@@ -5,4 +5,3 @@
 export type StarCountAggregate = {
   type: 'star_count';
 };
-

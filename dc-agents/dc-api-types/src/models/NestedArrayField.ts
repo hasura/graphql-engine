@@ -20,4 +20,3 @@ export type NestedArrayField = {
   type: 'array';
   where?: Expression;
 };
-

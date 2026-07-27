@@ -18,4 +18,3 @@ export type CustomUpdateColumnOperatorRowUpdate = {
   value: any;
   value_type: ScalarType;
 };
-

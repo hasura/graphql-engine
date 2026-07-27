@@ -9,4 +9,3 @@ export type ScalarArgumentValue = {
   value: any;
   value_type: ScalarType;
 };
-

@@ -6,5 +6,7 @@ import type { AutoIncrementGenerationStrategy } from './AutoIncrementGenerationS
 import type { DefaultValueGenerationStrategy } from './DefaultValueGenerationStrategy';
 import type { UniqueIdentifierGenerationStrategy } from './UniqueIdentifierGenerationStrategy';
 
-export type ColumnValueGenerationStrategy = (DefaultValueGenerationStrategy | AutoIncrementGenerationStrategy | UniqueIdentifierGenerationStrategy);
-
+export type ColumnValueGenerationStrategy =
+  | DefaultValueGenerationStrategy
+  | AutoIncrementGenerationStrategy
+  | UniqueIdentifierGenerationStrategy;

@@ -6,4 +6,3 @@ export type InterpolatedText = {
   type: 'text';
   value: string;
 };
-

@@ -9,4 +9,3 @@ export type SchemaRequest = {
   detail_level?: DetailLevel;
   filters?: SchemaFilters;
 };
-

@@ -21,4 +21,3 @@ export type ScalarTypeCapabilities = {
   graphql_type?: GraphQLType;
   update_column_operators?: UpdateColumnOperators;
 };
-

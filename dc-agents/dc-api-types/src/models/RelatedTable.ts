@@ -6,4 +6,3 @@ export type RelatedTable = {
   relationship: string;
   type: 'related';
 };
-

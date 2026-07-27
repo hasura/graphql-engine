@@ -12,4 +12,3 @@ export type ObjectRelationInsertSchema = {
   relationship: string;
   type: 'object_relation';
 };
-

@@ -15,4 +15,3 @@ export type OrderBy = {
    */
   relations: Record<string, OrderByRelation>;
 };
-

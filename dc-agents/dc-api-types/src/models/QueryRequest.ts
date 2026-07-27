@@ -26,4 +26,3 @@ export type QueryRequest = {
   relationships: Array<Relationships>;
   target: Target;
 };
-

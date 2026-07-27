@@ -8,4 +8,3 @@ export type UnrelatedTable = {
   table: TableName;
   type: 'unrelated';
 };
-

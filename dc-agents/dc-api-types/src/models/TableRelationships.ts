@@ -13,4 +13,3 @@ export type TableRelationships = {
   source_table: TableName;
   type: 'table';
 };
-

@@ -9,4 +9,7 @@ import type { UpdateColumnOperatorDefinition } from './UpdateColumnOperatorDefin
  * Operator names must be valid GraphQL names.
  *
  */
-export type UpdateColumnOperators = Record<string, UpdateColumnOperatorDefinition>;
+export type UpdateColumnOperators = Record<
+  string,
+  UpdateColumnOperatorDefinition
+>;

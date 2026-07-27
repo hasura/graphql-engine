@@ -16,4 +16,3 @@ export type OrderBySingleColumnAggregate = {
   result_type: ScalarType;
   type: 'single_column_aggregate';
 };
-

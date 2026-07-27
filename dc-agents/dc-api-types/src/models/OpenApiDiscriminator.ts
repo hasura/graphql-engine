@@ -6,4 +6,3 @@ export type OpenApiDiscriminator = {
   mapping?: Record<string, string>;
   propertyName: string;
 };
-

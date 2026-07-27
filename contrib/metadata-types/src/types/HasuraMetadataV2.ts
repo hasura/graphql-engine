@@ -1,29 +1,29 @@
-export type PGColumn = string
-export type ComputedFieldName = string
-export type RoleName = string
-export type TriggerName = string
-export type RemoteRelationshipName = string
-export type RemoteSchemaName = string
-export type CollectionName = string
-export type GraphQLName = string
-export type GraphQLType = string
-export type RelationshipName = string
-export type ActionName = string
+export type PGColumn = string;
+export type ComputedFieldName = string;
+export type RoleName = string;
+export type TriggerName = string;
+export type RemoteRelationshipName = string;
+export type RemoteSchemaName = string;
+export type CollectionName = string;
+export type GraphQLName = string;
+export type GraphQLType = string;
+export type RelationshipName = string;
+export type ActionName = string;
 /**
  * A String value which supports templating environment variables enclosed in {{ and }}.
  * Template example: https://{{ACTION_API_DOMAIN}}/create-user
  */
-export type WebhookURL = string
+export type WebhookURL = string;
 
 ////////////////////////////////
 // #region TABLES
 ///////////////////////////////
 
-export type TableName = string | QualifiedTable
+export type TableName = string | QualifiedTable;
 
 export interface QualifiedTable {
-  name: string
-  schema: string
+  name: string;
+  schema: string;
 }
 
 /**
@@ -32,29 +32,29 @@ export interface QualifiedTable {
  */
 export interface TableConfig {
   /** Customise the table name */
-  custom_name?: string
+  custom_name?: string;
   /** Customise the root fields */
-  custom_root_fields?: CustomRootFields
+  custom_root_fields?: CustomRootFields;
   /** Customise the column names */
-  custom_column_names?: CustomColumnNames
+  custom_column_names?: CustomColumnNames;
 }
 
 /**
  * Representation of a table in metadata, 'tables.yaml' and 'metadata.json'
  */
 export interface TableEntry {
-  table: QualifiedTable
-  is_enum?: boolean
-  configuration?: TableConfig
-  event_triggers?: EventTrigger[]
-  computed_fields?: ComputedField[]
-  object_relationships?: ObjectRelationship[]
-  array_relationships?: ArrayRelationship[]
-  remote_relationships?: RemoteRelationship[]
-  insert_permissions?: InsertPermissionEntry[]
-  select_permissions?: SelectPermissionEntry[]
-  update_permissions?: UpdatePermissionEntry[]
-  delete_permissions?: DeletePermissionEntry[]
+  table: QualifiedTable;
+  is_enum?: boolean;
+  configuration?: TableConfig;
+  event_triggers?: EventTrigger[];
+  computed_fields?: ComputedField[];
+  object_relationships?: ObjectRelationship[];
+  array_relationships?: ArrayRelationship[];
+  remote_relationships?: RemoteRelationship[];
+  insert_permissions?: InsertPermissionEntry[];
+  select_permissions?: SelectPermissionEntry[];
+  update_permissions?: UpdatePermissionEntry[];
+  delete_permissions?: DeletePermissionEntry[];
 }
 
 /**
@@ -63,30 +63,30 @@ export interface TableEntry {
  */
 export interface CustomRootFields {
   /** Customise the `<table-name>` root field */
-  select?: string
+  select?: string;
   /** Customise the `<table-name>_by_pk` root field */
-  select_by_pk?: string
+  select_by_pk?: string;
   /** Customise the `<table-name>_aggregate` root field */
-  select_aggregate?: string
+  select_aggregate?: string;
   /** Customise the `insert_<table-name>` root field */
-  insert?: string
+  insert?: string;
   /** Customise the `insert_<table-name>_one` root field */
-  insert_one?: string
+  insert_one?: string;
   /** Customise the `update_<table-name>` root field */
-  update?: string
+  update?: string;
   /** Customise the `update_<table-name>_by_pk` root field */
-  update_by_pk?: string
+  update_by_pk?: string;
   /** Customise the `delete_<table-name>` root field */
-  delete?: string
+  delete?: string;
   /** Customise the `delete_<table-name>_by_pk` root field */
-  delete_by_pk?: string
+  delete_by_pk?: string;
 }
 
 /**
  * A JSON Object of Postgres column name to GraphQL name mapping
  */
 export interface CustomColumnNames {
-  [key: string]: string
+  [key: string]: string;
 }
 
 //////////////////////////////
@@ -97,11 +97,11 @@ export interface CustomColumnNames {
 // #region CUSTOM FUNCTIONS
 ///////////////////////////////
 
-export type FunctionName = string | QualifiedFunction
+export type FunctionName = string | QualifiedFunction;
 
 export interface QualifiedFunction {
-  name: string
-  schema: string
+  name: string;
+  schema: string;
 }
 
 /**
@@ -110,9 +110,9 @@ export interface QualifiedFunction {
  */
 export interface CustomFunction {
   /** Name of the SQL function */
-  function: FunctionName
+  function: FunctionName;
   /** Configuration for the SQL function */
-  configuration?: FunctionConfiguration
+  configuration?: FunctionConfiguration;
 }
 
 /**
@@ -127,7 +127,7 @@ export interface FunctionConfiguration {
    * - Return type: MUST be `SETOF <table-name>`
    * - Argument modes: ONLY `IN`
    */
-  session_argument?: string
+  session_argument?: string;
 }
 
 //////////////////////////////
@@ -143,11 +143,11 @@ export interface FunctionConfiguration {
  */
 export interface ObjectRelationship {
   /** Name of the new relationship */
-  name: string
+  name: string;
   /** Use one of the available ways to define an object relationship */
-  using: ObjRelUsing
+  using: ObjRelUsing;
   /** Comment */
-  comment?: string
+  comment?: string;
 }
 
 /**
@@ -156,9 +156,9 @@ export interface ObjectRelationship {
  */
 export interface ObjRelUsing {
   /** The column with foreign key constraint */
-  foreign_key_constraint_on?: PGColumn
+  foreign_key_constraint_on?: PGColumn;
   /** Manual mapping of table and columns */
-  manual_configuration?: ObjRelUsingManualMapping
+  manual_configuration?: ObjRelUsingManualMapping;
 }
 
 /**
@@ -167,9 +167,9 @@ export interface ObjRelUsing {
  */
 export interface ObjRelUsingManualMapping {
   /** The table to which the relationship has to be established */
-  remote_table: TableName
+  remote_table: TableName;
   /** Mapping of columns from current table to remote table */
-  column_mapping: { [key: string]: string }
+  column_mapping: { [key: string]: string };
 }
 
 /**
@@ -177,11 +177,11 @@ export interface ObjRelUsingManualMapping {
  */
 export interface ArrayRelationship {
   /** Name of the new relationship */
-  name: string
+  name: string;
   /** Use one of the available ways to define an array relationship */
-  using: ArrRelUsing
+  using: ArrRelUsing;
   /** Comment */
-  comment?: string
+  comment?: string;
 }
 
 /**
@@ -190,9 +190,9 @@ export interface ArrayRelationship {
  */
 export interface ArrRelUsing {
   /** The column with foreign key constraint */
-  foreign_key_constraint_on?: ArrRelUsingFKeyOn
+  foreign_key_constraint_on?: ArrRelUsingFKeyOn;
   /** Manual mapping of table and columns */
-  manual_configuration?: ArrRelUsingManualMapping
+  manual_configuration?: ArrRelUsingManualMapping;
 }
 
 /**
@@ -200,8 +200,8 @@ export interface ArrRelUsing {
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#arrrelusingfkeyon
  */
 export interface ArrRelUsingFKeyOn {
-  column: PGColumn
-  table: TableName
+  column: PGColumn;
+  table: TableName;
 }
 
 /**
@@ -210,9 +210,9 @@ export interface ArrRelUsingFKeyOn {
  */
 export interface ArrRelUsingManualMapping {
   /** The table to which the relationship has to be established */
-  remote_table: TableName
+  remote_table: TableName;
   /** Mapping of columns from current table to remote table */
-  column_mapping: { [key: string]: string }
+  column_mapping: { [key: string]: string };
 }
 
 /**
@@ -220,7 +220,7 @@ export interface ArrRelUsingManualMapping {
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#columnpresetexp
  */
 export interface ColumnPresetsExpression {
-  [key: string]: string
+  [key: string]: string;
 }
 
 ////////////////////////////////
@@ -236,11 +236,11 @@ export interface ColumnPresetsExpression {
  */
 export interface InsertPermissionEntry {
   /** Role */
-  role: RoleName
+  role: RoleName;
   /** The permission definition */
-  permission: InsertPermission
+  permission: InsertPermission;
   /** Comment */
-  comment?: string
+  comment?: string;
 }
 
 /**
@@ -248,16 +248,16 @@ export interface InsertPermissionEntry {
  */
 export interface InsertPermission {
   /** This expression has to hold true for every new row that is inserted */
-  check?: { [key: string]: object | string | number }
+  check?: { [key: string]: object | string | number };
   /** Preset values for columns that can be sourced from session variables or static values */
-  set?: ColumnPresetsExpression
+  set?: ColumnPresetsExpression;
   /** Can insert into only these columns (or all when '*' is specified) */
-  columns: PGColumn[] | "*"
+  columns: PGColumn[] | '*';
   /**
    * When set to true the mutation is accessible only if x-hasura-use-backend-only-permissions session variable exists
    * and is set to true and request is made with x-hasura-admin-secret set if any auth is configured
    */
-  backend_only?: boolean
+  backend_only?: boolean;
 }
 
 /**
@@ -265,11 +265,11 @@ export interface InsertPermission {
  */
 export interface SelectPermissionEntry {
   /** Role */
-  role: RoleName
+  role: RoleName;
   /** The permission definition */
-  permission: SelectPermission
+  permission: SelectPermission;
   /** Comment */
-  comment?: string
+  comment?: string;
 }
 
 /**
@@ -277,18 +277,18 @@ export interface SelectPermissionEntry {
  */
 export interface SelectPermission {
   /** Only these columns are selectable (or all when '*' is specified) */
-  columns: PGColumn[] | "*"
+  columns: PGColumn[] | '*';
   /** Only these computed fields are selectable */
-  computed_fields?: ComputedFieldName[]
+  computed_fields?: ComputedFieldName[];
   /**
    * The maximum number of rows that can be returned
    * @TJS-type integer
    */
-  limit?: number
+  limit?: number;
   /** Toggle allowing aggregate queries */
-  allow_aggregations?: boolean
+  allow_aggregations?: boolean;
   /** Only the rows where this precondition holds true are selectable */
-  filter?: { [key: string]: object | string | number }
+  filter?: { [key: string]: object | string | number };
 }
 
 /**
@@ -296,11 +296,11 @@ export interface SelectPermission {
  */
 export interface UpdatePermissionEntry {
   /** Role */
-  role: RoleName
+  role: RoleName;
   /** The permission definition */
-  permission: UpdatePermission
+  permission: UpdatePermission;
   /** Comment */
-  comment?: string
+  comment?: string;
 }
 
 /**
@@ -308,13 +308,13 @@ export interface UpdatePermissionEntry {
  */
 export interface UpdatePermission {
   /** Postcondition which must be satisfied by rows which have been updated */
-  check?: { [key: string]: object | string | number }
+  check?: { [key: string]: object | string | number };
   /** Preset values for columns that can be sourced from session variables or static values */
-  set?: ColumnPresetsExpression
+  set?: ColumnPresetsExpression;
   /** Only these columns are selectable (or all when '*' is specified) */
-  columns: PGColumn[] | "*"
+  columns: PGColumn[] | '*';
   /** Only the rows where this precondition holds true are updatable */
-  filter?: { [key: string]: object | string | number }
+  filter?: { [key: string]: object | string | number };
 }
 
 /**
@@ -322,11 +322,11 @@ export interface UpdatePermission {
  */
 export interface DeletePermissionEntry {
   /** Role */
-  role: RoleName
+  role: RoleName;
   /** The permission definition */
-  permission: DeletePermission
+  permission: DeletePermission;
   /** Comment */
-  comment?: string
+  comment?: string;
 }
 
 /**
@@ -334,7 +334,7 @@ export interface DeletePermissionEntry {
  */
 export interface DeletePermission {
   /** Only the rows where this precondition holds true are updatable */
-  filter?: { [key: string]: object | string | number }
+  filter?: { [key: string]: object | string | number };
 }
 
 ////////////////////////////////
@@ -350,11 +350,11 @@ export interface DeletePermission {
  */
 export interface ComputedField {
   /** Name of the new computed field */
-  name: ComputedFieldName
+  name: ComputedFieldName;
   /** The computed field definition */
-  definition: ComputedFieldDefinition
+  definition: ComputedFieldDefinition;
   /** Comment */
-  comment?: string
+  comment?: string;
 }
 
 /**
@@ -362,11 +362,11 @@ export interface ComputedField {
  */
 export interface ComputedFieldDefinition {
   /** The SQL function */
-  function: FunctionName
+  function: FunctionName;
   /** Name of the argument which accepts a table row type. If omitted, the first argument is considered a table argument */
-  table_argument?: string
+  table_argument?: string;
   /** Name of the argument which accepts the Hasura session object as a JSON/JSONB value. If omitted, the Hasura session object is not passed to the function */
-  session_argument?: string
+  session_argument?: string;
 }
 
 ////////////////////////////////
@@ -383,36 +383,36 @@ export interface ComputedFieldDefinition {
  */
 export interface EventTrigger {
   /** Name of the event trigger */
-  name: TriggerName
+  name: TriggerName;
   /** The SQL function */
-  definition: EventTriggerDefinition
+  definition: EventTriggerDefinition;
   /** The SQL function */
-  retry_conf: RetryConf
+  retry_conf: RetryConf;
   /** The SQL function */
-  webhook?: string
-  webhook_from_env?: string
+  webhook?: string;
+  webhook_from_env?: string;
   /** The SQL function */
-  headers?: Array<HeaderFromValue | HeaderFromEnv>
+  headers?: Array<HeaderFromValue | HeaderFromEnv>;
 }
 
 export interface EventTriggerDefinition {
-  enable_manual: boolean
-  insert?: OperationSpec
-  delete?: OperationSpec
-  update?: OperationSpec
+  enable_manual: boolean;
+  insert?: OperationSpec;
+  delete?: OperationSpec;
+  update?: OperationSpec;
 }
 
 /**
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns
  */
-export type EventTriggerColumns = "*" | PGColumn[]
+export type EventTriggerColumns = '*' | PGColumn[];
 
 /**
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec
  */
 export interface OperationSpec {
-  columns: EventTriggerColumns
-  payload?: EventTriggerColumns
+  columns: EventTriggerColumns;
+  payload?: EventTriggerColumns;
 }
 
 /**
@@ -420,9 +420,9 @@ export interface OperationSpec {
  */
 export interface HeaderFromValue {
   /** Name of the header */
-  name: string
+  name: string;
   /** Value of the header */
-  value: string
+  value: string;
 }
 
 /**
@@ -430,9 +430,9 @@ export interface HeaderFromValue {
  */
 export interface HeaderFromEnv {
   /** Name of the header */
-  name: string
+  name: string;
   /** Name of the environment variable which holds the value of the header */
-  value_from_env: string
+  value_from_env: string;
 }
 
 /**
@@ -444,19 +444,19 @@ export interface RetryConf {
    * Default: 0
    * @TJS-type integer
    */
-  num_retries?: number
+  num_retries?: number;
   /**
    * Number of seconds to wait between each retry.
    * Default: 10
    * @TJS-type integer
    */
-  interval_sec?: number
+  interval_sec?: number;
   /**
    * Number of seconds to wait for response before timing out.
    * Default: 60
    * @TJS-type integer
    */
-  timeout_sec?: number
+  timeout_sec?: number;
 }
 
 ////////////////////////////////
@@ -472,21 +472,21 @@ export interface RetryConf {
  */
 export interface CronTrigger {
   /**	Name of the cron trigger */
-  name: TriggerName
+  name: TriggerName;
   /**	URL of the webhook */
-  webhook: WebhookURL
+  webhook: WebhookURL;
   /**	Cron expression at which the trigger should be invoked. */
-  schedule: string
+  schedule: string;
   /** Any JSON payload which will be sent when the webhook is invoked. */
-  payload?: object
+  payload?: object;
   /** List of headers to be sent with the webhook */
-  headers: Array<HeaderFromEnv | HeaderFromValue>
+  headers: Array<HeaderFromEnv | HeaderFromValue>;
   /**	Retry configuration if scheduled invocation delivery fails */
-  retry_conf?: RetryConfST
+  retry_conf?: RetryConfST;
   /**	Flag to indicate whether a trigger should be included in the metadata. When a cron trigger is included in the metadata, the user will be able to export it when the metadata of the graphql-engine is exported. */
-  include_in_metadata: boolean
+  include_in_metadata: boolean;
   /**	Custom comment. */
-  comment?: string
+  comment?: string;
 }
 
 /**
@@ -498,25 +498,25 @@ export interface RetryConfST {
    * Default: 0
    * @TJS-type integer
    */
-  num_retries?: number
+  num_retries?: number;
   /**
    * Number of seconds to wait between each retry.
    * Default: 10
    * @TJS-type integer
    */
-  retry_interval_seconds?: number
+  retry_interval_seconds?: number;
   /**
    * Number of seconds to wait for response before timing out.
    * Default: 60
    * @TJS-type integer
    */
-  timeout_seconds?: number
+  timeout_seconds?: number;
   /**
    * Number of seconds between scheduled time and actual delivery time that is acceptable. If the time difference is more than this, then the event is dropped.
    * Default: 21600 (6 hours)
    * @TJS-type integer
    */
-  tolerance_seconds?: number
+  tolerance_seconds?: number;
 }
 
 ////////////////////////////////
@@ -532,22 +532,22 @@ export interface RetryConfST {
  */
 export interface RemoteSchema {
   /** Name of the remote schema */
-  name: string
+  name: string;
   /** Name of the remote schema */
-  definition: RemoteSchemaDef
+  definition: RemoteSchemaDef;
   /** Comment */
-  comment?: string
+  comment?: string;
 }
 
 /**
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#remoteschemadef
  */
 export interface RemoteSchemaDef {
-  url?: string
-  url_from_env?: string
-  headers?: Array<HeaderFromEnv | HeaderFromValue>
-  forward_client_headers?: boolean
-  timeout_seconds?: number
+  url?: string;
+  url_from_env?: string;
+  headers?: Array<HeaderFromEnv | HeaderFromValue>;
+  forward_client_headers?: boolean;
+  timeout_seconds?: number;
 }
 
 ////////////////////////////////
@@ -565,9 +565,9 @@ export interface RemoteSchemaDef {
  */
 export interface RemoteRelationship {
   /** Name of the remote relationship */
-  name: RemoteRelationshipName
+  name: RemoteRelationshipName;
   /** Definition object */
-  definition: RemoteRelationshipDef
+  definition: RemoteRelationshipDef;
 }
 
 export interface RemoteRelationshipDef {
@@ -575,11 +575,11 @@ export interface RemoteRelationshipDef {
    * Column(s) in the table that is used for joining with remote schema field.
    * All join keys in remote_field must appear here.
    */
-  hasura_fields: PGColumn[]
+  hasura_fields: PGColumn[];
   /** Name of the remote schema to join with */
-  remote_schema: RemoteSchemaName
+  remote_schema: RemoteSchemaName;
   /** The schema tree ending at the field in remote schema which needs to be joined with. */
-  remote_field: RemoteField
+  remote_field: RemoteField;
 }
 
 /**
@@ -589,9 +589,9 @@ export interface RemoteRelationshipDef {
  */
 export interface RemoteField {
   [FieldName: string]: {
-    arguments: InputArguments
-    field?: RemoteField
-  }
+    arguments: InputArguments;
+    field?: RemoteField;
+  };
 }
 
 /**
@@ -599,7 +599,7 @@ export interface RemoteField {
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-relationships.html#inputarguments
  */
 export interface InputArguments {
-  [InputField: string]: PGColumn
+  [InputField: string]: PGColumn;
 }
 
 ////////////////////////////////
@@ -615,21 +615,21 @@ export interface InputArguments {
  */
 export interface QueryCollectionEntry {
   /** Name of the query collection */
-  name: CollectionName
+  name: CollectionName;
   /** List of queries */
   definition: {
-    queries: QueryCollection[]
-  }
+    queries: QueryCollection[];
+  };
   /** Comment */
-  comment?: string
+  comment?: string;
 }
 
 /**
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#collectionquery
  */
 export interface QueryCollection {
-  name: string
-  query: string
+  name: string;
+  query: string;
 }
 
 ////////////////////////////////
@@ -645,7 +645,7 @@ export interface QueryCollection {
  */
 export interface AllowList {
   /** Name of a query collection to be added to the allow-list */
-  collection: CollectionName
+  collection: CollectionName;
 }
 
 ////////////////////////////////
@@ -657,10 +657,10 @@ export interface AllowList {
 ///////////////////////////////
 
 export interface CustomTypes {
-  input_objects?: InputObjectType[]
-  objects?: ObjectType[]
-  scalars?: ScalarType[]
-  enums?: EnumType[]
+  input_objects?: InputObjectType[];
+  objects?: ObjectType[];
+  scalars?: ScalarType[];
+  enums?: EnumType[];
 }
 
 /**
@@ -668,11 +668,11 @@ export interface CustomTypes {
  */
 export interface InputObjectType {
   /** Name of the Input object type */
-  name: GraphQLName
+  name: GraphQLName;
   /** Description of the Input object type */
-  description?: string
+  description?: string;
   /** Fields of the Input object type */
-  fields: InputObjectField[]
+  fields: InputObjectField[];
 }
 
 /**
@@ -680,11 +680,11 @@ export interface InputObjectType {
  */
 export interface InputObjectField {
   /** Name of the Input object type */
-  name: GraphQLName
+  name: GraphQLName;
   /** Description of the Input object type */
-  description?: string
+  description?: string;
   /** GraphQL type of the Input object type */
-  type: GraphQLType
+  type: GraphQLType;
 }
 
 /**
@@ -692,13 +692,13 @@ export interface InputObjectField {
  */
 export interface ObjectType {
   /** Name of the Input object type */
-  name: GraphQLName
+  name: GraphQLName;
   /** Description of the Input object type */
-  description?: string
+  description?: string;
   /** Fields of the Input object type */
-  fields: InputObjectField[]
+  fields: InputObjectField[];
   /**Relationships of the Object type to tables */
-  relationships?: CustomTypeObjectRelationship[]
+  relationships?: CustomTypeObjectRelationship[];
 }
 
 /**
@@ -706,11 +706,11 @@ export interface ObjectType {
  */
 export interface ObjectField {
   /** Name of the Input object type */
-  name: GraphQLName
+  name: GraphQLName;
   /** Description of the Input object type */
-  description?: string
+  description?: string;
   /** GraphQL type of the Input object type */
-  type: GraphQLType
+  type: GraphQLType;
 }
 
 /**
@@ -718,15 +718,15 @@ export interface ObjectField {
  */
 export interface CustomTypeObjectRelationship {
   /** Name of the relationship, shouldn’t conflict with existing field names */
-  name: RelationshipName
+  name: RelationshipName;
   /** Type of the relationship */
-  type: "object" | "array"
+  type: 'object' | 'array';
   /** The table to which relationship is defined */
-  remote_table: TableName
+  remote_table: TableName;
   /** Mapping of fields of object type to columns of remote table  */
   field_mapping: {
-    [ObjectFieldName: string]: string
-  }
+    [ObjectFieldName: string]: string;
+  };
 }
 
 /**
@@ -734,9 +734,9 @@ export interface CustomTypeObjectRelationship {
  */
 export interface ScalarType {
   /** Name of the Scalar type */
-  name: GraphQLName
+  name: GraphQLName;
   /** Description of the Scalar type */
-  description?: string
+  description?: string;
 }
 
 /**
@@ -744,11 +744,11 @@ export interface ScalarType {
  */
 export interface EnumType {
   /** Name of the Enum type */
-  name: GraphQLName
+  name: GraphQLName;
   /** Description of the Enum type */
-  description?: string
+  description?: string;
   /** Values of the Enum type */
-  values: EnumValue[]
+  values: EnumValue[];
 }
 
 /**
@@ -756,11 +756,11 @@ export interface EnumType {
  */
 export interface EnumValue {
   /** Value of the Enum type */
-  value: GraphQLName
+  value: GraphQLName;
   /** Description of the Enum value */
-  description?: string
+  description?: string;
   /** If set to true, the enum value is marked as deprecated */
-  is_deprecated?: boolean
+  is_deprecated?: boolean;
 }
 
 ////////////////////////////////
@@ -779,34 +779,34 @@ export interface EnumValue {
  */
 export interface Action {
   /** Name of the action  */
-  name: ActionName
+  name: ActionName;
   /** Definition of the action */
-  definition: ActionDefinition
+  definition: ActionDefinition;
   /** Comment */
-  comment?: string
+  comment?: string;
   /** Permissions of the action */
-  permissions?: Array<{ role: string }>
+  permissions?: Array<{ role: string }>;
 }
 
 /**
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/actions.html#actiondefinition
  */
 export interface ActionDefinition {
-  arguments?: InputArgument[]
-  output_type?: string
-  kind?: string
-  headers?: Array<HeaderFromEnv | HeaderFromValue>
-  forward_client_headers?: boolean
-  handler: WebhookURL
-  type?: "mutation" | "query"
+  arguments?: InputArgument[];
+  output_type?: string;
+  kind?: string;
+  headers?: Array<HeaderFromEnv | HeaderFromValue>;
+  forward_client_headers?: boolean;
+  handler: WebhookURL;
+  type?: 'mutation' | 'query';
 }
 
 /**
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/actions.html#inputargument
  */
 export interface InputArgument {
-  name: string
-  type: GraphQLType
+  name: string;
+  type: GraphQLType;
 }
 
 ////////////////////////////////
@@ -818,13 +818,13 @@ export interface InputArgument {
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/manage-metadata.html#replace-metadata
  */
 export interface HasuraMetadataV2 {
-  version: number
-  tables: TableEntry[]
-  actions?: Action[]
-  custom_types?: CustomTypes
-  functions?: CustomFunction[]
-  remote_schemas?: RemoteSchema[]
-  query_collections?: QueryCollectionEntry[]
-  allowlist?: AllowList[]
-  cron_triggers?: CronTrigger[]
+  version: number;
+  tables: TableEntry[];
+  actions?: Action[];
+  custom_types?: CustomTypes;
+  functions?: CustomFunction[];
+  remote_schemas?: RemoteSchema[];
+  query_collections?: QueryCollectionEntry[];
+  allowlist?: AllowList[];
+  cron_triggers?: CronTrigger[];
 }

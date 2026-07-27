@@ -7,4 +7,3 @@ import type { SubqueryComparisonCapabilities } from './SubqueryComparisonCapabil
 export type ComparisonCapabilities = {
   subquery?: SubqueryComparisonCapabilities;
 };
-

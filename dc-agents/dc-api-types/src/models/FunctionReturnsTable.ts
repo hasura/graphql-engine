@@ -8,4 +8,3 @@ export type FunctionReturnsTable = {
   table: TableName;
   type: 'table';
 };
-

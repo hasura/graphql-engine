@@ -3,7 +3,6 @@
 // init project
 var express = require('express');
 var app = express();
-var requestClient = require('request');
 var port = process.env.PORT || 3000;
 
 /* A simple sample

@@ -8,4 +8,3 @@ export type TTable = {
   name: TableName;
   type: 'table';
 };
-

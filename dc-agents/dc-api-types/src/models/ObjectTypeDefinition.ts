@@ -18,4 +18,3 @@ export type ObjectTypeDefinition = {
    */
   name: string;
 };
-

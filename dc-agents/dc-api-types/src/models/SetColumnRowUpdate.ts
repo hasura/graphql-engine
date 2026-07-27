@@ -16,4 +16,3 @@ export type SetColumnRowUpdate = {
   value: any;
   value_type: ScalarType;
 };
-

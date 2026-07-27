@@ -1,6 +1,5 @@
-﻿
-export function stringToBool(x: string | null | undefined): boolean {
-  return (/1|true|t|yes|y/i).test(x || '');
+﻿export function stringToBool(x: string | null | undefined): boolean {
+  return /1|true|t|yes|y/i.test(x || '');
 }
 
 export function envToBool(envVarName: string): boolean {
@@ -17,12 +16,15 @@ export function envToNum(envVarName: string, defaultValue: number): number {
   return val === undefined ? defaultValue : Number(val);
 }
 
-export function envToArrayOfString(envVarName: string, defaultValue: Array<string> | null = null): Array<string> | null {
+export function envToArrayOfString(
+  envVarName: string,
+  defaultValue: Array<string> | null = null,
+): Array<string> | null {
   const val = process.env[envVarName];
   return val == null ? defaultValue : val.split(',');
 }
 
-export const LOG_LEVEL = envToString("LOG_LEVEL", "info");
+export const LOG_LEVEL = envToString('LOG_LEVEL', 'info');
 export const PRETTY_PRINT_LOGS = envToBool('PRETTY_PRINT_LOGS');
 export const METRICS = envToBool('METRICS');
 
@@ -42,5 +44,8 @@ export const MUTATIONS = envToBool('MUTATIONS');
 
 export const DATASETS = envToBool('DATASETS');
 export const DATASET_DELETE = envToBool('DATASET_DELETE');
-export const DATASET_TEMPLATES = envToString('DATASET_TEMPLATES', "./dataset_templates");
-export const DATASET_CLONES = envToString('DATASET_CLONES', "./dataset_clones");
+export const DATASET_TEMPLATES = envToString(
+  'DATASET_TEMPLATES',
+  './dataset_templates',
+);
+export const DATASET_CLONES = envToString('DATASET_CLONES', './dataset_clones');
