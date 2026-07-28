@@ -30,7 +30,7 @@ const handlePayload = (payload) => {
           a.name,
           a.definition.type,
           a.definition.arguments,
-          a.definition.output_type,
+          a.definition.output_type
         )}`;
       });
     } catch (e) {
@@ -53,13 +53,13 @@ const handlePayload = (payload) => {
       const derivation = deriveAction(
         toDeriveOperation,
         introspectionSchema,
-        actionName,
+        actionName
       );
       const derivedActionSdl = getActionDefinitionSdl(
         derivation.action.name,
         derivation.action.type,
         derivation.action.arguments,
-        derivation.action.output_type,
+        derivation.action.output_type
       );
       const derivedTypesSdl = getTypesSdl(derivation.types);
       sdl = `${derivedActionSdl}${derivedTypesSdl}${sdl}`;

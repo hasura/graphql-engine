@@ -1,5 +1,3 @@
-import 'regenerator-runtime/runtime';
-
 const fs = require('fs');
 const { sdl, actionsCodegen } = require('./services');
 const { getFlagValue, OUTPUT_FILE_FLAG } = require('./utils/commandUtils');

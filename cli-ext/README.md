@@ -5,22 +5,24 @@ The binaries are built using the [pkg](https://www.npmjs.com/package/pkg) packag
 ```bash
 npm install
 npm run build
-OR 
+OR
 make clean-build
 ```
 
 The binaries will be placed in the `bin` directory at root. Copy the binary to your PATH as `cli-ext`.
 
 Presently, binaries are built for following targets:
-- node12-linux-x64
-- node12-windows-x64
-- node12-macos-x64
-- node12-linux-arm64
-- node16-macos-arm64
+
+- node24-linux-x64
+- node24-windows-x64
+- node24-macos-x64
+- node24-linux-arm64
+- node24-macos-arm64
 
 More information on `pkg` and `targets` is available on the [pkg page](https://www.npmjs.com/package/pkg).
 
 If you want to build only a specific binary or one for a different target altogether, you can do so by following the commands below:
+
 ```bash
 npm install -g pkg
 pkg ./build/command.js --output <output-path> -t <node-range>-<platform>-<architecture>
@@ -31,7 +33,6 @@ A supported list and combinations of `node-range`, `platform` and `architecture`
 The hasura cli provides a `--cli-ext-path` flag to use a different cli-ext binary.
 
 ## API
-
 
 ```
 scaffolder sdl to '{ "types": { "enums": [], "scalars": [], "input_objects": [ { "name": "UserInput", "fields": [ { "name": "username", "type": "String", "description": "lalz" }, { "name": "password", "type": "String!", "description": "pass" } ] } ], "objects": [ { "name": "UserInfo", "fields": [ { "name": "accessToken", "type": "String", "description": "lolz" } ] } ] } }'

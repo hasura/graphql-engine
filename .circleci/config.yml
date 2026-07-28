@@ -616,7 +616,7 @@ jobs:
       - run:
           name: sign macos (arm64) cli-ext
           command: |
-            codesign --sign - ~/build/_cli_ext_output/cli-ext-hasura-node16-macos-arm64
+            codesign --sign - ~/build/_cli_ext_output/cli-ext-hasura-node24-macos-arm64
       - store_artifacts:
           path: ~/build/_cli_ext_output
           destination: cli_ext

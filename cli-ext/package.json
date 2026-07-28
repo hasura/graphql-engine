@@ -10,13 +10,14 @@
     "pretest": "npm run transpile && babel ./tests --out-dir _tmptests",
     "posttest": "rm -rf _tmptests",
     "test": "node ./_tmptests/index.js",
+    "test:unit": "vitest",
     "lint": "eslint 'src/**/*.{js,ts}' --fix",
-    "format": "prettier-eslint $PWD'src/**/*.{js,ts,json}' --write && npm run lint"
+    "format": "npx prettier --write \"**/*.+(js|jsx|css|json|md|mdx)\""
   },
   "lint-staged": {
     "**/*.js": [
       "eslint --fix",
-      "prettier-eslint --write",
+      "npx prettier --write \"**/*.+(js|jsx|css|json|md|mdx)\"",
       "git add"
     ]
   },
@@ -25,35 +26,31 @@
       "pre-commit": "lint-staged"
     }
   },
-  "author": "wawhal",
-  "license": "ISC",
   "dependencies": {
     "@graphql-codegen/core": "^1.9.0",
     "@graphql-codegen/typescript": "^1.9.0",
-    "graphql": "^14.5.8",
-    "inflection": "^1.12.0",
-    "node-fetch": "^2.6.0",
-    "regenerator-runtime": "^0.13.3"
+    "graphql": "15.10.2",
+    "inflection": "3.0.2"
+  },
+  "overrides": {
+    "lodash": "^4.18.1",
+    "immutable": "^4.3.9"
   },
   "devDependencies": {
-    "@babel/cli": "^7.0.0",
-    "@babel/core": "^7.0.0",
-    "@babel/plugin-transform-async-to-generator": "^7.7.4",
-    "@babel/preset-env": "^7.7.6",
-    "@babel/preset-typescript": "^7.9.0",
-    "@types/graphql": "^14.5.0",
-    "@types/inflection": "^1.5.28",
-    "@types/node-fetch": "^2.5.7",
-    "@typescript-eslint/eslint-plugin": "^2.34.0",
-    "@typescript-eslint/parser": "^2.34.0",
-    "eslint": "^6.8.0",
-    "eslint-config-airbnb-base": "^14.1.0",
-    "eslint-plugin-import": "^2.20.2",
-    "eslint-plugin-promise": "^4.2.1",
+    "@babel/cli": "8.0.4",
+    "@babel/core": "7.29.7",
+    "@babel/plugin-transform-async-to-generator": "7.29.7",
+    "@babel/preset-env": "7.29.7",
+    "@babel/preset-typescript": "^7.29.7",
+    "@eslint/js": "^10.0.1",
+    "@typescript-eslint/eslint-plugin": "8.65.0",
+    "@typescript-eslint/parser": "8.65.0",
+    "@yao-pkg/pkg": "6.21.0",
+    "eslint": "^10.8.0",
     "husky": "^4.2.5",
     "lint-staged": "^10.1.5",
-    "pkg": "^5.2.1",
-    "prettier-eslint-cli": "^5.0.0",
-    "typescript": "^3.9.2"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.65.0",
+    "vitest": "^4.1.10"
   }
 }

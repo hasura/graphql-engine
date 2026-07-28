@@ -1,8 +1,9 @@
-const { getActionsCodegen } = require('../../build/services/actions-codegen/codegen');
+const {
+  getActionsCodegen,
+} = require('../../build/services/actions-codegen/codegen');
 const { samplePayload } = require('./payload');
 
 const test = async () => {
-
   try {
     const codegenFiles = await getActionsCodegen(samplePayload);
     if (codegenFiles) {
@@ -17,7 +18,6 @@ const test = async () => {
     console.error(e);
     process.exit(1);
   }
-
 };
 
 module.exports = test;

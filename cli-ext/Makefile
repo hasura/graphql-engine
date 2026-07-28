@@ -11,7 +11,7 @@ deps:
 .PHONY: ci-deps
 ## ci-deps: builds if not already build
 ci-deps:
-	if [ ! -d "node_modules" ]; then npm ci; fi
+	if [ ! -d "node_modules" ]; then npm ci --legacy-peer-deps; fi
 
 .PHONY: clean-deps
 ## clean-deps: deletes node_modules

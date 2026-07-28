@@ -32,15 +32,17 @@ export const validateOperation = (operationString, clientSchema) => {
     );
   }
 
-  if (operationAst.definitions.some(d => d.kind === 'FragmentDefinition')) {
+  if (operationAst.definitions.some((d) => d.kind === 'FragmentDefinition')) {
     throw Error('fragments are not supported');
   }
 
-  if (operationAst.definitions.some(d => !isValidOperationName(d.operation))) {
+  if (
+    operationAst.definitions.some((d) => !isValidOperationName(d.operation))
+  ) {
     throw Error('subscriptions cannot be derived into actions');
   }
 
-  operationAst.definitions = operationAst.definitions.filter(d =>
+  operationAst.definitions = operationAst.definitions.filter((d) =>
     isValidOperationName(d.operation)
   );
 
@@ -59,9 +61,9 @@ export const validateOperation = (operationString, clientSchema) => {
 
   // filter schema specific fields from the operation
   operationAst.definitions[0].selectionSet.selections =
-    operationAst.definitions[0].selectionSet.selections.filter(s => {
-      return s.name.value.indexOf('__') !== 0;
-    });
+    operationAst.definitions[0].selectionSet.selections.filter(
+      (s) => s.name.value.indexOf('__') !== 0
+    );
 
   // throw error if no operation is being made
   if (!operationAst.definitions[0].selectionSet.selections.length) {
@@ -87,7 +89,7 @@ const deriveAction = (
     throw e;
   }
 
-  const operation = operationAst.definitions[0].operation;
+  const { operation } = operationAst.definitions[0];
 
   const variables = operationAst.definitions[0].variableDefinitions;
 
@@ -96,9 +98,9 @@ const deriveAction = (
   const operationDefinition = rootFields[0];
   const operationName = operationDefinition.name.value;
 
-  const selectedFields = operationDefinition.selectionSet.selections.map(s => {
-    return s.name.value;
-  });
+  const selectedFields = operationDefinition.selectionSet.selections.map(
+    (s) => s.name.value
+  );
 
   // get action name if not provided
   if (!actionName) {
@@ -108,16 +110,12 @@ const deriveAction = (
   }
 
   // function to prefix typename with the action name
-  const prefixTypename = typename => {
-    return camelize(`${actionName}_${typename}`);
-  };
+  const prefixTypename = (typename) => camelize(`${actionName}_${typename}`);
 
   const allHasuraTypes = clientSchema._typeMap;
   const operationType = getOperationType(clientSchema, operation);
 
-  const isHasuraScalar = name => {
-    return isScalarType(allHasuraTypes[name]);
-  };
+  const isHasuraScalar = (name) => isScalarType(allHasuraTypes[name]);
 
   const actionArguments = [];
   const newTypes = {};
@@ -139,7 +137,7 @@ const deriveAction = (
 
     if (isEnumType(type)) {
       newType.kind = 'enum';
-      newType.values = type._values.map(v => ({
+      newType.values = type._values.map((v) => ({
         value: v.value,
         description: v.description,
       }));
@@ -152,7 +150,7 @@ const deriveAction = (
       newType.fields = [];
       const typeFields = getTypeFields(type);
       newTypes[typename] = true;
-      Object.values(typeFields).forEach(tf => {
+      Object.values(typeFields).forEach((tf) => {
         const _tf = { name: tf.name };
         const { type: underLyingType, wraps: fieldTypeWraps } =
           getUnderlyingType(tf.type);
@@ -171,11 +169,10 @@ const deriveAction = (
         newType.fields.push(_tf);
       });
       newTypes[typename] = newType;
-      return;
     }
   };
 
-  variables.forEach(v => {
+  variables.forEach((v) => {
     const generatedArg = {
       name: v.variable.name.value,
     };
@@ -204,14 +201,14 @@ const deriveAction = (
     fields: [],
   };
   const outputTypeFields = {};
-  rootFields.forEach(f => {
+  rootFields.forEach((f) => {
     const rfName = f.name.value;
     const refOperationOutputType = getUnderlyingType(
       getTypeFields(operationType)[rfName].type
     ).type;
 
     Object.values(getTypeFields(refOperationOutputType)).forEach(
-      outputTypeField => {
+      (outputTypeField) => {
         const fieldTypeMetadata = getUnderlyingType(outputTypeField.type);
         if (
           isScalarType(fieldTypeMetadata.type) &&
@@ -227,11 +224,11 @@ const deriveAction = (
   });
   if (!Object.keys(outputTypeFields).length) {
     throw new Error(
-      `no scalar found in the selection set of your operation; only scalar fields of the operation get mapped onto the output type of the derived action`
+      'no scalar found in the selection set of your operation; only scalar fields of the operation get mapped onto the output type of the derived action'
     );
   }
 
-  Object.keys(outputTypeFields).forEach(fieldName => {
+  Object.keys(outputTypeFields).forEach((fieldName) => {
     actionOutputType.fields.push({
       name: fieldName,
       type: outputTypeFields[fieldName],

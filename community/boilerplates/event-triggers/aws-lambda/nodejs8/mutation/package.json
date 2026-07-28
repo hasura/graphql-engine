@@ -8,6 +8,6 @@
   },
   "license": "ISC",
   "dependencies": {
-    "node-fetch": "^2.2.0"
+    "node-fetch": "^3.3.2"
   }
 }

@@ -4,7 +4,7 @@ from sqlalchemy import Column, Integer, String, create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
-POSTGRES_CONNECTION_STRING = os.environ.get('POSTGRES_CONNECTION_STRING') or "postgres://postgres:password@localhost:6432/postgres"
+POSTGRES_CONNECTION_STRING = os.environ.get('POSTGRES_CONNECTION_STRING') or "postgresql://postgres:password@localhost:6432/postgres"
 
 engine = create_engine(POSTGRES_CONNECTION_STRING, convert_unicode=True)
 db_session = scoped_session(sessionmaker(autocommit=False,

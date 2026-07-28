@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { getActionDefinitionFromSdl } from '../sdlUtils';
 
 describe('Get action definition by providing SDL', () => {
@@ -21,7 +22,7 @@ describe('Get action definition by providing SDL', () => {
       type: 'mutation',
     };
 
-    const emptyQuerySDLInput = `type Query`;
+    const emptyQuerySDLInput = 'type Query';
     const emptyQuerySDLOutput = {
       name: '',
       arguments: [],
@@ -54,13 +55,13 @@ describe('Get action definition by providing SDL', () => {
     };
 
     expect(getActionDefinitionFromSdl(mutationSDLInput)).toStrictEqual(
-      mutationSDLOutput
+      mutationSDLOutput,
     );
     expect(getActionDefinitionFromSdl(emptyQuerySDLInput)).toStrictEqual(
-      emptyQuerySDLOutput
+      emptyQuerySDLOutput,
     );
     expect(getActionDefinitionFromSdl(querySDLInput)).toStrictEqual(
-      querySDLOutput
+      querySDLOutput,
     );
   });
 });

@@ -1,4 +1,3 @@
-const fetch = require('node-fetch');
 const { parse: sdlParse } = require('graphql/language/parser');
 const { getTemplatePath } = require('../../utils/utils');
 const {
@@ -24,7 +23,7 @@ const getActionsCodegen = async (payload) => {
       actionName,
       sdlComplete,
       derive,
-      codegenConfig,
+      codegenConfig
     );
     if (codegenResp.error) {
       throw Error(codegenResp.error);

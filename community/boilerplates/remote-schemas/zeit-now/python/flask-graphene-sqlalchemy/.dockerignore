@@ -1,0 +1,5 @@
+venv
+*.temp
+*.pyc
+__pycache__
+README.md

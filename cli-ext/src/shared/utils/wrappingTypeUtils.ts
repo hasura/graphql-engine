@@ -7,13 +7,9 @@ import {
   GraphQLInputObjectType,
 } from 'graphql';
 
-const unwrapNonNullable = (wrappedTypename: string) => {
-  return wrappedTypename.substring(0, wrappedTypename.length - 1);
-};
+const unwrapNonNullable = (wrappedTypename: string) => wrappedTypename.substring(0, wrappedTypename.length - 1);
 
-const unwrapList = (wrappedTypename: string) => {
-  return wrappedTypename.substring(1, wrappedTypename.length - 1);
-};
+const unwrapList = (wrappedTypename: string) => wrappedTypename.substring(1, wrappedTypename.length - 1);
 
 export const unwrapType = (wrappedTypename: string) => {
   let typename = wrappedTypename;
@@ -59,7 +55,7 @@ export const getAstTypeMetadata = (type: TypeNode) => {
 };
 
 export const getSchemaTypeMetadata = (
-  type: GraphQLObjectType | GraphQLInputObjectType
+  type: GraphQLObjectType | GraphQLInputObjectType,
 ) => {
   let t = type;
   const typewraps = [];
@@ -81,7 +77,7 @@ export const getSchemaTypeMetadata = (
 
 export const wrapTypename = (name: string, wrapperStack: string[]) => {
   let wrappedTypename = name;
-  wrapperStack.reverse().forEach(w => {
+  wrapperStack.reverse().forEach((w) => {
     if (w === 'l') {
       wrappedTypename = `[${wrappedTypename}]`;
     }

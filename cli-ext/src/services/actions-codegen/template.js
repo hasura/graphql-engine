@@ -3,7 +3,6 @@ const { codegen } = require('@graphql-codegen/core');
 const typescriptPlugin = require('@graphql-codegen/typescript');
 const { camelize } = require('inflection');
 
-const fetch = require('node-fetch');
 const path = require('path');
 const fs = require('fs');
 const { getTemplatePath } = require('../../utils/utils');
@@ -80,7 +79,7 @@ const getCodegenFiles = async (
   actionName,
   actionsSdl,
   derive,
-  codegenConfig,
+  codegenConfig
 ) => {
   let codegenerator;
   try {
@@ -101,14 +100,14 @@ const getFrameworkCodegen = async (
   actionName,
   actionsSdl,
   derive,
-  codegenConfig,
+  codegenConfig
 ) => {
   try {
     const codegenFiles = await getCodegenFiles(
       actionName,
       actionsSdl,
       derive,
-      codegenConfig,
+      codegenConfig
     );
     return {
       files: codegenFiles,

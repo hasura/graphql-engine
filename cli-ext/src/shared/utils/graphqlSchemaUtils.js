@@ -10,11 +10,9 @@ export const getOperationType = (schema, operation) => {
   return schema._mutationType;
 };
 
-export const getMutationType = schema => {
-  return schema._mutationType;
-};
+export const getMutationType = (schema) => schema._mutationType;
 
-export const getUnderlyingType = _type => {
+export const getUnderlyingType = (_type) => {
   let type = Object.assign(Object.create(_type), _type);
   const wraps = [];
   while (isWrappingType(type)) {
@@ -28,15 +26,11 @@ export const getUnderlyingType = _type => {
   };
 };
 
-export const getTypeFields = _type => {
-  return _type._fields || [];
-};
+export const getTypeFields = (_type) => _type._fields || [];
 
-export const getFieldArgs = field => {
-  return field.args || [];
-};
+export const getFieldArgs = (field) => field.args || [];
 
-export const getHasuraMutationMetadata = field => {
+export const getHasuraMutationMetadata = (field) => {
   if (
     field.args.length === 2 &&
     field.args[0].name === 'objects' &&
@@ -49,8 +43,8 @@ export const getHasuraMutationMetadata = field => {
 
   if (
     field.args.length >= 2 &&
-    !!field.args.find(a => a.name === '_set') &&
-    !!field.args.find(a => a.name === 'where')
+    !!field.args.find((a) => a.name === '_set') &&
+    !!field.args.find((a) => a.name === 'where')
   ) {
     return {
       kind: 'update',
