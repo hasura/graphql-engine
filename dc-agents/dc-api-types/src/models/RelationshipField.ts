@@ -1,9 +1,8 @@
+/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { Query } from './Query';
-
 export type RelationshipField = {
   query: Query;
   /**
@@ -12,3 +11,4 @@ export type RelationshipField = {
   relationship: string;
   type: 'relationship';
 };
+

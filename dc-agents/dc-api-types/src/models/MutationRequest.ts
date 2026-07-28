@@ -1,12 +1,11 @@
+/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { MutationOperation } from './MutationOperation';
 import type { Relationships } from './Relationships';
 import type { TableInsertSchema } from './TableInsertSchema';
 import type { TargetRedactionExpressions } from './TargetRedactionExpressions';
-
 export type MutationRequest = {
   /**
    * The schema by which to interpret row data specified in any insert operations in this request
@@ -25,3 +24,4 @@ export type MutationRequest = {
    */
   relationships: Array<Relationships>;
 };
+

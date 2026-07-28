@@ -1,10 +1,9 @@
+/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { OrderByElement } from './OrderByElement';
 import type { OrderByRelation } from './OrderByRelation';
-
 export type OrderBy = {
   /**
    * The elements to order by, in priority order
@@ -15,3 +14,4 @@ export type OrderBy = {
    */
   relations: Record<string, OrderByRelation>;
 };
+

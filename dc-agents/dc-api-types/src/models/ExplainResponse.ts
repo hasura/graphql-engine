@@ -1,7 +1,7 @@
+/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 export type ExplainResponse = {
   /**
    * Lines of the formatted explain plan response
@@ -12,3 +12,4 @@ export type ExplainResponse = {
    */
   query: string;
 };
+

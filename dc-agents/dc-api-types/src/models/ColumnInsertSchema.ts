@@ -1,10 +1,9 @@
+/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { ColumnType } from './ColumnType';
 import type { ColumnValueGenerationStrategy } from './ColumnValueGenerationStrategy';
-
 export type ColumnInsertSchema = {
   /**
    * The name of the column that this field should be inserted into
@@ -18,3 +17,4 @@ export type ColumnInsertSchema = {
   type: 'column';
   value_generated?: ColumnValueGenerationStrategy;
 };
+

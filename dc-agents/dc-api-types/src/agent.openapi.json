@@ -549,7 +549,10 @@
             "type": "string"
           }
         },
-        "required": ["capabilities", "config_schemas"],
+        "required": [
+          "capabilities",
+          "config_schemas"
+        ],
         "type": "object"
       },
       "Capabilities": {
@@ -603,7 +606,10 @@
         "type": "object"
       },
       "ColumnNullability": {
-        "enum": ["only_nullable", "nullable_and_non_nullable"],
+        "enum": [
+          "only_nullable",
+          "nullable_and_non_nullable"
+        ],
         "type": "string"
       },
       "DataSchemaCapabilities": {
@@ -710,7 +716,9 @@
             "$ref": "#/components/schemas/ScalarType"
           }
         },
-        "required": ["argument_type"],
+        "required": [
+          "argument_type"
+        ],
         "type": "object"
       },
       "UpdateColumnOperators": {
@@ -721,7 +729,13 @@
         "type": "object"
       },
       "GraphQLType": {
-        "enum": ["Int", "Float", "String", "Boolean", "ID"],
+        "enum": [
+          "Int",
+          "Float",
+          "String",
+          "Boolean",
+          "ID"
+        ],
         "type": "string"
       },
       "ScalarTypeCapabilities": {
@@ -790,7 +804,10 @@
             "type": "object"
           }
         },
-        "required": ["config_schema", "other_schemas"],
+        "required": [
+          "config_schema",
+          "other_schemas"
+        ],
         "type": "object"
       },
       "OpenApiSchema": {
@@ -1009,7 +1026,9 @@
             "type": "string"
           }
         },
-        "required": ["$ref"],
+        "required": [
+          "$ref"
+        ],
         "type": "object"
       },
       "OpenApiDiscriminator": {
@@ -1024,7 +1043,9 @@
             "type": "string"
           }
         },
-        "required": ["propertyName"],
+        "required": [
+          "propertyName"
+        ],
         "type": "object"
       },
       "OpenApiExternalDocumentation": {
@@ -1038,7 +1059,9 @@
             "type": "string"
           }
         },
-        "required": ["url"],
+        "required": [
+          "url"
+        ],
         "type": "object"
       },
       "OpenApiXml": {
@@ -1080,7 +1103,9 @@
             "$ref": "#/components/schemas/ErrorResponseType"
           }
         },
-        "required": ["message"],
+        "required": [
+          "message"
+        ],
         "type": "object"
       },
       "ErrorResponseType": {
@@ -1116,7 +1141,9 @@
             "type": "array"
           }
         },
-        "required": ["tables"],
+        "required": [
+          "tables"
+        ],
         "type": "object"
       },
       "TableName": {
@@ -1127,7 +1154,10 @@
         "type": "array"
       },
       "TableType": {
-        "enum": ["table", "view"],
+        "enum": [
+          "table",
+          "view"
+        ],
         "type": "string"
       },
       "ColumnTypeObject": {
@@ -1136,11 +1166,16 @@
             "type": "string"
           },
           "type": {
-            "enum": ["object"],
+            "enum": [
+              "object"
+            ],
             "type": "string"
           }
         },
-        "required": ["name", "type"],
+        "required": [
+          "name",
+          "type"
+        ],
         "type": "object"
       },
       "ColumnType": {
@@ -1163,11 +1198,17 @@
             "type": "boolean"
           },
           "type": {
-            "enum": ["array"],
+            "enum": [
+              "array"
+            ],
             "type": "string"
           }
         },
-        "required": ["element_type", "nullable", "type"],
+        "required": [
+          "element_type",
+          "nullable",
+          "type"
+        ],
         "type": "object"
       },
       "ColumnTypeNonScalar": {
@@ -1190,31 +1231,43 @@
       "DefaultValueGenerationStrategy": {
         "properties": {
           "type": {
-            "enum": ["default_value"],
+            "enum": [
+              "default_value"
+            ],
             "type": "string"
           }
         },
-        "required": ["type"],
+        "required": [
+          "type"
+        ],
         "type": "object"
       },
       "AutoIncrementGenerationStrategy": {
         "properties": {
           "type": {
-            "enum": ["auto_increment"],
+            "enum": [
+              "auto_increment"
+            ],
             "type": "string"
           }
         },
-        "required": ["type"],
+        "required": [
+          "type"
+        ],
         "type": "object"
       },
       "UniqueIdentifierGenerationStrategy": {
         "properties": {
           "type": {
-            "enum": ["unique_identifier"],
+            "enum": [
+              "unique_identifier"
+            ],
             "type": "string"
           }
         },
-        "required": ["type"],
+        "required": [
+          "type"
+        ],
         "type": "object"
       },
       "ColumnValueGenerationStrategy": {
@@ -1270,7 +1323,11 @@
             "$ref": "#/components/schemas/ColumnValueGenerationStrategy"
           }
         },
-        "required": ["name", "type", "nullable"],
+        "required": [
+          "name",
+          "type",
+          "nullable"
+        ],
         "type": "object"
       },
       "Constraint": {
@@ -1317,7 +1374,10 @@
             "$ref": "#/components/schemas/TableName"
           }
         },
-        "required": ["foreign_table", "column_mapping"],
+        "required": [
+          "foreign_table",
+          "column_mapping"
+        ],
         "type": "object"
       },
       "TableInfo": {
@@ -1373,7 +1433,9 @@
             "type": "boolean"
           }
         },
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "type": "object"
       },
       "FunctionName": {
@@ -1384,7 +1446,10 @@
         "type": "array"
       },
       "FunctionType": {
-        "enum": ["read", "write"],
+        "enum": [
+          "read",
+          "write"
+        ],
         "type": "string"
       },
       "FunctionReturnsTable": {
@@ -1393,21 +1458,30 @@
             "$ref": "#/components/schemas/TableName"
           },
           "type": {
-            "enum": ["table"],
+            "enum": [
+              "table"
+            ],
             "type": "string"
           }
         },
-        "required": ["table", "type"],
+        "required": [
+          "table",
+          "type"
+        ],
         "type": "object"
       },
       "FunctionReturnsUnknown": {
         "properties": {
           "type": {
-            "enum": ["unknown"],
+            "enum": [
+              "unknown"
+            ],
             "type": "string"
           }
         },
-        "required": ["type"],
+        "required": [
+          "type"
+        ],
         "type": "object"
       },
       "FunctionReturnType": {
@@ -1442,7 +1516,10 @@
             "$ref": "#/components/schemas/ScalarType"
           }
         },
-        "required": ["name", "type"],
+        "required": [
+          "name",
+          "type"
+        ],
         "type": "object"
       },
       "FunctionInfo": {
@@ -1465,7 +1542,10 @@
           },
           "response_cardinality": {
             "description": "object response if false, rows if true",
-            "enum": ["one", "many"],
+            "enum": [
+              "one",
+              "many"
+            ],
             "nullable": true,
             "type": "string"
           },
@@ -1476,7 +1556,10 @@
             "$ref": "#/components/schemas/FunctionType"
           }
         },
-        "required": ["name", "type"],
+        "required": [
+          "name",
+          "type"
+        ],
         "type": "object"
       },
       "ObjectTypeDefinition": {
@@ -1497,7 +1580,10 @@
             "type": "string"
           }
         },
-        "required": ["name", "columns"],
+        "required": [
+          "name",
+          "columns"
+        ],
         "type": "object"
       },
       "SchemaRequest": {
@@ -1532,7 +1618,10 @@
       },
       "DetailLevel": {
         "description": "How much information to return about the schema. Values:\n- 'everything': All information about the schema.\n- 'basic_info': For tables, only the table name and table type, for functions, only the function name and function type.\n",
-        "enum": ["everything", "basic_info"],
+        "enum": [
+          "everything",
+          "basic_info"
+        ],
         "type": "string"
       },
       "QueryResponse": {
@@ -1614,7 +1703,11 @@
             "$ref": "#/components/schemas/Target"
           }
         },
-        "required": ["target", "relationships", "query"],
+        "required": [
+          "target",
+          "relationships",
+          "query"
+        ],
         "type": "object"
       },
       "TTable": {
@@ -1623,11 +1716,16 @@
             "$ref": "#/components/schemas/TableName"
           },
           "type": {
-            "enum": ["table"],
+            "enum": [
+              "table"
+            ],
             "type": "string"
           }
         },
-        "required": ["name", "type"],
+        "required": [
+          "name",
+          "type"
+        ],
         "type": "object"
       },
       "TInterpolated": {
@@ -1637,17 +1735,24 @@
             "type": "string"
           },
           "type": {
-            "enum": ["interpolated"],
+            "enum": [
+              "interpolated"
+            ],
             "type": "string"
           }
         },
-        "required": ["id", "type"],
+        "required": [
+          "id",
+          "type"
+        ],
         "type": "object"
       },
       "ScalarArgumentValue": {
         "properties": {
           "type": {
-            "enum": ["scalar"],
+            "enum": [
+              "scalar"
+            ],
             "type": "string"
           },
           "value": {
@@ -1657,7 +1762,11 @@
             "$ref": "#/components/schemas/ScalarType"
           }
         },
-        "required": ["value", "value_type", "type"],
+        "required": [
+          "value",
+          "value_type",
+          "type"
+        ],
         "type": "object"
       },
       "ArgumentValue": {
@@ -1680,14 +1789,20 @@
             "type": "string"
           },
           "type": {
-            "enum": ["named"],
+            "enum": [
+              "named"
+            ],
             "type": "string"
           },
           "value": {
             "$ref": "#/components/schemas/ArgumentValue"
           }
         },
-        "required": ["name", "value", "type"],
+        "required": [
+          "name",
+          "value",
+          "type"
+        ],
         "type": "object"
       },
       "FunctionRequestArgument": {
@@ -1716,11 +1831,17 @@
             "$ref": "#/components/schemas/FunctionName"
           },
           "type": {
-            "enum": ["function"],
+            "enum": [
+              "function"
+            ],
             "type": "string"
           }
         },
-        "required": ["name", "arguments", "type"],
+        "required": [
+          "name",
+          "arguments",
+          "type"
+        ],
         "type": "object"
       },
       "Target": {
@@ -1745,7 +1866,10 @@
         ]
       },
       "RelationshipType": {
-        "enum": ["object", "array"],
+        "enum": [
+          "object",
+          "array"
+        ],
         "type": "string"
       },
       "Relationship": {
@@ -1795,7 +1919,11 @@
             "$ref": "#/components/schemas/Target"
           }
         },
-        "required": ["target", "relationship_type", "column_mapping"],
+        "required": [
+          "target",
+          "relationship_type",
+          "column_mapping"
+        ],
         "type": "object"
       },
       "TableRelationships": {
@@ -1811,11 +1939,17 @@
             "$ref": "#/components/schemas/TableName"
           },
           "type": {
-            "enum": ["table"],
+            "enum": [
+              "table"
+            ],
             "type": "string"
           }
         },
-        "required": ["source_table", "relationships", "type"],
+        "required": [
+          "source_table",
+          "relationships",
+          "type"
+        ],
         "type": "object"
       },
       "InterpolatedRelationships": {
@@ -1832,11 +1966,17 @@
             "type": "string"
           },
           "type": {
-            "enum": ["interpolated"],
+            "enum": [
+              "interpolated"
+            ],
             "type": "string"
           }
         },
-        "required": ["source_interpolated_query", "relationships", "type"],
+        "required": [
+          "source_interpolated_query",
+          "relationships",
+          "type"
+        ],
         "type": "object"
       },
       "FunctionRelationships": {
@@ -1852,11 +1992,17 @@
             "$ref": "#/components/schemas/FunctionName"
           },
           "type": {
-            "enum": ["function"],
+            "enum": [
+              "function"
+            ],
             "type": "string"
           }
         },
-        "required": ["source_function", "relationships", "type"],
+        "required": [
+          "source_function",
+          "relationships",
+          "type"
+        ],
         "type": "object"
       },
       "Relationships": {
@@ -1886,11 +2032,16 @@
             "$ref": "#/components/schemas/TableName"
           },
           "type": {
-            "enum": ["table"],
+            "enum": [
+              "table"
+            ],
             "type": "string"
           }
         },
-        "required": ["table", "type"],
+        "required": [
+          "table",
+          "type"
+        ],
         "type": "object"
       },
       "TNInterpolatedQuery": {
@@ -1900,11 +2051,16 @@
             "type": "string"
           },
           "type": {
-            "enum": ["interpolated"],
+            "enum": [
+              "interpolated"
+            ],
             "type": "string"
           }
         },
-        "required": ["interpolated", "type"],
+        "required": [
+          "interpolated",
+          "type"
+        ],
         "type": "object"
       },
       "TNFunction": {
@@ -1913,11 +2069,16 @@
             "$ref": "#/components/schemas/FunctionName"
           },
           "type": {
-            "enum": ["function"],
+            "enum": [
+              "function"
+            ],
             "type": "string"
           }
         },
-        "required": ["function", "type"],
+        "required": [
+          "function",
+          "type"
+        ],
         "type": "object"
       },
       "TargetName": {
@@ -1987,11 +2148,16 @@
             "type": "array"
           },
           "type": {
-            "enum": ["or"],
+            "enum": [
+              "or"
+            ],
             "type": "string"
           }
         },
-        "required": ["expressions", "type"],
+        "required": [
+          "expressions",
+          "type"
+        ],
         "type": "object"
       },
       "BinaryComparisonOperator": {
@@ -2046,13 +2212,18 @@
             "$ref": "#/components/schemas/RedactionExpressionName"
           }
         },
-        "required": ["name", "column_type"],
+        "required": [
+          "name",
+          "column_type"
+        ],
         "type": "object"
       },
       "ScalarValueComparison": {
         "properties": {
           "type": {
-            "enum": ["scalar"],
+            "enum": [
+              "scalar"
+            ],
             "type": "string"
           },
           "value": {
@@ -2062,7 +2233,11 @@
             "$ref": "#/components/schemas/ScalarType"
           }
         },
-        "required": ["value", "value_type", "type"],
+        "required": [
+          "value",
+          "value_type",
+          "type"
+        ],
         "type": "object"
       },
       "AnotherColumnComparison": {
@@ -2071,11 +2246,16 @@
             "$ref": "#/components/schemas/ComparisonColumn"
           },
           "type": {
-            "enum": ["column"],
+            "enum": [
+              "column"
+            ],
             "type": "string"
           }
         },
-        "required": ["column", "type"],
+        "required": [
+          "column",
+          "type"
+        ],
         "type": "object"
       },
       "ComparisonValue": {
@@ -2104,14 +2284,21 @@
             "$ref": "#/components/schemas/BinaryComparisonOperator"
           },
           "type": {
-            "enum": ["binary_op"],
+            "enum": [
+              "binary_op"
+            ],
             "type": "string"
           },
           "value": {
             "$ref": "#/components/schemas/ComparisonValue"
           }
         },
-        "required": ["operator", "column", "value", "type"],
+        "required": [
+          "operator",
+          "column",
+          "value",
+          "type"
+        ],
         "type": "object"
       },
       "RelatedTable": {
@@ -2120,11 +2307,16 @@
             "type": "string"
           },
           "type": {
-            "enum": ["related"],
+            "enum": [
+              "related"
+            ],
             "type": "string"
           }
         },
-        "required": ["relationship", "type"],
+        "required": [
+          "relationship",
+          "type"
+        ],
         "type": "object"
       },
       "UnrelatedTable": {
@@ -2133,11 +2325,16 @@
             "$ref": "#/components/schemas/TableName"
           },
           "type": {
-            "enum": ["unrelated"],
+            "enum": [
+              "unrelated"
+            ],
             "type": "string"
           }
         },
-        "required": ["table", "type"],
+        "required": [
+          "table",
+          "type"
+        ],
         "type": "object"
       },
       "ExistsInTable": {
@@ -2163,14 +2360,20 @@
             "$ref": "#/components/schemas/ExistsInTable"
           },
           "type": {
-            "enum": ["exists"],
+            "enum": [
+              "exists"
+            ],
             "type": "string"
           },
           "where": {
             "$ref": "#/components/schemas/Expression"
           }
         },
-        "required": ["in_table", "where", "type"],
+        "required": [
+          "in_table",
+          "where",
+          "type"
+        ],
         "type": "object"
       },
       "NotExpression": {
@@ -2179,18 +2382,25 @@
             "$ref": "#/components/schemas/Expression"
           },
           "type": {
-            "enum": ["not"],
+            "enum": [
+              "not"
+            ],
             "type": "string"
           }
         },
-        "required": ["expression", "type"],
+        "required": [
+          "expression",
+          "type"
+        ],
         "type": "object"
       },
       "BinaryArrayComparisonOperator": {
         "additionalProperties": true,
         "anyOf": [
           {
-            "enum": ["in"],
+            "enum": [
+              "in"
+            ],
             "type": "string"
           },
           {
@@ -2207,7 +2417,9 @@
             "$ref": "#/components/schemas/BinaryArrayComparisonOperator"
           },
           "type": {
-            "enum": ["binary_arr_op"],
+            "enum": [
+              "binary_arr_op"
+            ],
             "type": "string"
           },
           "value_type": {
@@ -2220,14 +2432,22 @@
             "type": "array"
           }
         },
-        "required": ["operator", "column", "values", "value_type", "type"],
+        "required": [
+          "operator",
+          "column",
+          "values",
+          "value_type",
+          "type"
+        ],
         "type": "object"
       },
       "UnaryComparisonOperator": {
         "additionalProperties": true,
         "anyOf": [
           {
-            "enum": ["is_null"],
+            "enum": [
+              "is_null"
+            ],
             "type": "string"
           },
           {
@@ -2244,11 +2464,17 @@
             "$ref": "#/components/schemas/UnaryComparisonOperator"
           },
           "type": {
-            "enum": ["unary_op"],
+            "enum": [
+              "unary_op"
+            ],
             "type": "string"
           }
         },
-        "required": ["operator", "column", "type"],
+        "required": [
+          "operator",
+          "column",
+          "type"
+        ],
         "type": "object"
       },
       "AndExpression": {
@@ -2260,11 +2486,16 @@
             "type": "array"
           },
           "type": {
-            "enum": ["and"],
+            "enum": [
+              "and"
+            ],
             "type": "string"
           }
         },
-        "required": ["expressions", "type"],
+        "required": [
+          "expressions",
+          "type"
+        ],
         "type": "object"
       },
       "TargetRedactionExpressions": {
@@ -2280,13 +2511,18 @@
             "$ref": "#/components/schemas/TargetName"
           }
         },
-        "required": ["target", "expressions"],
+        "required": [
+          "target",
+          "expressions"
+        ],
         "type": "object"
       },
       "InterpolatedScalar": {
         "properties": {
           "type": {
-            "enum": ["scalar"],
+            "enum": [
+              "scalar"
+            ],
             "type": "string"
           },
           "value": {
@@ -2296,20 +2532,29 @@
             "$ref": "#/components/schemas/ScalarType"
           }
         },
-        "required": ["value", "value_type", "type"],
+        "required": [
+          "value",
+          "value_type",
+          "type"
+        ],
         "type": "object"
       },
       "InterpolatedText": {
         "properties": {
           "type": {
-            "enum": ["text"],
+            "enum": [
+              "text"
+            ],
             "type": "string"
           },
           "value": {
             "type": "string"
           }
         },
-        "required": ["value", "type"],
+        "required": [
+          "value",
+          "type"
+        ],
         "type": "object"
       },
       "InterpolatedItem": {
@@ -2343,7 +2588,10 @@
             "type": "array"
           }
         },
-        "required": ["id", "items"],
+        "required": [
+          "id",
+          "items"
+        ],
         "type": "object"
       },
       "InterpolatedQueries": {
@@ -2409,11 +2657,17 @@
             "$ref": "#/components/schemas/Query"
           },
           "type": {
-            "enum": ["object"],
+            "enum": [
+              "object"
+            ],
             "type": "string"
           }
         },
-        "required": ["column", "query", "type"],
+        "required": [
+          "column",
+          "query",
+          "type"
+        ],
         "type": "object"
       },
       "Field": {
@@ -2454,17 +2708,23 @@
             "$ref": "#/components/schemas/Expression"
           }
         },
-        "required": ["subrelations"],
+        "required": [
+          "subrelations"
+        ],
         "type": "object"
       },
       "OrderByStarCountAggregate": {
         "properties": {
           "type": {
-            "enum": ["star_count_aggregate"],
+            "enum": [
+              "star_count_aggregate"
+            ],
             "type": "string"
           }
         },
-        "required": ["type"],
+        "required": [
+          "type"
+        ],
         "type": "object"
       },
       "SingleColumnAggregateFunction": {
@@ -2487,11 +2747,18 @@
             "$ref": "#/components/schemas/ScalarType"
           },
           "type": {
-            "enum": ["single_column_aggregate"],
+            "enum": [
+              "single_column_aggregate"
+            ],
             "type": "string"
           }
         },
-        "required": ["function", "column", "result_type", "type"],
+        "required": [
+          "function",
+          "column",
+          "result_type",
+          "type"
+        ],
         "type": "object"
       },
       "OrderByColumn": {
@@ -2513,11 +2780,16 @@
             "$ref": "#/components/schemas/RedactionExpressionName"
           },
           "type": {
-            "enum": ["column"],
+            "enum": [
+              "column"
+            ],
             "type": "string"
           }
         },
-        "required": ["column", "type"],
+        "required": [
+          "column",
+          "type"
+        ],
         "type": "object"
       },
       "OrderByTarget": {
@@ -2542,7 +2814,10 @@
         ]
       },
       "OrderDirection": {
-        "enum": ["asc", "desc"],
+        "enum": [
+          "asc",
+          "desc"
+        ],
         "type": "string"
       },
       "OrderByElement": {
@@ -2561,7 +2836,11 @@
             "type": "array"
           }
         },
-        "required": ["target_path", "target", "order_direction"],
+        "required": [
+          "target_path",
+          "target",
+          "order_direction"
+        ],
         "type": "object"
       },
       "OrderBy": {
@@ -2582,7 +2861,10 @@
             "type": "object"
           }
         },
-        "required": ["relations", "elements"],
+        "required": [
+          "relations",
+          "elements"
+        ],
         "type": "object"
       },
       "NestedArrayField": {
@@ -2608,14 +2890,19 @@
             "$ref": "#/components/schemas/OrderBy"
           },
           "type": {
-            "enum": ["array"],
+            "enum": [
+              "array"
+            ],
             "type": "string"
           },
           "where": {
             "$ref": "#/components/schemas/Expression"
           }
         },
-        "required": ["field", "type"],
+        "required": [
+          "field",
+          "type"
+        ],
         "type": "object"
       },
       "RelationshipField": {
@@ -2628,11 +2915,17 @@
             "type": "string"
           },
           "type": {
-            "enum": ["relationship"],
+            "enum": [
+              "relationship"
+            ],
             "type": "string"
           }
         },
-        "required": ["relationship", "query", "type"],
+        "required": [
+          "relationship",
+          "query",
+          "type"
+        ],
         "type": "object"
       },
       "ColumnField": {
@@ -2647,11 +2940,17 @@
             "$ref": "#/components/schemas/RedactionExpressionName"
           },
           "type": {
-            "enum": ["column"],
+            "enum": [
+              "column"
+            ],
             "type": "string"
           }
         },
-        "required": ["column", "column_type", "type"],
+        "required": [
+          "column",
+          "column_type",
+          "type"
+        ],
         "type": "object"
       },
       "ColumnCountAggregate": {
@@ -2668,11 +2967,17 @@
             "$ref": "#/components/schemas/RedactionExpressionName"
           },
           "type": {
-            "enum": ["column_count"],
+            "enum": [
+              "column_count"
+            ],
             "type": "string"
           }
         },
-        "required": ["column", "distinct", "type"],
+        "required": [
+          "column",
+          "distinct",
+          "type"
+        ],
         "type": "object"
       },
       "SingleColumnAggregate": {
@@ -2691,21 +2996,32 @@
             "$ref": "#/components/schemas/ScalarType"
           },
           "type": {
-            "enum": ["single_column"],
+            "enum": [
+              "single_column"
+            ],
             "type": "string"
           }
         },
-        "required": ["function", "column", "result_type", "type"],
+        "required": [
+          "function",
+          "column",
+          "result_type",
+          "type"
+        ],
         "type": "object"
       },
       "StarCountAggregate": {
         "properties": {
           "type": {
-            "enum": ["star_count"],
+            "enum": [
+              "star_count"
+            ],
             "type": "string"
           }
         },
-        "required": ["type"],
+        "required": [
+          "type"
+        ],
         "type": "object"
       },
       "Aggregate": {
@@ -2738,7 +3054,10 @@
             "$ref": "#/components/schemas/ScalarType"
           }
         },
-        "required": ["value", "value_type"],
+        "required": [
+          "value",
+          "value_type"
+        ],
         "type": "object"
       },
       "ExplainResponse": {
@@ -2755,7 +3074,10 @@
             "type": "string"
           }
         },
-        "required": ["lines", "query"],
+        "required": [
+          "lines",
+          "query"
+        ],
         "type": "object"
       },
       "MutationResponse": {
@@ -2768,7 +3090,9 @@
             "type": "array"
           }
         },
-        "required": ["operation_results"],
+        "required": [
+          "operation_results"
+        ],
         "type": "object"
       },
       "MutationOperationResults": {
@@ -2802,7 +3126,9 @@
             "type": "array"
           }
         },
-        "required": ["affected_rows"],
+        "required": [
+          "affected_rows"
+        ],
         "type": "object"
       },
       "MutationRequest": {
@@ -2837,11 +3163,18 @@
             "type": "array"
           }
         },
-        "required": ["relationships", "insert_schema", "operations"],
+        "required": [
+          "relationships",
+          "insert_schema",
+          "operations"
+        ],
         "type": "object"
       },
       "ObjectRelationInsertionOrder": {
-        "enum": ["before_parent", "after_parent"],
+        "enum": [
+          "before_parent",
+          "after_parent"
+        ],
         "type": "string"
       },
       "ObjectRelationInsertSchema": {
@@ -2854,11 +3187,17 @@
             "type": "string"
           },
           "type": {
-            "enum": ["object_relation"],
+            "enum": [
+              "object_relation"
+            ],
             "type": "string"
           }
         },
-        "required": ["relationship", "insertion_order", "type"],
+        "required": [
+          "relationship",
+          "insertion_order",
+          "type"
+        ],
         "type": "object"
       },
       "ArrayRelationInsertSchema": {
@@ -2868,11 +3207,16 @@
             "type": "string"
           },
           "type": {
-            "enum": ["array_relation"],
+            "enum": [
+              "array_relation"
+            ],
             "type": "string"
           }
         },
-        "required": ["relationship", "type"],
+        "required": [
+          "relationship",
+          "type"
+        ],
         "type": "object"
       },
       "ColumnInsertSchema": {
@@ -2889,14 +3233,21 @@
             "type": "boolean"
           },
           "type": {
-            "enum": ["column"],
+            "enum": [
+              "column"
+            ],
             "type": "string"
           },
           "value_generated": {
             "$ref": "#/components/schemas/ColumnValueGenerationStrategy"
           }
         },
-        "required": ["column", "column_type", "nullable", "type"],
+        "required": [
+          "column",
+          "column_type",
+          "nullable",
+          "type"
+        ],
         "type": "object"
       },
       "InsertFieldSchema": {
@@ -2941,7 +3292,10 @@
             "$ref": "#/components/schemas/TableName"
           }
         },
-        "required": ["table", "fields"],
+        "required": [
+          "table",
+          "fields"
+        ],
         "type": "object"
       },
       "ColumnInsertFieldValue": {
@@ -3002,11 +3356,17 @@
             "$ref": "#/components/schemas/TableName"
           },
           "type": {
-            "enum": ["insert"],
+            "enum": [
+              "insert"
+            ],
             "type": "string"
           }
         },
-        "required": ["table", "rows", "type"],
+        "required": [
+          "table",
+          "rows",
+          "type"
+        ],
         "type": "object"
       },
       "SetColumnRowUpdate": {
@@ -3016,7 +3376,9 @@
             "type": "string"
           },
           "type": {
-            "enum": ["set"],
+            "enum": [
+              "set"
+            ],
             "type": "string"
           },
           "value": {
@@ -3027,7 +3389,12 @@
             "$ref": "#/components/schemas/ScalarType"
           }
         },
-        "required": ["column", "value", "value_type", "type"],
+        "required": [
+          "column",
+          "value",
+          "value_type",
+          "type"
+        ],
         "type": "object"
       },
       "UpdateColumnOperatorName": {
@@ -3043,7 +3410,9 @@
             "$ref": "#/components/schemas/UpdateColumnOperatorName"
           },
           "type": {
-            "enum": ["custom_operator"],
+            "enum": [
+              "custom_operator"
+            ],
             "type": "string"
           },
           "value": {
@@ -3054,7 +3423,13 @@
             "$ref": "#/components/schemas/ScalarType"
           }
         },
-        "required": ["operator_name", "column", "value", "value_type", "type"],
+        "required": [
+          "operator_name",
+          "column",
+          "value",
+          "value_type",
+          "type"
+        ],
         "type": "object"
       },
       "RowUpdate": {
@@ -3092,7 +3467,9 @@
             "$ref": "#/components/schemas/TableName"
           },
           "type": {
-            "enum": ["update"],
+            "enum": [
+              "update"
+            ],
             "type": "string"
           },
           "updates": {
@@ -3106,7 +3483,11 @@
             "$ref": "#/components/schemas/Expression"
           }
         },
-        "required": ["table", "updates", "type"],
+        "required": [
+          "table",
+          "updates",
+          "type"
+        ],
         "type": "object"
       },
       "DeleteMutationOperation": {
@@ -3124,14 +3505,19 @@
             "$ref": "#/components/schemas/TableName"
           },
           "type": {
-            "enum": ["delete"],
+            "enum": [
+              "delete"
+            ],
             "type": "string"
           },
           "where": {
             "$ref": "#/components/schemas/Expression"
           }
         },
-        "required": ["table", "type"],
+        "required": [
+          "table",
+          "type"
+        ],
         "type": "object"
       },
       "MutationOperation": {
@@ -3168,7 +3554,9 @@
             "type": "array"
           }
         },
-        "required": ["rows"],
+        "required": [
+          "rows"
+        ],
         "type": "object"
       },
       "RawRequest": {
@@ -3178,7 +3566,9 @@
             "type": "string"
           }
         },
-        "required": ["query"],
+        "required": [
+          "query"
+        ],
         "type": "object"
       },
       "DatasetGetTemplateResponse": {
@@ -3188,7 +3578,9 @@
             "type": "boolean"
           }
         },
-        "required": ["exists"],
+        "required": [
+          "exists"
+        ],
         "type": "object"
       },
       "DatasetCreateCloneResponse": {
@@ -3197,7 +3589,9 @@
             "$ref": "#/components/schemas/Config"
           }
         },
-        "required": ["config"],
+        "required": [
+          "config"
+        ],
         "type": "object"
       },
       "Config": {
@@ -3212,7 +3606,9 @@
             "$ref": "#/components/schemas/DatasetTemplateName"
           }
         },
-        "required": ["from"],
+        "required": [
+          "from"
+        ],
         "type": "object"
       },
       "DatasetTemplateName": {
@@ -3225,7 +3621,9 @@
             "type": "string"
           }
         },
-        "required": ["message"],
+        "required": [
+          "message"
+        ],
         "type": "object"
       }
     }

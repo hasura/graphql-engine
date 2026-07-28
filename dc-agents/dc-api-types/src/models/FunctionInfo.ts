@@ -1,12 +1,11 @@
+/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { FunctionInformationArgument } from './FunctionInformationArgument';
 import type { FunctionName } from './FunctionName';
 import type { FunctionReturnType } from './FunctionReturnType';
 import type { FunctionType } from './FunctionType';
-
 export type FunctionInfo = {
   /**
    * argument info - name/types
@@ -24,3 +23,4 @@ export type FunctionInfo = {
   returns?: FunctionReturnType;
   type: FunctionType;
 };
+

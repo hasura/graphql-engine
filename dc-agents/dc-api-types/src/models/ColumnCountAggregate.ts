@@ -1,9 +1,8 @@
+/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { RedactionExpressionName } from './RedactionExpressionName';
-
 export type ColumnCountAggregate = {
   /**
    * The column to apply the count aggregate function to
@@ -16,3 +15,4 @@ export type ColumnCountAggregate = {
   redaction_expression?: RedactionExpressionName;
   type: 'column_count';
 };
+

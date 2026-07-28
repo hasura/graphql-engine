@@ -1,11 +1,10 @@
+/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { Expression } from './Expression';
 import type { Field } from './Field';
 import type { TableName } from './TableName';
-
 export type DeleteMutationOperation = {
   /**
    * The fields to return for the rows affected by this delete operation
@@ -15,3 +14,4 @@ export type DeleteMutationOperation = {
   type: 'delete';
   where?: Expression;
 };
+

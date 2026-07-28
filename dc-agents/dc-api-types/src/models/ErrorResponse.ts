@@ -1,9 +1,8 @@
+/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { ErrorResponseType } from './ErrorResponseType';
-
 export type ErrorResponse = {
   /**
    * Error details
@@ -15,3 +14,4 @@ export type ErrorResponse = {
   message: string;
   type?: ErrorResponseType;
 };
+
