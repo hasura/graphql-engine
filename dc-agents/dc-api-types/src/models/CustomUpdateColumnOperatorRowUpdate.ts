@@ -1,10 +1,9 @@
+/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { ScalarType } from './ScalarType';
 import type { UpdateColumnOperatorName } from './UpdateColumnOperatorName';
-
 export type CustomUpdateColumnOperatorRowUpdate = {
   /**
    * The name of the column in the row
@@ -18,3 +17,4 @@ export type CustomUpdateColumnOperatorRowUpdate = {
   value: any;
   value_type: ScalarType;
 };
+

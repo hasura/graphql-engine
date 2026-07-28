@@ -1,10 +1,9 @@
+/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { FunctionRelationships } from './FunctionRelationships';
 import type { InterpolatedRelationships } from './InterpolatedRelationships';
 import type { TableRelationships } from './TableRelationships';
+export type Relationships = (TableRelationships | InterpolatedRelationships | FunctionRelationships);
 
-export type Relationships =
-  TableRelationships | InterpolatedRelationships | FunctionRelationships;

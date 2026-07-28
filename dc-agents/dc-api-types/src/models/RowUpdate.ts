@@ -1,9 +1,8 @@
+/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { CustomUpdateColumnOperatorRowUpdate } from './CustomUpdateColumnOperatorRowUpdate';
 import type { SetColumnRowUpdate } from './SetColumnRowUpdate';
+export type RowUpdate = (SetColumnRowUpdate | CustomUpdateColumnOperatorRowUpdate);
 
-export type RowUpdate =
-  SetColumnRowUpdate | CustomUpdateColumnOperatorRowUpdate;

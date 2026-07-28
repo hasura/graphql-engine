@@ -1,12 +1,11 @@
+/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { Aggregate } from './Aggregate';
 import type { Expression } from './Expression';
 import type { Field } from './Field';
 import type { OrderBy } from './OrderBy';
-
 export type Query = {
   /**
    * Aggregate fields of the query
@@ -31,3 +30,4 @@ export type Query = {
   order_by?: OrderBy;
   where?: Expression;
 };
+

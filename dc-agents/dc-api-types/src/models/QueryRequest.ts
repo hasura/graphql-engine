@@ -1,14 +1,13 @@
+/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { InterpolatedQueries } from './InterpolatedQueries';
 import type { Query } from './Query';
 import type { Relationships } from './Relationships';
 import type { ScalarValue } from './ScalarValue';
 import type { Target } from './Target';
 import type { TargetRedactionExpressions } from './TargetRedactionExpressions';
-
 export type QueryRequest = {
   /**
    * If present, a list of columns and values for the columns that the query must be repeated for, applying the column values as a filter for each query.
@@ -26,3 +25,4 @@ export type QueryRequest = {
   relationships: Array<Relationships>;
   target: Target;
 };
+

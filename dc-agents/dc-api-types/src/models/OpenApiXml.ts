@@ -1,7 +1,7 @@
+/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 export type OpenApiXml = {
   attribute?: boolean;
   name?: string;
@@ -9,3 +9,4 @@ export type OpenApiXml = {
   prefix?: string;
   wrapped?: boolean;
 };
+

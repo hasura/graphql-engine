@@ -1,7 +1,7 @@
+/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { ComparisonCapabilities } from './ComparisonCapabilities';
 import type { DataSchemaCapabilities } from './DataSchemaCapabilities';
 import type { DatasetCapabilities } from './DatasetCapabilities';
@@ -17,7 +17,6 @@ import type { RelationshipCapabilities } from './RelationshipCapabilities';
 import type { ScalarTypesCapabilities } from './ScalarTypesCapabilities';
 import type { SubscriptionCapabilities } from './SubscriptionCapabilities';
 import type { UserDefinedFunctionCapabilities } from './UserDefinedFunctionCapabilities';
-
 export type Capabilities = {
   comparisons?: ComparisonCapabilities;
   data_schema?: DataSchemaCapabilities;
@@ -35,3 +34,4 @@ export type Capabilities = {
   subscriptions?: SubscriptionCapabilities;
   user_defined_functions?: UserDefinedFunctionCapabilities;
 };
+

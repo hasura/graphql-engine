@@ -1,7 +1,7 @@
+/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { AndExpression } from './AndExpression';
 import type { ApplyBinaryArrayComparisonOperator } from './ApplyBinaryArrayComparisonOperator';
 import type { ApplyBinaryComparisonOperator } from './ApplyBinaryComparisonOperator';
@@ -9,12 +9,5 @@ import type { ApplyUnaryComparisonOperator } from './ApplyUnaryComparisonOperato
 import type { ExistsExpression } from './ExistsExpression';
 import type { NotExpression } from './NotExpression';
 import type { OrExpression } from './OrExpression';
+export type Expression = (OrExpression | ApplyBinaryComparisonOperator | ExistsExpression | NotExpression | ApplyBinaryArrayComparisonOperator | ApplyUnaryComparisonOperator | AndExpression);
 
-export type Expression =
-  | OrExpression
-  | ApplyBinaryComparisonOperator
-  | ExistsExpression
-  | NotExpression
-  | ApplyBinaryArrayComparisonOperator
-  | ApplyUnaryComparisonOperator
-  | AndExpression;

@@ -1,9 +1,8 @@
+/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { ObjectRelationInsertionOrder } from './ObjectRelationInsertionOrder';
-
 export type ObjectRelationInsertSchema = {
   insertion_order: ObjectRelationInsertionOrder;
   /**
@@ -12,3 +11,4 @@ export type ObjectRelationInsertSchema = {
   relationship: string;
   type: 'object_relation';
 };
+

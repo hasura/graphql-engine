@@ -1,7 +1,7 @@
+/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 export type TInterpolated = {
   /**
    * The id for the query interpolation template
@@ -9,3 +9,4 @@ export type TInterpolated = {
   id: string;
   type: 'interpolated';
 };
+
