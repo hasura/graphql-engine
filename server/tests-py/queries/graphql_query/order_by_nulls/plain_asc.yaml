@@ -1,0 +1,26 @@
+description: |
+  order by nullable column ascending with no explicit nulls order.
+  Postgres' native default for plain "asc" is nulls last.
+url: /v1/graphql
+status: 200
+response:
+  data:
+    order_by_nulls_test:
+    - id: 3
+      val: 1
+    - id: 5
+      val: 2
+    - id: 1
+      val: 3
+    - id: 2
+      val: null
+    - id: 4
+      val: null
+query:
+  query: |
+    query {
+      order_by_nulls_test(order_by: [{val: asc}, {id: asc}]) {
+        id
+        val
+      }
+    }

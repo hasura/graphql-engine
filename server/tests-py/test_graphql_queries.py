@@ -831,6 +831,49 @@ class TestGraphQLQueryOrderBy:
         return 'queries/graphql_query/order_by'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.backend('postgres', 'mssql')
+@usefixtures('per_class_tests_db_state')
+class TestGraphQLQueryOrderByNulls:
+    """
+    Regression tests for #10844: MSSQL used to always emit a redundant
+    IIF(.. IS NULL, ..) sort key to implement nulls first/last ordering, even
+    when the ordering expression could never be NULL, which defeated index
+    use. These check actual row order (not just the generated SQL) against a
+    column that has real NULLs, on both Postgres and MSSQL.
+
+    asc_nulls_first/asc_nulls_last/desc_nulls_first/desc_nulls_last are
+    expected to place NULLs identically on every backend. Plain asc/desc are
+    intentionally backend-specific: they follow each backend's native default
+    nulls ordering (Postgres: asc nulls last, desc nulls first; MSSQL: asc
+    nulls first, desc nulls last), so those two use per-backend expected files.
+    """
+
+    def test_asc_nulls_first(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/asc_nulls_first.yaml', transport)
+
+    def test_asc_nulls_last(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/asc_nulls_last.yaml', transport)
+
+    def test_desc_nulls_first(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/desc_nulls_first.yaml', transport)
+
+    def test_desc_nulls_last(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/desc_nulls_last.yaml', transport)
+
+    def test_plain_asc_native_nulls_order(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + hge_ctx.backend_suffix('/plain_asc') + '.yaml', transport)
+
+    def test_plain_desc_native_nulls_order(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + hge_ctx.backend_suffix('/plain_desc') + '.yaml', transport)
+
+    def test_not_nullable_column_desc(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/not_nullable_column_desc.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/order_by_nulls'
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryCustomSchema:
 

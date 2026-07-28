@@ -1,0 +1,8 @@
+type: bulk
+args:
+
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: order_by_nulls_test

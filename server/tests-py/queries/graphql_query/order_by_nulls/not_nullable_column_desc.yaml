@@ -1,0 +1,26 @@
+description: |
+  order by the non-nullable id column descending; there's no NULL handling to
+  do here at all, this just guards against a regression in plain ordering.
+url: /v1/graphql
+status: 200
+response:
+  data:
+    order_by_nulls_test:
+    - id: 5
+      val: 2
+    - id: 4
+      val: null
+    - id: 3
+      val: 1
+    - id: 2
+      val: null
+    - id: 1
+      val: 3
+query:
+  query: |
+    query {
+      order_by_nulls_test(order_by: [{id: desc}]) {
+        id
+        val
+      }
+    }
