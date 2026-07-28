@@ -1,0 +1,28 @@
+description: |
+  order by nullable column descending with no explicit nulls order.
+  MSSQL's native default for plain "desc" is nulls last (see #10844): this
+  relies on SQL Server's native sort placing NULL as the lowest value,
+  without generating an explicit IIF(.. IS NULL, ..) sort key.
+url: /v1/graphql
+status: 200
+response:
+  data:
+    order_by_nulls_test:
+    - id: 1
+      val: 3
+    - id: 5
+      val: 2
+    - id: 3
+      val: 1
+    - id: 2
+      val: null
+    - id: 4
+      val: null
+query:
+  query: |
+    query {
+      order_by_nulls_test(order_by: [{val: desc}, {id: asc}]) {
+        id
+        val
+      }
+    }

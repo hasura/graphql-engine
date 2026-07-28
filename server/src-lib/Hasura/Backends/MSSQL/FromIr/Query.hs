@@ -967,29 +967,44 @@ fromAnnotatedOrderByItemG ::
   IR.AnnotatedOrderByItemG 'MSSQL Expression ->
   WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) OrderBy
 fromAnnotatedOrderByItemG IR.OrderByItemG {obiType, obiColumn = obiColumn, obiNulls} = do
-  (orderByExpression, orderByType) <- unfurlAnnotatedOrderByElement obiColumn
-  let orderByNullsOrder = fromMaybe NullsAnyOrder obiNulls
+  (orderByExpression, orderByType, nullability) <- unfurlAnnotatedOrderByElement obiColumn
+  let orderByNullsOrder = case nullability of
+        -- When the ordering expression can never evaluate to NULL, a nulls
+        -- ordering would only add a redundant @IIF(.. IS NULL, ..)@ sort key
+        -- to the generated query, so we drop it.
+        IR.NotNullable -> NullsAnyOrder
+        IR.Nullable -> fromMaybe NullsAnyOrder obiNulls
       orderByOrder = fromMaybe AscOrder obiType
   pure OrderBy {..}
 
 -- | Unfurl the nested set of object relations (tell'd in the writer)
 -- that are terminated by field name (IR.AOCColumn and
 -- IR.AOCArrayAggregation).
+--
+-- Also reports whether the resulting ordering expression may evaluate to
+-- NULL, so that null handling can be skipped when it provably cannot.
 unfurlAnnotatedOrderByElement ::
   IR.AnnotatedOrderByElement 'MSSQL Expression ->
-  WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) (Expression, Maybe TSQL.ScalarType)
+  WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) (Expression, Maybe TSQL.ScalarType, IR.Nullable)
 unfurlAnnotatedOrderByElement =
   \case
     IR.AOCColumn columnInfo redactionExp -> do
       fieldName <- lift (fromColumnInfo columnInfo)
       ex <- lift $ potentiallyRedacted redactionExp (ColumnExpression fieldName)
+      let nullability = case redactionExp of
+            -- Redaction wraps the column in a conditional that can produce
+            -- NULL even for non-nullable columns.
+            IR.NoRedaction
+              | not (IR.ciIsNullable columnInfo) -> IR.NotNullable
+            _ -> IR.Nullable
       pure
         ( ex,
           case IR.ciType columnInfo of
             IR.ColumnScalar t -> Just t
             -- Above: It is of interest to us whether the type is
             -- text/ntext/image. See ToQuery for more explanation.
-            _ -> Nothing
+            _ -> Nothing,
+          nullability
         )
     IR.AOCObjectRelation IR.RelInfo {riMapping = IR.RelMapping mapping, riTarget = IR.RelTargetNativeQuery nativeQueryName} annBoolExp annOrderByElementG -> do
       let name = T.toTxt (getNativeQueryName nativeQueryName)
@@ -1059,7 +1074,10 @@ unfurlAnnotatedOrderByElement =
         )
       pure
         ( ColumnExpression $ FieldName {fieldNameEntity = joinAliasEntity, fieldName = alias},
-          Nothing
+          Nothing,
+          -- Conservative: aggregates other than COUNT (e.g. MIN, SUM) yield
+          -- NULL when no rows match.
+          IR.Nullable
         )
   where
     genObjectRelation mapping annBoolExp annOrderByElementG joinAliasEntity selectFrom table = do
@@ -1099,9 +1117,14 @@ unfurlAnnotatedOrderByElement =
                 unfurledObjectTableAlias = Just (table, EntityAlias joinAliasEntity)
               }
         )
-      local
-        (const (EntityAlias joinAliasEntity))
-        (unfurlAnnotatedOrderByElement annOrderByElementG)
+      (ex, ty, _) <-
+        local
+          (const (EntityAlias joinAliasEntity))
+          (unfurlAnnotatedOrderByElement annOrderByElementG)
+      -- The object relation is joined with an OUTER APPLY: even when the
+      -- targeted expression itself can never be NULL, the joined row as a
+      -- whole may be missing, making the ordering expression NULL.
+      pure (ex, ty, IR.Nullable)
 
 tableNameText :: TableName -> Text
 tableNameText (TableName {tableName}) = tableName

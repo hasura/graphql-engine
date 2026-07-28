@@ -279,23 +279,30 @@ msOrderByOperators _tCase =
     $
     -- NOTE: NamingCase is not being used here as we don't support naming conventions for this DB
     NE.fromList
+      -- SQL Server sorts NULL as the lowest possible value: ascending order
+      -- places nulls first and descending order places nulls last, natively.
+      -- Operators that ask for exactly that placement are given
+      -- 'NullsAnyOrder' so no @IIF(.. IS NULL, ..)@ sort key is emitted for
+      -- them (such a computed sort key defeats index use, see #10844). Only
+      -- the two operators that invert the native placement need an explicit
+      -- nulls order.
       [ ( define Name._asc "in ascending order, nulls first",
-          (MSSQL.AscOrder, MSSQL.NullsFirst)
+          (MSSQL.AscOrder, MSSQL.NullsAnyOrder)
         ),
         ( define Name._asc_nulls_first "in ascending order, nulls first",
-          (MSSQL.AscOrder, MSSQL.NullsFirst)
+          (MSSQL.AscOrder, MSSQL.NullsAnyOrder)
         ),
         ( define Name._asc_nulls_last "in ascending order, nulls last",
           (MSSQL.AscOrder, MSSQL.NullsLast)
         ),
         ( define Name._desc "in descending order, nulls last",
-          (MSSQL.DescOrder, MSSQL.NullsLast)
+          (MSSQL.DescOrder, MSSQL.NullsAnyOrder)
         ),
         ( define Name._desc_nulls_first "in descending order, nulls first",
           (MSSQL.DescOrder, MSSQL.NullsFirst)
         ),
         ( define Name._desc_nulls_last "in descending order, nulls last",
-          (MSSQL.DescOrder, MSSQL.NullsLast)
+          (MSSQL.DescOrder, MSSQL.NullsAnyOrder)
         )
       ]
   where

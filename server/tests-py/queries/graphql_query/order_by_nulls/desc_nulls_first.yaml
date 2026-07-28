@@ -1,0 +1,24 @@
+description: order by nullable column descending with nulls first, same on every backend
+url: /v1/graphql
+status: 200
+response:
+  data:
+    order_by_nulls_test:
+    - id: 2
+      val: null
+    - id: 4
+      val: null
+    - id: 1
+      val: 3
+    - id: 5
+      val: 2
+    - id: 3
+      val: 1
+query:
+  query: |
+    query {
+      order_by_nulls_test(order_by: [{val: desc_nulls_first}, {id: asc}]) {
+        id
+        val
+      }
+    }
