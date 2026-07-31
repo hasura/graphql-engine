@@ -355,6 +355,20 @@ Used to set the default [naming convention](/schema/postgres/naming-convention.m
 | **Default**         | `hasura-default`                           |
 | **Supported in**    | CE, Enterprise Edition, Cloud              |
 
+### Enable Naming Convention Sep 2023 feature flag
+
+By default, even when `graphql-default` is selected, the following names keep using `hasura-default`-style (snake_case)
+casing, to preserve backward compatibility with schemas generated before September 2023. Enable this flag to opt in to
+the full `graphql-default`.
+
+|                     |                                        |
+| ------------------- | -------------------------------------- |
+| **Env var**         | `HASURA_FF_NAMING_CONVENTION_SEP_2023` |
+| **Accepted values** | Boolean                                |
+| **Options**         | `true` or `false`                      |
+| **Default**         | `false`                                |
+| **Supported in**    | CE, Enterprise Edition, Cloud          |
+
 ### Disable CORS
 
 [Disables CORS](deployment/graphql-engine-flags/config-examples.mdx#configure-cors). Hasura will not send any CORS
@@ -560,16 +574,17 @@ Enable [RBAC for Remote Schemas](/remote-schemas/auth/remote-schema-permissions.
 
 ### Enable Relay
 
-Enable the Relay API endpoint (`/v1/relay` and `/v1beta1/relay`). When disabled, requests to the relay endpoint return an error with instructions to enable it. Disabling this reduces memory usage for deployments that do not use Relay.
+Enable the Relay API endpoint (`/v1/relay` and `/v1beta1/relay`). When disabled, requests to the relay endpoint return
+an error with instructions to enable it. Disabling this reduces memory usage for deployments that do not use Relay.
 
-|                     |                                   |
-| ------------------- | --------------------------------- |
-| **Flag**            | `--enable-relay`                  |
-| **Env var**         | `HASURA_GRAPHQL_ENABLE_RELAY`     |
-| **Accepted values** | Boolean                           |
-| **Options**         | `true` or `false`                 |
-| **Default**         | `true`                            |
-| **Supported in**    | CE, Enterprise Edition, Cloud     |
+|                     |                               |
+| ------------------- | ----------------------------- |
+| **Flag**            | `--enable-relay`              |
+| **Env var**         | `HASURA_GRAPHQL_ENABLE_RELAY` |
+| **Accepted values** | Boolean                       |
+| **Options**         | `true` or `false`             |
+| **Default**         | `true`                        |
+| **Supported in**    | CE, Enterprise Edition, Cloud |
 
 ### Enable Telemetry
 
@@ -1416,8 +1431,8 @@ Used to set the connection initialization timeout for GraphQL subscription proto
 ### Websocket Queue Size
 
 Sets the maximum number of messages buffered per WebSocket connection before older messages are dropped to make room for
-newer ones. The primary purpose is to bound memory usage when a subscriber is slow to consume messages — without a limit,
-a stalled or slow client can cause unbounded memory growth on the server as subscription results accumulate.
+newer ones. The primary purpose is to bound memory usage when a subscriber is slow to consume messages — without a
+limit, a stalled or slow client can cause unbounded memory growth on the server as subscription results accumulate.
 
 When the queue is full, the oldest undelivered message is evicted and the newest message takes its place. The
 `hasura_websocket_messages_evicted_total` Prometheus metric counts these evictions; pairing it with
@@ -1437,13 +1452,13 @@ sequence of elements and rely on cursor-based pagination to make progress; a dro
 sequence that cannot be recovered. Use a larger queue size (or increase the poll interval) if streaming query clients
 may be slow consumers. Streaming subscriptions require the `streaming_subscriptions` experimental feature flag.
 
-|                     |                                                |
-| ------------------- | ---------------------------------------------- |
-| **Flag**            | `--websocket-queue-size <SIZE>`                |
-| **Env var**         | `HASURA_GRAPHQL_WEBSOCKET_QUEUE_SIZE`          |
-| **Accepted values** | Integer (must be at least `1`)                 |
+|                     |                                                                                                    |
+| ------------------- | -------------------------------------------------------------------------------------------------- |
+| **Flag**            | `--websocket-queue-size <SIZE>`                                                                    |
+| **Env var**         | `HASURA_GRAPHQL_WEBSOCKET_QUEUE_SIZE`                                                              |
+| **Accepted values** | Integer (must be at least `1`)                                                                     |
 | **Default**         | `100`; `1000` when `streaming_subscriptions` is enabled via `HASURA_GRAPHQL_EXPERIMENTAL_FEATURES` |
-| **Supported in**    | CE, Enterprise Edition, Cloud                  |
+| **Supported in**    | CE, Enterprise Edition, Cloud                                                                      |
 
 ### Websocket Keepalive
 

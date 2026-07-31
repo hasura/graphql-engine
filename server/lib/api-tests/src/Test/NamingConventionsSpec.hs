@@ -25,7 +25,8 @@ spec =
   withHge
     ( emptyHgeConfig
         { hgeConfigEnvironmentVars =
-            [ ("HASURA_GRAPHQL_EXPERIMENTAL_FEATURES", "naming_convention")
+            [ ("HASURA_GRAPHQL_EXPERIMENTAL_FEATURES", "naming_convention"),
+              ("HASURA_FF_NAMING_CONVENTION_SEP_2023", "True")
             ]
         }
     )

@@ -2,6 +2,7 @@
 -- Definitions for schema building configuration.
 module Hasura.RQL.Types.Schema.Options
   ( SchemaOptions (..),
+    NamingConventionSep2023 (..),
     StringifyNumbers (..),
     DangerouslyCollapseBooleans (..),
     BackwardsCompatibleNullInNonNullableVariables (..),
@@ -38,8 +39,19 @@ data SchemaOptions = SchemaOptions
     soIncludeGroupByAggregateFields :: IncludeGroupByAggregateFields,
     soPostgresArrays :: UsePostgresArrays,
     soNoNullUnboundVariableDefault :: NoNullUnboundVariableDefault,
-    soRemoveEmptySubscriptionResponses :: RemoveEmptySubscriptionResponses
+    soRemoveEmptySubscriptionResponses :: RemoveEmptySubscriptionResponses,
+    soNamingConventionSep2023 :: NamingConventionSep2023
   }
+
+-- | Whether the naming-convention changes introduced in September 2023 should
+-- be applied when building the schema. This was previously gated behind the
+-- @naming-convention-sep-2023@ feature flag and is now controlled by the
+-- @HASURA_FF_NAMING_CONVENTION_SEP_2023@ environment variable. It defaults to
+-- disabled to preserve the pre-existing (@fromCustomName@) naming behaviour.
+data NamingConventionSep2023
+  = EnableNamingConventionSep2023
+  | DisableNamingConventionSep2023
+  deriving (Eq, Show)
 
 -- | Should we represent numbers in our responses as numbers, or strings?
 -- Some backends can return numbers that exceed the bounds of JSON's own

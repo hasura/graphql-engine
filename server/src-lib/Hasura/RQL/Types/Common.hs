@@ -306,7 +306,8 @@ data SQLGenCtx = SQLGenCtx
     removeEmptySubscriptionResponses :: Options.RemoveEmptySubscriptionResponses,
     remoteNullForwardingPolicy :: Options.RemoteNullForwardingPolicy,
     optimizePermissionFilters :: Options.OptimizePermissionFilters,
-    bigqueryStringNumericInput :: Options.BigQueryStringNumericInput
+    bigqueryStringNumericInput :: Options.BigQueryStringNumericInput,
+    namingConventionSep2023 :: Options.NamingConventionSep2023
   }
   deriving (Show, Eq)
 

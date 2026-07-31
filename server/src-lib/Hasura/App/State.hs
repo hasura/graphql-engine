@@ -26,6 +26,7 @@ import Control.Arrow.Extended
 import Control.Concurrent.STM qualified as STM
 import Control.Monad.Catch (MonadMask)
 import Control.Monad.Trans.Control (MonadBaseControl)
+import Data.Char (toLower)
 import Data.Environment qualified as E
 import Data.HashSet qualified as Set
 import Database.PG.Query qualified as PG
@@ -271,7 +272,15 @@ buildAppContextRule ::
   (ServeOptions impl, E.Environment, InvalidationKeys) `arr` AppContext
 buildAppContextRule = proc (ServeOptions {..}, env, _keys) -> do
   authMode <- buildAuthMode -< (soAdminSecret, soAuthHook, soJwtSecret, soUnAuthRole)
-  let sqlGenCtx = initSQLGenCtx soExperimentalFeatures soStringifyNum soDangerousBooleanCollapse soBackwardsCompatibleNullInNonNullableVariables soRemoteNullForwardingPolicy
+  let namingConventionSep2023 =
+        -- Read the naming-convention-sep-2023 toggle directly from the
+        -- environment. This preserves the @HASURA_FF_NAMING_CONVENTION_SEP_2023@
+        -- variable that used to be handled by the (now removed) feature-flag
+        -- system, defaulting to disabled to keep pre-existing naming behaviour.
+        if (map toLower <$> E.lookupEnv env "HASURA_FF_NAMING_CONVENTION_SEP_2023") == Just "true"
+          then Options.EnableNamingConventionSep2023
+          else Options.DisableNamingConventionSep2023
+      sqlGenCtx = initSQLGenCtx soExperimentalFeatures soStringifyNum soDangerousBooleanCollapse soBackwardsCompatibleNullInNonNullableVariables soRemoteNullForwardingPolicy namingConventionSep2023
   responseInternalErrorsConfig <- buildResponseInternalErrorsConfig -< (soAdminInternalErrors, soDevMode)
   eventEngineCtx <- buildEventEngineCtx -< (soEventsHttpPoolSize, soEventsFetchInterval, soEventsFetchBatchSize)
   returnA
@@ -343,8 +352,9 @@ initSQLGenCtx ::
   Options.DangerouslyCollapseBooleans ->
   Options.BackwardsCompatibleNullInNonNullableVariables ->
   Options.RemoteNullForwardingPolicy ->
+  Options.NamingConventionSep2023 ->
   SQLGenCtx
-initSQLGenCtx experimentalFeatures stringifyNum dangerousBooleanCollapse nullInNonNullableVariables remoteNullForwardingPolicy =
+initSQLGenCtx experimentalFeatures stringifyNum dangerousBooleanCollapse nullInNonNullableVariables remoteNullForwardingPolicy namingConventionSep2023 =
   let optimizePermissionFilters
         | EFOptimizePermissionFilters `elem` experimentalFeatures = Options.OptimizePermissionFilters
         | otherwise = Options.Don'tOptimizePermissionFilters
@@ -360,7 +370,7 @@ initSQLGenCtx experimentalFeatures stringifyNum dangerousBooleanCollapse nullInN
       removeEmptySubscriptionResponses
         | EFRemoveEmptySubscriptionResponses `elem` experimentalFeatures = Options.RemoveEmptyResponses
         | otherwise = Options.PreserveEmptyResponses
-   in SQLGenCtx stringifyNum dangerousBooleanCollapse nullInNonNullableVariables noNullUnboundVariableDefault removeEmptySubscriptionResponses remoteNullForwardingPolicy optimizePermissionFilters bigqueryStringNumericInput
+   in SQLGenCtx stringifyNum dangerousBooleanCollapse nullInNonNullableVariables noNullUnboundVariableDefault removeEmptySubscriptionResponses remoteNullForwardingPolicy optimizePermissionFilters bigqueryStringNumericInput namingConventionSep2023
 
 buildCacheStaticConfig :: AppEnv -> CacheStaticConfig
 buildCacheStaticConfig AppEnv {..} =

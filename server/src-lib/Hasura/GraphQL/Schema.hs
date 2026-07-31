@@ -261,7 +261,7 @@ buildSchemaOptions ::
   HashSet ExperimentalFeature ->
   SchemaOptions
 buildSchemaOptions
-  ( SQLGenCtx stringifyNum dangerousBooleanCollapse _nullInNonNullableVariables noNullUnboundVariableDefault removeEmptySubscriptionResponses remoteNullForwardingPolicy optimizePermissionFilters bigqueryStringNumericInput,
+  ( SQLGenCtx stringifyNum dangerousBooleanCollapse _nullInNonNullableVariables noNullUnboundVariableDefault removeEmptySubscriptionResponses remoteNullForwardingPolicy optimizePermissionFilters bigqueryStringNumericInput namingConventionSep2023,
     functionPermsCtx
     )
   expFeatures =
@@ -295,7 +295,9 @@ buildSchemaOptions
         soNoNullUnboundVariableDefault =
           noNullUnboundVariableDefault,
         soRemoveEmptySubscriptionResponses =
-          removeEmptySubscriptionResponses
+          removeEmptySubscriptionResponses,
+        soNamingConventionSep2023 =
+          namingConventionSep2023
       }
 
 -- | Build the @QueryHasura@ context for a given role.

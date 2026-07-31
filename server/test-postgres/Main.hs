@@ -111,6 +111,7 @@ main = do
                 Options.RemoteForwardAccurately
                 Options.Don'tOptimizePermissionFilters
                 Options.EnableBigQueryStringNumericInput
+                Options.DisableNamingConventionSep2023
             maintenanceMode = MaintenanceModeDisabled
             readOnlyMode = ReadOnlyModeDisabled
             staticConfig =
