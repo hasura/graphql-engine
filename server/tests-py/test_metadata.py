@@ -136,6 +136,59 @@ class TestMetadata:
             "code": "unexpected"
         }
 
+    """create_event_trigger hard-rejects event trigger names containing characters
+    outside [A-Za-z0-9_-], but replace_metadata only warns and installs the trigger
+    anyway. The name is later interpolated unescaped into the generated trigger
+    function's SQL, so an illegal name accepted here is a SQL injection vector.
+    replace_metadata should hard-reject it the same way create_event_trigger does."""
+    def test_replace_metadata_illegal_event_trigger_name(self, hge_ctx):
+        resp = hge_ctx.v1metadataq({"type": "export_metadata", "args": {}})
+        default_source = list(filter(lambda source: (source["name"] == "default"), resp["sources"]))
+        assert default_source, "default source config not found"
+        default_source_config = default_source[0]["configuration"]
+        resp = hge_ctx.v1metadataq(
+            {
+                "type": "replace_metadata",
+                "version": 2,
+                "args": {
+                    "metadata": {
+                        "version": 3,
+                        "sources": [
+                            {
+                                "name": "default",
+                                "kind": "postgres",
+                                "tables": [
+                                    {
+                                        "table": {
+                                            "schema": "public",
+                                            "name": "author"
+                                        },
+                                        "event_triggers": [
+                                            {
+                                                "name": "bad'name",
+                                                "definition": {
+                                                    "enable_manual": True
+                                                },
+                                                "webhook": "https://httpbin.org/post",
+                                                "retry_conf": {
+                                                    "num_retries": 0,
+                                                    "interval_sec": 10,
+                                                    "timeout_sec": 60
+                                                }
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "configuration": default_source_config
+                            }
+                        ]
+                    }
+                }
+            },
+            expected_status_code = 400
+        )
+        assert 'only alphanumeric and underscore and hyphens allowed for name' in str(resp), resp
+
     """Test that missing "kind" key in metadata source defaults to "postgres".
     Regression test for https://github.com/hasura/graphql-engine-mono/issues/4501"""
     def test_replace_metadata_default_kind(self, hge_ctx):

@@ -16,6 +16,7 @@ module Hasura.Backends.MSSQL.DDL.EventTrigger
     unlockEventsInSource,
     getMaintenanceModeVersion,
     qualifyTableName,
+    mssqlFmtLit,
     createMissingSQLTriggers,
     checkIfTriggerExists,
     addCleanupSchedules,
@@ -460,7 +461,7 @@ fetchEvents source triggerNames (FetchBatchSize fetchBatchSize) = do
     -- We cannot use 'commaseperated()' because it creates the Text as
     -- 'insert_test_books, et_test_bigint' which is not useful to compare values in
     -- 'IN' MSSQL operator.
-    triggerNamesTxt = "(" <> commaSeparated (map (\t -> "'" <> toTxt t <> "'") triggerNames) <> ")"
+    triggerNamesTxt = "(" <> commaSeparated (map (mssqlFmtLit . toTxt) triggerNames) <> ")"
 
     uncurryEvent (eventId, sn, tn, trn, payload :: Text, tries, createdAt :: B.ByteString, nextRetryAt :: Maybe B.ByteString) = do
       -- see Note [Encode Event Trigger Payload to JSON in SQL Server]
@@ -621,6 +622,17 @@ mssqlFmtIdentifier :: Text -> Text
 mssqlFmtIdentifier x =
   "[" <> T.replace "]" "]]" x <> "]"
 
+-- | Quote and escape a piece of text for use as a SQL Server string literal,
+-- i.e. double up any single quotes so the value can't break out of the
+-- surrounding @'...'@.
+--
+-- >>> mssqlFmtLit "foo" == "'foo'"
+--
+-- >>> mssqlFmtLit "o'brien" == "'o''brien'"
+mssqlFmtLit :: Text -> Text
+mssqlFmtLit x =
+  "'" <> T.replace "'" "''" x <> "'"
+
 -- | A Representation of SQL Trigger name for an event trigger in MSSQL.
 newtype SQLTriggerName = SQLTriggerName {getSQLTriggerName :: Text}
 
@@ -776,8 +788,10 @@ qualifyTableName = toTxt . toQueryFlat . fromTableName
 mkInsertTriggerQuery :: TableName -> TriggerName -> [ColumnInfo 'MSSQL] -> TriggerOnReplication -> LT.Text
 mkInsertTriggerQuery table@(TableName tableName schema@(SchemaName schemaName)) triggerName columns triggerOnReplication =
   let qualifiedTriggerName = qualifiedTriggerNameToText $ QualifiedTriggerName schema $ mkSQLTriggerName triggerName INSERT
-      triggerNameText = triggerNameToTxt triggerName
+      triggerNameLit = mssqlFmtLit $ triggerNameToTxt triggerName
       qualifiedTableName = qualifyTableName table
+      schemaNameLit = mssqlFmtLit schemaName
+      tableNameLit = mssqlFmtLit tableName
       operation = tshow INSERT
       replicationClause :: String = if triggerOnReplication /= TOREnableTrigger then "NOT FOR REPLICATION" else ""
       deliveryColsSQLExpression :: Text =
@@ -787,8 +801,10 @@ mkInsertTriggerQuery table@(TableName tableName schema@(SchemaName schemaName)) 
 mkDeleteTriggerQuery :: TableName -> TriggerName -> [ColumnInfo 'MSSQL] -> TriggerOnReplication -> LT.Text
 mkDeleteTriggerQuery table@(TableName tableName schema@(SchemaName schemaName)) triggerName columns triggerOnReplication =
   let qualifiedTriggerName = qualifiedTriggerNameToText $ QualifiedTriggerName schema $ mkSQLTriggerName triggerName DELETE
-      triggerNameText = triggerNameToTxt triggerName
+      triggerNameLit = mssqlFmtLit $ triggerNameToTxt triggerName
       qualifiedTableName = qualifyTableName table
+      schemaNameLit = mssqlFmtLit schemaName
+      tableNameLit = mssqlFmtLit tableName
       operation = tshow DELETE
       replicationClause :: String = if triggerOnReplication /= TOREnableTrigger then "NOT FOR REPLICATION" else ""
       deliveryColsSQLExpression :: Text = commaSeparated $ map (unSQLFragment . generateColumnTriggerAlias OLD Nothing) columns
@@ -878,8 +894,10 @@ mkUpdateTriggerQuery
   primaryKey
   triggerOnReplication =
     let qualifiedTriggerName = qualifiedTriggerNameToText $ QualifiedTriggerName schema $ mkSQLTriggerName triggerName UPDATE
-        triggerNameText = triggerNameToTxt triggerName
+        triggerNameLit = mssqlFmtLit $ triggerNameToTxt triggerName
         qualifiedTableName = qualifyTableName table
+        schemaNameLit = mssqlFmtLit schemaName
+        tableNameLit = mssqlFmtLit tableName
         operation = tshow UPDATE
         replicationClause :: String = if triggerOnReplication /= TOREnableTrigger then "NOT FOR REPLICATION" else ""
 
@@ -954,7 +972,7 @@ insertEventTriggerCleanupLogsTx triggerNameWithSchedules =
           ( \(triggerName, schedules) ->
               generateSQLValuesFromListWith
                 ( \schedule ->
-                    "'" <> triggerNameToTxt triggerName <> "', '" <> (T.pack . iso8601Show . unDatetimeoffset) schedule <> "', 'scheduled'"
+                    mssqlFmtLit (triggerNameToTxt triggerName) <> ", " <> mssqlFmtLit ((T.pack . iso8601Show . unDatetimeoffset) schedule) <> ", 'scheduled'"
                 )
                 schedules
           )
@@ -979,7 +997,7 @@ selectLastCleanupScheduledTimestamp triggerNames =
         |]
       )
   where
-    triggerNamesValues = generateSQLValuesFromListWith triggerNameToTxt triggerNames
+    triggerNamesValues = generateSQLValuesFromListWith (mssqlFmtLit . triggerNameToTxt) triggerNames
 
 deleteAllScheduledCleanupsTx :: TriggerName -> TxE QErr ()
 deleteAllScheduledCleanupsTx triggerName = do
@@ -1157,7 +1175,7 @@ deleteEventTriggerLogsTx TriggerLogCleanupConfig {..} = do
             else
               [ST.st|
                 UPDATE hdb_catalog.event_invocation_logs
-                SET trigger_name = '#{qTriggerName}'
+                SET trigger_name = #{qTriggerNameLit}
                 WHERE event_id = ANY ( SELECT id from  (VALUES #{eventIdsValues}) AS X(id));
                 |]
       --  Finally delete the event logs.
@@ -1179,6 +1197,7 @@ deleteEventTriggerLogsTx TriggerLogCleanupConfig {..} = do
   where
     qTimeout = tlccTimeout * 1000
     qTriggerName = triggerNameToTxt tlccEventTriggerName
+    qTriggerNameLit = mssqlFmtLit qTriggerName
     qRetentionPeriod = tlccClearOlderThan
     qBatchSize = tlccBatchSize
 

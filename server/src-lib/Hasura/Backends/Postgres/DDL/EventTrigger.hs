@@ -748,7 +748,7 @@ mkTriggerFunctionQ triggerName (QualifiedObject schema table) allCols op (Subscr
               DELETE -> SENull
               MANUAL -> SENull
 
-            name = triggerNameToTxt triggerName
+            name = pgFmtLit $ triggerNameToTxt triggerName
             qualifiedTriggerName = unQualifiedTriggerName dbQualifiedTriggerName
             schemaName = pgFmtLit $ getSchemaTxt schema
             tableName = pgFmtLit $ getTableTxt table

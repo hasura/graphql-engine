@@ -1294,6 +1294,7 @@ test-suite graphql-engine-test-mssql
   other-modules:
     Database.MSSQL.TransactionSpec
     Hasura.Backends.MSSQL.ErrorSpec
+    Hasura.Backends.MSSQL.EventTriggerCleanupSuite
     SpecHook
 
 test-suite graphql-engine-test-postgres

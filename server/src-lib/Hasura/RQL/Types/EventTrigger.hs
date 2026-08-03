@@ -34,6 +34,7 @@ module Hasura.RQL.Types.EventTrigger
     TriggerLogCleanupToggleConfig (..),
     updateCleanupConfig,
     isIllegalTriggerName,
+    maxTriggerNameLength,
     EventLogStatus (..),
     GetEventLogs (..),
     EventLog (..),
@@ -98,6 +99,14 @@ isIllegalTriggerName (TriggerName name) =
   let regex = "^[A-Za-z]+[A-Za-z0-9_\\-]*$" :: LBS.ByteString
       compiledRegex = TDFA.makeRegex regex :: TDFA.Regex
    in not $ TDFA.match compiledRegex . T.unpack $ unNonEmptyText name
+
+-- This limit helps us create functions for the event triggers
+-- without the function name being truncated by PG, since PG allows
+-- for only 63 chars for identifiers.
+-- Reasoning for the 42 characters:
+-- 63 - (notify_hasura_) - (_INSERT | _UPDATE | _DELETE)
+maxTriggerNameLength :: Int
+maxTriggerNameLength = 42
 
 data Ops = INSERT | UPDATE | DELETE | MANUAL deriving (Show, Eq, Generic)
 

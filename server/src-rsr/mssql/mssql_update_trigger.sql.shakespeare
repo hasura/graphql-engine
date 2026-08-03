@@ -13,9 +13,9 @@ SET @json_pk_not_updated =
       (SELECT
           #{oldDeliveryColsSQLExp}, #{newDeliveryColsSQLExp},
           '#{operation}' as [payload.op],
-          '#{schemaName}' as [schema_name],
-          '#{tableName}' as [table_name],
-          '#{triggerNameText}' as [trigger_name]
+          #{schemaNameLit} as [schema_name],
+          #{tableNameLit} as [table_name],
+          #{triggerNameLit} as [trigger_name]
         FROM DELETED
         JOIN INSERTED
         ON #{primaryKeyJoinExp}
@@ -44,9 +44,9 @@ IF (#{isPrimaryKeyInListenColumnsExp})
           (SELECT
             #{oldDeliveryColsSQLExpWhenPrimaryKeyUpdated}, #{newDeliveryColsSQLExpWhenPrimaryKeyUpdated},
             '#{operation}' as [payload.op],
-            '#{schemaName}' as [schema_name],
-            '#{tableName}' as [table_name],
-            '#{triggerNameText}' as [trigger_name]
+            #{schemaNameLit} as [schema_name],
+            #{tableNameLit} as [table_name],
+            #{triggerNameLit} as [trigger_name]
           FROM INSERTED
           WHERE NOT EXISTS (SELECT * FROM DELETED WHERE #{primaryKeyJoinExp})
           FOR JSON PATH, INCLUDE_NULL_VALUES

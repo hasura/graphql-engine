@@ -9,9 +9,9 @@ SET @json =  (
   SELECT
     #{deliveryColsSQLExpression}, NULL as [payload.data.old],
     '#{operation}' as [payload.op],
-    '#{schemaName}' as [schema_name],
-    '#{tableName}' as [table_name],
-    '#{triggerNameText}' as [trigger_name]
+    #{schemaNameLit} as [schema_name],
+    #{tableNameLit} as [table_name],
+    #{triggerNameLit} as [trigger_name]
   FROM INSERTED
   FOR JSON PATH, INCLUDE_NULL_VALUES
 )
