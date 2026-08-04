@@ -1,8 +1,9 @@
-/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+
 import type { InterpolatedItem } from './InterpolatedItem';
+
 export type InterpolatedQuery = {
   /**
    * An id associated with the interpolated query - Should be unique across the request

@@ -1,11 +1,12 @@
-/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+
 import type { OpenApiDiscriminator } from './OpenApiDiscriminator';
 import type { OpenApiExternalDocumentation } from './OpenApiExternalDocumentation';
 import type { OpenApiReference } from './OpenApiReference';
 import type { OpenApiXml } from './OpenApiXml';
+
 export type OpenApiSchema = {
   additionalProperties?: any;
   allOf?: Array<(OpenApiSchema | OpenApiReference)>;

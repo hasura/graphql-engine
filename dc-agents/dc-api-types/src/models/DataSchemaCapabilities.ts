@@ -1,8 +1,9 @@
-/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+
 import type { ColumnNullability } from './ColumnNullability';
+
 export type DataSchemaCapabilities = {
   column_nullability?: ColumnNullability;
   /**

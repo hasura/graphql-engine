@@ -1,9 +1,10 @@
-/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+
 import type { ComparisonColumn } from './ComparisonColumn';
 import type { UnaryComparisonOperator } from './UnaryComparisonOperator';
+
 export type ApplyUnaryComparisonOperator = {
   column: ComparisonColumn;
   operator: UnaryComparisonOperator;

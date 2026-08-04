@@ -1,10 +1,11 @@
-/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+
 import type { FunctionInfo } from './FunctionInfo';
 import type { ObjectTypeDefinition } from './ObjectTypeDefinition';
 import type { TableInfo } from './TableInfo';
+
 export type SchemaResponse = {
   /**
    * Available functions

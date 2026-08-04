@@ -1,7 +1,7 @@
-/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+
 /**
  * Describes the level of transactional atomicity the agent supports for mutation operations.
  * 'row': If multiple rows are affected in a single operation but one fails, only the failed row's changes will be reverted

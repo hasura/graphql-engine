@@ -1,10 +1,11 @@
-/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+
 import type { RedactionExpressionName } from './RedactionExpressionName';
 import type { ScalarType } from './ScalarType';
 import type { SingleColumnAggregateFunction } from './SingleColumnAggregateFunction';
+
 export type OrderBySingleColumnAggregate = {
   /**
    * The column to apply the aggregation function to

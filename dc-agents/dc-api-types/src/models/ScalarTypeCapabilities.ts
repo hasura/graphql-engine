@@ -1,11 +1,12 @@
-/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+
 import type { AggregateFunctions } from './AggregateFunctions';
 import type { ComparisonOperators } from './ComparisonOperators';
 import type { GraphQLType } from './GraphQLType';
 import type { UpdateColumnOperators } from './UpdateColumnOperators';
+
 /**
  * Capabilities of a scalar type.
  * comparison_operators: The comparison operators supported by the scalar type.

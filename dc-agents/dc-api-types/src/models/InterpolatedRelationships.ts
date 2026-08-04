@@ -1,8 +1,9 @@
-/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+
 import type { Relationship } from './Relationship';
+
 export type InterpolatedRelationships = {
   /**
    * A map of relationships from the interpolated table to targets. The key of the map is the relationship name

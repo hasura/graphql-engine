@@ -1,9 +1,10 @@
 {
+  "extends": "@tsconfig/node16/tsconfig.json",
   "compilerOptions": {
     "outDir": "dist",
-    "types": ["node"],
     "resolveJsonModule": true,
-    "esModuleInterop": true
   },
-  "include": ["scripts/**/*"]
+  "include": [
+    "scripts/**/*"
+  ]
 }

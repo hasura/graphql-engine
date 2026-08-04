@@ -1,11 +1,12 @@
-/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+
 import type { ColumnInfo } from './ColumnInfo';
 import type { Constraint } from './Constraint';
 import type { TableName } from './TableName';
 import type { TableType } from './TableType';
+
 export type TableInfo = {
   /**
    * The columns of the table

@@ -1,9 +1,10 @@
-/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+
 import type { DeleteMutationOperation } from './DeleteMutationOperation';
 import type { InsertMutationOperation } from './InsertMutationOperation';
 import type { UpdateMutationOperation } from './UpdateMutationOperation';
+
 export type MutationOperation = (InsertMutationOperation | UpdateMutationOperation | DeleteMutationOperation);
 

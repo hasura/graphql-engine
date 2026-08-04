@@ -1,9 +1,10 @@
-/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+
 import type { ColumnFieldValue } from './ColumnFieldValue';
 import type { NullColumnFieldValue } from './NullColumnFieldValue';
+
 export type QueryResponse = {
   /**
    * The results of the aggregates returned by the query

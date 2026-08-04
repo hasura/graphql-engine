@@ -1,9 +1,10 @@
-/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+
 import type { OrderByTarget } from './OrderByTarget';
 import type { OrderDirection } from './OrderDirection';
+
 export type OrderByElement = {
   order_direction: OrderDirection;
   target: OrderByTarget;

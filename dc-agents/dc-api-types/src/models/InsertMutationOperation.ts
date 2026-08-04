@@ -1,11 +1,12 @@
-/* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+
 import type { Expression } from './Expression';
 import type { Field } from './Field';
 import type { RowObject } from './RowObject';
 import type { TableName } from './TableName';
+
 export type InsertMutationOperation = {
   post_insert_check?: Expression;
   /**
