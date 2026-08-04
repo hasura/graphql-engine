@@ -370,8 +370,10 @@ msDBLiveQuerySubscriptionPlan UserInfo {_uiSession, _uiRole} sourceName sourceCo
 
   let modelInfo = getModelInfoPartfromModelNames modelNameInfo (ModelOperationType G.OperationTypeSubscription)
 
+  cohortId <- newCohortId
+
   pure
-    $ (SubscriptionQueryPlan parameterizedPlan sourceConfig dummyCohortId () cohortVariables namespace, modelInfo)
+    $ (SubscriptionQueryPlan parameterizedPlan sourceConfig cohortId () cohortVariables namespace, modelInfo)
 
 prepareStateCohortVariables ::
   (MonadError QErr m, MonadIO m, MonadBaseControl IO m) =>

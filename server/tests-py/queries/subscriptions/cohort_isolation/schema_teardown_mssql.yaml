@@ -1,0 +1,14 @@
+type: bulk
+args:
+
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      drop table hge_tests.cohort_isolation_probe
+
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      DROP SCHEMA hge_tests
