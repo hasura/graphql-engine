@@ -54,11 +54,11 @@ const fillAndSubmitForm: Story['play'] = async (
   //await userEvent.click(c.getAllByText('Remove')[0]);
 
   await userEvent.type(
-    c.getByPlaceholderText('Name that exposes this model in GraphQL API'),
+    c.getByPlaceholderText('Name that exposes this query in GraphQL API'),
     'my_native_query'
   );
   await userEvent.type(
-    c.getByPlaceholderText('A description of this logical model'),
+    c.getByPlaceholderText('A description of this native query'),
     'a description'
   );
 
