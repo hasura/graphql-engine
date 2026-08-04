@@ -1,0 +1,6 @@
+type: pg_track_table
+args:
+  source: default
+  table:
+    schema: hge_tests
+    name: cohort_isolation_probe
