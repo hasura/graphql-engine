@@ -440,7 +440,7 @@ websocketConnectionReaper getLatestConfig getSchemaCache ws@(WSServer _ userConf
             hasBigqueryStringNumericInputChanged = bigqueryStringNumericInput currSqlGenCtx /= bigqueryStringNumericInput prevSqlGenCtx
             hasHideAggregationPredicatesChanged = (EFHideAggregationPredicates `elem` currExperimentalFeatures) /= (EFHideAggregationPredicates `elem` prevExperimentalFeatures)
             hasHideStreamFieldsChanged = (EFHideStreamFields `elem` currExperimentalFeatures) /= (EFHideStreamFields `elem` prevExperimentalFeatures)
-            hasDefaultNamingCaseChanged = hasNamingConventionChanged (prevExperimentalFeatures, prevDefaultNamingCase) (currExperimentalFeatures, currDefaultNamingCase)
+            hasDefaultNamingCaseChanged = hasNamingConventionChanged prevDefaultNamingCase currDefaultNamingCase
         if
           -- if CORS policy has changed, close all connections
           | hasCorsPolicyChanged ->

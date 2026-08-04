@@ -147,4 +147,4 @@ class TestNamingConventionWithoutExperimentalFeature:
         add_source('pg1', customization={'naming_convention': 'graphql-default'})
 
     def test_naming_convention_without_feature_turned_on(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/naming_convention_without_feature_turned_on.yaml')
+        check_query_f(hge_ctx, self.dir() + '/default_global_naming_convention.yaml')
