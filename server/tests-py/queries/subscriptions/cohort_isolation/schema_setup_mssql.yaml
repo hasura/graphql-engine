@@ -1,0 +1,20 @@
+type: bulk
+args:
+
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      CREATE SCHEMA hge_tests
+
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      create table hge_tests.cohort_isolation_probe(
+        id int primary key,
+        val varchar(max)
+      );
+      insert into hge_tests.cohort_isolation_probe (id, val) values
+        (1, 'row-1'),
+        (2, 'row-2');
