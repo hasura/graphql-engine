@@ -1,3 +1,4 @@
+import { formatSdl } from 'format-graphql';
 import { CustomRootFields, TableConfig } from './../../metadata/types';
 import {
   OrderBy,
@@ -7,7 +8,6 @@ import { ReduxState } from '../../types';
 import { BaseTableColumn, Relationship, Table } from '../types';
 import { SourceCustomization } from '../../features/hasura-metadata-types';
 import { getQueryName } from './utils';
-import { formatGraphQL } from '../../utils/formatGraphQL';
 
 type Tables = ReduxState['tables'];
 
@@ -233,7 +233,7 @@ export const getQueryWithNamespace = ({
   namespace,
   innerQuery,
 }: GetQueryWithNamespaceArgs) => {
-  return formatGraphQL(`${queryName}
+  return formatSdl(`${queryName}
   {
     ${namespace ? `${namespace} {` : ''}
 

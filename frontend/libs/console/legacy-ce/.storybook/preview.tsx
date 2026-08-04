@@ -2,6 +2,7 @@ import React from 'react';
 import { Provider } from 'react-redux';
 import { initialize, mswDecorator } from 'msw-storybook-addon';
 import mockdate from 'mockdate';
+import dayjs from 'dayjs';
 import theme from './theme';
 import 'react-loading-skeleton/dist/skeleton.css';
 import '../src/lib/theme/tailwind.css';
@@ -45,7 +46,7 @@ export const decorators = [
     // Allows us to "time travel" to ensure our stories don't change over time
     mockdate.set(parameters.mockdate);
 
-    const mockedDate = new Date(parameters.mockdate).toISOString();
+    const mockedDate = dayjs(parameters.mockdate).format('DD-MM-YYYY HH:mma');
 
     return (
       <div>

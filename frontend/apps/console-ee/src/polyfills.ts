@@ -9,7 +9,6 @@ import 'regenerator-runtime/runtime';
 import 'browser-hrtime';
 import { Buffer } from 'buffer/';
 process.cwd = () => '';
-(process as any).version = (process as any).version ?? '';
 
 (window as any).global = window;
 (window as any).Buffer = Buffer;

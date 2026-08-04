@@ -1,5 +1,5 @@
-import { formatGraphQL } from '../../../utils/formatGraphQL';
 import { MetadataTable, Source } from '../../hasura-metadata-types';
+import { formatSdl } from 'format-graphql';
 import { getMutationRoot } from './getMutationRoot';
 
 export const generateGraphQLInsertMutation = ({
@@ -56,7 +56,7 @@ export const generateGraphQLInsertMutation = ({
     }`;
 
     return {
-      query: formatGraphQL(mutationString),
+      query: formatSdl(mutationString),
       resultPath: `${sourceCustomization.root_fields?.namespace}.${queryRoot}`,
     };
   }
@@ -68,7 +68,7 @@ export const generateGraphQLInsertMutation = ({
   }`;
 
   return {
-    query: formatGraphQL(query),
+    query: formatSdl(query),
     resultPath: queryRoot,
   };
 };

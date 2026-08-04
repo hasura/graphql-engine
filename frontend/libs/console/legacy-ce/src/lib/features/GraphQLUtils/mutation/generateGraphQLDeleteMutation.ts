@@ -1,4 +1,4 @@
-import { formatGraphQL } from '../../../utils/formatGraphQL';
+import { formatSdl } from 'format-graphql';
 import { MetadataTable, Source } from '../../hasura-metadata-types';
 import { getMutationRoot } from './getMutationRoot';
 
@@ -45,7 +45,7 @@ export const generateGraphQLDeleteMutation = ({
    */
   if (sourceCustomization?.root_fields?.namespace)
     return {
-      query: formatGraphQL(`mutation ${mutationName}  {
+      query: formatSdl(`mutation ${mutationName}  {
     ${sourceCustomization.root_fields.namespace}  {
       ${queryRoot} (where: { 
         _or: [
@@ -59,7 +59,7 @@ export const generateGraphQLDeleteMutation = ({
     };
 
   return {
-    query: formatGraphQL(`
+    query: formatSdl(`
     mutation ${mutationName} {
       ${queryRoot} (where: { 
         _or: [

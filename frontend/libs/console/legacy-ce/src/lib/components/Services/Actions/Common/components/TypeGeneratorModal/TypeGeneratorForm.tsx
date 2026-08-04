@@ -1,11 +1,11 @@
 import React, { useEffect } from 'react';
 import z from 'zod';
 import { CodeEditorField } from '../../../../../../new-components/Form';
+import { formatSdl } from 'format-graphql';
 import { jsonToSchema } from '@walmartlabs/json-to-simple-graphql-schema/lib';
 import { useFormContext } from 'react-hook-form';
 import { useDebouncedEffect } from '../../../../../../hooks/useDebounceEffect';
 import { SchemaType } from './types';
-import { formatGraphQL } from '../../../../../../utils/formatGraphQL';
 
 export const schema = z.object({
   jsonInput: z.string(),
@@ -51,7 +51,7 @@ export const TypeGeneratorForm = (props: {
           });
           setValue(
             'graphqlInput',
-            formatGraphQL(schema.value.replace(/type\s(.*)\s\{/g, 'input $1 {'))
+            formatSdl(schema.value.replace(/type\s(.*)\s\{/g, 'input $1 {'))
           );
         }
       } catch (e) {
@@ -66,7 +66,7 @@ export const TypeGeneratorForm = (props: {
             jsonInput: jsonOutput,
             baseType: 'SampleOutput',
           });
-          setValue('graphqlOutput', formatGraphQL(schema.value));
+          setValue('graphqlOutput', formatSdl(schema.value));
         }
       } catch (e) {
         setError('jsonOutput', {

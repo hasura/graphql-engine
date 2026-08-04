@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { jwtDecode } from 'jwt-decode';
 import {
   FaCheck,
   FaEye,
@@ -88,6 +87,7 @@ class ApiRequest extends Component {
         error: null,
         serverResp: {},
       },
+      jwt: null,
     };
 
     if (this.props.numberOfTables !== 0) {
@@ -99,6 +99,13 @@ class ApiRequest extends Component {
 
     this.analyzeBearerToken = this.analyzeBearerToken.bind(this);
     this.onAnalyzeBearerClose = this.onAnalyzeBearerClose.bind(this);
+
+    // Dynamically load jsonwebtoken library to prevent storybook stories crash
+    if (!global.window.preventJsonWebTokenLoad) {
+      import('jsonwebtoken').then(jwt => {
+        this.setState({ ...this.state, jwt });
+      });
+    }
   }
 
   componentDidMount() {
@@ -186,7 +193,7 @@ class ApiRequest extends Component {
       });
 
       const decodeAndSetState = serverResp => {
-        const decoded = jwtDecode(token, { complete: true });
+        const decoded = this.state.jwt.decode(token, { complete: true });
 
         if (decoded) {
           this.setState({

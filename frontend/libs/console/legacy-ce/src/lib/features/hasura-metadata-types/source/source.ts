@@ -137,4 +137,4 @@ export const isBulkAtomicResponseError = (
   return 'error' in response;
 };
 
-export type { NativeQueryRelationship } from './nativeQuery';
+export { NativeQueryRelationship } from './nativeQuery';
