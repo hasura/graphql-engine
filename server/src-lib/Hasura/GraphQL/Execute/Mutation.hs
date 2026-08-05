@@ -48,7 +48,8 @@ convertMutationAction ::
   ( MonadIO m,
     MonadError QErr m,
     MonadMetadataStorage m,
-    ProvidesNetwork m
+    ProvidesNetwork m,
+    Tracing.MonadTraceContext m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
