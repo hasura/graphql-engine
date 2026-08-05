@@ -14,20 +14,19 @@ keywords:
 
 ## Introduction
 
-Add/Remove a remote GraphQL server as Remote Schema in Hasura GraphQL
-engine.
+Add/Remove a remote GraphQL server as Remote Schema in Hasura GraphQL engine.
 
 :::tip Supported from
 
-The Metadata API is supported for versions `v2.0.0` and above and
-replaces the older [schema/Metadata API](/api-reference/schema-metadata-api/index.mdx).
+The Metadata API is supported for versions `v2.0.0` and above and replaces the older
+[schema/Metadata API](/api-reference/schema-metadata-api/index.mdx).
 
 :::
 
 ## add_remote_schema {#metadata-add-remote-schema}
 
-`add_remote_schema` is used to add a remote GraphQL server as remote
-schema. GraphQL Engine stitches it's schema with existing.
+`add_remote_schema` is used to add a remote GraphQL server as remote schema. GraphQL Engine stitches it's schema with
+existing.
 
 An example request as follows:
 
@@ -79,11 +78,9 @@ X-Hasura-Role: admin
 
 ## update_remote_schema {#metadata-update-remote-schema}
 
-`update_remote_schema` is used to update the configuration of a remote
-schema. If the Remote Schema URL has changed then it will perform a
-introspection as well. After introspection, if there are any
-inconsistencies detected with other Metadata objects (like remote
-relationships or Remote Schema permissions) they will be reported as
+`update_remote_schema` is used to update the configuration of a remote schema. If the Remote Schema URL has changed then
+it will perform a introspection as well. After introspection, if there are any inconsistencies detected with other
+Metadata objects (like remote relationships or Remote Schema permissions) they will be reported as
 
 <em>inconsistent_metadata</em>.
 
@@ -137,8 +134,7 @@ X-Hasura-Role: admin
 
 ## remove_remote_schema {#metadata-remove-remote-schema}
 
-`remove_remote_schema` is used to delete a Remote Schema. GraphQL Engine
-de-stitches it's schema.
+`remove_remote_schema` is used to delete a Remote Schema. GraphQL Engine de-stitches it's schema.
 
 An example request as follows:
 
@@ -150,21 +146,23 @@ X-Hasura-Role: admin
 {
     "type": "remove_remote_schema",
     "args": {
-        "name": "my remote schema"
+        "name": "my remote schema",
+        "cascade": false
     }
 }
 ```
 
 ### Args syntax {#metadata-remove-remote-schema-syntax}
 
-| Key  | Required | Schema                                                              | Description               |
-| ---- | -------- | ------------------------------------------------------------------- | ------------------------- |
-| name | true     | [RemoteSchemaName](/api-reference/syntax-defs.mdx#remoteschemaname) | Name of the Remote Schema |
+| Key     | Required | Schema                                                              | Description                                                                                 |
+| ------- | -------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| name    | true     | [RemoteSchemaName](/api-reference/syntax-defs.mdx#remoteschemaname) | Name of the Remote Schema                                                                   |
+| cascade | false    | Boolean                                                             | When set to `true`, all the dependent items (if any) on this remote schema are also dropped |
 
 ## reload_remote_schema {#metadata-reload-remote-schema}
 
-`reload_remote_schema` is used to refresh schema of the remote server.
-GraphQL Engine refetches schema from server and stitches.
+`reload_remote_schema` is used to refresh schema of the remote server. GraphQL Engine refetches schema from server and
+stitches.
 
 An example request as follows:
 
