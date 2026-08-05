@@ -112,6 +112,32 @@ A [secret key](/deployment/securing-graphql-endpoint.mdx) required to access the
 :::info Note
 
 When you use [webhook or JWT mode for authentication](/auth/authentication/index.mdx), setting this value is mandatory.
+This requirement does not apply when `HASURA_GRAPHQL_DISABLE_ADMIN_SECRET=true`.
+
+:::
+
+### Disable Admin Secret
+
+Authentication via the `x-hasura-admin-secret` request header is disabled.
+
+|                     |                                       |
+| ------------------- | ------------------------------------- |
+| **Flag**            | `--disable-admin-secret`              |
+| **Env var**         | `HASURA_GRAPHQL_DISABLE_ADMIN_SECRET` |
+| **Accepted values** | Boolean                               |
+| **Options**         | `true` or `false`                     |
+| **Default**         | `false`                               |
+| **Supported in**    | CE and Enterprise Edition             |
+
+When enabled in CE, you must configure either `HASURA_GRAPHQL_AUTH_HOOK` or `HASURA_GRAPHQL_JWT_SECRET`. In self-hosted
+Enterprise Edition, you must configure at least one of `HASURA_GRAPHQL_AUTH_HOOK`, `HASURA_GRAPHQL_JWT_SECRET`,
+`HASURA_GRAPHQL_JWT_SECRETS`, or `HASURA_GRAPHQL_SSO_PROVIDERS`.
+
+:::warning CE console and metadata APIs
+
+The CE Console cannot authenticate when admin-secret authentication is disabled. For CE deployments, set
+`HASURA_GRAPHQL_ENABLE_CONSOLE=false` and `HASURA_GRAPHQL_ENABLED_APIS=graphql` unless you intentionally expose another
+API configuration.
 
 :::
 

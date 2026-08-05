@@ -59,6 +59,7 @@ emptyServeOptionsRaw =
       rsoUnAuthRole = Nothing,
       rsoCorsConfig = Nothing,
       rsoConsoleStatus = UUT.ConsoleDisabled,
+      rsoDisableAdminSecret = False,
       rsoConsoleAssetsDir = Nothing,
       rsoConsoleSentryDsn = Nothing,
       rsoEnableTelemetry = Nothing,
@@ -505,6 +506,25 @@ mkServeOptionsSpec =
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
         fmap UUT.soConsoleStatus result `Hspec.shouldBe` Right UUT.ConsoleEnabled
+
+    Hspec.describe "soDisableAdminSecret" $ do
+      Hspec.it "Default = false" $ do
+        let result = UUT.runWithEnv [] (UUT.mkServeOptions @Hasura emptyServeOptionsRaw)
+
+        fmap UUT.soDisableAdminSecret result `Hspec.shouldBe` Right False
+
+      Hspec.it "Env > No Switch" $ do
+        let env = [(UUT._envVar UUT.disableAdminSecretOption, "true")]
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura emptyServeOptionsRaw)
+
+        fmap UUT.soDisableAdminSecret result `Hspec.shouldBe` Right True
+
+      Hspec.it "Arg > Env" $ do
+        let rawServeOptions = emptyServeOptionsRaw {UUT.rsoDisableAdminSecret = True}
+            env = [(UUT._envVar UUT.disableAdminSecretOption, "false")]
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+
+        fmap UUT.soDisableAdminSecret result `Hspec.shouldBe` Right True
 
     Hspec.describe "soConsoleAssetsDir" $ do
       Hspec.it "Env > Nothing" $ do

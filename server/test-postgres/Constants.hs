@@ -27,8 +27,8 @@ import Hasura.Server.Init qualified as Init
 import Hasura.Server.Logging (HttpLogQueryOnlyOnError (HttpLogQueryOnlyOnErrorDisabled), MetadataQueryLoggingMode (MetadataQueryLoggingDisabled))
 import Hasura.Server.Types
   ( ApolloFederationStatus (ApolloFederationDisabled),
-    EventingMode (EventingEnabled),
     EventProcessingMode (EventProcessingEnabled),
+    EventingMode (EventingEnabled),
     ExperimentalFeature (..),
     MaintenanceMode (MaintenanceModeDisabled),
     ReadOnlyMode (ReadOnlyModeDisabled),
@@ -58,6 +58,7 @@ serveOptions =
       soUnAuthRole = Nothing,
       soCorsConfig = CCAllowAll,
       soConsoleStatus = Init.ConsoleEnabled,
+      soDisableAdminSecret = False,
       soConsoleAssetsDir = Just "../../frontend/dist/apps/server-assets-console-ce",
       soConsoleSentryDsn = Nothing,
       soEnableTelemetry = Init.TelemetryDisabled,

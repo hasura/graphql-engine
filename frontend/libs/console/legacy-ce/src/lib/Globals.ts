@@ -32,6 +32,7 @@ type OSSServerEnv = {
   consolePath: string; // e.g. "/console"
   enableTelemetry: boolean;
   isAdminSecretSet: boolean;
+  isAdminSecretDisabled?: boolean;
   serverVersion: string; // e.g. "v2.7.0"
   urlPrefix: string; // e.g. "/console"
   cdnAssets: boolean;
@@ -46,6 +47,7 @@ type ProServerEnv = {
   consolePath: string;
   enableTelemetry: boolean;
   isAdminSecretSet: boolean;
+  isAdminSecretDisabled?: boolean;
   serverVersion: string;
   urlPrefix: string;
   consoleSentryDsn?: string; // Corresponds to the HASURA_CONSOLE_SENTRY_DSN environment variable
@@ -59,6 +61,7 @@ type ProLiteServerEnv = {
   consolePath: string;
   enableTelemetry: boolean;
   isAdminSecretSet: boolean;
+  isAdminSecretDisabled?: boolean;
   serverVersion: string;
   urlPrefix: string;
   consoleSentryDsn?: string; // Corresponds to the HASURA_CONSOLE_SENTRY_DSN environment variable
@@ -79,6 +82,7 @@ type CloudServerEnv = {
   eeMode: string;
   herokuOAuthClientId: UUID;
   isAdminSecretSet: boolean;
+  isAdminSecretDisabled?: boolean;
   luxDataHost: string; // e.g. "data.pro.hasura.io"
   schemaRegistryHost: string;
   projectID: UUID;
@@ -131,6 +135,7 @@ export type CloudCliEnv = {
   pro: true;
   projectId: UUID;
   isAdminSecretSet: boolean;
+  isAdminSecretDisabled?: boolean;
   consoleSentryDsn?: string; // Corresponds to the HASURA_CONSOLE_SENTRY_DSN environment variable
 };
 
@@ -153,6 +158,7 @@ export type EnvVars = {
   luxDataHost?: string;
   schemaRegistryHost: string;
   isAdminSecretSet?: boolean;
+  isAdminSecretDisabled?: boolean;
   enableTelemetry?: boolean;
   consoleType?: ConsoleType;
   eeMode?: string;
@@ -201,6 +207,7 @@ const globals = {
     window.__env?.isAdminSecretSet ||
     !isEmpty(window.__env?.adminSecret) ||
     false,
+  isAdminSecretDisabled: window.__env?.isAdminSecretDisabled || false,
   consoleMode: window.__env?.consoleMode || SERVER_CONSOLE_MODE,
   enableTelemetry: window.__env?.enableTelemetry,
   telemetryTopic: isProduction ? 'console-v2' : 'console-test-v2', // updated to v2 to ignore legacy redux based events from earlier console versions

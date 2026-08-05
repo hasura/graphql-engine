@@ -133,6 +133,7 @@ data AppEnv = AppEnv
     appEnvTxIso :: PG.TxIsolation,
     appEnvConsoleAssetsDir :: Maybe Text,
     appEnvConsoleSentryDsn :: Maybe Text,
+    appEnvDisableAdminSecret :: Bool,
     appEnvConnectionOptions :: WebSockets.ConnectionOptions,
     appEnvWebSocketKeepAlive :: KeepAliveDelay,
     appEnvWebSocketConnectionInitTimeout :: WSConnectionInitTimeout,
@@ -271,7 +272,7 @@ buildAppContextRule ::
   ) =>
   (ServeOptions impl, E.Environment, InvalidationKeys) `arr` AppContext
 buildAppContextRule = proc (ServeOptions {..}, env, _keys) -> do
-  authMode <- buildAuthMode -< (soAdminSecret, soAuthHook, soJwtSecret, soUnAuthRole)
+  authMode <- buildAuthMode -< (soAdminSecret, soAuthHook, soJwtSecret, soUnAuthRole, soDisableAdminSecret)
   let namingConventionSep2023 =
         -- Read the naming-convention-sep-2023 toggle directly from the
         -- environment. This preserves the @HASURA_FF_NAMING_CONVENTION_SEP_2023@
@@ -316,8 +317,8 @@ buildAppContextRule = proc (ServeOptions {..}, env, _keys) -> do
       eventEngineCtx <- bindA -< initEventEngineCtx httpPoolSize fetchInterval fetchBatchSize
       returnA -< eventEngineCtx
 
-    buildAuthMode :: (Set.HashSet AdminSecretHash, Maybe AuthHook, [JWTConfig], Maybe RoleName) `arr` AuthMode
-    buildAuthMode = Inc.cache proc (adminSecretHashSet, webHook, jwtSecrets, unAuthRole) -> do
+    buildAuthMode :: (Set.HashSet AdminSecretHash, Maybe AuthHook, [JWTConfig], Maybe RoleName, Bool) `arr` AuthMode
+    buildAuthMode = Inc.cache proc (adminSecretHashSet, webHook, jwtSecrets, unAuthRole, disableAdminSecret) -> do
       authMode <-
         bindA
           -< do
@@ -329,6 +330,7 @@ buildAppContextRule = proc (ServeOptions {..}, env, _keys) -> do
                   webHook
                   jwtSecrets
                   unAuthRole
+                  disableAdminSecret
                   logger
                   httpManager
             onLeft authModeRes throw500
