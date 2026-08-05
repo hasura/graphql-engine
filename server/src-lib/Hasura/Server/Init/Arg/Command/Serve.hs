@@ -26,6 +26,7 @@ module Hasura.Server.Init.Arg.Command.Serve
     corsDomainOption,
     disableCorsOption,
     enableConsoleOption,
+    disableAdminSecretOption,
     preserve401ErrorsOption,
     consoleAssetsDirOption,
     consoleSentryDsnOption,
@@ -134,6 +135,7 @@ serveCommandParser =
     <*> parseUnAuthRole
     <*> parseCorsConfig
     <*> parseEnableConsole
+    <*> parseDisableAdminSecret
     <*> parseConsoleAssetsDir
     <*> parseConsoleSentryDsn
     <*> parseEnableTelemetry
@@ -553,6 +555,21 @@ enableConsoleOption =
     { Config._default = Config.ConsoleDisabled,
       Config._envVar = "HASURA_GRAPHQL_ENABLE_CONSOLE",
       Config._helpMessage = "Enable API Console (default: false)"
+    }
+
+parseDisableAdminSecret :: Opt.Parser Bool
+parseDisableAdminSecret =
+  Opt.switch
+    ( Opt.long "disable-admin-secret"
+        <> Opt.help (Config._helpMessage disableAdminSecretOption)
+    )
+
+disableAdminSecretOption :: Config.Option Bool
+disableAdminSecretOption =
+  Config.Option
+    { Config._default = False,
+      Config._envVar = "HASURA_GRAPHQL_DISABLE_ADMIN_SECRET",
+      Config._helpMessage = "Disable the admin authentication via the x-hasura-admin-secret header (default: false)"
     }
 
 parseConsoleAssetsDir :: Opt.Parser (Maybe Text)

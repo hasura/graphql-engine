@@ -14,6 +14,7 @@ type EeConsoleEnvVars = CeConsoleEnvVars & {
   readonly versionedAssetsPath?: string;
   readonly pro?: boolean;
   readonly isMetadataAPIEnabled?: boolean;
+  readonly isAdminSecretDisabled?: boolean;
   readonly ssoEnabled?: string;
 
   // Available only in EE
@@ -56,6 +57,7 @@ const extendedGlobals = {
   userRole: windowEnv.userRole,
   isAdminSecretSet:
     windowEnv?.isAdminSecretSet || !isEmpty(windowEnv?.adminSecret) || false,
+  isAdminSecretDisabled: windowEnv.isAdminSecretDisabled || false,
   consoleType: windowEnv.consoleType,
   ssoEnabled: windowEnv.ssoEnabled === 'true',
 

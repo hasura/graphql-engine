@@ -740,6 +740,7 @@ class (Monad m) => ConsoleRenderer m where
     TelemetryStatus ->
     Maybe Text ->
     Maybe Text ->
+    Bool ->
     ConsoleType m ->
     m (Either String Text)
 
@@ -755,7 +756,7 @@ ceConsoleTypeIdentifier = \case
 
 instance (ConsoleRenderer m) => ConsoleRenderer (Tracing.TraceT m) where
   type ConsoleType (Tracing.TraceT m) = ConsoleType m
-  renderConsole a b c d e f = lift $ renderConsole a b c d e f
+  renderConsole a b c d e f g = lift $ renderConsole a b c d e f g
 
 -- Type class to get any extra [Pair] for the version API
 class (Monad m) => MonadVersionAPIWithExtraData m where
@@ -1095,7 +1096,7 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore closeWebsocketsOn
       $ apiHandler
 
   Spock.post "v1/relay" serveV1Relay
-  
+
   Spock.post "v1beta1/relay" serveV1Relay
 
   -- This exposes some simple RTS stats when we run with `+RTS -T`. We want
@@ -1216,7 +1217,7 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore closeWebsocketsOn
           AppContext {..} <- liftIO $ getAppContext appStateRef
           req <- Spock.request
           let headers = Wai.requestHeaders req
-          consoleHtml <- lift $ renderConsole path acAuthMode acEnableTelemetry appEnvConsoleAssetsDir appEnvConsoleSentryDsn consoleType
+          consoleHtml <- lift $ renderConsole path acAuthMode acEnableTelemetry appEnvConsoleAssetsDir appEnvConsoleSentryDsn appEnvDisableAdminSecret consoleType
           either (raiseGenericApiError logger appEnvLoggingSettings headers . internalError . T.pack) Spock.html consoleHtml
 
     serveApiConsoleAssets = do

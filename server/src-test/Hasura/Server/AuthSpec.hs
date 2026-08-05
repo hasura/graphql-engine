@@ -188,10 +188,6 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
         `shouldReturn` Left AccessDenied
       getUserInfoWithExpTime mempty [("blah", "blah"), sessionVariableToHeader adminSecretHeader "blah"] mode
         `shouldReturn` Left AccessDenied
-      -- x-hasura-access-key is no longer accepted; the correct admin secret via
-      -- the deprecated header is not recognized, falling through to webhook auth.
-      getUserInfoWithExpTime mempty [("x-hasura-access-key", "secret")] mode
-        `shouldReturn` Right (mkRoleNameE "hook")
 
     it "authenticates with webhook when no admin secret sent" $ do
       getUserInfoWithExpTime mempty mempty mode
@@ -340,6 +336,62 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
               getUserInfoWithExpTime claim [("Authorization", "Bearer IGNORED")] mode
                 `shouldReturn` Left JWTRoleClaimMissing
 
+  -- With --disable-admin-secret, all requests are rejected outright,
+  -- regardless of any headers sent.
+  describe "admin secret disabled, no fallback auth (AMUnauthentication)" $ do
+    mode <- runIO $ setupAuthModeDisableAdminSecretE Nothing Nothing mempty Nothing
+
+    it "always rejects, even with an admin secret or role header" $ do
+      getUserInfoWithExpTime mempty mempty mode
+        `shouldReturn` Left AccessDenied
+      getUserInfoWithExpTime mempty [sessionVariableToHeader adminSecretHeader "secret"] mode
+        `shouldReturn` Left AccessDenied
+      getUserInfoWithExpTime mempty [sessionVariableToHeader userRoleHeader "r00t"] mode
+        `shouldReturn` Left AccessDenied
+
+  -- With --disable-admin-secret and a webhook configured, the admin secret
+  -- header is never consulted; webhook auth applies unconditionally.
+  describe "admin secret disabled, webhook only (AMHook)" $ do
+    mode <- runIO $ setupAuthModeDisableAdminSecretE Nothing (Just fakeAuthHook) mempty Nothing
+
+    it "authenticates with webhook regardless of any admin secret header sent" $ do
+      getUserInfoWithExpTime mempty mempty mode
+        `shouldReturn` Right (mkRoleNameE "hook")
+      getUserInfoWithExpTime mempty [sessionVariableToHeader adminSecretHeader "secret"] mode
+        `shouldReturn` Right (mkRoleNameE "hook")
+      getUserInfoWithExpTime mempty [sessionVariableToHeader adminSecretHeader "bad secret"] mode
+        `shouldReturn` Right (mkRoleNameE "hook")
+
+  -- With --disable-admin-secret and JWT configured, the admin secret header
+  -- is never consulted; JWT auth applies unconditionally.
+  describe "admin secret disabled, JWT only (AMJWT)" $ do
+    describe "unauth role NOT set" $ do
+      mode <- runIO $ setupAuthModeDisableAdminSecretE Nothing Nothing [fakeJWTConfig] Nothing
+
+      it "ignores any admin secret header and requires a JWT" $ do
+        getUserInfoWithExpTime mempty [sessionVariableToHeader adminSecretHeader "secret"] mode
+          `shouldReturn` Left InvalidHeaders
+        getUserInfoWithExpTime mempty mempty mode
+          `shouldReturn` Left InvalidHeaders
+
+      it "authorizes successfully with JWT when requested role allowed" $ do
+        let claim =
+              unObject
+                [ allowedRolesClaimText .= (["editor", "user", "mod"] :: [Text]),
+                  defaultRoleClaimText .= ("user" :: Text)
+                ]
+        getUserInfoWithExpTime claim [("Authorization", "Bearer IGNORED")] mode
+          `shouldReturn` Right (mkRoleNameE "user")
+
+    describe "unauth role set" $ do
+      mode <- runIO $ setupAuthModeDisableAdminSecretE Nothing Nothing [fakeJWTConfig] (Just ourUnauthRole)
+
+      it "ignores any admin secret header, falling back to unauth role without a JWT" $ do
+        getUserInfoWithExpTime mempty [sessionVariableToHeader adminSecretHeader "secret"] mode
+          `shouldReturn` Right ourUnauthRole
+        getUserInfoWithExpTime mempty mempty mode
+          `shouldReturn` Right ourUnauthRole
+
 -- (*) FIXME NOTE (re above):
 --
 -- Ideally we should always return AccessDenied if the role we would
@@ -363,54 +415,84 @@ setupAuthModeTests = describe "setupAuthMode" $ do
 
   -- These are all various error cases, except for the AMNoAuth mode:
   it "with no admin secret provided" $ do
-    setupAuthMode' Nothing Nothing mempty Nothing
+    setupAuthMode' Nothing Nothing mempty Nothing False
       `shouldReturn` Right AMNoAuth
     -- We insist on an admin secret in order to use webhook or JWT auth:
-    setupAuthMode' Nothing Nothing [fakeJWTConfig] Nothing
+    setupAuthMode' Nothing Nothing [fakeJWTConfig] Nothing False
       `shouldReturn` Left ()
-    setupAuthMode' Nothing (Just fakeAuthHook) mempty Nothing
+    setupAuthMode' Nothing (Just fakeAuthHook) mempty Nothing False
       `shouldReturn` Left ()
     -- ...and we can't have both:
-    setupAuthMode' Nothing (Just fakeAuthHook) [fakeJWTConfig] Nothing
+    setupAuthMode' Nothing (Just fakeAuthHook) [fakeJWTConfig] Nothing False
       `shouldReturn` Left ()
     -- If the unauthenticated role was set but would otherwise be ignored this
     -- should be an error (for now), since users might expect all access to use
     -- the specified role. This first case would be the real worrying one:
-    setupAuthMode' Nothing Nothing mempty (Just unauthRole)
+    setupAuthMode' Nothing Nothing mempty (Just unauthRole) False
       `shouldReturn` Left ()
-    setupAuthMode' Nothing Nothing [fakeJWTConfig] (Just unauthRole)
+    setupAuthMode' Nothing Nothing [fakeJWTConfig] (Just unauthRole) False
       `shouldReturn` Left ()
-    setupAuthMode' Nothing (Just fakeAuthHook) mempty (Just unauthRole)
+    setupAuthMode' Nothing (Just fakeAuthHook) mempty (Just unauthRole) False
       `shouldReturn` Left ()
-    setupAuthMode' Nothing (Just fakeAuthHook) [fakeJWTConfig] (Just unauthRole)
+    setupAuthMode' Nothing (Just fakeAuthHook) [fakeJWTConfig] (Just unauthRole) False
       `shouldReturn` Left ()
 
   it "with admin secret provided" $ do
-    setupAuthMode' (Just secret) Nothing mempty Nothing
+    setupAuthMode' (Just secret) Nothing mempty Nothing False
       `shouldReturn` Right (AMAdminSecret secret Nothing)
-    setupAuthMode' (Just secret) Nothing mempty (Just unauthRole)
+    setupAuthMode' (Just secret) Nothing mempty (Just unauthRole) False
       `shouldReturn` Right (AMAdminSecret secret $ Just unauthRole)
 
-    setupAuthMode' (Just secret) Nothing [fakeJWTConfig] Nothing >>= \case
+    setupAuthMode' (Just secret) Nothing [fakeJWTConfig] Nothing False >>= \case
       Right (AMAdminSecretAndJWT s _ Nothing) -> do
         s `shouldBe` secret
       _ -> expectationFailure "AMAdminSecretAndJWT"
-    setupAuthMode' (Just secret) Nothing [fakeJWTConfig] (Just unauthRole) >>= \case
+    setupAuthMode' (Just secret) Nothing [fakeJWTConfig] (Just unauthRole) False >>= \case
       Right (AMAdminSecretAndJWT s _ ur) -> do
         s `shouldBe` secret
         ur `shouldBe` Just unauthRole
       _ -> expectationFailure "AMAdminSecretAndJWT"
 
-    setupAuthMode' (Just secret) (Just fakeAuthHook) mempty Nothing
+    setupAuthMode' (Just secret) (Just fakeAuthHook) mempty Nothing False
       `shouldReturn` Right (AMAdminSecretAndHook secret fakeAuthHook)
     -- auth hook can't make use of unauthenticated role for now (no good UX):
-    setupAuthMode' (Just secret) (Just fakeAuthHook) mempty (Just unauthRole)
+    setupAuthMode' (Just secret) (Just fakeAuthHook) mempty (Just unauthRole) False
       `shouldReturn` Left ()
     -- we can't have both:
-    setupAuthMode' (Just secret) (Just fakeAuthHook) [fakeJWTConfig] Nothing
+    setupAuthMode' (Just secret) (Just fakeAuthHook) [fakeJWTConfig] Nothing False
       `shouldReturn` Left ()
-    setupAuthMode' (Just secret) (Just fakeAuthHook) [fakeJWTConfig] (Just unauthRole)
+    setupAuthMode' (Just secret) (Just fakeAuthHook) [fakeJWTConfig] (Just unauthRole) False
       `shouldReturn` Left ()
+
+  -- disableAdminSecret requires a fallback auth method (webhook or JWT); the
+  -- admin secret, if any, is then ignored entirely in favor of that method.
+  describe "with admin secret disabled" $ do
+    it "rejects all requests when neither webhook nor JWT is configured" $ do
+      setupAuthMode' Nothing Nothing mempty Nothing True
+        `shouldReturn` Right AMUnauthentication
+      -- admin secret, if provided, is simply ignored:
+      setupAuthMode' (Just secret) Nothing mempty Nothing True
+        `shouldReturn` Right AMUnauthentication
+
+    it "uses webhook only, ignoring any configured admin secret" $ do
+      setupAuthMode' Nothing (Just fakeAuthHook) mempty Nothing True
+        `shouldReturn` Right (AMHook fakeAuthHook)
+      setupAuthMode' (Just secret) (Just fakeAuthHook) mempty Nothing True
+        `shouldReturn` Right (AMHook fakeAuthHook)
+
+    it "uses JWT only, ignoring any configured admin secret" $ do
+      setupAuthMode' Nothing Nothing [fakeJWTConfig] Nothing True >>= \case
+        Right (AMJWT _ Nothing) -> pure ()
+        _ -> expectationFailure "AMJWT"
+      setupAuthMode' (Just secret) Nothing [fakeJWTConfig] (Just unauthRole) True >>= \case
+        Right (AMJWT _ ur) -> ur `shouldBe` Just unauthRole
+        _ -> expectationFailure "AMJWT"
+
+    it "still can't have both webhook and JWT" $ do
+      setupAuthMode' Nothing (Just fakeAuthHook) [fakeJWTConfig] Nothing True
+        `shouldReturn` Left ()
+      setupAuthMode' (Just secret) (Just fakeAuthHook) [fakeJWTConfig] Nothing True
+        `shouldReturn` Left ()
 
 parseClaimsMapTests :: Spec
 parseClaimsMapTests = describe "parseClaimMapTests" $ do
@@ -622,8 +704,9 @@ setupAuthMode' ::
   Maybe AuthHook ->
   [JWTConfig] ->
   Maybe RoleName ->
+  Bool ->
   m (Either () AuthMode)
-setupAuthMode' mAdminSecretHash mWebHook jwtSecrets mUnAuthRole = do
+setupAuthMode' mAdminSecretHash mWebHook jwtSecrets mUnAuthRole disableAdminSecret = do
   httpManager <- liftIO $ HTTP.newManager HTTP.defaultManagerSettings
   fmap (mapLeft $ const ())
     $ runExceptT
@@ -632,6 +715,7 @@ setupAuthMode' mAdminSecretHash mWebHook jwtSecrets mUnAuthRole = do
       mWebHook
       jwtSecrets
       mUnAuthRole
+      disableAdminSecret
       (Logger $ void . return)
       httpManager
 
@@ -646,7 +730,21 @@ setupAuthMode'E ::
   m AuthMode
 setupAuthMode'E a b c d =
   either (const $ error "fixme") id
-    <$> setupAuthMode' a b c d
+    <$> setupAuthMode' a b c d False
+
+-- | Like 'setupAuthMode'E' but allows setting @disableAdminSecret@.
+setupAuthModeDisableAdminSecretE ::
+  ( ForkableMonadIO m,
+    MonadMask m
+  ) =>
+  Maybe (HashSet AdminSecretHash) ->
+  Maybe AuthHook ->
+  [JWTConfig] ->
+  Maybe RoleName ->
+  m AuthMode
+setupAuthModeDisableAdminSecretE a b c d =
+  either (const $ error "fixme") id
+    <$> setupAuthMode' a b c d True
 
 mkClaimsSetWithUnregisteredClaims :: J.Object -> JWT.ClaimsSet
 mkClaimsSetWithUnregisteredClaims unregisteredClaims =

@@ -398,16 +398,34 @@ initialiseAppEnv ::
   SamplingPolicy ->
   ManagedT m (AppInit, AppEnv)
 initialiseAppEnv BasicConnectionInfo {..} serveOptions@ServeOptions {..} liveQueryHook serverMetrics prometheusMetrics traceSamplingPolicy = do
+  when (soDisableAdminSecret && isNothing soAuthHook && null soJwtSecret)
+    $ throwErrExit InvalidEnvironmentVariableOptionsError
+    $ "Fatal Error: requires either HASURA_GRAPHQL_AUTH_HOOK or HASURA_GRAPHQL_JWT_SECRET when the admin secret is disabled"
+
   loggers@(Loggers _loggerCtx logger pgLogger) <- mkLoggers soEnabledLogTypes soLogLevel
 
   -- SIDE EFFECT: print a warning if no admin secret is set.
-  when (null soAdminSecret)
+  when (not soDisableAdminSecret && null soAdminSecret)
     $ unLogger
       logger
       StartupLog
         { slLogLevel = LevelWarn,
           slKind = "no_admin_secret",
           slInfo = J.toJSON ("WARNING: No admin secret provided" :: Text)
+        }
+
+  -- SIDE EFFECT: print an info if admin secret is disabled.
+  when (soDisableAdminSecret && (isConsoleEnabled soConsoleStatus || METADATA `elem` soEnabledAPIs))
+    $ unLogger
+      logger
+      StartupLog
+        { slLogLevel = LevelInfo,
+          slKind = "admin_secret_disabled",
+          slInfo =
+            J.toJSON
+              ( "The admin secret is disabled. Console and CLI will not functional because they require the admin-secret authentication. You can disable the console and metadata APIs by setting HASURA_GRAPHQL_ENABLE_CONSOLE=false and HASURA_GRAPHQL_ENABLED_APIS=graphql." ::
+                  Text
+              )
         }
 
   -- SIDE EFFECT: log all server options.
@@ -494,6 +512,7 @@ initialiseAppEnv BasicConnectionInfo {..} serveOptions@ServeOptions {..} liveQue
           appEnvTxIso = soTxIso,
           appEnvConsoleAssetsDir = soConsoleAssetsDir,
           appEnvConsoleSentryDsn = soConsoleSentryDsn,
+          appEnvDisableAdminSecret = soDisableAdminSecret,
           appEnvConnectionOptions = soConnectionOptions,
           appEnvWebSocketKeepAlive = soWebSocketKeepAlive,
           appEnvWebSocketConnectionInitTimeout = soWebSocketConnectionInitTimeout,
@@ -731,7 +750,7 @@ instance MonadExecuteQuery AppM where
   cacheLookup _ _ _ _ _ _ = pure $ Right ([], ResponseUncached Nothing)
 
 instance UserAuthentication AppM where
-  resolveUserInfo logger manager headers authMode reqs =
+  resolveUserInfo logger manager headers authMode reqs = do
     runExceptT $ do
       (a, b, c) <- getUserInfoWithExpTime logger manager headers authMode reqs
       pure $ (a, b, c, ExtraUserInfo Nothing)
@@ -757,8 +776,8 @@ instance MonadMetadataApiAuthorization AppM where
 
 instance ConsoleRenderer AppM where
   type ConsoleType AppM = CEConsoleType
-  renderConsole path authMode enableTelemetry consoleAssetsDir consoleSentryDsn consoleType =
-    return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn consoleType
+  renderConsole path authMode enableTelemetry consoleAssetsDir consoleSentryDsn disableAdminSecret consoleType =
+    return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn disableAdminSecret consoleType
 
 instance MonadVersionAPIWithExtraData AppM where
   -- we always default to CE as the `server_type` in this codebase
@@ -1485,14 +1504,16 @@ mkConsoleHTML ::
   TelemetryStatus ->
   Maybe Text ->
   Maybe Text ->
+  Bool ->
   CEConsoleType ->
   Either String Text
-mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn ceConsoleType =
+mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn disableAdminSecret ceConsoleType =
   renderHtmlTemplate consoleTmplt
     $
     -- variables required to render the template
     J.object
       [ "isAdminSecretSet" J..= isAdminSecretSet authMode,
+        "isAdminSecretDisabled" J..= boolToText disableAdminSecret,
         "consolePath" J..= consolePath,
         "enableTelemetry" J..= boolToText (isTelemetryEnabled enableTelemetry),
         "cdnAssets" J..= boolToText (isNothing consoleAssetsDir),
