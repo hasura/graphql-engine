@@ -4,7 +4,7 @@
   "containerDefinitions": [
     {
       "name": "hasura",
-      "image": "hasura/graphql-engine:v2.49.5",
+      "image": "hasura/graphql-engine:v2.50.0",
       "portMappings": [
         {
           "hostPort": 8080,
