@@ -8,6 +8,10 @@
 
 ### Fixed
 
+- Expose models with arguments in the default SQL schema as table-valued
+  functions under their model names, and apply model-to-connector argument
+  mappings when executing them through relational query pushdown.
+
 ## [v2026.07.15]
 
 - No changes
