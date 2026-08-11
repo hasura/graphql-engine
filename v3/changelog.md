@@ -4,6 +4,11 @@
 
 ### Added
 
+- The bee artifact client optionally authenticates requests using a projected
+  Kubernetes service-account token. Set `ARTIFACTS_AUTH_TOKEN_FILE` to enable;
+  the token is read eagerly at startup and refreshed before expiry. When unset,
+  requests are unauthenticated and behavior is unchanged.
+
 ### Changed
 
 ### Fixed

@@ -42,5 +42,7 @@ ignore = ["RUSTSEC-2024-0437", "RUSTSEC-2023-0071", "RUSTSEC-2026-0176", "RUSTSE
 
 # RUSTSEC-2026-0235
 # https://rustsec.org/advisories/RUSTSEC-2026-0235
-# rkyv 0.7.46 is an optional dep of rust_decimal (rkyv feature not enabled).
-# Present in lockfile only, never compiled. No newer rust_decimal available.
+# rkyv 0.7.46 is an unused optional dependency of rust_decimal (behind its
+# "rkyv" feature, which is not enabled). It is only present in the lockfile,
+# never compiled. The fix requires rust_decimal to upgrade its optional rkyv
+# dependency from 0.7 to >=0.8.17.
