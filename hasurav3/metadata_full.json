@@ -1,0 +1,753 @@
+{
+    "validate_connectors": false,
+    "data_connectors": [
+        {
+            "kind": "postgres",
+            "url": "http://localhost:8081/api/v1/postgres"
+        }
+    ],
+    "metadata": {
+        "databases": [
+            {
+                "name": "db",
+                "kind": "postgres",
+                "connectionString": "jdbc:postgresql://34.94.43.240:5432/chinook?user=postgres&password=4qWSA82VCR3z07PYjkYn"}
+        ],
+        "models": [
+            {
+                "name": "Artist",
+                "source": {
+                    "database": "db",
+                    "table": [
+                        "public",
+                        "Artist"
+                    ]
+                },
+                "fields": [
+                    {
+                        "name": "ArtistId",
+                        "type": "Int",
+                        "source": {
+                            "column": "ArtistId",
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Name",
+                        "type": "String",
+                        "source": {
+                            "column": "Name",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "uniqueIdentifiers": [
+                    {
+                        "name": "ArtistByID",
+                        "fields": [
+                            "ArtistId"
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "Employee",
+                "source": {
+                    "database": "db",
+                    "table": [
+                        "public",
+                        "Employee"
+                    ]
+                },
+                "fields": [
+                    {
+                        "name": "EmployeeId",
+                        "type": "Int",
+                        "source": {
+                            "column": "EmployeeId",
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "LastName",
+                        "type": "String",
+                        "source": {
+                            "column": "LastName",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "FirstName",
+                        "type": "String",
+                        "source": {
+                            "column": "FirstName",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Title",
+                        "type": "String",
+                        "source": {
+                            "column": "Title",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "ReportsTo",
+                        "type": "Int",
+                        "source": {
+                            "column": "ReportsTo",
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "BirthDate",
+                        "type": "String",
+                        "source": {
+                            "column": "BirthDate",
+                            "type": "datetime"
+                        }
+                    },
+                    {
+                        "name": "HireDate",
+                        "type": "String",
+                        "source": {
+                            "column": "HireDate",
+                            "type": "datetime"
+                        }
+                    },
+                    {
+                        "name": "Address",
+                        "type": "String",
+                        "source": {
+                            "column": "Address",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "City",
+                        "type": "String",
+                        "source": {
+                            "column": "City",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "State",
+                        "type": "String",
+                        "source": {
+                            "column": "State",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Country",
+                        "type": "String",
+                        "source": {
+                            "column": "Country",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "PostalCode",
+                        "type": "String",
+                        "source": {
+                            "column": "PostalCode",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Phone",
+                        "type": "String",
+                        "source": {
+                            "column": "Phone",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Fax",
+                        "type": "String",
+                        "source": {
+                            "column": "Fax",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Email",
+                        "type": "String",
+                        "source": {
+                            "column": "Email",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "uniqueIdentifiers": [
+                    {
+                        "name": "EmployeeByID",
+                        "fields": [
+                            "EmployeeId"
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "Genre",
+                "source": {
+                    "database": "db",
+                    "table": [
+                        "public",
+                        "Genre"
+                    ]
+                },
+                "fields": [
+                    {
+                        "name": "GenreId",
+                        "type": "Int",
+                        "source": {
+                            "column": "GenreId",
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Name",
+                        "type": "String",
+                        "source": {
+                            "column": "Name",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "uniqueIdentifiers": [
+                    {
+                        "name": "GenreByID",
+                        "fields": [
+                            "GenreId"
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "MediaType",
+                "source": {
+                    "database": "db",
+                    "table": [
+                        "public",
+                        "MediaType"
+                    ]
+                },
+                "fields": [
+                    {
+                        "name": "MediaTypeId",
+                        "type": "Int",
+                        "source": {
+                            "column": "MediaTypeId",
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Name",
+                        "type": "String",
+                        "source": {
+                            "column": "Name",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "uniqueIdentifiers": [
+                    {
+                        "name": "MediaTypeByID",
+                        "fields": [
+                            "MediaTypeId"
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "Playlist",
+                "source": {
+                    "database": "db",
+                    "table": [
+                        "public",
+                        "Playlist"
+                    ]
+                },
+                "fields": [
+                    {
+                        "name": "PlaylistId",
+                        "type": "Int",
+                        "source": {
+                            "column": "PlaylistId",
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Name",
+                        "type": "String",
+                        "source": {
+                            "column": "Name",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "uniqueIdentifiers": [
+                    {
+                        "name": "PlaylistByID",
+                        "fields": [
+                            "PlaylistId"
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "Album",
+                "source": {
+                    "database": "db",
+                    "table": [
+                        "public",
+                        "Album"
+                    ]
+                },
+                "fields": [
+                    {
+                        "name": "AlbumId",
+                        "type": "Int",
+                        "source": {
+                            "column": "AlbumId",
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Title",
+                        "type": "String",
+                        "source": {
+                            "column": "Title",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "ArtistId",
+                        "type": "Int",
+                        "source": {
+                            "column": "ArtistId",
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "uniqueIdentifiers": [
+                    {
+                        "name": "AlbumByID",
+                        "fields": [
+                            "AlbumId"
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "Customer",
+                "source": {
+                    "database": "db",
+                    "table": [
+                        "public",
+                        "Customer"
+                    ]
+                },
+                "fields": [
+                    {
+                        "name": "CustomerId",
+                        "type": "Int",
+                        "source": {
+                            "column": "CustomerId",
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "FirstName",
+                        "type": "String",
+                        "source": {
+                            "column": "FirstName",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "LastName",
+                        "type": "String",
+                        "source": {
+                            "column": "LastName",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Company",
+                        "type": "String",
+                        "source": {
+                            "column": "Company",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Address",
+                        "type": "String",
+                        "source": {
+                            "column": "Address",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "City",
+                        "type": "String",
+                        "source": {
+                            "column": "City",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "State",
+                        "type": "String",
+                        "source": {
+                            "column": "State",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Country",
+                        "type": "String",
+                        "source": {
+                            "column": "Country",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "PostalCode",
+                        "type": "String",
+                        "source": {
+                            "column": "PostalCode",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Phone",
+                        "type": "String",
+                        "source": {
+                            "column": "Phone",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Fax",
+                        "type": "String",
+                        "source": {
+                            "column": "Fax",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Email",
+                        "type": "String",
+                        "source": {
+                            "column": "Email",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "SupportRepId",
+                        "type": "Int",
+                        "source": {
+                            "column": "SupportRepId",
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "uniqueIdentifiers": [
+                    {
+                        "name": "CustomerByID",
+                        "fields": [
+                            "CustomerId"
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "Invoice",
+                "source": {
+                    "database": "db",
+                    "table": [
+                        "public",
+                        "Invoice"
+                    ]
+                },
+                "fields": [
+                    {
+                        "name": "InvoiceId",
+                        "type": "Int",
+                        "source": {
+                            "column": "InvoiceId",
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "CustomerId",
+                        "type": "Int",
+                        "source": {
+                            "column": "CustomerId",
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "InvoiceDate",
+                        "type": "String",
+                        "source": {
+                            "column": "InvoiceDate",
+                            "type": "datetime"
+                        }
+                    },
+                    {
+                        "name": "BillingAddress",
+                        "type": "String",
+                        "source": {
+                            "column": "BillingAddress",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "BillingCity",
+                        "type": "String",
+                        "source": {
+                            "column": "BillingCity",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "BillingState",
+                        "type": "String",
+                        "source": {
+                            "column": "BillingState",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "BillingCountry",
+                        "type": "String",
+                        "source": {
+                            "column": "BillingCountry",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "BillingPostalCode",
+                        "type": "String",
+                        "source": {
+                            "column": "BillingPostalCode",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Total",
+                        "type": "Float",
+                        "source": {
+                            "column": "Total",
+                            "type": "float"
+                        }
+                    }
+                ],
+                "uniqueIdentifiers": [
+                    {
+                        "name": "InvoiceByID",
+                        "fields": [
+                            "InvoiceId"
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "Track",
+                "source": {
+                    "database": "db",
+                    "table": [
+                        "public",
+                        "Track"
+                    ]
+                },
+                "fields": [
+                    {
+                        "name": "TrackId",
+                        "type": "Int",
+                        "source": {
+                            "column": "TrackId",
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Name",
+                        "type": "String",
+                        "source": {
+                            "column": "Name",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "AlbumId",
+                        "type": "Int",
+                        "source": {
+                            "column": "AlbumId",
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "MediaTypeId",
+                        "type": "Int",
+                        "source": {
+                            "column": "MediaTypeId",
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "GenreId",
+                        "type": "Int",
+                        "source": {
+                            "column": "GenreId",
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Composer",
+                        "type": "String",
+                        "source": {
+                            "column": "Composer",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Milliseconds",
+                        "type": "Int",
+                        "source": {
+                            "column": "Milliseconds",
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Bytes",
+                        "type": "Int",
+                        "source": {
+                            "column": "Bytes",
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "UnitPrice",
+                        "type": "Float",
+                        "source": {
+                            "column": "UnitPrice",
+                            "type": "float"
+                        }
+                    }
+                ],
+                "uniqueIdentifiers": [
+                    {
+                        "name": "TrackByID",
+                        "fields": [
+                            "TrackId"
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "InvoiceLine",
+                "source": {
+                    "database": "db",
+                    "table": [
+                        "public",
+                        "InvoiceLine"
+                    ]
+                },
+                "fields": [
+                    {
+                        "name": "InvoiceLineId",
+                        "type": "Int",
+                        "source": {
+                            "column": "InvoiceLineId",
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "InvoiceId",
+                        "type": "Int",
+                        "source": {
+                            "column": "InvoiceId",
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "TrackId",
+                        "type": "Int",
+                        "source": {
+                            "column": "TrackId",
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "UnitPrice",
+                        "type": "Float",
+                        "source": {
+                            "column": "UnitPrice",
+                            "type": "float"
+                        }
+                    },
+                    {
+                        "name": "Quantity",
+                        "type": "Int",
+                        "source": {
+                            "column": "Quantity",
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "uniqueIdentifiers": [
+                    {
+                        "name": "InvoiceLineByID",
+                        "fields": [
+                            "InvoiceLineId"
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "PlaylistTrack",
+                "source": {
+                    "database": "db",
+                    "table": [
+                        "public",
+                        "PlaylistTrack"
+                    ]
+                },
+                "fields": [
+                    {
+                        "name": "PlaylistId",
+                        "type": "Int",
+                        "source": {
+                            "column": "PlaylistId",
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "TrackId",
+                        "type": "Int",
+                        "source": {
+                            "column": "TrackId",
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "uniqueIdentifiers": [
+                    {
+                        "name": "PlaylistTrackByID",
+                        "fields": [
+                            "PlaylistId",
+                            "TrackId"
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+    
+}
