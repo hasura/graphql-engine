@@ -7,7 +7,7 @@
 # permanently specified in this file.
 
 [advisories]
-ignore = ["RUSTSEC-2024-0437", "RUSTSEC-2023-0071", "RUSTSEC-2026-0176", "RUSTSEC-2026-0177", "RUSTSEC-2024-0436", "RUSTSEC-2026-0194", "RUSTSEC-2026-0195"] # advisory IDs to ignore e.g. ["RUSTSEC-2019-0001", ...]
+ignore = ["RUSTSEC-2024-0437", "RUSTSEC-2023-0071", "RUSTSEC-2026-0176", "RUSTSEC-2026-0177", "RUSTSEC-2024-0436", "RUSTSEC-2026-0194", "RUSTSEC-2026-0195", "RUSTSEC-2026-0235"] # advisory IDs to ignore e.g. ["RUSTSEC-2019-0001", ...]
 
 # RUSTSEC-2024-0437
 #
@@ -39,3 +39,8 @@ ignore = ["RUSTSEC-2024-0437", "RUSTSEC-2023-0071", "RUSTSEC-2026-0176", "RUSTSE
 # (through reqsign and opendal). The fix requires quick-xml >=0.41.0, which is a
 # breaking bump not reachable without a major iceberg/reqsign/opendal upgrade,
 # so we ignore until iceberg is bumped.
+
+# RUSTSEC-2026-0235
+# https://rustsec.org/advisories/RUSTSEC-2026-0235
+# rkyv 0.7.46 is an optional dep of rust_decimal (rkyv feature not enabled).
+# Present in lockfile only, never compiled. No newer rust_decimal available.
