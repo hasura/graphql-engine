@@ -73,7 +73,7 @@ Set the following environment variables for Hasura:
 
 ```
 HASURA_GRAPHQL_ADMIN_SECRET=myadminsecretkey
-HASURA_GRAPHQL_AUTH_WEBHOOK=http://localhost:5000/auth-webhook
+HASURA_GRAPHQL_AUTH_HOOK=http://localhost:5000/auth-webhook
 ```
 
 All queries will be now validated through the webhook.
