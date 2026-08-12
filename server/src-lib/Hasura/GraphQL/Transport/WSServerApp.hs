@@ -35,7 +35,6 @@ import Hasura.Server.Auth (UserAuthentication)
 import Hasura.Server.Init.Config
   ( WSConnectionInitTimeout,
   )
-import Refined (Positive, Refined)
 import Hasura.Server.Limits
 import Hasura.Server.Metrics (ServerMetrics (..))
 import Hasura.Server.Prometheus
@@ -47,6 +46,7 @@ import Hasura.Server.Types (MonadGetPolicies (..))
 import Hasura.Services.Network
 import Hasura.Tracing qualified as Tracing
 import Network.WebSockets qualified as WS
+import Refined (Positive, Refined)
 import System.Metrics.Gauge qualified as EKG.Gauge
 
 -- | This is called for each client websocket connection
@@ -101,10 +101,11 @@ createWSServerApp enabledLogTypes serverEnv connInitTimeout wsQueueSize licenseK
 
     onMessageHandler conn bs sp = do
       headerPrecedence <- liftIO $ acHeaderPrecedence <$> getAppContext (_wseAppStateRef serverEnv)
+      redactActionHandlerLogs <- liftIO $ acRedactActionHandlerLogs <$> getAppContext (_wseAppStateRef serverEnv)
       traceQueryStatus <- liftIO $ acTraceQueryStatus <$> getAppContext (_wseAppStateRef serverEnv)
       responseErrorsConfig <- liftIO $ acResponseInternalErrorsConfig <$> getAppContext (_wseAppStateRef serverEnv)
       mask_
-        $ onMessage enabledLogTypes getAuthMode serverEnv conn bs (wsActions sp) licenseKeyCache responseErrorsConfig headerPrecedence traceQueryStatus
+        $ onMessage enabledLogTypes getAuthMode serverEnv conn bs (wsActions sp) licenseKeyCache responseErrorsConfig headerPrecedence redactActionHandlerLogs traceQueryStatus
 
     onCloseHandler conn = mask_ do
       granularPrometheusMetricsState <- runGetPrometheusMetricsGranularity

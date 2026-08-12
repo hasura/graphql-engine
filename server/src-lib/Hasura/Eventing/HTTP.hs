@@ -17,6 +17,8 @@ module Hasura.Eventing.HTTP
     logHTTPForST,
     ExtraLogContext (..),
     RequestDetails (..),
+    sanitiseReqJSON,
+    sanitiseRespJSON,
     extractRequest,
     EventId,
     InvocationVersion,
@@ -71,7 +73,7 @@ import Hasura.RQL.Types.Common (ResolvedWebhook (..))
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.Headers
-import Hasura.Server.Types (TriggersErrorLogLevelStatus, isTriggersErrorLogLevelEnabled)
+import Hasura.Server.Types qualified as Types
 import Hasura.Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP
 
@@ -171,50 +173,134 @@ data HTTPRespExtra (a :: TriggerTypes) = HTTPRespExtra
     _hreRequest :: !RequestDetails,
     _hreWebhookVarName :: !Text,
     -- | These contain sensitive headers that must not be logged!
-    _hreLogHeaders :: ![HeaderConf]
+    _hreLogHeaders :: ![HeaderConf],
+    -- | When 'True', the request body, session variables and webhook response
+    -- body are redacted (to JSON @null@) from the logged request/response. The
+    -- specific per-trigger-type feature flag is resolved to this 'Bool' by
+    -- 'logHTTPForET' / 'logHTTPForST'. See 'sanitiseReqJSON' / 'sanitiseRespJSON'.
+    _hreRedactLogs :: !Bool
   }
 
 instance J.ToJSON (HTTPRespExtra a) where
-  toJSON (HTTPRespExtra resp ctxt req webhookVarName logHeaders) =
-    case resp of
-      Left errResp ->
-        J.object
-          $ [ "response" J..= J.toJSON errResp,
-              "request" J..= sanitiseReqJSON req,
-              "event_id" J..= elEventId ctxt
-            ]
-          ++ eventName
-      Right okResp ->
-        J.object
-          $ [ "response" J..= J.toJSON okResp,
-              "request" J..= sanitiseReqJSON req,
-              "event_id" J..= elEventId ctxt
-            ]
-          ++ eventName
+  toJSON (HTTPRespExtra resp ctxt req webhookVarName logHeaders redactLogs) =
+    J.object
+      $ [ "response" J..= sanitiseRespJSON redactLogs resp,
+          "request" J..= sanitiseReqJSON redactLogs webhookVarName logHeaders req,
+          "event_id" J..= elEventId ctxt
+        ]
+      ++ eventName
     where
       eventName = case elEventName ctxt of
         Just name -> ["event_name" J..= name]
         Nothing -> []
-      redactedValue name val = case val of
-        HVValue txt
-          | CI.mk (TE.encodeUtf8 name) `HashSet.member` sensitiveHeaders -> J.String "<REDACTED>"
-          | otherwise -> J.String (printTemplate txt)
-        HVEnv txt -> J.String ("<from_env: " <> txt <> ">")
-      -- This should remove sensitiveHeaders as well as any from_env headers,
-      -- which many users reasonably expect to stay secret (although we don't
-      -- seem to promise this currently)
-      getRedactedHeaders =
-        J.Object
-          $ foldr (\(HeaderConf name val) -> KM.insert (J.fromText name) (redactedValue name val)) mempty logHeaders
-      updateReqDetail v reqType =
-        let webhookRedactedReq = J.toJSON v & key reqType . key "url" .~ J.String webhookVarName
-            redactedReq = webhookRedactedReq & key reqType . key "headers" .~ getRedactedHeaders
-         in redactedReq
-      -- redact the resolved webhook and headers value, this helps in not logging
-      -- sensitive info
-      sanitiseReqJSON v = case _rdTransformedRequest v of
-        Nothing -> updateReqDetail v "original_request"
-        Just _ -> updateReqDetail v "transformed_request"
+
+-- | Produce the JSON representation of a 'RequestDetails' for trigger delivery
+-- logs, with sensitive values redacted.
+--
+-- The webhook URL is always replaced with the name of the env var that holds
+-- it, and sensitive/from-env headers are always redacted (this is existing
+-- behaviour).
+--
+-- When payload redaction is enabled (the 'Bool' argument, resolved from a
+-- per-trigger-type feature flag by the caller), the request body, the top-level
+-- session variables and the request transform context (which also echoes the
+-- body and session variables) are additionally redacted to JSON @null@ (rather
+-- than a string sentinel, so log-collector pipelines that expect object/array
+-- field types do not break). The request sizes and the event id/name are always
+-- retained. When redaction is disabled the output is byte-identical to the
+-- previous behaviour.
+sanitiseReqJSON ::
+  -- | whether to redact the request body, session variables and transform context
+  Bool ->
+  -- | the env var name that holds the webhook URL (substituted for the URL)
+  Text ->
+  -- | the headers to log (redacted individually)
+  [HeaderConf] ->
+  RequestDetails ->
+  J.Value
+sanitiseReqJSON redactLogs webhookVarName logHeaders v =
+  let webhookAndHeaderRedactedReq =
+        J.toJSON v
+          & key reqType
+          . key "url"
+          .~ J.String webhookVarName
+            & key reqType
+            . key "headers"
+          .~ getRedactedHeaders
+   in if redactLogs
+        then
+          -- Redact the body of both the original and the transformed request
+          -- (the JSON contains both when a request transform is configured),
+          -- the top-level session variables, and the request transform context
+          -- (which also echoes the body and session variables), to JSON null.
+          -- Redacting a missing/absent key is a no-op.
+          webhookAndHeaderRedactedReq
+            & key "original_request"
+            . key "body"
+            .~ J.Null
+              & key "transformed_request"
+              . key "body"
+            .~ J.Null
+              & key "session_vars"
+            .~ J.Null
+              & key "req_transform_ctx"
+            .~ J.Null
+        else webhookAndHeaderRedactedReq
+  where
+    -- redact the resolved webhook and headers value, this helps in not logging
+    -- sensitive info
+    reqType = case _rdTransformedRequest v of
+      Nothing -> "original_request"
+      Just _ -> "transformed_request"
+    redactedValue name val = case val of
+      HVValue txt
+        | CI.mk (TE.encodeUtf8 name) `HashSet.member` sensitiveHeaders -> J.String "<REDACTED>"
+        | otherwise -> J.String (printTemplate txt)
+      HVEnv txt -> J.String ("<from_env: " <> txt <> ">")
+    -- This should remove sensitiveHeaders as well as any from_env headers,
+    -- which many users reasonably expect to stay secret (although we don't
+    -- seem to promise this currently)
+    getRedactedHeaders =
+      J.Object
+        $ foldr (\(HeaderConf name val) -> KM.insert (J.fromText name) (redactedValue name val)) mempty logHeaders
+
+-- | Produce the JSON representation of the webhook response (or delivery error)
+-- for trigger delivery logs.
+--
+-- When payload redaction is enabled (the 'Bool' argument, resolved from a
+-- per-trigger-type feature flag by the caller), the webhook response body is
+-- redacted to JSON @null@ (rather than a string sentinel, so log-collector
+-- pipelines that expect object/array field types do not break). The status
+-- code, response size, response headers and the error type/detail envelope are
+-- always retained. When redaction is disabled the output is byte-identical to
+-- the previous behaviour.
+--
+-- The response body appears in two shapes:
+--
+--   * a successful response ('Right') serialises the 'HTTPResp' at the top
+--     level, so the body is at @body@;
+--
+--   * a non-2xx response ('Left' 'HStatus') nests the 'HTTPResp' under the
+--     error envelope, so the body is at @detail.body@.
+--
+-- Both paths are rewritten; a missing/absent key is a no-op (so 'HClient' and
+-- 'HOther' errors, which carry no webhook response body, are unaffected).
+sanitiseRespJSON ::
+  -- | whether to redact the webhook response body
+  Bool ->
+  Either (HTTPErr a) (HTTPResp a) ->
+  J.Value
+sanitiseRespJSON redactLogs eitherResp =
+  let respJSON = either J.toJSON J.toJSON eitherResp
+   in if redactLogs
+        then
+          respJSON
+            & key "body"
+            .~ J.Null
+              & key "detail"
+              . key "body"
+            .~ J.Null
+        else respJSON
 
 data HTTPRespExtraLog a = HTTPRespExtraLog {_hrelLevel :: !LogLevel, _hrelpayload :: HTTPRespExtra a}
 
@@ -274,13 +360,16 @@ logHTTPForTriggers ::
   RequestDetails ->
   Text ->
   [HeaderConf] ->
-  TriggersErrorLogLevelStatus ->
+  Types.TriggersErrorLogLevelStatus ->
+  -- | whether to redact the request/response payloads (resolved from the
+  -- relevant per-trigger-type feature flag by the caller)
+  Bool ->
   m ()
-logHTTPForTriggers eitherResp extraLogCtx reqDetails webhookVarName logHeaders triggersErrorLogLevelStatus = do
+logHTTPForTriggers eitherResp extraLogCtx reqDetails webhookVarName logHeaders triggersErrorLogLevelStatus redactLogs = do
   logger :: Logger Hasura <- asks getter
-  case (eitherResp, isTriggersErrorLogLevelEnabled triggersErrorLogLevelStatus) of
-    (Left _, True) -> unLoggerTracing logger $ HTTPRespExtraLog LevelError $ HTTPRespExtra eitherResp extraLogCtx reqDetails webhookVarName logHeaders
-    (_, _) -> unLoggerTracing logger $ HTTPRespExtraLog LevelInfo $ HTTPRespExtra eitherResp extraLogCtx reqDetails webhookVarName logHeaders
+  case (eitherResp, Types.isTriggersErrorLogLevelEnabled triggersErrorLogLevelStatus) of
+    (Left _, True) -> unLoggerTracing logger $ HTTPRespExtraLog LevelError $ HTTPRespExtra eitherResp extraLogCtx reqDetails webhookVarName logHeaders redactLogs
+    (_, _) -> unLoggerTracing logger $ HTTPRespExtraLog LevelInfo $ HTTPRespExtra eitherResp extraLogCtx reqDetails webhookVarName logHeaders redactLogs
 
 logHTTPForET ::
   ( MonadReader r m,
@@ -293,9 +382,11 @@ logHTTPForET ::
   RequestDetails ->
   Text ->
   [HeaderConf] ->
-  TriggersErrorLogLevelStatus ->
+  Types.TriggersErrorLogLevelStatus ->
+  Types.RedactEventTriggerLogsStatus ->
   m ()
-logHTTPForET = logHTTPForTriggers
+logHTTPForET eitherResp extraLogCtx reqDetails webhookVarName logHeaders triggersErrorLogLevelStatus redactLogs =
+  logHTTPForTriggers eitherResp extraLogCtx reqDetails webhookVarName logHeaders triggersErrorLogLevelStatus (Types.isRedactEventTriggerLogsEnabled redactLogs)
 
 logHTTPForST ::
   ( MonadReader r m,
@@ -308,9 +399,11 @@ logHTTPForST ::
   RequestDetails ->
   Text ->
   [HeaderConf] ->
-  TriggersErrorLogLevelStatus ->
+  Types.TriggersErrorLogLevelStatus ->
+  Types.RedactScheduledTriggerLogsStatus ->
   m ()
-logHTTPForST = logHTTPForTriggers
+logHTTPForST eitherResp extraLogCtx reqDetails webhookVarName logHeaders triggersErrorLogLevelStatus redactLogs =
+  logHTTPForTriggers eitherResp extraLogCtx reqDetails webhookVarName logHeaders triggersErrorLogLevelStatus (Types.isRedactScheduledTriggerLogsEnabled redactLogs)
 
 runHTTP :: (MonadIO m) => HTTP.Manager -> HTTP.Request -> m (Either (HTTPErr a) (HTTPResp a))
 runHTTP manager req = do

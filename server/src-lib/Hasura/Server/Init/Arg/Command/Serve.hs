@@ -71,6 +71,9 @@ module Hasura.Server.Init.Arg.Command.Serve
     metadataDefaultsOption,
     apolloFederationStatusOption,
     triggersErrorLogLevelStatusOption,
+    redactEventTriggerLogsOption,
+    redactScheduledTriggerLogsOption,
+    redactActionHandlerLogsOption,
     closeWebsocketsOnMetadataChangeOption,
     maxTotalHeaderLengthOption,
     asyncActionsFetchBatchSizeOption,
@@ -180,6 +183,9 @@ serveCommandParser =
     <*> parseEnableCloseWebsocketsOnMetadataChange
     <*> parseMaxTotalHeaderLength
     <*> parseTriggersErrorLoglevelStatus
+    <*> parseRedactEventTriggerLogs
+    <*> parseRedactScheduledTriggerLogs
+    <*> parseRedactActionHandlerLogs
     <*> parseAsyncActionsFetchBatchSize
     <*> parsePersistedQueries
     <*> parsePersistedQueriesTtl
@@ -1415,6 +1421,54 @@ parseTriggersErrorLoglevelStatus =
           <> Opt.help (Config._helpMessage triggersErrorLogLevelStatusOption)
       )
 
+redactEventTriggerLogsOption :: Config.Option (Types.RedactEventTriggerLogsStatus)
+redactEventTriggerLogsOption =
+  Config.Option
+    { Config._default = Types.RedactEventTriggerLogsDisabled,
+      Config._envVar = "HASURA_GRAPHQL_REDACT_EVENT_TRIGGER_LOGS",
+      Config._helpMessage = "Redact the request body, session variables and webhook response body from Event Trigger delivery logs (default: false)."
+    }
+
+parseRedactEventTriggerLogs :: Opt.Parser (Maybe Types.RedactEventTriggerLogsStatus)
+parseRedactEventTriggerLogs =
+  (bool Nothing (Just Types.RedactEventTriggerLogsEnabled))
+    <$> Opt.switch
+      ( Opt.long "redact-event-trigger-logs"
+          <> Opt.help (Config._helpMessage redactEventTriggerLogsOption)
+      )
+
+redactScheduledTriggerLogsOption :: Config.Option (Types.RedactScheduledTriggerLogsStatus)
+redactScheduledTriggerLogsOption =
+  Config.Option
+    { Config._default = Types.RedactScheduledTriggerLogsDisabled,
+      Config._envVar = "HASURA_GRAPHQL_REDACT_SCHEDULED_TRIGGER_LOGS",
+      Config._helpMessage = "Redact the request body, session variables and webhook response body from Scheduled/Cron Trigger delivery logs (default: false)."
+    }
+
+parseRedactScheduledTriggerLogs :: Opt.Parser (Maybe Types.RedactScheduledTriggerLogsStatus)
+parseRedactScheduledTriggerLogs =
+  (bool Nothing (Just Types.RedactScheduledTriggerLogsEnabled))
+    <$> Opt.switch
+      ( Opt.long "redact-scheduled-trigger-logs"
+          <> Opt.help (Config._helpMessage redactScheduledTriggerLogsOption)
+      )
+
+redactActionHandlerLogsOption :: Config.Option (Types.RedactActionHandlerLogsStatus)
+redactActionHandlerLogsOption =
+  Config.Option
+    { Config._default = Types.RedactActionHandlerLogsDisabled,
+      Config._envVar = "HASURA_GRAPHQL_REDACT_ACTION_HANDLER_LOGS",
+      Config._helpMessage = "Redact the request body from Action handler logs (action-handler-log) (default: false)."
+    }
+
+parseRedactActionHandlerLogs :: Opt.Parser (Maybe Types.RedactActionHandlerLogsStatus)
+parseRedactActionHandlerLogs =
+  (bool Nothing (Just Types.RedactActionHandlerLogsEnabled))
+    <$> Opt.switch
+      ( Opt.long "redact-action-handler-logs"
+          <> Opt.help (Config._helpMessage redactActionHandlerLogsOption)
+      )
+
 asyncActionsFetchBatchSizeOption :: Config.Option Int
 asyncActionsFetchBatchSizeOption =
   Config.Option
@@ -1679,6 +1733,9 @@ serveCmdFooter =
         Config.optionPP maxTotalHeaderLengthOption,
         Config.optionPP remoteNullForwardingPolicyOption,
         Config.optionPP triggersErrorLogLevelStatusOption,
+        Config.optionPP redactEventTriggerLogsOption,
+        Config.optionPP redactScheduledTriggerLogsOption,
+        Config.optionPP redactActionHandlerLogsOption,
         Config.optionPP asyncActionsFetchBatchSizeOption,
         Config.optionPP persistedQueriesOption,
         Config.optionPP persistedQueriesTtlOption,

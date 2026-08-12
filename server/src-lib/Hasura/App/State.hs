@@ -146,7 +146,6 @@ data AppEnv = AppEnv
     appEnvSchemaPollInterval :: OptionalInterval,
     appEnvLicenseKeyCache :: Maybe (CredentialCache AgentLicenseKey),
     appEnvMaxTotalHeaderLength :: Int,
-    appEnvTriggersErrorLogLevelStatus :: TriggersErrorLogLevelStatus,
     appEnvAsyncActionsFetchBatchSize :: Int,
     appEnvPersistedQueries :: PersistedQueriesState,
     appEnvPersistedQueriesTtl :: Int,
@@ -179,6 +178,7 @@ data AppContext = AppContext
     acCloseWebsocketsOnMetadataChangeStatus :: CloseWebsocketsOnMetadataChangeStatus,
     acRemoteSchemaResponsePriority :: RemoteSchemaResponsePriority,
     acHeaderPrecedence :: HeaderPrecedence,
+    acRedactActionHandlerLogs :: RedactActionHandlerLogsStatus,
     acTraceQueryStatus :: TraceQueryStatus,
     acRelayMode :: RelayModeStatus
   }
@@ -309,6 +309,7 @@ buildAppContextRule = proc (ServeOptions {..}, env, _keys) -> do
           acCloseWebsocketsOnMetadataChangeStatus = soCloseWebsocketsOnMetadataChangeStatus,
           acRemoteSchemaResponsePriority = soRemoteSchemaResponsePriority,
           acHeaderPrecedence = soHeaderPrecedence,
+          acRedactActionHandlerLogs = soRedactActionHandlerLogs,
           acTraceQueryStatus = soTraceQueryStatus,
           acRelayMode = soRelayMode
         }

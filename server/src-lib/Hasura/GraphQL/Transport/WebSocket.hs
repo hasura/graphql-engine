@@ -107,7 +107,7 @@ import Hasura.Server.Prometheus
     recordGraphqlOperationMetric,
   )
 import Hasura.Server.Telemetry.Counters qualified as Telem
-import Hasura.Server.Types (GranularPrometheusMetricsState (..), HeaderPrecedence, ModelInfoLogState (..), MonadGetPolicies (..), RemoteSchemaResponsePriority, RequestId, TraceQueryStatus (TraceQueryEnabled), getRequestId)
+import Hasura.Server.Types (GranularPrometheusMetricsState (..), HeaderPrecedence, ModelInfoLogState (..), MonadGetPolicies (..), RedactActionHandlerLogsStatus, RemoteSchemaResponsePriority, RequestId, TraceQueryStatus (TraceQueryEnabled), getRequestId)
 import Hasura.Services.Network
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax (Name (..))
@@ -451,9 +451,10 @@ onStart ::
   WS.WSActions WSConnData ->
   ResponseInternalErrorsConfig ->
   HeaderPrecedence ->
+  RedactActionHandlerLogsStatus ->
   TraceQueryStatus ->
   m ()
-onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables (StartMsg opId q) onMessageActions responseErrorsConfig headerPrecedence traceQueryStatus = catchAndIgnore $ do
+onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables (StartMsg opId q) onMessageActions responseErrorsConfig headerPrecedence redactActionHandlerLogs traceQueryStatus = catchAndIgnore $ do
   modelInfoLogStatus' <- runGetModelInfoLogStatus
   modelInfoLogStatus <- liftIO modelInfoLogStatus'
   granularPrometheusMetricsState <- runGetPrometheusMetricsGranularity
@@ -529,6 +530,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
         requestId
         responseErrorsConfig
         headerPrecedence
+        redactActionHandlerLogs
         traceQueryStatus
 
   (parameterizedQueryHash, execPlan, modelInfoList) <- onLeft execPlanE (withComplete . preExecErr granularPrometheusMetricsState requestId (Just gqlOpType) opName Nothing)
@@ -1124,9 +1126,10 @@ onMessage ::
   Maybe (CredentialCache AgentLicenseKey) ->
   ResponseInternalErrorsConfig ->
   HeaderPrecedence ->
+  RedactActionHandlerLogsStatus ->
   TraceQueryStatus ->
   m ()
-onMessage enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions agentLicenseKey responseErrorsConfig headerPrecedence traceQueryStatus = do
+onMessage enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions agentLicenseKey responseErrorsConfig headerPrecedence redactActionHandlerLogs traceQueryStatus = do
   Tracing.newTrace (_wseTraceSamplingPolicy serverEnv) "websocket" do
     case J.eitherDecode msgRaw of
       Left e -> do
@@ -1150,7 +1153,7 @@ onMessage enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions agen
                 if _mcAnalyzeQueryVariables (scMetricsConfig schemaCache)
                   then CaptureQueryVariables
                   else DoNotCaptureQueryVariables
-          onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables startMsg onMessageActions responseErrorsConfig headerPrecedence traceQueryStatus
+          onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables startMsg onMessageActions responseErrorsConfig headerPrecedence redactActionHandlerLogs traceQueryStatus
         CMStop stopMsg -> do
           granularPrometheusMetricsState <- runGetPrometheusMetricsGranularity
           onStop serverEnv wsConn stopMsg granularPrometheusMetricsState
@@ -1270,7 +1273,7 @@ onConnInit logger manager wsConn getAuthMode connParamsM onConnInitErrAction kee
 
     paramHeaders =
       [ (CI.mk $ TE.encodeUtf8 h, TE.encodeUtf8 v)
-        | (h, v) <- maybe [] HashMap.toList $ connParamsM >>= _cpHeaders
+      | (h, v) <- maybe [] HashMap.toList $ connParamsM >>= _cpHeaders
       ]
 
     getClientHdrs st = case st of

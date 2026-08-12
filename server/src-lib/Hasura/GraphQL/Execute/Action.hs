@@ -87,7 +87,7 @@ import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache
 import Hasura.Server.Init.Config (OptionalInterval (..), ResponseInternalErrorsConfig (..), shouldIncludeInternal)
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
-import Hasura.Server.Types (HeaderPrecedence (..))
+import Hasura.Server.Types (HeaderPrecedence (..), RedactActionHandlerLogsStatus)
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client.Transformable qualified as HTTP
@@ -158,8 +158,9 @@ resolveActionExecution ::
   Maybe GQLQueryText ->
   IncludeInternalErrors ->
   HeaderPrecedence ->
+  RedactActionHandlerLogsStatus ->
   ActionExecution
-resolveActionExecution httpManager env logger tracesPropagator prometheusMetrics IR.AnnActionExecution {..} ActionExecContext {..} gqlQueryText includeInternalErrors headerPrecedence =
+resolveActionExecution httpManager env logger tracesPropagator prometheusMetrics IR.AnnActionExecution {..} ActionExecContext {..} gqlQueryText includeInternalErrors headerPrecedence redactActionHandlerLogs =
   ActionExecution $ first (encJFromOrderedValue . makeActionResponseNoRelations _aaeFields _aaeOutputType _aaeOutputFields True) <$> runWebhook
   where
     handlerPayload = ActionWebhookPayload (ActionContext _aaeName) _aecSessionVariables _aaePayload gqlQueryText
@@ -189,6 +190,7 @@ resolveActionExecution httpManager env logger tracesPropagator prometheusMetrics
           _aaeResponseTransform
           includeInternalErrors
           headerPrecedence
+          redactActionHandlerLogs
 
 throwUnexpected :: (MonadError QErr m) => Text -> m ()
 throwUnexpected = throw400 Unexpected
@@ -509,8 +511,9 @@ asyncActionsProcessor ::
   Int ->
   IncludeInternalErrors ->
   IO HeaderPrecedence ->
+  RedactActionHandlerLogsStatus ->
   m (Forever m)
-asyncActionsProcessor getEnvHook logger getSCFromRef' getFetchInterval lockedActionEvents gqlQueryText fetchBatchSize includeInternalErrors getHeaderPrecedence =
+asyncActionsProcessor getEnvHook logger getSCFromRef' getFetchInterval lockedActionEvents gqlQueryText fetchBatchSize includeInternalErrors getHeaderPrecedence redactActionHandlerLogs =
   return
     $ Forever ()
     $ const
@@ -604,6 +607,7 @@ asyncActionsProcessor getEnvHook logger getSCFromRef' getFetchInterval lockedAct
                   metadataResponseTransform
                   includeInternalErrors
                   headerPrecedence
+                  redactActionHandlerLogs
             resE <-
               setActionStatus actionId $ case eitherRes of
                 Left e -> AASError e
@@ -637,6 +641,7 @@ callWebhook ::
   Maybe MetadataResponseTransform ->
   IncludeInternalErrors ->
   HeaderPrecedence ->
+  RedactActionHandlerLogsStatus ->
   m (ActionWebhookResponse, HTTP.ResponseHeaders)
 callWebhook
   env
@@ -656,7 +661,8 @@ callWebhook
   metadataRequestTransform
   metadataResponseTransform
   includeInternalErrors
-  headerPrecedence = do
+  headerPrecedence
+  redactActionHandlerLogs = do
     resolvedConfHeaders <- makeHeadersFromConf env confHeaders
     let clientHeaders = if forwardClientHeaders then mkClientHeadersForward ignoredClientHeaders reqHeaders else mempty
         hdrs = case headerPrecedence of
@@ -763,6 +769,7 @@ callWebhook
             responseBodySize
             actionName
             actionType
+            redactActionHandlerLogs
 
         case J.eitherDecode transformedResponseBody of
           Left e -> do
