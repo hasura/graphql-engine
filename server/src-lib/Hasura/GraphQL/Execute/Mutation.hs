@@ -61,12 +61,13 @@ convertMutationAction ::
   ActionMutation Void ->
   IncludeInternalErrors ->
   HeaderPrecedence ->
+  RedactActionHandlerLogsStatus ->
   m ActionExecutionPlan
-convertMutationAction env logger tracesPropagator prometheusMetrics userInfo reqHeaders gqlQueryText action includeInternalErrors headerPrecedence = do
+convertMutationAction env logger tracesPropagator prometheusMetrics userInfo reqHeaders gqlQueryText action includeInternalErrors headerPrecedence redactActionHandlerLogs = do
   httpManager <- askHTTPManager
   case action of
     AMSync s ->
-      pure $ AEPSync $ resolveActionExecution httpManager env logger tracesPropagator prometheusMetrics s actionExecContext gqlQueryText includeInternalErrors headerPrecedence
+      pure $ AEPSync $ resolveActionExecution httpManager env logger tracesPropagator prometheusMetrics s actionExecContext gqlQueryText includeInternalErrors headerPrecedence redactActionHandlerLogs
     AMAsync s ->
       AEPAsyncMutation <$> resolveActionMutationAsync s reqHeaders userSession
   where
@@ -101,6 +102,7 @@ convertMutationSelectionSet ::
   Maybe G.Name ->
   IncludeInternalErrors ->
   HeaderPrecedence ->
+  RedactActionHandlerLogsStatus ->
   TraceQueryStatus ->
   m (ExecutionPlan, ParameterizedQueryHash, [ModelInfoPart])
 convertMutationSelectionSet
@@ -121,6 +123,7 @@ convertMutationSelectionSet
   maybeOperationName
   includeInternalErrors
   headerPrecedence
+  redactActionHandlerLogs
   traceQueryStatus = do
     mutationParser <-
       onNothing (gqlMutationParser gqlContext)
@@ -164,7 +167,7 @@ convertMutationSelectionSet
               (actionName, _fch) <- pure $ case noRelsDBAST of
                 AMSync s -> (_aaeName s, _aaeForwardClientHeaders s)
                 AMAsync s -> (_aamaName s, _aamaForwardClientHeaders s)
-              plan <- convertMutationAction env logger tracesPropagator prometheusMetrics userInfo reqHeaders (Just (GH._grQuery gqlUnparsed)) noRelsDBAST includeInternalErrors headerPrecedence
+              plan <- convertMutationAction env logger tracesPropagator prometheusMetrics userInfo reqHeaders (Just (GH._grQuery gqlUnparsed)) noRelsDBAST includeInternalErrors headerPrecedence redactActionHandlerLogs
               let actionsModel = ModelInfoPart (toTxt actionName) ModelTypeAction Nothing Nothing (ModelOperationType G.OperationTypeMutation)
               pure $ (ExecStepAction plan (ActionsInfo actionName _fch) remoteJoins, [actionsModel]) -- `_fch` represents the `forward_client_headers` option from the action
               -- definition which is currently being ignored for actions that are mutations

@@ -502,6 +502,48 @@ Sets the log-level as `error` for Trigger type error logs (Event Triggers, Sched
 | **Default**         | `false`                                          |
 | **Supported in**    | CE, Enterprise Edition                           |
 
+### Redact Event Trigger Logs
+
+When enabled, redacts the request body, session variables and webhook response body from the **Event Trigger**
+(`event-trigger`) logs. The webhook URL and sensitive/from-env headers are always redacted regardless of this flag.
+Redacted fields are emitted as `null`. Enable this to avoid leaking sensitive payload data into `stdout` logs when a
+webhook delivery fails (for example, when re-enabling event-trigger error logging in `stdout`).
+
+|                     |                                            |
+| ------------------- | ------------------------------------------ |
+| **Flag**            | `--redact-event-trigger-logs`              |
+| **Env var**         | `HASURA_GRAPHQL_REDACT_EVENT_TRIGGER_LOGS` |
+| **Accepted values** | Boolean                                    |
+| **Default**         | `false`                                    |
+| **Supported in**    | CE, Enterprise Edition                     |
+
+### Redact Scheduled Trigger Logs
+
+When enabled, redacts the request body, session variables and webhook response body from the **Scheduled/Cron Trigger**
+(`scheduled-trigger`) logs (covers cron and one-off scheduled events). Redacted fields are emitted as `null`.
+
+|                     |                                                |
+| ------------------- | ---------------------------------------------- |
+| **Flag**            | `--redact-scheduled-trigger-logs`              |
+| **Env var**         | `HASURA_GRAPHQL_REDACT_SCHEDULED_TRIGGER_LOGS` |
+| **Accepted values** | Boolean                                        |
+| **Default**         | `false`                                        |
+| **Supported in**    | CE, Enterprise Edition                         |
+
+### Redact Action Handler Logs
+
+When enabled, redacts the request body (of both the original and the transformed request) from the **Action handler**
+(`action-handler-log`) logs. The request size, response size and action metadata are always retained. Redacted fields
+are emitted as `null`.
+
+|                     |                                             |
+| ------------------- | ------------------------------------------- |
+| **Flag**            | `--redact-action-handler-logs`              |
+| **Env var**         | `HASURA_GRAPHQL_REDACT_ACTION_HANDLER_LOGS` |
+| **Accepted values** | Boolean                                     |
+| **Default**         | `false`                                     |
+| **Supported in**    | CE, Enterprise Edition                      |
+
 ### Enable Console
 
 Enable the Hasura Console (served by the server on `/` and `/console`).

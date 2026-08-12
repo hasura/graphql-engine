@@ -22,8 +22,14 @@ module Hasura.Server.Types
     getRequestId,
     ApolloFederationStatus (..),
     TriggersErrorLogLevelStatus (..),
+    RedactEventTriggerLogsStatus (..),
+    RedactScheduledTriggerLogsStatus (..),
+    RedactActionHandlerLogsStatus (..),
     isApolloFederationEnabled,
     isTriggersErrorLogLevelEnabled,
+    isRedactEventTriggerLogsEnabled,
+    isRedactScheduledTriggerLogsEnabled,
+    isRedactActionHandlerLogsEnabled,
     ModelInfoLogState (..),
     GranularPrometheusMetricsState (..),
     OpenTelemetryExporterState (..),
@@ -143,7 +149,7 @@ instance FromJSON ExperimentalFeature where
       experimentalFeatures :: [(Text, ExperimentalFeature)]
       experimentalFeatures =
         [ (experimentalFeatureKey ef, ef)
-          | ef <- [minBound .. maxBound]
+        | ef <- [minBound .. maxBound]
         ]
 
 instance ToJSON ExperimentalFeature where
@@ -212,6 +218,61 @@ isTriggersErrorLogLevelEnabled = \case
 
 instance ToJSON TriggersErrorLogLevelStatus where
   toJSON = toJSON . isTriggersErrorLogLevelEnabled
+
+-- | Whether the request body, session variables and webhook response body of an
+-- Event Trigger should be redacted from the @event-trigger@ delivery logs.
+-- Defaults to 'RedactEventTriggerLogsDisabled' so that existing log output
+-- is unchanged unless the operator opts in.
+data RedactEventTriggerLogsStatus = RedactEventTriggerLogsEnabled | RedactEventTriggerLogsDisabled
+  deriving stock (Show, Eq, Ord, Generic)
+
+instance FromJSON RedactEventTriggerLogsStatus where
+  parseJSON = fmap (bool RedactEventTriggerLogsDisabled RedactEventTriggerLogsEnabled) . parseJSON
+
+isRedactEventTriggerLogsEnabled :: RedactEventTriggerLogsStatus -> Bool
+isRedactEventTriggerLogsEnabled = \case
+  RedactEventTriggerLogsEnabled -> True
+  RedactEventTriggerLogsDisabled -> False
+
+instance ToJSON RedactEventTriggerLogsStatus where
+  toJSON = toJSON . isRedactEventTriggerLogsEnabled
+
+-- | Whether the request body, session variables and webhook response body of a
+-- Scheduled/Cron/one-off trigger should be redacted from the
+-- @scheduled-trigger@ delivery logs. Defaults to
+-- 'RedactScheduledTriggerLogsDisabled' so that existing log output is
+-- unchanged unless the operator opts in.
+data RedactScheduledTriggerLogsStatus = RedactScheduledTriggerLogsEnabled | RedactScheduledTriggerLogsDisabled
+  deriving stock (Show, Eq, Ord, Generic)
+
+instance FromJSON RedactScheduledTriggerLogsStatus where
+  parseJSON = fmap (bool RedactScheduledTriggerLogsDisabled RedactScheduledTriggerLogsEnabled) . parseJSON
+
+isRedactScheduledTriggerLogsEnabled :: RedactScheduledTriggerLogsStatus -> Bool
+isRedactScheduledTriggerLogsEnabled = \case
+  RedactScheduledTriggerLogsEnabled -> True
+  RedactScheduledTriggerLogsDisabled -> False
+
+instance ToJSON RedactScheduledTriggerLogsStatus where
+  toJSON = toJSON . isRedactScheduledTriggerLogsEnabled
+
+-- | Whether the request body (and any request transform context) of an Action
+-- handler webhook call should be redacted from the @action-handler-log@ logs.
+-- Defaults to 'RedactActionHandlerLogsDisabled' so that existing log output
+-- is unchanged unless the operator opts in.
+data RedactActionHandlerLogsStatus = RedactActionHandlerLogsEnabled | RedactActionHandlerLogsDisabled
+  deriving stock (Show, Eq, Ord, Generic)
+
+instance FromJSON RedactActionHandlerLogsStatus where
+  parseJSON = fmap (bool RedactActionHandlerLogsDisabled RedactActionHandlerLogsEnabled) . parseJSON
+
+isRedactActionHandlerLogsEnabled :: RedactActionHandlerLogsStatus -> Bool
+isRedactActionHandlerLogsEnabled = \case
+  RedactActionHandlerLogsEnabled -> True
+  RedactActionHandlerLogsDisabled -> False
+
+instance ToJSON RedactActionHandlerLogsStatus where
+  toJSON = toJSON . isRedactActionHandlerLogsEnabled
 
 data ModelInfoLogState
   = ModelInfoLogOff

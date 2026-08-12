@@ -497,7 +497,16 @@ initialiseAppEnv BasicConnectionInfo {..} serveOptions@ServeOptions {..} liveQue
           appEnvMetadataVersionRef = metaVersionRef,
           appEnvInstanceId = instanceId,
           appEnvEnableMaintenanceMode = soEnableMaintenanceMode,
-          appEnvLoggingSettings = LoggingSettings soEnabledLogTypes soEnableMetadataQueryLogging soHttpLogQueryOnlyOnError soLogMaskedVariables,
+          appEnvLoggingSettings =
+            LoggingSettings
+              soEnabledLogTypes
+              soEnableMetadataQueryLogging
+              soHttpLogQueryOnlyOnError
+              soLogMaskedVariables
+              soTriggersErrorLogLevelStatus
+              soRedactEventTriggerLogs
+              soRedactScheduledTriggerLogs
+              soRedactActionHandlerLogs,
           appEnvEventingMode = soEventingMode,
           appEnvEventProcessingMode = soEventProcessingMode,
           appEnvEnableReadOnlyMode = soReadOnlyMode,
@@ -521,7 +530,6 @@ initialiseAppEnv BasicConnectionInfo {..} serveOptions@ServeOptions {..} liveQue
           appEnvSchemaPollInterval = soSchemaPollInterval,
           appEnvLicenseKeyCache = Nothing,
           appEnvMaxTotalHeaderLength = soMaxTotalHeaderLength,
-          appEnvTriggersErrorLogLevelStatus = soTriggersErrorLogLevelStatus,
           appEnvAsyncActionsFetchBatchSize = soAsyncActionsFetchBatchSize,
           appEnvPersistedQueries = soPersistedQueries,
           appEnvPersistedQueriesTtl = soPersistedQueriesTtl,
@@ -1353,7 +1361,8 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
             appEnvServerMetrics
             (pmEventTriggerMetrics appEnvPrometheusMetrics)
             appEnvEnableMaintenanceMode
-            appEnvTriggersErrorLogLevelStatus
+            (_lsTriggersErrorLogLevelStatus appEnvLoggingSettings)
+            (_lsRedactEventTriggerLogs appEnvLoggingSettings)
 
     startAsyncActionsPollerThread logger lockedEventsCtx actionSubState = do
       AppEnv {..} <- lift askAppEnv
@@ -1385,6 +1394,7 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
           appEnvAsyncActionsFetchBatchSize
           HideInternalErrors
           (acHeaderPrecedence <$> getAppContext appStateRef)
+          (_lsRedactActionHandlerLogs appEnvLoggingSettings)
 
       -- start a background thread to handle async action live queries
       void
@@ -1432,7 +1442,8 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
             (pmScheduledTriggerMetrics appEnvPrometheusMetrics)
             (getSchemaCache appStateRef)
             lockedEventsCtx
-            appEnvTriggersErrorLogLevelStatus
+            (_lsTriggersErrorLogLevelStatus appEnvLoggingSettings)
+            (_lsRedactScheduledTriggerLogs appEnvLoggingSettings)
 
 runInSeparateTx ::
   PG.TxE QErr a ->
