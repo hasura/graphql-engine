@@ -21,9 +21,10 @@ import Data.Text qualified as Text
 import Data.Text.Casing qualified as C
 import Data.Text.Extended ((<<>))
 import Hasura.Backends.DataConnector.API qualified as API
+import Hasura.Backends.DataConnector.Adapter.ColumnValues (getDataConnectorColumnValues)
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Backends.DataConnector.Adapter.Types.Mutations qualified as DC
-import Hasura.Base.Error (Code (ValidationFailed), QErr, runAesonParser, throw400, throw500)
+import Hasura.Base.Error (Code (ValidationFailed), QErr, runAesonParser, throw400)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend (..), ComputedFieldReturnType, HasSourceConfiguration (..), SupportedNamingCase (..), XDisable, XEnable)
 import Hasura.RQL.Types.BackendType (BackendSourceKind (DataConnectorKind), BackendType (DataConnector))
@@ -166,7 +167,7 @@ instance Backend 'DataConnector where
 
   defaultTriggerOnReplication = Nothing
 
-  getColVals _ _ _ _ _ _ = throw500 "getColVals: not implemented for the Data Connector backend"
+  getColVals = getDataConnectorColumnValues
 
   getColumnPathColumn = \case
     DC.CPPath p -> NonEmpty.head p

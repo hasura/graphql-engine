@@ -642,6 +642,7 @@ library
                      -- GraphQL Data Connector
                      , Hasura.Backends.DataConnector.Adapter.API
                      , Hasura.Backends.DataConnector.Adapter.Backend
+                     , Hasura.Backends.DataConnector.Adapter.ColumnValues
                      , Hasura.Backends.DataConnector.Adapter.Execute
                      , Hasura.Backends.DataConnector.Adapter.ConfigTransform
                      , Hasura.Backends.DataConnector.Adapter.RunSQL
