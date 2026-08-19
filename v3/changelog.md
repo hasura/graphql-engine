@@ -17,6 +17,13 @@
   functions under their model names, and apply model-to-connector argument
   mappings when executing them through relational query pushdown.
 
+### Security
+
+- Bump dependencies to clear `cargo audit` findings: `h2` 0.4.15 → 0.4.16
+  (RUSTSEC-2026-0258, unbounded empty DATA frames / DoS), `event-listener` 5.4.1
+  → 5.4.2 (RUSTSEC-2026-0221 unsoundness), and `spin` 0.9.8 → 0.9.9 (yanked
+  release). Lockfile-only patch updates; no source or public API changes.
+
 ## [v2026.07.15]
 
 - No changes
