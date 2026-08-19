@@ -9,6 +9,7 @@ import {
 } from 'react-icons/fa';
 import { Key } from 'antd/lib/table/interface';
 import { Link } from 'react-router';
+import escapeRegExp from 'lodash/escapeRegExp';
 import './custom.css';
 import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.module.scss';
 import {
@@ -59,18 +60,19 @@ const filterItemsBySearch = (searchQuery: string, itemList: SourceItem[]) => {
     }
   });
 
+  // the results are sorted by how early the search query appears in the name.
+  // `indexOf` is used instead of `search`, since `search` coerces its argument
+  // to a RegExp and therefore throws on queries containing metacharacters
   return [
-    ...caseSensitiveResults.sort((item1, item2) => {
-      return item1.name.search(searchQuery) > item2.name.search(searchQuery)
-        ? 1
-        : -1;
-    }),
-    ...caseAgnosticResults.sort((item1, item2) => {
-      return item1.name.toLowerCase().search(searchQuery.toLowerCase()) >
-        item2.name.toLowerCase().search(searchQuery.toLowerCase())
-        ? 1
-        : -1;
-    }),
+    ...caseSensitiveResults.sort(
+      (item1, item2) =>
+        item1.name.indexOf(searchQuery) - item2.name.indexOf(searchQuery)
+    ),
+    ...caseAgnosticResults.sort(
+      (item1, item2) =>
+        item1.name.toLowerCase().indexOf(searchQuery.toLowerCase()) -
+        item2.name.toLowerCase().indexOf(searchQuery.toLowerCase())
+    ),
   ];
 };
 
@@ -87,8 +89,12 @@ const LeafItemsView: React.FC<LeafItemsViewProps> = ({
   pathname,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  // database object names can contain RegExp metacharacters, so they have to be
+  // escaped before being interpolated into the route pattern
   const regex = new RegExp(
-    `\\/data\\/${currentSource}\\/schema\\/${currentSchema}\\/(tables|functions|views)\\/${item.name}\\/`
+    `\\/data\\/${escapeRegExp(currentSource)}\\/schema\\/${escapeRegExp(
+      currentSchema
+    )}\\/(tables|functions|views)\\/${escapeRegExp(item.name)}\\/`
   );
   const isActive = regex.test(pathname);
 
