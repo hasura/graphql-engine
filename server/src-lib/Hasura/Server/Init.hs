@@ -194,7 +194,7 @@ mkServeOptions sor@ServeOptionsRaw {..} = do
       Options.DisableRemoteSchemaPermissions -> withOptionDefault Nothing enableRemoteSchemaPermsOption
       enableRemoteSchemaPermissions -> pure enableRemoteSchemaPermissions
   webSocketCompressionFromEnv <-
-    withOptionSwitch' rsoWebSocketCompression (isWebSocketCompressionEnabled, bool WebSockets.NoCompression (WebSockets.PermessageDeflateCompression WebSockets.defaultPermessageDeflate)) webSocketCompressionOption
+    withOptionSwitch' rsoWebSocketCompression (isWebSocketCompressionEnabled, bool WebSockets.NoCompression enabledWebSocketCompressionOptions) webSocketCompressionOption
   let soConnectionOptions = WebSockets.defaultConnectionOptions {WebSockets.connectionCompressionOptions = webSocketCompressionFromEnv}
   soWebSocketKeepAlive <- withOptionDefault rsoWebSocketKeepAlive webSocketKeepAliveOption
   soInferFunctionPermissions <- withOptionDefault rsoInferFunctionPermissions inferFunctionPermsOption

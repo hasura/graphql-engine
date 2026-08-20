@@ -41,6 +41,7 @@ module Hasura.Server.Init.Config
     isConsoleEnabled,
     AdminInternalErrorsStatus (..),
     isAdminInternalErrorsEnabled,
+    enabledWebSocketCompressionOptions,
     isWebSocketCompressionEnabled,
     AllowListStatus (..),
     isAllowListEnabled,
@@ -398,6 +399,11 @@ isWebSocketCompressionEnabled :: WebSockets.CompressionOptions -> Bool
 isWebSocketCompressionEnabled = \case
   WebSockets.PermessageDeflateCompression _ -> True
   WebSockets.NoCompression -> False
+
+enabledWebSocketCompressionOptions :: WebSockets.CompressionOptions
+enabledWebSocketCompressionOptions =
+  WebSockets.PermessageDeflateCompression
+    (WebSockets.defaultPermessageDeflate {WebSockets.pdCompressionLevel = 3})
 
 -- | A representation of whether or not to enable the GraphQL Query AllowList.
 --

@@ -1143,18 +1143,18 @@ mkServeOptionsSpec =
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
         fmap (WS.connectionCompressionOptions . UUT.soConnectionOptions) result
-          `Hspec.shouldBe` Right (WS.PermessageDeflateCompression WS.defaultPermessageDeflate)
+          `Hspec.shouldBe` Right (WS.PermessageDeflateCompression (WS.defaultPermessageDeflate {WS.pdCompressionLevel = 3}))
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoWebSocketCompression = (WS.PermessageDeflateCompression WS.defaultPermessageDeflate)}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoWebSocketCompression = (WS.PermessageDeflateCompression (WS.defaultPermessageDeflate {WS.pdCompressionLevel = 3}))}
             -- When
             env = [(UUT._envVar UUT.webSocketCompressionOption, "false")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
         fmap (WS.connectionCompressionOptions . UUT.soConnectionOptions) result
-          `Hspec.shouldBe` Right (WS.PermessageDeflateCompression WS.defaultPermessageDeflate)
+          `Hspec.shouldBe` Right (WS.PermessageDeflateCompression (WS.defaultPermessageDeflate {WS.pdCompressionLevel = 3}))
 
     Hspec.describe "soWebSocketKeepAlive" $ do
       Hspec.it "Default == 5" $ do

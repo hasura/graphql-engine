@@ -1039,7 +1039,7 @@ enableRemoteSchemaPermsOption =
 
 parseWebSocketCompression :: Opt.Parser WebSockets.CompressionOptions
 parseWebSocketCompression =
-  bool WebSockets.NoCompression (WebSockets.PermessageDeflateCompression WebSockets.defaultPermessageDeflate)
+  bool WebSockets.NoCompression Config.enabledWebSocketCompressionOptions
     <$> Opt.switch
       ( Opt.long "websocket-compression"
           <> Opt.help (Config._helpMessage webSocketCompressionOption)
