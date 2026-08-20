@@ -1614,7 +1614,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoWebSocketCompression result `Hspec.shouldSatisfy` \case
-        Opt.Success webSocketCompression -> webSocketCompression == WS.PermessageDeflateCompression WS.defaultPermessageDeflate
+        Opt.Success webSocketCompression -> webSocketCompression == WS.PermessageDeflateCompression (WS.defaultPermessageDeflate {WS.pdCompressionLevel = 3})
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
