@@ -3,8 +3,8 @@
 -- | This file contains the handlers that are used within websocket server.
 --
 -- This module export three main handlers for the websocket server ('onConn',
--- 'onMessage', 'onClose'), and two helpers for sending messages to the client
--- ('sendMsg', 'sendCloseWithMsg').
+-- 'onMessage', 'onClose'), and helpers for sending messages to the client
+-- ('sendControlMsg', 'sendKeepAliveMsg', 'sendCloseWithMsg').
 --
 -- NOTE!
 --  The handler functions 'onClose', 'onMessage', etc. depend for correctness on two properties:
@@ -14,7 +14,8 @@ module Hasura.GraphQL.Transport.WebSocket
   ( onConn,
     onMessage,
     onClose,
-    sendMsg,
+    sendControlMsg,
+    sendKeepAliveMsg,
     sendCloseWithMsg,
     mkCloseWebsocketsOnMetadataChangeAction,
     runWebsocketCloseOnMetadataChangeAction,
@@ -237,10 +238,23 @@ logWSEvent (L.Logger logger) wsConn wsEv = do
         ODCompleted -> False
         ODStopped -> False
 
-sendMsg :: (MonadIO m) => WSConn -> ServerMsg -> m ()
-sendMsg wsConn msg = liftIO do
+-- | Sends a control/signal message (a completion, an error, a connection
+-- ack, a pong) -- anything that isn't full subscription-result data (that
+-- goes through 'sendMsgWithMetadata' instead) or keepalive traffic (that
+-- goes through 'sendKeepAliveMsg'). Always succeeds: these are small,
+-- bounded in number, and must never be silently dropped -- see
+-- 'WS.sendMsgUnconditional'.
+sendControlMsg :: (MonadIO m) => WSConn -> ServerMsg -> m ()
+sendControlMsg wsConn msg = liftIO do
   timer <- startTimer
-  WS.sendMsg wsConn $ WS.WSQueueResponse (encodeServerMsg msg) Nothing timer
+  WS.sendMsgUnconditional wsConn $ WS.WSQueueResponse (encodeServerMsg msg) Nothing timer
+
+-- | Sends keepalive traffic ('SMConnKeepAlive'/'SMPing') -- see
+-- 'WS.sendMsgKeepAlive'.
+sendKeepAliveMsg :: (MonadIO m) => WSConn -> ServerMsg -> m ()
+sendKeepAliveMsg wsConn msg = liftIO do
+  timer <- startTimer
+  WS.sendMsgKeepAlive wsConn $ WS.WSQueueResponse (encodeServerMsg msg) Nothing timer
 
 -- sendCloseWithMsg closes the websocket server with an error code that can be supplied as (Maybe Word16),
 -- if there is `Nothing`, the server will be closed with an error code derived from ServerErrorCode
@@ -273,35 +287,6 @@ sendCloseWithMsg logger wsConn errCode mErrServerMsg mCode = do
       ConnectionInitTimeout4408 -> 4408
       NonUniqueSubscription4409 _ -> 4409
       TooManyRequests4429 -> 4429
-
-sendMsgWithMetadata ::
-  (MonadIO m) =>
-  WSConn ->
-  ServerMsg ->
-  Maybe OperationName ->
-  Maybe ParameterizedQueryHash ->
-  ES.SubscriptionMetadata ->
-  m ()
-sendMsgWithMetadata wsConn msg opName paramQueryHash (ES.SubscriptionMetadata execTime) =
-  liftIO do
-    timer <- startTimer
-    WS.sendMsg wsConn $ WS.WSQueueResponse bs wsInfo timer
-  where
-    bs = encodeServerMsg msg
-    (msgType, operationId) = case msg of
-      (SMNext (DataMsg opId _)) -> (Just SMT_GQL_NEXT, Just opId)
-      (SMData (DataMsg opId _)) -> (Just SMT_GQL_DATA, Just opId)
-      _ -> (Nothing, Nothing)
-    wsInfo =
-      Just
-        $! WS.WSEventInfo
-          { WS._wseiEventType = msgType,
-            WS._wseiOperationId = operationId,
-            WS._wseiOperationName = opName,
-            WS._wseiQueryExecutionTime = Just $! realToFrac execTime,
-            WS._wseiResponseSize = Just $! LBS.length bs,
-            WS._wseiParameterizedQueryHash = paramQueryHash
-          }
 
 onConn ::
   ( MonadFail m {- only due to https://gitlab.haskell.org/ghc/ghc/-/issues/15681 -},
@@ -551,7 +536,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
           let reportedExecutionTime = 0
           liftIO $ recordGQLQuerySuccess granularPrometheusMetricsState reportedExecutionTime opName parameterizedQueryHash gqlOpType
           modelInfoLogging modelInfoList True modelInfoLogStatus
-          sendSuccResp cachedResponseData opName parameterizedQueryHash $ ES.SubscriptionMetadata reportedExecutionTime
+          sendSuccResp cachedResponseData opName parameterizedQueryHash granularPrometheusMetricsState $ ES.SubscriptionMetadata reportedExecutionTime
         ResponseUncached storeResponseM -> do
           conclusion <- runExceptT
             $ runLimits
@@ -628,7 +613,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
                 telemTimeIO = convertDuration telemTimeIO_DT
             totalTime <- timerTot
             let telemTimeTot = Seconds totalTime
-            sendSuccResp (encodeEncJSONResults results) opName parameterizedQueryHash
+            sendSuccResp (encodeEncJSONResults results) opName parameterizedQueryHash granularPrometheusMetricsState
               $ ES.SubscriptionMetadata telemTimeIO_DT
             -- Telemetry. NOTE: don't time network IO:
             Telem.recordTimingMetric Telem.RequestDimensions {..} Telem.RequestTimings {..}
@@ -698,7 +683,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
                   Nothing -> sendCompleted (Just requestId) (Just parameterizedQueryHash)
                   Just modifier' -> do
                     let serverMsg = sendDataMsg $ DataMsg opId $ Right . encJToLBS . encJFromOrderedValue $ appEndo modifier' $ JO.Object $ JO.empty
-                    sendMsg wsConn serverMsg
+                    sendControlMsg wsConn serverMsg
               Just actionIds -> do
                 let sendResponseIO actionLogMap = do
                       (dTime, resultsE) <- withElapsedTime
@@ -718,7 +703,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
                                   $ pure
                                   $ encJToLBS
                                   $ encodeEncJSONResults results
-                          sendMsgWithMetadata wsConn dataMsg opName (Just parameterizedQueryHash) $ ES.SubscriptionMetadata dTime
+                          sendMsgWithMetadata False Nothing granularPrometheusMetricsState dataMsg opName (Just parameterizedQueryHash) $ ES.SubscriptionMetadata dTime
 
                     asyncActionQueryLive =
                       ES.LAAQNoRelationships
@@ -828,7 +813,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
             telemTimeIO = convertDuration $ sum $ fmap arpTimeIO results'
         totalTime <- timerTot
         let telemTimeTot = Seconds totalTime
-        sendSuccResp (encodeAnnotatedResponseParts results') opName pqh
+        sendSuccResp (encodeAnnotatedResponseParts results') opName pqh granularPrometheusMetricsState
           $ ES.SubscriptionMetadata
           $ sum
           $ fmap arpTimeIO results'
@@ -882,7 +867,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
       readOnlyMode
       _
       _keepAliveDelay
-      _serverMetrics
+      serverMetrics
       prometheusMetrics
       _loggerSettings
       _ = serverEnv
@@ -910,7 +895,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
 
     sendStartErr granularPrometheusMetricsState mOpName e = do
       let errFn = getErrFn errRespTy
-      sendMsg wsConn
+      sendControlMsg wsConn
         $ SMErr
         $ ErrorMsg opId
         $ errFn HideInternalErrors
@@ -920,7 +905,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
       liftIO $ closeConnAction wsConn opId (T.unpack e)
 
     sendCompleted reqId paramQueryHash = do
-      sendMsg wsConn (SMComplete . CompletionMsg $ opId)
+      sendControlMsg wsConn (SMComplete . CompletionMsg $ opId)
       logOpEv ODCompleted reqId paramQueryHash
 
     postExecErr ::
@@ -953,17 +938,137 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
       let err = case errRespTy of
             ERTLegacy -> errFn HideInternalErrors qErr
             ERTGraphqlCompliant -> fmtErrorMessage [errFn HideInternalErrors qErr]
-      sendMsg wsConn (SMErr $ ErrorMsg opId err)
+      sendControlMsg wsConn (SMErr $ ErrorMsg opId err)
+
+    -- | Sends subscription-result data -- the only messages subject to the
+    -- connection's send-queue capacity. If the queue is at capacity, this
+    -- doesn't enqueue the data at all; instead it cancels the operation via
+    -- 'cancelOperationOnOvercapacity'.
+    sendMsgWithMetadata ::
+      (MonadIO n) =>
+      -- | Whether this operation is a live query or streaming subscription
+      -- (as opposed to a one-shot query/mutation). Determines whether
+      -- 'cancelOperationOnOvercapacity' needs to tear down a poller and
+      -- guard against a dangling/straggler poll re-notifying an
+      -- already-cancelled operation -- see its haddock.
+      Bool ->
+      -- | For a streaming subscription's data push: the cursor value in
+      -- effect just before the poll that produced it -- see
+      -- 'WS._wseiStreamingResumeCursor'. 'Nothing' for everything else.
+      Maybe ES.CursorVariableValues ->
+      IO GranularPrometheusMetricsState ->
+      ServerMsg ->
+      Maybe OperationName ->
+      Maybe ParameterizedQueryHash ->
+      ES.SubscriptionMetadata ->
+      n ()
+    sendMsgWithMetadata isSubscriptionOp resumeCursor granularPrometheusMetricsState msg opName paramQueryHash (ES.SubscriptionMetadata execTime) =
+      liftIO do
+        timer <- startTimer
+        accepted <- WS.sendMsg wsConn $ WS.WSQueueResponse bs wsInfo timer
+        unless accepted $ cancelOperationOnOvercapacity isSubscriptionOp granularPrometheusMetricsState resumeCursor
+      where
+        bs = encodeServerMsg msg
+        msgType = case msg of
+          SMNext {} -> Just SMT_GQL_NEXT
+          SMData {} -> Just SMT_GQL_DATA
+          _ -> Nothing
+        wsInfo =
+          Just
+            $! WS.WSEventInfo
+              { WS._wseiEventType = msgType,
+                WS._wseiOperationId = Just opId,
+                WS._wseiOperationName = opName,
+                WS._wseiQueryExecutionTime = Just $! realToFrac execTime,
+                WS._wseiResponseSize = Just $! LBS.length bs,
+                WS._wseiParameterizedQueryHash = paramQueryHash,
+                WS._wseiStreamingResumeCursor = J.toJSON <$> resumeCursor
+              }
+
+    -- | Called when 'sendMsgWithMetadata' fails to enqueue this operation's
+    -- data because the connection's send queue is at capacity. Tears the
+    -- operation down if it's a live query or streaming subscription (a
+    -- one-shot query/mutation has no poller to tear down -- it's simply
+    -- notified below), then notifies the client with an error and a
+    -- completion, so it's never left waiting on data that will now never
+    -- arrive.
+    --
+    -- This applies uniformly to every operation kind, including live
+    -- queries: it's only correct to silently skip a live query's update
+    -- when a *newer* one supersedes it. If the connection stays overloaded
+    -- and no further update ever gets through, the client could be stuck
+    -- on stale data forever with no indication anything is wrong -- e.g. a
+    -- support ticket stuck showing "pending" when it actually reached
+    -- "done". Telling the client to resubscribe fixes this: resubscribing
+    -- to a live query immediately re-fetches the current state.
+    --
+    -- For a live query/streaming subscription, this can itself be called
+    -- more than once for the same operation: a poll that was already
+    -- in-flight when an earlier call tore the operation down (removed it
+    -- from 'opMap') can still land its own write attempt afterward -- see
+    -- 'onChange'. To avoid re-notifying (a spurious second error+complete)
+    -- for that dangling/straggler call, 'claimAndStopSubscription' does the
+    -- lookup-and-delete as a single atomic transaction and reports whether
+    -- *this* call was the one that found (and removed) the entry --
+    -- notification only happens then, making this a no-op for the
+    -- straggler's call (or for a concurrent 'stopOperation'/'onClose'). A
+    -- one-shot query/mutation is never tracked in 'opMap' at all (no
+    -- poller, so no straggler is possible), so it always notifies
+    -- unconditionally.
+    cancelOperationOnOvercapacity :: Bool -> IO GranularPrometheusMetricsState -> Maybe ES.CursorVariableValues -> IO ()
+    cancelOperationOnOvercapacity isSubscriptionOp granularPrometheusMetricsState resumeCursor = do
+      shouldNotify <-
+        if isSubscriptionOp
+          then claimAndStopSubscription logger serverMetrics prometheusMetrics subscriptionsState wsConn granularPrometheusMetricsState opId
+          else pure True
+      when shouldNotify do
+        let errFn = getErrFn errRespTy
+            err = case errRespTy of
+              ERTLegacy -> errFn HideInternalErrors overcapacityErr
+              ERTGraphqlCompliant -> fmtErrorMessage [errFn HideInternalErrors overcapacityErr]
+        sendControlMsg wsConn $ SMErr $ ErrorMsg opId err
+        sendControlMsg wsConn $ SMComplete $ CompletionMsg opId
+      where
+        -- The cursor value the client should use as this operation's
+        -- cursor's @initial_value@ to resume from exactly where results
+        -- were lost, for a streaming subscription. Included both as plain
+        -- text (works for every error response type) and, for
+        -- 'ERTGraphqlCompliant', as structured 'extensions' data too --
+        -- 'ERTLegacy's encoding unfortunately has no way to carry that
+        -- through.
+        overcapacityErr =
+          (err500 Unexpected message)
+            { qeInternal = ExtraExtensions . resumeCursorExtensions <$> resumeCursor
+            }
+          where
+            message =
+              "This operation's result could not be delivered because the connection's send queue was at capacity, "
+                <> "so it has been stopped. Please retry"
+                <> case resumeCursor of
+                  Nothing -> "."
+                  Just cursor ->
+                    ", using this cursor as the initial_value to resume from exactly where results were lost: "
+                      <> TE.decodeUtf8 (LBS.toStrict (J.encode cursor))
+                      <> "."
+            resumeCursorExtensions cursor =
+              J.object
+                [ "path" J..= ("$" :: T.Text),
+                  "code" J..= J.toJSON Unexpected,
+                  "resume_cursor" J..= cursor
+                ]
 
     sendSuccResp ::
       EncJSON ->
       Maybe OperationName ->
       ParameterizedQueryHash ->
+      IO GranularPrometheusMetricsState ->
       ES.SubscriptionMetadata ->
       ExceptT () m ()
-    sendSuccResp encJson opName queryHash =
+    sendSuccResp encJson opName queryHash granularPrometheusMetricsState =
       sendMsgWithMetadata
-        wsConn
+        False
+        Nothing
+        granularPrometheusMetricsState
         (sendDataMsg $ DataMsg opId $ pure $ encJToLBS encJson)
         opName
         (Just queryHash)
@@ -1003,7 +1108,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
               requestId
               liveQueryPlan
               granularPrometheusMetricsState
-              (onChange opName parameterizedQueryHash $ ES._sqpNamespace liveQueryPlan)
+              (onChange granularPrometheusMetricsState opName parameterizedQueryHash $ ES._sqpNamespace liveQueryPlan)
               modifier
               modelInfo
               modelInfoLogStatus
@@ -1037,7 +1142,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
             (_rfaAlias rootFieldName)
             streamQueryPlan
             granularPrometheusMetricsState
-            (onChange opName parameterizedQueryHash $ ES._sqpNamespace streamQueryPlan)
+            (onChange granularPrometheusMetricsState opName parameterizedQueryHash $ ES._sqpNamespace streamQueryPlan)
             modifier
             modelInfo
             modelInfoLogStatus
@@ -1049,22 +1154,35 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
       pure ()
 
     -- on change, send message on the websocket
-    onChange :: Maybe OperationName -> ParameterizedQueryHash -> Maybe Name -> ES.OnChange
-    onChange opName queryHash namespace = \case
-      Right (ES.SubscriptionResponse bs dTime) ->
-        sendMsgWithMetadata
-          wsConn
-          (sendDataMsg $ DataMsg opId $ pure $ maybe LBS.fromStrict wrapNamespace namespace bs)
-          opName
-          (Just queryHash)
-          (ES.SubscriptionMetadata dTime)
-      resp ->
-        sendMsg wsConn
-          $ sendDataMsg
-          $ DataMsg opId
-          $ LBS.fromStrict
-          . ES._lqrPayload
-          <$> resp
+    --
+    -- Guards against a dangling/straggler poll: 'removeLiveQuery'/
+    -- 'removeStreamingQuery' stop the poller and remove 'opId' from
+    -- 'opMap', but a poll that was already in-flight past its cohort
+    -- snapshot when that happened can still call this once afterward. If
+    -- 'opId' is no longer in 'opMap', the operation has already been
+    -- cancelled or completed, so this drops the push entirely instead of
+    -- risking a stray data message (or error+complete) arriving after the
+    -- client was already told the operation is done.
+    onChange :: IO GranularPrometheusMetricsState -> Maybe OperationName -> ParameterizedQueryHash -> Maybe Name -> ES.OnChange
+    onChange granularPrometheusMetricsState opName queryHash namespace response = do
+      stillLive <- STM.atomically $ STMMap.lookup opId opMap
+      when (isJust stillLive) $ case response of
+        Right (ES.SubscriptionResponse bs dTime resumeCursor) ->
+          sendMsgWithMetadata
+            True
+            resumeCursor
+            granularPrometheusMetricsState
+            (sendDataMsg $ DataMsg opId $ pure $ maybe LBS.fromStrict wrapNamespace namespace bs)
+            opName
+            (Just queryHash)
+            (ES.SubscriptionMetadata dTime)
+        resp ->
+          sendControlMsg wsConn
+            $ sendDataMsg
+            $ DataMsg opId
+            $ LBS.fromStrict
+            . ES._lqrPayload
+            <$> resp
 
     -- If the source has a namespace then we need to wrap the response
     -- from the DB in that namespace.
@@ -1169,7 +1287,7 @@ onMessage enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions agen
 
 onPing :: (MonadIO m) => WSConn -> Maybe PingPongPayload -> m ()
 onPing wsConn mPayload =
-  liftIO $ sendMsg wsConn (SMPong mPayload)
+  liftIO $ sendControlMsg wsConn (SMPong mPayload)
 
 onStop :: (Tracing.MonadTraceContext m, MonadIO m) => WSServerEnv impl -> WSConn -> StopMsg -> IO GranularPrometheusMetricsState -> m ()
 onStop serverEnv wsConn (StopMsg opId) granularPrometheusMetricsState = do
@@ -1191,22 +1309,16 @@ onStop serverEnv wsConn (StopMsg opId) granularPrometheusMetricsState = do
 
 stopOperation :: (MonadIO m) => WSServerEnv impl -> WSConn -> OperationId -> IO GranularPrometheusMetricsState -> m () -> m ()
 stopOperation serverEnv wsConn opId granularPrometheusMetricsState logWhenOpNotExist = do
-  opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
-  case opM of
-    Just (subscriberDetails, operationName) -> do
-      liftIO $ logWSEvent logger wsConn $ EOperation $ opDet operationName
-      case subscriberDetails of
-        LiveQuerySubscriber lqId ->
-          liftIO $ ES.removeLiveQuery logger (_wseServerMetrics serverEnv) (_wsePrometheusMetrics serverEnv) subscriptionState lqId granularPrometheusMetricsState operationName
-        StreamingQuerySubscriber streamSubscriberId ->
-          liftIO $ ES.removeStreamingQuery logger (_wseServerMetrics serverEnv) (_wsePrometheusMetrics serverEnv) subscriptionState streamSubscriberId granularPrometheusMetricsState operationName
-    Nothing -> logWhenOpNotExist
-  liftIO $ STM.atomically $ STMMap.delete opId opMap
+  -- 'claimAndStopSubscription' does the lookup-and-delete as one atomic
+  -- transaction, so this races safely against a concurrent
+  -- 'Hasura.GraphQL.Transport.WebSocket.cancelOperationOnOvercapacity' or
+  -- 'onClose' for the same opId -- STM's serialization of transactions
+  -- touching the same key guarantees only whichever commits first observes
+  -- 'Just' and does the teardown.
+  found <- liftIO $ claimAndStopSubscription logger (_wseServerMetrics serverEnv) (_wsePrometheusMetrics serverEnv) (_wseSubscriptionState serverEnv) wsConn granularPrometheusMetricsState opId
+  unless found logWhenOpNotExist
   where
     logger = _wseLogger serverEnv
-    subscriptionState = _wseSubscriptionState serverEnv
-    opMap = _wscOpMap $ WS.getData wsConn
-    opDet n = OperationDetails opId Nothing n ODStopped Nothing Nothing
 
 onConnInit ::
   (MonadIO m, UserAuthentication m) =>
@@ -1255,7 +1367,7 @@ onConnInit logger manager wsConn getAuthMode connParamsM onConnInitErrAction kee
             STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) csInit
           -- mark the connection as initialised in the connection
           liftIO $ WS.setConnInitialized wsConn
-          sendMsg wsConn SMConnAck
+          sendControlMsg wsConn SMConnAck
           liftIO $ keepAliveMessageAction wsConn
   where
     unexpectedInitError e = do
@@ -1280,6 +1392,41 @@ onConnInit logger manager wsConn getAuthMode connParamsM onConnInitErrAction kee
       CSNotInitialised h _ -> unWsHeaders h
       _ -> []
 
+-- | Atomically claims 'opId': looks it up in the connection's 'OperationMap'
+-- and, if present, removes it in the same transaction, tears its poller
+-- down (if it's a live query or streaming subscription), and logs it as
+-- stopped. Returns 'True' if this call is the one that found (and removed)
+-- the entry, 'False' if some concurrently-racing claimant already did --
+-- e.g. a straggler poll's
+-- 'Hasura.GraphQL.Transport.WebSocket.cancelOperationOnOvercapacity', a
+-- client 'stop' via 'stopOperation', or a concurrent 'onClose' -- in which
+-- case this is a no-op. Callers race safely against each other precisely
+-- because the lookup-and-delete is one atomic transaction: STM's
+-- serialization of transactions touching the same key guarantees only
+-- whichever commits first ever observes 'Just'.
+claimAndStopSubscription ::
+  L.Logger L.Hasura ->
+  ServerMetrics ->
+  PrometheusMetrics ->
+  ES.SubscriptionsState ->
+  WSConn ->
+  IO GranularPrometheusMetricsState ->
+  OperationId ->
+  IO Bool
+claimAndStopSubscription logger serverMetrics prometheusMetrics subscriptionsState wsConn granularPrometheusMetricsState opId = do
+  opM <- STM.atomically $ do
+    m <- STMMap.lookup opId opMap
+    for_ m $ \_ -> STMMap.delete opId opMap
+    pure m
+  for_ opM $ \(subscriberDetails, operationName) -> do
+    logWSEvent logger wsConn $ EOperation $ OperationDetails opId Nothing operationName ODStopped Nothing Nothing
+    case subscriberDetails of
+      LiveQuerySubscriber lqId -> ES.removeLiveQuery logger serverMetrics prometheusMetrics subscriptionsState lqId granularPrometheusMetricsState operationName
+      StreamingQuerySubscriber streamSubscriberId -> ES.removeStreamingQuery logger serverMetrics prometheusMetrics subscriptionsState streamSubscriberId granularPrometheusMetricsState operationName
+  pure $ isJust opM
+  where
+    opMap = _wscOpMap $ WS.getData wsConn
+
 onClose ::
   (MonadIO m) =>
   L.Logger L.Hasura ->
@@ -1291,13 +1438,15 @@ onClose ::
   m ()
 onClose logger serverMetrics prometheusMetrics subscriptionsState wsConn granularPrometheusMetricsState = do
   logWSEvent logger wsConn EClosed
-  operations <- liftIO $ STM.atomically $ ListT.toList $ STMMap.listT opMap
+  -- Snapshotting all opIds and then acting on each isn't itself atomic with
+  -- that snapshot, so a concurrent 'stopOperation' or
+  -- 'cancelOperationOnOvercapacity' could race to remove the same opId --
+  -- 'claimAndStopSubscription' re-claims each one individually so only
+  -- whichever side wins actually tears it down.
+  opIds <- liftIO $ STM.atomically $ map fst <$> ListT.toList (STMMap.listT opMap)
   liftIO
-    $ for_ operations
-    $ \(_, (subscriber, operationName)) ->
-      case subscriber of
-        LiveQuerySubscriber lqId -> ES.removeLiveQuery logger serverMetrics prometheusMetrics subscriptionsState lqId granularPrometheusMetricsState operationName
-        StreamingQuerySubscriber streamSubscriberId -> ES.removeStreamingQuery logger serverMetrics prometheusMetrics subscriptionsState streamSubscriberId granularPrometheusMetricsState operationName
+    $ for_ opIds
+    $ void . claimAndStopSubscription logger serverMetrics prometheusMetrics subscriptionsState wsConn granularPrometheusMetricsState
   where
     opMap = _wscOpMap $ WS.getData wsConn
 

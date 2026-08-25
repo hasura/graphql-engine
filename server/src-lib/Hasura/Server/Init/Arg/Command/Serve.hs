@@ -1262,9 +1262,9 @@ parseWebSocketQueueSize =
 webSocketQueueSizeOption :: Config.Option (Refined Positive Int)
 webSocketQueueSizeOption =
   Config.Option
-    { Config._default = $$(refineTH @Positive @Int 100),
+    { Config._default = $$(refineTH @Positive @Int 300),
       Config._envVar = "HASURA_GRAPHQL_WEBSOCKET_QUEUE_SIZE",
-      Config._helpMessage = "Max number of messages buffered per WebSocket connection before older messages are dropped (default: 100; default: 1000 when streaming subscriptions are enabled via HASURA_GRAPHQL_EXPERIMENTAL_FEATURES; minimum: 1)"
+      Config._helpMessage = "Max number of subscription-result/query-result messages buffered per WebSocket connection before the operation responsible is cancelled instead (default: 300; minimum: 1). Control messages (completions, errors, etc.) are never subject to this limit."
     }
 
 parseEnableMetadataQueryLogging :: Opt.Parser Server.Logging.MetadataQueryLoggingMode

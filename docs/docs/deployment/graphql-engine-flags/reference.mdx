@@ -1498,35 +1498,59 @@ Used to set the connection initialization timeout for GraphQL subscription proto
 
 ### Websocket Queue Size
 
-Sets the maximum number of messages buffered per WebSocket connection before older messages are dropped to make room for
-newer ones. The primary purpose is to bound memory usage when a subscriber is slow to consume messages — without a
-limit, a stalled or slow client can cause unbounded memory growth on the server as subscription results accumulate.
+Sets the maximum number of subscription-result and query-result messages buffered per WebSocket connection. The
+primary purpose is to bound memory usage when a subscriber is slow to consume messages — without a limit, a stalled
+or slow client can cause unbounded memory growth on the server as results accumulate.
 
-When the queue is full, the oldest undelivered message is evicted and the newest message takes its place. The
-`hasura_websocket_messages_evicted_total` Prometheus metric counts these evictions; pairing it with
-`hasura_websocket_messages_queued_total` gives the eviction rate as a fraction of total sends.
+Unlike a simple bounded buffer, nothing already queued is ever silently dropped to make room for newer messages. When
+the queue is at capacity, a new result for an operation isn't enqueued at all: that operation is stopped instead, and
+the client receives an explicit `error` followed by a `complete` telling it to retry (a one-shot query or mutation)
+or resubscribe (a live query or streaming subscription). This applies uniformly to every operation kind, including
+live queries: it's only correct to skip a live query's update when a _newer_ one supersedes it. If the connection
+stayed overloaded indefinitely, a subscriber could otherwise be stuck on stale data forever with no indication
+anything was wrong — resubscribing re-fetches the current state immediately, so nothing is permanently missed.
+
+Control/signal messages (completions, errors, connection acks, pongs) are never subject to this limit — they always
+succeed, so the queue's true depth can exceed this setting slightly under sustained overcapacity, bounded by however
+many operations are concurrently being stopped this way, not unbounded.
+
+The `hasura_websocket_messages_dropped_total` Prometheus metric counts how many times a data message couldn't be
+enqueued this way; pairing it with `hasura_websocket_messages_queued_total` gives the drop rate as a fraction of
+total sends.
 
 **Interaction with poll interval:** A slow subscriber is most likely to overflow the queue when the subscription poll
 interval is short relative to the client's consumption rate. If you lower
 `HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL`, consider whether clients can keep up, and tune this queue
 size accordingly.
 
-**Setting the queue size to `1`** means a subscriber always receives the most recently computed result and never holds
-stale intermediate values in memory. This is safe for live query subscriptions, where the guarantee is only _eventual
-consistency_ with the current database state — missing intermediate values is by design.
+**Streaming subscriptions:** Streaming queries present results as an ordered sequence of elements and rely on
+cursor-based pagination to make progress, so the error a client receives on overcapacity also includes, in its
+`extensions.resume_cursor` field, the cursor value to resubscribe with in order to resume from exactly where it left
+off — no data is skipped or duplicated. Streaming subscriptions require the `streaming_subscriptions` experimental
+feature flag:
 
-**Streaming subscriptions:** Overflow has a stronger impact here. Streaming queries present results as an ordered
-sequence of elements and rely on cursor-based pagination to make progress; a dropped message means a gap in that
-sequence that cannot be recovered. Use a larger queue size (or increase the poll interval) if streaming query clients
-may be slow consumers. Streaming subscriptions require the `streaming_subscriptions` experimental feature flag.
+    {
+      "errors": [
+        {
+          "message": "This operation's result could not be delivered because the connection's send queue was at capacity, so it has been stopped. Please retry, using this cursor as the initial_value to resume from exactly where results were lost: {\"TrackId\":\"1328\"}.",
+          "extensions": {
+            "code": "unexpected",
+            "path": "$",
+            "resume_cursor": {
+              "TrackId": "1328"
+            }
+          }
+        }
+      ]
+    }
 
-|                     |                                                                                                    |
-| ------------------- | -------------------------------------------------------------------------------------------------- |
-| **Flag**            | `--websocket-queue-size <SIZE>`                                                                    |
-| **Env var**         | `HASURA_GRAPHQL_WEBSOCKET_QUEUE_SIZE`                                                              |
-| **Accepted values** | Integer (must be at least `1`)                                                                     |
-| **Default**         | `100`; `1000` when `streaming_subscriptions` is enabled via `HASURA_GRAPHQL_EXPERIMENTAL_FEATURES` |
-| **Supported in**    | CE, Enterprise Edition, Cloud                                                                      |
+|                     |                                 |
+| ------------------- | ------------------------------- |
+| **Flag**            | `--websocket-queue-size <SIZE>` |
+| **Env var**         | `HASURA_GRAPHQL_WEBSOCKET_QUEUE_SIZE` |
+| **Accepted values** | Integer (must be at least `1`) |
+| **Default**         | `300`                           |
+| **Supported in**    | CE, Enterprise Edition, Cloud   |
 
 ### Websocket Keepalive
 
