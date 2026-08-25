@@ -82,10 +82,20 @@ data PrometheusMetrics = PrometheusMetrics
     pmSubscriptionMetrics :: SubscriptionMetrics,
     pmWebsocketMsgQueueTimeSeconds :: Histogram,
     pmWebsocketMsgWriteTimeSeconds :: Histogram,
-    -- | Total messages enqueued via sendMsg (including evictions).
+    -- | Total data and control messages successfully enqueued for sending
+    -- over a websocket connection. Excludes keepalive traffic
+    -- ('SMConnKeepAlive'/'SMPing'), which is coalesced into a single-slot
+    -- mailbox rather than queued, so counting it here wouldn't mean
+    -- "messages queued" in the same sense as everything else.
     pmWebsocketMsgQueued :: Counter,
-    -- | Messages evicted from a full send queue to make room for a newer message.
-    pmWebsocketMsgEvicted :: Counter,
+    -- | Data messages that could not be enqueued because the connection's
+    -- send queue was at capacity. Never includes control/signal messages
+    -- (completions, errors, acks, pongs), which always succeed -- see
+    -- 'Hasura.GraphQL.Transport.WebSocket.Server.sendMsgUnconditional'.
+    -- Unlike the old evicted-message metric this replaces, nothing is ever
+    -- silently dropped: the caller is expected to notify the client (and,
+    -- for subscriptions, tear down the operation) whenever this increments.
+    pmWebsocketMsgDropped :: Counter,
     pmCacheRequestMetrics :: CacheRequestMetrics,
     pmOpenTelemetryMetrics :: OpenTelemetryMetrics
   }
@@ -169,7 +179,7 @@ makeDummyPrometheusMetrics = do
   pmWebsocketMsgQueueTimeSeconds <- Histogram.new []
   pmWebsocketMsgWriteTimeSeconds <- Histogram.new []
   pmWebsocketMsgQueued <- Counter.new
-  pmWebsocketMsgEvicted <- Counter.new
+  pmWebsocketMsgDropped <- Counter.new
   pmCacheRequestMetrics <- makeDummyCacheRequestMetrics
   pmOpenTelemetryMetrics <- makeDummyOpenTelemetryMetrics
   pure PrometheusMetrics {..}

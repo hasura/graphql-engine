@@ -11,7 +11,7 @@ module Hasura.GraphQL.Transport.WebSocket.Server
     WSConn,
     WSErrorMessage (..),
     WSEvent (EMessageSent),
-    WSEventInfo (WSEventInfo, _wseiEventType, _wseiOperationId, _wseiOperationName, _wseiParameterizedQueryHash, _wseiQueryExecutionTime, _wseiResponseSize),
+    WSEventInfo (WSEventInfo, _wseiEventType, _wseiOperationId, _wseiOperationName, _wseiParameterizedQueryHash, _wseiQueryExecutionTime, _wseiResponseSize, _wseiStreamingResumeCursor),
     WSHandlers (WSHandlers),
     WSId,
     WSKeepAliveMessageAction,
@@ -31,6 +31,8 @@ module Hasura.GraphQL.Transport.WebSocket.Server
     setConnInitialized,
     mkWSServerErrorCode,
     sendMsg,
+    sendMsgUnconditional,
+    sendMsgKeepAlive,
     shutdown,
 
     -- * exported for testing
@@ -75,7 +77,7 @@ import Hasura.Server.Prometheus
   ( DynamicGraphqlOperationLabel (..),
     PrometheusMetrics (..),
     recordMetricWithLabel,
-    pmWebsocketMsgEvicted,
+    pmWebsocketMsgDropped,
     pmWebsocketMsgQueued,
   )
 import Hasura.Server.Types (ExperimentalFeature (..), MonadGetPolicies (runGetPrometheusMetricsGranularity))
@@ -138,7 +140,15 @@ data WSEventInfo = WSEventInfo
     _wseiOperationName :: !(Maybe OperationName),
     _wseiQueryExecutionTime :: !(Maybe Double),
     _wseiResponseSize :: !(Maybe Int64),
-    _wseiParameterizedQueryHash :: !(Maybe ParameterizedQueryHash)
+    _wseiParameterizedQueryHash :: !(Maybe ParameterizedQueryHash),
+    -- | For a streaming subscription's data push: the cursor value in effect
+    -- just before the poll that produced it, i.e. what the client should use
+    -- as this batch's cursor's @initial_value@ to resume from exactly this
+    -- point if the connection's send queue is ever too full to accept this
+    -- operation's data (see
+    -- 'Hasura.GraphQL.Transport.WebSocket.cancelOperationOnOvercapacity').
+    -- 'Nothing' for everything else.
+    _wseiStreamingResumeCursor :: !(Maybe J.Value)
   }
   deriving (Show, Eq)
 
@@ -203,7 +213,29 @@ data WSConn a = WSConn
   { _wcConnId :: !WSId,
     _wcLogger :: !(L.Logger L.Hasura),
     _wcConnRaw :: !WS.Connection,
-    _wcSendQ :: !(STM.TBQueue WSQueueResponse),
+    -- | The main send queue. Never evicts: once '_wcMainQCount' reaches
+    -- '_wcMainQCapacity', 'sendMsg' rejects further data instead, and it's
+    -- up to the caller to write a cancellation message for the operation
+    -- that tried to write (via 'sendMsgUnconditional', which always
+    -- succeeds) instead of the data. That cancellation message, and any
+    -- other control message, is what's allowed to push the queue's true
+    -- depth beyond '_wcMainQCapacity' -- bounded by however many operations
+    -- are concurrently active on the connection, not unbounded.
+    _wcMainQ :: !(STM.TQueue WSQueueResponse),
+    -- | Tracks '_wcMainQ's current depth, since 'STM.TQueue' has no O(1)
+    -- length. Every write to '_wcMainQ' (whether via 'sendMsg' or
+    -- 'sendMsgUnconditional') must increment this in the same transaction,
+    -- and every read in the send loop must decrement it likewise.
+    _wcMainQCount :: !(STM.TVar Int),
+    _wcMainQCapacity :: !Int,
+    -- | A single-slot, coalescing "queue" for keepalive traffic
+    -- ('SMConnKeepAlive'/'SMPing') only. Keepalives carry no information of
+    -- their own and are always superseded by the next tick, so a new one
+    -- can simply overwrite any not-yet-sent one -- and, more importantly,
+    -- they never compete with real messages for '_wcMainQ's capacity. The
+    -- send loop only drains this when '_wcMainQ' is empty, so keepalive
+    -- traffic never delays a real message either.
+    _wcKeepAliveSlot :: !(STM.TMVar WSQueueResponse),
     _wsConnInitTimer :: !WSConnInitTimeout,
     _wcExtraData :: !a,
     _wcPrometheusMetrics :: !PrometheusMetrics
@@ -241,22 +273,54 @@ sendMsgAndCloseConn wsConn errCode bs serverErr = do
   WS.sendTextData (_wcConnRaw wsConn) (encodeServerMsg serverErr)
   WS.sendCloseCode (_wcConnRaw wsConn) errCode bs
 
--- writes to a queue instead of the raw connection
--- so that sendMsg doesn't block
-sendMsg :: WSConn a -> WSQueueResponse -> IO ()
-sendMsg WSConn{_wcSendQ, _wcPrometheusMetrics} !resp = do
+-- | Writes data to the main queue instead of the raw connection, so sending
+-- doesn't block -- unless the queue is already at capacity, in which case
+-- this rejects the write (returning 'False') rather than evicting anything
+-- already queued. Callers are expected to react to a 'False' result by
+-- writing a cancellation message for whichever operation this data belonged
+-- to via 'sendMsgUnconditional' instead (see
+-- 'Hasura.GraphQL.Transport.WebSocket.cancelOperationOnOvercapacity']),
+-- since a client waiting on data that will now never arrive is worse than
+-- one told explicitly to retry.
+sendMsg :: WSConn a -> WSQueueResponse -> IO Bool
+sendMsg WSConn{_wcMainQ, _wcMainQCount, _wcMainQCapacity, _wcPrometheusMetrics} !resp = do
   $assertNFHere resp -- so we don't write thunks to mutable vars
-  -- non-blocking push that pops the oldest if full
-  didEvict <- STM.atomically $ do
-    full <- STM.isFullTBQueue _wcSendQ
-    when full $ do
-      -- make room, sanity checking an invariant while here
-      oldest <- STM.tryReadTBQueue _wcSendQ
-      when (isNothing oldest) $ error "impossible: wsQueueSize <1, input validation broken"
-    STM.writeTBQueue _wcSendQ resp
-    pure full
+  accepted <- STM.atomically $ do
+    count <- STM.readTVar _wcMainQCount
+    if count >= _wcMainQCapacity
+      then pure False
+      else do
+        STM.writeTQueue _wcMainQ resp
+        STM.writeTVar _wcMainQCount (count + 1)
+        pure True
+  if accepted
+    then Prometheus.Counter.inc (pmWebsocketMsgQueued _wcPrometheusMetrics)
+    else Prometheus.Counter.inc (pmWebsocketMsgDropped _wcPrometheusMetrics)
+  pure accepted
+
+-- | Like 'sendMsg', but always succeeds, regardless of the main queue's
+-- current depth -- for control/signal messages (completions, errors,
+-- connection acks, pongs) which must never be silently dropped, and are
+-- small and bounded in number (at most a handful per operation lifecycle),
+-- unlike the data traffic 'sendMsg' guards.
+sendMsgUnconditional :: WSConn a -> WSQueueResponse -> IO ()
+sendMsgUnconditional WSConn{_wcMainQ, _wcMainQCount, _wcPrometheusMetrics} !resp = do
+  $assertNFHere resp -- so we don't write thunks to mutable vars
+  STM.atomically $ do
+    STM.writeTQueue _wcMainQ resp
+    STM.modifyTVar' _wcMainQCount (+ 1)
   Prometheus.Counter.inc (pmWebsocketMsgQueued _wcPrometheusMetrics)
-  when didEvict $ Prometheus.Counter.inc (pmWebsocketMsgEvicted _wcPrometheusMetrics)
+
+-- | For keepalive traffic ('SMConnKeepAlive'/'SMPing') only: writes to the
+-- single-slot, coalescing '_wcKeepAliveSlot' instead of '_wcMainQ', so a
+-- keepalive tick never competes with real messages for queue capacity.
+-- Overwrites any not-yet-sent keepalive rather than blocking or queuing a
+-- second one -- they're fully interchangeable, so only the latest is ever
+-- worth keeping.
+sendMsgKeepAlive :: WSConn a -> WSQueueResponse -> IO ()
+sendMsgKeepAlive WSConn{_wcKeepAliveSlot} !resp = do
+  $assertNFHere resp -- so we don't write thunks to mutable vars
+  STM.atomically $ STM.writeTMVar _wcKeepAliveSlot resp
 
 type ConnMap a = STMMap.Map WSId (WSConn a)
 
@@ -614,8 +678,10 @@ createServerApp getMetricsConfig wsConnInitTimeout wsQueueSize (WSServer logger@
     onAccept wsConnInitTimer wsId (AcceptWith a acceptWithParams keepAlive onJwtExpiry) = do
       conn <- liftIO $ WS.acceptRequestWith pendingConn acceptWithParams
       logWSLog logger $ WSLog wsId EAccepted Nothing
-      sendQ <- liftIO $ STM.newTBQueueIO (fromIntegral (unrefine wsQueueSize))
-      let !wsConn = WSConn wsId logger conn sendQ wsConnInitTimer a prometheusMetrics
+      mainQ <- liftIO STM.newTQueueIO
+      mainQCount <- liftIO $ STM.newTVarIO 0
+      keepAliveSlot <- liftIO STM.newEmptyTMVarIO
+      let !wsConn = WSConn wsId logger conn mainQ mainQCount (fromIntegral (unrefine wsQueueSize)) keepAliveSlot wsConnInitTimer a prometheusMetrics
       -- TODO there are many thunks here. Difficult to trace how much is retained, and
       --      how much of that would be shared anyway.
       --      Requires a fork of 'wai-websockets' and 'websockets', it looks like.
@@ -673,7 +739,18 @@ createServerApp getMetricsConfig wsConnInitTimeout wsQueueSize (WSServer logger@
             let send = do
                   labelMe "WebSocket send"
                   forever $ do
-                    WSQueueResponse msg wsInfo wsTimer <- liftIO $ STM.atomically $ STM.readTBQueue sendQ
+                    -- mainQ is always drained first: keepAliveSlot is only
+                    -- ever read once mainQ is empty, so keepalive traffic
+                    -- can never delay a real message.
+                    WSQueueResponse msg wsInfo wsTimer <-
+                      liftIO
+                        $ STM.atomically
+                        $ ( do
+                              resp <- STM.readTQueue mainQ
+                              STM.modifyTVar' mainQCount (subtract 1)
+                              pure resp
+                          )
+                        `STM.orElse` STM.takeTMVar keepAliveSlot
                     messageQueueTime <- liftIO $ realToFrac <$> wsTimer
                     (messageWriteTime, _) <- liftIO $ withElapsedTime $ WS.sendTextData conn msg
                     let messageLength = BL.length msg

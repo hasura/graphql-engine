@@ -160,7 +160,7 @@ mkWSActions logger subProtocol =
     fmtErrorMessage
   where
     mkPostExecErrMessageAction wsConn opId execErr =
-      sendMsg wsConn $ case subProtocol of
+      sendControlMsg wsConn $ case subProtocol of
         Apollo -> SMData $ DataMsg opId $ throwError execErr
         GraphQLWS -> SMErr $ ErrorMsg opId $ encodeGQExecError execErr
 
@@ -169,7 +169,7 @@ mkWSActions logger subProtocol =
         Apollo ->
           case mErrMsg of
             WS.ConnInitFailed -> sendCloseWithMsg logger wsConn (WS.mkWSServerErrorCode subProtocol mErrMsg err) (Just $ SMConnErr err) Nothing
-            WS.ClientMessageParseFailed -> sendMsg wsConn $ SMConnErr err
+            WS.ClientMessageParseFailed -> sendControlMsg wsConn $ SMConnErr err
         GraphQLWS -> sendCloseWithMsg logger wsConn (WS.mkWSServerErrorCode subProtocol mErrMsg err) Nothing Nothing
 
     mkConnectionCloseAction wsConn opId errMsg =
@@ -180,7 +180,7 @@ mkWSActions logger subProtocol =
       Apollo -> SMData
       GraphQLWS -> SMNext
 
-    keepAliveAction wsConn = sendMsg wsConn
+    keepAliveAction wsConn = sendKeepAliveMsg wsConn
       $ case subProtocol of
         Apollo -> SMConnKeepAlive
         GraphQLWS -> SMPing . Just $ keepAliveMessage
