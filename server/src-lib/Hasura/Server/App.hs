@@ -334,7 +334,7 @@ mkSpockAction ::
 mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
   AppEnv {..} <- lift askAppEnv
   AppContext {..} <- liftIO $ getAppContext appStateRef
-  SchemaCache {..} <- liftIO $ getSchemaCache appStateRef
+  SchemaCache {scOpenTelemetryConfig} <- liftIO $ getSchemaCache appStateRef
   req <- Spock.request
   let origHeaders = Wai.requestHeaders req
       ipAddress = Wai.getSourceFromFallback req
@@ -985,8 +985,6 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore closeWebsocketsOn
     setHeader jsonHeader
     Spock.lazyBytes $ encode $ object $ ["version" .= currentVersion] <> extraData
 
-  responseErrorsConfig <- liftIO $ acResponseInternalErrorsConfig <$> getAppContext appStateRef
-
   let customEndpointHandler ::
         RestRequest Spock.SpockMethod ->
         Handler m (HttpLogGraphQLInfo, APIResp)
@@ -1009,7 +1007,7 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore closeWebsocketsOn
               Spock.PATCH -> pure EP.PATCH
               other -> throw400 BadRequest $ "Method " <> tshow other <> " not supported."
             _ -> throw400 BadRequest $ "Nonstandard method not allowed for REST endpoints"
-        fmap JSONResp <$> runCustomEndpoint acEnvironment acSQLGenCtx schemaCache acEnableAllowlist appEnvEnableReadOnlyMode acRemoteSchemaResponsePriority acHeaderPrecedence acRedactActionHandlerLogs acTraceQueryStatus appEnvPrometheusMetrics (_lsLogger appEnvLoggers) appEnvLicenseKeyCache requestId userInfo reqHeaders ipAddress req endpoints responseErrorsConfig
+        fmap JSONResp <$> runCustomEndpoint acEnvironment acSQLGenCtx schemaCache acEnableAllowlist appEnvEnableReadOnlyMode acRemoteSchemaResponsePriority acHeaderPrecedence acRedactActionHandlerLogs acTraceQueryStatus appEnvPrometheusMetrics (_lsLogger appEnvLoggers) appEnvLicenseKeyCache requestId userInfo reqHeaders ipAddress req endpoints acResponseInternalErrorsConfig
 
   -- See Issue #291 for discussion around restified feature
   Spock.hookRouteAll ("api" <//> "rest" <//> Spock.wildcard) $ \wildcard -> do
