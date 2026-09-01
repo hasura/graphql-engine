@@ -1120,7 +1120,9 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
   -- Log Warning if deprecated environment variables are used
   sources <- scSources <$> liftIO (getSchemaCache appStateRef)
   -- TODO: naveen: send IO to logDeprecatedEnvVars
-  AppContext {..} <- liftIO $ getAppContext appStateRef
+  -- NOTE!: make sure not to close over any other fields here in the forked
+  -- thread bodies below, or risk retaining memory:
+  AppContext {acEnvironment} <- liftIO $ getAppContext appStateRef
   liftIO $ logDeprecatedEnvVars logger acEnvironment sources
 
   -- log inconsistent schema objects
@@ -1322,15 +1324,21 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
 
     startEventTriggerPollerThread logger lockedEventsCtx = do
       AppEnv {..} <- lift askAppEnv
-      schemaCache <- liftIO $ getSchemaCache appStateRef
-      let allSources = HashMap.elems $ scSources schemaCache
       activeEventProcessingThreads <- liftIO $ newTVarIO 0
       appCtx <- liftIO $ getAppContext appStateRef
       let fetchInterval = _eeCtxFetchInterval $ acEventEngineCtx appCtx
           fetchBatchSize = _eeCtxFetchSize $ acEventEngineCtx appCtx
       unless (unrefine fetchBatchSize == 0 || fetchInterval == 0) $ do
         -- Initialise the event processing thread
-        let eventsGracefulShutdownAction =
+        let eventsGracefulShutdownAction = do
+              -- Re-fetch the current sources here, rather than closing over
+              -- the schema cache that was live when this thread started:
+              -- this action is only ever invoked (much later) at actual
+              -- server shutdown, so using a boot-time snapshot would both
+              -- use a stale source list and -- since it's captured in this
+              -- long-lived thread's shutdown handler -- pin that whole
+              -- schema cache generation alive for the life of the process.
+              allSources <- HashMap.elems . scSources <$> getSchemaCache appStateRef
               waitForProcessingAction
                 logger
                 "event_triggers"
