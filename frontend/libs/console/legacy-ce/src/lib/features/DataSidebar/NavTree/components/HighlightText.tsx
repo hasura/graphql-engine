@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import escapeRegExp from 'lodash/escapeRegExp';
 
 export const HighlightText = ({
   text,
@@ -17,8 +18,10 @@ export const HighlightText = ({
 
   if (!highlightedText) return <div {...containerProps}>{text}</div>;
 
+  // the search term is typed by the user, so it has to be escaped before being
+  // used in a RegExp, otherwise metacharacters like `(` throw a SyntaxError
   const splitText = text
-    .split(new RegExp(`(${highlightedText})`, 'gi'))
+    .split(new RegExp(`(${escapeRegExp(highlightedText)})`, 'gi'))
     .filter(Boolean);
 
   return (

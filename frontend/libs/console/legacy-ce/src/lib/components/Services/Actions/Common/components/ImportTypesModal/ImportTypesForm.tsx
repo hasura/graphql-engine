@@ -26,16 +26,19 @@ const filterItemsBySearch = (searchQuery: string, itemList: string[]) => {
       caseAgnosticResults.push(item);
     }
   });
+  // the results are sorted by how early the search query appears in the type
+  // name. `indexOf` is used instead of `search`, since `search` coerces its
+  // argument to a RegExp and therefore throws on queries containing
+  // metacharacters
   return [
-    ...caseSensitiveResults.sort((item1, item2) => {
-      return item1.search(searchQuery) > item2.search(searchQuery) ? 1 : -1;
-    }),
-    ...caseAgnosticResults.sort((item1, item2) => {
-      return item1.toLowerCase().search(searchQuery.toLowerCase()) >
-        item2.toLowerCase().search(searchQuery.toLowerCase())
-        ? 1
-        : -1;
-    }),
+    ...caseSensitiveResults.sort(
+      (item1, item2) => item1.indexOf(searchQuery) - item2.indexOf(searchQuery)
+    ),
+    ...caseAgnosticResults.sort(
+      (item1, item2) =>
+        item1.toLowerCase().indexOf(searchQuery.toLowerCase()) -
+        item2.toLowerCase().indexOf(searchQuery.toLowerCase())
+    ),
   ];
 };
 
