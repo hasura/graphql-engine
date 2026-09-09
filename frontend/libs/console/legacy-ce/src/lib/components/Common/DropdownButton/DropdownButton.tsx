@@ -76,6 +76,7 @@ const DDButton: React.FC<DropDownButtonProps> = props => {
                 boxShadow: '0 6px 12px rgb(0 0 0 / 18%);',
                 padding: '5px 0',
                 margin: '2px 0 0',
+                zIndex: 100
               }}
               align="start"
             >
