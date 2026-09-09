@@ -1,0 +1,138 @@
+---
+description: Add migration safety checks to your Hasura CI/CD pipeline with pgfence
+keywords:
+  - hasura
+  - docs
+  - ci-cd
+  - migrations
+  - safety
+  - postgres
+  - locks
+  - pgfence
+sidebar_label: Migration safety checks
+sidebar_position: 50
+---
+
+import ProductBadge from '@site/src/components/ProductBadge';
+
+# Migration Safety Checks
+
+<ProductBadge free pro ee />
+
+## Introduction
+
+When deploying Hasura Migrations to production, certain SQL statements can acquire aggressive Postgres locks that block
+reads and writes for the duration of the operation. On large tables, this can cause downtime or cascading lock queue
+failures.
+
+[pgfence](https://pgfence.com) is an open-source CLI that analyzes your migration SQL files **before deployment** and
+reports which lock modes each statement acquires, the associated risk level, and safe rewrite alternatives when a
+dangerous pattern is detected.
+
+Adding pgfence to your CI/CD pipeline catches problems like non-concurrent index creation, unsafe column type changes,
+and missing `lock_timeout` settings before they reach production.
+
+## What pgfence detects
+
+pgfence checks for common Postgres migration footguns, including:
+
+| Pattern | Risk | Why it's dangerous |
+|---------|------|--------------------|
+| `CREATE INDEX` (non-concurrent) | Medium | Acquires a `SHARE` lock, blocking all writes |
+| `ALTER COLUMN TYPE` | High | Requires `ACCESS EXCLUSIVE` lock and full table rewrite |
+| `ADD COLUMN ... NOT NULL` without `DEFAULT` | High | `ACCESS EXCLUSIVE` lock on the entire table |
+| `ADD CONSTRAINT ... FOREIGN KEY` (inline) | High | Locks both tables with `ACCESS EXCLUSIVE` |
+| `DROP TABLE` / `TRUNCATE` | Critical | `ACCESS EXCLUSIVE` lock, irreversible |
+| Missing `SET lock_timeout` | Policy | No timeout means unbounded lock waits |
+
+For each issue found, pgfence provides the safe alternative — for example, `CREATE INDEX CONCURRENTLY` instead of
+`CREATE INDEX`, or the `NOT VALID` + `VALIDATE CONSTRAINT` pattern for foreign keys.
+
+## Add pgfence to a GitHub Actions workflow
+
+If you use [GitHub Actions](https://github.com/features/actions) to deploy Hasura Migrations (as recommended for
+production in the
+[GitHub integration docs](/cloud-ci-cd/github-integration.mdx)), you can add pgfence as a step that runs before
+applying migrations.
+
+### Basic workflow
+
+Add the following step to your existing workflow file (e.g., `.github/workflows/hasura-deploy.yml`) **before** the step
+that applies migrations:
+
+```yaml
+- name: Check migration safety
+  run: npx --yes @flvmnt/pgfence@0.2.3 analyze --ci hasura/migrations/**/*.sql
+```
+
+The `--ci` flag causes pgfence to exit with code 1 if any check exceeds the default risk threshold, which will fail the
+workflow and prevent the deployment.
+
+### Full example workflow
+
+```yaml
+name: Hasura Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'hasura/migrations/**'
+      - 'hasura/metadata/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check migration safety
+        run: npx --yes @flvmnt/pgfence@0.2.3 analyze --ci hasura/migrations/**/*.sql
+
+      - name: Apply migrations
+        run: hasura migrate apply --endpoint ${{ secrets.HASURA_ENDPOINT }} --admin-secret ${{ secrets.HASURA_ADMIN_SECRET }}
+
+      - name: Apply metadata
+        run: hasura metadata apply --endpoint ${{ secrets.HASURA_ENDPOINT }} --admin-secret ${{ secrets.HASURA_ADMIN_SECRET }}
+```
+
+### Controlling the risk threshold
+
+By default, `--ci` fails the build on `HIGH` risk or above. You can adjust this with `--max-risk`:
+
+```yaml
+- name: Check migration safety
+  run: npx --yes @flvmnt/pgfence@0.2.3 analyze --ci --max-risk medium hasura/migrations/**/*.sql
+```
+
+This will fail the build on `MEDIUM` risk or above, catching issues like non-concurrent index creation.
+
+### JSON output for further processing
+
+To integrate pgfence results into other tools or dashboards, use the `--output json` flag:
+
+```yaml
+- name: Check migration safety
+  run: npx --yes @flvmnt/pgfence@0.2.3 analyze --output json hasura/migrations/**/*.sql > pgfence-report.json
+```
+
+## Adjusting migration paths
+
+Hasura stores migrations under `hasura/migrations/<source-name>/<timestamp>_<name>/up.sql` by default. Adjust the glob
+pattern to match your project structure:
+
+```yaml
+# Single data source named "default"
+run: npx --yes @flvmnt/pgfence@0.2.3 analyze --ci hasura/migrations/default/**/up.sql
+
+# All data sources
+run: npx --yes @flvmnt/pgfence@0.2.3 analyze --ci hasura/migrations/**/up.sql
+```
+
+## Further resources
+
+- [pgfence documentation](https://pgfence.com)
+- [pgfence on npm](https://www.npmjs.com/package/@flvmnt/pgfence)
+- [pgfence on GitHub](https://github.com/flvmnt/pgfence)
+- [PostgreSQL explicit locking documentation](https://www.postgresql.org/docs/current/explicit-locking.html)
+- [Hasura Migrations Best Practices](/migrations-metadata-seeds/migration-best-practices.mdx)
