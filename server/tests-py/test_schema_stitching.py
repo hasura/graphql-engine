@@ -15,8 +15,11 @@ yaml=YAML(typ='safe', pure=True)
 
 from validate import check_query_f, check_query
 
-def mk_add_remote_q(name, url, headers=None, client_hdrs=False, timeout=None, customization=None):
-    return {
+_UNSET = object()
+
+
+def mk_add_remote_q(name, url, headers=None, client_hdrs=False, timeout=None, customization=None, introspection_headers=_UNSET):
+    query = {
         "type": "add_remote_schema",
         "args": {
             "name": name,
@@ -30,12 +33,15 @@ def mk_add_remote_q(name, url, headers=None, client_hdrs=False, timeout=None, cu
             }
         }
     }
+    if introspection_headers is not _UNSET:
+        query["args"]["definition"]["introspection_headers"] = introspection_headers
+    return query
 
 def type_prefix_customization(type_prefix, mapping={}):
     return { "type_names": {"prefix": type_prefix, "mapping": mapping }}
 
-def mk_update_remote_q(name, url, headers=None, client_hdrs=False, timeout=None, customization=None):
-    return {
+def mk_update_remote_q(name, url, headers=None, client_hdrs=False, timeout=None, customization=None, introspection_headers=_UNSET):
+    query = {
         "type": "update_remote_schema",
         "args": {
             "name": name,
@@ -49,6 +55,9 @@ def mk_update_remote_q(name, url, headers=None, client_hdrs=False, timeout=None,
             }
         }
     }
+    if introspection_headers is not _UNSET:
+        query["args"]["definition"]["introspection_headers"] = introspection_headers
+    return query
 
 def mk_delete_remote_q(name):
     return {
@@ -428,6 +437,49 @@ class TestAddRemoteSchemaTbls:
         assert res['data']['wassup'] == 'Hello world'
 
         hge_ctx.v1q({'type': 'remove_remote_schema', 'args': {'name': 'header-graphql'}})
+
+
+class TestRemoteSchemaIntrospectionHeaders:
+    teardown = {"type": "clear_metadata", "args": {}}
+
+    @pytest.fixture(autouse=True)
+    def transact(self, hge_ctx):
+        yield
+        hge_ctx.v1q(self.teardown)
+
+    @pytest.mark.parametrize(
+        "mode,introspection_headers",
+        [
+            ("legacy", _UNSET),
+            ("null", None),
+            ("empty", []),
+            (
+                "distinct",
+                [{"name": "x-introspection-header", "value": "introspection"}],
+            ),
+        ],
+    )
+    def test_introspection_and_runtime_headers(
+        self, hge_ctx, gql_server, mode, introspection_headers
+    ):
+        runtime_headers = [{"name": "x-runtime-header", "value": "runtime"}]
+        add_remote = mk_add_remote_q(
+            "introspection-headers",
+            f"{gql_server.url}/introspection-headers-graphql?mode={mode}",
+            headers=runtime_headers,
+            introspection_headers=introspection_headers,
+        )
+        hge_ctx.v1q(add_remote)
+
+        metadata = hge_ctx.v1q(export_metadata_q)
+        definition = metadata["remote_schemas"][0]["definition"]
+        if introspection_headers is _UNSET or introspection_headers is None:
+            assert "introspection_headers" not in definition
+        else:
+            assert definition["introspection_headers"] == introspection_headers
+
+        response = hge_ctx.v1graphqlq({"query": "{ hello }"})
+        assert response == {"data": {"hello": "Hello world"}}
 
 
 class TestRemoteSchemaQueriesOverWebsocket:

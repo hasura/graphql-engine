@@ -74,8 +74,11 @@ describe('Create RS with shortest possible path', () => {
 
     // add header
     cy.log('**--- Click on Add headers button and add some headers');
-    cy.findAllByPlaceholderText('header name').type('user_id');
-    cy.findAllByPlaceholderText('header value').type('1234');
+    cy.get('input[placeholder="header name"]')
+      .type('user_id')
+      .closest('.form-group')
+      .find('input[placeholder="header value"]')
+      .type('1234');
 
     // add server timeout
     cy.log('**--- Add the gql server timeout');

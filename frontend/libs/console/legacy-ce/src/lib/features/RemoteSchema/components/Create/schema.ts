@@ -8,6 +8,8 @@ export const schema = z.object({
     type: z.literal('from_url').or(z.literal('from_env')),
   }),
   headers: requestHeadersSelectorSchema,
+  use_introspection_headers: z.boolean(),
+  introspection_headers: requestHeadersSelectorSchema,
   forward_client_headers: z.preprocess(val => {
     if (val === 'true') return true;
     return false;

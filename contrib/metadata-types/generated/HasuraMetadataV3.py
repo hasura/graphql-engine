@@ -871,6 +871,9 @@ class RemoteSchemaDef:
     """
     forward_client_headers: Optional[bool] = None
     headers: Optional[List[Header]] = None
+    introspection_headers: Optional[List[Header]] = None
+    """Headers used only to introspect the Remote Schema. When omitted, `headers` are used."""
+
     timeout_seconds: Optional[float] = None
     url: Optional[str] = None
     url_from_env: Optional[str] = None
@@ -880,10 +883,11 @@ class RemoteSchemaDef:
         assert isinstance(obj, dict)
         forward_client_headers = from_union([from_bool, from_none], obj.get("forward_client_headers"))
         headers = from_union([lambda x: from_list(Header.from_dict, x), from_none], obj.get("headers"))
+        introspection_headers = from_union([lambda x: from_list(Header.from_dict, x), from_none], obj.get("introspection_headers"))
         timeout_seconds = from_union([from_float, from_none], obj.get("timeout_seconds"))
         url = from_union([from_str, from_none], obj.get("url"))
         url_from_env = from_union([from_str, from_none], obj.get("url_from_env"))
-        return RemoteSchemaDef(forward_client_headers, headers, timeout_seconds, url, url_from_env)
+        return RemoteSchemaDef(forward_client_headers, headers, introspection_headers, timeout_seconds, url, url_from_env)
 
     def to_dict(self) -> dict:
         result: dict = {}
@@ -891,6 +895,8 @@ class RemoteSchemaDef:
             result["forward_client_headers"] = from_union([from_bool, from_none], self.forward_client_headers)
         if self.headers is not None:
             result["headers"] = from_union([lambda x: from_list(lambda x: to_class(Header, x), x), from_none], self.headers)
+        if self.introspection_headers is not None:
+            result["introspection_headers"] = from_union([lambda x: from_list(lambda x: to_class(Header, x), x), from_none], self.introspection_headers)
         if self.timeout_seconds is not None:
             result["timeout_seconds"] = from_union([to_float, from_none], self.timeout_seconds)
         if self.url is not None:

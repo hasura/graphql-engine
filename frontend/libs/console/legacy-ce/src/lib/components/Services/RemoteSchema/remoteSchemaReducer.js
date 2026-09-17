@@ -16,6 +16,13 @@ const remoteSchemaReducer = combineReducers({
       value: '',
     },
   ]),
+  introspectionHeaderData: headerReducer('REMOTE_SCHEMA_INTROSPECTION', [
+    {
+      name: '',
+      type: 'static',
+      value: '',
+    },
+  ]),
 });
 
 export default remoteSchemaReducer;

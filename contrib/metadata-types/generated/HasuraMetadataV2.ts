@@ -571,6 +571,8 @@ export interface RemoteSchema {
 export interface RemoteSchemaDef {
   forward_client_headers?: boolean;
   headers?: Header[];
+  /** Headers used only to introspect the Remote Schema. When omitted, `headers` are used. */
+  introspection_headers?: Header[];
   timeout_seconds?: number;
   url?: string;
   url_from_env?: string;
@@ -2207,6 +2209,11 @@ const typeMap: any = {
         typ: u(undefined, true),
       },
       { json: 'headers', js: 'headers', typ: u(undefined, a(r('Header'))) },
+      {
+        json: 'introspection_headers',
+        js: 'introspection_headers',
+        typ: u(undefined, a(r('Header'))),
+      },
       {
         json: 'timeout_seconds',
         js: 'timeout_seconds',

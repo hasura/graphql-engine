@@ -207,4 +207,5 @@ addRemoteSchemaP2Setup ::
   m (IntrospectionResult, BL.ByteString, RemoteSchemaInfo)
 addRemoteSchemaP2Setup name env def = do
   rsi <- validateRemoteSchemaDef name env def
-  fetchRemoteSchema env rsi
+  let introspectionHeaders = fromMaybe (_vrsdHeaders rsi) (_rsdIntrospectionHeaders def)
+  fetchRemoteSchema env introspectionHeaders rsi

@@ -48,6 +48,7 @@ class Common extends React.Component {
       envName,
       timeoutConf,
       forwardClientHeaders,
+      introspectionHeaders,
       comment,
       customization,
       isEnvVarEnabled,
@@ -198,9 +199,31 @@ class Common extends React.Component {
           )}
         </div>
         <br />
-        <div className={`${subHeading} pt-md`}>
-          Headers for the remote GraphQL server
-        </div>
+        {getTimeoutSection()}
+        <hr className="my-md" />
+        <div className={`${subHeading} pt-md`}>Introspection headers</div>
+        <p className="mb-md">
+          Headers used to fetch the Remote Schema GraphQL schema. If none are
+          added, the request headers configured below are reused.
+        </p>
+        <CommonHeader
+          eventPrefix="REMOTE_SCHEMA_INTROSPECTION"
+          headers={introspectionHeaders}
+          dispatch={this.props.dispatch}
+          typeOptions={[
+            { display_text: 'Value', value: 'static' },
+            { display_text: 'From env var', value: 'env' },
+          ]}
+          isDisabled={isDisabled}
+          placeHolderText={this.getPlaceHolderText.bind(this)}
+          keyInputPlaceholder="introspection header name"
+        />
+        <hr className="my-md" />
+        <div className={`${subHeading} pt-md`}>Request headers</div>
+        <p className="mb-md">
+          Headers sent when executing GraphQL operations against the Remote
+          Schema.
+        </p>
         <div className={`${subHeading} flex items-center mb-md`}>
           <label className="flex justify-center mr-sm">
             <input
@@ -232,8 +255,6 @@ class Common extends React.Component {
           placeHolderText={this.getPlaceHolderText.bind(this)}
           keyInputPlaceholder="header name"
         />
-        <hr className="my-md" />
-        {getTimeoutSection()}
         <hr className="my-md" />
         <div className={`${subHeading} flex items-center`}>
           Comment
@@ -278,6 +299,8 @@ Common.propTypes = {
   manualUrl: PropTypes.string.isRequired,
   headers: PropTypes.array.isRequired,
   forwardClientHeaders: PropTypes.bool.isRequired,
+  useIntrospectionHeaders: PropTypes.bool.isRequired,
+  introspectionHeaders: PropTypes.array.isRequired,
   dispatch: PropTypes.func.isRequired,
 };
 

@@ -43,6 +43,7 @@ data RemoteSchemaDef = RemoteSchemaDef
   { _rsdUrl :: Maybe InputWebhook,
     _rsdUrlFromEnv :: Maybe UrlFromEnv,
     _rsdHeaders :: Maybe [HeaderConf],
+    _rsdIntrospectionHeaders :: Maybe [HeaderConf],
     _rsdForwardClientHeaders :: Bool,
     _rsdTimeoutSeconds :: Maybe Int,
     _rsdCustomization :: Maybe RemoteSchemaCustomization
@@ -67,6 +68,8 @@ instance HasCodec RemoteSchemaDef where
       .= _rsdUrlFromEnv
         <*> optionalField' "headers"
       .= _rsdHeaders
+        <*> optionalField' "introspection_headers"
+      .= _rsdIntrospectionHeaders
         <*> optionalFieldWithDefault' "forward_client_headers" False
       .= _rsdForwardClientHeaders
         <*> optionalField' "timeout_seconds"
@@ -87,6 +90,8 @@ instance J.FromJSON RemoteSchemaDef where
       J..:? "url_from_env"
       <*> o
       J..:? "headers"
+      <*> o
+      J..:? "introspection_headers"
       <*> o
       J..:? "forward_client_headers"
       J..!= False

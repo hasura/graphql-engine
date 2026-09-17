@@ -62,7 +62,7 @@ data RemoteSchemaNameQuery = RemoteSchemaNameQuery
 instance J.FromJSON RemoteSchemaNameQuery where
   parseJSON = J.withObject "RemoteSchemaNameQuery" $ \o -> do
     name <- o J..: "name"
-    cascade <-o J..:? "cascade"
+    cascade <- o J..:? "cascade"
     pure $ RemoteSchemaNameQuery name cascade
 
 instance J.ToJSON RemoteSchemaNameQuery where
@@ -212,7 +212,7 @@ runUpdateRemoteSchema env (AddRemoteSchemaQuery name defn comment) = do
         || (isJust metadataRMSchemaURLFromEnv && isJust currentRMSchemaURLFromEnv && metadataRMSchemaURLFromEnv == currentRMSchemaURLFromEnv)
     )
     $ void
-    $ fetchRemoteSchema env rsi
+    $ fetchRemoteSchema env (fromMaybe (_vrsdHeaders rsi) (_rsdIntrospectionHeaders defn)) rsi
 
   -- This will throw an error if the new schema fetched in incompatible
   -- with the existing permissions and relations
