@@ -214,7 +214,7 @@ validateRemoteSchemaDef ::
   Env.Environment ->
   RemoteSchemaDef ->
   m ValidatedRemoteSchemaDef
-validateRemoteSchemaDef name env (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs mTimeout customization) = do
+validateRemoteSchemaDef name env (RemoteSchemaDef mUrl mUrlEnv hdrC _introspectionHdrC fwdHdrs mTimeout customization) = do
   validateRemoteSchemaCustomization customization
   case (mUrl, mUrlEnv) of
     -- case 1: URL is supplied as a template

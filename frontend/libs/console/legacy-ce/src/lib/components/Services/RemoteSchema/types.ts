@@ -38,6 +38,8 @@ export type EditState = {
   isModify: boolean;
   originalName: string;
   originalHeaders: any[];
+  originalUseIntrospectionHeaders: boolean;
+  originalIntrospectionHeaders: any[];
   originalUrl: string;
   originalEnvUrl: string;
   originalTimeoutConf: string;
@@ -50,6 +52,7 @@ export type AddState = AsyncState & {
   manualUrl: string;
   envName: any;
   headers: any[];
+  useIntrospectionHeaders: boolean;
   timeoutConf: string;
   name: string;
   forwardClientHeaders: boolean;
@@ -70,4 +73,5 @@ export type RemoteSchemaState = {
   listData: ListState;
   permissions: RemoteSchemaPermissionsState;
   headerData: HeaderState;
+  introspectionHeaderData: HeaderState;
 };

@@ -1271,11 +1271,13 @@ type RemoteSchema struct {
 //
 // https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#remoteschemadef
 type RemoteSchemaDef struct {
-	ForwardClientHeaders *bool    `json:"forward_client_headers,omitempty"`
-	Headers              []Header `json:"headers,omitempty"`
-	TimeoutSeconds       *float64 `json:"timeout_seconds,omitempty"`
-	URL                  *string  `json:"url,omitempty"`
-	URLFromEnv           *string  `json:"url_from_env,omitempty"`
+	ForwardClientHeaders                                                                   *bool    `json:"forward_client_headers,omitempty"`
+	Headers                                                                                []Header `json:"headers,omitempty"`
+	// Headers used only to introspect the Remote Schema. When omitted, `headers` are used.
+	IntrospectionHeaders                                                                   []Header `json:"introspection_headers,omitempty"`
+	TimeoutSeconds                                                                         *float64 `json:"timeout_seconds,omitempty"`
+	URL                                                                                    *string  `json:"url,omitempty"`
+	URLFromEnv                                                                             *string  `json:"url_from_env,omitempty"`
 }
 
 // Representation of a table in metadata, 'tables.yaml' and 'metadata.json'

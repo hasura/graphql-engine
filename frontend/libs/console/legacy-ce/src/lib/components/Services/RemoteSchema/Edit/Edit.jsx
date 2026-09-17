@@ -13,6 +13,7 @@ import {
   RESET,
   TOGGLE_MODIFY,
   getHeaderEvents,
+  getIntrospectionHeaderEvents,
 } from '../Add/addRemoteSchemaReducer';
 import { VIEW_REMOTE_SCHEMA } from '../Actions';
 import { push } from 'react-router-redux';
@@ -73,6 +74,16 @@ class Edit extends React.Component {
       this.props.dispatch({ type: RESET }),
       this.props.dispatch({
         type: getHeaderEvents.UPDATE_HEADERS,
+        data: [
+          {
+            name: '',
+            type: 'static',
+            value: '',
+          },
+        ],
+      }),
+      this.props.dispatch({
+        type: getIntrospectionHeaderEvents.UPDATE_HEADERS,
         data: [
           {
             name: '',
@@ -249,6 +260,7 @@ const mapStateToProps = state => {
   return {
     ...state.remoteSchemas.addData,
     ...state.remoteSchemas.headerData,
+    introspectionHeaders: state.remoteSchemas.introspectionHeaderData.headers,
     allRemoteSchemas: getRemoteSchemasSelector(state),
     dataHeaders: state.tables.dataHeaders,
     inconsistentObjects: state.metadata.inconsistentObjects,

@@ -546,6 +546,8 @@ export interface RemoteSchemaDef {
   url?: string;
   url_from_env?: string;
   headers?: Array<HeaderFromEnv | HeaderFromValue>;
+  /** Headers used only to introspect the Remote Schema. When omitted, `headers` are used. */
+  introspection_headers?: Array<HeaderFromEnv | HeaderFromValue>;
   forward_client_headers?: boolean;
   timeout_seconds?: number;
 }

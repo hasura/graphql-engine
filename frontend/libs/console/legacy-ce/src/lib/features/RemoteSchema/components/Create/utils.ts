@@ -22,13 +22,26 @@ interface Definition {
     | { name: string; value_from_env: string }
     | { name: string; value: string }
   )[];
+  introspection_headers?: (
+    | { name: string; value_from_env: string }
+    | { name: string; value: string }
+  )[];
 }
+
+const transformHeaders = (headers: Schema['headers']) =>
+  headers.map(header => {
+    if (header.type === 'from_env')
+      return { name: header.name, value_from_env: header.value };
+    return { name: header.name, value: header.value };
+  });
 
 export const transformFormData = (values: Schema) => {
   const {
     name,
     url,
     headers,
+    use_introspection_headers,
+    introspection_headers,
     forward_client_headers,
     comment,
     timeout_seconds,
@@ -93,14 +106,14 @@ export const transformFormData = (values: Schema) => {
   const definition: Definition = {
     [url.type === 'from_env' ? 'url_from_env' : 'url']: url.value,
     forward_client_headers,
-    headers: headers.map(header => {
-      if (header.type === 'from_env')
-        return { name: header.name, value_from_env: header.value };
-      return { name: header.name, value: header.value };
-    }),
+    headers: transformHeaders(headers),
     timeout_seconds: timeout_seconds ? parseInt(timeout_seconds, 10) : 60,
     customization,
   };
+
+  if (use_introspection_headers) {
+    definition.introspection_headers = transformHeaders(introspection_headers);
+  }
 
   return { name, comment, definition };
 };

@@ -976,6 +976,16 @@ definitions:
             - $ref: '#/definitions/HeaderFromValue'
             - $ref: '#/definitions/HeaderFromEnv'
         title: headers
+      introspection_headers:
+        description: >-
+          Headers used only to introspect the Remote Schema. When omitted,
+          `headers` are used.
+        type: array
+        items:
+          anyOf:
+            - $ref: '#/definitions/HeaderFromValue'
+            - $ref: '#/definitions/HeaderFromEnv'
+        title: introspection_headers
       forward_client_headers:
         type: boolean
         title: forward_client_headers

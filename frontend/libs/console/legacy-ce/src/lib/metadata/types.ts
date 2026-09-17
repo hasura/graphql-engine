@@ -630,6 +630,7 @@ export interface RemoteSchemaDef {
   url?: string;
   url_from_env?: string;
   headers?: ServerHeader[];
+  introspection_headers?: ServerHeader[];
   forward_client_headers?: boolean;
   timeout_seconds?: number;
 }

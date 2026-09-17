@@ -9,10 +9,11 @@ export interface RequestHeadersSelectorProps {
   name: string;
   addButtonText?: ReactText;
   typeSelect?: boolean;
+  onAdd?: () => void;
 }
 
 export const RequestHeadersSelector = (props: RequestHeadersSelectorProps) => {
-  const { name, addButtonText = 'Add', typeSelect = true } = props;
+  const { name, addButtonText = 'Add', typeSelect = true, onAdd } = props;
   const { fields, append, remove } = useFieldArray<
     Record<string, RequestHeadersSelectorSchema>
   >({
@@ -48,6 +49,7 @@ export const RequestHeadersSelector = (props: RequestHeadersSelectorProps) => {
         data-testid="add-header"
         icon={<FaPlusCircle />}
         onClick={() => {
+          onAdd?.();
           append({
             name: '',
             value: '',

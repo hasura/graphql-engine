@@ -956,6 +956,13 @@ be derived from a session variable of the same name.
       "value_from_env": env-var-string
     }
   ],
+  "introspection_headers": [
+    {
+      "name": header-name-string,
+      "value": header-value-string,
+      "value_from_env": env-var-string
+    }
+  ],
   "forward_client_headers": boolean,
   "timeout_seconds": integer,
   "customization": `}
@@ -966,6 +973,10 @@ be derived from a session variable of the same name.
 </pre>
 
 </div>
+
+`introspection_headers` is optional. When omitted, Remote Schema introspection uses `headers` for backward
+compatibility. When present, introspection uses only this list; an explicit empty list sends no configured headers.
+Runtime Remote Schema operations always use `headers`.
 
 ## RemoteSchemaCustomization {#remoteschemacustomization}
 
