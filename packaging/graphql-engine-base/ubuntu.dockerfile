@@ -1,4 +1,4 @@
-FROM ubuntu:noble-20260610
+FROM ubuntu:noble-20260911
 ### NOTE! Shared libraries here need to be kept in sync with `server-builder.dockerfile`!
 
 # TARGETPLATFORM is automatically set up by docker buildx based on the platform we are targetting for
