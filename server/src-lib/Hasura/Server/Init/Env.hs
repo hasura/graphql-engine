@@ -401,6 +401,15 @@ instance FromEnv Server.Types.CloseWebsocketsOnMetadataChangeStatus where
 instance FromEnv Server.Types.TriggersErrorLogLevelStatus where
   fromEnv = fmap (bool Server.Types.TriggersErrorLogLevelDisabled Server.Types.TriggersErrorLogLevelEnabled) . fromEnv @Bool
 
+instance FromEnv Server.Types.RedactEventTriggerLogsStatus where
+  fromEnv = fmap (bool Server.Types.RedactEventTriggerLogsDisabled Server.Types.RedactEventTriggerLogsEnabled) . fromEnv @Bool
+
+instance FromEnv Server.Types.RedactScheduledTriggerLogsStatus where
+  fromEnv = fmap (bool Server.Types.RedactScheduledTriggerLogsDisabled Server.Types.RedactScheduledTriggerLogsEnabled) . fromEnv @Bool
+
+instance FromEnv Server.Types.RedactActionHandlerLogsStatus where
+  fromEnv = fmap (bool Server.Types.RedactActionHandlerLogsDisabled Server.Types.RedactActionHandlerLogsEnabled) . fromEnv @Bool
+
 instance FromEnv Server.Types.PersistedQueriesState where
   fromEnv = fmap (bool Server.Types.PersistedQueriesDisabled Server.Types.PersistedQueriesEnabled) . fromEnv @Bool
 

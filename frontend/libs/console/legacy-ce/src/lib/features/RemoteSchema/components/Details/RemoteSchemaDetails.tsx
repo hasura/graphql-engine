@@ -72,6 +72,9 @@ export const RemoteSchemaDetails = (props: RemoteSchemaDetailsProps) => {
   const manualUrl = remoteSchema.data?.definition.url;
   const envName = remoteSchema.data?.definition.url_from_env;
   const headers = remoteSchema.data?.definition.headers;
+  const introspectionHeaders =
+    remoteSchema.data?.definition.introspection_headers;
+  const hasIntrospectionHeaders = Array.isArray(introspectionHeaders);
   const readOnlyMode = readOnlyModeResponse.data || true;
 
   const inconsistencyDetails = inconsistentObjects.find(
@@ -108,7 +111,30 @@ export const RemoteSchemaDetails = (props: RemoteSchemaDetailsProps) => {
                   )}
                 </div>
               </div>
-              <RemoteSchemaDetailsHeaders headers={headers} />
+              {!hasIntrospectionHeaders ? (
+                <div className="mb-md">
+                  <label className="block mb-xs font-semibold text-muted">
+                    Introspection headers
+                  </label>
+                  <span>Inherited from additional headers</span>
+                </div>
+              ) : introspectionHeaders?.length === 0 ? (
+                <div className="mb-md">
+                  <label className="block mb-xs font-semibold text-muted">
+                    Introspection headers
+                  </label>
+                  <span>None</span>
+                </div>
+              ) : (
+                <RemoteSchemaDetailsHeaders
+                  headers={introspectionHeaders}
+                  title="Introspection headers"
+                />
+              )}
+              <RemoteSchemaDetailsHeaders
+                headers={headers}
+                title="Request headers"
+              />
               <label className="block mb-xs text-muted font-semibold">
                 Remote Schema Preview
               </label>

@@ -398,16 +398,34 @@ initialiseAppEnv ::
   SamplingPolicy ->
   ManagedT m (AppInit, AppEnv)
 initialiseAppEnv BasicConnectionInfo {..} serveOptions@ServeOptions {..} liveQueryHook serverMetrics prometheusMetrics traceSamplingPolicy = do
+  when (soDisableAdminSecret && isNothing soAuthHook && null soJwtSecret)
+    $ throwErrExit InvalidEnvironmentVariableOptionsError
+    $ "Fatal Error: requires either HASURA_GRAPHQL_AUTH_HOOK or HASURA_GRAPHQL_JWT_SECRET when the admin secret is disabled"
+
   loggers@(Loggers _loggerCtx logger pgLogger) <- mkLoggers soEnabledLogTypes soLogLevel
 
   -- SIDE EFFECT: print a warning if no admin secret is set.
-  when (null soAdminSecret)
+  when (not soDisableAdminSecret && null soAdminSecret)
     $ unLogger
       logger
       StartupLog
         { slLogLevel = LevelWarn,
           slKind = "no_admin_secret",
           slInfo = J.toJSON ("WARNING: No admin secret provided" :: Text)
+        }
+
+  -- SIDE EFFECT: print an info if admin secret is disabled.
+  when (soDisableAdminSecret && (isConsoleEnabled soConsoleStatus || METADATA `elem` soEnabledAPIs))
+    $ unLogger
+      logger
+      StartupLog
+        { slLogLevel = LevelInfo,
+          slKind = "admin_secret_disabled",
+          slInfo =
+            J.toJSON
+              ( "The admin secret is disabled. Console and CLI will not functional because they require the admin-secret authentication. You can disable the console and metadata APIs by setting HASURA_GRAPHQL_ENABLE_CONSOLE=false and HASURA_GRAPHQL_ENABLED_APIS=graphql." ::
+                  Text
+              )
         }
 
   -- SIDE EFFECT: log all server options.
@@ -479,7 +497,16 @@ initialiseAppEnv BasicConnectionInfo {..} serveOptions@ServeOptions {..} liveQue
           appEnvMetadataVersionRef = metaVersionRef,
           appEnvInstanceId = instanceId,
           appEnvEnableMaintenanceMode = soEnableMaintenanceMode,
-          appEnvLoggingSettings = LoggingSettings soEnabledLogTypes soEnableMetadataQueryLogging soHttpLogQueryOnlyOnError soLogMaskedVariables,
+          appEnvLoggingSettings =
+            LoggingSettings
+              soEnabledLogTypes
+              soEnableMetadataQueryLogging
+              soHttpLogQueryOnlyOnError
+              soLogMaskedVariables
+              soTriggersErrorLogLevelStatus
+              soRedactEventTriggerLogs
+              soRedactScheduledTriggerLogs
+              soRedactActionHandlerLogs,
           appEnvEventingMode = soEventingMode,
           appEnvEventProcessingMode = soEventProcessingMode,
           appEnvEnableReadOnlyMode = soReadOnlyMode,
@@ -494,6 +521,7 @@ initialiseAppEnv BasicConnectionInfo {..} serveOptions@ServeOptions {..} liveQue
           appEnvTxIso = soTxIso,
           appEnvConsoleAssetsDir = soConsoleAssetsDir,
           appEnvConsoleSentryDsn = soConsoleSentryDsn,
+          appEnvDisableAdminSecret = soDisableAdminSecret,
           appEnvConnectionOptions = soConnectionOptions,
           appEnvWebSocketKeepAlive = soWebSocketKeepAlive,
           appEnvWebSocketConnectionInitTimeout = soWebSocketConnectionInitTimeout,
@@ -502,7 +530,6 @@ initialiseAppEnv BasicConnectionInfo {..} serveOptions@ServeOptions {..} liveQue
           appEnvSchemaPollInterval = soSchemaPollInterval,
           appEnvLicenseKeyCache = Nothing,
           appEnvMaxTotalHeaderLength = soMaxTotalHeaderLength,
-          appEnvTriggersErrorLogLevelStatus = soTriggersErrorLogLevelStatus,
           appEnvAsyncActionsFetchBatchSize = soAsyncActionsFetchBatchSize,
           appEnvPersistedQueries = soPersistedQueries,
           appEnvPersistedQueriesTtl = soPersistedQueriesTtl,
@@ -731,7 +758,7 @@ instance MonadExecuteQuery AppM where
   cacheLookup _ _ _ _ _ _ = pure $ Right ([], ResponseUncached Nothing)
 
 instance UserAuthentication AppM where
-  resolveUserInfo logger manager headers authMode reqs =
+  resolveUserInfo logger manager headers authMode reqs = do
     runExceptT $ do
       (a, b, c) <- getUserInfoWithExpTime logger manager headers authMode reqs
       pure $ (a, b, c, ExtraUserInfo Nothing)
@@ -757,8 +784,8 @@ instance MonadMetadataApiAuthorization AppM where
 
 instance ConsoleRenderer AppM where
   type ConsoleType AppM = CEConsoleType
-  renderConsole path authMode enableTelemetry consoleAssetsDir consoleSentryDsn consoleType =
-    return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn consoleType
+  renderConsole path authMode enableTelemetry consoleAssetsDir consoleSentryDsn disableAdminSecret consoleType =
+    return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn disableAdminSecret consoleType
 
 instance MonadVersionAPIWithExtraData AppM where
   -- we always default to CE as the `server_type` in this codebase
@@ -1093,7 +1120,9 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
   -- Log Warning if deprecated environment variables are used
   sources <- scSources <$> liftIO (getSchemaCache appStateRef)
   -- TODO: naveen: send IO to logDeprecatedEnvVars
-  AppContext {..} <- liftIO $ getAppContext appStateRef
+  -- NOTE!: make sure not to close over any other fields here in the forked
+  -- thread bodies below, or risk retaining memory:
+  AppContext {acEnvironment} <- liftIO $ getAppContext appStateRef
   liftIO $ logDeprecatedEnvVars logger acEnvironment sources
 
   -- log inconsistent schema objects
@@ -1295,15 +1324,21 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
 
     startEventTriggerPollerThread logger lockedEventsCtx = do
       AppEnv {..} <- lift askAppEnv
-      schemaCache <- liftIO $ getSchemaCache appStateRef
-      let allSources = HashMap.elems $ scSources schemaCache
       activeEventProcessingThreads <- liftIO $ newTVarIO 0
       appCtx <- liftIO $ getAppContext appStateRef
       let fetchInterval = _eeCtxFetchInterval $ acEventEngineCtx appCtx
           fetchBatchSize = _eeCtxFetchSize $ acEventEngineCtx appCtx
       unless (unrefine fetchBatchSize == 0 || fetchInterval == 0) $ do
         -- Initialise the event processing thread
-        let eventsGracefulShutdownAction =
+        let eventsGracefulShutdownAction = do
+              -- Re-fetch the current sources here, rather than closing over
+              -- the schema cache that was live when this thread started:
+              -- this action is only ever invoked (much later) at actual
+              -- server shutdown, so using a boot-time snapshot would both
+              -- use a stale source list and -- since it's captured in this
+              -- long-lived thread's shutdown handler -- pin that whole
+              -- schema cache generation alive for the life of the process.
+              allSources <- HashMap.elems . scSources <$> getSchemaCache appStateRef
               waitForProcessingAction
                 logger
                 "event_triggers"
@@ -1334,7 +1369,8 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
             appEnvServerMetrics
             (pmEventTriggerMetrics appEnvPrometheusMetrics)
             appEnvEnableMaintenanceMode
-            appEnvTriggersErrorLogLevelStatus
+            (_lsTriggersErrorLogLevelStatus appEnvLoggingSettings)
+            (_lsRedactEventTriggerLogs appEnvLoggingSettings)
 
     startAsyncActionsPollerThread logger lockedEventsCtx actionSubState = do
       AppEnv {..} <- lift askAppEnv
@@ -1366,6 +1402,7 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
           appEnvAsyncActionsFetchBatchSize
           HideInternalErrors
           (acHeaderPrecedence <$> getAppContext appStateRef)
+          (_lsRedactActionHandlerLogs appEnvLoggingSettings)
 
       -- start a background thread to handle async action live queries
       void
@@ -1413,7 +1450,8 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
             (pmScheduledTriggerMetrics appEnvPrometheusMetrics)
             (getSchemaCache appStateRef)
             lockedEventsCtx
-            appEnvTriggersErrorLogLevelStatus
+            (_lsTriggersErrorLogLevelStatus appEnvLoggingSettings)
+            (_lsRedactScheduledTriggerLogs appEnvLoggingSettings)
 
 runInSeparateTx ::
   PG.TxE QErr a ->
@@ -1485,14 +1523,16 @@ mkConsoleHTML ::
   TelemetryStatus ->
   Maybe Text ->
   Maybe Text ->
+  Bool ->
   CEConsoleType ->
   Either String Text
-mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn ceConsoleType =
+mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn disableAdminSecret ceConsoleType =
   renderHtmlTemplate consoleTmplt
     $
     -- variables required to render the template
     J.object
       [ "isAdminSecretSet" J..= isAdminSecretSet authMode,
+        "isAdminSecretDisabled" J..= boolToText disableAdminSecret,
         "consolePath" J..= consolePath,
         "enableTelemetry" J..= boolToText (isTelemetryEnabled enableTelemetry),
         "cdnAssets" J..= boolToText (isNothing consoleAssetsDir),

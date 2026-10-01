@@ -841,6 +841,15 @@ serveParserSpec =
         Opt.Failure _pf -> pure ()
         Opt.CompletionInvoked cr -> Hspec.expectationFailure $ show cr
 
+    Hspec.it "It accepts '--disable-admin-secret'" $ do
+      let parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          result = Opt.execParserPure Opt.defaultPrefs parserInfo ["--disable-admin-secret"]
+
+      fmap UUT.rsoDisableAdminSecret result `Hspec.shouldSatisfy` \case
+        Opt.Success disableAdminSecret -> disableAdminSecret
+        Opt.Failure _pf -> False
+        Opt.CompletionInvoked _cr -> False
+
     Hspec.it "It accepts '--console-assets-dir'" $ do
       let -- Given
           parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
@@ -1605,7 +1614,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoWebSocketCompression result `Hspec.shouldSatisfy` \case
-        Opt.Success webSocketCompression -> webSocketCompression == WS.PermessageDeflateCompression WS.defaultPermessageDeflate
+        Opt.Success webSocketCompression -> webSocketCompression == WS.PermessageDeflateCompression (WS.defaultPermessageDeflate {WS.pdCompressionLevel = 3})
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 

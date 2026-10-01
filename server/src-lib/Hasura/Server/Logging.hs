@@ -279,7 +279,11 @@ data LoggingSettings = LoggingSettings
     _lsHttpLogQueryOnlyOnError :: HttpLogQueryOnlyOnError,
     -- | Set of variable names whose values should be masked in query logs.
     -- When a variable name matches, its value is replaced with "[MASKED]".
-    _lsLogMaskedVariables :: HashSet Text
+    _lsLogMaskedVariables :: HashSet Text,
+    _lsTriggersErrorLogLevelStatus :: TriggersErrorLogLevelStatus,
+    _lsRedactEventTriggerLogs :: RedactEventTriggerLogsStatus,
+    _lsRedactScheduledTriggerLogs :: RedactScheduledTriggerLogsStatus,
+    _lsRedactActionHandlerLogs :: RedactActionHandlerLogsStatus
   }
   deriving (Eq)
 

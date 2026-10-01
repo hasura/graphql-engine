@@ -186,7 +186,15 @@ class ApiRequest extends Component {
       });
 
       const decodeAndSetState = serverResp => {
-        const decoded = jwtDecode(token, { complete: true });
+        let decoded;
+        try {
+          decoded = {
+            header: jwtDecode(token, { header: true }),
+            payload: jwtDecode(token),
+          };
+        } catch {
+          decoded = null;
+        }
 
         if (decoded) {
           this.setState({

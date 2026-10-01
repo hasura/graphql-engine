@@ -904,6 +904,125 @@ class TestSubscriptionMSSQLChunkedResults:
         assert not "errors" in ev['payload'], ev
 
 
+@pytest.mark.backend('mssql', 'postgres')
+@usefixtures('per_class_tests_db_state', 'ws_conn_init')
+@pytest.mark.admin_secret
+class TestSubscriptionCohortIsolationMSSQLPostgres:
+    '''
+    Regression test for a SQL Server-only bug: live query plans on MSSQL are
+    built with a hardcoded `dummyCohortId` instead of a freshly generated one
+    per cohort (see `dummyCohortId` in
+    Hasura.GraphQL.Execute.Subscription.Plan, used by
+    Hasura.Backends.MSSQL.Instances.Execute), whereas Postgres correctly
+    generates a fresh id per cohort. A poller routes DB response rows back to
+    the originating cohort (and its subscribers) by matching on this id, so
+    on MSSQL, whenever more than one distinct cohort lands in the same poll
+    batch, they collapse onto the same id and results get delivered to the
+    wrong subscriber -- or not delivered at all.
+
+    This multiplexes two subscriptions that differ only by a query variable
+    (so they share one poller but are distinct cohorts) and checks that each
+    one only ever observes the row it actually asked for. Parameterized over
+    both backends: expected to pass on postgres and fail on mssql.
+    '''
+
+    # separate schema (DB) and metadata setup/teardown files, needed for the
+    # mssql source and harmless for postgres
+    setup_metadata_api_version = "v2"
+
+    @classmethod
+    def dir(cls):
+        return 'queries/subscriptions/cohort_isolation'
+
+    query = '''
+    subscription ($id: Int!) {
+      hge_tests_cohort_isolation_probe(where: {id: {_eq: $id}}) {
+        id
+        val
+      }
+    }
+    '''
+
+    def start(self, ws_client, query_id, id_value):
+        ws_client.send({
+            'id': query_id,
+            'payload': {
+                'query': self.query,
+                'variables': {'id': id_value},
+            },
+            'type': 'start',
+        })
+
+    def assert_cohort_event(self, ws_client, query_id, expected_id, expected_val):
+        ev = ws_client.get_ws_query_event(query_id, 15)
+        assert ev['type'] == 'data' and ev['id'] == query_id, ev
+        rows = ev['payload']['data']['hge_tests_cohort_isolation_probe']
+        assert rows == [{'id': expected_id, 'val': expected_val}], \
+            f"subscription {query_id} (expecting only id={expected_id}) got cross-cohort data: {rows}"
+
+    def update_row(self, hge_ctx, id_value, val):
+        sql = f"update hge_tests.cohort_isolation_probe set val = '{val}' where id = {id_value}"
+        if hge_ctx.backend == 'mssql':
+            hge_ctx.v2q({
+                'type': 'mssql_run_sql',
+                'args': {'source': 'mssql', 'sql': sql},
+            })
+        else:
+            hge_ctx.v1q({
+                'type': 'run_sql',
+                'args': {'sql': sql},
+            })
+
+    def assert_no_cross_cohort_leak(self, ws_client, query_id, forbidden_id, per_event_timeout=5, max_events=4):
+        '''
+        Drains whatever is pushed to `query_id`'s subscription for a short
+        while and fails if any of it contains a row for `forbidden_id` --
+        i.e. data belonging to a *different* cohort than the one this
+        subscription actually asked for. Stops early once the queue goes
+        quiet, since that's the normal (bug-free) steady state.
+        '''
+        for _ in range(max_events):
+            try:
+                ev = ws_client.get_ws_query_event(query_id, per_event_timeout)
+            except queue.Empty:
+                return
+            assert ev['type'] == 'data' and ev['id'] == query_id, ev
+            rows = ev['payload']['data']['hge_tests_cohort_isolation_probe']
+            leaked = [row for row in rows if row['id'] == forbidden_id]
+            assert not leaked, \
+                f"subscription {query_id} received another cohort's data (id={forbidden_id}): {rows}"
+
+    def test_cohorts_are_not_confused(self, hge_ctx, ws_client):
+        # Two subscriptions sharing the same query shape -- and therefore the
+        # same multiplexed poller -- differing only in the `$id` variable, so
+        # they become two distinct cohorts of that one poller.
+        self.start(ws_client, 'cohort-1', 1)
+        self.start(ws_client, 'cohort-2', 2)
+
+        self.assert_cohort_event(ws_client, 'cohort-1', 1, 'row-1')
+        self.assert_cohort_event(ws_client, 'cohort-2', 2, 'row-2')
+
+        # Force another poll cycle to notice a change for just one cohort.
+        # The bug reproduces on every poll where both cohorts are batched
+        # together, not only the first, so check again after a mutation.
+        self.update_row(hge_ctx, 1, 'updated-1')
+
+        # The sharper, data-leak shape of the bug: cohort-2 never asked for
+        # id=1, and should never see it on its own channel, no matter what
+        # happens to cohort-1's row.
+        self.assert_no_cross_cohort_leak(ws_client, 'cohort-2', forbidden_id=1)
+
+        # The flip side of the same collision: cohort-1 can stop hearing
+        # about its own updates entirely, having "lost" the collision.
+        self.assert_cohort_event(ws_client, 'cohort-1', 1, 'updated-1')
+
+        self.update_row(hge_ctx, 2, 'updated-2')
+        self.assert_cohort_event(ws_client, 'cohort-2', 2, 'updated-2')
+
+        ws_client.stop('cohort-1')
+        ws_client.stop('cohort-2')
+
+
 @usefixtures('per_method_tests_db_state', 'ws_conn_init')
 @pytest.mark.hge_env('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES', 'streaming_subscriptions')
 # Only citus and vanilla PG have this bugfix/behavior:

@@ -43,6 +43,8 @@ const MODIFYING_REMOTE_SCHEMA = '@addRemoteSchema/MODIFYING_REMOTE_SCHEMA';
 
 const UPDATE_FORWARD_CLIENT_HEADERS =
   '@addRemoteSchema/UPDATE_FORWARD_CLIENT_HEADERS';
+const UPDATE_USE_INTROSPECTION_HEADERS =
+  '@addRemoteSchema/UPDATE_USE_INTROSPECTION_HEADERS';
 
 const TOGGLE_MODIFY = '@editRemoteSchema/TOGGLE_MODIFY';
 
@@ -61,6 +63,9 @@ const inputChange = (type, data) => {
 };
 
 const getHeaderEvents = generateHeaderSyms('REMOTE_SCHEMA');
+const getIntrospectionHeaderEvents = generateHeaderSyms(
+  'REMOTE_SCHEMA_INTROSPECTION'
+);
 /* */
 
 const getReqHeader = headers => {
@@ -108,6 +113,23 @@ const fetchRemoteSchema = remoteSchema => {
         type: getHeaderEvents.UPDATE_HEADERS,
         data: headerObj,
       });
+      const introspectionHeaderObj = [];
+      (schema.definition.introspection_headers || []).forEach(d => {
+        introspectionHeaderObj.push({
+          name: d.name,
+          value: d.value ? d.value : d.value_from_env,
+          type: d.value ? 'static' : 'env',
+        });
+      });
+      introspectionHeaderObj.push({
+        name: '',
+        type: 'static',
+        value: '',
+      });
+      dispatch({
+        type: getIntrospectionHeaderEvents.UPDATE_HEADERS,
+        data: introspectionHeaderObj,
+      });
     } else {
       dispatch(_push(`${prefixUrl}`));
     }
@@ -128,6 +150,12 @@ const addRemoteSchema = () => (dispatch, getState) => {
     forward_client_headers: currState.forwardClientHeaders,
     headers: getReqHeader(getState().remoteSchemas.headerData.headers),
   };
+  const introspectionHeaders = getReqHeader(
+    getState().remoteSchemas.introspectionHeaderData.headers
+  );
+  if (currState.useIntrospectionHeaders || introspectionHeaders.length > 0) {
+    remoteSchemaDef.introspection_headers = introspectionHeaders;
+  }
   const remoteSchemaComment = currState?.comment;
 
   if (!manualUrl && !envName) {
@@ -203,6 +231,10 @@ const deleteRemoteSchema = () => (dispatch, getState) => {
     forward_client_headers: currState.editState.originalForwardClientHeaders,
     timeout_seconds: currState.editState.originalTimeoutConf,
   };
+  if (currState.editState.originalUseIntrospectionHeaders) {
+    remoteSchemaDef.introspection_headers =
+      currState.editState.originalIntrospectionHeaders;
+  }
   const remoteSchemaComment = currState.editState?.originalComment ?? '';
 
   if (!currState.editState.originalUrl) {
@@ -267,6 +299,12 @@ const modifyRemoteSchema = () => (dispatch, getState) => {
     headers: getReqHeader(getState().remoteSchemas.headerData.headers),
     customization: currState.customization,
   };
+  const introspectionHeaders = getReqHeader(
+    getState().remoteSchemas.introspectionHeaderData.headers
+  );
+  if (currState.useIntrospectionHeaders || introspectionHeaders.length > 0) {
+    remoteSchemaDef.introspection_headers = introspectionHeaders;
+  }
   const remoteSchemaComment = currState?.comment;
 
   if (!manualUrl && !envName) {
@@ -298,6 +336,10 @@ const modifyRemoteSchema = () => (dispatch, getState) => {
     forward_client_headers: currState.editState.originalForwardClientHeaders,
     currState: currState.editState.oldCustomization,
   };
+  if (currState.editState.originalUseIntrospectionHeaders) {
+    oldRemoteSchemaDef.introspection_headers =
+      currState.editState.originalIntrospectionHeaders;
+  }
 
   if (!currState.editState.originalUrl) {
     oldRemoteSchemaDef.url_from_env = currState.editState.originalEnvUrl;
@@ -434,6 +476,9 @@ const addRemoteSchemaReducer = (state = addState, action) => {
         manualUrl: action.data.definition.url || null,
         envName: action.data.definition.url_from_env || null,
         headers: action.data.definition.headers || [],
+        useIntrospectionHeaders: Array.isArray(
+          action.data.definition.introspection_headers
+        ),
         timeoutConf: action.data.definition.timeout_seconds
           ? action.data.definition.timeout_seconds.toString()
           : '60',
@@ -445,6 +490,11 @@ const addRemoteSchemaReducer = (state = addState, action) => {
           isModify: true,
           originalName: action.data.name,
           originalHeaders: action.data.definition.headers || [],
+          originalUseIntrospectionHeaders: Array.isArray(
+            action.data.definition.introspection_headers
+          ),
+          originalIntrospectionHeaders:
+            action.data.definition.introspection_headers || [],
           originalUrl: action.data.definition.url || null,
           originalEnvUrl: action.data.definition.url_from_env || null,
           originalForwardClientHeaders:
@@ -490,6 +540,11 @@ const addRemoteSchemaReducer = (state = addState, action) => {
         ...state,
         forwardClientHeaders: !state.forwardClientHeaders,
       };
+    case UPDATE_USE_INTROSPECTION_HEADERS:
+      return {
+        ...state,
+        useIntrospectionHeaders: !state.useIntrospectionHeaders,
+      };
     default:
       return {
         ...state,
@@ -507,6 +562,8 @@ export {
   TOGGLE_MODIFY,
   UPDATE_FORWARD_CLIENT_HEADERS,
   getHeaderEvents,
+  getIntrospectionHeaderEvents,
+  UPDATE_USE_INTROSPECTION_HEADERS,
 };
 
 export default addRemoteSchemaReducer;

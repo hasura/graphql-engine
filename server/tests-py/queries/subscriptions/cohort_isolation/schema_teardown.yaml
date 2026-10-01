@@ -1,0 +1,4 @@
+type: run_sql
+args:
+  sql: |
+    drop table hge_tests.cohort_isolation_probe;

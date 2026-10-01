@@ -92,6 +92,7 @@ serveOptsToLog so =
           "server_host" .= show (Config.soHost so),
           "transaction_isolation" .= show (Config.soTxIso so),
           "admin_secret_set" .= not (HashSet.null (Config.soAdminSecret so)),
+          "disable_admin_secret" .= Config.soDisableAdminSecret so,
           "auth_hook" .= (Auth.ahUrl <$> Config.soAuthHook so),
           "auth_hook_mode" .= (show . Auth.ahType <$> Config.soAuthHook so),
           "jwt_secret" .= (J.toJSON <$> Config.soJwtSecret so),

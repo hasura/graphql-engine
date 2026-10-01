@@ -97,7 +97,7 @@ import Hasura.Server.Prometheus
     recordGraphqlOperationMetric,
   )
 import Hasura.Server.Telemetry.Counters qualified as Telem
-import Hasura.Server.Types (HeaderPrecedence, ModelInfoLogState (..), MonadGetPolicies (..), ReadOnlyMode (..), RemoteSchemaResponsePriority (..), RequestId (..), TraceQueryStatus (TraceQueryEnabled))
+import Hasura.Server.Types (HeaderPrecedence, ModelInfoLogState (..), MonadGetPolicies (..), ReadOnlyMode (..), RedactActionHandlerLogsStatus, RemoteSchemaResponsePriority (..), RequestId (..), TraceQueryStatus (TraceQueryEnabled))
 import Hasura.Services
 import Hasura.Tracing (MonadTrace, attachMetadata)
 import Hasura.Tracing qualified as Tracing
@@ -321,6 +321,7 @@ runGQ ::
   ReadOnlyMode ->
   RemoteSchemaResponsePriority ->
   HeaderPrecedence ->
+  RedactActionHandlerLogsStatus ->
   TraceQueryStatus ->
   PrometheusMetrics ->
   L.Logger L.Hasura ->
@@ -333,7 +334,7 @@ runGQ ::
   GQLReqUnparsed ->
   ResponseInternalErrorsConfig ->
   m (GQLQueryOperationSuccessLog, HttpResponse (Maybe GQResponse, EncJSON))
-runGQ env sqlGenCtx sc enableAL readOnlyMode remoteSchemaResponsePriority headerPrecedence traceQueryStatus prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHeaders queryType reqUnparsed responseErrorsConfig = do
+runGQ env sqlGenCtx sc enableAL readOnlyMode remoteSchemaResponsePriority headerPrecedence redactActionHandlerLogs traceQueryStatus prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHeaders queryType reqUnparsed responseErrorsConfig = do
   granularPrometheusMetricsState <- runGetPrometheusMetricsGranularity
   getModelInfoLogStatus' <- runGetModelInfoLogStatus
   modelInfoLogStatus <- liftIO getModelInfoLogStatus'
@@ -381,6 +382,7 @@ runGQ env sqlGenCtx sc enableAL readOnlyMode remoteSchemaResponsePriority header
           reqId
           responseErrorsConfig
           headerPrecedence
+          redactActionHandlerLogs
           traceQueryStatus
 
       -- 4. Execute the execution plan producing a 'AnnotatedResponse'.
@@ -828,6 +830,7 @@ runGQBatched ::
   ResponseInternalErrorsConfig ->
   RemoteSchemaResponsePriority ->
   HeaderPrecedence ->
+  RedactActionHandlerLogsStatus ->
   TraceQueryStatus ->
   UserInfo ->
   Wai.IpAddress ->
@@ -836,10 +839,10 @@ runGQBatched ::
   -- | the batched request with unparsed GraphQL query
   GQLBatchedReqs (GQLReq GQLQueryText) ->
   m (HttpLogGraphQLInfo, HttpResponse EncJSON)
-runGQBatched env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId responseErrorsConfig remoteSchemaResponsePriority headerPrecedence traceQueryStatus userInfo ipAddress reqHdrs queryType query =
+runGQBatched env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId responseErrorsConfig remoteSchemaResponsePriority headerPrecedence redactActionHandlerLogs traceQueryStatus userInfo ipAddress reqHdrs queryType query =
   case query of
     GQLSingleRequest req -> do
-      (gqlQueryOperationLog, httpResp) <- runGQ env sqlGenCtx sc enableAL readOnlyMode remoteSchemaResponsePriority headerPrecedence traceQueryStatus prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHdrs queryType req responseErrorsConfig
+      (gqlQueryOperationLog, httpResp) <- runGQ env sqlGenCtx sc enableAL readOnlyMode remoteSchemaResponsePriority headerPrecedence redactActionHandlerLogs traceQueryStatus prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHdrs queryType req responseErrorsConfig
       let httpLoggingGQInfo = (CommonHttpLogMetadata L.RequestModeSingle (Just (GQLSingleRequest (GQLQueryOperationSuccess gqlQueryOperationLog))), (PQHSetSingleton (gqolParameterizedQueryHash gqlQueryOperationLog)))
       pure (httpLoggingGQInfo, snd <$> httpResp)
     GQLBatchedReqs reqs -> do
@@ -852,7 +855,7 @@ runGQBatched env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger age
             flip HttpResponse []
               . encJFromList
               . map (either (encJFromJEncoding . encodeGQErr includeInternal) _hrBody)
-      responses <- for reqs \req -> fmap (req,) $ try $ (fmap . fmap . fmap) snd $ runGQ env sqlGenCtx sc enableAL readOnlyMode remoteSchemaResponsePriority headerPrecedence traceQueryStatus prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHdrs queryType req responseErrorsConfig
+      responses <- for reqs \req -> fmap (req,) $ try $ (fmap . fmap . fmap) snd $ runGQ env sqlGenCtx sc enableAL readOnlyMode remoteSchemaResponsePriority headerPrecedence redactActionHandlerLogs traceQueryStatus prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHdrs queryType req responseErrorsConfig
       let requestsOperationLogs = map fst $ rights $ map snd responses
           batchOperationLogs =
             map

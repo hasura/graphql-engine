@@ -4,11 +4,12 @@ import { ServerHeader } from '../../../hasura-metadata-types';
 
 interface RemoteSchemaDetailsHeadersProps {
   headers?: ServerHeader[];
+  title?: string;
 }
 export const RemoteSchemaDetailsHeaders = (
   props: RemoteSchemaDetailsHeadersProps
 ) => {
-  const { headers } = props;
+  const { headers, title = 'Headers' } = props;
 
   if (!headers) {
     return null;
@@ -18,7 +19,7 @@ export const RemoteSchemaDetailsHeaders = (
 
   return (
     <div className="mb-md">
-      <label className="block mb-xs font-semibold text-muted">Headers</label>
+      <label className="block mb-xs font-semibold text-muted">{title}</label>
       <CardedTable
         columns={['Name', 'Type', 'Value']}
         data={filteredHeaders.map(header => {

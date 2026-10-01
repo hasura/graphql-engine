@@ -52,6 +52,8 @@ export const Create = ({ onSuccess }: Props) => {
     name: '',
     url: { value: '', type: 'from_url' },
     headers: [],
+    use_introspection_headers: false,
+    introspection_headers: [],
     forward_client_headers: false,
     timeout_seconds: '',
     comment: '',
@@ -75,7 +77,7 @@ export const Create = ({ onSuccess }: Props) => {
   const [openCustomizationWidget, setOpenCustomizationWidget] = useState(false);
 
   const {
-    methods: { formState, register },
+    methods: { formState, register, setValue },
     Form,
   } = useConsoleForm({
     schema,
@@ -136,7 +138,31 @@ export const Create = ({ onSuccess }: Props) => {
             </div>
           </div>
           <div className="mb-lg w-8/12">
-            <h2 className="text-lg font-semibold text-gray-600 ">Headers</h2>
+            <h2 className="text-lg font-semibold text-gray-600">
+              Introspection Headers
+            </h2>
+            <p className="text-sm text-gray-600 my-sm">
+              Headers used to fetch the Remote Schema GraphQL schema. If none
+              are added, the request headers configured below are reused.
+            </p>
+            <RequestHeadersSelector
+              name="introspection_headers"
+              addButtonText="Add introspection headers"
+              onAdd={() =>
+                setValue('use_introspection_headers', true, {
+                  shouldDirty: true,
+                })
+              }
+            />
+          </div>
+          <div className="mb-lg w-8/12">
+            <h2 className="text-lg font-semibold text-gray-600">
+              Request Headers
+            </h2>
+            <p className="text-sm text-gray-600 my-sm">
+              Headers sent when executing GraphQL operations against the Remote
+              Schema.
+            </p>
 
             <div className="items-center mr-sm mb-sm my-sm flex">
               <input

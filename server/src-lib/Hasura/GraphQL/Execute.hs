@@ -65,7 +65,7 @@ import Hasura.RQL.Types.Subscription
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Init qualified as Init
 import Hasura.Server.Prometheus (PrometheusMetrics)
-import Hasura.Server.Types (HeaderPrecedence, MonadGetPolicies, ReadOnlyMode (..), RequestId (..), TraceQueryStatus)
+import Hasura.Server.Types (HeaderPrecedence, MonadGetPolicies, ReadOnlyMode (..), RedactActionHandlerLogsStatus, RequestId (..), TraceQueryStatus)
 import Hasura.Services
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -368,6 +368,7 @@ getResolvedExecPlan ::
   RequestId ->
   Init.ResponseInternalErrorsConfig ->
   HeaderPrecedence ->
+  RedactActionHandlerLogsStatus ->
   TraceQueryStatus ->
   m (ParameterizedQueryHash, ResolvedExecutionPlan, [ModelInfoPart])
 getResolvedExecPlan
@@ -386,6 +387,7 @@ getResolvedExecPlan
   reqId
   responseErrorsConfig
   headerPrecedence
+  redactActionHandlerLogs
   traceQueryStatus = do
     let gCtx = makeGQLContext userInfo sc queryType
         tracesPropagator = getOtelTracesPropagator $ scOpenTelemetryConfig sc
@@ -414,6 +416,7 @@ getResolvedExecPlan
               maybeOperationName
               responseErrorsConfig
               headerPrecedence
+              redactActionHandlerLogs
               traceQueryStatus
           Tracing.attachMetadata [("graphql.operation.type", "query"), ("parameterized_query_hash", bsToTxt $ unParamQueryHash parameterizedQueryHash)]
           pure (parameterizedQueryHash, QueryExecutionPlan executionPlan queryRootFields dirMap, modelInfoList)
@@ -439,6 +442,7 @@ getResolvedExecPlan
               maybeOperationName
               includeInternalErrors
               headerPrecedence
+              redactActionHandlerLogs
               traceQueryStatus
           Tracing.attachMetadata [("graphql.operation.type", "mutation")]
           pure (parameterizedQueryHash, MutationExecutionPlan executionPlan, modelInfoList)

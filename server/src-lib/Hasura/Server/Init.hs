@@ -1,5 +1,4 @@
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 -- | Arg and Env Parsing for initialisation of the engine along with
 -- corresponding logging and other helper functionality.
@@ -47,7 +46,7 @@ import Hasura.Server.Init.Logging
 import Hasura.Server.Logging qualified as Server.Logging
 import Hasura.Server.Types qualified as Types
 import Network.WebSockets qualified as WebSockets
-import Refined (Positive, refineTH, unrefine)
+import Refined (unrefine)
 
 --------------------------------------------------------------------------------
 -- TODO(SOLOMON): Where does this note belong?
@@ -161,6 +160,7 @@ mkServeOptions sor@ServeOptionsRaw {..} = do
   soUnAuthRole <- withOption rsoUnAuthRole unAuthRoleOption
   soCorsConfig <- mkCorsConfig sor rsoCorsConfig
   soConsoleStatus <- withOptionSwitch' rsoConsoleStatus (isConsoleEnabled, bool ConsoleDisabled ConsoleEnabled) enableConsoleOption
+  soDisableAdminSecret <- withOptionSwitch rsoDisableAdminSecret disableAdminSecretOption
   soConsoleAssetsDir <- withOption rsoConsoleAssetsDir consoleAssetsDirOption
   soConsoleSentryDsn <- withOption rsoConsoleSentryDsn consoleSentryDsnOption
   soEnableTelemetry <- withOptionDefault rsoEnableTelemetry enableTelemetryOption
@@ -193,7 +193,7 @@ mkServeOptions sor@ServeOptionsRaw {..} = do
       Options.DisableRemoteSchemaPermissions -> withOptionDefault Nothing enableRemoteSchemaPermsOption
       enableRemoteSchemaPermissions -> pure enableRemoteSchemaPermissions
   webSocketCompressionFromEnv <-
-    withOptionSwitch' rsoWebSocketCompression (isWebSocketCompressionEnabled, bool WebSockets.NoCompression (WebSockets.PermessageDeflateCompression WebSockets.defaultPermessageDeflate)) webSocketCompressionOption
+    withOptionSwitch' rsoWebSocketCompression (isWebSocketCompressionEnabled, bool WebSockets.NoCompression enabledWebSocketCompressionOptions) webSocketCompressionOption
   let soConnectionOptions = WebSockets.defaultConnectionOptions {WebSockets.connectionCompressionOptions = webSocketCompressionFromEnv}
   soWebSocketKeepAlive <- withOptionDefault rsoWebSocketKeepAlive webSocketKeepAliveOption
   soInferFunctionPermissions <- withOptionDefault rsoInferFunctionPermissions inferFunctionPermsOption
@@ -205,15 +205,7 @@ mkServeOptions sor@ServeOptionsRaw {..} = do
   soEventsFetchBatchSize <- withOptionDefault rsoEventsFetchBatchSize eventsFetchBatchSizeOption
   soGracefulShutdownTimeout <- withOptionDefault rsoGracefulShutdownTimeout gracefulShutdownOption
   soWebSocketConnectionInitTimeout <- withOptionDefault rsoWebSocketConnectionInitTimeout webSocketConnectionInitTimeoutOption
-  soWebSocketQueueSize <-
-    -- When the user has not set a value explicitly, default to 1000 if streaming
-    -- subscriptions are enabled (ordered streams make eviction a correctness risk).
-    case rsoWebSocketQueueSize of
-      Just explicit -> pure explicit
-      Nothing
-        | HashSet.member Types.EFStreamingSubscriptions soExperimentalFeatures ->
-            pure $$(refineTH @Positive @Int 1000)
-        | otherwise -> pure $ _default webSocketQueueSizeOption
+  soWebSocketQueueSize <- withOptionDefault rsoWebSocketQueueSize webSocketQueueSizeOption
   soEventingMode <- case rsoEventingMode of
     Types.EventingEnabled -> withOptionDefault Nothing disableEventingOption
     eventingDisabled -> pure eventingDisabled
@@ -237,6 +229,9 @@ mkServeOptions sor@ServeOptionsRaw {..} = do
     withOptionDefault rsoCloseWebsocketsOnMetadataChangeStatus closeWebsocketsOnMetadataChangeOption
   soMaxTotalHeaderLength <- withOptionDefault rsoMaxTotalHeaderLength maxTotalHeaderLengthOption
   soTriggersErrorLogLevelStatus <- withOptionDefault rsoTriggersErrorLogLevelStatus triggersErrorLogLevelStatusOption
+  soRedactEventTriggerLogs <- withOptionDefault rsoRedactEventTriggerLogs redactEventTriggerLogsOption
+  soRedactScheduledTriggerLogs <- withOptionDefault rsoRedactScheduledTriggerLogs redactScheduledTriggerLogsOption
+  soRedactActionHandlerLogs <- withOptionDefault rsoRedactActionHandlerLogs redactActionHandlerLogsOption
   soAsyncActionsFetchBatchSize <- withOptionDefault rsoAsyncActionsFetchBatchSize asyncActionsFetchBatchSizeOption
   soPersistedQueries <- withOptionDefault rsoPersistedQueries persistedQueriesOption
   soPersistedQueriesTtl <- withOptionDefault rsoPersistedQueriesTtl persistedQueriesTtlOption

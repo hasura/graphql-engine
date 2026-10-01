@@ -644,10 +644,14 @@ data RemoteSchema = RemoteSchema
 
 
 https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#remoteschemadef
+
+introspectionHeaders:
+Headers used only to introspect the Remote Schema. When omitted, `headers` are used.
 -}
 data RemoteSchemaDef = RemoteSchemaDef
     { forwardClientHeadersRemoteSchemaDef :: Maybe Bool
     , headersRemoteSchemaDef :: Maybe ([Header])
+    , introspectionHeadersRemoteSchemaDef :: Maybe ([Header])
     , timeoutSecondsRemoteSchemaDef :: Maybe Float
     , urlRemoteSchemaDef :: Maybe Text
     , urlFromEnvRemoteSchemaDef :: Maybe Text
@@ -2468,10 +2472,11 @@ instance FromJSON RemoteSchema where
         <*> v .: "name"
 
 instance ToJSON RemoteSchemaDef where
-    toJSON (RemoteSchemaDef forwardClientHeadersRemoteSchemaDef headersRemoteSchemaDef timeoutSecondsRemoteSchemaDef urlRemoteSchemaDef urlFromEnvRemoteSchemaDef) =
+    toJSON (RemoteSchemaDef forwardClientHeadersRemoteSchemaDef headersRemoteSchemaDef introspectionHeadersRemoteSchemaDef timeoutSecondsRemoteSchemaDef urlRemoteSchemaDef urlFromEnvRemoteSchemaDef) =
         object
         [ "forward_client_headers" .= forwardClientHeadersRemoteSchemaDef
         , "headers" .= headersRemoteSchemaDef
+        , "introspection_headers" .= introspectionHeadersRemoteSchemaDef
         , "timeout_seconds" .= timeoutSecondsRemoteSchemaDef
         , "url" .= urlRemoteSchemaDef
         , "url_from_env" .= urlFromEnvRemoteSchemaDef
@@ -2481,6 +2486,7 @@ instance FromJSON RemoteSchemaDef where
     parseJSON (Object v) = RemoteSchemaDef
         <$> v .:? "forward_client_headers"
         <*> v .:? "headers"
+        <*> v .:? "introspection_headers"
         <*> v .:? "timeout_seconds"
         <*> v .:? "url"
         <*> v .:? "url_from_env"

@@ -26,6 +26,7 @@ module Hasura.Server.Init.Arg.Command.Serve
     corsDomainOption,
     disableCorsOption,
     enableConsoleOption,
+    disableAdminSecretOption,
     preserve401ErrorsOption,
     consoleAssetsDirOption,
     consoleSentryDsnOption,
@@ -70,6 +71,9 @@ module Hasura.Server.Init.Arg.Command.Serve
     metadataDefaultsOption,
     apolloFederationStatusOption,
     triggersErrorLogLevelStatusOption,
+    redactEventTriggerLogsOption,
+    redactScheduledTriggerLogsOption,
+    redactActionHandlerLogsOption,
     closeWebsocketsOnMetadataChangeOption,
     maxTotalHeaderLengthOption,
     asyncActionsFetchBatchSizeOption,
@@ -134,6 +138,7 @@ serveCommandParser =
     <*> parseUnAuthRole
     <*> parseCorsConfig
     <*> parseEnableConsole
+    <*> parseDisableAdminSecret
     <*> parseConsoleAssetsDir
     <*> parseConsoleSentryDsn
     <*> parseEnableTelemetry
@@ -178,6 +183,9 @@ serveCommandParser =
     <*> parseEnableCloseWebsocketsOnMetadataChange
     <*> parseMaxTotalHeaderLength
     <*> parseTriggersErrorLoglevelStatus
+    <*> parseRedactEventTriggerLogs
+    <*> parseRedactScheduledTriggerLogs
+    <*> parseRedactActionHandlerLogs
     <*> parseAsyncActionsFetchBatchSize
     <*> parsePersistedQueries
     <*> parsePersistedQueriesTtl
@@ -553,6 +561,21 @@ enableConsoleOption =
     { Config._default = Config.ConsoleDisabled,
       Config._envVar = "HASURA_GRAPHQL_ENABLE_CONSOLE",
       Config._helpMessage = "Enable API Console (default: false)"
+    }
+
+parseDisableAdminSecret :: Opt.Parser Bool
+parseDisableAdminSecret =
+  Opt.switch
+    ( Opt.long "disable-admin-secret"
+        <> Opt.help (Config._helpMessage disableAdminSecretOption)
+    )
+
+disableAdminSecretOption :: Config.Option Bool
+disableAdminSecretOption =
+  Config.Option
+    { Config._default = False,
+      Config._envVar = "HASURA_GRAPHQL_DISABLE_ADMIN_SECRET",
+      Config._helpMessage = "Disable the admin authentication via the x-hasura-admin-secret header (default: false)"
     }
 
 parseConsoleAssetsDir :: Opt.Parser (Maybe Text)
@@ -1016,7 +1039,7 @@ enableRemoteSchemaPermsOption =
 
 parseWebSocketCompression :: Opt.Parser WebSockets.CompressionOptions
 parseWebSocketCompression =
-  bool WebSockets.NoCompression (WebSockets.PermessageDeflateCompression WebSockets.defaultPermessageDeflate)
+  bool WebSockets.NoCompression Config.enabledWebSocketCompressionOptions
     <$> Opt.switch
       ( Opt.long "websocket-compression"
           <> Opt.help (Config._helpMessage webSocketCompressionOption)
@@ -1239,9 +1262,9 @@ parseWebSocketQueueSize =
 webSocketQueueSizeOption :: Config.Option (Refined Positive Int)
 webSocketQueueSizeOption =
   Config.Option
-    { Config._default = $$(refineTH @Positive @Int 100),
+    { Config._default = $$(refineTH @Positive @Int 300),
       Config._envVar = "HASURA_GRAPHQL_WEBSOCKET_QUEUE_SIZE",
-      Config._helpMessage = "Max number of messages buffered per WebSocket connection before older messages are dropped (default: 100; default: 1000 when streaming subscriptions are enabled via HASURA_GRAPHQL_EXPERIMENTAL_FEATURES; minimum: 1)"
+      Config._helpMessage = "Max number of subscription-result/query-result messages buffered per WebSocket connection before the operation responsible is cancelled instead (default: 300; minimum: 1). Control messages (completions, errors, etc.) are never subject to this limit."
     }
 
 parseEnableMetadataQueryLogging :: Opt.Parser Server.Logging.MetadataQueryLoggingMode
@@ -1396,6 +1419,54 @@ parseTriggersErrorLoglevelStatus =
     <$> Opt.switch
       ( Opt.long "enable-triggers-error-log-level"
           <> Opt.help (Config._helpMessage triggersErrorLogLevelStatusOption)
+      )
+
+redactEventTriggerLogsOption :: Config.Option (Types.RedactEventTriggerLogsStatus)
+redactEventTriggerLogsOption =
+  Config.Option
+    { Config._default = Types.RedactEventTriggerLogsDisabled,
+      Config._envVar = "HASURA_GRAPHQL_REDACT_EVENT_TRIGGER_LOGS",
+      Config._helpMessage = "Redact the request body, session variables and webhook response body from Event Trigger delivery logs (default: false)."
+    }
+
+parseRedactEventTriggerLogs :: Opt.Parser (Maybe Types.RedactEventTriggerLogsStatus)
+parseRedactEventTriggerLogs =
+  (bool Nothing (Just Types.RedactEventTriggerLogsEnabled))
+    <$> Opt.switch
+      ( Opt.long "redact-event-trigger-logs"
+          <> Opt.help (Config._helpMessage redactEventTriggerLogsOption)
+      )
+
+redactScheduledTriggerLogsOption :: Config.Option (Types.RedactScheduledTriggerLogsStatus)
+redactScheduledTriggerLogsOption =
+  Config.Option
+    { Config._default = Types.RedactScheduledTriggerLogsDisabled,
+      Config._envVar = "HASURA_GRAPHQL_REDACT_SCHEDULED_TRIGGER_LOGS",
+      Config._helpMessage = "Redact the request body, session variables and webhook response body from Scheduled/Cron Trigger delivery logs (default: false)."
+    }
+
+parseRedactScheduledTriggerLogs :: Opt.Parser (Maybe Types.RedactScheduledTriggerLogsStatus)
+parseRedactScheduledTriggerLogs =
+  (bool Nothing (Just Types.RedactScheduledTriggerLogsEnabled))
+    <$> Opt.switch
+      ( Opt.long "redact-scheduled-trigger-logs"
+          <> Opt.help (Config._helpMessage redactScheduledTriggerLogsOption)
+      )
+
+redactActionHandlerLogsOption :: Config.Option (Types.RedactActionHandlerLogsStatus)
+redactActionHandlerLogsOption =
+  Config.Option
+    { Config._default = Types.RedactActionHandlerLogsDisabled,
+      Config._envVar = "HASURA_GRAPHQL_REDACT_ACTION_HANDLER_LOGS",
+      Config._helpMessage = "Redact the request body from Action handler logs (action-handler-log) (default: false)."
+    }
+
+parseRedactActionHandlerLogs :: Opt.Parser (Maybe Types.RedactActionHandlerLogsStatus)
+parseRedactActionHandlerLogs =
+  (bool Nothing (Just Types.RedactActionHandlerLogsEnabled))
+    <$> Opt.switch
+      ( Opt.long "redact-action-handler-logs"
+          <> Opt.help (Config._helpMessage redactActionHandlerLogsOption)
       )
 
 asyncActionsFetchBatchSizeOption :: Config.Option Int
@@ -1662,6 +1733,9 @@ serveCmdFooter =
         Config.optionPP maxTotalHeaderLengthOption,
         Config.optionPP remoteNullForwardingPolicyOption,
         Config.optionPP triggersErrorLogLevelStatusOption,
+        Config.optionPP redactEventTriggerLogsOption,
+        Config.optionPP redactScheduledTriggerLogsOption,
+        Config.optionPP redactActionHandlerLogsOption,
         Config.optionPP asyncActionsFetchBatchSizeOption,
         Config.optionPP persistedQueriesOption,
         Config.optionPP persistedQueriesTtlOption,

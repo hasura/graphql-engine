@@ -59,6 +59,7 @@ emptyServeOptionsRaw =
       rsoUnAuthRole = Nothing,
       rsoCorsConfig = Nothing,
       rsoConsoleStatus = UUT.ConsoleDisabled,
+      rsoDisableAdminSecret = False,
       rsoConsoleAssetsDir = Nothing,
       rsoConsoleSentryDsn = Nothing,
       rsoEnableTelemetry = Nothing,
@@ -102,6 +103,9 @@ emptyServeOptionsRaw =
       rsoCloseWebsocketsOnMetadataChangeStatus = Nothing,
       rsoMaxTotalHeaderLength = Nothing,
       rsoTriggersErrorLogLevelStatus = Nothing,
+      rsoRedactEventTriggerLogs = Nothing,
+      rsoRedactScheduledTriggerLogs = Nothing,
+      rsoRedactActionHandlerLogs = Nothing,
       rsoAsyncActionsFetchBatchSize = Nothing,
       rsoPersistedQueries = Nothing,
       rsoPersistedQueriesTtl = Nothing,
@@ -505,6 +509,25 @@ mkServeOptionsSpec =
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
         fmap UUT.soConsoleStatus result `Hspec.shouldBe` Right UUT.ConsoleEnabled
+
+    Hspec.describe "soDisableAdminSecret" $ do
+      Hspec.it "Default = false" $ do
+        let result = UUT.runWithEnv [] (UUT.mkServeOptions @Hasura emptyServeOptionsRaw)
+
+        fmap UUT.soDisableAdminSecret result `Hspec.shouldBe` Right False
+
+      Hspec.it "Env > No Switch" $ do
+        let env = [(UUT._envVar UUT.disableAdminSecretOption, "true")]
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura emptyServeOptionsRaw)
+
+        fmap UUT.soDisableAdminSecret result `Hspec.shouldBe` Right True
+
+      Hspec.it "Arg > Env" $ do
+        let rawServeOptions = emptyServeOptionsRaw {UUT.rsoDisableAdminSecret = True}
+            env = [(UUT._envVar UUT.disableAdminSecretOption, "false")]
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+
+        fmap UUT.soDisableAdminSecret result `Hspec.shouldBe` Right True
 
     Hspec.describe "soConsoleAssetsDir" $ do
       Hspec.it "Env > Nothing" $ do
@@ -1120,18 +1143,18 @@ mkServeOptionsSpec =
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
         fmap (WS.connectionCompressionOptions . UUT.soConnectionOptions) result
-          `Hspec.shouldBe` Right (WS.PermessageDeflateCompression WS.defaultPermessageDeflate)
+          `Hspec.shouldBe` Right (WS.PermessageDeflateCompression (WS.defaultPermessageDeflate {WS.pdCompressionLevel = 3}))
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoWebSocketCompression = (WS.PermessageDeflateCompression WS.defaultPermessageDeflate)}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoWebSocketCompression = (WS.PermessageDeflateCompression (WS.defaultPermessageDeflate {WS.pdCompressionLevel = 3}))}
             -- When
             env = [(UUT._envVar UUT.webSocketCompressionOption, "false")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
         fmap (WS.connectionCompressionOptions . UUT.soConnectionOptions) result
-          `Hspec.shouldBe` Right (WS.PermessageDeflateCompression WS.defaultPermessageDeflate)
+          `Hspec.shouldBe` Right (WS.PermessageDeflateCompression (WS.defaultPermessageDeflate {WS.pdCompressionLevel = 3}))
 
     Hspec.describe "soWebSocketKeepAlive" $ do
       Hspec.it "Default == 5" $ do
@@ -1519,3 +1542,72 @@ mkServeOptionsSpec =
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
         fmap UUT.soLogMaskedVariables result `Hspec.shouldBe` Right (Set.fromList ["secret"])
+
+    Hspec.describe "soRedactEventTriggerLogs" $ do
+      Hspec.it "Default == Disabled" $ do
+        let -- Given
+            rawServeOptions = emptyServeOptionsRaw
+            -- When
+            env = []
+            -- Then
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+
+        fmap UUT.soRedactEventTriggerLogs result `Hspec.shouldBe` Right Types.RedactEventTriggerLogsDisabled
+
+      Hspec.it "Env > Nothing" $ do
+        let -- Given
+            rawServeOptions = emptyServeOptionsRaw
+            -- When
+            env = [(UUT._envVar UUT.redactEventTriggerLogsOption, "true")]
+            -- Then
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+
+        fmap UUT.soRedactEventTriggerLogs result `Hspec.shouldBe` Right Types.RedactEventTriggerLogsEnabled
+
+      Hspec.it "Arg > Env" $ do
+        let -- Given
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoRedactEventTriggerLogs = Just Types.RedactEventTriggerLogsEnabled}
+            -- When
+            env = [(UUT._envVar UUT.redactEventTriggerLogsOption, "false")]
+            -- Then
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+
+        fmap UUT.soRedactEventTriggerLogs result `Hspec.shouldBe` Right Types.RedactEventTriggerLogsEnabled
+
+    Hspec.describe "soRedactScheduledTriggerLogs" $ do
+      Hspec.it "Default == Disabled" $ do
+        let rawServeOptions = emptyServeOptionsRaw
+            env = []
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+        fmap UUT.soRedactScheduledTriggerLogs result `Hspec.shouldBe` Right Types.RedactScheduledTriggerLogsDisabled
+
+      Hspec.it "Env > Nothing" $ do
+        let rawServeOptions = emptyServeOptionsRaw
+            env = [(UUT._envVar UUT.redactScheduledTriggerLogsOption, "true")]
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+        fmap UUT.soRedactScheduledTriggerLogs result `Hspec.shouldBe` Right Types.RedactScheduledTriggerLogsEnabled
+
+      Hspec.it "Arg > Env" $ do
+        let rawServeOptions = emptyServeOptionsRaw {UUT.rsoRedactScheduledTriggerLogs = Just Types.RedactScheduledTriggerLogsEnabled}
+            env = [(UUT._envVar UUT.redactScheduledTriggerLogsOption, "false")]
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+        fmap UUT.soRedactScheduledTriggerLogs result `Hspec.shouldBe` Right Types.RedactScheduledTriggerLogsEnabled
+
+    Hspec.describe "soRedactActionHandlerLogs" $ do
+      Hspec.it "Default == Disabled" $ do
+        let rawServeOptions = emptyServeOptionsRaw
+            env = []
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+        fmap UUT.soRedactActionHandlerLogs result `Hspec.shouldBe` Right Types.RedactActionHandlerLogsDisabled
+
+      Hspec.it "Env > Nothing" $ do
+        let rawServeOptions = emptyServeOptionsRaw
+            env = [(UUT._envVar UUT.redactActionHandlerLogsOption, "true")]
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+        fmap UUT.soRedactActionHandlerLogs result `Hspec.shouldBe` Right Types.RedactActionHandlerLogsEnabled
+
+      Hspec.it "Arg > Env" $ do
+        let rawServeOptions = emptyServeOptionsRaw {UUT.rsoRedactActionHandlerLogs = Just Types.RedactActionHandlerLogsEnabled}
+            env = [(UUT._envVar UUT.redactActionHandlerLogsOption, "false")]
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+        fmap UUT.soRedactActionHandlerLogs result `Hspec.shouldBe` Right Types.RedactActionHandlerLogsEnabled
