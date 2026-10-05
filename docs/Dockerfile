@@ -10,6 +10,8 @@ ENV BUILD_VERSION="2.0"
 RUN apk add --no-cache git \
     bash
 
+WORKDIR /graphql-engine/docs
+
 # Bundle app source
 COPY . .
 
