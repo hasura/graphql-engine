@@ -1238,6 +1238,23 @@ The Redis URL to use for [query caching](/caching/enterprise-caching.mdx) and
 | **Example**         | `redis://username:password@host:port/db` |
 | **Supported in**    | Enterprise Edition only                  |
 
+### Remote Schema Healing Interval
+
+The interval, in milliseconds, at which to check for Remote Schemas that are inconsistent (for example because they
+were unreachable when the server started) and retry introspecting them. Once a Remote Schema can be introspected
+again, it is automatically reloaded, without needing to call
+[`reload_remote_schema`](/api-reference/metadata-api/remote-schemas.mdx#metadata-reload-remote-schema). Each failing
+Remote Schema is retried with exponential backoff, starting at this interval and up to a maximum of 2 minutes. To
+disable, set this value to `0`.
+
+|                     |                                                     |
+| ------------------- | --------------------------------------------------- |
+| **Flag**            | `--remote-schema-healing-interval <INTERVAL_IN_MS>` |
+| **Env var**         | `HASURA_GRAPHQL_REMOTE_SCHEMA_HEALING_INTERVAL`     |
+| **Accepted values** | Integer (Representing an interval in milliseconds)  |
+| **Default**         | `5000`                                              |
+| **Supported in**    | CE, Enterprise Edition                              |
+
 ### Remote Schema prioritize data
 
 Setting this will prioritize `data` or `errors` if both fields are present in the Remote Schema response.

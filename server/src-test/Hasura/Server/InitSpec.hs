@@ -116,7 +116,8 @@ emptyServeOptionsRaw =
       rsoPreserve401Errors = UUT.MapEverythingTo200,
       rsoServerTimeout = Nothing,
       rsoLogMaskedVariables = Nothing,
-      rsoRelayMode = UUT.RelayModeEnabled
+      rsoRelayMode = UUT.RelayModeEnabled,
+      rsoRemoteSchemaHealingInterval = Nothing
     }
 
 mkServeOptionsSpec :: Hspec.Spec

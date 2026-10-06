@@ -155,6 +155,7 @@ import Hasura.Server.Prometheus
     decWarpThreads,
     incWarpThreads,
   )
+import Hasura.Server.RemoteSchemaHealing (startRemoteSchemaHealingThread)
 import Hasura.Server.ResourceChecker (getServerResources)
 import Hasura.Server.SchemaUpdate
 import Hasura.Server.Telemetry
@@ -534,7 +535,8 @@ initialiseAppEnv BasicConnectionInfo {..} serveOptions@ServeOptions {..} liveQue
           appEnvPersistedQueries = soPersistedQueries,
           appEnvPersistedQueriesTtl = soPersistedQueriesTtl,
           appEnvPreserve401Errors = soPreserve401Errors,
-          appServerTimeout = soServerTimeout
+          appServerTimeout = soServerTimeout,
+          appEnvRemoteSchemaHealingInterval = soRemoteSchemaHealingInterval
         }
     )
 
@@ -1135,6 +1137,10 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
 
   -- Start a background thread for processing schema sync event present in the '_sscSyncEventRef'
   _ <- startSchemaSyncProcessorThread appStateRef newLogTVar
+
+  -- Start a background thread to retry introspecting inconsistent remote schemas
+  -- See Note [Remote schema healing]
+  startRemoteSchemaHealingThread appStateRef
 
   case (appEnvEventingMode, appEnvEventProcessingMode) of
     (EventingEnabled, EventProcessingEnabled) -> do
