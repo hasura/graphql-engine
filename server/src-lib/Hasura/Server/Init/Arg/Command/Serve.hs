@@ -85,6 +85,7 @@ module Hasura.Server.Init.Arg.Command.Serve
     serverTimeoutOption,
     logMaskedVariablesOption,
     enableRelayOption,
+    remoteSchemaHealingIntervalOption,
 
     -- * Pretty Printer
     serveCmdFooter,
@@ -197,6 +198,7 @@ serveCommandParser =
     <*> parseServerTimeout
     <*> parseLogMaskedVariables
     <*> parseEnableRelay
+    <*> parseRemoteSchemaHealingInterval
 
 --------------------------------------------------------------------------------
 -- Serve Options
@@ -1627,6 +1629,29 @@ logMaskedVariablesOption =
           <> "replaced with \"[MASKED]\" in query-log output."
     }
 
+parseRemoteSchemaHealingInterval :: Opt.Parser (Maybe Config.OptionalInterval)
+parseRemoteSchemaHealingInterval =
+  Opt.optional
+    $ Opt.option
+      (Opt.eitherReader Env.fromEnv)
+      ( Opt.long "remote-schema-healing-interval"
+          <> Opt.metavar (Config._envVar remoteSchemaHealingIntervalOption)
+          <> Opt.help (Config._helpMessage remoteSchemaHealingIntervalOption)
+      )
+
+remoteSchemaHealingIntervalOption :: Config.Option Config.OptionalInterval
+remoteSchemaHealingIntervalOption =
+  Config.Option
+    { -- 5000 Milliseconds or 5 Seconds
+      Config._default = Config.Interval $$(refineTH 5000),
+      Config._envVar = "HASURA_GRAPHQL_REMOTE_SCHEMA_HEALING_INTERVAL",
+      Config._helpMessage =
+        "Interval in milliseconds at which to check for remote schemas that are inconsistent "
+          <> "(e.g. because they were unreachable at startup) and retry introspecting them. "
+          <> "Each failing remote schema is retried with exponential backoff starting at "
+          <> "this interval, up to a maximum of 2 minutes - Default 5000 (5s) - Set to 0 to disable"
+    }
+
 --------------------------------------------------------------------------------
 -- Pretty Printer
 
@@ -1743,6 +1768,7 @@ serveCmdFooter =
         Config.optionPP preserve401ErrorsOption,
         Config.optionPP serverTimeoutOption,
         Config.optionPP logMaskedVariablesOption,
-        Config.optionPP enableRelayOption
+        Config.optionPP enableRelayOption,
+        Config.optionPP remoteSchemaHealingIntervalOption
       ]
     eventEnvs = [Config.optionPP graphqlEventsHttpPoolSizeOption, Config.optionPP graphqlEventsFetchIntervalOption]

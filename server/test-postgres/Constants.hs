@@ -114,7 +114,8 @@ serveOptions =
       soPreserve401Errors = Init.MapEverythingTo200,
       soServerTimeout = Init._default Init.serverTimeoutOption,
       soLogMaskedVariables = Set.empty,
-      soRelayMode = Init.RelayModeEnabled
+      soRelayMode = Init.RelayModeEnabled,
+      soRemoteSchemaHealingInterval = Init._default Init.remoteSchemaHealingIntervalOption
     }
 
 -- | What log level should be used by the engine; this is not exported, and

@@ -150,7 +150,8 @@ data AppEnv = AppEnv
     appEnvPersistedQueries :: PersistedQueriesState,
     appEnvPersistedQueriesTtl :: Int,
     appEnvPreserve401Errors :: Preserve401ErrorsStatus,
-    appServerTimeout :: Refined NonNegative Int
+    appServerTimeout :: Refined NonNegative Int,
+    appEnvRemoteSchemaHealingInterval :: OptionalInterval
   }
 
 -- | Represents the Dynamic Hasura State, these field are mutable and can be changed
