@@ -92,8 +92,12 @@ export const ConnectPostgresModal = (props: ConnectPostgresModalProps) => {
                 <PoolSettings
                   name={`configuration.connectionInfo.poolSettings`}
                 />
-                <IsolationLevel name={`configuration.connectionInfo`} />
-                <UsePreparedStatements name={`configuration.connectionInfo`} />
+                <IsolationLevel
+                  name={`configuration.connectionInfo.isolationLevel`}
+                />
+                <UsePreparedStatements
+                  name={`configuration.connectionInfo.usePreparedStatements`}
+                />
                 {areSSLSettingsEnabled() && (
                   <Collapsible
                     triggerChildren={
