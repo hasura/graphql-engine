@@ -255,6 +255,125 @@ The username and password used by Hasura to connect to the database
 comes from a Kubernetes secret object `cloudsql-db-credentials` that we
 created earlier.
 
+## Advanced: Cloud SQL IAM Database Authentication
+
+With [Cloud SQL IAM database authentication](https://cloud.google.com/sql/docs/postgres/authentication),
+you can allow your application to connect to the Cloud SQL instance with the service account, meaning that you
+don't need to manage any password for the Postgres user.
+
+Here are the additinal steps to run Hasura on GKE connecting to Cloud SQL with IAM database authentication.
+You can skip the step Set up Cloud SQL Proxy Credentials if you connect with IAM database authentication.
+
+### Create Google Service Account with necessary permissions
+
+Create a Service Account `hasura`.
+
+```bash
+PROJECT=hasura
+SA_NAME=hasura
+gcloud iam service-accounts create ${SA_NAME} \
+    --display-name=${SA_NAME} \
+    --project=${PROJECT}
+```
+
+Grant the necessary permissions to the service account with the following commands:
+
+```bash
+NAMESPACE=default
+KSA_NAME=hasura
+# to allow service account to login with IAM database authentication
+gcloud projects add-iam-policy-binding hasura \
+    --member=serviceAccount:${SA_NAME}@${PROJECT}.iam.gserviceaccount.com \
+    --role=roles/cloudsql.instanceUser
+# to allow cloud-sql-proxy to connect to the Cloud SQL instance
+gcloud projects add-iam-policy-binding hasura \
+    --member=serviceAccount:${SA_NAME}@${PROJECT}.iam.gserviceaccount.com \
+    --role=roles/cloudsql.client
+# to allow Kubernetes ServiceAccount to impersonate the GCP Service Account
+gcloud iam service-accounts add-iam-policy-binding ${SA_NAME}@${PROJECT}.iam.gserviceaccount.com \
+    --role roles/iam.workloadIdentityUser \
+    --member "serviceAccount:${PROJECT}.svc.id.goog[${NAMESPACE}/${KSA_NAME}]"
+```
+
+### Create Cloud SQL user with IAM_SERVICE_ACCONT user type
+
+Create a Cloud SQL user with `--type=cloud_iam_service_account`
+
+```bash
+gcloud sql users create ${SA_NAME}@${PROJECT}.iam \
+    --instance hasura-postgres \
+    --type=cloud_iam_service_account --project ${PROJECT}
+```
+
+Note that the Cloud SQL user's name needs to be in the format of `[service account name]@[project id].iam`.
+
+By default, the Postgres user with `IAM_SERVICE_ACCONT` type doesn't have any permission.
+So you need to grant the necessary permission with [GRANT](https://www.postgresql.org/docs/current/sql-grant.html) command.
+Here's an example command:
+
+```sql
+GRANT ALL ON ALL TABLES in SCHEMA public TO "[service account name]@[project id].iam";
+```
+
+### Deploy with the service account
+
+
+Create a Kubernetes Service Account `hasura` with annotations `iam.gkd.io/gcp-service-account` to
+tell the Kubernetes Service Account which Google Service Account to use.
+
+```bash
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    iam.gke.io/gcp-service-account: ${SA_NAME}@${PROJECT}.iam.gserviceaccount.com
+  name: $KSA_NAME
+EOF
+```
+
+
+In the manifest file for Deployment, you need to specify the Service Account with `serviceAccountName` field,
+provide `HASURA_GRAPHQL_DATABASE_URL` in the format of `"postgres://[database host]:[database port]/[database name]?user=[service account name]@[project id].iam"`,
+and make sure that the `args` of `cloud-sql-proxy` container includes `--auto-iam-authn`:
+
+```diff
+...
+ spec:
+   template:
+     metadata:
+       labels:
+         app: $DEPLOYMENT_NAME
+     spec:
++      serviceAccountName: hasura # $KSA_NAME
+       - name: hasura
+         image: hasura/graphql-engine:v2.33.0
+         ports:
+         - containerPort: 8080
+           protocol: TCP
+         env:
++          - name: HASURA_GRAPHQL_DATABASE_URL
++            value: "postgres://localhost:5432/hasura?user=[service account name]@[project id].iam"
+           ## enable the console served by server
+           - name: HASURA_GRAPHQL_ENABLE_CONSOLE
+             value: "true"
+           ## enable debugging mode. It is recommended to disable this in production
+           - name: HASURA_GRAPHQL_DEV_MODE
+             value: "true"
+       - name: cloud-sql-proxy
+         image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:latest
+         args:
+           # If connecting to a Cloud SQL instance within a VPC network, you can use the
+           # following flag to have the proxy connect over private IP
+           - "--private-ip"
++          - "--auto-iam-authn"
+           # Ensure the port number on the --port argument matches the value of the DB_PORT env var on the my-app container.
+           - "--port=5432"
+           # instance connection name takes format "PROJECT:REGION:INSTANCE_NAME"
+           - "[INSTANCE_CONNECTION_NAME]"
+```
+
+
 ## Tearing down
 
 To clean up the resources created, just delete the Google Cloud Project:
