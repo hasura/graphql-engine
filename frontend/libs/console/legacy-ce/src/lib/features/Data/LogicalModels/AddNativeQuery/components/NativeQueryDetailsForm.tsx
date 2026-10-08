@@ -64,13 +64,13 @@ export const NativeQueryFormFields = ({ sources }: { sources?: Source[] }) => {
         <GraphQLSanitizedInputField
           name="root_field_name"
           label="Native Query Name"
-          placeholder="Name that exposes this model in GraphQL API"
+          placeholder="Name that exposes this query in GraphQL API"
           hideTips
         />
         <InputField
           name="comment"
           label="Comment"
-          placeholder="A description of this logical model"
+          placeholder="A description of this native query"
         />
         <Select
           name="source"
