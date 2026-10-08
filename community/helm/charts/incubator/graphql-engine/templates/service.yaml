@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "hasura-graphql-engine.fullname" . }}
+  labels:
+    {{- include "hasura-graphql-engine.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.hasura.server.port }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "hasura-graphql-engine.selectorLabels" . | nindent 4 }}

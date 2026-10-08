@@ -1,0 +1,74 @@
+apiVersion: v1
+entries:
+  graphql-engine:
+  - apiVersion: v2
+    appVersion: 1.3.2
+    created: "2020-09-12T23:40:01.1102598+08:00"
+    dependencies:
+    - condition: hasura.database.postgres.managed.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 9.4.1
+    description: A Helm chart for Hasura GraphQL Engine. Currently in alpha
+    digest: 37963a0f42cae6742d3407ffd508fb29019bf218886fc3d4d411ddfd4760165d
+    keywords:
+    - application
+    - graphql
+    - haskell
+    - hasura
+    - productivity
+    - web
+    maintainers:
+    - email: 29133953+stevefan1999-personal@users.noreply.github.com
+      name: Steve Fan
+    name: graphql-engine
+    type: application
+    urls:
+    - graphql-engine-0.0.7.tgz
+    version: 0.0.7
+  - apiVersion: v2
+    appVersion: 1.3.2
+    created: "2020-09-12T23:40:01.1072579+08:00"
+    dependencies:
+    - condition: hasura.database.postgres.managed.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 9.4.1
+    description: A Helm chart for Hasura GraphQL Engine. Currently in alpha
+    digest: 8314db6acd9688d069760f56868e6e6c036b80af9d42879ecc09f55c924f0425
+    keywords:
+    - application
+    - graphql
+    - haskell
+    - hasura
+    - productivity
+    - web
+    maintainers:
+    - email: 29133953+stevefan1999-personal@users.noreply.github.com
+      name: Steve Fan
+    name: graphql-engine
+    type: application
+    urls:
+    - graphql-engine-0.0.6.tgz
+    version: 0.0.6
+  - apiVersion: v1
+    appVersion: 1.3.2
+    created: "2020-09-12T23:40:01.103257+08:00"
+    description: A Helm chart for Hasura GraphQL Engine. Currently in alpha
+    digest: fafbc4154af38b85f635dc8b9daf800e39f7777b5007ea145561e0f9a1ff68c7
+    keywords:
+    - application
+    - graphql
+    - haskell
+    - hasura
+    - productivity
+    - web
+    maintainers:
+    - email: 29133953+stevefan1999-personal@users.noreply.github.com
+      name: Steve Fan
+    name: graphql-engine
+    type: application
+    urls:
+    - graphql-engine-0.0.5.tgz
+    version: 0.0.5
+generated: "2020-09-12T23:40:01.0992565+08:00"
