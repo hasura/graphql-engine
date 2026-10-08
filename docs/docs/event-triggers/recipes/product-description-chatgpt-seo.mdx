@@ -377,7 +377,7 @@ async def update_product_description(product_id, improved_description):
     "x-hasura-admin-secret": HASURA_ADMIN_SECRET,
   }
 
-  #Ideally store your querys in another file where you can re-use them
+  #Ideally store your queries in another file where you can re-use them
   body = {
       "query": """
           mutation UpdateProduct($id: uuid!, $description: String) {
