@@ -1,15 +1,19 @@
-import { useState } from 'react';
-import produce from 'immer';
-import React from 'react';
+import React, { useState } from 'react';
 import { AiFillCaretDown } from 'react-icons/ai';
-import { DropdownMenu } from '../../../../new-components/DropdownMenu';
+import {
+  Checkbox,
+  CheckedState,
+  DropdownMenu,
+  IconButton,
+} from '@hasura/shared/ui';
 import { FaFilter } from 'react-icons/fa';
 import { BsCheck2All } from 'react-icons/bs';
+import { Flex } from '@radix-ui/themes';
 
 export const useCheckRows = <T,>(
   data: (T & { id: string })[],
   filteredData: (T & { id: string })[],
-  allData: (T & { id: string })[]
+  allData: (T & { id: string })[],
 ) => {
   const [checkedIds, setCheckedIds] = useState<string[]>([]);
 
@@ -25,20 +29,13 @@ export const useCheckRows = <T,>(
   const partialSelection =
     checkedIds.length > 0 && checkedIds.length < data.length;
 
-  const inputStatus: 'indeterminate' | 'determinate' = partialSelection
+  const inputStatus: CheckedState = partialSelection
     ? 'indeterminate'
-    : 'determinate';
+    : checkedIds.length > 0;
 
   const onCheck = (id: string) => {
-    setCheckedIds(prev =>
-      produce(prev, draft => {
-        if (draft.includes(id)) {
-          const i = draft.indexOf(id);
-          draft.splice(i, 1);
-        } else {
-          draft.push(id);
-        }
-      })
+    setCheckedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
   };
 
@@ -49,19 +46,19 @@ export const useCheckRows = <T,>(
     const { useOriginalList, useAllFilteredList } = props ?? {};
 
     if (useOriginalList) {
-      setCheckedIds(allData.map(item => item.id));
+      setCheckedIds(allData.map((item) => item.id));
       return;
     }
 
     if (useAllFilteredList) {
-      setCheckedIds(filteredData.map(item => item.id));
+      setCheckedIds(filteredData.map((item) => item.id));
       return;
     }
 
     if (allChecked) {
       setCheckedIds([]);
     } else {
-      setCheckedIds(data.map(item => item.id));
+      setCheckedIds(data.map((item) => item.id));
     }
   };
 
@@ -69,46 +66,41 @@ export const useCheckRows = <T,>(
     setCheckedIds([]);
   };
 
-  React.useEffect(() => {
-    if (!checkboxRef.current) return;
-    checkboxRef.current.indeterminate = inputStatus === 'indeterminate';
-  }, [inputStatus]);
-
   const checkAllElement = () => (
-    <div className="flex items-center gap-2">
-      <input
-        ref={checkboxRef}
-        type="checkbox"
-        className="cursor-pointer
-              rounded border shadow-sm border-gray-400 hover:border-gray-500 focus:ring-yellow-400"
-        checked={allChecked}
+    <Flex align="center" gap="2">
+      <Checkbox
+        value={inputStatus}
         onChange={() => {
           toggleAll();
         }}
       />
-      <DropdownMenu
-        items={[
-          [
-            <div
-              className="py-1.5 gap-2 flex items-center"
-              onClick={() => toggleAll({ useAllFilteredList: true })}
+      {checkedIds.length < data.length && (
+        <DropdownMenu.Root
+          items={[
+            <DropdownMenu.Item
+              key="use-filtered"
+              onSelect={() => toggleAll({ useAllFilteredList: true })}
             >
-              <FaFilter /> All {filteredData.length} results (filtered)
-            </div>,
-          ],
-          [
-            <div
-              className="py-1.5 gap-2 flex items-center"
-              onClick={() => toggleAll({ useOriginalList: true })}
+              <Flex key="filtered" gap="2" align="center" className="py-1.5">
+                <FaFilter /> All {filteredData.length} results (filtered)
+              </Flex>
+            </DropdownMenu.Item>,
+            <DropdownMenu.Item
+              key="use-all"
+              onSelect={() => toggleAll({ useOriginalList: true })}
             >
-              <BsCheck2All /> All {allData.length} items
-            </div>,
-          ],
-        ]}
-      >
-        <AiFillCaretDown className="cursor-pointer" />
-      </DropdownMenu>
-    </div>
+              <Flex key="all" gap="2" align="center" className="py-1.5">
+                <BsCheck2All /> All {allData.length} items
+              </Flex>
+            </DropdownMenu.Item>,
+          ]}
+        >
+          <IconButton variant="ghost" radius="full">
+            <AiFillCaretDown className="cursor-pointer" />
+          </IconButton>
+        </DropdownMenu.Root>
+      )}
+    </Flex>
   );
 
   return {

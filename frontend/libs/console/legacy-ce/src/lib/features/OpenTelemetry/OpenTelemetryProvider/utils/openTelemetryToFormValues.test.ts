@@ -1,4 +1,4 @@
-import type { Metadata } from '../../../hasura-metadata-types';
+import type { Metadata } from '@hasura/shared/types';
 import type { FormValues } from '../../OpenTelemetry/components/Form/schema';
 
 import {
@@ -35,7 +35,7 @@ describe('openTelemetryToFormValues', () => {
     logsEndpoint: 'https://hasura.io/v1/logs',
     tracesEndpoint: 'https://hasura.io/v1/traces',
     metricsEndpoint: 'https://hasura.io/v1/metrics',
-    headers: [{ name: 'baz', value: 'qux', type: 'from_value' }],
+    headers: [{ name: 'baz', value: 'qux', type: 'value' }],
 
     dataType: ['traces', 'metrics', 'logs'],
     // At the beginning, only one Connection Type is available
@@ -62,14 +62,14 @@ describe('openTelemetryToFormValues', () => {
         tracesEndpoint: '',
         metricsEndpoint: '',
         logsEndpoint: '',
-        headers: [{ name: 'baz', value: 'qux', type: 'from_value' }],
+        headers: [{ name: 'baz', value: 'qux', type: 'value' }],
 
         // At the beginning, only one Data Type is available
         dataType: ['traces'],
         // At the beginning, only one Connection Type is available
         connectionType: 'http/protobuf',
         tracesPropagators: ['b3'],
-      })
+      }),
     ).toEqual({
       status: 'disabled',
 

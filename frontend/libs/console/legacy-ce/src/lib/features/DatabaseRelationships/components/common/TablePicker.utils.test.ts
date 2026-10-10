@@ -3,7 +3,7 @@ import {
   mapMetadataSourceToSelectorItems,
   getDefaultSourceSelectorItem,
 } from './TablePicker.utils';
-import type { Source } from '../../../../features/hasura-metadata-types';
+import type { Source } from '@hasura/shared/types';
 import { SourceSelectorItem } from './SourcePicker/SourcePicker.types';
 
 const sources: Source[] = [
@@ -64,7 +64,7 @@ describe('mapMetadataSourceToSelectorItems', () => {
     ];
 
     expect(mapMetadataSourceToSelectorItems(sources, filterDataSource)).toEqual(
-      expected
+      expected,
     );
   });
 });
@@ -93,7 +93,7 @@ describe('getDefaultSourceSelectorItem', () => {
         sourceSelectorItems,
         dataSourceName: 'Chinook',
         table: ['Album'],
-      })
+      }),
     ).toEqual(expected);
   });
 });

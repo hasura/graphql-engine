@@ -1,12 +1,11 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-webpack5';
 import type { ComponentPropsWithoutRef } from 'react';
 
-import { action } from '@storybook/addon-actions';
-import { expect } from '@storybook/jest';
-import { waitFor, within } from '@storybook/testing-library';
+import { action } from 'storybook/actions';
+import { expect, waitFor, within } from 'storybook/test';
 import { useEffect, useState } from 'react';
 
-import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
 import { OpenTelemetry } from './OpenTelemetry';
 import { defaultValues as defaultFormValues } from './components/Form/schema';
 
@@ -24,7 +23,7 @@ export default {
 } as Meta<typeof OpenTelemetry>;
 
 export const Disabled: StoryObj<typeof OpenTelemetry> = {
-  render: args => {
+  render: (args) => {
     return <OpenTelemetry {...args} />;
   },
 
@@ -32,7 +31,7 @@ export const Disabled: StoryObj<typeof OpenTelemetry> = {
 };
 
 export const DisabledWithoutLicense: StoryObj<typeof OpenTelemetry> = {
-  render: args => {
+  render: (args) => {
     return <OpenTelemetry {...args} />;
   },
 
@@ -44,7 +43,7 @@ export const DisabledWithoutLicense: StoryObj<typeof OpenTelemetry> = {
       action('setOpenTelemetry')(...args);
 
       // Fake the server loading
-      return new Promise(resolve => setTimeout(resolve, 1000));
+      return new Promise((resolve) => setTimeout(resolve, 1000));
     },
 
     skeletonMode: false,
@@ -68,7 +67,7 @@ export const DisabledWithoutLicense: StoryObj<typeof OpenTelemetry> = {
 };
 
 export const Enabled: StoryObj<typeof OpenTelemetry> = {
-  render: args => {
+  render: (args) => {
     return <OpenTelemetry {...args} />;
   },
 
@@ -80,7 +79,7 @@ export const Enabled: StoryObj<typeof OpenTelemetry> = {
       action('setOpenTelemetry')(...args);
 
       // Fake the server loading
-      return new Promise(resolve => setTimeout(resolve, 1000));
+      return new Promise((resolve) => setTimeout(resolve, 1000));
     },
 
     skeletonMode: false,
@@ -102,7 +101,7 @@ export const Enabled: StoryObj<typeof OpenTelemetry> = {
 };
 
 export const Skeleton: StoryObj<typeof OpenTelemetry> = {
-  render: args => {
+  render: (args) => {
     return <OpenTelemetry {...args} />;
   },
 
@@ -114,7 +113,7 @@ export const Skeleton: StoryObj<typeof OpenTelemetry> = {
       action('updateOpenT')(...args);
 
       // Fake the server loading
-      return new Promise(resolve => setTimeout(resolve, 1000));
+      return new Promise((resolve) => setTimeout(resolve, 1000));
     },
 
     skeletonMode: true,
@@ -165,8 +164,8 @@ const metadataLoadedProps: ComponentPropsWithoutRef<typeof OpenTelemetry> = {
     tracesEndpoint: 'http://localhost:1234',
     metricsEndpoint: 'http://localhost:1234',
     tracesPropagators: ['tracecontext'],
-    headers: [{ name: 'foo', value: 'bar', type: 'from_value' }],
-    attributes: [{ name: 'foo', value: 'bar', type: 'from_value' }],
+    headers: [{ name: 'foo', value: 'bar', type: 'value' }],
+    attributes: [{ name: 'foo', value: 'bar', type: 'value' }],
   },
 };
 
@@ -175,7 +174,7 @@ export const DefaultValues: StoryObj = {
     // Initial placeholder props
     const [props, setProps] =
       useState<ComponentPropsWithoutRef<typeof OpenTelemetry>>(
-        loadingMetadataProps
+        loadingMetadataProps,
       );
 
     // Simulate passing from the loading to the default state
@@ -200,14 +199,14 @@ export const DefaultValues: StoryObj = {
     const canvas = within(canvasElement);
 
     // STEP: Ensure the props used for the test are different from the default ones
-    expect(metadataLoadedProps.metadataFormValues).not.toEqual(
-      defaultFormValues
+    await expect(metadataLoadedProps.metadataFormValues).not.toEqual(
+      defaultFormValues,
     );
 
     // STEP: Wait until the metadata has been loaded (through waiting for the submit button being enabled)
     const submitButton = await canvas.findByRole('button', { name: 'Update' });
-    await waitFor(() => {
-      expect(submitButton).toBeEnabled();
+    await waitFor(async () => {
+      await expect(submitButton).toBeEnabled();
     });
 
     // STEP: check the default value of the Batch Size
@@ -230,10 +229,10 @@ export const DefaultValues: StoryObj = {
       selector: 'input',
     });
 
-    expect(batchSizeInputField).toHaveValue(99);
-    expect(tracesEndpoint).toHaveValue('http://localhost:1234');
-    expect(metricsEndpoint).toHaveValue('http://localhost:1234');
-    expect(logsEndpoint).toHaveValue('http://localhost:1234');
+    await expect(batchSizeInputField).toHaveValue(99);
+    await expect(tracesEndpoint).toHaveValue('http://localhost:1234');
+    await expect(metricsEndpoint).toHaveValue('http://localhost:1234');
+    await expect(logsEndpoint).toHaveValue('http://localhost:1234');
 
     // All the other input fields are not tested since if one input field has the correct default value
     // all of the other input fields have the correct default value.

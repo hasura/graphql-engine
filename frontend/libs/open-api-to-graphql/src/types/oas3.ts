@@ -13,12 +13,7 @@ type ExternalDocumentationObject = {
 };
 
 type SchemaObjectType =
-  | 'string'
-  | 'number'
-  | 'integer'
-  | 'boolean'
-  | 'object'
-  | 'array';
+  'string' | 'number' | 'integer' | 'boolean' | 'object' | 'array';
 export type SchemaObject = {
   title?: string;
   type?: SchemaObjectType | [SchemaObjectType, null];

@@ -1,63 +1,45 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { useRemoteSchema } from '../../../../MetadataAPI';
-import { MapSelector } from '../../../../../new-components/MapSelector';
-import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
 import {
+  IndicatorCard,
   LinkBlockHorizontal,
   LinkBlockVertical,
-} from '../../../../../new-components/LinkBlock';
+  SkeletonList,
+} from '@hasura/shared/ui';
 import { RemoteDatabaseWidget } from '../RemoteDatabaseWidget';
 import { RsSourceTypeSelector } from '../RsSourceTypeSelector';
 import { Schema } from './schema';
-import { getTypesFromIntrospection } from '../../utils';
-import { useTableColumns } from '../../../../DatabaseRelationships/hooks/useTableColumns';
+import { getTypesFromIntrospection } from '../../../utils';
+import { useTableColumns } from '@hasura/metadata/data-source';
+import { useIntrospectRemoteSchema, useMetadata } from '@hasura/metadata/api';
+import { MetadataSelectors } from '@hasura/metadata/helpers';
+import { Flex, Skeleton } from '@radix-ui/themes';
+import { MapSelector } from './MapSelector';
+import { Metadata, RemoteRelationship } from '@hasura/shared/types';
 
 export const FormElements = ({
   sourceRemoteSchema,
-  existingRelationshipName,
+  existingRelationship,
 }: {
   sourceRemoteSchema: string;
-  existingRelationshipName: string;
+  existingRelationship: RemoteRelationship | undefined;
 }) => {
+  const { data: meta, isFetching: isFetchingMetadata } = useMetadata();
+  const { data, isFetching: isFetchingRemoteSchema } =
+    useIntrospectRemoteSchema(sourceRemoteSchema);
+
   const { watch } = useFormContext<Schema>();
-
   const target = watch('target');
-  const RSTypeName = watch('typeName');
-  const mapping = watch('mapping');
-  const { fetchSchema, data, isLoading } = useRemoteSchema();
 
-  const [typeMap, setTypeMap] = useState<{ field: string; column: string }[]>(
-    []
-  );
-
-  const dataSourceName = target?.dataSourceName;
-  const table = target?.table;
-  const { data: columnData } = useTableColumns({ dataSourceName, table });
-
-  const columns: string[] = columnData
-    ? (columnData ?? []).map(column => column.name)
-    : [];
-
-  useEffect(() => {
-    if (sourceRemoteSchema) {
-      fetchSchema(sourceRemoteSchema);
-    }
-  }, [fetchSchema, sourceRemoteSchema]);
-
-  useEffect(() => {
-    const defaultMapping = mapping?.length ? mapping : [];
-    if (existingRelationshipName && mapping?.length) setTypeMap(defaultMapping);
-  }, [RSTypeName, existingRelationshipName, mapping]);
-
-  if (isLoading) {
+  if (isFetchingMetadata || isFetchingRemoteSchema) {
     return (
       <div className="my-2">
-        <IndicatorCard status="info">Loading...</IndicatorCard>
+        <SkeletonList count={5} />
       </div>
     );
   }
-  if (!data)
+
+  if (!data || !meta)
     return (
       <div className="my-2">
         <IndicatorCard status="info">Data is not ready</IndicatorCard>;
@@ -68,37 +50,93 @@ export const FormElements = ({
 
   return (
     <>
-      <div className="grid grid-cols-12 mt-md">
+      <div className="grid grid-cols-12 mt-4">
         <div className="col-span-5">
           <RsSourceTypeSelector
-            types={remoteSchemaTypes.map(t => t.typeName).sort()}
+            types={remoteSchemaTypes.map((t) => t.typeName).sort()}
             sourceTypeKey="typeName"
             nameTypeKey="relationshipName"
-            isModify={!!existingRelationshipName}
+            remoteSchemaName={sourceRemoteSchema}
+            isModify={!!existingRelationship}
           />
         </div>
 
-        <LinkBlockHorizontal />
+        <Flex className="col-span-2 h-full" align="center">
+          <LinkBlockHorizontal />
+        </Flex>
 
-        <div className="col-span-5 pt-10 mt-20">
-          <RemoteDatabaseWidget />
-        </div>
+        <Flex className="col-span-5 h-full" align="center">
+          <RemoteDatabaseWidget meta={meta} />
+        </Flex>
       </div>
 
+      {Boolean(target.table) && (
+        <RelationshipMapSelector
+          existingRelationship={existingRelationship}
+          remoteSchemaTypes={remoteSchemaTypes}
+          meta={meta}
+        />
+      )}
+    </>
+  );
+};
+
+const RelationshipMapSelector = ({
+  meta,
+  remoteSchemaTypes,
+}: {
+  meta: Metadata;
+  remoteSchemaTypes: {
+    typeName: string;
+    fields: string[];
+  }[];
+  existingRelationship: RemoteRelationship | undefined;
+}) => {
+  const { watch, setValue } = useFormContext<Schema>();
+  const target = watch('target');
+  const rsTypeName = watch('typeName');
+  const mapping = watch('mapping');
+
+  const table = target?.table;
+  const dataSourceName = target?.dataSourceName;
+  const source = MetadataSelectors.findSource(dataSourceName)(meta);
+
+  const { data: columnData, isFetching: isFetchingColumns } = useTableColumns({
+    source,
+    table,
+  });
+
+  const columns: string[] = columnData
+    ? (columnData.columns ?? []).map((column) => column.name)
+    : [];
+  const types =
+    remoteSchemaTypes.find((x) => x.typeName === rsTypeName)?.fields ?? [];
+
+  useEffect(() => {
+    setValue(
+      'mapping',
+      mapping.filter(
+        (typeMap) =>
+          columns.includes(typeMap.column) && types.includes(typeMap.field),
+      ),
+    );
+  }, [columns, types]);
+
+  return (
+    <>
       {/* vertical connector line */}
+
       <LinkBlockVertical title="Type Mapped To" />
-      <MapSelector
-        types={
-          remoteSchemaTypes.find(x => x.typeName === RSTypeName)?.fields ?? []
-        }
-        columns={columns}
-        typeMappings={typeMap}
-        placeholder=""
-        name="mapping"
-        onChange={e => {
-          setTypeMap([...e]);
-        }}
-      />
+      {isFetchingColumns ? (
+        <Skeleton width="100%" height="100px" />
+      ) : (
+        <MapSelector
+          types={types}
+          columns={columns}
+          mapping={mapping}
+          setMapping={(values) => setValue('mapping', values)}
+        />
+      )}
     </>
   );
 };

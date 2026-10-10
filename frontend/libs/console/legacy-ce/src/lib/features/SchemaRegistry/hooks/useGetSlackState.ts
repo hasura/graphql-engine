@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { FETCH_SLACK_STATE } from '../queries';
 import { GetSlackStateResponseWithError } from '../types';
 import { FETCH_SLACK_STATE_QUERY_NAME } from '../constants';
@@ -19,7 +19,7 @@ type FetchSlackStateResponse =
     };
 
 export const useGetSlackState = (
-  projectId: string
+  projectId: string,
 ): FetchSlackStateResponse => {
   const fetchSlackStateQueryFn = (projectId: string) => {
     return controlPlaneClient.query<

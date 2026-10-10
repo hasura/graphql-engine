@@ -1,6 +1,6 @@
-import { SimpleForm } from '../../../../../new-components/Form';
-import { Button } from '../../../../../new-components/Button';
-import { StoryFn, Meta } from '@storybook/react';
+import { SimpleForm, Button } from '@hasura/shared/ui';
+
+import { StoryFn, Meta } from '@storybook/react-webpack5';
 import { z } from 'zod';
 
 import { ReadReplicas } from './ReadReplicas';
@@ -12,7 +12,7 @@ export default {
 
 export const Primary: StoryFn<typeof ReadReplicas> = () => (
   <SimpleForm
-    onSubmit={data => console.log(data)}
+    onSubmit={(data) => console.log(data)}
     schema={z.object({
       readReplicas: z.array(connectionInfoSchema),
     })}

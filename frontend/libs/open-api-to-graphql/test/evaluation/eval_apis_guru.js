@@ -8,7 +8,7 @@
 const openapiToGraphql = require('../../lib/index');
 const Glob = require('glob');
 const fs = require('fs');
-const YAML = require('js-yaml');
+const { load: loadYaml } = require('js-yaml');
 const ss = require('simple-statistics');
 
 /**
@@ -75,7 +75,7 @@ async function checkOas(OASList) {
 
 function printOverallResults(results) {
   const noWarnings = results.successes.filter(
-    s => s.report.warnings.length === 0
+    (s) => s.report.warnings.length === 0,
   ).length;
   console.log('----------------------');
   console.log('Overall results:');
@@ -83,13 +83,13 @@ function printOverallResults(results) {
     `Assessed APIs: ${results.overall}\n` +
       `Successes: ${results.successes.length}\n` +
       `  with no warnings: ${noWarnings}\n` +
-      `Errors: ${results.errors.length}`
+      `Errors: ${results.errors.length}`,
   );
 }
 
 function printWarningsBreakdown(results) {
   let allWarnings = [];
-  results.successes.forEach(suc => {
+  results.successes.forEach((suc) => {
     allWarnings = allWarnings.concat(suc.report.warnings);
   });
   const warningDict = groupBy(allWarnings, 'type');
@@ -113,7 +113,7 @@ function printErrorBreakdown(results) {
     invalidReference: 0, // thrown by: OpenAPI-to-GraphQL
     other: 0,
   };
-  results.errors.forEach(err => {
+  results.errors.forEach((err) => {
     if (/can not be used as an Enum value/.test(err.error)) {
       errors.invalidEnumValue++;
     } else if (/^Cannot sanitize /.test(err.error)) {
@@ -149,13 +149,13 @@ function getWarningsDistribution(results) {
     InvalidSchemaTypeScalar: {},
   };
 
-  results.successes.forEach(suc => {
+  results.successes.forEach((suc) => {
     const overall = suc.report.warnings.length;
     if (typeof dist.overall[overall] === 'undefined') dist.overall[overall] = 0;
     dist.overall[overall]++;
 
     const missingResponseSchema = suc.report.warnings.filter(
-      w => w.type === 'MissingResponseSchema'
+      (w) => w.type === 'MissingResponseSchema',
     ).length;
     if (
       typeof dist.MissingResponseSchema[missingResponseSchema] === 'undefined'
@@ -164,21 +164,21 @@ function getWarningsDistribution(results) {
     dist.MissingResponseSchema[missingResponseSchema]++;
 
     const invalidSchemaType = suc.report.warnings.filter(
-      w => w.type === 'InvalidSchemaType'
+      (w) => w.type === 'InvalidSchemaType',
     ).length;
     if (typeof dist.InvalidSchemaType[invalidSchemaType] === 'undefined')
       dist.InvalidSchemaType[invalidSchemaType] = 0;
     dist.InvalidSchemaType[invalidSchemaType]++;
 
     const multipleResponses = suc.report.warnings.filter(
-      w => w.type === 'MultipleResponses'
+      (w) => w.type === 'MultipleResponses',
     ).length;
     if (typeof dist.MultipleResponses[multipleResponses] === 'undefined')
       dist.MultipleResponses[multipleResponses] = 0;
     dist.MultipleResponses[multipleResponses]++;
 
     const invalidSchemaTypeScalar = suc.report.warnings.filter(
-      w => w.type === 'InvalidSchemaTypeScalar'
+      (w) => w.type === 'InvalidSchemaTypeScalar',
     ).length;
     if (
       typeof dist.InvalidSchemaTypeScalar[invalidSchemaTypeScalar] ===
@@ -205,28 +205,28 @@ function getWarningsDistribution(results) {
 }
 
 function printStats(results) {
-  const numOps = results.successes.map(succ => succ.report.numOps);
+  const numOps = results.successes.map((succ) => succ.report.numOps);
   console.log(`Number of operations:`);
   console.log(printSummary(numOps) + '\n');
 
-  const numOpsQuery = results.successes.map(succ => succ.report.numOpsQuery);
+  const numOpsQuery = results.successes.map((succ) => succ.report.numOpsQuery);
   console.log(`Number of query operations:`);
   console.log(printSummary(numOpsQuery) + '\n');
 
   const numOpsMutation = results.successes.map(
-    succ => succ.report.numOpsMutation
+    (succ) => succ.report.numOpsMutation,
   );
   console.log(`Number of mutation operations:`);
   console.log(printSummary(numOpsMutation) + '\n');
 
   const numQueries = results.successes.map(
-    succ => succ.report.numQueriesCreated
+    (succ) => succ.report.numQueriesCreated,
   );
   console.log(`Number of queries created:`);
   console.log(printSummary(numQueries) + '\n');
 
   const numMutations = results.successes.map(
-    succ => succ.report.numMutationsCreated
+    (succ) => succ.report.numMutationsCreated,
   );
   console.log(`Number of mutations created:`);
   console.log(printSummary(numMutations) + '\n');
@@ -259,7 +259,7 @@ function printSummary(arr) {
 
 function warningsPerApi(results) {
   const apiDict = {};
-  results.successes.forEach(suc => {
+  results.successes.forEach((suc) => {
     let name = suc.name;
     while (typeof apiDict[name] !== 'undefined') {
       name += '_1';
@@ -267,16 +267,16 @@ function warningsPerApi(results) {
     apiDict[name] = {
       overall: suc.report.warnings.length,
       MissingResponseSchema: suc.report.warnings.filter(
-        w => w.type === 'MissingResponseSchema'
+        (w) => w.type === 'MissingResponseSchema',
       ).length,
       InvalidSchemaType: suc.report.warnings.filter(
-        w => w.type === 'InvalidSchemaType'
+        (w) => w.type === 'InvalidSchemaType',
       ).length,
       MultipleResponses: suc.report.warnings.filter(
-        w => w.type === 'MultipleResponses'
+        (w) => w.type === 'MultipleResponses',
       ).length,
       InvalidSchemaTypeScalar: suc.report.warnings.filter(
-        w => w.type === 'InvalidSchemaTypeScalar'
+        (w) => w.type === 'InvalidSchemaTypeScalar',
       ).length,
       numOps: suc.report.numOps,
       numOpsCreated:
@@ -319,7 +319,7 @@ function readFile(path) {
     if (/json$/.test(path)) {
       doc = JSON.parse(fs.readFileSync(path, 'utf8'));
     } else if (/yaml$|yml$/.test(path)) {
-      doc = YAML.safeLoad(fs.readFileSync(path, 'utf8'));
+      doc = loadYaml(fs.readFileSync(path, 'utf8'));
     }
     return doc;
   } catch (e) {
@@ -334,7 +334,7 @@ function readFile(path) {
  * @param  {Object}  oas
  * @return {Boolean}
  */
-const isValidOAS = oas => {
+const isValidOAS = (oas) => {
   return (
     typeof oas === 'object' &&
     typeof oas.info === 'object' &&
@@ -353,7 +353,7 @@ try {
 } catch (e) {
   console.error(
     `Error: Please provide maximum number of APIs to check. ` +
-      `For example:\n\n     npm run guru-test 10\n`
+      `For example:\n\n     npm run guru-test 10\n`,
   );
   process.exit();
 }

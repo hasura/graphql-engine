@@ -1,21 +1,32 @@
-import { useCallback, useMemo } from 'react';
-import { TrackedSuggestedRelationship } from '../types';
+import React, { useCallback, useMemo } from 'react';
 import { usePaginatedSearchableList } from '../../hooks';
-import { useCreateTableRelationships } from '../../../../DatabaseRelationships/hooks/useCreateTableRelationships/useCreateTableRelationships';
 import { TrackableListMenu } from '../../components/TrackableListMenu';
-import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
-import { CardedTable } from '../../../../../new-components/CardedTable';
-import { FaMagic } from 'react-icons/fa';
-import { TrackedRelationshipRow } from './TrackedRelationshipRow';
 import {
+  IndicatorCard,
+  CardedTable,
   useDestructiveAlert,
   useHasuraAlert,
-} from '../../../../../new-components/Alert';
-import { hasuraToast } from '../../../../../new-components/Toasts';
+  hasuraToast,
+  DisplayToastErrorMessage,
+  Checkbox,
+  Button,
+  Text,
+} from '@hasura/shared/ui';
+import DisplaySuggestedRelationship from './DisplaySuggestedRelationship';
 import { UNTRACK_RELATIONSHIP_SUCCESS_MESSAGE } from '../constants';
-import { DisplayToastErrorMessage } from '../../../components/DisplayErrorMessage';
-import React from 'react';
-import { anyIncludes, getTableDisplayName } from '../utils';
+import { anyIncludes } from '../utils';
+import {
+  TrackedSuggestedRelationship,
+  useDropRelationships,
+  useRenameRelationship,
+} from '@hasura/metadata/api';
+import { Flex } from '@radix-ui/themes';
+import { FaDatabase } from 'react-icons/fa6';
+import { getTableHeaderRow } from './utils';
+import {
+  capitalizeFirstLetter,
+  getTableDisplayName,
+} from '@hasura/shared/utils';
 
 const getRelationshipRowId = (relationship: TrackedSuggestedRelationship) => {
   const fromTable = getTableDisplayName(relationship.fromTable);
@@ -43,20 +54,21 @@ export const TrackedSuggestedRelationships = ({
 }) => {
   const listValues: TrackedSuggestedRelationshipWithId[] = useMemo(
     () =>
-      trackedRelationships.map(rel => ({
+      trackedRelationships.map((rel) => ({
         ...rel,
         id: getRelationshipRowId(rel),
       })),
-    [trackedRelationships]
+    [trackedRelationships],
   );
 
-  const { deleteRelationships, renameRelationships, isLoading } =
-    useCreateTableRelationships(dataSourceName);
+  const { renameRelationship, isPending: renameLoading } =
+    useRenameRelationship();
+  const { dropRelationships, isPending: dropLoading } = useDropRelationships();
 
   const filterFn = useCallback(
     (searchText: string, rel: TrackedSuggestedRelationship) =>
       anyIncludes(searchText, [rel.name, rel.type]),
-    []
+    [],
   );
 
   const listProps = usePaginatedSearchableList<
@@ -83,56 +95,60 @@ export const TrackedSuggestedRelationships = ({
       resourceType: 'relationships',
       destroyTerm: 'remove',
       onConfirm: () =>
-        new Promise(resolve => {
-          setLoadingIds(rels.map(r => r.id));
-          deleteRelationships({
-            data: rels.map(rel => ({
-              name: rel.name,
+        new Promise((resolve) => {
+          setLoadingIds(rels.map((r) => r.id));
+          dropRelationships(
+            rels.map((rel) => ({
+              relationship: rel.name,
               source: dataSourceName,
               table: rel.fromTable,
             })),
-            onSuccess: () => {
-              hasuraToast({
-                type: 'success',
-                title: UNTRACK_RELATIONSHIP_SUCCESS_MESSAGE,
-              });
-              resolve(true);
-              onDelete?.();
-              onChange?.();
+            {
+              onSuccess: () => {
+                hasuraToast({
+                  type: 'success',
+                  title: UNTRACK_RELATIONSHIP_SUCCESS_MESSAGE,
+                });
+                resolve(true);
+                onDelete?.();
+                onChange?.();
+              },
+              onError: (err) => {
+                hasuraToast({
+                  type: 'error',
+                  children: <DisplayToastErrorMessage message={err.message} />,
+                });
+                resolve(false);
+              },
+              onSettled: () => {
+                setLoadingIds([]);
+                reset();
+              },
             },
-            onError: err => {
-              hasuraToast({
-                type: 'error',
-                children: <DisplayToastErrorMessage message={err.message} />,
-              });
-              resolve(false);
-            },
-            onSettled: () => {
-              setLoadingIds([]);
-              reset();
-            },
-          });
+          );
         }),
     });
   };
 
   const onRenameRelationship = (rel: TrackedSuggestedRelationshipWithId) => {
     hasuraPrompt({
-      message:
-        'This will change the name of relationship exposed via the GraphQL schema',
+      message: (
+        <div className="mb-2">
+          <Text>
+            &apos;This will change the name of relationship exposed via the
+            GraphQL schema&apos;
+          </Text>
+        </div>
+      ),
       title: 'Rename Relationship',
       confirmText: 'Rename',
-      onCloseAsync: async result => {
+      onCloseAsync: async (result) => {
         if (result.confirmed) {
-          await renameRelationships({
-            data: [
-              {
-                name: rel.name,
-                source: dataSourceName,
-                table: rel.fromTable,
-                new_name: result.promptValue,
-              },
-            ],
+          await renameRelationship({
+            name: rel.name,
+            source: dataSourceName,
+            table: rel.fromTable,
+            new_name: result.promptValue,
           });
           onRename?.();
           onChange?.();
@@ -143,6 +159,8 @@ export const TrackedSuggestedRelationships = ({
       },
     });
   };
+
+  const isLoading = renameLoading || dropLoading;
 
   return (
     <div className="space-y-4">
@@ -160,43 +178,48 @@ export const TrackedSuggestedRelationships = ({
           <IndicatorCard>{`No relationships found.`}</IndicatorCard>
         </div>
       ) : (
-        <CardedTable.Table>
-          <CardedTable.TableHead>
-            <CardedTable.TableHeadRow>
-              <th className="w-0 bg-gray-50 px-sm text-sm font-semibold text-muted uppercase tracking-wider border-r">
-                {checkAllElement()}
-              </th>
-              <CardedTable.TableHeadCell>
-                <div>
-                  <FaMagic className="fill-muted" /> SUGGESTED RELATIONSHIPS
-                </div>
-              </CardedTable.TableHeadCell>
-              <CardedTable.TableHeadCell>SOURCE</CardedTable.TableHeadCell>
-              <CardedTable.TableHeadCell>TYPE</CardedTable.TableHeadCell>
-              <CardedTable.TableHeadCell>
-                RELATIONSHIP
-              </CardedTable.TableHeadCell>
-              <CardedTable.TableHeadCell>ACTIONS</CardedTable.TableHeadCell>
-            </CardedTable.TableHeadRow>
-          </CardedTable.TableHead>
+        <CardedTable
+          columns={getTableHeaderRow(checkAllElement())}
+          data={paginatedRelationships.map((relationship) => {
+            const isLoading =
+              loadingIds.length === 1 && loadingIds[0] === relationship.id;
 
-          <CardedTable.TableBody>
-            {paginatedRelationships.map(relationship => (
-              <TrackedRelationshipRow
-                key={relationship.id}
-                isChecked={checkedIds.includes(relationship.id)}
-                isLoading={
-                  loadingIds.length === 1 && loadingIds[0] === relationship.id
-                }
+            return [
+              <Checkbox
+                key={`check-${relationship.id}`}
+                value={checkedIds.includes(relationship.id)}
+                onChange={() => onCheck(relationship.id)}
+              />,
+              relationship.name,
+              <Flex key={`source-${relationship.id}`} align="center" gap="2">
+                <FaDatabase /> <span>{dataSourceName}</span>
+              </Flex>,
+              capitalizeFirstLetter(relationship.type),
+              <DisplaySuggestedRelationship
+                key={`rel-${relationship.id}`}
                 relationship={relationship}
-                onToggle={() => onCheck(relationship.id)}
-                onUntrack={() => onUntrack([relationship])}
-                onRename={() => onRenameRelationship(relationship)}
-                dataSourceName={dataSourceName}
-              />
-            ))}
-          </CardedTable.TableBody>
-        </CardedTable.Table>
+              />,
+              <Flex key={`actions-${relationship.id}`} align="center" gap="2">
+                <Button
+                  mode="destructive"
+                  size="sm"
+                  onClick={() => onUntrack([relationship])}
+                  disabled={isLoading}
+                >
+                  Untrack
+                </Button>
+                <Button
+                  size="sm"
+                  className="ml-1"
+                  onClick={() => onRenameRelationship(relationship)}
+                  disabled={isLoading}
+                >
+                  Rename
+                </Button>
+              </Flex>,
+            ];
+          })}
+        />
       )}
     </div>
   );

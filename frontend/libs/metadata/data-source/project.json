@@ -1,0 +1,16 @@
+{
+  "name": "metadata-data-source",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/metadata/data-source/src",
+  "projectType": "library",
+  "tags": ["scope:metadata"],
+  "targets": {
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "coverage/libs/metadata/data-source"
+      }
+    }
+  }
+}

@@ -1,20 +1,24 @@
 import React, { useCallback } from 'react';
-import { FaMagic } from 'react-icons/fa';
-import { useHasuraAlert } from '../../../../../new-components/Alert';
-import { CardedTable } from '../../../../../new-components/CardedTable';
-import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
-import { hasuraToast } from '../../../../../new-components/Toasts';
-import { useCreateTableRelationships } from '../../../../DatabaseRelationships/hooks/useCreateTableRelationships/useCreateTableRelationships';
-import { DisplayToastErrorMessage } from '../../../components/DisplayErrorMessage';
+import {
+  useHasuraAlert,
+  CardedTable,
+  IndicatorCard,
+  hasuraToast,
+  DisplayToastErrorMessage,
+  Checkbox,
+  Button,
+} from '@hasura/shared/ui';
 import { TrackableListMenu } from '../../components/TrackableListMenu';
 import { usePaginatedSearchableList } from '../../hooks';
-import {
-  DisplaySuggestedRelationship,
-  UntrackedRelationshipRow,
-} from './UntrackedRelationshipRow';
-import { SuggestedRelationshipWithName } from '../types';
-import capitalize from 'lodash/capitalize';
+import { capitalize } from 'inflection';
 import { anyIncludes } from '../utils';
+import { SuggestedRelationshipWithName } from '@hasura/metadata/api';
+import { useCreateTableRelationships } from '@hasura/metadata/data-source';
+import { getTableHeaderRow } from './utils';
+import { Flex } from '@radix-ui/themes';
+import { FaDatabase } from 'react-icons/fa6';
+import { capitalizeFirstLetter } from '@hasura/shared/utils';
+import { DisplaySuggestedRelationship } from '../../../../DatabaseRelationships/components/common/mapping/DisplaySuggestedRelationship';
 
 export const UntrackedRelationships = ({
   untrackedRelationships,
@@ -28,7 +32,7 @@ export const UntrackedRelationships = ({
   const filterFn = useCallback(
     (searchText: string, rel: SuggestedRelationshipWithName) =>
       anyIncludes(searchText, [rel.constraintName, rel.type]),
-    []
+    [],
   );
 
   const listProps = usePaginatedSearchableList<SuggestedRelationshipWithName>({
@@ -42,18 +46,18 @@ export const UntrackedRelationships = ({
     paginatedData: paginatedRelationships,
   } = listProps;
 
-  const { createTableRelationships, isLoading } =
+  const { createTableRelationships, isPending } =
     useCreateTableRelationships(dataSourceName);
 
   const [loadingIds, setLoadingIds] = React.useState<string[]>([]);
 
   const onTrackRelationships = async (
-    relationships: SuggestedRelationshipWithName[]
+    relationships: SuggestedRelationshipWithName[],
   ): Promise<boolean> =>
-    new Promise(resolve => {
-      setLoadingIds(relationships.map(r => r.id));
-      createTableRelationships({
-        data: relationships.map(rel => ({
+    new Promise((resolve) => {
+      setLoadingIds(relationships.map((r) => r.id));
+      createTableRelationships(
+        relationships.map((rel) => ({
           name: rel.constraintName,
           source: {
             fromSource: dataSourceName,
@@ -73,27 +77,29 @@ export const UntrackedRelationships = ({
             },
           },
         })),
-        onSettled: () => {
-          reset();
-          setLoadingIds([]);
+        {
+          onSettled: () => {
+            reset();
+            setLoadingIds([]);
+          },
+          onSuccess: () => {
+            hasuraToast({
+              type: 'success',
+              title: 'Successfully tracked relationships',
+            });
+            resolve(true);
+            onTrack?.();
+          },
+          onError: (err) => {
+            hasuraToast({
+              type: 'error',
+              title: 'Error while tracking relationships',
+              children: <DisplayToastErrorMessage message={err.message} />,
+            });
+            resolve(false);
+          },
         },
-        onSuccess: () => {
-          hasuraToast({
-            type: 'success',
-            title: 'Successfully tracked relationships',
-          });
-          resolve(true);
-          onTrack?.();
-        },
-        onError: err => {
-          hasuraToast({
-            type: 'error',
-            title: 'Error while tracking relationships',
-            children: <DisplayToastErrorMessage message={err.message} />,
-          });
-          resolve(false);
-        },
-      });
+      );
     });
 
   const { hasuraPrompt } = useHasuraAlert();
@@ -102,7 +108,7 @@ export const UntrackedRelationships = ({
     hasuraPrompt({
       title: `Track ${capitalize(relationship.type)} relationship:`,
       message: (
-        <div>
+        <div className="py-4">
           <DisplaySuggestedRelationship relationship={relationship} />
         </div>
       ),
@@ -110,15 +116,15 @@ export const UntrackedRelationships = ({
       confirmText: 'Add Relationship',
       defaultValue: relationship.constraintName,
       inputFieldName: 'Relationship Name',
-      onCloseAsync: response =>
-        new Promise(resolve => {
+      onCloseAsync: (response) =>
+        new Promise((resolve) => {
           if (response.confirmed) {
             onTrackRelationships([
               {
                 ...relationship,
                 constraintName: response.promptValue,
               },
-            ]).then(success => {
+            ]).then((success) => {
               resolve({
                 withSuccess: success,
                 successText: 'Added!',
@@ -140,7 +146,7 @@ export const UntrackedRelationships = ({
           onTrackRelationships(getCheckedItems());
         }}
         showButton
-        isLoading={isLoading}
+        isLoading={isPending}
         {...listProps}
       />
       {paginatedRelationships.length === 0 ? (
@@ -148,44 +154,53 @@ export const UntrackedRelationships = ({
           <IndicatorCard>{`No relationships found.`}</IndicatorCard>
         </div>
       ) : (
-        <CardedTable.Table>
-          <CardedTable.TableHead>
-            <CardedTable.TableHeadRow>
-              <th className="w-0 bg-gray-50 px-sm text-sm font-semibold text-muted uppercase tracking-wider border-r">
-                {checkAllElement()}
-              </th>
-              <CardedTable.TableHeadCell>
-                <div>
-                  <FaMagic className="fill-muted" /> SUGGESTED RELATIONSHIPS
-                </div>
-              </CardedTable.TableHeadCell>
-              <CardedTable.TableHeadCell>SOURCE</CardedTable.TableHeadCell>
-              <CardedTable.TableHeadCell>TYPE</CardedTable.TableHeadCell>
-              <CardedTable.TableHeadCell>
-                RELATIONSHIP
-              </CardedTable.TableHeadCell>
-              <CardedTable.TableHeadCell>ACTIONS</CardedTable.TableHeadCell>
-            </CardedTable.TableHeadRow>
-          </CardedTable.TableHead>
+        <CardedTable
+          columns={getTableHeaderRow(checkAllElement())}
+          data={paginatedRelationships.map((relationship) => {
+            const isLoading =
+              loadingIds.length === 1 && loadingIds[0] === relationship.id;
 
-          <CardedTable.TableBody>
-            {paginatedRelationships.map(relationship => (
-              <UntrackedRelationshipRow
-                key={relationship.id}
-                isChecked={checkedIds.includes(relationship.id)}
-                // we only want this row to show it's own loading state if we are tracking a single item and it's this one
-                isLoading={
-                  loadingIds.length === 1 && loadingIds[0] === relationship.id
-                }
+            return [
+              <Checkbox
+                key={`${relationship.id}-select`}
+                value={checkedIds.includes(relationship.id)}
+                onChange={() => onCheck(relationship.id)}
+              />,
+              relationship.constraintName,
+              <Flex key={`${relationship.id}-source`} align="center" gap="2">
+                <FaDatabase /> <span>{dataSourceName}</span>
+              </Flex>,
+              capitalizeFirstLetter(relationship.type),
+              <DisplaySuggestedRelationship
+                key={`${relationship.id}-suggested`}
                 relationship={relationship}
-                onToggle={() => onCheck(relationship.id)}
-                onTrack={() => onTrackRelationships([relationship])}
-                onCustomize={() => onCustomize(relationship)}
-                dataSourceName={dataSourceName}
-              />
-            ))}
-          </CardedTable.TableBody>
-        </CardedTable.Table>
+              />,
+              <Flex
+                key={`${relationship.id}-actions`}
+                direction="row"
+                gap="2"
+                align="center"
+              >
+                <Button
+                  mode="primary"
+                  size="sm"
+                  onClick={() => onTrackRelationships([relationship])}
+                  disabled={isLoading}
+                >
+                  Track
+                </Button>
+                <Button
+                  size="sm"
+                  mode="default"
+                  onClick={() => onCustomize(relationship)}
+                  disabled={isLoading}
+                >
+                  Customize
+                </Button>
+              </Flex>,
+            ];
+          })}
+        />
       )}
     </div>
   );

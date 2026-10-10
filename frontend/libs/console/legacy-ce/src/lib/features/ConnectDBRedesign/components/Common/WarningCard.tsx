@@ -1,10 +1,10 @@
 import React from 'react';
 import { FaExclamationTriangle } from 'react-icons/fa';
-import { Card } from '../../../../new-components/Card';
-import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
+import { Card, LearnMoreLink, Text } from '@hasura/shared/ui';
 import { useEnvironmentState } from '../../hooks';
-import { useConsoleConfig } from '../../../../hooks/useEnvVars';
 import { DbConnectConsoleType } from '../../types';
+import { useAppContext } from '@hasura/shared/context';
+import { Avatar, Code, Flex, Heading, Strong } from '@radix-ui/themes';
 
 const DOC_LINK_PER_ENV: Record<
   'server' | 'cli',
@@ -25,54 +25,64 @@ const DOC_LINK_PER_ENV: Record<
   },
 };
 
+const WarningAvatar = () => (
+  <Avatar
+    variant="soft"
+    radius="full"
+    color="amber"
+    size="4"
+    fallback={<FaExclamationTriangle size="28" />}
+  />
+);
+
 export const WarningCard: React.FC<unknown> = () => {
   const { consoleType } = useEnvironmentState();
-  const { mode } = useConsoleConfig();
-  const docLink = DOC_LINK_PER_ENV[mode][consoleType];
+  const { envVars } = useAppContext();
+  const docLink = DOC_LINK_PER_ENV[envVars.consoleMode][consoleType];
 
   return (
     <Card mode="warning" className="mb-3">
-      <div className="flex gap-4 items-center">
-        <div className="text-amber-500 mr-2 rounded-full bg-amber-100 p-4">
-          <FaExclamationTriangle size="28" />
-        </div>
+      <Flex gap="4" align="center">
+        <WarningAvatar />
         <div>
-          <div className="text-lg text-amber-500 font-semibold">Warning</div>
-          <div>
-            This option <strong>exposes sensitive information</strong> such as
-            password and hostname <strong>in your metadata as plaintext</strong>
+          <Heading size="3" color="amber">
+            Warning
+          </Heading>
+          <Text as="div">
+            This option <Strong>exposes sensitive information</Strong> such as
+            password and hostname <Strong>in your metadata as plaintext</Strong>
             .
             <br />
-            The <strong>recommended way</strong> of adding connections is using
-            an <strong>Environment variable</strong>.
+            The <Strong>recommended way</Strong> of adding connections is using
+            an <Strong>Environment variable</Strong>.
             {docLink ? <LearnMoreLink href={docLink} /> : null}
-          </div>
+          </Text>
         </div>
-      </div>
+      </Flex>
     </Card>
   );
 };
+
 export const WarningCardMetadataDBNotDynamic: React.FC<unknown> = () => {
   return (
     <Card mode="warning" className="mb-3">
-      <div className="flex gap-4 items-center">
-        <div className="text-amber-500 mr-2 rounded-full bg-amber-100 p-4">
-          <FaExclamationTriangle size="28" />
-        </div>
+      <Flex gap="4" align="center">
+        <WarningAvatar />
         <div>
-          <div className="text-lg text-amber-500 font-semibold">Warning</div>
-          <div>
+          <Heading size="3" color="amber">
+            Warning
+          </Heading>
+          <Text as="div">
             This will have no effect on your metadata database URI, which may
-            have been initialized from{' '}
-            <code className="!px-0">HASURA_GRAPHQL_DATABASE_URL</code>. If you
-            need a dynamic URL for metadata as well, your administrator will
-            need to set{' '}
-            <code className="!px-0">
+            have been initialized from <Code>HASURA_GRAPHQL_DATABASE_URL</Code>.
+            If you need a dynamic URL for metadata as well, your administrator
+            will need to set{' '}
+            <Code>
               HASURA_GRAPHQL_METADATA_DATABASE_URL=dynamic-from-file:///path/to/file
-            </code>
-          </div>
+            </Code>
+          </Text>
         </div>
-      </div>
+      </Flex>
     </Card>
   );
 };

@@ -1,12 +1,17 @@
 import React from 'react';
 import { useFormContext, useFieldArray, useWatch } from 'react-hook-form';
-
-import { Button } from '../../../../new-components/Button';
-import { Collapse } from '../../../../new-components/deprecated';
-
-import { getIngForm } from '../../../../components/Services/Data/utils';
+import { Flex, Grid } from '@radix-ui/themes';
+import {
+  Button,
+  Collapsible,
+  CollapsibleHeader,
+  InputField,
+  SelectField,
+  Text,
+} from '@hasura/shared/ui';
 import { useIsDisabled } from '../hooks/useIsDisabled';
-import { QueryType } from '../../types';
+import { DataQueryType } from '@hasura/shared/types';
+import { getIngForm } from '@hasura/shared/utils';
 
 interface PresetsRowProps {
   id: number;
@@ -15,8 +20,12 @@ interface PresetsRowProps {
   remove: () => void;
 }
 
-const className =
-  'block w-full h-input px-md shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400';
+const PRESET_TYPE_OPTIONS = ['static', 'from session variable'].map(
+  (value) => ({
+    label: value,
+    value,
+  }),
+);
 
 const PresetsRow: React.FC<PresetsRowProps> = ({
   id,
@@ -24,90 +33,81 @@ const PresetsRow: React.FC<PresetsRowProps> = ({
   allDisabled,
   remove,
 }) => {
-  const { register, watch } = useFormContext();
+  const { watch } = useFormContext();
 
   const watched: Preset = watch(`presets.${id}`);
   const disabled = allDisabled || watched.columnName === 'default_column';
 
   return (
-    <div className="grid grid-cols-5 gap-4">
-      <div>
-        <select
+    <Flex align="center" gap="4">
+      <div className="md:w-3/12">
+        <SelectField
+          full
+          name={`presets.${id}.columnName`}
           aria-label="select column"
-          className={className}
           defaultValue={watched.columnName}
           disabled={allDisabled}
-          title={allDisabled ? 'Set a row permission first' : ''}
           data-index-id={id}
           data-test={`column-presets-column-${id}`}
-          {...register(`presets.${id}.columnName`)}
-        >
-          <option key="default_column_name" value="default" disabled>
-            Column Name
-          </option>
-
-          {columns?.map(columnName => (
-            <option key={columnName} value={columnName}>
-              {columnName}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <select
-          id="presetType"
-          className={className}
-          disabled={disabled}
-          title={disabled ? 'Choose column fist' : ''}
-          data-index-id={id}
-          data-test={`column-presets-column-${id}`}
-          {...register(`presets.${id}.presetType`)}
-        >
-          <option key="default_preset_type" value="default" disabled>
-            Select Preset Type
-          </option>
-
-          {['static', 'from session variable'].map(type => (
-            <option key={type} value={type}>
-              {type}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <input
-          id="columnValue"
-          type="text"
-          className={className}
-          placeholder="Column value"
-          disabled={disabled}
-          {...register(`presets.${id}.columnValue`)}
+          placeholder={
+            allDisabled ? 'Set a row permission first' : 'Column Name'
+          }
+          noErrorPlaceholder
+          options={
+            columns?.map((columnName) => ({
+              label: columnName,
+              value: columnName,
+            })) ?? []
+          }
         />
       </div>
 
-      <div className="flex items-center">
-        <p>
+      <div className="md:w-3/12">
+        <SelectField
+          full
+          disabled={disabled}
+          data-index-id={id}
+          data-test={`column-presets-column-${id}`}
+          placeholder={disabled ? 'Choose column first' : 'Select Preset Type'}
+          name={`presets.${id}.presetType`}
+          options={PRESET_TYPE_OPTIONS}
+          noErrorPlaceholder
+        />
+      </div>
+
+      <div className="md:w-3/12">
+        <InputField
+          noErrorPlaceholder
+          name={`presets.${id}.columnValue`}
+          fieldProps={{
+            placeholder: 'Column value',
+            disabled,
+            full: true,
+          }}
+        />
+      </div>
+
+      <Flex align="center" className="md:w-2/12">
+        <Text>
           {watched.presetType !== 'static'
             ? 'e.g. X-Hasura-User-Id'
             : 'e.g. false, 1, some-text'}
-        </p>
-      </div>
+        </Text>
+      </Flex>
 
       {watched.columnName !== 'default' && (
-        <div className="flex items-center">
+        <Flex align="center" className="md:w-1/12">
           <Button type="button" size="sm" mode="destructive" onClick={remove}>
             Delete
           </Button>
-        </div>
+        </Flex>
       )}
-    </div>
+    </Flex>
   );
 };
 
 export interface ColumnPresetsSectionProps {
-  queryType: QueryType;
+  queryType: DataQueryType;
   columns?: string[];
 }
 
@@ -128,7 +128,7 @@ const useStatus = (disabled: boolean) => {
 
   const columnNames = presets
     ?.map(({ columnName }) => columnName)
-    .filter(columnName => columnName !== 'default');
+    .filter((columnName) => columnName !== 'default');
 
   if (!columnNames?.length) {
     return 'No Presets';
@@ -162,12 +162,12 @@ export const ColumnPresetsSection: React.FC<ColumnPresetsSectionProps> = ({
 
   React.useEffect(() => {
     const finalRowIsNotDefault =
-      controlledFields[controlledFields?.length - 1]?.columnName !== 'default';
+      controlledFields[controlledFields?.length - 1]?.columnName;
     const allColumnsSet = controlledFields?.length === columns?.length;
 
     if (finalRowIsNotDefault && !allColumnsSet) {
       append({
-        columnName: 'default',
+        columnName: '',
         presetType: 'static',
         columnValue: '',
       });
@@ -175,41 +175,42 @@ export const ColumnPresetsSection: React.FC<ColumnPresetsSectionProps> = ({
   }, [controlledFields, columns?.length, append]);
 
   return (
-    <Collapse defaultOpen={presets?.length > 0 && !disabled}>
-      <Collapse.Header
-        title="Column presets"
-        tooltip={`Set static values or session variables as pre-determined values
+    <Collapsible
+      defaultOpen={presets?.length > 0 && !disabled}
+      disabled={disabled}
+      triggerChildren={
+        <CollapsibleHeader
+          title="Column presets"
+          tooltip={`Set static values or session variables as pre-determined values
               for columns while ${getIngForm(queryType)}`}
-        status={status}
-        disabled={disabled}
-        disabledMessage={status}
-      />
-      <Collapse.Content>
-        <div className="grid gap-4">
-          {controlledFields.map((field, index) => {
-            // remove current preset from columns to remove
-            const columnsToRemove = controlledFields
-              .map(preset => preset?.columnName)
-              .filter(preset => preset !== presets[index]?.columnName);
+          status={status}
+        />
+      }
+    >
+      <Grid gap="4">
+        {controlledFields.map((field, index) => {
+          // remove current preset from columns to remove
+          const columnsToRemove = controlledFields
+            .map((preset) => preset?.columnName)
+            .filter((preset) => preset !== presets[index]?.columnName);
 
-            // remove other presets from selectable columns
-            const selectableColumns = columns?.filter(
-              column => !columnsToRemove.includes(column)
-            );
+          // remove other presets from selectable columns
+          const selectableColumns = columns?.filter(
+            (column) => !columnsToRemove.includes(column),
+          );
 
-            return (
-              <PresetsRow
-                key={field.id}
-                id={index}
-                allDisabled={disabled}
-                columns={selectableColumns}
-                remove={() => remove(index)}
-              />
-            );
-          })}
-        </div>
-      </Collapse.Content>
-    </Collapse>
+          return (
+            <PresetsRow
+              key={field.id}
+              id={index}
+              allDisabled={disabled}
+              columns={selectableColumns}
+              remove={() => remove(index)}
+            />
+          );
+        })}
+      </Grid>
+    </Collapsible>
   );
 };
 

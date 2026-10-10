@@ -12,7 +12,7 @@ type Status =
   | {
       status: 'error';
       errorTitle: string;
-      errorDescription: string | React.ReactNode;
+      errorDescription: React.ReactNode;
     }
   | {
       status: 'default';
@@ -21,7 +21,7 @@ type Status =
       status: 'success';
     };
 
-export type NeonButtonIcons = 'refresh' | 'loading' | 'create';
+export type NeonButtonIcons = 'refresh' | 'create';
 
 export type NeonButtonProps = {
   status: Status;

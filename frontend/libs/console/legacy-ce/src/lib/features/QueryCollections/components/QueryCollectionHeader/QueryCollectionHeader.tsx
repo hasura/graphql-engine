@@ -1,21 +1,22 @@
 import React, { useState } from 'react';
 import { FaPlusCircle } from 'react-icons/fa';
 
-import { QueryCollectionEntry } from '../../../../metadata/types';
-import { Button } from '../../../../new-components/Button';
+import { Button } from '@hasura/shared/ui';
 
 import { QueryCollectionRenameDialog } from './QueryCollectionRenameDialog';
 import { QueryCollectionHeaderMenu } from './QueryCollectionHeaderMenu';
 import { QueryCollectionOperationAdd } from '../QueryCollectionOperationDialog/QueryCollectionOperationAdd';
+import type { QueryCollection } from '@hasura/shared/types';
+import { Flex } from '@radix-ui/themes';
 
 interface QueryCollectionHeaderProps {
-  queryCollection: QueryCollectionEntry;
+  queryCollection: QueryCollection;
   onDelete: (name: string) => void;
   onRename: (name: string, newName: string) => void;
 }
-export const QueryCollectionHeader: React.FC<
-  QueryCollectionHeaderProps
-> = props => {
+export const QueryCollectionHeader: React.FC<QueryCollectionHeaderProps> = (
+  props,
+) => {
   const { queryCollection, onDelete, onRename } = props;
 
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
@@ -41,7 +42,7 @@ export const QueryCollectionHeader: React.FC<
           }}
         />
       )}
-      <div className="flex items-center mb-sm">
+      <Flex align="center" className="mb-2">
         <div>
           <h1 className="text-xl font-semibold">{queryCollection.name}</h1>
           <p className="text-muted m-0">
@@ -49,7 +50,7 @@ export const QueryCollectionHeader: React.FC<
             which can be run against your GraphQL API.
           </p>
         </div>
-        <div className="relative ml-auto mr-sm">
+        <div className="relative ml-auto mr-2">
           <QueryCollectionHeaderMenu
             queryCollection={queryCollection}
             onDelete={onDelete}
@@ -59,12 +60,12 @@ export const QueryCollectionHeader: React.FC<
         </div>
         <Button
           mode="primary"
-          icon={<FaPlusCircle />}
+          leftIcon={FaPlusCircle}
           onClick={() => setIsAddModalOpen(true)}
         >
           Add Operation
         </Button>
-      </div>
+      </Flex>
     </>
   );
 };

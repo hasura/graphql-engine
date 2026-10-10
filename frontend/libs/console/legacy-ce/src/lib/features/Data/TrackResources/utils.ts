@@ -30,7 +30,7 @@ export function search<T>({
   searchText: string;
   filterFn: (searchText: string, item: T) => boolean;
 }) {
-  return data.filter(item => filterFn(searchText, item));
+  return data.filter((item) => filterFn(searchText, item));
 }
 
 export const filterByText = (parentText: string, searchText: string) => {

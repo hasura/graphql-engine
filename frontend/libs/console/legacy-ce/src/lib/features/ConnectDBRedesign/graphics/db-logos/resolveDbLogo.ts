@@ -7,7 +7,7 @@ export const resolveDbLogo = (dbKind: string) => {
     return dbLogos[kind];
   } else {
     const fuzzyFind = Object.keys(dbLogos).find(
-      key => key.includes(kind) || kind.includes(key)
+      (key) => key.includes(kind) || kind.includes(key),
     );
 
     if (fuzzyFind) {

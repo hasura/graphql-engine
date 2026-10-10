@@ -1,12 +1,11 @@
-import { expect } from '@storybook/jest';
-import { StoryObj, Meta } from '@storybook/react';
-import { userEvent, within } from '@storybook/testing-library';
+import { expect, userEvent, within } from 'storybook/test';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
 import React from 'react';
 import {
   CustomFieldNamesForm,
   CustomFieldNamesFormProps,
 } from './CustomFieldNamesForm';
-import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
 
 export default {
   component: CustomFieldNamesForm,
@@ -14,7 +13,7 @@ export default {
 } as Meta<typeof CustomFieldNamesForm>;
 
 export const Primary: StoryObj<CustomFieldNamesFormProps> = {
-  render: args => (
+  render: (args) => (
     <div className="w-[600px] h-auto overflow-auto border pt-4 mb-4 bg-white">
       <CustomFieldNamesForm {...args} />
     </div>
@@ -78,19 +77,19 @@ export const Primary: StoryObj<CustomFieldNamesFormProps> = {
 
     const inputs = form?.querySelectorAll('input[type="text"]');
 
-    inputs?.forEach(async input => {
+    for (const input of inputs ?? []) {
       await userEvent.type(input, 'foo');
-    });
+    }
 
-    inputs?.forEach(async input => {
+    for (const input of inputs ?? []) {
       await expect(input).toHaveValue('foo');
-    });
+    }
 
     await userEvent.click(clearAllFieldsButton);
 
-    inputs?.forEach(async input => {
+    for (const input of inputs ?? []) {
       await expect(input).toHaveValue('');
-    });
+    }
 
     // close collapsed form sections
     await userEvent.click(mutationCollapse);

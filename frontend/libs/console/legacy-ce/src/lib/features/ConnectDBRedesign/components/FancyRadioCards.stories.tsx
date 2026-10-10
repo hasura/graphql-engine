@@ -1,13 +1,11 @@
-import { expect } from '@storybook/jest';
-import { Meta, StoryFn } from '@storybook/react';
-import { userEvent, within } from '@storybook/testing-library';
+import { expect, userEvent, within } from 'storybook/test';
+import { Meta, StoryFn } from '@storybook/react-webpack5';
 import React from 'react';
-import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
 import { handlers } from '../mocks/handlers.mock';
-
 import { useDatabaseConnectDrivers } from '../hooks';
 import { FancyRadioCards } from './FancyRadioCards';
-import { Badge } from '../../../new-components/Badge';
+import { Badge } from '@hasura/shared/ui';
 
 export default {
   component: FancyRadioCards,
@@ -48,11 +46,11 @@ export const Primary = {
     // test click on label element
     await userEvent.click(await c.findByTestId('fancy-label-snowflake'));
 
-    expect(c.getByTestId('value')).toHaveTextContent('snowflake');
+    await expect(c.getByTestId('value')).toHaveTextContent('snowflake');
 
     // test click on radio button
     await userEvent.click(await c.findByTestId('fancy-radio-mssql'));
 
-    expect(c.getByTestId('value')).toHaveTextContent('mssql');
+    await expect(c.getByTestId('value')).toHaveTextContent('mssql');
   },
 };

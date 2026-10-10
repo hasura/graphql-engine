@@ -1,4 +1,4 @@
-import { Meta, StoryObj } from '@storybook/react';
+import { Meta, StoryObj } from '@storybook/react-webpack5';
 import { ExperimentalFeatureBanner } from './ExperimentalFeatureBanner';
 
 export default {
@@ -10,5 +10,5 @@ export default {
 } as Meta<typeof ExperimentalFeatureBanner>;
 
 export const Basic: StoryObj<typeof ExperimentalFeatureBanner> = {
-  render: args => <ExperimentalFeatureBanner {...args} />,
+  render: (args) => <ExperimentalFeatureBanner {...args} />,
 };

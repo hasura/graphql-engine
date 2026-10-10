@@ -3,9 +3,10 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/open-api-to-graphql/src",
   "projectType": "library",
+  "tags": ["scope:shared", "type:utils"],
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/libs/open-api-to-graphql",
@@ -15,26 +16,23 @@
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["libs/open-api-to-graphql/**/*.ts"]
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "jestConfig": "libs/open-api-to-graphql/jest.config.ts",
-        "passWithNoTests": true
+        "reportsDirectory": "coverage/libs/open-api-to-graphql"
       },
       "configurations": {
         "ci": {
-          "ci": true,
-          "codeCoverage": true
+          "coverage": true
         }
       }
     }
-  },
-  "tags": ["scope:shared", "type:utils"]
+  }
 }

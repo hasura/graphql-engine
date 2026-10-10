@@ -1,11 +1,11 @@
-import React from 'react';
 import { MultipleAdminSecretsSvg } from './MultipleAdminSecretsSvg';
+import { Code, Flex, Heading } from '@radix-ui/themes';
 import { EETrialCard } from '../EETrialCard/EETrialCard';
 import { useEELiteAccess } from '../../hooks/useEELiteAccess';
-import globals from '../../../../Globals';
+import { LearnMoreLink, Text } from '@hasura/shared/ui';
 
 export const MultipleAdminSecretsPage = () => {
-  const { access } = useEELiteAccess(globals);
+  const { access } = useEELiteAccess();
   const isFeatureForbidden = access === 'forbidden';
 
   const isFeatureActive = access === 'active';
@@ -13,44 +13,38 @@ export const MultipleAdminSecretsPage = () => {
   if (isFeatureForbidden) return null;
 
   return (
-    <div className="flex max-w-screen-md p-md">
+    <Flex className="max-w-(--breakpoint-lg) p-4">
       <div className="max-w-3xl">
-        <div className="text-xl text-slate-900 font-semibold mb-xs">
-          Multiple Admin Secrets
-        </div>
-        <div className="mt-0 mb-xs">
-          <span className="text-muted">
+        <Heading size="5">Multiple Admin Secrets</Heading>
+        <div className="mb-1">
+          <Text>
             Enable access to your Hasura instance using multiple
             x-hasura-admin-secrets.
-          </span>
-          <a
+          </Text>{' '}
+          <LearnMoreLink
             href="https://hasura.io/docs/latest/security/multiple-admin-secrets/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="italic font-thin text-sm ml-1 text-secondary"
-          >
-            (Know More)
-          </a>
+            text="(Know More)"
+          />
         </div>
         <MultipleAdminSecretsSvg />
         {isFeatureActive ? (
-          <p className="mt-md text-muted">
-            <strong>Setup Multiple Admin Secrets</strong>
-            <br />
-            <a
-              className="font-bold text-secondary"
-              href="https://hasura.io/docs/latest/security/multiple-admin-secrets/"
-            >
-              Read more
-            </a>{' '}
-            on setting up multiple admin secrets for your Hasura instance.
-            <br />
-            Multiple admin secrets may be enabled by setting the environment
-            variable:<code>HASURA_GRAPHQL_ADMIN_SECRETS</code>
-          </p>
+          <div className="mt-4">
+            <Text weight="bold">Setup Multiple Admin Secrets</Text>
+            <Text as="p">
+              <LearnMoreLink
+                href="https://hasura.io/docs/latest/security/multiple-admin-secrets/"
+                text="Read more"
+                weight="bold"
+              />{' '}
+              on setting up multiple admin secrets for your Hasura instance.
+              <br />
+              Multiple admin secrets may be enabled by setting the environment
+              variable: <Code>HASURA_GRAPHQL_ADMIN_SECRETS</Code>
+            </Text>
+          </div>
         ) : (
           <EETrialCard
-            className="mt-md"
+            className="mt-4"
             id="multiple-admin-secrets"
             cardTitle="Want to enable multiple secrets for your instance?"
             cardText={
@@ -65,6 +59,6 @@ export const MultipleAdminSecretsPage = () => {
           />
         )}
       </div>
-    </div>
+    </Flex>
   );
 };

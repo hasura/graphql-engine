@@ -6,7 +6,7 @@
   "tags": ["scope:shared", "type:feature", "meta:package"],
   "targets": {
     "build": {
-      "executor": "@nrwl/js:swc",
+      "executor": "@nx/js:swc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/libs/nx/storybook-addon-console-env",
@@ -23,7 +23,7 @@
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [
@@ -32,39 +32,41 @@
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": [
-        "{workspaceRoot}/coverage/libs/nx/storybook-addon-console-env"
-      ],
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "jestConfig": "libs/nx/storybook-addon-console-env/jest.config.ts",
-        "passWithNoTests": true
+        "reportsDirectory": "coverage/libs/nx/storybook-addon-console-env"
+      }
+    },
+    "build-storybook": {
+      "dependsOn": ["build"],
+      "outputs": ["{projectRoot}/{options.output-dir}"],
+      "options": {
+        "output-dir": "../../../dist/storybook/nx/storybook-addon-console-env"
       }
     },
     "storybook": {
       "dependsOn": ["build"],
-      "executor": "@nrwl/storybook:storybook",
       "options": {
         "port": 4400,
-        "configDir": "libs/nx/storybook-addon-console-env/.storybook"
+        "config-dir": ".storybook"
       },
       "configurations": {
         "ci": {
-          "quiet": true
+          "args": ["--quiet"]
         }
       }
     },
     "publish": {
       "executor": "nx:run-commands",
-      "options": {
-        "command": "node tools/scripts/publish.mjs nx-storybook-addon-console-env {args.ver} {args.tag}"
-      },
       "dependsOn": [
         {
-          "projects": "self",
           "target": "build"
         }
-      ]
+      ],
+      "options": {
+        "command": "node tools/scripts/publish.mjs nx-storybook-addon-console-env {args.ver} {args.tag}"
+      }
     }
   }
 }

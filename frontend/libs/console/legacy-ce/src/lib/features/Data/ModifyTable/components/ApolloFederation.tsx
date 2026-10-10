@@ -1,13 +1,20 @@
-import Skeleton from 'react-loading-skeleton';
-import { ServerConfig, useServerConfig } from '../../../../hooks';
 import { useUpdateApolloFederationConfig } from '../hooks/useUpdateApolloFederationConfig';
-import { Table } from '../../../hasura-metadata-types';
-import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
-import { Switch } from '../../../../new-components/Switch';
-import { MetadataSelectors, useMetadata } from '../../../hasura-metadata-api';
-import { CgSpinner } from 'react-icons/cg';
-import { hasuraToast } from '../../../../new-components/Toasts';
-import { DisplayToastErrorMessage } from '../../components/DisplayErrorMessage';
+import {
+  Card,
+  LearnMoreLink,
+  SkeletonList,
+  Spinner,
+  Switch,
+  Text,
+  hasuraToast,
+} from '@hasura/shared/ui';
+import {
+  ServerConfig,
+  useErrorNotification,
+  useServerConfig,
+} from '@hasura/metadata/api';
+import { ModifyTableProps } from '../types';
+import { Code, Flex, Heading } from '@radix-ui/themes';
 
 const getIsApolloFlagEnabled = (data?: ServerConfig) =>
   data
@@ -15,90 +22,82 @@ const getIsApolloFlagEnabled = (data?: ServerConfig) =>
       data.is_apollo_federation_enabled
     : false;
 
-export const ApolloFederation = ({
-  dataSourceName,
-  table,
-}: {
-  dataSourceName: string;
-  table: Table;
-}) => {
+export const ApolloFederation = ({ source, table }: ModifyTableProps) => {
+  const showErrorNotification = useErrorNotification();
+
   /**
    * Check if the ENV variable is set on the server
    */
   const { data: isApolloFederationEnabled = false, isLoading } =
     useServerConfig(getIsApolloFlagEnabled);
 
-  const { updateApolloConfig, isLoading: updateInProgress } =
+  const { updateApolloConfig, isPending: updateInProgress } =
     useUpdateApolloFederationConfig({
-      dataSourceName,
+      dataSourceName: source.name,
       onSuccess: () => {
         hasuraToast({
           type: 'success',
           title: 'Updated successfully!',
         });
       },
-      onError: err => {
-        hasuraToast({
-          type: 'error',
+      onError: (err) => {
+        showErrorNotification({
           title: 'Failed to update Apollo configuration',
-          children: <DisplayToastErrorMessage message={err.message} />,
+          error: err,
         });
       },
     });
 
-  const { data: { apolloFederationConfig } = {} } = useMetadata(m => ({
-    apolloFederationConfig: MetadataSelectors.findTable(
-      dataSourceName,
-      table
-    )(m)?.apollo_federation_config,
-  }));
+  if (isLoading) return <SkeletonList count={5} />;
 
-  if (isLoading) return <Skeleton count={5} height={20} />;
+  const apolloFederationConfig = table.apollo_federation_config;
 
   const handleToggle = () => {
     updateApolloConfig({
-      table: table,
+      table: table.table,
       isEnabled: !(apolloFederationConfig?.enable === 'v1'),
     });
   };
 
   return (
     <div>
-      <div className="mb-sm">
-        <span className="text-lg font-semibold">Enable Apollo Federation</span>
+      <Flex className="mb-2" gap="2" align="center">
+        <Heading size="3">Enable Apollo Federation</Heading>
         <LearnMoreLink href="https://hasura.io/docs/latest/data-federation/apollo-federation/" />
-      </div>
-      <div className="bg-white border border-gray-300 flex items-center justify-between p-md rounded">
-        {!isApolloFederationEnabled ? (
-          <div>
-            Apollo federation is not enabled. To enable apollo federation
-            support, set the project env variable or start the Hasura server
-            with environment variable
-            <code className="bg-slate-100 rounded text-red-600">
-              HASURA_GRAPHQL_ENABLE_APOLLO_FEDERATION: "true"
-            </code>
-          </div>
-        ) : (
-          <>
-            <div>
-              Enable Apollo Federation support to add Hasura as a subgraph in
-              your Apollo federated gateway.
-            </div>
-            <div>
+      </Flex>
+      <Card>
+        <Flex align="center" justify="between">
+          {!isApolloFederationEnabled ? (
+            <Text>
+              Apollo federation is not enabled. To enable apollo federation
+              support, set the project env variable or start the Hasura server
+              with environment variable{' '}
+              <Code>
+                HASURA_GRAPHQL_ENABLE_APOLLO_FEDERATION: &quot;true&quot;
+              </Code>
+            </Text>
+          ) : (
+            <>
+              <Text>
+                Enable Apollo Federation support to add Hasura as a subgraph in
+                your Apollo federated gateway.
+              </Text>
               <div>
-                {updateInProgress ? (
-                  <CgSpinner className="animate-spin" size={30} />
-                ) : (
-                  <Switch
-                    checked={apolloFederationConfig?.enable === 'v1'}
-                    onCheckedChange={() => handleToggle()}
-                  />
-                )}
+                <div>
+                  {updateInProgress ? (
+                    <Spinner />
+                  ) : (
+                    <Switch
+                      value={apolloFederationConfig?.enable === 'v1'}
+                      onChange={() => handleToggle()}
+                    />
+                  )}
+                </div>
               </div>
-            </div>
-          </>
-        )}
-      </div>
+            </>
+          )}
+        </Flex>
+      </Card>
     </div>
   );
 };

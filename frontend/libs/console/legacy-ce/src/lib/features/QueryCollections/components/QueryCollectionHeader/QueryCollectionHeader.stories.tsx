@@ -1,24 +1,19 @@
 import React from 'react';
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
-import { ReduxDecorator } from '../../../../storybook/decorators/redux-decorator';
-import { Meta } from '@storybook/react';
 import {
+  ReactQueryDecorator,
   handlers,
   createDefaultInitialData,
-} from '../../../../mocks/metadata.mock';
-import { action } from '@storybook/addon-actions';
+} from '@hasura/shared/testing';
+import { Meta } from '@storybook/react-webpack5';
+import { action } from 'storybook/actions';
 
 import { QueryCollectionHeader } from './QueryCollectionHeader';
-import { screen, userEvent, waitFor, within } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
+import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 
 export default {
   title: 'Features/Query Collections/Query Collection Header',
   component: QueryCollectionHeader,
-  decorators: [
-    ReduxDecorator({ tables: { currentDataSource: 'default' } }),
-    ReactQueryDecorator(),
-  ],
+  decorators: [ReactQueryDecorator()],
   parameters: {
     msw: handlers({ delay: 500 }),
   },
@@ -49,14 +44,14 @@ Primary.play = async ({ canvasElement }: any) => {
 
   /* 2. select introspection query */
   await waitFor(async () =>
-    userEvent.click(await screen.findByText('Introspection query'))
+    userEvent.click(await screen.findByText('Introspection query')),
   );
 
   // click on Add Operation
   await userEvent.click(
     (
       await canvas.findAllByText('Add Operation', undefined, { timeout: 3000 })
-    )[1]
+    )[1],
   );
 
   await userEvent.click(await canvas.findByText('Cancel'));
@@ -71,11 +66,11 @@ Primary.play = async ({ canvasElement }: any) => {
   await userEvent.click(
     (
       await canvas.findAllByText('Add Operation', undefined, { timeout: 3000 })
-    )[1]
+    )[1],
   );
   await expect(await canvas.findByText(`Name is required`)).toBeInTheDocument();
   await expect(
-    await canvas.findByText(`Operation is required`)
+    await canvas.findByText(`Operation is required`),
   ).toBeInTheDocument();
   await userEvent.click(await canvas.findByText('Cancel'));
 
@@ -83,7 +78,7 @@ Primary.play = async ({ canvasElement }: any) => {
   await userEvent.click(await canvas.findByText('Add Operation'));
   await userEvent.click(await canvas.findByText('Upload Operation'));
   await expect(
-    await canvas.findByText(`Upload GraphQL File`)
+    await canvas.findByText(`Upload GraphQL File`),
   ).toBeInTheDocument();
   await userEvent.click(await canvas.findByText('Cancel'));
 };

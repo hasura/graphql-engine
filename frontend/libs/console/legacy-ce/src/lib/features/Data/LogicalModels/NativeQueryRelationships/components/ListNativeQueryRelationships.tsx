@@ -1,18 +1,17 @@
-import Skeleton from 'react-loading-skeleton';
-import {
-  MetadataSelectors,
-  useMetadata,
-} from '../../../../hasura-metadata-api';
-import {
-  createColumnHelper,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
+import { useMetadata } from '@hasura/metadata/api';
+import { Flex } from '@radix-ui/themes';
+import { createColumnHelper, useTable } from '@tanstack/react-table';
 import React from 'react';
-import { useCardedTableFromReactTableWithRef } from '../../components/CardedTableFromReactTable';
-import { Button } from '../../../../../new-components/Button';
+import {
+  Button,
+  SkeletonList,
+  coreTableFeatures,
+  CoreTableFeatures,
+  createCardedTableFromReactTableWithRef,
+} from '@hasura/shared/ui';
 import { FaEdit, FaTrash } from 'react-icons/fa';
-import { NativeQueryRelationship } from '../../../../hasura-metadata-types';
+import { NativeQueryRelationship } from '@hasura/shared/types';
+import { MetadataSelectors } from '@hasura/metadata/helpers';
 
 export type ListNativeQueryRow = NativeQueryRelationship & {
   type: 'object' | 'array';
@@ -25,27 +24,33 @@ export type ListNativeQueryRelationships = {
   onEditRow?: (data: ListNativeQueryRow) => void;
 };
 
-const columnHelper = createColumnHelper<ListNativeQueryRow>();
+const columnHelper = createColumnHelper<
+  CoreTableFeatures,
+  ListNativeQueryRow
+>();
+
+const NativeQueryRelationshipsTable =
+  createCardedTableFromReactTableWithRef<ListNativeQueryRow>();
 
 export const ListNativeQueryRelationships = (
-  props: ListNativeQueryRelationships
+  props: ListNativeQueryRelationships,
 ) => {
   const { dataSourceName, nativeQueryName, onDeleteRow, onEditRow } = props;
 
   const { data: nativeQueryRelationships = [], isLoading } = useMetadata<
     ListNativeQueryRow[]
-  >(m => {
+  >((m) => {
     const currentNativeQuery = MetadataSelectors.findNativeQuery(
       dataSourceName,
-      nativeQueryName
+      nativeQueryName,
     )(m);
 
     return [
-      ...(currentNativeQuery?.array_relationships?.map(relationship => ({
+      ...(currentNativeQuery?.array_relationships?.map((relationship) => ({
         ...relationship,
         type: 'array' as ListNativeQueryRow['type'],
       })) ?? []),
-      ...(currentNativeQuery?.object_relationships?.map(relationship => ({
+      ...(currentNativeQuery?.object_relationships?.map((relationship) => ({
         ...relationship,
         type: 'object' as ListNativeQueryRow['type'],
       })) ?? []),
@@ -55,58 +60,56 @@ export const ListNativeQueryRelationships = (
   const tableRef = React.useRef<HTMLDivElement>(null);
 
   const columns = React.useMemo(
-    () => [
-      columnHelper.accessor('name', {
-        id: 'name',
-        cell: data => <span>{data.getValue()}</span>,
-        header: 'Name',
-      }),
-      columnHelper.accessor('type', {
-        id: 'type',
-        cell: data => <span>{data.getValue()}</span>,
-        header: 'Type',
-      }),
-      columnHelper.display({
-        id: 'actions',
-        cell: ({ row }) => (
-          <div className="flex gap-8">
-            <Button
-              icon={<FaEdit />}
-              onClick={() => {
-                onEditRow?.(row.original);
-              }}
-              data-testid="edit-button"
-            >
-              Edit
-            </Button>
-            <Button
-              icon={<FaTrash />}
-              mode="destructive"
-              onClick={() => {
-                onDeleteRow?.(row.original);
-              }}
-              data-testid="delete-button"
-            >
-              Delete
-            </Button>
-          </div>
-        ),
-        header: 'Actions',
-      }),
-    ],
-    [onDeleteRow, onEditRow]
+    () =>
+      columnHelper.columns([
+        columnHelper.accessor('name', {
+          id: 'name',
+          cell: (data) => <span>{data.getValue()}</span>,
+          header: 'Name',
+        }),
+        columnHelper.accessor('type', {
+          id: 'type',
+          cell: (data) => <span>{data.getValue()}</span>,
+          header: 'Type',
+        }),
+        columnHelper.display({
+          id: 'actions',
+          cell: ({ row }) => (
+            <Flex gap="8">
+              <Button
+                leftIcon={FaEdit}
+                onClick={() => {
+                  onEditRow?.(row.original);
+                }}
+                data-testid="edit-button"
+              >
+                Edit
+              </Button>
+              <Button
+                leftIcon={FaTrash}
+                mode="destructive"
+                onClick={() => {
+                  onDeleteRow?.(row.original);
+                }}
+                data-testid="delete-button"
+              >
+                Delete
+              </Button>
+            </Flex>
+          ),
+          header: 'Actions',
+        }),
+      ]),
+    [onDeleteRow, onEditRow],
   );
 
-  const relationshipsTable = useReactTable({
+  const relationshipsTable = useTable({
+    features: coreTableFeatures,
     data: nativeQueryRelationships,
     columns: columns,
-    getCoreRowModel: getCoreRowModel(),
   });
 
-  const NativeQueryRelationshipsTable =
-    useCardedTableFromReactTableWithRef<ListNativeQueryRow>();
-
-  if (isLoading) return <Skeleton count={10} height={20} />;
+  if (isLoading) return <SkeletonList count={5} />;
 
   return (
     <NativeQueryRelationshipsTable

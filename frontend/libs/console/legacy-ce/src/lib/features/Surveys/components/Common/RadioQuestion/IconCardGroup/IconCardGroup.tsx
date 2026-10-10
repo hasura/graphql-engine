@@ -1,7 +1,8 @@
 import React from 'react';
 import { FaAngleRight } from 'react-icons/fa';
 import clsx from 'clsx';
-import { Analytics } from '../../../../../Analytics';
+import { Flex } from '@radix-ui/themes';
+import { Analytics } from '@hasura/shared/analytics';
 
 export interface IconCardGroupItem<T> {
   value: T;
@@ -18,39 +19,41 @@ interface IconCardGroupProps<T> {
 }
 
 export const IconCardGroup = <T extends string = string>(
-  props: IconCardGroupProps<T>
+  props: IconCardGroupProps<T>,
 ) => {
   const { value, items, disabled = false, onChange } = props;
 
   return (
     <div className="grid gap-sm grid-rows-auto w-full">
-      {items.map(item => {
+      {items.map((item) => {
         const { value: iValue, title, body } = item;
         return (
-          <Analytics name={`hasura-familiarity-survey-${title}-option`}>
+          <Analytics
+            key={iValue}
+            name={`hasura-familiarity-survey-${title}-option`}
+          >
             <div
               className={clsx(
-                'bg-white shadow-sm rounded p-md border border-gray-300 flex',
+                'bg-white shadow-sm rounded p-4 border border-gray-300 flex',
                 disabled ? 'cursor-not-allowed' : 'cursor-pointer',
-                value === iValue && 'border-yellow-400'
+                value === iValue && 'border-yellow-400',
               )}
-              key={iValue}
               onClick={() => !disabled && onChange(iValue)}
             >
-              <div className="flex items-center">{item.icon}</div>
-              <div className="w-9/12 ml-md">
+              <Flex align="center">{item.icon}</Flex>
+              <div className="w-9/12 ml-4">
                 <div
                   className={clsx(
                     'mt-0.5',
-                    disabled ? 'cursor-not-allowed' : 'cursor-pointer'
+                    disabled ? 'cursor-not-allowed' : 'cursor-pointer',
                   )}
                 >
                   {body}
                 </div>
               </div>
-              <div className="flex items-center ml-auto">
+              <Flex align="center" className="ml-auto">
                 <FaAngleRight className="text-gray-500" />
-              </div>
+              </Flex>
             </div>
           </Analytics>
         );

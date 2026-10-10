@@ -1,5 +1,5 @@
-import { StoryObj, Meta } from '@storybook/react';
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
 import { FamiliaritySurveyTheme } from './FamiliaritySurveyTheme';
 import { mockFetchAllSurveysData } from '../../__mocks__/surveys.mock';
 

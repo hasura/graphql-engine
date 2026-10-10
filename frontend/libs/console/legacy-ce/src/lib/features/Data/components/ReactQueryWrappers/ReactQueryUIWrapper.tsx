@@ -1,7 +1,9 @@
-import { UseQueryResult } from 'react-query';
+import { UseQueryResult } from '@tanstack/react-query';
 import { ReactQueryStatusUI } from './ReactQueryStatusUI';
-import { CommonProps, ErrorType } from './types';
+import { CommonProps } from './types';
 import { nonSuccessRenderChildren } from './utils';
+
+import type { JSX } from 'react';
 
 // pass the useQueryReturn to this component and it will...
 // 1. render error/loading UI based on props or defaults
@@ -19,13 +21,14 @@ export function ReactQueryUIWrapper<TData = unknown>({
   render,
   ...props
 }: CommonProps<TData> & {
-  useQueryResult: UseQueryResult<TData, ErrorType>;
+  useQueryResult: UseQueryResult<TData, unknown>;
   render: (params: { data: TData }) => JSX.Element;
 }) {
-  const { status, data, error } = useQueryResult;
+  const { status, fetchStatus, data, error } = useQueryResult;
+  const isIdle = status === 'pending' && fetchStatus === 'idle';
 
   // idle will get rendred so we need fallback data to safely render the render() prop
-  if (status === 'idle' && !props.fallbackData && !props.renderIdle) {
+  if (isIdle && !props.fallbackData && !props.renderIdle) {
     return (
       <ReactQueryStatusUI
         status={'error'}
@@ -36,12 +39,14 @@ export function ReactQueryUIWrapper<TData = unknown>({
     );
   }
 
+  const uiStatus = isIdle ? 'idle' : status;
+
   return (
     // ReactQueryStatusUI will attempt to render the children whenever the above const alsoRendersChildren === true
-    <ReactQueryStatusUI status={status} error={error} {...props}>
+    <ReactQueryStatusUI status={uiStatus} error={error} {...props}>
       <span data-testid={TestIds.renderContent}>
         {status === 'success' && render({ data })}
-        {nonSuccessRenderChildren({ ...props, status }) &&
+        {nonSuccessRenderChildren({ ...props, status: uiStatus }) &&
           props.fallbackData &&
           render({ data: props.fallbackData })}
       </span>

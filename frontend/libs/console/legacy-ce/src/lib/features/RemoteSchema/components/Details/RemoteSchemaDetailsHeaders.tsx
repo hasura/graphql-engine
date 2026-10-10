@@ -1,13 +1,12 @@
-import React from 'react';
-import { CardedTable } from '../../../../new-components/CardedTable';
-import { ServerHeader } from '../../../hasura-metadata-types';
+import { CardedTable, Text } from '@hasura/shared/ui';
+import { HeaderConfig } from '@hasura/shared/types';
 
 interface RemoteSchemaDetailsHeadersProps {
-  headers?: ServerHeader[];
+  headers?: HeaderConfig[];
   title?: string;
 }
 export const RemoteSchemaDetailsHeaders = (
-  props: RemoteSchemaDetailsHeadersProps
+  props: RemoteSchemaDetailsHeadersProps,
 ) => {
   const { headers, title = 'Headers' } = props;
 
@@ -15,14 +14,16 @@ export const RemoteSchemaDetailsHeaders = (
     return null;
   }
 
-  const filteredHeaders = headers.filter(h => !!h.name);
+  const filteredHeaders = headers.filter((h) => !!h.name);
 
   return (
-    <div className="mb-md">
-      <label className="block mb-xs font-semibold text-muted">{title}</label>
+    <div className="mb-4">
+      <Text as="div" weight="bold">
+        {title}
+      </Text>
       <CardedTable
         columns={['Name', 'Type', 'Value']}
-        data={filteredHeaders.map(header => {
+        data={filteredHeaders.map((header) => {
           if ('value' in header) {
             return [header.name, 'Static', header.value];
           }

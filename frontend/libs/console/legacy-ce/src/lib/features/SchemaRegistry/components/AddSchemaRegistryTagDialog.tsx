@@ -1,12 +1,12 @@
 import React from 'react';
-import { Dialog } from '../../../new-components/Dialog';
-import { HuePicker, ColorResult } from 'react-color';
+import { Flex } from '@radix-ui/themes';
+import { Dialog, Input, DialogFooter } from '@hasura/shared/ui';
+import { HexColorPicker } from 'react-colorful';
 import { DEFAULT_TAG_COLOR } from '../constants';
 import globals from '../../../Globals';
-import { Analytics, REDACT_EVERYTHING } from '../../Analytics';
+import { Analytics, REDACT_EVERYTHING } from '@hasura/shared/analytics';
 import { useCreateSchemaTag } from '../hooks/useCreateSchemaTag';
 import { SchemaRegistryTag } from '../types';
-import { Input } from '../../../new-components/Form';
 
 interface AddSchemaRegistryTagDialogProps {
   tagsList: SchemaRegistryTag[];
@@ -17,7 +17,7 @@ interface AddSchemaRegistryTagDialogProps {
 
 export const AddSchemaRegistryTagDialog: React.FC<
   AddSchemaRegistryTagDialogProps
-> = props => {
+> = (props) => {
   const { tagsList, setTagsList, onClose, entryHash } = props;
   const projectID = globals.hasuraCloudProjectId;
 
@@ -55,25 +55,25 @@ export const AddSchemaRegistryTagDialog: React.FC<
     setExistingTag(e.target.value);
 
   return (
-    <Dialog size="sm" hasBackdrop title="Create a Tag" onClose={onClose}>
+    <Dialog size="sm" title="Create a Tag" onClose={onClose}>
       <>
         <Analytics name="AddSchemaRegistryTagDialog" {...REDACT_EVERYTHING}>
-          <div className="flex flex-col justify-center p-4">
+          <Flex direction="column" justify="center" className="p-4">
             <div className="w-full">
               <Input
                 name="schema-registry-tag"
                 placeholder="Type to create a tag"
-                fieldProps={{ value: tag }}
+                value={tag}
                 onChange={handleOnChangeTag}
                 data-test="schema-registry-tag-input"
               />
             </div>
             {tag && (
-              <div className="flex flex-row justify-center items-center mt-4">
-                <div className="flex mb-4">
+              <Flex justify="center" align="center" className="mt-4">
+                <Flex className="mb-4">
                   <Input
                     name="schema-registry-tag-color"
-                    fieldProps={{ value: selectedColor }}
+                    value={selectedColor}
                     className="w-full font-bold"
                     placeholder="Tag Color"
                     type="text"
@@ -82,20 +82,18 @@ export const AddSchemaRegistryTagDialog: React.FC<
                     }
                     data-test="schema-registry-tag-color-input"
                   />
-                </div>
-                <div className="flex mt-[-8px] ml-8">
-                  <HuePicker
+                </Flex>
+                <Flex className="mt-[-8px] ml-8">
+                  <HexColorPicker
                     color={selectedColor}
-                    onChangeComplete={(r: ColorResult) =>
-                      handleColorChange(r.hex)
-                    }
+                    onChange={handleColorChange}
                   />
-                </div>
-              </div>
+                </Flex>
+              </Flex>
             )}
-          </div>
+          </Flex>
         </Analytics>
-        <Dialog.Footer
+        <DialogFooter
           callToDeny="Cancel"
           callToAction="Create and Assign"
           onClose={onClose}

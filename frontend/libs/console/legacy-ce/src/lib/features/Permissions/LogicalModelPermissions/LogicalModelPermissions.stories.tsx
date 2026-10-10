@@ -1,9 +1,8 @@
-import { Meta, StoryObj } from '@storybook/react';
+import { Meta, StoryObj } from '@storybook/react-webpack5';
 
 import { LogicalModelPermissions } from './LogicalModelPermissions';
 import { comparators } from '../PermissionsForm/components/RowPermissionsBuilder/components/__tests__/fixtures/comparators';
-import { userEvent, within } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
+import { expect, userEvent, within } from 'storybook/test';
 import { ComponentProps } from 'react';
 
 export default {
@@ -110,10 +109,10 @@ export const ExistingPermission: Story = {
     await userEvent.click(canvas.getByTestId('user-select-permissions-cell'));
     await expect(canvas.getByTestId('permissions-form')).toBeInTheDocument();
     await expect((await canvas.findByTestId('role-pill')).textContent).toBe(
-      'user'
+      'user',
     );
     await expect((await canvas.findByTestId('action-pill')).textContent).toBe(
-      'select'
+      'select',
     );
 
     // It should send correct existing permission (`{"one":{"_eq":"eqone"}}`) when clicking save

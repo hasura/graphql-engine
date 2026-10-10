@@ -9,9 +9,9 @@
  * 7. Return the "Latency" info to the hook's consumer.
  */
 
-import { useMutation, useQuery, UseQueryOptions } from 'react-query';
-import globals from '../../../Globals';
-import { getProjectId } from '../../../utils/cloudConsole';
+import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
+import { getProjectId } from '@hasura/shared/utils';
+import { useAppContext } from '@hasura/shared/context';
 import { CheckDatabaseLatencyResponse } from '../../ConnectDB/hooks';
 import {
   controlPlaneClient,
@@ -19,11 +19,9 @@ import {
   fetchInfoFromJobId,
   insertInfoIntoDBLatencyQuery,
 } from '../../ControlPlane';
-import { LatencyActionResponse, LatencyJobResponse } from '../types';
+import { Latency, LatencyActionResponse, LatencyJobResponse } from '../types';
 
-const getJobIdFromLux = async () => {
-  const projectId = getProjectId(globals);
-
+const getJobIdFromLux = async (projectId: string | undefined) => {
   if (!projectId) {
     return undefined;
   }
@@ -32,7 +30,7 @@ const getJobIdFromLux = async () => {
     fetchDatabaseLatencyJobId,
     {
       project_id: projectId,
-    }
+    },
   );
 };
 
@@ -40,7 +38,7 @@ async function poll<ReturnType>(
   fn: () => Promise<ReturnType>,
   fnCondition: (result: ReturnType) => boolean,
   waitMs: number,
-  maxPollNumber = 50
+  maxPollNumber = 50,
 ) {
   let iterCount = 0;
   let result = await fn();
@@ -53,7 +51,7 @@ async function poll<ReturnType>(
 }
 
 function wait(ms = 1000) {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
 }
@@ -90,12 +88,27 @@ const useInsertIntoDBLatencyTable = () => {
   });
 };
 
-type QueryOptions = Omit<UseQueryOptions, 'queryFn'>;
+type DatabaseLatencyCheckResult = {
+  latencies: Latency[];
+  rowId: string | undefined;
+};
+
+type QueryOptions = Omit<
+  UseQueryOptions<DatabaseLatencyCheckResult>,
+  'queryFn' | 'queryKey'
+>;
 
 export const useDatabaseLatencyCheck = (props: QueryOptions) => {
   const insertDbLatencyMutation = useInsertIntoDBLatencyTable();
+  // Read the project id from the running AppContext envVars (the canonical
+  // EnvVars). The previous `getProjectId(globals)` was both a type error and
+  // semantically stale: the derived Globals exposes `hasuraCloudProjectId`, not
+  // the `projectID`/`tenantID` that getProjectId/isCloudConsole read, so it
+  // always resolved to undefined. Compute it once and thread the plain id down.
+  const { envVars } = useAppContext();
+  const projectId = getProjectId(envVars);
 
-  return useQuery({
+  return useQuery<DatabaseLatencyCheckResult>({
     queryKey: ['database_latency_check'],
     queryFn: async () => {
       // only for testing
@@ -124,7 +137,7 @@ export const useDatabaseLatencyCheck = (props: QueryOptions) => {
       // };
 
       // Get Job Id from lux
-      const resultFromLux = await getJobIdFromLux();
+      const resultFromLux = await getJobIdFromLux(projectId);
 
       // Start timer
       const startTime = new Date().getTime();
@@ -146,14 +159,14 @@ export const useDatabaseLatencyCheck = (props: QueryOptions) => {
       if (latencyResponse.data.jobs_by_pk.status === 'failed') {
         const failedTaskEvent =
           latencyResponse?.data?.jobs_by_pk?.tasks?.[0]?.task_events?.find(
-            taskEvent => taskEvent.event_type === 'failure'
+            (taskEvent) => taskEvent.event_type === 'failure',
           );
         throw Error(failedTaskEvent?.error);
       }
 
       const taskEvent =
         latencyResponse?.data?.jobs_by_pk?.tasks?.[0]?.task_events?.find(
-          taskEvent => taskEvent.event_type === 'success'
+          (taskEvent) => taskEvent.event_type === 'success',
         );
 
       /**
@@ -167,12 +180,12 @@ export const useDatabaseLatencyCheck = (props: QueryOptions) => {
       // Save this data back to lux
       insertDbLatencyMutation.mutate({
         dateDifferenceInMilliseconds: new Date().getTime() - startTime,
-        projectId: getProjectId(globals),
+        projectId,
         jobId,
       });
 
       const latencies = Object.entries(
-        taskEvent?.public_event_data.sources ?? {}
+        taskEvent?.public_event_data.sources ?? {},
       ).map(([source, latencyInfo]) => {
         return {
           dataSourceName: source,
@@ -188,9 +201,5 @@ export const useDatabaseLatencyCheck = (props: QueryOptions) => {
       };
     },
     enabled: props.enabled,
-    onSuccess: data => {
-      props.onSuccess?.(data);
-    },
-    onError: props.onError,
   });
 };

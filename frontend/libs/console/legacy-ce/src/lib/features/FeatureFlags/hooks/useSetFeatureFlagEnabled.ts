@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from 'react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { FeatureFlagId, useFeatureFlags } from '..';
 import { saveFeatureFlagsStateToLocalStorage } from '../utils';
 import { sendTelemetryEvent, SetFeatureFlagEvent } from '../../../telemetry';
@@ -8,8 +8,8 @@ export function useSetFeatureFlagEnabled() {
   const queryClient = useQueryClient();
   const { data, isError, isLoading } = useFeatureFlags();
 
-  return useMutation(
-    async ({
+  return useMutation({
+    mutationFn: async ({
       flagId,
       newState,
     }: {
@@ -24,14 +24,14 @@ export function useSetFeatureFlagEnabled() {
         type: 'SET_FEATURE_FLAG',
         data: {
           feature_flag:
-            availableFeatureFlags.find(x => x.id === flagId)?.title ||
+            availableFeatureFlags.find((x) => x.id === flagId)?.title ||
             'Unknown',
           value: newState,
         },
       };
       sendTelemetryEvent(setFeatureFlagEvent);
 
-      const newFlags = data.map(item => {
+      const newFlags = data.map((item) => {
         if (item.id !== flagId) {
           return item;
         }
@@ -47,8 +47,7 @@ export function useSetFeatureFlagEnabled() {
 
       return saveFeatureFlagsStateToLocalStorage(newFlags);
     },
-    {
-      onSuccess: () => queryClient.invalidateQueries('featureFlags'),
-    }
-  );
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ['featureFlags'] }),
+  });
 }

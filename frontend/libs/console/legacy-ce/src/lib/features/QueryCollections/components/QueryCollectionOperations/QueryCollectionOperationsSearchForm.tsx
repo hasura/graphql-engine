@@ -1,5 +1,5 @@
 import z from 'zod';
-import { SimpleForm, InputField } from '../../../../new-components/Form';
+import { SimpleForm, InputField } from '@hasura/shared/ui';
 import React, { useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { FaSearch } from 'react-icons/fa';
@@ -23,9 +23,11 @@ const SearchInput: React.FC<QueryCollectionsOperationsSearchFormProps> = ({
   return (
     <InputField
       id="search"
-      placeholder="Search Operations..."
-      icon={<FaSearch />}
       name="search"
+      fieldProps={{
+        placeholder: 'Search Operations...',
+        icon: FaSearch,
+      }}
     />
   );
 };

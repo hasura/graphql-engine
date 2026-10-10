@@ -1,11 +1,10 @@
-import { expect } from '@storybook/jest';
-import { Meta, StoryObj } from '@storybook/react';
-import { userEvent, waitFor, within } from '@storybook/testing-library';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { Meta, StoryObj } from '@storybook/react-webpack5';
 import { useState } from 'react';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { APIError } from '../../../../hooks/error';
-import { Button } from '../../../../new-components/Button';
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
+import { Button } from '@hasura/shared/ui';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
 import { TestIds as StatusTestIds } from './ReactQueryStatusUI';
 import {
   IdleQueryErrorMessage,
@@ -37,7 +36,7 @@ const errorFn = async () => {
 
 const LOADING_TIME = 2000;
 const pauseForLoading = () =>
-  new Promise(resolve => setTimeout(resolve, LOADING_TIME));
+  new Promise((resolve) => setTimeout(resolve, LOADING_TIME));
 
 const waitForLoading = async () =>
   await waitFor(async () => await pauseForLoading(), {
@@ -46,7 +45,7 @@ const waitForLoading = async () =>
 
 export const Basic: StoryObj<typeof ReactQueryUIWrapper> = {
   render: () => {
-    const queryReturn = useQuery<typeof demoData, APIError>({
+    const queryReturn = useQuery<typeof demoData, unknown>({
       queryKey: ['foo'],
       queryFn: successFn,
       //enabled: false,
@@ -90,7 +89,7 @@ export const Basic: StoryObj<typeof ReactQueryUIWrapper> = {
 
     // make sure that the data is rendered as expected
     await expect(
-      within(canvasElement).getByText(JSON.stringify(demoData))
+      within(canvasElement).getByText(JSON.stringify(demoData)),
     ).toBeInTheDocument();
   },
 };
@@ -108,7 +107,7 @@ export const SkeletonInsteadOfContent: typeof Basic = {
         </div>
         <ReactQueryUIWrapper
           loader="skeleton"
-          skeletonProps={{ count: 3, height: 30 }}
+          skeletonProps={{ count: 3 }}
           useQueryResult={queryReturn}
           render={({ data }) => (
             <div>
@@ -140,7 +139,7 @@ export const SkeletonInsteadOfContent: typeof Basic = {
 
     // make sure that the data is rendered as expected
     await expect(
-      within(canvasElement).getByText(JSON.stringify(demoData))
+      within(canvasElement).getByText(JSON.stringify(demoData)),
     ).toBeInTheDocument();
   },
 };
@@ -159,7 +158,9 @@ export const SkeletonOverlay: typeof Basic = {
         <ReactQueryUIWrapper
           loadingStyle="overlay"
           loader="skeleton"
-          skeletonCount={3}
+          skeletonProps={{
+            count: 3,
+          }}
           fallbackData={demoData}
           useQueryResult={queryReturn}
           render={({ data }) => (
@@ -196,7 +197,7 @@ export const SkeletonOverlay: typeof Basic = {
 
     // make sure that the data is rendered as expected
     await expect(
-      within(canvasElement).getByText(JSON.stringify(demoData))
+      within(canvasElement).getByText(JSON.stringify(demoData)),
     ).toBeInTheDocument();
   },
 };
@@ -252,7 +253,7 @@ export const SpinnerOverlay: typeof Basic = {
 
     // make sure that the data is rendered as expected
     await expect(
-      within(canvasElement).getByText(JSON.stringify(demoData))
+      within(canvasElement).getByText(JSON.stringify(demoData)),
     ).toBeInTheDocument();
   },
 };
@@ -302,7 +303,7 @@ export const ErrorDisplay: typeof Basic = {
 
     // make sure that the data is rendered as expected
     await expect(
-      within(canvasElement).queryByText(JSON.stringify(demoData))
+      within(canvasElement).queryByText(JSON.stringify(demoData)),
     ).not.toBeInTheDocument();
   },
 };
@@ -358,7 +359,7 @@ export const ErrorBelowContent: typeof Basic = {
 
     // make sure that the data is rendered as expected
     await expect(
-      within(canvasElement).queryByText(JSON.stringify(demoData))
+      within(canvasElement).queryByText(JSON.stringify(demoData)),
     ).toBeInTheDocument();
   },
 };
@@ -417,7 +418,7 @@ export const CustomErrorBelowContent: typeof Basic = {
 
     // make sure that the data is rendered as expected
     await expect(
-      within(canvasElement).queryByText(JSON.stringify(demoData))
+      within(canvasElement).queryByText(JSON.stringify(demoData)),
     ).toBeInTheDocument();
   },
 };
@@ -439,7 +440,7 @@ export const IdleQueryWithFallbackData: typeof Basic = {
           <br />
           <Button
             data-testid="enable-query"
-            onClick={() => setEnabled(e => !e)}
+            onClick={() => setEnabled((e) => !e)}
           >
             Toggle Enabled
           </Button>
@@ -485,7 +486,7 @@ export const IdleQueryWithFallbackData: typeof Basic = {
 
     // make sure that the data is rendered as expected
     await expect(
-      within(canvasElement).getByText(JSON.stringify(demoData))
+      within(canvasElement).getByText(JSON.stringify(demoData)),
     ).toBeInTheDocument();
   },
 };
@@ -496,7 +497,7 @@ export const IdleQueryCustomRender: typeof Basic = {
     const queryReturn = useQuery<typeof demoData, APIError>({
       queryKey: ['foo'],
       queryFn: () =>
-        new Promise(res => {
+        new Promise((res) => {
           setTimeout(() => {
             return res(demoData);
           }, LOADING_TIME);
@@ -511,7 +512,7 @@ export const IdleQueryCustomRender: typeof Basic = {
           <br />
           <Button
             data-testid="enable-query"
-            onClick={() => setEnabled(e => !e)}
+            onClick={() => setEnabled((e) => !e)}
           >
             Toggle Enabled
           </Button>
@@ -538,7 +539,7 @@ export const IdleQueryCustomRender: typeof Basic = {
   },
   play: async ({ canvasElement }) => {
     await expect(
-      within(canvasElement).getByTestId('awesome-idle')
+      within(canvasElement).getByTestId('awesome-idle'),
     ).toBeInTheDocument();
 
     await checkForStatusElements({
@@ -565,7 +566,7 @@ export const IdleQueryCustomRender: typeof Basic = {
 
     // make sure that the data is rendered as expected
     await expect(
-      within(canvasElement).getByText(JSON.stringify(demoData))
+      within(canvasElement).getByText(JSON.stringify(demoData)),
     ).toBeInTheDocument();
   },
 };
@@ -576,7 +577,7 @@ export const IdleQueryError: typeof Basic = {
     const queryReturn = useQuery<typeof demoData, APIError>({
       queryKey: ['foo'],
       queryFn: () =>
-        new Promise(res => {
+        new Promise((res) => {
           setTimeout(() => {
             return res(demoData);
           }, LOADING_TIME);
@@ -591,7 +592,7 @@ export const IdleQueryError: typeof Basic = {
           <br />
           <Button
             data-testid="enable-query"
-            onClick={() => setEnabled(e => !e)}
+            onClick={() => setEnabled((e) => !e)}
           >
             Toggle Enabled
           </Button>
@@ -619,7 +620,7 @@ export const IdleQueryError: typeof Basic = {
     });
 
     await expect(
-      within(canvasElement).getByText(IdleQueryErrorMessage)
+      within(canvasElement).getByText(IdleQueryErrorMessage),
     ).toBeInTheDocument();
   },
 };

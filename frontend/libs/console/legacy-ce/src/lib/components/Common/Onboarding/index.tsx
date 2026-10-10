@@ -1,18 +1,18 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router';
 import { FaExternalLinkAlt, FaDatabase } from 'react-icons/fa';
-import { Button } from '../../../new-components/Button';
-import { isCloudConsole } from '../../../utils/cloudConsole';
-
+import { Button, Separator } from '@hasura/shared/ui';
 import YouTube from 'react-youtube';
-
-import globals from '../../../Globals';
-import { hasSources, isMetadataEmpty } from '../../../metadata/utils';
-import { setOnboardingCompletedInDB } from '../../../telemetry/Actions';
-import { Dispatch, ReduxState } from '../../../types';
-import { getLSItem, LS_KEYS, setLSItem } from '../../../utils/localStorage';
+import { getLSItem, setLSItem, isCloudConsole } from '@hasura/shared/utils';
 import hasuraDarkIcon from './hasura_icon_dark.svg';
 import styles from './Onboarding.module.scss';
+import { ConsoleState } from '@hasura/metadata/api';
+import { useCatalogState } from '../../../telemetry';
+import { useAppContext } from '@hasura/shared/context';
+import type { Metadata } from '@hasura/shared/types';
+import { LS_KEYS } from '@hasura/shared/types';
+import { Flex } from '@radix-ui/themes';
+import { isMetadataEmpty } from '@hasura/metadata/helpers';
 
 type PopupLinkProps = {
   title: string;
@@ -33,6 +33,7 @@ const PopupLink = ({
   title,
   internalLink,
 }: PopupLinkProps) => {
+  const { serverVersion } = useAppContext();
   if (videoId) {
     return (
       <li className={`${styles.popup_item} ${styles.video}`}>
@@ -45,9 +46,9 @@ const PopupLink = ({
     );
   }
   let url = link?.oss;
-  if (globals.serverVersion.includes('pro')) {
+  if (serverVersion.includes('pro')) {
     url = link?.pro;
-  } else if (globals.serverVersion.includes('cloud')) {
+  } else if (serverVersion.includes('cloud')) {
     url = link?.cloud;
   }
   return (
@@ -116,20 +117,17 @@ const onboardingList = [
 ];
 
 interface OnboardingProps {
-  dispatch: Dispatch;
-  console_opts: ReduxState['telemetry']['console_opts'];
-  metadata: ReduxState['metadata']['metadataObject'];
+  console_opts: ConsoleState | null;
+  metadata: Metadata['metadata'] | undefined;
 }
 
-const Onboarding: React.FC<OnboardingProps> = ({
-  dispatch,
-  console_opts,
-  metadata,
-}) => {
+const Onboarding: React.FC<OnboardingProps> = ({ console_opts, metadata }) => {
+  const { envVars } = useAppContext();
+  const { setOnboardingCompleted } = useCatalogState();
   const [visible, setVisible] = React.useState(true);
 
   const shouldShowOnbaording = useMemo(() => {
-    const shown = console_opts && console_opts.onboardingShown;
+    const shown = console_opts?.onboardingShown;
     if (shown) {
       return false;
     }
@@ -146,19 +144,19 @@ const Onboarding: React.FC<OnboardingProps> = ({
   }, []);
 
   // Only show onboarding popup on bottom right if environment is not cloud console
-  if (isCloudConsole(globals)) {
+  if (isCloudConsole(envVars)) {
     return null;
   }
 
   const togglePopup = () => {
-    setVisible(pre => {
+    setVisible((pre) => {
       setLSItem(LS_KEYS.showConsoleOnboarding, (!pre).toString());
       return !pre;
     });
   };
 
   const markCompleted = () => {
-    dispatch(setOnboardingCompletedInDB);
+    setOnboardingCompleted();
   };
 
   if (!shouldShowOnbaording) {
@@ -186,7 +184,7 @@ const Onboarding: React.FC<OnboardingProps> = ({
           </div>
           <div className={styles.popup_body}>
             <ul>
-              {metadata && !hasSources(metadata) ? (
+              {metadata && !metadata.sources.length ? (
                 <PopupLink {...connectDatabaseHelper} index={0} />
               ) : null}
               {onboardingList.map((item, i) => (
@@ -194,14 +192,23 @@ const Onboarding: React.FC<OnboardingProps> = ({
               ))}
             </ul>
           </div>
-          <div className="flex gap-2 p-4 justify-between border-t">
-            <Button onClick={togglePopup} data-test="btn-hide-for-now">
+          <Separator size="4" />
+          <Flex gap="2" justify="between" className="p-4">
+            <Button
+              onClick={togglePopup}
+              data-test="btn-hide-for-now"
+              color="gray"
+            >
               Hide for now
             </Button>
-            <Button onClick={markCompleted} data-test="btn-ob-dont-show-again">
+            <Button
+              onClick={markCompleted}
+              data-test="btn-ob-dont-show-again"
+              color="gray"
+            >
               Don&apos;t show me again
             </Button>
-          </div>
+          </Flex>
         </div>
       )}
     </>

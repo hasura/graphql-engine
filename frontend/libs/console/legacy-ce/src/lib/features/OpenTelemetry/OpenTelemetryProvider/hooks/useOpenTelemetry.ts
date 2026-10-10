@@ -1,4 +1,4 @@
-import { useMetadata } from '../../../hasura-metadata-api';
+import { useMetadata } from '@hasura/metadata/api';
 
 import { openTelemetryToFormValues } from '../utils/openTelemetryToFormValues';
 import { useNotifyMetadataLoadingError } from './useNotifyMetadataLoadingError';
@@ -12,7 +12,7 @@ export function useOpenTelemetry() {
     data: openTelemetry,
     isLoading: isLoadingMetadata,
     isError: loadingMetadataFailed,
-  } = useMetadata(metadata => metadata.metadata.opentelemetry);
+  } = useMetadata((metadata) => metadata.metadata.opentelemetry);
 
   useNotifyMetadataLoadingError(loadingMetadataFailed);
   useTrackTypeMisalignments(openTelemetry);

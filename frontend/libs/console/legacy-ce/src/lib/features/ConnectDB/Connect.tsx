@@ -1,16 +1,19 @@
-import { CustomizationForm } from '.';
-import { Button } from '../../new-components/Button';
-import { useConsoleForm, InputField } from '../../new-components/Form';
-import { IndicatorCard } from '../../new-components/IndicatorCard';
-import React from 'react';
+import {
+  Button,
+  IndicatorCard,
+  useConsoleForm,
+  InputField,
+} from '@hasura/shared/ui';
 import { Configuration } from './components/Configuration';
 import { Driver } from './components/Driver';
 import { EditConnection } from './EditConnection';
 import { useLoadSchema, useSubmit } from './hooks';
+import { SupportedDriver } from '@hasura/shared/types';
+import { CustomizationForm } from './components/Customization';
 
 interface Props {
   name: string;
-  driver: string;
+  driver: SupportedDriver;
   onDriverChange: (driver: string, name: string) => void;
 }
 
@@ -24,7 +27,7 @@ const CreateConnection = ({ name, driver, onDriverChange }: Props) => {
     driver,
   });
 
-  const { submit, isLoading: submitIsLoading } = useSubmit();
+  const { submit, isPending: submitIsLoading } = useSubmit();
 
   const {
     methods: { formState },
@@ -60,12 +63,16 @@ const CreateConnection = ({ name, driver, onDriverChange }: Props) => {
 
   return (
     <Form
-      key={`${defaultValues.name}-${defaultValues.driver}` || 'new-connection'}
+      key={
+        defaultValues.name || defaultValues.driver
+          ? `${defaultValues.name}-${defaultValues.driver}`
+          : 'new-connection'
+      }
       onSubmit={submit}
       className="pl-sm"
     >
       <div>
-        <InputField type="text" name="name" label="Database Display Name" />
+        <InputField name="name" label="Database Display Name" />
 
         <Driver onDriverChange={onDriverChange} />
 
@@ -79,7 +86,7 @@ const CreateConnection = ({ name, driver, onDriverChange }: Props) => {
           type="submit"
           className="mt-4"
           mode="primary"
-          isLoading={submitIsLoading}
+          loading={submitIsLoading}
         >
           Connect Database
         </Button>

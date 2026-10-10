@@ -2,8 +2,8 @@
 
 import React from 'react';
 
-import { StoryFn, Meta } from '@storybook/react';
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
+import { StoryFn, Meta } from '@storybook/react-webpack5';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
 import { RenderWidget } from './RenderWidget';
 import { MODE } from '../../types';
 

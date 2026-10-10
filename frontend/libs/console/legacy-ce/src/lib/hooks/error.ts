@@ -35,7 +35,7 @@ namespace APIErrors {
 
   export const hasField = <T extends string, U = unknown>(
     e: unknown,
-    check: T
+    check: T,
   ): e is Record<T, U> => {
     if (typeof e !== 'object' || e === null) return false;
     return check in e;
@@ -43,7 +43,7 @@ namespace APIErrors {
 
   export const hasStringField = <T extends string>(
     e: unknown,
-    check: T
+    check: T,
   ): e is Record<T, string> => {
     return hasField<T, string>(e, check);
   };

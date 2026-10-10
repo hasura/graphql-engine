@@ -1,16 +1,23 @@
-import type { Meta, StoryObj } from '@storybook/react';
-
-import produce from 'immer';
-import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
-import { ReduxDecorator } from '../../../storybook/decorators/redux-decorator';
+import type { Meta, StoryObj } from '@storybook/react-webpack5';
 
 import {
+  ReactQueryDecorator,
+  ConsoleTypeDecorator,
   createDefaultInitialData,
   handlers,
-} from '../../../mocks/metadata.mock';
-
-import { ConsoleTypeDecorator } from '../../../storybook/decorators';
+} from '@hasura/shared/testing';
 import { OpenTelemetryEEProvider } from './OpenTelemetryEEProvider';
+
+const initialDataWithoutOpenTelemetry = () => {
+  const defaultInitialData = createDefaultInitialData();
+  return {
+    ...defaultInitialData,
+    metadata: {
+      ...defaultInitialData.metadata,
+      opentelemetry: undefined,
+    },
+  };
+};
 
 // --------------------------------------------------
 // NOT TESTED
@@ -22,7 +29,6 @@ export default {
   title: 'Features/OpenTelemetry/OpenTelemetryProvider',
   component: OpenTelemetryEEProvider,
   decorators: [
-    ReduxDecorator({ tables: { currentDataSource: 'default' } }),
     ReactQueryDecorator(),
     ConsoleTypeDecorator({ consoleType: 'pro' }),
   ],
@@ -32,9 +38,7 @@ export default {
       delay: 500,
 
       // This story requires just the OpenTelemetry-related metadata handlers
-      initialData: produce(createDefaultInitialData(), draft => {
-        draft.metadata.opentelemetry = undefined;
-      }),
+      initialData: initialDataWithoutOpenTelemetry(),
     }),
   },
 } as Meta<typeof OpenTelemetryEEProvider>;
@@ -59,9 +63,7 @@ export const HappyPath: StoryObj<typeof OpenTelemetryEEProvider> = {
       delay: 0,
 
       // This story requires just the OpenTelemetry-related metadata handlers
-      initialData: produce(createDefaultInitialData(), draft => {
-        draft.metadata.opentelemetry = undefined;
-      }),
+      initialData: initialDataWithoutOpenTelemetry(),
     }),
   },
   // test is broken behind an "Enabled Enterprise" Banner. Unclear how best to fix text.

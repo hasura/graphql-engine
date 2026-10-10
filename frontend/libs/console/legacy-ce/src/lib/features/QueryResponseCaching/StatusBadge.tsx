@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
-import { Badge } from '../../new-components/Badge';
+import { Badge } from '@hasura/shared/ui';
 
 type Props = {
   status: 'enabled' | 'disabled';

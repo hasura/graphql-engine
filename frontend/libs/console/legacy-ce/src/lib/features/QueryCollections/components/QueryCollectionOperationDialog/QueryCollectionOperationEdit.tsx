@@ -1,28 +1,25 @@
-import React from 'react';
-import { QueryCollection } from '../../../../metadata/types';
-import { useFireNotification } from '../../../../new-components/Notifications';
-
-import { useEditOperationInQueryCollection } from '../../hooks/useEditOperationInQueryCollection';
+import { hasuraToast } from '@hasura/shared/ui';
+import { QueryCollectionQuery } from '@hasura/shared/types';
 import { QueryCollectionOperationDialog } from './QueryCollectionOperationDialog';
+import { useEditOperationInQueryCollection } from '@hasura/metadata/api';
 
 interface QueryCollectionOperationEditProps {
   queryCollectionName: string;
-  operation: QueryCollection;
+  operation: QueryCollectionQuery;
   onClose: () => void;
 }
 export const QueryCollectionOperationEdit = (
-  props: QueryCollectionOperationEditProps
+  props: QueryCollectionOperationEditProps,
 ) => {
   const { onClose, operation, queryCollectionName } = props;
-  const { isLoading, editOperationInQueryCollection } =
+  const { isPending, editOperationInQueryCollection } =
     useEditOperationInQueryCollection();
-  const { fireNotification } = useFireNotification();
   return (
     <QueryCollectionOperationDialog
       title="Edit Operation"
       callToAction="Edit operation"
-      isLoading={isLoading}
-      onSubmit={values => {
+      isLoading={isPending}
+      onSubmit={(values) => {
         if (values.option === 'write operation') {
           editOperationInQueryCollection(
             queryCollectionName,
@@ -32,22 +29,22 @@ export const QueryCollectionOperationEdit = (
               query: values.query,
             },
             {
-              onError: e => {
-                fireNotification({
+              onError: (e) => {
+                hasuraToast({
                   type: 'error',
                   title: 'Error',
                   message: `Failed to edit operation in query collection: ${e.message}`,
                 });
               },
               onSuccess: () => {
-                fireNotification({
+                hasuraToast({
                   type: 'success',
                   title: 'Success',
                   message: `Successfully edited operation in query collection`,
                 });
                 onClose();
               },
-            }
+            },
           );
         }
       }}

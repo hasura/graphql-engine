@@ -1,10 +1,10 @@
-import { capitaliseFirstLetter } from '../../../../components/Common/ConfigureTransformation/utils';
+import { capitalizeFirstLetter } from '@hasura/shared/utils';
 import { LocalRelationship } from '../../types';
 import { SuggestedRelationshipWithName } from './hooks/useSuggestedRelationships';
 
 export const convertSuggestedRelationShipToLocalRelationship = (
   dataSourceName: string,
-  suggestedRelationship: SuggestedRelationshipWithName
+  suggestedRelationship: SuggestedRelationshipWithName,
 ): LocalRelationship => ({
   definition: {
     toTable: suggestedRelationship.to.table,
@@ -14,8 +14,8 @@ export const convertSuggestedRelationShipToLocalRelationship = (
   },
   fromSource: dataSourceName,
   fromTable: suggestedRelationship.from.table,
-  relationshipType: capitaliseFirstLetter(
-    suggestedRelationship.type
+  relationshipType: capitalizeFirstLetter(
+    suggestedRelationship.type,
   ) as LocalRelationship['relationshipType'],
   type: 'localRelationship',
   name: suggestedRelationship.constraintName,

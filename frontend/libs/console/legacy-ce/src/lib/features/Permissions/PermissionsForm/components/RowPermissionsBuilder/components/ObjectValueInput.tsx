@@ -1,6 +1,7 @@
 import { useContext } from 'react';
 import { rowPermissionsContext } from './RowPermissionsProvider';
 import { jsonToString, stringToJson } from './utils/jsonString';
+import { Input } from '@hasura/shared/ui';
 
 export function ObjectValueInput({
   value,
@@ -13,13 +14,13 @@ export function ObjectValueInput({
 }) {
   const { setValue, isLoading } = useContext(rowPermissionsContext);
   return (
-    <input
+    <Input
       disabled={isLoading}
       data-testid={componentLevelId}
-      className="border border-gray-200 rounded-md p-2 !mr-4"
+      className="rounded-md p-2 mr-4!"
       type="text"
       value={jsonToString(value)}
-      onChange={e => {
+      onChange={(e) => {
         setValue(path, stringToJson(e.target.value));
       }}
     />

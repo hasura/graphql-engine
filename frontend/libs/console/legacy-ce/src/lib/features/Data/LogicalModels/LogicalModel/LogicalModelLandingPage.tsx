@@ -1,9 +1,7 @@
-import { withRouter } from 'react-router';
-import { IndicatorCard } from '../../../../new-components/IndicatorCard';
-import { Tabs } from '../../../../new-components/Tabs';
-import { usePushRoute } from '../../../ConnectDBRedesign/hooks';
-import { MetadataSelectors } from '../../../hasura-metadata-api';
-import { LogicalModel } from '../../../hasura-metadata-types';
+import { useNavigate, useParams } from 'react-router';
+import { IndicatorCard, Tabs } from '@hasura/shared/ui';
+import { MetadataSelectors } from '@hasura/metadata/helpers';
+import { LogicalModel } from '@hasura/shared/types';
 import { LogicalModelPermissionsPage } from '../../../Permissions/LogicalModelPermissions/LogicalModelPermissionsPage';
 import { MetadataWrapper } from '../../components';
 import { LogicalModelWidget } from '../LogicalModelWidget/LogicalModelWidget';
@@ -13,14 +11,14 @@ import { Routes } from '../constants';
 import { LogicalModelTabs } from '../types';
 import { logicalModelFieldToFormField } from './utils/logicalModelFieldToFormField';
 
-export const LogicalModelRoute = withRouter<{
-  params: {
+export const LogicalModelRoute = () => {
+  const params = useParams<{
     source: string;
     name: string;
     tabName?: LogicalModelTabs;
-  };
-}>(({ params }) => {
-  if (!params.source || !params.name) {
+  }>();
+  const { source, name, tabName } = params;
+  if (!source || !name) {
     return (
       <IndicatorCard status="negative">
         Unable to parse data from url.
@@ -30,13 +28,18 @@ export const LogicalModelRoute = withRouter<{
 
   return (
     <MetadataWrapper
-      selector={MetadataSelectors.findLogicalModel(params.source, params.name)}
+      selector={MetadataSelectors.findLogicalModel(source, name)}
       render={({ data: logicalModel }) => (
-        <LogicalModelLandingPage {...params} logicalModel={logicalModel} />
+        <LogicalModelLandingPage
+          source={source}
+          name={name}
+          tabName={tabName}
+          logicalModel={logicalModel}
+        />
       )}
     />
   );
-});
+};
 
 const LogicalModelLandingPage = ({
   name: logicalModelName,
@@ -49,7 +52,7 @@ const LogicalModelLandingPage = ({
   tabName?: string;
   logicalModel: LogicalModel | undefined;
 }) => {
-  const push = usePushRoute();
+  const push = useNavigate();
 
   if (!logicalModel) {
     return (
@@ -74,13 +77,13 @@ const LogicalModelLandingPage = ({
       <Tabs
         data-testid="logical-model-tabs"
         defaultValue={tabName ?? 'details'}
-        onValueChange={tab =>
+        onValueChange={(tab) =>
           push(
             injectRouteDetails(Routes.EditLogicalModel, {
               itemName: logicalModel.name,
               itemSourceName: source,
               itemTabName: tab,
-            })
+            }),
           )
         }
         items={[
@@ -88,7 +91,7 @@ const LogicalModelLandingPage = ({
             value: 'details',
             label: `Logical Model`,
             content: (
-              <div className="py-md max-w">
+              <div className="py-4 max-w">
                 <LogicalModelWidget
                   key={`${source}-${logicalModelName}`}
                   disabled={{
@@ -98,7 +101,7 @@ const LogicalModelLandingPage = ({
                     name: logicalModel.name,
                     dataSourceName: source,
                     fields: logicalModel.fields.map(
-                      logicalModelFieldToFormField
+                      logicalModelFieldToFormField,
                     ),
                   }}
                   onSubmit={() => {

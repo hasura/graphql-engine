@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { requestHeadersSelectorSchema } from '../../../../../new-components/RequestHeadersSelector';
+import { requestHeadersSelectorSchema } from '@hasura/shared/ui';
 
 const endPointSchema = z.string();
 
@@ -50,7 +50,7 @@ export const formSchema = z
   // enforce invariant that: when export is enabled globally AND when the
   // corresponding data_type is enabled THEN a valid endpoint url is provided.
   .refine(
-    obj =>
+    (obj) =>
       ['enabled', 'env'].includes(obj.status) && obj.dataType.includes('traces')
         ? obj.tracesEndpoint
         : true,
@@ -58,10 +58,10 @@ export const formSchema = z
       message:
         'A valid traces endpoint must be supplied when trace export is enabled',
       path: ['tracesEndpoint'],
-    }
+    },
   )
   .refine(
-    obj =>
+    (obj) =>
       ['enabled', 'env'].includes(obj.status) &&
       obj.dataType.includes('metrics')
         ? obj.metricsEndpoint
@@ -70,10 +70,10 @@ export const formSchema = z
       message:
         'A valid metrics endpoint must be supplied when metrics export is enabled',
       path: ['metricsEndpoint'],
-    }
+    },
   )
   .refine(
-    obj =>
+    (obj) =>
       ['enabled', 'env'].includes(obj.status) && obj.dataType.includes('logs')
         ? obj.logsEndpoint
         : true,
@@ -81,7 +81,7 @@ export const formSchema = z
       message:
         'A valid logs endpoint must be supplied when logs export is enabled',
       path: ['logsEndpoint'],
-    }
+    },
   );
 
 // --------------------------------------------------

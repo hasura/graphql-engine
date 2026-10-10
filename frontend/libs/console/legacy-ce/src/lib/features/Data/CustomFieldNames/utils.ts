@@ -1,12 +1,11 @@
 import pickBy from 'lodash/pickBy';
-import { Driver } from '../../../dataSources';
-import { getDriverPrefix } from '../../DataSource';
-import { MetadataTableConfig } from '../../hasura-metadata-types';
+import { MetadataTableConfig, SupportedDriver } from '@hasura/shared/types';
 import {
   CustomFieldNamesFormVals,
   GetTablePayloadArgs,
   QualifiedTable,
 } from './types';
+import { getDriverPrefix } from '@hasura/metadata/helpers';
 
 export const getQualifiedTableForCustomFieldNames = ({
   driver,
@@ -27,7 +26,7 @@ export const getQualifiedTableForCustomFieldNames = ({
 };
 
 export const customFieldNamesPlaceholders = (
-  tableName: string
+  tableName: string,
 ): CustomFieldNamesFormVals => ({
   custom_name: `${tableName} (default)`,
   select: `${tableName} (default)`,
@@ -45,7 +44,7 @@ export const customFieldNamesPlaceholders = (
 });
 
 export const buildConfigFromFormValues = (
-  values: CustomFieldNamesFormVals
+  values: CustomFieldNamesFormVals,
 ): MetadataTableConfig => {
   // we want to only add properties if a value is "truthy"/not empty
 
@@ -56,7 +55,7 @@ export const buildConfigFromFormValues = (
   if (custom_name) config.custom_name = custom_name;
   if (logical_model) config.logical_model = logical_model;
 
-  const rootsWithValues = pickBy(customRoots, v => v !== '');
+  const rootsWithValues = pickBy(customRoots, (v) => v !== '');
 
   if (Object.keys(rootsWithValues).length > 0) {
     config.custom_root_fields = rootsWithValues;
@@ -65,9 +64,9 @@ export const buildConfigFromFormValues = (
   return config;
 };
 
-export const getTrackTableType = (driver: Driver) => {
+export const getTrackTableType = (driver: SupportedDriver) => {
   const prefix = getDriverPrefix(driver);
-  return `${prefix}_track_table`;
+  return `${prefix}_track_table` as const;
 };
 
 export const query_field_props: (keyof CustomFieldNamesFormVals)[] = [

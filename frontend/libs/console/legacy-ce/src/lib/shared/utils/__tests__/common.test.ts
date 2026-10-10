@@ -12,11 +12,11 @@ describe('Get action definition by providing SDL', () => {
         {
           name: 'arg1',
           type: 'SampleInput!',
-          description: null,
+          description: undefined,
         },
       ],
       outputType: 'SampleOutput',
-      comment: null,
+      comment: undefined,
       error: null,
       type: 'mutation',
     };
@@ -39,28 +39,28 @@ describe('Get action definition by providing SDL', () => {
         {
           name: 'username',
           type: 'String!',
-          description: null,
+          description: undefined,
         },
         {
           name: 'password',
           type: 'String!',
-          description: null,
+          description: undefined,
         },
       ],
       outputType: 'accessToken',
-      comment: null,
+      comment: undefined,
       error: null,
       type: 'query',
     };
 
     expect(getActionDefinitionFromSdl(mutationSDLInput)).toStrictEqual(
-      mutationSDLOutput
+      mutationSDLOutput,
     );
     expect(getActionDefinitionFromSdl(emptyQuerySDLInput)).toStrictEqual(
-      emptyQuerySDLOutput
+      emptyQuerySDLOutput,
     );
     expect(getActionDefinitionFromSdl(querySDLInput)).toStrictEqual(
-      querySDLOutput
+      querySDLOutput,
     );
   });
 });

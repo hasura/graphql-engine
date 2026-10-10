@@ -1,29 +1,29 @@
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
 import { FaPlusCircle } from 'react-icons/fa';
-import { Button } from '../../../../../new-components/Button';
 import {
+  Button,
+  CodeEditorField,
   GraphQLSanitizedInputField,
   InputField,
-  Select,
-} from '../../../../../new-components/Form';
+  SelectField,
+  Text,
+} from '@hasura/shared/ui';
 import { LimitedFeatureWrapper } from '../../../../ConnectDBRedesign/components/LimitedFeatureWrapper/LimitedFeatureWrapper';
-import { useMetadata } from '../../../../hasura-metadata-api';
-import { ReactQueryStatusUI } from '../../../components/ReactQueryWrappers/ReactQueryStatusUI';
-import { Source } from '../../../../hasura-metadata-types';
-import { useSupportedDataTypes } from '../../../hooks/useSupportedDataTypes';
+import { useMetadata } from '@hasura/metadata/api';
+import { Source } from '@hasura/shared/types';
 import { LogicalModelWidget } from '../../LogicalModelWidget/LogicalModelWidget';
 import { ArgumentsField } from '../components/ArgumentsField';
-import { SqlEditorField } from '../components/SqlEditorField';
 import { NativeQueryForm } from '../types';
-import { ReactQueryUIWrapper } from '../../../components';
+import { useSupportedScalars } from '@hasura/metadata/data-source';
+import { Flex } from '@radix-ui/themes';
 
 export const NativeQueryFormFields = ({ sources }: { sources?: Source[] }) => {
   const { watch, setValue } = useFormContext<NativeQueryForm>();
   const selectedSource = watch('source');
 
   const logicalModels = sources?.find(
-    s => s.name === selectedSource
+    (s) => s.name === selectedSource,
   )?.logical_models;
 
   const logicalModelSelectPlaceholder = () => {
@@ -38,52 +38,50 @@ export const NativeQueryFormFields = ({ sources }: { sources?: Source[] }) => {
     return 'Select a logical model...';
   };
 
-  const { data: isThereBigQueryOrMssqlSource } = useMetadata(
-    m =>
-      !!m.metadata.sources.find(
-        s => s.kind === 'mssql' || s.kind === 'bigquery'
-      )
-  );
+  const { data: meta } = useMetadata();
 
   const [isLogicalModelsDialogOpen, setIsLogicalModelsDialogOpen] =
     React.useState(false);
 
+  const isThereBigQueryOrMssqlSource =
+    meta?.metadata?.sources?.some(
+      (s) => s.kind === 'mssql' || s.kind === 'bigquery',
+    ) ?? false;
+
+  const source = meta?.metadata?.sources.find((s) => s.name === selectedSource);
   /**
    * Options for the data source types
    */
-  const supportedDataTypesResult = useSupportedDataTypes({
-    dataSourceName: selectedSource,
-    options: {
-      enabled: !!selectedSource,
-    },
-  });
+  const { data: supportedDataTypesResult } = useSupportedScalars(source?.kind);
 
   return (
     <>
-      <div className="max-w-xl flex flex-col">
+      <Flex direction="column" className="max-w-xl" gap="4">
         <GraphQLSanitizedInputField
           name="root_field_name"
           label="Native Query Name"
-          placeholder="Name that exposes this model in GraphQL API"
           hideTips
+          fieldProps={{
+            placeholder: 'Name that exposes this model in GraphQL API',
+          }}
         />
         <InputField
           name="comment"
           label="Comment"
-          placeholder="A description of this logical model"
+          fieldProps={{ placeholder: 'A description of this logical model' }}
         />
-        <Select
+        <SelectField
           name="source"
           label="Database"
           // saving prop for future update
           //noOptionsMessage="No databases found."
-          options={(sources ?? []).map(m => ({
+          options={(sources ?? []).map((m) => ({
             label: m.name,
             value: m.name,
           }))}
           placeholder="Select a database..."
         />
-      </div>
+      </Flex>
       <div className="max-w-4xl">
         {isThereBigQueryOrMssqlSource && (
           <LimitedFeatureWrapper
@@ -93,42 +91,48 @@ export const NativeQueryFormFields = ({ sources }: { sources?: Source[] }) => {
           />
         )}
       </div>
-      <ReactQueryUIWrapper
-        loadingStyle="overlay"
-        loader="spinner"
-        fallbackData={[]}
-        miniSpinnerBackdrop
-        useQueryResult={supportedDataTypesResult}
-        render={({ data: typeOptions }) => (
-          <ArgumentsField
-            noSourceSelected={!selectedSource}
-            types={typeOptions}
-          />
-        )}
+      <ArgumentsField
+        noSourceSelected={!selectedSource}
+        types={supportedDataTypesResult ?? []}
       />
-
-      <SqlEditorField />
-      <div className="flex w-full">
+      <CodeEditorField
+        name="code"
+        label="Native Query Statement"
+        editorProps={{
+          mode: 'sql',
+        }}
+      />
+      <Flex className="w-full">
         {/* Logical Model Dropdown */}
-        <Select
+        <SelectField
           name="returns"
-          selectClassName="max-w-xl"
-          label="Query Return Type"
+          label={
+            <>
+              <Text weight="medium">Query Return Type</Text>
+              <Button
+                mode="default"
+                size="1"
+                leftIcon={FaPlusCircle}
+                onClick={() => {
+                  setIsLogicalModelsDialogOpen(true);
+                }}
+              >
+                Add Logical Model
+              </Button>
+            </>
+          }
           placeholder={logicalModelSelectPlaceholder()}
-          options={(logicalModels ?? []).map(m => ({
+          options={(logicalModels ?? []).map((m) => ({
             label: m.name,
             value: m.name,
           }))}
-        />
-        <Button
-          icon={<FaPlusCircle />}
-          onClick={e => {
-            setIsLogicalModelsDialogOpen(true);
+          fieldProps={{
+            trigger: {
+              className: 'max-w-xl',
+            },
           }}
-        >
-          Add Logical Model
-        </Button>
-      </div>
+        />
+      </Flex>
       {isLogicalModelsDialogOpen ? (
         <LogicalModelWidget
           defaultValues={{ dataSourceName: selectedSource }}
@@ -136,7 +140,7 @@ export const NativeQueryFormFields = ({ sources }: { sources?: Source[] }) => {
           onCancel={() => {
             setIsLogicalModelsDialogOpen(false);
           }}
-          onSubmit={data => {
+          onSubmit={(data) => {
             if (data.dataSourceName !== selectedSource) {
               setValue('source', data.dataSourceName);
             }

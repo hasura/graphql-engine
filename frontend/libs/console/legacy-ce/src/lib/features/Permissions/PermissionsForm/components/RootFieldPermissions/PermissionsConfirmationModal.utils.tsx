@@ -1,5 +1,5 @@
-import React from 'react';
-import { LS_KEYS, getLSItem } from '../../../../../utils/localStorage';
+import { getLSItem } from '@hasura/shared/utils';
+import { LS_KEYS } from '@hasura/shared/types';
 
 type Scenario = 'aggregate' | 'pk' | 'pks';
 

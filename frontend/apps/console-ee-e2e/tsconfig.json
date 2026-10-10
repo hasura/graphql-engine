@@ -2,8 +2,13 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "sourceMap": false,
+    // cypress.config.ts is loaded by Nx/Node as native ESM (type stripping),
+    // which needs explicit `.ts` extensions on relative imports.
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
     "outDir": "../../dist/out-tsc",
     "allowJs": true,
+    "checkJs": false,
     "types": ["cypress", "node", "@testing-library/cypress"]
   },
   "include": ["src/**/*.ts", "src/**/*.js", "cypress.config.ts"]

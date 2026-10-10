@@ -12,10 +12,10 @@ import {
   parse,
   validate,
 } from 'graphql';
-import { afterAll, beforeAll, expect, test } from '@jest/globals';
+import { afterAll, beforeAll, expect, test } from 'vitest';
 
-const openAPIToGraphQL = require('../src/index');
-const Oas3Tools = require('../src/oas_3_tools');
+import * as openAPIToGraphQL from '../src/index';
+import * as Oas3Tools from '../src/oas_3_tools';
 
 // Set up the schema first
 const oas = require('./fixtures/government_social_work.json');
@@ -37,7 +37,7 @@ test('All query endpoints present', () => {
     }
   }
   const gqlTypes = Object.keys(
-    (createdSchema.getTypeMap().Query as GraphQLObjectType).getFields()
+    (createdSchema.getTypeMap().Query as GraphQLObjectType).getFields(),
   ).length;
   expect(gqlTypes).toEqual(oasGetCount);
 });
@@ -50,7 +50,7 @@ test('All mutation endpoints present', () => {
     }
   }
   const gqlTypes = Object.keys(
-    (createdSchema.getTypeMap().Mutation as GraphQLObjectType).getFields()
+    (createdSchema.getTypeMap().Mutation as GraphQLObjectType).getFields(),
   ).length;
   expect(gqlTypes).toEqual(oasMutCount);
 });

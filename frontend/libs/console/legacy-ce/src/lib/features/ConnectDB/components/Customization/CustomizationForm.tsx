@@ -1,9 +1,8 @@
-import { Collapsible } from '../../../../new-components/Collapsible';
-import { InputField } from '../../../../new-components/Form';
+import { Collapsible, InputField } from '@hasura/shared/ui';
 import React from 'react';
-import { SectionHeader } from './parts';
+import { SectionHeader } from './parts/SectionHeader';
 
-export const CustomizationForm: React.VFC<{ defaultOpen?: boolean }> = ({
+export const CustomizationForm: React.FC<{ defaultOpen?: boolean }> = ({
   defaultOpen,
 }) => {
   return (
@@ -24,7 +23,6 @@ export const CustomizationForm: React.VFC<{ defaultOpen?: boolean }> = ({
           <InputField
             name="customization.root_fields.namespace"
             label="Namespace"
-            prependLabel=""
           />
           <InputField name="customization.root_fields.prefix" label="Prefix" />
           <InputField name="customization.root_fields.suffix" label="Suffix" />

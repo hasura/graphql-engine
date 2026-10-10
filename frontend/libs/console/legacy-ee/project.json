@@ -6,18 +6,25 @@
   "tags": ["scope:console", "type:feature", "meta:legacy"],
   "targets": {
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["libs/console/legacy-ee/**/*.{ts,tsx,js,jsx,json}"]
       }
     },
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/libs/console/legacy-ee"],
+    "lint-fix": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
       "options": {
-        "jestConfig": "libs/console/legacy-ee/jest.config.ts",
-        "passWithNoTests": true
+        "fix": true,
+        "lintFilePatterns": ["libs/console/legacy-ee/**/*.{ts,tsx,js,jsx,json}"]
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "coverage/libs/console/legacy-ee"
       }
     }
   }

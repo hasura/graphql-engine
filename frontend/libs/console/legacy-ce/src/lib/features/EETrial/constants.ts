@@ -1,6 +1,6 @@
 import { parse as gql } from 'graphql';
 export const eeApiHeaders = {};
-export const EE_LICENSE_INFO_QUERY_NAME = 'EE_LICENSE_INFO_QUERY_NAME';
+export const EE_LICENSE_INFO_QUERY_NAME = ['EE_LICENSE_INFO_QUERY_NAME'];
 export const LICENSE_REFRESH_INTERVAL = 3600000;
 export const EE_TRIAL_DOCS_URL =
   'https://hasura.io/docs/latest/enterprise/try-hasura-enterprise-edition';

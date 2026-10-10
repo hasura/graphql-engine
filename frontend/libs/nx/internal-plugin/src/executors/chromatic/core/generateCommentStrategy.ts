@@ -30,7 +30,7 @@ export type GenerateCommentStrategyResult = {
 };
 
 export function generateCommentStrategy(
-  params: GenerateCommentStrategyParams
+  params: GenerateCommentStrategyParams,
 ): GenerateCommentStrategyResult {
   const {
     diagnosticFile,
@@ -59,7 +59,7 @@ _Sent with 💌 from the frontenders of the Hasura Platform team_.
         uncaughtChromaticError instanceof Error
           ? uncaughtChromaticError
           : new Error(
-              `Something bad happened to the Chromatic build with an unexpected error (${uncaughtChromaticError})`
+              `Something bad happened to the Chromatic build with an unexpected error (${uncaughtChromaticError})`,
             );
 
       return {
@@ -76,7 +76,7 @@ _Sent with 💌 from the frontenders of the Hasura Platform team_.
     return {
       status: 'noDiagnosticFile',
       error: new Error(
-        `CI job is over but the Chromatic diagnostic file cannot be found`
+        `CI job is over but the Chromatic diagnostic file cannot be found`,
       ),
       comment: `
 ### 🤔 Chromatic Visual Regression Report
@@ -97,7 +97,7 @@ ${signature}`,
     return {
       status: 'wrongDiagnosticFile',
       error: new Error(
-        `CI job is over but we are not able to parse the Chromatic diagnostic file. There might be an issue with chromatic, feel free to share this run with the platform team for further diagnostics.`
+        `CI job is over but we are not able to parse the Chromatic diagnostic file. There might be an issue with chromatic, feel free to share this run with the platform team for further diagnostics.`,
       ),
       comment: `
 ### 🤔 Chromatic Visual Regression Report
@@ -118,7 +118,7 @@ ${signature}`,
       return {
         status: 'pending',
         error: new Error(
-          `Chromatic reported ${diagnosticData.build.changeCount} visual differences with this PR. You can review them [here](${diagnosticData.build.webUrl}).`
+          `Chromatic reported ${diagnosticData.build.changeCount} visual differences with this PR. You can review them [here](${diagnosticData.build.webUrl}).`,
         ),
         comment: `
 ### ⚠️ Chromatic Visual Regression Report
@@ -144,7 +144,7 @@ ${signature}`,
         // This is the value of this executor: failing the CI when there are visual regressions that
         // have been rejected!
         error: new Error(
-          `The ${diagnosticData.build.changeCount} visual differences Chromatic reported with this PR have been rejected. You can review them [here](${diagnosticData.build.webUrl})`
+          `The ${diagnosticData.build.changeCount} visual differences Chromatic reported with this PR have been rejected. You can review them [here](${diagnosticData.build.webUrl})`,
         ),
 
         comment: `
@@ -178,7 +178,7 @@ ${signature}`,
       return {
         status: 'broken',
         error: new Error(
-          `There are ${diagnosticData.build.errorCount} errors reported by Chromatic with this PR. You can view them [here](${diagnosticData.build.webUrl}).`
+          `There are ${diagnosticData.build.errorCount} errors reported by Chromatic with this PR. You can view them [here](${diagnosticData.build.webUrl}).`,
         ),
         comment: `
 ### ❌ Chromatic Visual Regression Report
@@ -191,7 +191,7 @@ ${signature}`,
       return {
         status: 'cancelled',
         error: new Error(
-          `Chromatic build is broken, maybe something is wrong with some stories. You can view them [here](${diagnosticData.build.webUrl}).`
+          `Chromatic build is broken, maybe something is wrong with some stories. You can view them [here](${diagnosticData.build.webUrl}).`,
         ),
         comment: `
 ### ❌ Chromatic Visual Regression Report

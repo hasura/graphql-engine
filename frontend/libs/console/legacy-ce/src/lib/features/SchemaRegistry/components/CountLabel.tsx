@@ -1,12 +1,12 @@
 import React from 'react';
 import { ChangeLevel } from '../types';
 import { FaExclamationTriangle } from 'react-icons/fa';
-import { IconTooltip } from '../../../new-components/Tooltip';
+import { IconTooltip } from '@hasura/shared/ui';
 
-export const CountLabel: React.VFC<{
+export const CountLabel: React.FC<{
   count?: number;
   type: ChangeLevel;
-}> = props => {
+}> = (props) => {
   const { count, type } = props;
 
   if (count === undefined) {

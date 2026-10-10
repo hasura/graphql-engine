@@ -21,7 +21,7 @@ export const typesContext = createContext<TypesContext>({
 // This is used to determine if a permission is a column or relationship or nested object
 export const TypesProvider = ({ children }: { children: React.ReactNode }) => {
   const [types, setTypes] = useState<Record<string, { type: PermissionType }>>(
-    {}
+    {},
   );
   const { permissions } = useContext(rowPermissionsContext);
   const { table, tables } = useContext(rootTableContext);
@@ -35,7 +35,7 @@ export const TypesProvider = ({ children }: { children: React.ReactNode }) => {
       path: string[];
       value: any;
     }) => {
-      setTypes(prev => {
+      setTypes((prev) => {
         // Remove old path
         const newTypes = { ...prev };
         unset(newTypes, path.join('.'));
@@ -45,7 +45,7 @@ export const TypesProvider = ({ children }: { children: React.ReactNode }) => {
         return newTypes;
       });
     },
-    []
+    [],
   );
   //  Stringify values to get a stable value for useEffect
   const jsonPermissions = JSON.stringify(permissions);

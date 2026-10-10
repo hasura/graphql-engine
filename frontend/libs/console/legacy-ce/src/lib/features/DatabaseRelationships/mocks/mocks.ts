@@ -111,7 +111,7 @@ export const mocksTrackedArrayRelationship = {
         },
         {
           name: 'aMySQL',
-          kind: 'mysql8',
+          kind: 'mysql',
           tables: [
             {
               table: ['Artist'],

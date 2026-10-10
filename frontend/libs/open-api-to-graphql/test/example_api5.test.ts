@@ -6,7 +6,7 @@
 'use strict';
 
 import { graphql, GraphQLSchema } from 'graphql';
-import { afterAll, beforeAll, expect, test } from '@jest/globals';
+import { afterAll, beforeAll, expect, test } from 'vitest';
 
 import * as openAPIToGraphQL from '../src/index';
 import { startServer, stopServer } from './example_api5_server';
@@ -50,7 +50,7 @@ test('Basic simpleNames option test', () => {
     }
   }`;
 
-  return graphql({ schema: createdSchema, source: query }).then(result => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         o_d_d___n_a_m_e: {
@@ -74,7 +74,7 @@ test('Basic simpleNames option test with GraphQL unsafe values', () => {
     }
   }`;
 
-  return graphql({ schema: createdSchema, source: query }).then(result => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         weird___name: {
@@ -98,7 +98,7 @@ test('Basic simpleNames option test with GraphQL unsafe values and a parameter',
     }
   }`;
 
-  return graphql({ schema: createdSchema, source: query }).then(result => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         weird___name2: {
@@ -122,7 +122,7 @@ test('Basic simpleNames option test with a link', () => {
     }
   }`;
 
-  return graphql({ schema: createdSchema, source: query }).then(result => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         o_d_d___n_a_m_e: {
@@ -148,7 +148,7 @@ test('Basic simpleNames option test with a link that has parameters', () => {
     }
   }`;
 
-  return graphql({ schema: createdSchema, source: query }).then(result => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         o_d_d___n_a_m_e: {
@@ -174,7 +174,7 @@ test('Basic simpleNames option test with a link that has exposed parameters', ()
     }
   }`;
 
-  return graphql({ schema: createdSchema, source: query }).then(result => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         o_d_d___n_a_m_e: {
@@ -200,7 +200,7 @@ test('Basic simpleEnumValues option test', () => {
   }`;
 
   const promise = graphql({ schema: createdSchema, source: query }).then(
-    result => {
+    (result) => {
       expect(result).toEqual({
         data: {
           getEnum: {
@@ -208,7 +208,7 @@ test('Basic simpleEnumValues option test', () => {
           },
         },
       });
-    }
+    },
   );
 
   const promise2 = openAPIToGraphQL
@@ -216,7 +216,7 @@ test('Basic simpleEnumValues option test', () => {
       simpleEnumValues: true,
     })
     .then(({ schema, report }) => {
-      return graphql({ schema, source: query }).then(result => {
+      return graphql({ schema, source: query }).then((result) => {
         expect(result).toEqual({
           data: {
             getEnum: {
@@ -242,7 +242,7 @@ test('Basic simpleEnumValues option test on numerical enum', () => {
   }`;
 
   const promise = graphql({ schema: createdSchema, source: query }).then(
-    result => {
+    (result) => {
       expect(result).toEqual({
         data: {
           getNumericalEnum: {
@@ -250,7 +250,7 @@ test('Basic simpleEnumValues option test on numerical enum', () => {
           },
         },
       });
-    }
+    },
   );
 
   const promise2 = openAPIToGraphQL
@@ -258,7 +258,7 @@ test('Basic simpleEnumValues option test on numerical enum', () => {
       simpleEnumValues: true,
     })
     .then(({ schema, report }) => {
-      return graphql({ schema, source: query }).then(result => {
+      return graphql({ schema, source: query }).then((result) => {
         expect(result).toEqual({
           data: {
             getNumericalEnum: {
@@ -285,7 +285,7 @@ test('Basic simpleEnumValues option test on object enum', () => {
   }`;
 
   const promise = graphql({ schema: createdSchema, source: query }).then(
-    result => {
+    (result) => {
       expect(result).toEqual({
         data: {
           __type: {
@@ -294,7 +294,7 @@ test('Basic simpleEnumValues option test on object enum', () => {
           },
         },
       });
-    }
+    },
   );
 
   const promise2 = openAPIToGraphQL
@@ -302,7 +302,7 @@ test('Basic simpleEnumValues option test on object enum', () => {
       simpleEnumValues: true,
     })
     .then(({ schema, report }) => {
-      return graphql({ schema, source: query }).then(result => {
+      return graphql({ schema, source: query }).then((result) => {
         expect(result).toEqual({
           data: {
             __type: {

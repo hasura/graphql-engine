@@ -1,4 +1,4 @@
-import { StoryObj, Meta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
 import RemoteSchemaRelationshipTable from './RemoteSchemaRelationshipsTable';
 
 const tableWithLegacyAndNewRemoteSchemaRelations: any = {
@@ -94,6 +94,8 @@ export const WithLgacyandNewRemoteRelationships: StoryObj<
   args: {
     remoteSchemaRels:
       tableWithLegacyAndNewRemoteSchemaRelations?.remote_relationships,
-    remoteSchema: 'countries',
+    remoteSchema: {
+      name: 'countries',
+    },
   },
 };

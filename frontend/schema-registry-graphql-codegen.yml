@@ -6,4 +6,23 @@ schema:
 documents: 'libs/console/legacy-ce/src/lib/features/SchemaRegistry/queries.ts'
 generates:
   libs/console/legacy-ce/src/lib/features/SchemaRegistry/generatedGraphQLTypes.ts:
-    plugins: ['typescript', 'typescript-operations']
+    plugins: ['typescript-operations']
+    config:
+      # Generate enums as TypeScript enums (not unions)
+      enumType: native
+      # Map custom scalars to TypeScript types
+      scalars:
+        uuid: string
+        timestamptz: string
+        timestamp: string
+        date: string
+        jsonb: any
+        json: any
+        tsvector: any
+        # BigInts are encoded as strings to ensure large numbers are supported
+        bigint: string
+        numeric: number
+        bytea: string
+        citext: string
+        float8: number
+        _uuid: any

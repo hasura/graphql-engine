@@ -1,7 +1,8 @@
-import React, { ReactText } from 'react';
+import React from 'react';
 import { FaTable, FaColumns } from 'react-icons/fa';
+import { Flex } from '@radix-ui/themes';
 
-const ColumnCell = ({ columnName }: { columnName: ReactText }) => (
+const ColumnCell = ({ columnName }: { columnName: React.ReactNode }) => (
   <>
     <FaColumns
       className="fill-current text-sm text-muted mr-1"
@@ -15,15 +16,17 @@ const TableCell = ({
   tableName,
   cols,
 }: {
-  tableName: ReactText;
-  cols?: ReactText[];
+  tableName: React.ReactNode;
+  cols?: React.ReactNode[];
 }) => (
-  <div className="flex items-center">
+  <Flex align="center">
     <FaTable className="fill-current text-sm text-muted mr-1" title="Table" />
     {tableName}
     <span className="px-2">/</span>
-    {cols ? cols.map(i => <ColumnCell columnName={i} />) : null}
-  </div>
+    {cols
+      ? cols.map((i, index) => <ColumnCell key={index} columnName={i} />)
+      : null}
+  </Flex>
 );
 
 export default TableCell;

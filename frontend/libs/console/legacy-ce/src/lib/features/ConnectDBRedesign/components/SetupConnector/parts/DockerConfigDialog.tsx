@@ -1,9 +1,11 @@
 import { GrDocker } from 'react-icons/gr';
-import { Dialog } from '../../../../../new-components/Dialog';
-import { DriverInfo } from '../../../../DataSource';
+import { Flex } from '@radix-ui/themes';
+import { Dialog, Text } from '@hasura/shared/ui';
+import { DriverInfo } from '@hasura/metadata/data-source';
 import { useAgentForm } from '../hooks/useAgentForm';
 import { useDockerCommandForm } from '../hooks/useCommandForm';
 import { useAddSuperConnectorAgents } from '../hooks/useSuperConnectorAgents';
+import { KnownEnterpriseDriver } from '@hasura/shared/types';
 
 export const DockerConfigDialog = ({
   onCancel,
@@ -15,14 +17,11 @@ export const DockerConfigDialog = ({
   selectedDriver: DriverInfo;
 }) => {
   const { AgentForm, watchedValues, agentPath } = useAgentForm();
-
   const { DockerCommandForm } = useDockerCommandForm(watchedValues);
-
-  const { addAgents, isLoading } = useAddSuperConnectorAgents();
+  const { addAgents, isPending } = useAddSuperConnectorAgents();
 
   return (
     <Dialog
-      hasBackdrop
       title={'Data Connector Agent Setup'}
       footer={{
         callToAction: 'Validate & Connect',
@@ -33,7 +32,7 @@ export const DockerConfigDialog = ({
         onSubmit: async () => {
           const { success, makeToast } = await addAgents(
             agentPath,
-            selectedDriver?.name
+            selectedDriver?.name as KnownEnterpriseDriver,
           );
 
           makeToast();
@@ -42,27 +41,22 @@ export const DockerConfigDialog = ({
             onSetupSuccess();
           }
         },
-        isLoading,
+        isLoading: isPending,
       }}
     >
-      <div className="p-4">
-        <div className="flex flex-col">
-          <div className="font-bold text-muted flex items-center">
-            <GrDocker />
-            <div className="ml-1">Docker Setup</div>
-          </div>
-          <div>
-            Run the command below to install the Hasura Data Connector Service.
-          </div>
-          <input
-            type="text"
-            className="h-0 w-0 p-0 border-none outline-none"
-            style={{ boxShadow: 'none' }}
-          />
-          {DockerCommandForm()}
-          {AgentForm()}
-        </div>
-      </div>
+      <Flex direction="column" gap="2">
+        <Flex align="center" gap="2">
+          <GrDocker />
+          <Text className="ml-1" weight="bold">
+            Docker Setup
+          </Text>
+        </Flex>
+        <Text as="div">
+          Run the command below to install the Hasura Data Connector Service.
+        </Text>
+        {DockerCommandForm()}
+        {AgentForm()}
+      </Flex>
     </Dialog>
   );
 };

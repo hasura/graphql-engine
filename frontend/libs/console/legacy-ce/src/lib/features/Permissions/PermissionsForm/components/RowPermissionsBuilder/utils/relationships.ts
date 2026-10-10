@@ -15,14 +15,14 @@ export function getNewTablesToLoad({
 
   // Create a Set of existing tables for faster lookups
   const existingTablesSet = new Set<string>(
-    tablesToLoad.map(t => JSON.stringify(t))
+    tablesToLoad.map((t) => JSON.stringify(t)),
   );
 
   // Use a Set to collect unique tables to add
   const tablesToAddSet = new Set<string>();
 
-  relatedTables.forEach(relationship => {
-    let tableObject = undefined;
+  relatedTables.forEach((relationship) => {
+    let tableObject = '';
     if (
       'toSource' in relationship.definition &&
       typeof relationship.definition.toTable === 'object'
@@ -38,14 +38,14 @@ export function getNewTablesToLoad({
       });
     }
     // Check if the toTable is not in the existing tables
-    if (!existingTablesSet.has(tableObject)) {
+    if (tableObject && !existingTablesSet.has(tableObject)) {
       tablesToAddSet.add(tableObject);
     }
   });
 
   // Convert the Set back to an array
-  const tablesToAdd = Array.from(tablesToAddSet).map(table =>
-    JSON.parse(table)
+  const tablesToAdd = Array.from(tablesToAddSet).map((table) =>
+    JSON.parse(table),
   );
 
   return tablesToAdd;

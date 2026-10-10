@@ -1,9 +1,7 @@
-import { withRouter } from 'react-router';
-import { IndicatorCard } from '../../../../new-components/IndicatorCard';
-import { Tabs } from '../../../../new-components/Tabs';
-import { usePushRoute } from '../../../ConnectDBRedesign/hooks';
-import { MetadataSelectors } from '../../../hasura-metadata-api';
-import { NativeQuery } from '../../../hasura-metadata-types';
+import { useNavigate, useParams } from 'react-router';
+import { Flex } from '@radix-ui/themes';
+import { IndicatorCard, Tabs, Badge } from '@hasura/shared/ui';
+import { NativeQuery } from '@hasura/shared/types';
 import { MetadataWrapper } from '../../components';
 import { NativeQueryRelationships } from '../NativeQueryRelationships/NativeQueryRelationships';
 import { RouteWrapper } from '../components/RouteWrapper';
@@ -11,12 +9,15 @@ import { injectRouteDetails } from '../components/route-wrapper-utils';
 import { Routes } from '../constants';
 import { NativeQueryTabs } from '../types';
 import { AddNativeQuery } from './AddNativeQuery';
-import { Badge } from '../../../../new-components/Badge';
+import { MetadataSelectors } from '@hasura/metadata/helpers';
 
-export const NativeQueryRoute = withRouter<{
-  params: { source: string; name: string; tabName?: NativeQueryTabs };
-}>(({ params }) => {
-  const { source, name } = params;
+export const NativeQueryRoute = () => {
+  const params = useParams<{
+    source: string;
+    name: string;
+    tabName?: NativeQueryTabs;
+  }>();
+  const { source, name, tabName } = params;
 
   if (!source || !name) {
     return (
@@ -31,11 +32,16 @@ export const NativeQueryRoute = withRouter<{
     <MetadataWrapper
       selector={MetadataSelectors.findNativeQuery(source, name)}
       render={({ data: nativeQuery }) => (
-        <NativeQueryLandingPage {...params} nativeQuery={nativeQuery} />
+        <NativeQueryLandingPage
+          source={source}
+          name={name}
+          tabName={tabName}
+          nativeQuery={nativeQuery}
+        />
       )}
     />
   );
-});
+};
 
 // presentational component that has no data fetching:
 const NativeQueryLandingPage = ({
@@ -49,7 +55,7 @@ const NativeQueryLandingPage = ({
   tabName?: string;
   nativeQuery: NativeQuery | undefined;
 }) => {
-  const push = usePushRoute();
+  const push = useNavigate();
 
   if (!nativeQuery) {
     return (
@@ -77,13 +83,13 @@ const NativeQueryLandingPage = ({
     >
       <Tabs
         value={tabName ?? 'details'}
-        onValueChange={tab =>
+        onValueChange={(tab) =>
           push(
             injectRouteDetails(Routes.EditNativeQuery, {
               itemName: nativeQuery.root_field_name,
               itemSourceName: source,
               itemTabName: tab,
-            })
+            }),
           )
         }
         items={[
@@ -104,15 +110,12 @@ const NativeQueryLandingPage = ({
               />
             ),
             label: (
-              <div
-                className="flex items-center gap-2"
-                data-testid="untracked-tab"
-              >
+              <Flex align="center" gap="2" data-testid="untracked-tab">
                 Relationships
-                <Badge className={`px-xs`} color="dark-gray">
+                <Badge className={`px-xs`} color="gray">
                   {relationshipsCount}
                 </Badge>
-              </div>
+              </Flex>
             ),
             value: 'relationships',
           },

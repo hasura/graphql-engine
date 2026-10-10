@@ -1,11 +1,20 @@
 import { ReactNode } from 'react';
-import { Button } from '../../../../new-components/Button';
-import { IconTooltip } from '../../../../new-components/Tooltip';
+import {
+  Button,
+  Collapsible,
+  CollapsibleHeader,
+  IconTooltip,
+  Badge,
+  CheckboxGroup,
+  createTextOption,
+  Text,
+  Card,
+  RadioGroup,
+} from '@hasura/shared/ui';
 import { usePermissionsFormContext } from '../hooks/usePermissionForm';
-import { Permission } from './types';
-import { Collapse } from '../../../../new-components/deprecated';
-import { getEdForm } from '../../../../components/Services/Data/utils';
-import { Badge } from '../../../../new-components/Badge';
+import { Permission, RowSelectPermissionsType } from './types';
+import { Flex, Strong } from '@radix-ui/themes';
+import { getEdForm } from '@hasura/shared/utils';
 
 type PermissionsFormProps = {
   permission: Permission;
@@ -32,21 +41,19 @@ export const PermissionsForm = ({
     toggleColumn,
     toggleAllColumns,
     columnPermissionsStatus,
-    setPermission,
   } = usePermissionsFormContext();
   return (
     <form
-      onSubmit={e => {
+      onSubmit={(e) => {
         e.preventDefault();
         onSave();
       }}
     >
-      <div
-        className="bg-white rounded p-md border border-gray-300"
-        data-testid="permissions-form"
-      >
-        <div className="pb-4 flex items-center gap-4">
+      <Card data-testid="permissions-form">
+        <Flex align="center" gap="4" className="pb-4">
           <Button
+            mode="default"
+            size="1"
             type="button"
             onClick={() => {
               unsetActivePermission();
@@ -54,106 +61,81 @@ export const PermissionsForm = ({
           >
             Close
           </Button>
-          <h3 data-testid="form-title">
-            <strong>Role:</strong>
+          <Flex data-testid="form-title" align="center" gap="2">
+            <Text weight="bold">Role:</Text>
             <Badge className="mx-2" data-testid="role-pill">
               {permission.roleName}
             </Badge>
-            <strong>Action:</strong>
+            <Text weight="bold">Action:</Text>
             <Badge className="mx-2" data-testid="action-pill">
               {permission.action}
             </Badge>
-          </h3>
-        </div>
-        <fieldset className="grid gap-2">
-          <div>
-            <label className="flex items-center gap-2">
-              <input
-                id={'without_filter'}
-                type="radio"
-                value={'without_filter'}
-                checked={rowSelectPermissions === 'without_filter'}
-                data-testid="without-filter"
-                onClick={() => {
-                  setRowSelectPermissions('without_filter');
-                  setPermission(permission.roleName, {});
-                }}
-              />
-              <NoChecksLabel />
-            </label>
-          </div>
-
-          <div>
-            <label className="flex items-center gap-2">
-              <input
-                id={'with_custom_filter'}
-                type="radio"
-                value={rowSelectPermissions}
-                checked={rowSelectPermissions === 'with_custom_filter'}
-                onClick={() => {
-                  setRowSelectPermissions('with_custom_filter');
-                }}
-              />
-              <CustomLabel />
-            </label>
-
-            {rowSelectPermissions === 'with_custom_filter' && (
-              <div className="pt-4">
-                <div>{PermissionsInput}</div>
-              </div>
-            )}
-          </div>
-        </fieldset>
-
-        <Collapse defaultOpen>
-          <Collapse.Header
-            title={`Column ${permission.action} permissions`}
-            tooltip={`Choose columns allowed to be ${getEdForm(
-              permission.action
-            )}`}
-            status={columnPermissionsStatus(permission)}
-            disabledMessage="Set row permissions first"
+          </Flex>
+        </Flex>
+        <div className="mb-4">
+          <RadioGroup
+            value={rowSelectPermissions}
+            onChange={(value) =>
+              setRowSelectPermissions(value as RowSelectPermissionsType)
+            }
+            options={[
+              {
+                label: <NoChecksLabel />,
+                value: 'without_filter',
+              },
+              {
+                label: <CustomLabel />,
+                value: 'with_custom_filter',
+              },
+            ]}
           />
-          <Collapse.Content>
-            <div className="grid gap-2">
-              <div className="flex gap-2 items-center">
-                <p>
-                  Allow role <strong>{permission.roleName}</strong> to access{' '}
-                  <strong>columns</strong>:
-                </p>
-              </div>
-              <fieldset className="flex gap-4 flex-wrap">
-                {columns?.map(column => (
-                  <label key={column} className="flex gap-2 items-center">
-                    <input
-                      type="checkbox"
-                      data-testid={`column-${column}-checkbox`}
-                      style={{ marginTop: '0px !important' }}
-                      className="rounded shadow-sm border border-gray-300 hover:border-gray-400 focus:ring-yellow-400"
-                      checked={permission.columns.includes(column)}
-                      onChange={() => {
-                        toggleColumn(permission, column);
-                      }}
-                    />
-                    <i>{column}</i>
-                  </label>
-                ))}
+        </div>
+        {rowSelectPermissions === 'with_custom_filter' && (
+          <div>{PermissionsInput}</div>
+        )}
+        <Collapsible
+          triggerChildren={
+            <CollapsibleHeader
+              title={`Column ${permission.action} permissions`}
+              tooltip={`Choose columns allowed to be ${getEdForm(
+                permission.action,
+              )}`}
+              status={columnPermissionsStatus(permission)}
+              // disabledMessage="Set row permissions first"
+            />
+          }
+          defaultOpen
+        >
+          <div>
+            <Text as="p">
+              Allow role <Strong>{permission.roleName}</Strong> to access{' '}
+              <Strong>columns</Strong>:
+            </Text>
+            <div className="mt-2">
+              <CheckboxGroup
+                orientation="horizontal"
+                options={columns?.map(createTextOption) ?? []}
+                value={permission.columns}
+                onChange={(values) => toggleColumn(permission, values)}
+              />
+              <div className="mt-4">
                 <Button
+                  mode="default"
                   type="button"
-                  size="sm"
+                  size="1"
                   onClick={() => toggleAllColumns(permission)}
                   data-testid="toggle-all-columns"
                 >
                   Toggle All
                 </Button>
-              </fieldset>
+              </div>
             </div>
-          </Collapse.Content>
-        </Collapse>
+          </div>
+        </Collapsible>
 
-        <div className="pt-2 flex gap-2 mt-4" id="form-buttons-container">
+        <Flex gap="2" className="pt-2 mt-4" id="form-buttons-container">
           <Button
-            isLoading={isCreating}
+            loading={isCreating}
             disabled={isRemoving || isCreating}
             type="submit"
             mode="primary"
@@ -164,7 +146,7 @@ export const PermissionsForm = ({
           </Button>
 
           <Button
-            isLoading={isRemoving}
+            loading={isRemoving}
             disabled={isRemoving || isCreating}
             type="button"
             mode="destructive"
@@ -173,19 +155,19 @@ export const PermissionsForm = ({
           >
             Delete Permissions
           </Button>
-        </div>
-      </div>
+        </Flex>
+      </Card>
     </form>
   );
 };
 
 const NoChecksLabel = () => (
-  <span data-test="without-checks">Without any checks&nbsp;</span>
+  <Text data-test="without-checks">Without any checks&nbsp;</Text>
 );
 
 const CustomLabel = () => (
-  <span data-test="custom-check" className="flex items-center">
-    With custom check:
+  <Flex data-test="custom-check" align="center" gap="2">
+    <Text>With custom check:</Text>
     <IconTooltip message="Create custom check using permissions builder" />
-  </span>
+  </Flex>
 );

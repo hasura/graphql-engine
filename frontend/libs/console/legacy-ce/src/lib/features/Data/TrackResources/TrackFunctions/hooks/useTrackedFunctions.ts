@@ -1,16 +1,18 @@
+import { useMetadata } from '@hasura/metadata/api';
 import {
+  functionDisplayName,
   MetadataSelectors,
-  useMetadata,
-} from '../../../../hasura-metadata-api';
-import { adaptFunctionName } from '../utils';
+} from '@hasura/metadata/helpers';
 
 export const useTrackedFunctions = (dataSourceName: string) => {
-  return useMetadata(m =>
+  return useMetadata((m) =>
     (MetadataSelectors.findSource(dataSourceName)(m)?.functions ?? []).map(
-      fn => ({
+      (fn) => ({
         qualifiedFunction: fn.function,
-        name: adaptFunctionName(fn.function).join(' / '),
-      })
-    )
+        name: functionDisplayName({
+          qualifiedFunction: fn.function,
+        }),
+      }),
+    ),
   );
 };

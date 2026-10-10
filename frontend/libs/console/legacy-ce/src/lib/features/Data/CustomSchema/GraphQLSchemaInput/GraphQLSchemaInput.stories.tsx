@@ -1,4 +1,4 @@
-import { StoryObj, Meta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
 import { useState } from 'react';
 import {
   GraphQLSchemaInput,
@@ -87,7 +87,7 @@ type Query {
 `;
 
 export const Primary: StoryObj<GraphQLSchemaInputProps> = {
-  render: args => {
+  render: (args) => {
     const [value, setValue] = useState(graphQLSchema);
     return <GraphQLSchemaInput value={value} onChange={setValue} />;
   },

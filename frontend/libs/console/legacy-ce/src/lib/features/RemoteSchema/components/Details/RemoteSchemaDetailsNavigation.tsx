@@ -1,11 +1,10 @@
-import React from 'react';
-import { Tabs } from '../../../../components/Services/RemoteSchema/Common/Tabs';
+import { Tabs } from '../Tabs';
 
 interface RemoteSchemaDetailsNavigationProps {
   remoteSchemaName: string;
 }
 export const RemoteSchemaDetailsNavigation = (
-  props: RemoteSchemaDetailsNavigationProps
+  props: RemoteSchemaDetailsNavigationProps,
 ) => {
   const { remoteSchemaName } = props;
 
@@ -24,7 +23,7 @@ export const RemoteSchemaDetailsNavigation = (
     breadCrumbs.push({
       title: remoteSchemaName.trim(),
       url: `/remote-schemas/manage/${encodeURIComponent(
-        remoteSchemaName.trim()
+        remoteSchemaName.trim(),
       )}/details`,
     });
     breadCrumbs.push({
@@ -35,13 +34,10 @@ export const RemoteSchemaDetailsNavigation = (
 
   return (
     <Tabs
-      appPrefix="/remote-schemas"
       currentTab="details"
       heading={remoteSchemaName}
       breadCrumbs={breadCrumbs}
       baseUrl={`/remote-schemas/manage/${encodeURIComponent(remoteSchemaName)}`}
-      showLoader={false}
-      testPrefix="remote-schema-details"
     />
   );
 };

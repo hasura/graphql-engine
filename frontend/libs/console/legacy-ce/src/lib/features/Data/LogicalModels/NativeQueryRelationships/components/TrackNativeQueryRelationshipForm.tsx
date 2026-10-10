@@ -1,8 +1,8 @@
 import {
   GraphQLSanitizedInputField,
-  Select,
-} from '../../../../../new-components/Form';
-import { ListMap } from '../../../../../new-components/ListMap';
+  ListMap,
+  SelectField,
+} from '@hasura/shared/ui';
 
 export const TrackNativeQueryRelationshipForm = ({
   name,
@@ -18,31 +18,32 @@ export const TrackNativeQueryRelationshipForm = ({
   toFieldOptions: string[];
 }) => {
   const allowedNativeQueryOptions = nativeQueryOptions
-    .filter(nq => nq !== fromNativeQuery)
-    .map(nq => ({ value: nq, label: nq }));
+    .filter((nq) => nq !== fromNativeQuery)
+    .map((nq) => ({ value: nq, label: nq }));
 
   return (
     <div>
       <GraphQLSanitizedInputField
         hideTips
         label="Relationship Name"
-        placeholder="Name your native query relationship"
         name={'name'}
         dataTestId="relationship_name"
+        fieldProps={{ placeholder: 'Name your native query relationship' }}
       />
-      <Select
+      <SelectField
         name={'toNativeQuery'}
         options={allowedNativeQueryOptions}
         label="Target Native Query"
         placeholder="Select target native query"
       />
 
-      <Select
+      <SelectField
         name={'type'}
         options={[
           { value: 'object', label: 'Object' },
           { value: 'array', label: 'Array' },
         ]}
+        placeholder="Select a relationship type..."
         label="Relationship Type"
       />
 

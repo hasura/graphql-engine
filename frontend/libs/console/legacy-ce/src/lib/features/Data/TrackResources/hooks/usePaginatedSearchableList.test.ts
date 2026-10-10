@@ -1,4 +1,4 @@
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react';
 import { usePaginatedSearchableList } from './usePaginatedSearchableList';
 
 const mockData = [
@@ -25,7 +25,7 @@ describe('usePaginatedSearchableList', () => {
       usePaginatedSearchableList({
         data: mockData,
         filterFn: (searchText, item) => item.name.includes(searchText),
-      })
+      }),
     );
 
     expect(result.current.pageNumber).toBe(1);
@@ -44,7 +44,7 @@ describe('usePaginatedSearchableList', () => {
       usePaginatedSearchableList({
         data: mockData,
         filterFn: (searchText, item) => item.name.includes(searchText),
-      })
+      }),
     );
 
     act(() => {
@@ -63,7 +63,7 @@ describe('usePaginatedSearchableList', () => {
       usePaginatedSearchableList({
         data: mockData,
         filterFn: (searchText, item) => item.name.includes(searchText),
-      })
+      }),
     );
 
     act(() => {
@@ -82,7 +82,7 @@ describe('usePaginatedSearchableList', () => {
       usePaginatedSearchableList({
         data: mockData,
         filterFn: (searchText, item) => item.name.includes(searchText),
-      })
+      }),
     );
 
     act(() => {
@@ -112,7 +112,7 @@ describe('usePaginatedSearchableList', () => {
       usePaginatedSearchableList({
         data: mockData,
         filterFn: (searchText, item) => item.name.includes(searchText),
-      })
+      }),
     );
 
     act(() => {
@@ -136,7 +136,7 @@ describe('usePaginatedSearchableList', () => {
       usePaginatedSearchableList({
         data: mockData,
         filterFn: (searchText, item) => item.name.includes(searchText),
-      })
+      }),
     );
 
     act(() => {

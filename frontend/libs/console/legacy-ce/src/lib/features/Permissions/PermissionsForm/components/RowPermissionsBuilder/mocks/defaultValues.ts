@@ -1,5 +1,5 @@
-import { TableColumn } from '../../../../../DataSource';
-import { MetadataDataSource } from '../../../../../../metadata/types';
+import { TableColumn } from '@hasura/metadata/data-source';
+import { Source } from '@hasura/shared/types';
 export const tableColumns = [
   {
     name: 'Series_reference',
@@ -77,4 +77,4 @@ export const sourceMetadata = {
       project_id: 'sensei',
     },
   },
-} as MetadataDataSource;
+} as unknown as Source;

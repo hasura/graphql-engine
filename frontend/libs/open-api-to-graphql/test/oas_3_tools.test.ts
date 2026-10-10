@@ -5,7 +5,7 @@
 
 'use strict';
 
-import { afterAll, beforeAll, expect, test } from '@jest/globals';
+import { afterAll, beforeAll, expect, test } from 'vitest';
 const {
   GraphQLSchema,
   GraphQLObjectType,
@@ -171,7 +171,7 @@ test('Properly treat null values during sanitization', () => {
     }
   }`;
 
-  graphql({ schema, source: query }).then(result => {
+  graphql({ schema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         User: {
@@ -199,7 +199,7 @@ test('Handle encoded JSON pointer references', () => {
   expect(Oas3Tools.resolveRef('/paths/~1users/description', oas)).toBe('all');
   expect(Oas3Tools.resolveRef('#/paths/~1users/description', oas)).toBe('all');
   expect(
-    Oas3Tools.resolveRef('#/paths/~1users~1%7bid%7d/description', oas)
+    Oas3Tools.resolveRef('#/paths/~1users~1%7bid%7d/description', oas),
   ).toBe('one');
 
   function getPathItemObject(description): PathItemObject {

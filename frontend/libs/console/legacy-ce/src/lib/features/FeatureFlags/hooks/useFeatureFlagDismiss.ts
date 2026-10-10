@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from 'react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { FeatureFlagId, useFeatureFlags } from '..';
 import { saveFeatureFlagsStateToLocalStorage } from '../utils';
 
@@ -6,12 +6,12 @@ export function useFeatureFlagDismiss() {
   const queryClient = useQueryClient();
   const { data, isError, isLoading } = useFeatureFlags();
 
-  return useMutation(
-    async (flagId: FeatureFlagId) => {
+  return useMutation({
+    mutationFn: async (flagId: FeatureFlagId) => {
       if (isError || isLoading || !data) {
         throw new Error('Feature flags not loaded');
       }
-      const newFlags = data.map(item => {
+      const newFlags = data.map((item) => {
         if (item.id !== flagId) {
           return item;
         }
@@ -27,8 +27,7 @@ export function useFeatureFlagDismiss() {
 
       return saveFeatureFlagsStateToLocalStorage(newFlags);
     },
-    {
-      onSuccess: () => queryClient.invalidateQueries('featureFlags'),
-    }
-  );
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ['featureFlags'] }),
+  });
 }

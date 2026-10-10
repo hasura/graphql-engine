@@ -1,47 +1,49 @@
-import {
-  createColumnHelper,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
+import { createColumnHelper, useTable } from '@tanstack/react-table';
 
 import { useCallback, useState } from 'react';
-import { Button } from '../../../../../new-components/Button';
-import { StoredProcedure } from '../../../../hasura-metadata-types';
-import { CardedTableFromReactTable } from '../../components/CardedTableFromReactTable';
+import {
+  Button,
+  DisplayToastErrorMessage,
+  hasuraToast,
+  useDestructiveAlert,
+  coreTableFeatures,
+  CoreTableFeatures,
+  CardedTableFromReactTable,
+} from '@hasura/shared/ui';
+import { StoredProcedure } from '@hasura/shared/types';
 
-import { hasuraToast } from '../../../../../new-components/Toasts';
-import { useMetadata } from '../../../../hasura-metadata-api';
-import { DisplayToastErrorMessage } from '../../../components/DisplayErrorMessage';
+import { useMetadata } from '@hasura/metadata/api';
 import { useTrackStoredProcedure } from '../../../hooks/useTrackStoredProcedure';
 import { StoredProcedureDisplayName } from '../../StoredProcedures/components/StoredProcedureDisplayName';
 import {
   STORED_PROCEDURE_UNTRACK_ERROR,
   STORED_PROCEDURE_UNTRACK_SUCCESS,
 } from '../../constants';
-import { useDestructiveAlert } from '../../../../../new-components/Alert';
+import { Flex } from '@radix-ui/themes';
+
 import { getQualifiedTable } from '../../../ManageTable/utils';
 
 // this is local type for the table row. Do not export
 type RowType = { dataSourceName: string } & StoredProcedure;
 
-const columnHelper = createColumnHelper<RowType>();
+const columnHelper = createColumnHelper<CoreTableFeatures, RowType>();
 
 export const ListStoredProcedures = () => {
-  const { untrackStoredProcedure, isLoading } = useTrackStoredProcedure();
+  const { untrackStoredProcedure, isPending } = useTrackStoredProcedure();
   const [activeRow, setActiveRow] = useState<number>();
 
   /**
    * Get the list of all stored procedures
    */
-  const { data = [] } = useMetadata(m =>
+  const { data = [] } = useMetadata((m) =>
     m.metadata.sources
       .map(({ name, stored_procedures }) =>
-        (stored_procedures ?? []).map(stored_procedure => ({
+        (stored_procedures ?? []).map((stored_procedure) => ({
           dataSourceName: name,
           ...stored_procedure,
-        }))
+        })),
       )
-      .flat()
+      .flat(),
   );
 
   // const { hasuraAlert } = useHasuraAlert();
@@ -55,7 +57,7 @@ export const ListStoredProcedures = () => {
       resourceType: 'Stored Procedure',
       destroyTerm: 'remove',
       onConfirm: () =>
-        new Promise(resolve => {
+        new Promise((resolve) => {
           setActiveRow(index);
 
           untrackStoredProcedure({
@@ -70,7 +72,7 @@ export const ListStoredProcedures = () => {
               });
               resolve(true);
             },
-            onError: err => {
+            onError: (err) => {
               hasuraToast({
                 type: 'error',
                 title: STORED_PROCEDURE_UNTRACK_ERROR,
@@ -87,46 +89,47 @@ export const ListStoredProcedures = () => {
   };
 
   const columns = useCallback(
-    () => [
-      columnHelper.accessor('stored_procedure', {
-        id: 'name',
-        cell: info => (
-          <span>
-            <StoredProcedureDisplayName
-              qualifiedStoredProcedure={info.getValue()}
-            />
-          </span>
-        ),
-        header: info => <span>Name</span>,
-      }),
-      columnHelper.accessor('dataSourceName', {
-        id: 'database',
-        cell: info => <span>{info.getValue()}</span>,
-        header: info => <span>Database</span>,
-      }),
-      columnHelper.display({
-        id: 'actions',
-        header: 'Actions',
-        cell: ({ cell, row }) => (
-          <div className="flex flex-row gap-2">
-            <Button
-              mode="destructive"
-              onClick={() => onRemoveClick(row.original, row.index)}
-              isLoading={activeRow === row.index && isLoading}
-            >
-              Remove
-            </Button>
-          </div>
-        ),
-      }),
-    ],
-    [activeRow, isLoading, onRemoveClick]
+    () =>
+      columnHelper.columns([
+        columnHelper.accessor('stored_procedure', {
+          id: 'name',
+          cell: (info) => (
+            <span>
+              <StoredProcedureDisplayName
+                qualifiedStoredProcedure={info.getValue()}
+              />
+            </span>
+          ),
+          header: (info) => <span>Name</span>,
+        }),
+        columnHelper.accessor('dataSourceName', {
+          id: 'database',
+          cell: (info) => <span>{info.getValue()}</span>,
+          header: (info) => <span>Database</span>,
+        }),
+        columnHelper.display({
+          id: 'actions',
+          header: 'Actions',
+          cell: ({ cell, row }) => (
+            <Flex direction="row" gap="2">
+              <Button
+                mode="destructive"
+                onClick={() => onRemoveClick(row.original, row.index)}
+                loading={activeRow === row.index && isPending}
+              >
+                Remove
+              </Button>
+            </Flex>
+          ),
+        }),
+      ]),
+    [activeRow, isPending, onRemoveClick],
   );
 
-  const table = useReactTable({
+  const table = useTable({
+    features: coreTableFeatures,
     data,
     columns: columns(),
-    getCoreRowModel: getCoreRowModel(),
   });
 
   return (

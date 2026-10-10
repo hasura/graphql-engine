@@ -1,16 +1,14 @@
-import React from 'react';
-import { Button } from '../../../../new-components/Button';
+import { Button } from '@hasura/shared/ui';
 import { FaFlask } from 'react-icons/fa';
-import { useDispatch } from 'react-redux';
-import _push from '../../../../components/Services/Data/push';
+import { useNavigate } from 'react-router';
 
 export const FeatureFlagFloatingButton = () => {
-  const dispatch = useDispatch();
+  const navigate = useNavigate();
   return (
     <Button
-      icon={<FaFlask />}
+      leftIcon={FaFlask}
       className="fixed flex items-center justify-center bottom-4 right-4"
-      onClick={() => dispatch(_push('/settings/feature-flags'))}
+      onClick={() => navigate('/settings/feature-flags')}
     />
   );
 };

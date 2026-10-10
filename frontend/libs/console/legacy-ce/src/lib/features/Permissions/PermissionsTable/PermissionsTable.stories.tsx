@@ -1,6 +1,6 @@
 import React from 'react';
-import { StoryObj, Meta } from '@storybook/react';
-import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
 
 import { PermissionsTable, PermissionsTableProps } from './PermissionsTable';
 import { handlers } from '../PermissionsForm/mocks/handlers.mock';
@@ -16,14 +16,17 @@ export default {
 
 // Fails
 export const GDCTable: StoryObj<PermissionsTableProps> = {
-  render: args => {
+  render: (args) => {
     const machine = useTableMachine();
 
     return <PermissionsTable {...args} machine={machine} />;
   },
 
   args: {
-    dataSourceName: 'Lite',
+    source: {
+      name: 'Lite',
+      kind: 'sqlite',
+    },
     table: ['Artist'],
   },
 };

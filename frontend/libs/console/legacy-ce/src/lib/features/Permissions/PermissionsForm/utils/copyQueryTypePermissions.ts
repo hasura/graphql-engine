@@ -7,7 +7,7 @@ export const copyQueryTypePermissions = (
   permissoinType: RowPermissionsSectionType,
   queryType: RowPermissionsSectionType,
   subQueryType: 'pre_update' | 'post_update' | undefined,
-  data: Record<string, any>
+  data: Record<string, any>,
 ): [string, Record<string, string>] => {
   const mappedType = getRowPermission(permissoinType);
   if (subQueryType) {

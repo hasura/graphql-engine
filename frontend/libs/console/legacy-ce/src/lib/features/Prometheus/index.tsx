@@ -1,10 +1,8 @@
 import React from 'react';
-
-import { useServerConfig } from '../../hooks';
 import endpoints from '../../Endpoints';
 import { PrometheusSettingsForm } from './PrometheusSettingsForm';
-import globals from '../../Globals';
 import { useEELiteAccess } from '../../features/EETrial';
+import { useServerConfig } from '@hasura/metadata/api';
 
 export const extractPrometheusUrl = (prometheusUrl: string) => {
   const urlRegExp =
@@ -16,11 +14,10 @@ export const extractPrometheusUrl = (prometheusUrl: string) => {
   return prometheusUrlExtract;
 };
 
-export const PrometheusSettings: React.VFC<Record<string, never>> = () => {
-  const eeLiteAccess = useEELiteAccess(globals);
+export const PrometheusSettings: React.FC<Record<string, never>> = () => {
+  const eeLiteAccess = useEELiteAccess();
   const { data: configData, isLoading } = useServerConfig();
 
-  // eslint-disable-next-line no-underscore-dangle
   if (eeLiteAccess.access === 'forbidden') {
     return null;
   }

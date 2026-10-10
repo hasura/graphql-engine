@@ -1,126 +1,147 @@
-import get from 'lodash/get';
 import React from 'react';
+import { Flex } from '@radix-ui/themes';
 import { FaCode, FaDatabase, FaLink, FaTable } from 'react-icons/fa';
-import TemplateGallery from '../../../components/Services/Data/Schema/TemplateGallery/TemplateGallery';
-import { Tabs as TabUI } from '../../../new-components/Tabs';
-import { Analytics, REDACT_EVERYTHING } from '../../Analytics';
-import { MetadataSelectors, useMetadata } from '../../hasura-metadata-api';
+import TemplateGallery from '../../TemplateGallery/TemplateGallery';
+import {
+  Tabs as TabUI,
+  Button,
+  Breadcrumbs,
+  RelativeLink,
+} from '@hasura/shared/ui';
+import { Analytics, REDACT_EVERYTHING } from '@hasura/shared/analytics';
 import { ManageTrackedTables } from '../ManageTable/components/ManageTrackedTables';
 import { ManageTrackedFunctions } from '../TrackResources/TrackFunctions/components/ManageTrackedFunctions';
 import { ManageSuggestedRelationships } from '../TrackResources/TrackRelationships/ManageSuggestedRelationships';
-import { useDriverCapabilities } from '../hooks/useDriverCapabilities';
-import { TAB_COLORS } from './constants';
-import { BreadCrumbs, CollapsibleResource, SourceName } from './parts';
-import { Link } from 'react-router';
-import { Button } from '../../../new-components/Button';
-import { managePermissionSummaryUrl } from '../../DataSidebar/navigation-utils';
+import { SourceName } from './parts';
+import { SetURLSearchParams, useSearchParams } from 'react-router';
+import {
+  getDatabaseMethods,
+  useDriverCapabilities,
+} from '@hasura/metadata/data-source';
+import { Source } from '@hasura/shared/types';
+import { useDataSourceContext } from '../context/DataSourceContext';
+import { dataRoutes } from '@hasura/shared/utils';
+import { FaFolder } from 'react-icons/fa6';
+import ManageSchema from '../ManageSchema/ManageSchema';
 
-export interface ManageDatabaseProps {
-  dataSourceName: string;
-  schema?: string;
-}
+export const ManageDatabase = () => {
+  const { currentSource } = useDataSourceContext();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const schema = searchParams.get('schema');
 
-// hard coding this instead of feature flag until we are sure the new tab UI is accepted.
-const USE_TABS = true;
-
-//This component has the code for template gallery but is currently commented out until further notice.
-export const ManageDatabase = ({
-  dataSourceName,
-  schema,
-}: ManageDatabaseProps) => {
   const {
     data: {
       areForeignKeysSupported = false,
       areUserDefinedFunctionsSupported = false,
     } = {},
-  } = useDriverCapabilities({
-    dataSourceName,
-    select: data => {
-      return {
-        areForeignKeysSupported: !!get(
-          data,
-          'data_schema.supports_foreign_keys'
-        ),
-        areUserDefinedFunctionsSupported: !!get(data, 'user_defined_functions'),
-      };
+  } = useDriverCapabilities(
+    {
+      source: currentSource,
     },
-  });
+    {
+      select: (data) => {
+        return {
+          areForeignKeysSupported: Boolean(
+            data.data_schema?.supports_foreign_keys,
+          ),
+          areUserDefinedFunctionsSupported: Boolean(
+            data.user_defined_functions,
+          ),
+        };
+      },
+    },
+  );
 
   return (
     <Analytics name="ManageDatabaseV2" {...REDACT_EVERYTHING}>
-      <div className="w-full overflow-y-auto bg-gray-50">
-        <div className="px-md pt-md mb-xs">
-          <BreadCrumbs dataSourceName={dataSourceName} />
-          <div className="flex items-center">
-            <SourceName dataSourceName={dataSourceName} schema={schema} />
-            <Link
-              to={managePermissionSummaryUrl(dataSourceName)}
-              style={{ marginLeft: '20px' }}
-            >
-              <Button size="sm">Show Permissions Summary</Button>
-            </Link>
-          </div>
+      <div className="p-6 w-full overflow-y-auto">
+        <div>
+          <Breadcrumbs
+            className="mb-4"
+            items={[
+              {
+                title: 'Data',
+                url: dataRoutes.manageDatabase,
+              },
+              {
+                title: currentSource.name,
+                icon: <FaDatabase />,
+              },
+            ]}
+          />
+          <Flex align="center" gap="2">
+            <SourceName source={currentSource} />
+            <RelativeLink to={dataRoutes.permissionSummary(currentSource.name)}>
+              <Button mode="default" size="sm">
+                Show Permissions Summary
+              </Button>
+            </RelativeLink>
+          </Flex>
         </div>
-        <div className="px-md group relative gap-2 flex-col flex">
-          {USE_TABS ? (
-            <Tabs
-              dataSourceName={dataSourceName}
-              areForeignKeysSupported={areForeignKeysSupported}
-              areUserDefinedFunctionsSupported={
-                areUserDefinedFunctionsSupported
-              }
-              schema={schema}
-            />
-          ) : (
-            <Collapsibles
-              dataSourceName={dataSourceName}
-              areForeignKeysSupported={areForeignKeysSupported}
-              areUserDefinedFunctionsSupported={
-                areUserDefinedFunctionsSupported
-              }
-            />
-          )}
-        </div>
+        <Flex direction="column" gap="2" className="relative">
+          <Tabs
+            source={currentSource}
+            areForeignKeysSupported={areForeignKeysSupported}
+            areUserDefinedFunctionsSupported={areUserDefinedFunctionsSupported}
+            schema={schema}
+            searchParams={searchParams}
+            setSearchParams={setSearchParams}
+          />
+        </Flex>
       </div>
     </Analytics>
   );
 };
 
-type ContentProps = ManageDatabaseProps & {
+type ContentProps = {
+  source: Source;
+  searchParams: URLSearchParams;
+  setSearchParams: SetURLSearchParams;
+  schema?: string | null;
   areUserDefinedFunctionsSupported: boolean;
   areForeignKeysSupported: boolean;
 };
 
 const Tabs = ({
-  dataSourceName,
+  source,
+  searchParams,
+  setSearchParams,
   areForeignKeysSupported,
   areUserDefinedFunctionsSupported,
   schema,
 }: ContentProps) => {
-  const { data: source } = useMetadata(
-    MetadataSelectors.findSource(dataSourceName)
-  );
-  const [currentTab, setCurrentTab] = React.useState('tables');
+  const dbMethods = getDatabaseMethods(source.kind);
 
   const tabItems = React.useMemo(
     () => [
+      ...(dbMethods.introspection.getDatabaseSchemas
+        ? [
+            {
+              content: (
+                <div className="mt-4">
+                  <ManageSchema source={source} />
+                </div>
+              ),
+              label: 'Schemas',
+              value: 'schemas',
+              icon: <FaFolder />,
+            },
+          ]
+        : []),
       {
         content: (
-          <ManageTrackedTables
-            dataSourceName={dataSourceName}
-            key={dataSourceName}
-          />
+          <div className="mt-4">
+            <ManageTrackedTables source={source} key={source.name} />
+          </div>
         ),
-        label: source?.kind === 'mongo' ? 'Collections' : 'Tables/Views',
+        label: source?.kind === 'mongodb' ? 'Collections' : 'Tables/Views',
         value: 'tables',
         icon: <FaTable />,
       },
       ...(areForeignKeysSupported
         ? [
             {
-              content: (
-                <ManageSuggestedRelationships dataSourceName={dataSourceName} />
-              ),
+              content: <ManageSuggestedRelationships source={source} />,
               label: 'Foreign Key Relationships',
               value: 'relationships',
               icon: <FaLink />,
@@ -131,7 +152,9 @@ const Tabs = ({
         ? [
             {
               content: (
-                <ManageTrackedFunctions dataSourceName={dataSourceName} />
+                <div className="mt-4">
+                  <ManageTrackedFunctions dataSourceName={source.name} />
+                </div>
               ),
               label: 'Functions',
               value: 'functions',
@@ -144,7 +167,7 @@ const Tabs = ({
             {
               content: (
                 <div className="mt-4">
-                  <TemplateGallery showHeader={false} driver="postgres" />
+                  <TemplateGallery showHeader={false} source={source} />
                 </div>
               ),
               label: 'Template Gallery',
@@ -157,66 +180,22 @@ const Tabs = ({
     [
       areForeignKeysSupported,
       areUserDefinedFunctionsSupported,
-      dataSourceName,
+      source,
       schema,
       source?.kind,
-    ]
+    ],
   );
   return (
     <TabUI
-      color={TAB_COLORS.primary}
-      accentStyle="background"
-      value={currentTab}
-      onValueChange={setCurrentTab}
+      color="indigo"
+      value={searchParams.get('tab') || 'tables'}
+      onValueChange={(value) => {
+        setSearchParams((prev) => {
+          prev.set('tab', value);
+          return prev;
+        });
+      }}
       items={tabItems}
     />
-  );
-};
-
-// leaving this in for now just in case we get any push back on the new tab UI
-const Collapsibles = ({
-  dataSourceName,
-  areUserDefinedFunctionsSupported,
-  areForeignKeysSupported,
-}: ContentProps) => {
-  const { data: source } = useMetadata(
-    MetadataSelectors.findSource(dataSourceName)
-  );
-
-  const isMongoDB = source?.kind === 'mongo';
-  const trackTablesTitle = isMongoDB ? 'Collections' : 'Tables/Views';
-  const trackTablesTooltip = `Expose the ${
-    isMongoDB ? 'collections' : 'tables'
-  } available in your database via the GraphQL API`;
-
-  return (
-    <>
-      <CollapsibleResource
-        title={trackTablesTitle}
-        tooltip={trackTablesTooltip}
-        defaultOpen
-      >
-        <ManageTrackedTables
-          dataSourceName={dataSourceName}
-          key={dataSourceName}
-        />
-      </CollapsibleResource>
-      {areForeignKeysSupported && (
-        <CollapsibleResource
-          title="Foreign Key Relationships"
-          tooltip="Track foreign key relationships in your database in your GraphQL API"
-        >
-          <ManageSuggestedRelationships dataSourceName={dataSourceName} />
-        </CollapsibleResource>
-      )}
-      {areUserDefinedFunctionsSupported && (
-        <CollapsibleResource
-          title="Untracked Custom Functions"
-          tooltip="Expose the functions available in your database via the GraphQL API"
-        >
-          <ManageTrackedFunctions dataSourceName={dataSourceName} />
-        </CollapsibleResource>
-      )}
-    </>
   );
 };

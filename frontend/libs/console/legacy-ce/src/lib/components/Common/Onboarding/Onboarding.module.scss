@@ -13,20 +13,27 @@
   position: fixed;
   bottom: 24px;
   right: 24px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    0 1px 4px rgba(0, 0, 0, 0.08);
 }
 .onboarding_popup {
   bottom: 32px;
   z-index: 10;
   right: 32px;
   background: #fff;
-  width: 320px;
+  width: 360px;
   border: 1px solid #d7d7d7;
   padding: 0;
   border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    0 1px 4px rgba(0, 0, 0, 0.08);
   position: fixed;
-  font-family: 'Gudea', -apple-system, sans-serif;
+  font-family:
+    'Gudea',
+    -apple-system,
+    sans-serif;
 }
 
 .link_icon {
@@ -40,7 +47,10 @@
   padding: 16px;
   color: #4d4d4d;
   background: #faca33;
-  font-family: 'Gudea', -apple-system, sans-serif;
+  font-family:
+    'Gudea',
+    -apple-system,
+    sans-serif;
 }
 .popup_header img {
   margin-right: 8px;

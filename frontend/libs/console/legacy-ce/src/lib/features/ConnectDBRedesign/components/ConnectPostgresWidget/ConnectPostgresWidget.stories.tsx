@@ -1,10 +1,12 @@
-import { StoryObj, StoryFn, Meta } from '@storybook/react';
+import { StoryObj, StoryFn, Meta } from '@storybook/react-webpack5';
 import { ConnectPostgresWidget } from './ConnectPostgresWidget';
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
+import {
+  ReactQueryDecorator,
+  ConsoleTypeDecorator,
+} from '@hasura/shared/testing';
 import { handlers } from '../../mocks/handlers.mock';
-import { userEvent, waitFor, within } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
-import { ConsoleTypeDecorator } from '../../../../storybook/decorators';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { Flex } from '@radix-ui/themes';
 
 export default {
   component: ConnectPostgresWidget,
@@ -21,22 +23,22 @@ export const PostgresCreateConnection: StoryFn<
   typeof ConnectPostgresWidget
 > = () => {
   return (
-    <div className="flex justify-center">
+    <Flex justify="center">
       <div className="w-1/2">
         <ConnectPostgresWidget />
       </div>
-    </div>
+    </Flex>
   );
 };
 
 export const Test: StoryObj<typeof ConnectPostgresWidget> = {
   render: () => {
     return (
-      <div className="flex justify-center">
+      <Flex justify="center">
         <div className="w-1/2">
           <ConnectPostgresWidget />
         </div>
-      </div>
+      </Flex>
     );
   },
 
@@ -47,23 +49,23 @@ export const Test: StoryObj<typeof ConnectPostgresWidget> = {
 
     // verify if the right title is displayed. It should contain the word `postgres`.
     await expect(
-      await canvas.findByText('Connect Postgres Database')
+      await canvas.findByText('Connect Postgres Database'),
     ).toBeInTheDocument();
 
     // verify if all the fields are present (in oss mode)
 
     await expect(
-      await canvas.findByLabelText('Database name')
+      await canvas.findByLabelText('Database name'),
     ).toBeInTheDocument();
 
     // There should be exactly 3 supported database connection options
     const radioOptions = await canvas.findAllByLabelText(
-      'Connect Database via'
+      'Connect Database via',
     );
     await expect(radioOptions.length).toBe(4);
 
     const databaseUrlOption = await canvas.findByTestId(
-      'configuration.connectionInfo.databaseUrl.connectionType-databaseUrl'
+      'configuration.connectionInfo.databaseUrl.connectionType-databaseUrl',
     );
     await expect(databaseUrlOption).toBeInTheDocument();
     await userEvent.click(databaseUrlOption);
@@ -71,59 +73,59 @@ export const Test: StoryObj<typeof ConnectPostgresWidget> = {
     // Expect the first option to have the following input fields
     await expect(
       await canvas.findByPlaceholderText(
-        'postgresql://username:password@hostname:port/postgres'
-      )
+        'postgresql://username:password@hostname:port/postgres',
+      ),
     ).toBeInTheDocument();
 
     // click on the environment variable option and verify if the correct fields are shown
     const environmentVariableOption = await canvas.findByTestId(
-      'configuration.connectionInfo.databaseUrl.connectionType-envVar'
+      'configuration.connectionInfo.databaseUrl.connectionType-envVar',
     );
     await userEvent.click(environmentVariableOption);
     await expect(
-      await canvas.findByPlaceholderText('HASURA_GRAPHQL_DB_URL_FROM_ENV')
+      await canvas.findByPlaceholderText('HASURA_GRAPHQL_DB_URL_FROM_ENV'),
     ).toBeInTheDocument();
 
     // click on the connection parameters option and verify if the correct fields are shown
     const connectionParamsOption = await canvas.findByTestId(
-      'configuration.connectionInfo.databaseUrl.connectionType-connectionParams'
+      'configuration.connectionInfo.databaseUrl.connectionType-connectionParams',
     );
     await userEvent.click(connectionParamsOption);
     await expect(
-      await canvas.findByPlaceholderText('postgres_user')
+      await canvas.findByPlaceholderText('postgres_user'),
     ).toBeInTheDocument();
     await expect(
-      await canvas.findByPlaceholderText('password')
+      await canvas.findByPlaceholderText('password'),
     ).toBeInTheDocument();
     await expect(
-      await canvas.findByPlaceholderText('postgres')
+      await canvas.findByPlaceholderText('postgres'),
     ).toBeInTheDocument();
     await expect(
-      await canvas.findByPlaceholderText('localhost')
+      await canvas.findByPlaceholderText('localhost'),
     ).toBeInTheDocument();
     await expect(
-      await canvas.findByPlaceholderText('5432')
+      await canvas.findByPlaceholderText('5432'),
     ).toBeInTheDocument();
 
     // Find and click on advanced settings
     await userEvent.click(await canvas.findByText('Advanced Settings'));
     await expect(
-      await canvas.findByText('Max Connections')
+      await canvas.findByText('Max Connections'),
     ).toBeInTheDocument();
     await expect(await canvas.findByText('Idle Timeout')).toBeInTheDocument();
     await expect(await canvas.findByText('Retries')).toBeInTheDocument();
     await expect(await canvas.findByText('Pool Timeout')).toBeInTheDocument();
     await expect(
-      await canvas.findByText('Connection Lifetime')
+      await canvas.findByText('Connection Lifetime'),
     ).toBeInTheDocument();
     await expect(
-      await canvas.findByText('Isolation Level')
+      await canvas.findByText('Isolation Level'),
     ).toBeInTheDocument();
     await expect(
-      await canvas.findByText('Use Prepared Statements')
+      await canvas.findByText('Use Prepared Statements'),
     ).toBeInTheDocument();
     await expect(
-      await canvas.findByText('Extension Schema')
+      await canvas.findByText('Extension Schema'),
     ).toBeInTheDocument();
   },
 };
@@ -144,7 +146,7 @@ export const PostgresEditConnection: StoryObj<typeof ConnectPostgresWidget> = {
 
     // verify if the right title is displayed. It should contain the word `postgres`.
     await expect(
-      await canvas.findByText('Edit Postgres Connection')
+      await canvas.findByText('Edit Postgres Connection'),
     ).toBeInTheDocument();
 
     // verify if all the fields are present (in oss mode)
@@ -152,68 +154,68 @@ export const PostgresEditConnection: StoryObj<typeof ConnectPostgresWidget> = {
     await waitFor(
       async () => {
         await expect(await canvas.findByLabelText('Database name')).toHaveValue(
-          'chinook'
+          'chinook',
         );
       },
-      { timeout: 5000 }
+      { timeout: 5000 },
     );
 
     const radioOptions = await canvas.findAllByLabelText(
-      'Connect Database via'
+      'Connect Database via',
     );
     await expect(radioOptions.length).toBe(4);
     const databaseUrlOption = await canvas.findByTestId(
-      'configuration.connectionInfo.databaseUrl.connectionType-databaseUrl'
+      'configuration.connectionInfo.databaseUrl.connectionType-databaseUrl',
     );
     await expect(databaseUrlOption).toBeChecked();
     await expect(
-      await canvas.findByTestId('configuration.connectionInfo.databaseUrl.url')
+      await canvas.findByTestId('configuration.connectionInfo.databaseUrl.url'),
     ).toHaveValue('postgres://postgres:test@host.docker.internal:6001/chinook');
 
     // Find and click on advanced settings
     await userEvent.click(await canvas.findByText('Advanced Settings'));
     await expect(
       await canvas.findByTestId(
-        'configuration.connectionInfo.poolSettings.maxConnections'
-      )
+        'configuration.connectionInfo.poolSettings.maxConnections',
+      ),
     ).toHaveValue(500);
     await expect(
       await canvas.findByTestId(
-        'configuration.connectionInfo.poolSettings.idleTimeout'
-      )
+        'configuration.connectionInfo.poolSettings.idleTimeout',
+      ),
     ).toHaveValue(200);
     await expect(
       await canvas.findByTestId(
-        'configuration.connectionInfo.poolSettings.retries'
-      )
+        'configuration.connectionInfo.poolSettings.retries',
+      ),
     ).toHaveValue(400);
     await expect(
       await canvas.findByTestId(
-        'configuration.connectionInfo.poolSettings.poolTimeout'
-      )
+        'configuration.connectionInfo.poolSettings.poolTimeout',
+      ),
     ).toHaveValue(300);
     await expect(
       await canvas.findByTestId(
-        'configuration.connectionInfo.poolSettings.connectionLifetime'
-      )
+        'configuration.connectionInfo.poolSettings.connectionLifetime',
+      ),
     ).toHaveValue(100);
 
     // find and click on graphql customization settings
     await userEvent.click(await canvas.findByText('GraphQL Customization'));
     await expect(
-      await canvas.findByTestId('customization.rootFields.namespace')
+      await canvas.findByTestId('customization.rootFields.namespace'),
     ).toHaveValue('namespace_');
     await expect(
-      await canvas.findByTestId('customization.rootFields.prefix')
+      await canvas.findByTestId('customization.rootFields.prefix'),
     ).toHaveValue('prefix_');
     await expect(
-      await canvas.findByTestId('customization.rootFields.suffix')
+      await canvas.findByTestId('customization.rootFields.suffix'),
     ).toHaveValue('_suffix');
     await expect(
-      await canvas.findByTestId('customization.typeNames.prefix')
+      await canvas.findByTestId('customization.typeNames.prefix'),
     ).toHaveValue('prefix_');
     await expect(
-      await canvas.findByTestId('customization.typeNames.suffix')
+      await canvas.findByTestId('customization.typeNames.suffix'),
     ).toHaveValue('_suffix');
   },
 };

@@ -1,41 +1,47 @@
-import { useMetadata } from '../../hasura-metadata-api';
+import { useMetadata } from '@hasura/metadata/api';
 import React from 'react';
+import { Flex, Heading } from '@radix-ui/themes';
 import DbConnectSVG from '../graphics/database-connect.svg';
-export const ConnectDatabaseWrapper: React.FC = ({ children }) => {
-  const { data: metadataSources } = useMetadata(m => m.metadata.sources);
+import { Separator, Text } from '@hasura/shared/ui';
+
+export const ConnectDatabaseWrapper: React.FC<{
+  children?: React.ReactNode;
+}> = ({ children }) => {
+  const { data: metadataSources } = useMetadata((m) => m.metadata.sources);
 
   return (
-    <div className="flex flex-col items-center">
-      <div className="py-lg border-b border-slate-300 w-full flex justify-center">
-        <div className="max-w-3xl w-full">
-          <div className="text-xl font-bold">
+    <Flex direction="column" align="center">
+      <Flex className="max-w-3xl w-full py-6">
+        <div>
+          <Heading size="6">
             {metadataSources?.length
               ? 'Connect Database'
               : 'Connect Your First Database'}
-          </div>
+          </Heading>
           {metadataSources?.length ? (
-            <div className="text-muted">
+            <Text>
               Connect a database to access your database objects in your GraphQL
               API.
-            </div>
+            </Text>
           ) : (
-            <div className="text-muted">
+            <Text>
               Connect your first database to access your database objects in
               your GraphQL API.
-            </div>
+            </Text>
           )}
         </div>
-      </div>
-      <div className="max-w-3xl py-lg w-full">
-        <div className="flex flex-col">
+      </Flex>
+      <Separator size="4" className="mb-6" />
+      <div className="max-w-3xl py-4 w-full">
+        <Flex direction="column">
           <img
             src={DbConnectSVG}
-            className={`mb-md w-full`}
+            className={`mb-4 w-full`}
             alt="Database Connection Diagram"
           />
           {children}
-        </div>
+        </Flex>
       </div>
-    </div>
+    </Flex>
   );
 };

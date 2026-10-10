@@ -1,10 +1,9 @@
-import { StoryFn, Meta } from '@storybook/react';
+import { StoryFn, Meta } from '@storybook/react-webpack5';
 import { Timeout } from './Timeout';
 import { Template } from './Template';
-import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
-import { SimpleForm } from '../../../../../new-components/Form';
 import { z } from 'zod';
-import { Button } from '../../../../../new-components/Button';
+import { Button, SimpleForm } from '@hasura/shared/ui';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
 
 export default {
   component: Timeout,
@@ -14,7 +13,7 @@ export default {
 export const BasicView: StoryFn<typeof Timeout> = () => {
   return (
     <SimpleForm
-      onSubmit={data => console.log(data)}
+      onSubmit={(data) => console.log(data)}
       schema={z.object({
         timeout: z
           .number()

@@ -2,12 +2,14 @@ import React from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  SelectField,
   CheckboxesField,
   InputField,
-} from '../../../../../new-components/Form';
-import { Button } from '../../../../../new-components/Button';
-import { Analytics } from '../../../../Analytics';
+  Button,
+  SelectField,
+} from '@hasura/shared/ui';
+import { Flex } from '@radix-ui/themes';
+
+import { Analytics } from '@hasura/shared/analytics';
 import { ConsentCheckbox } from './ConsentCheckbox';
 import {
   ActivateEEFormSchema,
@@ -25,10 +27,10 @@ type Props = {
   formState?: FormState;
 };
 
-export const Form: React.VFC<Props> = props => {
+export const Form: React.FC<Props> = (props) => {
   const { onSuccess } = props;
   const [state, setState] = React.useState<FormState>(
-    props.formState || 'register'
+    props.formState || 'register',
   );
 
   const onActivation = () => {
@@ -38,14 +40,14 @@ export const Form: React.VFC<Props> = props => {
   };
 
   return (
-    <div className="flex flex-col w-full">
-      <div className="p-md">
+    <Flex direction="column" className="w-full">
+      <div className="p-4">
         <div>
           {state === 'register' && (
-            <div className="flex flex-col w-full">
+            <Flex direction="column" className="w-full">
               <RegistrationForm {...props} onSuccess={onActivation} />
-              <div className="flex w-full justify-center mt-xs text-sm">
-                <span className="mr-xs">Already registered?</span>
+              <Flex justify="center" className="w-full mt-2 text-sm">
+                <span className="mr-1">Already registered?</span>
                 <Analytics name="ee-activate-existing-license">
                   <a
                     className="text-secondary"
@@ -58,14 +60,14 @@ export const Form: React.VFC<Props> = props => {
                     Activate Existing License{' '}
                   </a>
                 </Analytics>
-              </div>
-            </div>
+              </Flex>
+            </Flex>
           )}
           {state === 'activate' && (
-            <div className="flex flex-col w-full">
+            <Flex direction="column" className="w-full">
               <ActivationForm {...props} onSuccess={onActivation} />
-              <div className="flex w-full justify-center mt-xs text-sm">
-                <span className="mr-xs">Do not have a license?</span>
+              <Flex justify="center" className="w-full mt-2 text-sm">
+                <span className="mr-1">Do not have a license?</span>
                 <Analytics name="ee-register-a-new-license">
                   <a
                     className="text-secondary"
@@ -77,12 +79,12 @@ export const Form: React.VFC<Props> = props => {
                     Register for Hasura Enterprise Trial
                   </a>
                 </Analytics>
-              </div>
-            </div>
+              </Flex>
+            </Flex>
           )}
         </div>
       </div>
-    </div>
+    </Flex>
   );
 };
 
@@ -107,10 +109,10 @@ export const ActivationForm: React.FC<Props> = (props: Props) => {
   return (
     <FormProvider {...methods}>
       <form className="space-y-2">
-        <h1 className="text-xl text-slate-900 font-semibold mb-xs">
+        <h1 className="text-xl text-slate-900 font-semibold mb-1">
           Activate your free Hasura Enterprise trial license
         </h1>
-        <div className="text-muted mt-0 mb-xs">
+        <div className="text-muted mt-0 mb-1">
           Unlock extra observability, security, and performance features for
           your Hasura instance.
         </div>
@@ -119,7 +121,7 @@ export const ActivationForm: React.FC<Props> = (props: Props) => {
             name="email"
             label="Email *"
             description="Work email preferred"
-            placeholder="name@work.com"
+            fieldProps={{ placeholder: 'name@work.com' }}
             noErrorPlaceholder
           />
         </Analytics>
@@ -130,8 +132,7 @@ export const ActivationForm: React.FC<Props> = (props: Props) => {
           <InputField
             name="password"
             label="Password *"
-            type="password"
-            placeholder="Password"
+            fieldProps={{ type: 'password', placeholder: 'Password' }}
           />
         </Analytics>
         {errorMessage ? (
@@ -139,7 +140,7 @@ export const ActivationForm: React.FC<Props> = (props: Props) => {
             {errorMessage}
           </div>
         ) : null}
-        <div className="flex flex-col gap-4">
+        <Flex direction="column" gap="4">
           <Analytics
             name="ee-activation-form-submit"
             passHtmlAttributesToChildren
@@ -148,14 +149,14 @@ export const ActivationForm: React.FC<Props> = (props: Props) => {
               type="button"
               mode="primary"
               onClick={handleSubmitClick}
-              isLoading={isLoading}
+              loading={isLoading}
               loadingText="Activating..."
-              full
+              className="w-full"
             >
               Activate Your Trial License
             </Button>
           </Analytics>
-        </div>
+        </Flex>
       </form>
     </FormProvider>
   );
@@ -180,13 +181,25 @@ export const RegistrationForm: React.FC<Props> = (props: Props) => {
     methods.handleSubmit(onSubmit)();
   };
 
+  const [hasuraUseCaseOptions] = React.useState(() =>
+    [
+      { value: 'data-api', label: 'Data API on my databases' },
+      {
+        value: 'data-federation',
+        label: 'Data Federation across APIs and databases',
+      },
+      { value: 'gql-backend', label: 'GraphQL Backend' },
+      { value: 'api-gateway', label: 'API Gateway' },
+    ].sort(() => Math.random() - 0.5),
+  );
+
   return (
     <FormProvider {...methods}>
       <form className="space-y-2">
-        <h1 className="text-xl text-slate-900 font-semibold mb-xs">
+        <h1 className="text-xl text-slate-900 font-semibold mb-1">
           Activate your free Hasura Enterprise trial license
         </h1>
-        <div className="text-muted mt-0 mb-xs">
+        <div className="text-muted mt-0 mb-1">
           Unlock extra observability, security, and performance features for
           your Hasura instance.&nbsp;
           <Analytics name="ee-trial-docs">
@@ -200,7 +213,7 @@ export const RegistrationForm: React.FC<Props> = (props: Props) => {
             .
           </Analytics>
         </div>
-        <div className="flex gap-4">
+        <Flex gap="4">
           <Analytics
             name="ee-registration-form-first-name"
             passHtmlAttributesToChildren
@@ -208,7 +221,7 @@ export const RegistrationForm: React.FC<Props> = (props: Props) => {
             <InputField
               name="firstName"
               label="First Name *"
-              placeholder="First Name..."
+              fieldProps={{ placeholder: 'First Name...' }}
               noErrorPlaceholder
             />
           </Analytics>
@@ -219,11 +232,11 @@ export const RegistrationForm: React.FC<Props> = (props: Props) => {
             <InputField
               name="lastName"
               label="Last Name *"
-              placeholder="Last Name..."
+              fieldProps={{ placeholder: 'Last Name...' }}
               noErrorPlaceholder
             />
           </Analytics>
-        </div>
+        </Flex>
         <Analytics
           name="ee-registration-form-email"
           passHtmlAttributesToChildren
@@ -233,7 +246,7 @@ export const RegistrationForm: React.FC<Props> = (props: Props) => {
             label="Email *"
             description="Work email preferred"
             tooltip="If you already have a Hasura Cloud account, please use the same email and password for this registration"
-            placeholder="name@work.com"
+            fieldProps={{ placeholder: 'name@work.com' }}
             noErrorPlaceholder
           />
         </Analytics>
@@ -244,8 +257,7 @@ export const RegistrationForm: React.FC<Props> = (props: Props) => {
           <InputField
             name="password"
             label="Password *"
-            type="password"
-            placeholder="Password"
+            fieldProps={{ type: 'password', placeholder: 'Password' }}
             noErrorPlaceholder
           />
         </Analytics>
@@ -256,7 +268,7 @@ export const RegistrationForm: React.FC<Props> = (props: Props) => {
           <InputField
             name="organization"
             label="Organization *"
-            placeholder="My Work Inc."
+            fieldProps={{ placeholder: 'My Work Inc.' }}
             noErrorPlaceholder
           />
         </Analytics>
@@ -267,7 +279,7 @@ export const RegistrationForm: React.FC<Props> = (props: Props) => {
           <InputField
             name="jobFunction"
             label="Position"
-            placeholder="Software Developer"
+            fieldProps={{ placeholder: 'Software Developer' }}
             noErrorPlaceholder
           />
         </Analytics>
@@ -278,7 +290,7 @@ export const RegistrationForm: React.FC<Props> = (props: Props) => {
           <InputField
             name="phoneNumber"
             label="Phone Number"
-            placeholder="+1 123-345-6789"
+            fieldProps={{ placeholder: '+1 123-345-6789' }}
           />
         </Analytics>
         <Analytics
@@ -309,17 +321,14 @@ export const RegistrationForm: React.FC<Props> = (props: Props) => {
         >
           <SelectField
             name="hasuraUseCase"
-            options={[
-              { value: 'data-api', label: 'Data API on my databases' },
-              {
-                value: 'data-federation',
-                label: 'Data Federation across APIs and databases',
-              },
-              { value: 'gql-backend', label: 'GraphQL Backend' },
-              { value: 'api-gateway', label: 'API Gateway' },
-            ].sort(() => Math.random() - 0.5)}
+            options={hasuraUseCaseOptions}
             label="What would you like to Build with Hasura? *"
             placeholder="Please select"
+            fieldProps={{
+              trigger: {
+                className: 'w-full!',
+              },
+            }}
           />
         </Analytics>
         <Analytics name="ee-registration-form-tos-consent">
@@ -330,7 +339,7 @@ export const RegistrationForm: React.FC<Props> = (props: Props) => {
             {errorMessage}
           </div>
         ) : null}
-        <div className="flex flex-col gap-4">
+        <Flex direction="column" gap="4" className="mt-4">
           <Analytics
             name="ee-registration-form-submit"
             passHtmlAttributesToChildren
@@ -339,14 +348,14 @@ export const RegistrationForm: React.FC<Props> = (props: Props) => {
               type="button"
               mode="primary"
               onClick={handleSubmitClick}
-              isLoading={isLoading}
+              loading={isLoading}
               loadingText="Activating..."
-              full
+              className="w-full"
             >
               Activate Your Trial License
             </Button>
           </Analytics>
-        </div>
+        </Flex>
       </form>
     </FormProvider>
   );

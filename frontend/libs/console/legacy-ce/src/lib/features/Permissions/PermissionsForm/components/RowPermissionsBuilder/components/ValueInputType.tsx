@@ -7,11 +7,12 @@ import { ObjectValueInput } from './ObjectValueInput';
 import { BooleanValueInput } from './BooleanValueInput';
 import { Operator } from './types';
 import { rootTableContext } from './RootTableProvider';
-import { areTablesEqual } from '../../../../../hasura-metadata-api';
+import { areTablesEqual } from '@hasura/metadata/helpers';
+import { Input } from '@hasura/shared/ui';
 
 export const checkUseObjectInput = (
   comparatorName: string,
-  operator: Operator | undefined
+  operator: Operator | undefined,
 ) => {
   if (operator?.type === 'json' || operator?.type === 'jsonb') return true;
   if (
@@ -45,7 +46,7 @@ export const ValueInputType = ({
   const { tables } = useContext(rootTableContext);
   const { table } = useContext(tableContext);
   const operators = useOperators({ path });
-  const operator = operators.find(o => o.name === comparatorName);
+  const operator = operators.find((o) => o.name === comparatorName);
 
   if (operator?.inputType === 'boolean') {
     return (
@@ -68,20 +69,17 @@ export const ValueInputType = ({
   }
 
   return (
-    <input
+    <Input
       data-testid={componentLevelId}
-      size={20}
       disabled={isLoading || (comparatorName === '_where' && isEmpty(table))}
-      className={`border border-gray-200 rounded-md p-2 !mr-4 ${
-        isLoading ? 'bg-gray-100' : ''
-      }`}
+      className={`p-2 mr-4!`}
       type="text"
       value={value}
-      onChange={e => {
+      onChange={(e) => {
         let value = e.target.value as any;
-        const foundTable = tables.find(t => areTablesEqual(t.table, table));
+        const foundTable = tables.find((t) => areTablesEqual(t.table, table));
         const column = foundTable?.columns.find(
-          c => c.name === path[path.length - 2]
+          (c) => c.name === path[path.length - 2],
         );
         if (!isNaN(value) && value !== '') {
           try {
@@ -99,7 +97,7 @@ export const ValueInputType = ({
         }
         setValue(
           path,
-          operator?.inputType === 'boolean' ? Boolean(e.target.value) : value
+          operator?.inputType === 'boolean' ? Boolean(e.target.value) : value,
         );
       }}
     />

@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import produce from 'immer';
-import { TrackableTable } from '../types';
+import { TrackableTable } from '@hasura/metadata/api';
 
 export const useCheckRows = (data: TrackableTable[]) => {
   const [checkedIds, setCheckedIds] = useState<string[]>([]);
@@ -16,15 +15,8 @@ export const useCheckRows = (data: TrackableTable[]) => {
     : 'determinate';
 
   const onCheck = (id: string) => {
-    setCheckedIds(prev =>
-      produce(prev, draft => {
-        if (draft.includes(id)) {
-          const i = draft.indexOf(id);
-          draft.splice(i, 1);
-        } else {
-          draft.push(id);
-        }
-      })
+    setCheckedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
   };
 
@@ -32,7 +24,7 @@ export const useCheckRows = (data: TrackableTable[]) => {
     if (allChecked) {
       setCheckedIds([]);
     } else {
-      setCheckedIds(data.map(item => item.id));
+      setCheckedIds(data.map((item) => item.id));
     }
   };
 

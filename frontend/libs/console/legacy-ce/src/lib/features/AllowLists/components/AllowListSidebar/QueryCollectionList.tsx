@@ -1,7 +1,7 @@
-import React from 'react';
-import Skeleton from 'react-loading-skeleton';
+import { Skeleton } from '@radix-ui/themes';
 import { useQueryCollections } from '../../../QueryCollections/hooks/useQueryCollections';
 import { QueryCollectionItem } from './QueryCollectionItem';
+import { Text } from '@hasura/shared/ui';
 
 interface QueryCollectionItemProps {
   selectedCollectionQuery: string;
@@ -21,14 +21,15 @@ export const QueryCollectionList = (props: QueryCollectionItemProps) => {
 
   if (isLoading) {
     return (
-      <div className="px-sm -mt-2 mb-xs">
-        <Skeleton width={200} height={20} />
-      </div>
+      <Skeleton className="w-full" height="20px">
+        Loading...
+      </Skeleton>
     );
   }
 
   const matchingQueryCollections = (queryCollections || []).filter(
-    ({ name }) => !search || name?.toLowerCase().includes(search?.toLowerCase())
+    ({ name }) =>
+      !search || name?.toLowerCase().includes(search?.toLowerCase()),
   );
 
   if (
@@ -37,25 +38,25 @@ export const QueryCollectionList = (props: QueryCollectionItemProps) => {
     matchingQueryCollections.length === 0
   ) {
     return (
-      <div className="px-sm -mt-2 mb-xs">
-        <p className="text-gray-500">No results found</p>
+      <div>
+        <Text color="gray">No results found</Text>
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="px-sm -ml-3 mb-xs">
-        <p className="text-sm font-semibold text-muted uppercase tracking-wider uppercase">
+    <div className="mb-2">
+      <div>
+        <Text weight="bold" className="tracking-wider uppercase">
           Collections
-        </p>
+        </Text>
       </div>
-      <div className="-mt-2 mb-xs">
+      <div>
         {queryCollections &&
           matchingQueryCollections.map(({ name }) => (
             <QueryCollectionItem
-              href={buildHref(name)}
-              onClick={e => {
+              to={buildHref(name)}
+              onClick={(e) => {
                 onClick(buildHref(name));
                 e.preventDefault();
               }}

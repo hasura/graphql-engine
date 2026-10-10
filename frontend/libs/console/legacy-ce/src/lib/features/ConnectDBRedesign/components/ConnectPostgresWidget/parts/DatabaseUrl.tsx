@@ -1,5 +1,4 @@
-import React from 'react';
-import { InputField, Radio } from '../../../../../new-components/Form';
+import { InputField, RadioGroupField } from '@hasura/shared/ui';
 import { useFormContext } from 'react-hook-form';
 import { ConnectionInfoSchema } from '../schema';
 import {
@@ -22,11 +21,13 @@ export const DatabaseUrl = ({
     { value: 'dynamicFromFile', label: 'Dynamic URL' },
   ]
     .filter(
-      option =>
+      (option) =>
         // Remove this option on cloud, where it is unsupported:
-        !(option.value === 'dynamicFromFile' && globals.consoleType === 'cloud')
+        !(
+          option.value === 'dynamicFromFile' && globals.consoleType === 'cloud'
+        ),
     )
-    .filter(option => !hideOptions.includes(option.value));
+    .filter((option) => !hideOptions.includes(option.value));
 
   const { watch } = useFormContext<Record<string, ConnectionInfoSchema>>();
 
@@ -34,13 +35,14 @@ export const DatabaseUrl = ({
 
   return (
     <div>
-      <div className="py-1.5 font-semibold">
-        <Radio
+      <div className="py-1.5">
+        <RadioGroupField
           name={`${name}.connectionType`}
           label="Connect Database via"
           options={options}
           orientation="horizontal"
           tooltip="Environment variable recommended"
+          noErrorPlaceholder
         />
       </div>
 
@@ -51,7 +53,10 @@ export const DatabaseUrl = ({
             name={`${name}.url`}
             key={`${name}.url`}
             label="Database URL"
-            placeholder="postgresql://username:password@hostname:port/postgres"
+            fieldProps={{
+              placeholder:
+                'postgresql://username:password@hostname:port/postgres',
+            }}
           />
         </>
       ) : connectionType === 'dynamicFromFile' ? (
@@ -61,7 +66,9 @@ export const DatabaseUrl = ({
             name={`${name}.dynamicFromFile`}
             key={`${name}.dynamicFromFile`}
             label="Path to file that contains the connection string"
-            placeholder="/path/to/file/on/server"
+            fieldProps={{
+              placeholder: '/path/to/file/on/server',
+            }}
           />
         </>
       ) : connectionType === 'envVar' ? (
@@ -69,7 +76,9 @@ export const DatabaseUrl = ({
           name={`${name}.envVar`}
           key={`${name}.envVar`}
           label="Environment variable"
-          placeholder="HASURA_GRAPHQL_DB_URL_FROM_ENV"
+          fieldProps={{
+            placeholder: 'HASURA_GRAPHQL_DB_URL_FROM_ENV',
+          }}
         />
       ) : (
         <>
@@ -77,29 +86,39 @@ export const DatabaseUrl = ({
           <InputField
             name={`${name}.username`}
             label="Username"
-            placeholder="postgres_user"
+            fieldProps={{
+              placeholder: 'postgres_user',
+            }}
           />
           <InputField
             name={`${name}.password`}
             label="Password"
-            type="password"
-            placeholder="password"
+            fieldProps={{
+              type: 'password',
+              placeholder: 'password',
+            }}
           />
           <InputField
             name={`${name}.database`}
             label="Database name"
-            placeholder="postgres"
+            fieldProps={{
+              placeholder: 'postgres',
+            }}
           />
           <InputField
             name={`${name}.host`}
             label="Host"
-            placeholder="localhost"
+            fieldProps={{
+              placeholder: 'localhost',
+            }}
           />
           <InputField
             name={`${name}.port`}
             label="Port"
-            type="number"
-            placeholder="5432"
+            fieldProps={{
+              type: 'number',
+              placeholder: '5432',
+            }}
           />
         </>
       )}

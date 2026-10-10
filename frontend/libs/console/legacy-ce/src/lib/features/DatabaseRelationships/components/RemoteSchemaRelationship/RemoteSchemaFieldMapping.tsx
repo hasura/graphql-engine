@@ -1,5 +1,3 @@
-/* eslint-disable no-restricted-imports */
-/* eslint-disable import/first */
 import {
   buildServerRemoteFieldObject,
   RemoteSchemaTree,
@@ -15,21 +13,25 @@ interface RemoteSchemaFieldMappingProps {
   graphQLSchema: GraphQLSchema;
   defaultValue?: RemoteSchemaRelationship['definition']['remote_field'];
   onChange?: (
-    value: RemoteSchemaRelationship['definition']['remote_field']
+    value: RemoteSchemaRelationship['definition']['remote_field'],
   ) => void;
 }
 
 export const RemoteSchemaFieldMapping = (
-  props: RemoteSchemaFieldMappingProps
+  props: RemoteSchemaFieldMappingProps,
 ) => {
-  const { defaultValue, onChange, graphQLSchema } = props;
+  // Defaults live on the destructured parameters rather than on
+  // `RemoteSchemaFieldMapping.defaultProps`: React 19 ignores `defaultProps` on
+  // function components, so the previous no-op `onChange` default was silently
+  // dropped there. `onChange` stays optional in the public prop contract.
+  const { defaultValue, onChange = () => undefined, graphQLSchema } = props;
 
   // Why is this eslint rule disabled? => unless graphQL schema changes there is no change on the parent onChange handler reference.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   const memoizedCallback = useCallback(
     (value: RemoteSchemaRelationship['definition']['remote_field']) =>
       onChange?.(value),
-    [graphQLSchema]
+    [graphQLSchema],
   );
 
   const [relationshipFields, setRelationshipFields] = useState<
@@ -42,7 +44,7 @@ export const RemoteSchemaFieldMapping = (
 
   return (
     <div>
-      <div className="mb-sm">
+      <div className="mb-2">
         <RemoteFieldDisplay relationshipFields={relationshipFields} />
       </div>
       <RemoteSchemaTree
@@ -54,9 +56,4 @@ export const RemoteSchemaFieldMapping = (
       />
     </div>
   );
-};
-
-RemoteSchemaFieldMapping.defaultProps = {
-  defaultValue: undefined,
-  onChange: () => {},
 };

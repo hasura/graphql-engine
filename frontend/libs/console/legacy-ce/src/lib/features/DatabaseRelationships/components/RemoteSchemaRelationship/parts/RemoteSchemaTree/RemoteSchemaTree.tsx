@@ -1,11 +1,7 @@
 import React, { useMemo, useState } from 'react';
-import { Tree as AntTree } from 'antd';
 import { GraphQLSchema } from 'graphql';
-import { EventDataNode } from 'antd/lib/tree';
-import './ant-tree-styles.css';
 import {
   AllowedRootFields,
-  AntdTreeNode,
   HasuraRsFields,
   RelationshipFields,
   TreeNode,
@@ -13,14 +9,16 @@ import {
 import {
   buildTree,
   findRemoteField,
-  getFieldData,
   getExpandedKeys,
   getCheckedKeys,
 } from './utils';
-import { SearchBar } from '../SearchBar/SearchBar';
+import { getFieldData } from '../../../../../RemoteRelationships/RemoteSchemaRelationships/components/RemoteSchemaTree/utils';
+import { SearchInput, Tree, TreeProps } from '@hasura/shared/ui';
 
-export interface RemoteSchemaTreeProps
-  extends React.ComponentProps<typeof AntTree> {
+export interface RemoteSchemaTreeProps extends Pick<
+  TreeProps<TreeNode>,
+  'checkable' | 'className'
+> {
   /**
    * Graphql schema for setting new permissions.
    */
@@ -39,7 +37,8 @@ export const RemoteSchemaTree = ({
   rootFields,
   setRelationshipFields,
   fields,
-  ...rest
+  checkable = true,
+  className,
 }: RemoteSchemaTreeProps) => {
   const defaultSearchValue = relationshipFields?.[1]
     ? relationshipFields[1].key.split('.')[
@@ -58,56 +57,36 @@ export const RemoteSchemaTree = ({
         fields,
         rootFields,
       }),
-    [relationshipFields, schema, rootFields, fields]
+    [relationshipFields, schema, rootFields, fields],
   );
 
   const expandedKeys = useMemo(
     () => getExpandedKeys(relationshipFields),
-    [relationshipFields]
+    [relationshipFields],
   );
 
   const checkedKeys = useMemo(
     () => getCheckedKeys(relationshipFields),
-    [relationshipFields]
+    [relationshipFields],
   );
 
-  const onCheck = (
-    // onCheck props expects checked param
-    checked:
-      | React.Key[]
-      | {
-          checked: React.Key[];
-          halfChecked: React.Key[];
-        },
-    // CheckInfo is not exported by the library
-    // https://github.com/react-component/tree/issues/411
-    checkedNodeInfo: Record<string, any>
-  ) => {
-    const nodeInfo = checkedNodeInfo.node as AntdTreeNode;
+  const onCheck = (nodeInfo: TreeNode) => {
     const selectedField = findRemoteField(relationshipFields, nodeInfo);
     const fieldData = getFieldData(nodeInfo);
 
     if (selectedField) {
       setRelationshipFields(
-        relationshipFields.filter(field => !(field.key === nodeInfo.key))
+        relationshipFields.filter((field) => !(field.key === nodeInfo.key)),
       );
     } else {
       setRelationshipFields([
-        ...relationshipFields.filter(field => !(field.key === nodeInfo.key)),
+        ...relationshipFields.filter((field) => !(field.key === nodeInfo.key)),
         fieldData,
       ]);
     }
   };
 
-  const onExpand = (
-    expanded: React.Key[],
-    expandedNodeInfo: {
-      node: EventDataNode;
-      expanded: boolean;
-      nativeEvent: MouseEvent;
-    }
-  ) => {
-    const nodeInfo = expandedNodeInfo.node as AntdTreeNode;
+  const onExpand = (nodeInfo: TreeNode) => {
     const selectedField = findRemoteField(relationshipFields, nodeInfo);
     const fieldData = getFieldData(nodeInfo);
     if (selectedField) {
@@ -115,12 +94,12 @@ export const RemoteSchemaTree = ({
       // and remove all its children
       setRelationshipFields(
         relationshipFields.filter(
-          field =>
+          (field) =>
             !(
               field.key === nodeInfo.key ||
               field.key.includes(`${nodeInfo.key}.`)
-            )
-        )
+            ),
+        ),
       );
     } else {
       // `fields` at same or higher depth, if the current node is `argument` we skip this
@@ -128,26 +107,27 @@ export const RemoteSchemaTree = ({
         nodeInfo.type === 'field'
           ? relationshipFields
               .filter(
-                field => field.type === 'field' && field.depth >= nodeInfo.depth
+                (field) =>
+                  field.type === 'field' && field.depth >= nodeInfo.depth,
               )
-              .map(field => field.key)
+              .map((field) => field.key)
           : [];
 
       // remove all the fields and their children which are on same/higher depth, and add the current field
       // as one parent can have only one field at a certain depth
       setRelationshipFields([
         ...relationshipFields.filter(
-          field =>
+          (field) =>
             !(
               field.key === nodeInfo.key ||
               // remove all current or higher depth fields and their children
               (nodeInfo.type === 'field' &&
                 levelDepthFields.some(
-                  refFieldKey =>
+                  (refFieldKey) =>
                     field.key === refFieldKey ||
-                    field.key.includes(`${refFieldKey}.`)
+                    field.key.includes(`${refFieldKey}.`),
                 ))
-            )
+            ),
         ),
         fieldData,
       ]);
@@ -155,10 +135,10 @@ export const RemoteSchemaTree = ({
   };
 
   const expandedParentTrees: string[] = [];
-  const filteredTree = tree.map(subTree => {
+  const filteredTree = tree.map((subTree) => {
     return {
       ...subTree,
-      children: (subTree.children ?? []).filter(subTreeItem => {
+      children: (subTree.children ?? []).filter((subTreeItem) => {
         if (searchText.length) {
           if (subTreeItem.key.includes(searchText))
             expandedParentTrees.push(subTreeItem.key.split('.')[0]);
@@ -173,28 +153,19 @@ export const RemoteSchemaTree = ({
 
   return (
     <div>
-      <div className="mb-sm">
-        <SearchBar
-          value={searchText}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setSearchText(e.target.value)
-          }
-        />
+      <div className="mb-2">
+        <SearchInput value={searchText} onSearch={setSearchText} />
       </div>
 
-      <AntTree
-        checkable
-        checkStrictly
+      <Tree
+        checkable={checkable}
         blockNode
-        selectable={false}
         onCheck={onCheck}
         onExpand={onExpand}
         treeData={filteredTree}
         expandedKeys={[...expandedKeys, ...uniqueExpandedRoots]}
         checkedKeys={checkedKeys}
-        // disable animation onExpand to improve performance
-        motion={null}
-        {...rest}
+        className={className}
       />
     </div>
   );

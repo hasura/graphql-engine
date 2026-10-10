@@ -1,9 +1,9 @@
 import React from 'react';
-import { StoryObj, Meta } from '@storybook/react';
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
 import { registerEETrialLicenseActiveMutation } from '../../mocks/registration.mock';
 import { EnableEEButtonWrapper } from './EnableEEButton';
-import { Button } from '../../../../new-components/Button';
+import { Button } from '@hasura/shared/ui';
 
 export default {
   title: 'features / EETrial / EnableEEButtonWrapper 🧬️',

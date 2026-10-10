@@ -1,4 +1,4 @@
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { FETCH_SCHEMA_REGISTRY_NOTIFICATION_QUERY_NAME } from '../constants';
 import { FETCH_SCHEMA_REGISTRY_NOTIFICATION_QUERY } from '../queries';
 import { GetSchemaRegistryNotificationResponseWithError } from '../types';
@@ -19,7 +19,7 @@ type FetchSchemaRegistryNotificationResponse =
     };
 
 export const useGetSchemaRegistryNotificationColor = (
-  projectId: string
+  projectId: string,
 ): FetchSchemaRegistryNotificationResponse => {
   const fetchSchemaRegistyNotificationFn = (projectId: string) => {
     return schemaRegsitryControlPlaneClient.query<
@@ -33,7 +33,7 @@ export const useGetSchemaRegistryNotificationColor = (
     queryKey: FETCH_SCHEMA_REGISTRY_NOTIFICATION_QUERY_NAME,
     queryFn: () => fetchSchemaRegistyNotificationFn(projectId),
     refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
   });
   if (isLoading) {
     return {

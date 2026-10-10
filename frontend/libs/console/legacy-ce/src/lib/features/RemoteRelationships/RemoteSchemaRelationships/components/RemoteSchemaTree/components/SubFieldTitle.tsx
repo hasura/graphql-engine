@@ -1,5 +1,5 @@
-import { IconTooltip } from '../../../../../../new-components/Tooltip';
-import React from 'react';
+import { IconTooltip, Text } from '@hasura/shared/ui';
+import { Flex } from '@radix-ui/themes';
 
 type SubFieldTitleProps = {
   title: string;
@@ -13,20 +13,22 @@ export const SubFieldTitle = ({
   isSubfield,
 }: SubFieldTitleProps) => {
   return (
-    <div className="flex items-center cursor-pointer w-max whitespace-nowrap">
+    <Flex align="center" className="cursor-pointer w-max whitespace-nowrap">
       {!enabled ? (
         <>
           <IconTooltip
-            className="mr-sm text-gray-400"
+            className="mr-2 text-gray-400"
             message="Only fields with arguments or subfields can be toggled"
           />
           <span className="text-gray-400">{title}</span>
         </>
       ) : isSubfield ? (
-        <span className="text-blue-600 hover:text-blue-900">{title}</span>
+        <Text color="blue" className="hover:text-blue-600!">
+          {title}
+        </Text>
       ) : (
-        <span className="text-gray-900">{title}</span>
+        <span>{title}</span>
       )}
-    </div>
+    </Flex>
   );
 };

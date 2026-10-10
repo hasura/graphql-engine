@@ -1,19 +1,25 @@
-import { NumberInputField } from '../../ConnectPostgresWidget/parts/NumberInput';
+import { InputField } from '@hasura/shared/ui';
 
 export const PoolSettings = ({ name }: { name: string }) => {
   return (
     <>
-      <NumberInputField
+      <InputField
         name={`${name}.totalMaxConnections`}
         label="Total Max Connections"
-        placeholder="1000"
         tooltip="Maximum number of database connections"
+        fieldProps={{
+          type: 'number',
+          placeholder: '1000',
+        }}
       />
-      <NumberInputField
+      <InputField
         name={`${name}.idleTimeout`}
         label="Idle Timeout"
-        placeholder="5"
         tooltip="The idle timeout (in seconds) per connection"
+        fieldProps={{
+          type: 'number',
+          placeholder: '5',
+        }}
       />
     </>
   );

@@ -1,23 +1,35 @@
 import React from 'react';
-import { FaAngleRight, FaDatabase, FaTable } from 'react-icons/fa';
+import { FaDatabase, FaTable } from 'react-icons/fa';
+import { Flex } from '@radix-ui/themes';
+import { Breadcrumbs } from '@hasura/shared/ui';
+import { dataRoutes, getTableDisplayName } from '@hasura/shared/utils';
+import { Table } from '@hasura/shared/types';
 
-export const Breadcrumbs: React.VFC<{
+export const TableBreadcrumbs: React.FC<{
   dataSourceName: string;
-  tableName: string;
-}> = ({ dataSourceName, tableName }) => (
-  <div className="flex items-center space-x-xs mb-4">
-    <div className="cursor-pointer flex items-center text-muted hover:text-gray-900">
-      <FaDatabase className="mr-1.5" />
-      <span className="text-sm">{dataSourceName}</span>
-    </div>
-    <FaAngleRight className="text-muted" />
-    <div className="cursor-pointer flex items-center text-muted hover:text-gray-900">
-      <FaTable className="mr-1.5" />
-      <span className="text-sm">{tableName}</span>
-    </div>
-    <FaAngleRight className="text-muted" />
-    <div className="cursor-pointer flex items-center">
-      <span className="text-sm font-semibold text-yellow-500">Manage</span>
-    </div>
-  </div>
+  table: Table | undefined;
+}> = ({ dataSourceName, table }) => (
+  <Flex className="mb-4">
+    <Breadcrumbs
+      items={[
+        {
+          title: 'Data',
+          url: dataRoutes.manageDatabase,
+        },
+        {
+          title: dataSourceName,
+          icon: <FaDatabase />,
+          url: dataRoutes.manageDatabaseSource(dataSourceName),
+        },
+        ...(table
+          ? [
+              {
+                title: getTableDisplayName(table, '', ' / '),
+                icon: <FaTable />,
+              },
+            ]
+          : []),
+      ]}
+    />
+  </Flex>
 );

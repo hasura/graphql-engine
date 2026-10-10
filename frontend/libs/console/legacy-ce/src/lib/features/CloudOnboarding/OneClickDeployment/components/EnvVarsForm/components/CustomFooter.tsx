@@ -1,6 +1,5 @@
-import React from 'react';
-import { Dialog } from '../../../../../../new-components/Dialog';
-import { Analytics } from '../../../../../Analytics';
+import { DialogFooter } from '@hasura/shared/ui';
+import { Analytics } from '@hasura/shared/analytics';
 import { MdRefresh } from 'react-icons/md';
 import { EnvVarsFormState } from '../../../types';
 
@@ -21,15 +20,14 @@ export function CustomFooter(props: Props) {
       name="one-click-deployment-env-var-form-submit"
       passHtmlAttributesToChildren
     >
-      <Dialog.Footer
-        id="one-click-deployment-env-var-form-submit"
+      <DialogFooter
         callToAction={buttonText[state]}
-        callToActionIcon={
-          state === 'error' ? <MdRefresh className="text-black" /> : undefined
-        }
+        callToActionProps={{
+          leftIcon: state === 'error' ? MdRefresh : undefined,
+          loadingText: buttonText.loading,
+        }}
         disabled={state === 'loading'}
         isLoading={state === 'loading'}
-        callToActionLoadingText={buttonText.loading}
         onClose={() => {}}
       />
     </Analytics>

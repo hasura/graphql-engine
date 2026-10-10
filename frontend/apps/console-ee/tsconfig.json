@@ -3,13 +3,15 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "allowJs": true,
+    "checkJs": false,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
+    "noImplicitAny": false,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": false,
-    "noImplicitReturns": true,
+    "noImplicitReturns": false,
     "noFallthroughCasesInSwitch": true
   },
   "files": [],

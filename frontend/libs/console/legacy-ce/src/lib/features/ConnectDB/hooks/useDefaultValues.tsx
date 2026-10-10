@@ -1,4 +1,5 @@
-import { useMetadataSource } from '../../MetadataAPI';
+import { useMetadata } from '@hasura/metadata/api';
+import { MetadataSelectors } from '@hasura/metadata/helpers';
 
 interface Args {
   name: string;
@@ -6,7 +7,7 @@ interface Args {
 }
 
 export const useExistingConfig = (name: string) => {
-  const { data, ...rest } = useMetadataSource(name);
+  const { data, ...rest } = useMetadata(MetadataSelectors.findSource(name));
   return { data: data?.configuration, ...rest };
 };
 

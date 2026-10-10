@@ -1,10 +1,10 @@
 import React from 'react';
 import * as z from 'zod';
-import { StoryObj, Meta } from '@storybook/react';
-import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
-import { action } from '@storybook/addon-actions';
-import { SimpleForm } from '../../../../../new-components/Form';
-import { Button } from '../../../../../new-components/Button';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
+import { action } from 'storybook/actions';
+import { SimpleForm, Button } from '@hasura/shared/ui';
+
 import { handlers } from '../../__mocks__';
 import { RemoteDatabaseWidget } from './RemoteDatabaseWidget';
 
@@ -20,7 +20,7 @@ export default {
   component: RemoteDatabaseWidget,
   decorators: [
     ReactQueryDecorator(),
-    StoryComponent => (
+    (StoryComponent) => (
       <SimpleForm
         schema={z.any()}
         onSubmit={action('onSubmit')}

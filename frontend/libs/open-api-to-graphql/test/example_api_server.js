@@ -15,6 +15,9 @@ let server; // holds server object for shutdown
 function startServer(PORT) {
   const express = require('express');
   const app = express();
+  // Express 5 defaults to the 'simple' parser, which doesn't expand nested
+  // query params like `a[b][c]=1` into objects (Express 4's default did)
+  app.set('query parser', 'extended');
 
   const bodyParser = require('body-parser');
   const cookieParser = require('cookie-parser');
@@ -400,7 +403,7 @@ function startServer(PORT) {
 
   app.get('/api/users/:username/friends', (req, res) => {
     if (req.params.username in Users) {
-      const friends = Users[req.params.username].friends.map(friendName => {
+      const friends = Users[req.params.username].friends.map((friendName) => {
         return Users[friendName];
       });
 
@@ -474,7 +477,7 @@ function startServer(PORT) {
         .set('Content-Type', 'text/plain')
         .status(200)
         .send(
-          `You ordered a ${req.cookies.cookie_size} ${req.cookies.cookie_type} cookie!`
+          `You ordered a ${req.cookies.cookie_size} ${req.cookies.cookie_type} cookie!`,
         );
     } else {
       res.status(400).send('Need cookie header parameter');
@@ -595,7 +598,7 @@ function startServer(PORT) {
 
   app.get('/api/patents/:id', authMiddleware, (req, res) => {
     // Find patent based off of patent ID
-    const patent = Object.values(Patents).find(currentPatent => {
+    const patent = Object.values(Patents).find((currentPatent) => {
       return currentPatent['patent-id'] === req.params.id;
     });
 
@@ -620,7 +623,7 @@ function startServer(PORT) {
 
   app.get('/api/projects/:id', authMiddleware, (req, res) => {
     // Find project based off of projectId
-    const project = Object.values(Projects).find(currentProject => {
+    const project = Object.values(Projects).find((currentProject) => {
       return currentProject.projectId === Number(req.params.id);
     });
 
@@ -720,7 +723,7 @@ function startServer(PORT) {
     res.status(200).send({ status: 'success' });
   });
 
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     server = app.listen(PORT, () => {
       console.log(`Example API accessible on port ${PORT}`);
       resolve();
@@ -732,7 +735,7 @@ function startServer(PORT) {
  * Stops server.
  */
 function stopServer() {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     server.close(() => {
       console.log(`Stopped API server`);
       resolve();

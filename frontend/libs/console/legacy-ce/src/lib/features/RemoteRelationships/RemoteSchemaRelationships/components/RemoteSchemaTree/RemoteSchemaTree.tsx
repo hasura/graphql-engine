@@ -1,11 +1,7 @@
 import React, { useMemo } from 'react';
-import { Tree as AntTree } from 'antd';
 import { GraphQLSchema } from 'graphql';
-import { EventDataNode } from 'antd/lib/tree';
-import './index.css';
 import {
   AllowedRootFields,
-  AntdTreeNode,
   HasuraRsFields,
   RelationshipFields,
   TreeNode,
@@ -17,9 +13,12 @@ import {
   getExpandedKeys,
   getCheckedKeys,
 } from './utils';
+import { Tree, TreeProps } from '@hasura/shared/ui';
 
-export interface RemoteSchemaTreeProps
-  extends React.ComponentProps<typeof AntTree> {
+export interface RemoteSchemaTreeProps extends Pick<
+  TreeProps<TreeNode>,
+  'checkable' | 'className'
+> {
   /**
    * Graphql schema for setting new permissions.
    */
@@ -42,7 +41,8 @@ export const RemoteSchemaTree = ({
   setRelationshipFields,
   fields,
   showOnlySelectable = false,
-  ...rest
+  checkable = true,
+  className,
 }: RemoteSchemaTreeProps) => {
   const tree: TreeNode[] = useMemo(() => {
     let tree = buildTree({
@@ -55,7 +55,7 @@ export const RemoteSchemaTree = ({
     });
     if (selectedOperation) {
       const selectedOperationSubTree = tree[0].children?.find(
-        child => child.key === `__query.field.${selectedOperation}`
+        (child) => child.key === `__query.field.${selectedOperation}`,
       );
       if (selectedOperationSubTree) {
         tree = [selectedOperationSubTree];
@@ -66,51 +66,31 @@ export const RemoteSchemaTree = ({
 
   const expandedKeys = useMemo(
     () => getExpandedKeys(relationshipFields),
-    [relationshipFields]
+    [relationshipFields],
   );
 
   const checkedKeys = useMemo(
     () => getCheckedKeys(relationshipFields),
-    [relationshipFields]
+    [relationshipFields],
   );
 
-  const onCheck = (
-    // onCheck props expects checked param
-    checked:
-      | React.Key[]
-      | {
-          checked: React.Key[];
-          halfChecked: React.Key[];
-        },
-    // CheckInfo is not exported by the library
-    // https://github.com/react-component/tree/issues/411
-    checkedNodeInfo: Record<string, any>
-  ) => {
-    const nodeInfo = checkedNodeInfo.node as AntdTreeNode;
+  const onCheck = (nodeInfo: TreeNode) => {
     const selectedField = findRemoteField(relationshipFields, nodeInfo);
     const fieldData = getFieldData(nodeInfo);
 
     if (selectedField) {
       setRelationshipFields(
-        relationshipFields.filter(field => !(field.key === nodeInfo.key))
+        relationshipFields.filter((field) => !(field.key === nodeInfo.key)),
       );
     } else {
       setRelationshipFields([
-        ...relationshipFields.filter(field => !(field.key === nodeInfo.key)),
+        ...relationshipFields.filter((field) => !(field.key === nodeInfo.key)),
         fieldData,
       ]);
     }
   };
 
-  const onExpand = (
-    expanded: React.Key[],
-    expandedNodeInfo: {
-      node: EventDataNode;
-      expanded: boolean;
-      nativeEvent: MouseEvent;
-    }
-  ) => {
-    const nodeInfo = expandedNodeInfo.node as AntdTreeNode;
+  const onExpand = (nodeInfo: TreeNode) => {
     const selectedField = findRemoteField(relationshipFields, nodeInfo);
     const fieldData = getFieldData(nodeInfo);
     if (selectedField) {
@@ -118,12 +98,12 @@ export const RemoteSchemaTree = ({
       // and remove all its children
       setRelationshipFields(
         relationshipFields.filter(
-          field =>
+          (field) =>
             !(
               field.key === nodeInfo.key ||
               field.key.includes(`${nodeInfo.key}.`)
-            )
-        )
+            ),
+        ),
       );
     } else {
       // `fields` at same or higher depth, if the current node is `argument` we skip this
@@ -131,9 +111,10 @@ export const RemoteSchemaTree = ({
         nodeInfo.type === 'field'
           ? relationshipFields
               .filter(
-                field => field.type === 'field' && field.depth >= nodeInfo.depth
+                (field) =>
+                  field.type === 'field' && field.depth >= nodeInfo.depth,
               )
-              .map(field => field.key)
+              .map((field) => field.key)
           : [];
 
       // remove all the fields and their children which are on same/higher depth, and add the current field
@@ -141,17 +122,17 @@ export const RemoteSchemaTree = ({
 
       setRelationshipFields([
         ...relationshipFields.filter(
-          field =>
+          (field) =>
             !(
               field.key === nodeInfo.key ||
               // remove all current or higher depth fields and their children
               (nodeInfo.type === 'field' &&
                 levelDepthFields.some(
-                  refFieldKey =>
+                  (refFieldKey) =>
                     field.key === refFieldKey ||
-                    field.key.includes(`${refFieldKey}.`)
+                    field.key.includes(`${refFieldKey}.`),
                 ))
-            )
+            ),
         ),
         fieldData,
       ]);
@@ -159,28 +140,19 @@ export const RemoteSchemaTree = ({
   };
 
   return (
-    <AntTree
-      checkable
-      checkStrictly
-      blockNode={false}
-      selectable={false}
+    <Tree
+      checkable={checkable}
       onCheck={onCheck}
       onExpand={onExpand}
-      onClick={(nativeEvent, node) => {
-        if ((node?.children?.length || 0) > 0) {
-          onExpand([node.key], {
-            node,
-            expanded: node.expanded,
-            nativeEvent: nativeEvent.nativeEvent,
-          });
+      onNodeClick={(node) => {
+        if ((node.children?.length || 0) > 0) {
+          onExpand(node);
         }
       }}
       treeData={tree}
       expandedKeys={expandedKeys}
       checkedKeys={checkedKeys}
-      // disable animation onExpand to improve performance
-      motion={null}
-      {...rest}
+      className={className}
     />
   );
 };

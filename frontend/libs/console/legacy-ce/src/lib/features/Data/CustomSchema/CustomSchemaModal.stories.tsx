@@ -1,4 +1,4 @@
-import { StoryObj, Meta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
 import { CustomSchemaModal, CustomSchemaModalProps } from './CustomSchemaModal';
 
 export default {
@@ -26,7 +26,7 @@ export const Primary: StoryObj<CustomSchemaModalProps> = {
         },
       },
       null,
-      2
+      2,
     ),
     graphqlSchema: `
       type Movie {

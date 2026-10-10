@@ -10,14 +10,21 @@ type Options = { name?: string };
 
 export function checkMetadataPayload(
   interception: Interception,
-  options: Options
+  options: Options,
 ) {
   let bodyToSnapshot: unknown;
 
   // console mode: server
   if (interception.request.url.includes('v1/metadata')) {
     const { resource_version, ...other } = interception.request.body;
-    expect(resource_version).to.be.a('number');
+    // `resource_version` is an OPTIONAL optimistic-concurrency token. The console
+    // only sends it for metadata writes that opt into concurrency checks; bulk
+    // action writes (set_custom_types + create_action) omit it. Assert its type
+    // only when it is actually present, so the check stays meaningful without
+    // failing on ops that legitimately don't send it.
+    if (resource_version !== undefined) {
+      expect(resource_version).to.be.a('number');
+    }
     bodyToSnapshot = other.type === 'bulk' ? other.args : other;
 
     // console mode: cli

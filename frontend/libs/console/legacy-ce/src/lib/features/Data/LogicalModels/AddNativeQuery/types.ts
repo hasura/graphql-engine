@@ -1,7 +1,7 @@
 import {
   NativeQuery as NativeQueryMetadataType,
   NativeQueryArgument,
-} from '../../../hasura-metadata-types';
+} from '@hasura/shared/types';
 
 // metadata has these as records, but it's easier to do an array shape for the form
 export type NativeQueryArgumentNormalized = {

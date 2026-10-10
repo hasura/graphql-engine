@@ -1,65 +1,83 @@
 import endpoints from '../../Endpoints';
-import globals from '../../Globals';
-import { isCloudConsole } from '../../utils/cloudConsole';
-import { Api } from '../../hooks/apiUtils';
-import { getGraphqlSubscriptionsClient } from '../../utils/graphqlSubscriptions';
+import { isCloudConsole, requestJson } from '@hasura/shared/utils';
 import { print, DocumentNode } from 'graphql/language';
 import { GraphQLError } from 'graphql/error';
+import { createClient } from 'graphql-ws';
+
+const getGraphqlSubscriptionsClient = (
+  url: string,
+  headers: Record<string, string>,
+) => {
+  return createClient({
+    url,
+    connectionParams: {
+      headers: {
+        ...headers,
+      },
+      lazy: true,
+      shouldRetry: () => true,
+    },
+  });
+};
 
 export const createControlPlaneClient = (
   endpoint: string = endpoints.luxDataGraphql,
   headers: Record<string, string> = {
     'content-type': 'application/json',
     'hasura-client-name': 'hasura-console',
-  }
+  },
 ) => {
-  const subscriptionsClient = isCloudConsole(globals)
+  const subscriptionsClient = isCloudConsole(window.__env)
     ? getGraphqlSubscriptionsClient(endpoints.luxDataGraphqlWs, headers)
     : null;
 
   const query = <
     ResponseType = Record<string, any>,
-    VariablesType = Record<string, any>
+    VariablesType = Record<string, any>,
   >(
     queryDoc: DocumentNode,
-    variables: VariablesType
+    variables: VariablesType,
   ): Promise<ResponseType> => {
-    return Api.post<ResponseType>({
-      url: endpoint,
+    return requestJson<ResponseType>(endpoint, {
+      method: 'POST',
       headers,
-      body: {
+      body: JSON.stringify({
         query: print(queryDoc),
         variables: variables || {},
-      },
+      }),
       credentials: 'include',
     });
   };
 
   const subscribe = <
     ResponseType = Record<string, any>,
-    VariablesType extends Object = Record<string, any>
+    VariablesType extends Record<string, any> = Record<string, any>,
   >(
     queryDoc: DocumentNode,
     variables: VariablesType,
     dataCallback: (data: ResponseType) => void,
-    errorCallback: (error: GraphQLError) => void
+    errorCallback: (error: GraphQLError) => void,
   ) => {
     if (!subscriptionsClient) {
       return { unsubscribe: () => null };
     }
 
-    const request = subscriptionsClient.request({
-      query: queryDoc,
-      variables,
-    });
-    const { unsubscribe } = request.subscribe({
-      next: (data: any) => {
-        dataCallback(data.data as ResponseType);
+    const unsubscribe = subscriptionsClient.subscribe(
+      {
+        query: print(queryDoc),
+        variables,
       },
-      error: (error: Error) => {
-        errorCallback(new GraphQLError(error.message));
+      {
+        next: (data: any) => {
+          dataCallback(data.data as ResponseType);
+        },
+        error: (error: Error) => {
+          errorCallback(new GraphQLError(error.message));
+        },
+        complete: () => {},
       },
-    });
+    );
+
     return { unsubscribe };
   };
 

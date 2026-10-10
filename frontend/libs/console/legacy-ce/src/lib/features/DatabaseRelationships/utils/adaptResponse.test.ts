@@ -2,7 +2,7 @@ import {
   LocalTableArrayRelationship,
   SameTableObjectRelationship,
   Table,
-} from '../../hasura-metadata-types';
+} from '@hasura/shared/types';
 import { LocalRelationship, SuggestedRelationship } from '../types';
 import {
   adaptLocalArrayRelationshipWithFkConstraint,
@@ -318,7 +318,7 @@ describe('adaptLocalObjectRelationshipWithFkConstraint', () => {
         dataSourceName,
         relationship,
         suggestedRelationships,
-      })
+      }),
     ).toEqual(expected);
   });
 });

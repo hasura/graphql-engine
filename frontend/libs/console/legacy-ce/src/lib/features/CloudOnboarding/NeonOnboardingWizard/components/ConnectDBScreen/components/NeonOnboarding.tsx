@@ -1,11 +1,7 @@
 import * as React from 'react';
-import { Dispatch } from '../../../../../../types';
-import { useNeonIntegration } from '../../../../../../components/Services/Data/DataSources/CreateDataSource/Neon/useNeonIntegration';
-import { transformNeonIntegrationStatusToNeonBannerProps } from '../../../../../../components/Services/Data/DataSources/CreateDataSource/Neon/utils';
-import { reactQueryClient } from '../../../../../../lib/reactQuery';
-import { Analytics } from '../../../../../Analytics';
-import { FETCH_NEON_PROJECTS_BY_PROJECTID_QUERYKEY } from '../../../../../../components/Services/Data/DataSources/CreateDataSource/Neon/components/NeonDashboardLink';
-import _push from '../../../../../../components/Services/Data/push';
+import { useNeonIntegration } from '../../../hooks/useNeonIntegration';
+import { transformNeonIntegrationStatusToNeonBannerProps } from '../../../hooks/utils';
+import { Analytics } from '@hasura/shared/analytics';
 import { NeonBanner } from '../../NeonConnectBanner/NeonBanner';
 import {
   useInstallTemplate,
@@ -17,16 +13,21 @@ import {
   skippedNeonOnboardingVariables,
 } from '../../../../constants';
 import { emitOnboardingEvent } from '../../../../utils';
+import { useNavigate } from 'react-router';
+import { FETCH_NEON_PROJECTS_BY_PROJECTID_QUERYKEY } from '../../NeonDashboardLink';
+import { Flex } from '@radix-ui/themes';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function NeonOnboarding(props: {
-  dispatch: Dispatch;
   dismiss: VoidFunction;
   proceed: VoidFunction;
   setStepperIndex: (index: number) => void;
 }) {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [installingTemplate, setInstallingTemplate] = React.useState(false);
 
-  const { dispatch, dismiss, proceed, setStepperIndex } = props;
+  const { dismiss, proceed, setStepperIndex } = props;
 
   const onSkipHandler = () => {
     emitOnboardingEvent(skippedNeonOnboardingVariables);
@@ -38,12 +39,12 @@ export function NeonOnboarding(props: {
   };
 
   const onErrorHandler = () => {
-    dispatch(_push('/data/manage/connect'));
+    navigate('/data/manage/connect');
     dismiss();
   };
 
   const onInstallTemplateErrorHandler = () => {
-    dispatch(_push('/data/default/schema/public'));
+    navigate('/data/default/schema/public');
     dismiss();
   };
 
@@ -55,7 +56,7 @@ export function NeonOnboarding(props: {
     'default',
     NEON_TEMPLATE_BASE_PATH,
     onSuccessHandler,
-    onInstallTemplateErrorHandler
+    onInstallTemplateErrorHandler,
   );
 
   const neonIntegrationStatus = useNeonIntegration(
@@ -63,9 +64,9 @@ export function NeonOnboarding(props: {
     () => {
       // on success, refetch queries to show neon dashboard link in connect database page,
       // overriding the stale time
-      reactQueryClient.refetchQueries(
-        FETCH_NEON_PROJECTS_BY_PROJECTID_QUERYKEY
-      );
+      queryClient.refetchQueries({
+        queryKey: FETCH_NEON_PROJECTS_BY_PROJECTID_QUERYKEY,
+      });
 
       setInstallingTemplate(true);
       install();
@@ -73,8 +74,7 @@ export function NeonOnboarding(props: {
     () => {
       onErrorHandler();
     },
-    dispatch,
-    'onboarding'
+    'onboarding',
   );
 
   // emit onboarding events to the database
@@ -87,7 +87,7 @@ export function NeonOnboarding(props: {
     neonIntegrationStatus.status !== 'neon-database-creation-error';
 
   const neonBannerProps = transformNeonIntegrationStatusToNeonBannerProps(
-    neonIntegrationStatus
+    neonIntegrationStatus,
   );
 
   // show template install status when template is installing
@@ -97,15 +97,14 @@ export function NeonOnboarding(props: {
 
   return (
     <div className="w-full">
-      <div className="w-full mb-sm">
+      <div className="w-full mb-2">
         <NeonBanner
           {...neonBannerProps}
           setStepperIndex={setStepperIndex}
-          dispatch={dispatch}
           dismiss={dismiss}
         />
       </div>
-      <div className="flex justify-start items-center w-full">
+      <Flex justify="start" align="center" className="w-full">
         <Analytics name="onboarding-skip-button">
           <a
             id="onboarding-skip-button"
@@ -122,7 +121,7 @@ export function NeonOnboarding(props: {
             Skip getting started tutorial
           </a>
         </Analytics>
-      </div>
+      </Flex>
     </div>
   );
 }

@@ -27,7 +27,7 @@ describe.skip('OpenTelemetry', () => {
 
     cy.log('**--- STEP: Type the Endpoint**');
     cy.findByLabelText('Endpoint', { selector: 'input' }).type(
-      'http://example.io'
+      'http://example.io',
     );
 
     cy.log('**--- STEP: Click the Submit button**');
@@ -35,7 +35,7 @@ describe.skip('OpenTelemetry', () => {
 
     cy.log('**--- STEP: Check the success notification**');
     cy.expectSuccessNotificationWithMessage(
-      'Successfully updated the OpenTelemetry Configuration'
+      'Successfully updated the OpenTelemetry Configuration',
     );
   });
 });

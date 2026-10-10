@@ -1,4 +1,4 @@
-import { InputField, Radio } from '../../../../../new-components/Form';
+import { Card, InputField, RadioGroupField } from '@hasura/shared/ui';
 import { useFormContext } from 'react-hook-form';
 import { BigQueryConnectionSchema } from '../schema';
 import { WarningCard } from '../../Common/WarningCard';
@@ -17,9 +17,9 @@ export const Datasets = ({ name }: { name: string }) => {
   const connectionType = watch(`${name}.type`);
 
   return (
-    <div className="bg-white border border-hasGray-300 rounded-md shadow-sm overflow-hidden p-4">
-      <div className="bg-white py-1.5 font-semibold">
-        <Radio
+    <Card size="2">
+      <div>
+        <RadioGroupField
           name={`${name}.type`}
           label="Datasets"
           options={options}
@@ -34,16 +34,20 @@ export const Datasets = ({ name }: { name: string }) => {
           <InputField
             name={`${name}.value`}
             label="Datasets"
-            placeholder="dataset_1,dataset_2"
+            fieldProps={{
+              placeholder: 'dataset_1,dataset_2',
+            }}
           />
         </>
       ) : (
         <InputField
           name={`${name}.envVar`}
           label="Environment variable"
-          placeholder="HASURA_GRAPHQL_DB_URL_FROM_ENV"
+          fieldProps={{
+            placeholder: 'HASURA_GRAPHQL_DB_URL_FROM_ENV',
+          }}
         />
       )}
-    </div>
+    </Card>
   );
 };

@@ -21,7 +21,9 @@ export function useResetDefaultFormValues(params: Params) {
   const { reset, defaultValues, skeletonMode } = params;
 
   const latestParams = useRef({ defaultValues, reset });
-  latestParams.current = { defaultValues, reset };
+  useEffect(() => {
+    latestParams.current = { defaultValues, reset };
+  }, [defaultValues, reset]);
 
   const prevSkeletonMode = useRef(skeletonMode);
 

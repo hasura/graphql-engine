@@ -1,6 +1,6 @@
-import { StoryFn, Meta } from '@storybook/react';
+import { StoryFn, Meta } from '@storybook/react-webpack5';
 import { ConnectGDCSourceWidget } from './ConnectGDCSourceWidget';
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
 import { handlers } from '../../mocks/handlers.mock';
 
 export default {

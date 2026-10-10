@@ -1,10 +1,13 @@
 import clsx from 'clsx';
 import React from 'react';
-import Skeleton from 'react-loading-skeleton';
-import { Badge } from '../../../../new-components/Badge';
-import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
-import { Tabs } from '../../../../new-components/Tabs';
-import { TAB_COLORS } from '../constants';
+import {
+  Badge,
+  LearnMoreLink,
+  SkeletonList,
+  Tabs,
+  Text,
+} from '@hasura/shared/ui';
+import { Flex } from '@radix-ui/themes';
 
 export type TabState = 'tracked' | 'untracked';
 
@@ -39,53 +42,46 @@ export const TrackableResourceTabs = ({
   const { untracked, tracked } = items;
 
   return isLoading ? (
-    <div className="mx-sm">
-      <Skeleton count={8} height={25} className="mb-2" />
+    <div>
+      <SkeletonList count={8} containerClassName="mb-2" />
     </div>
   ) : (
     <div data-testid="trackable-resource-tabs" className="mx-sm">
       {introText ? (
-        <div className="my-4 text-muted">
-          {introText}
+        <Flex className="my-4" align="center" gap="2">
+          <Text>{introText}</Text>
           {!!learnMoreLink && <LearnMoreLink href={learnMoreLink} />}
-        </div>
+        </Flex>
       ) : (
         // spacer:
         <div className="my-4" />
       )}
       <Tabs
-        color={TAB_COLORS.secondary}
-        accentStyle={'background'}
+        color="gray"
         className={clsx('space-y-4', className)}
-        onValueChange={value => onValueChange(value as TabState)}
+        onValueChange={(value) => onValueChange(value as TabState)}
         items={[
           {
             value: 'untracked',
             label: (
-              <div
-                className="flex items-center gap-2"
-                data-testid="untracked-tab"
-              >
+              <Flex align="center" gap="2" data-testid="untracked-tab">
                 Untracked
-                <Badge className={clsx(`px-xs`)} color="dark-gray">
+                <Badge className={clsx(`px-xs`)} color="gray">
                   {untracked.amount}
                 </Badge>
-              </div>
+              </Flex>
             ),
             content: untracked.content,
           },
           {
             value: 'tracked',
             label: (
-              <div
-                className="flex items-center gap-2"
-                data-testid="tracked-tab"
-              >
+              <Flex align="center" gap="2" data-testid="tracked-tab">
                 Tracked
-                <Badge className={clsx(`px-xs`)} color="dark-gray">
+                <Badge className={clsx(`px-xs`)} color="gray">
                   {tracked.amount}
                 </Badge>
-              </div>
+              </Flex>
             ),
             content: tracked.content,
           },

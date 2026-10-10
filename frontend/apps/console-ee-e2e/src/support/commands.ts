@@ -9,7 +9,7 @@
 // ***********************************************
 
 import '@testing-library/cypress/add-commands';
-import 'cypress-plugin-snapshots/commands';
+import './snapshots';
 // eslint-disable-next-line @typescript-eslint/no-namespace,@typescript-eslint/no-unused-vars
 declare namespace Cypress {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

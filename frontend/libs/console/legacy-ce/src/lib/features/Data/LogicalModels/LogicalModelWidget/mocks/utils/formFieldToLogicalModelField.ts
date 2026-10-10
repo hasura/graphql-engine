@@ -1,8 +1,8 @@
-import { LogicalModel } from '../../../../../hasura-metadata-types';
+import { LogicalModel } from '@hasura/shared/types';
 import { AddLogicalModelFormData } from '../../validationSchema';
 
 export function formFieldToLogicalModelField(
-  field: AddLogicalModelFormData['fields'][number]
+  field: AddLogicalModelFormData['fields'][number],
 ): LogicalModel['fields'][number] {
   let type: LogicalModel['fields'][number]['type'];
   if (field.array) {

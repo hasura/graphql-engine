@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { graphQLCustomizationSchema } from '../GraphQLCustomization/schema';
-import { Source } from '../../../hasura-metadata-types';
+import { Source } from '@hasura/shared/types';
 import { adaptPostgresConnection } from './utils/adaptResponse';
 
 export const schema = z.object({
@@ -41,7 +41,7 @@ export const schema = z.object({
 });
 
 export const getDefaultValues = (
-  metadataSource?: Source
+  metadataSource?: Source,
 ): BigQueryConnectionSchema => {
   // if there is no exisiting connection, then return this template as default
   if (!metadataSource)

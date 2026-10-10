@@ -21,7 +21,7 @@
   },
   "sourceMaps": true,
   "exclude": [
-    "jest.config.ts",
+    "vitest.config.mts",
     ".*.spec.tsx?$",
     ".*.test.tsx?$",
     "./src/jest-setup.ts$",

@@ -1,11 +1,12 @@
-import { IndicatorCard } from '../../../../new-components/IndicatorCard';
-import { DriverInfo } from '../../../DataSource';
+import { IndicatorCard } from '@hasura/shared/ui';
+import { DriverInfo } from '@hasura/metadata/data-source';
 import { EELiteAccess, EETrialCard } from '../../../EETrial';
 import { SetupConnector } from '../../components';
 import { ConnectButton } from '../../components/ConnectButton';
 import { eeCardContentMap } from '../../constants';
-import { usePushRoute } from '../../hooks';
 import { indefiniteArticle } from '../../utils';
+import { dataRoutes } from '@hasura/shared/utils';
+import { useNavigate } from 'react-router';
 
 export const ProLite = ({
   selectedDriver,
@@ -16,7 +17,7 @@ export const ProLite = ({
   isDriverAvailable: boolean;
   eeLicenseInfo: EELiteAccess['access'];
 }) => {
-  const pushRoute = usePushRoute();
+  const navigate = useNavigate();
   const dbWithArticle = `${indefiniteArticle(selectedDriver.displayName)} ${
     selectedDriver.displayName
   }`;
@@ -32,8 +33,8 @@ export const ProLite = ({
                   <SetupConnector
                     selectedDriver={selectedDriver}
                     onSetupSuccess={() => {
-                      pushRoute(
-                        `/data/v2/manage/database/add?driver=${selectedDriver?.name}`
+                      navigate(
+                        dataRoutes.connectDatabase(selectedDriver?.name),
                       );
                     }}
                   />

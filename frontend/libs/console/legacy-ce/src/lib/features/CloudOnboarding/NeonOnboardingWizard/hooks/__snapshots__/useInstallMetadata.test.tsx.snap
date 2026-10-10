@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Check useInstallMetadata installs the correct metadata should install the correct metadata and call success callback 1`] = `
+exports[`Check useInstallMetadata installs the correct metadata > should install the correct metadata and call success callback 1`] = `
 {
   "args": {
     "sources": [

@@ -1,4 +1,4 @@
-import { Table } from '../../../../hasura-metadata-types';
+import { Table } from '@hasura/shared/types';
 
 export type SourceSelectorItem =
   | {

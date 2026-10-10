@@ -1,0 +1,16 @@
+{
+  "name": "analytics",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "shared/libs/analytics/src",
+  "projectType": "library",
+  "tags": ["scope:shared"],
+  "targets": {
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "coverage/libs/shared/analytics"
+      }
+    }
+  }
+}

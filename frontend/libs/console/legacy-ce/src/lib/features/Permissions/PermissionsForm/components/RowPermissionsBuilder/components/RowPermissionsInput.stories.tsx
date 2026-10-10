@@ -1,14 +1,15 @@
-import { StoryObj, Meta } from '@storybook/react';
-import { action } from '@storybook/addon-actions';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
+import { action } from 'storybook/actions';
 
 import { RowPermissionsInput } from './RowPermissionsInput';
-import { waitFor, within } from '@storybook/testing-library';
 import {
-  fireEvent,
+  expect,
   userEvent,
+  waitFor,
+  within,
+  fireEvent,
   waitForElementToBeRemoved,
-} from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
+} from 'storybook/test';
 import {
   tables,
   tableWithGeolocationSupport,
@@ -19,7 +20,7 @@ import { usePermissionComparators } from '../hooks/usePermissionComparators';
 import { handlers as jsonbHandlers } from './__tests__/fixtures/jsonb/handlers';
 import { handlers as manyDbsHandlers } from './__tests__/fixtures/many-dbs/handlers';
 import { handlers as mongoHandlers } from './__tests__/fixtures/mongo/handlers';
-import { ReactQueryDecorator } from '../../../../../../storybook/decorators/react-query';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
 import isEmpty from 'lodash/isEmpty';
 import { useState } from 'react';
 import { Permissions } from './types';
@@ -30,7 +31,7 @@ export default {
 } as Meta;
 
 export const SetRootLevelPermission: StoryObj<typeof RowPermissionsInput> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsInput
       onPermissionsChange={action('onPermissionsChange')}
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
@@ -47,13 +48,13 @@ export const SetRootLevelPermission: StoryObj<typeof RowPermissionsInput> = {
     await userEvent.click(canvas.getByTestId('root-operator'));
     await userEvent.selectOptions(
       canvas.getByTestId('root-operator'),
-      'Subject'
+      'Subject',
     );
   },
 };
 
 export const SetExistsPermission: StoryObj<typeof RowPermissionsInput> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsInput
       onPermissionsChange={action('onPermissionsChange')}
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
@@ -70,34 +71,34 @@ export const SetExistsPermission: StoryObj<typeof RowPermissionsInput> = {
 
     await userEvent.selectOptions(
       canvas.getByTestId('root-operator'),
-      '_exists'
+      '_exists',
     );
 
     await userEvent.selectOptions(
       canvas.getByTestId('_exists._table-value-input'),
-      'public.Label'
+      'public.Label',
     );
 
     await userEvent.selectOptions(
       canvas.getByTestId('_exists._where-operator'),
-      'id'
+      'id',
     );
 
     await userEvent.type(
       canvas.getByTestId('_exists._where.id._eq-value-input'),
-      '1337'
+      '1337',
     );
 
-    expect(canvas.getByTestId('_exists._where.id._eq-value-input')).toHaveValue(
-      '1337'
-    );
+    await expect(
+      canvas.getByTestId('_exists._where.id._eq-value-input'),
+    ).toHaveValue('1337');
   },
 };
 
 export const SetMultilevelExistsPermission: StoryObj<
   typeof RowPermissionsInput
 > = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsInput
       onPermissionsChange={action('onPermissionsChange')}
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
@@ -114,42 +115,42 @@ export const SetMultilevelExistsPermission: StoryObj<
 
     await userEvent.selectOptions(
       canvas.getByTestId('root-operator'),
-      '_exists'
+      '_exists',
     );
 
     await userEvent.selectOptions(
       canvas.getByTestId('_exists._table-value-input'),
-      'public.Label'
+      'public.Label',
     );
 
     await userEvent.selectOptions(
       canvas.getByTestId('_exists._where-operator'),
-      '_exists'
+      '_exists',
     );
 
     await userEvent.selectOptions(
       canvas.getByTestId('_exists._where._exists._table-value-input'),
-      'public.Label'
+      'public.Label',
     );
 
     await userEvent.selectOptions(
       canvas.getByTestId('_exists._where._exists._where-operator'),
-      'id'
+      'id',
     );
 
     await userEvent.type(
       canvas.getByTestId('_exists._where._exists._where.id._eq-value-input'),
-      '1337'
+      '1337',
     );
 
-    expect(
-      canvas.getByTestId('_exists._where._exists._where.id._eq-value-input')
+    await expect(
+      canvas.getByTestId('_exists._where._exists._where.id._eq-value-input'),
     ).toHaveValue('1337');
   },
 };
 
 export const SetAndPermission: StoryObj<typeof RowPermissionsInput> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsInput
       onPermissionsChange={action('onPermissionsChange')}
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
@@ -168,24 +169,24 @@ export const SetAndPermission: StoryObj<typeof RowPermissionsInput> = {
 
     await userEvent.selectOptions(
       canvas.getByTestId('_and.1-operator'),
-      'Series_reference'
+      'Series_reference',
     );
 
     await userEvent.type(
       canvas.getByTestId('_and.1.Series_reference._eq-value-input'),
       '1337',
-      { delay: 300 }
+      { delay: 300 },
     );
 
-    expect(
-      canvas.getByTestId('_and.1.Series_reference._eq-value-input')
+    await expect(
+      canvas.getByTestId('_and.1.Series_reference._eq-value-input'),
     ).toHaveValue('1337');
   },
 };
 
 export const SetMultilevelAndPermission: StoryObj<typeof RowPermissionsInput> =
   {
-    render: args => (
+    render: (args) => (
       <RowPermissionsInput
         onPermissionsChange={action('onPermissionsChange')}
         table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
@@ -202,37 +203,37 @@ export const SetMultilevelAndPermission: StoryObj<typeof RowPermissionsInput> =
 
       await userEvent.selectOptions(
         canvas.getByTestId('root-operator'),
-        '_and'
+        '_and',
       );
 
       await userEvent.selectOptions(
         canvas.getByTestId('_and.1-operator'),
-        'Series_reference'
+        'Series_reference',
       );
 
       await userEvent.type(
         canvas.getByTestId('_and.1.Series_reference._eq-value-input'),
         '1337',
-        { delay: 300 }
+        { delay: 300 },
       );
 
       await userEvent.selectOptions(
         canvas.getByTestId('_and.2-operator'),
-        'STATUS'
+        'STATUS',
       );
       await userEvent.type(
         canvas.getByTestId('_and.2.STATUS._eq-value-input'),
-        '1338'
+        '1338',
       );
 
-      expect(canvas.getByTestId('_and.2.STATUS._eq-value-input')).toHaveValue(
-        '1338'
-      );
+      await expect(
+        canvas.getByTestId('_and.2.STATUS._eq-value-input'),
+      ).toHaveValue('1338');
     },
   };
 
 export const SetNotPermission: StoryObj<typeof RowPermissionsInput> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsInput
       onPermissionsChange={action('onPermissionsChange')}
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
@@ -254,13 +255,13 @@ export const SetNotPermission: StoryObj<typeof RowPermissionsInput> = {
 
     const element = await canvas.getByLabelText('_not.Period._eq-comparator');
     await expect(element.getAttribute('id')).toEqual(
-      '_not.Period._eq-comparator-select-value'
+      '_not.Period._eq-comparator-select-value',
     );
   },
 };
 
 export const SetOrPermission: StoryObj<typeof RowPermissionsInput> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsInput
       onPermissionsChange={action('onPermissionsChange')}
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
@@ -279,22 +280,22 @@ export const SetOrPermission: StoryObj<typeof RowPermissionsInput> = {
 
     await userEvent.selectOptions(
       canvas.getByTestId('_or.1-operator'),
-      'Period'
+      'Period',
     );
 
     await userEvent.type(
       canvas.getByTestId('_or.1.Period._eq-value-input'),
-      '1337'
+      '1337',
     );
 
-    expect(canvas.getByTestId('_or.1.Period._eq-value-input')).toHaveValue(
-      '1337'
-    );
+    await expect(
+      canvas.getByTestId('_or.1.Period._eq-value-input'),
+    ).toHaveValue('1337');
   },
 };
 
 export const SetMultilevelOrPermission: StoryObj<typeof RowPermissionsInput> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsInput
       onPermissionsChange={action('onPermissionsChange')}
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
@@ -313,31 +314,31 @@ export const SetMultilevelOrPermission: StoryObj<typeof RowPermissionsInput> = {
 
     await userEvent.selectOptions(
       canvas.getByTestId('_or.1-operator'),
-      'Series_reference'
+      'Series_reference',
     );
 
     await userEvent.type(
       canvas.getByTestId('_or.1.Series_reference._eq-value-input'),
       '1337',
-      { delay: 300 }
+      { delay: 300 },
     );
 
     await userEvent.selectOptions(
       canvas.getByTestId('_or.2-operator'),
-      'STATUS'
+      'STATUS',
     );
     await userEvent.type(
       canvas.getByTestId('_or.2.STATUS._eq-value-input'),
       '1338',
       {
         delay: 300,
-      }
+      },
     );
   },
 };
 
 export const Empty: StoryObj<typeof RowPermissionsInput> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsInput
       onPermissionsChange={action('onPermissionsChange')}
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
@@ -351,7 +352,7 @@ export const Empty: StoryObj<typeof RowPermissionsInput> = {
 };
 
 export const Exists: StoryObj<typeof RowPermissionsInput> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsInput
       onPermissionsChange={action('onPermissionsChange')}
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
@@ -371,7 +372,7 @@ export const Exists: StoryObj<typeof RowPermissionsInput> = {
 
 export const SetDisabledExistsPermission: StoryObj<typeof RowPermissionsInput> =
   {
-    render: args => (
+    render: (args) => (
       <RowPermissionsInput
         onPermissionsChange={action('onPermissionsChange')}
         table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
@@ -392,19 +393,19 @@ export const SetDisabledExistsPermission: StoryObj<typeof RowPermissionsInput> =
       const canvas = within(canvasElement);
 
       const existElement = canvas.getByTestId('_exists._where-value-input');
-      expect(existElement).toHaveAttribute('disabled');
+      await expect(existElement).toHaveAttribute('disabled');
 
       await userEvent.selectOptions(
         canvas.getByTestId('_exists._table-value-input'),
-        'public.Label'
+        'public.Label',
       );
 
-      expect(existElement).not.toHaveAttribute('disabled');
+      await expect(existElement).not.toHaveAttribute('disabled');
     },
   };
 
 export const ExistsWhere: StoryObj<typeof RowPermissionsInput> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsInput
       onPermissionsChange={action('onPermissionsChange')}
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
@@ -428,7 +429,7 @@ export const ExistsWhere: StoryObj<typeof RowPermissionsInput> = {
 };
 
 export const EmptyExists: StoryObj<typeof RowPermissionsInput> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsInput
       onPermissionsChange={action('onPermissionsChange')}
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
@@ -447,7 +448,7 @@ export const EmptyExists: StoryObj<typeof RowPermissionsInput> = {
 };
 
 export const And: StoryObj<typeof RowPermissionsInput> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsInput
       onPermissionsChange={action('onPermissionsChange')}
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
@@ -466,7 +467,7 @@ export const And: StoryObj<typeof RowPermissionsInput> = {
 };
 
 export const EmptyAnd: StoryObj<typeof RowPermissionsInput> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsInput
       onPermissionsChange={action('onPermissionsChange')}
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
@@ -482,7 +483,7 @@ export const EmptyAnd: StoryObj<typeof RowPermissionsInput> = {
 };
 
 export const Not: StoryObj<typeof RowPermissionsInput> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsInput
       onPermissionsChange={action('onPermissionsChange')}
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
@@ -498,7 +499,7 @@ export const Not: StoryObj<typeof RowPermissionsInput> = {
 };
 
 export const EmptyNot: StoryObj<typeof RowPermissionsInput> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsInput
       onPermissionsChange={action('onPermissionsChange')}
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
@@ -514,7 +515,7 @@ export const EmptyNot: StoryObj<typeof RowPermissionsInput> = {
 };
 
 export const Relationships: StoryObj<typeof RowPermissionsInput> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsInput
       onPermissionsChange={action('onPermissionsChange')}
       table={['Album']}
@@ -528,7 +529,7 @@ export const Relationships: StoryObj<typeof RowPermissionsInput> = {
 };
 
 export const RelationshipsColumns: StoryObj<typeof RowPermissionsInput> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsInput
       onPermissionsChange={action('onPermissionsChange')}
       table={['Album']}
@@ -542,7 +543,7 @@ export const RelationshipsColumns: StoryObj<typeof RowPermissionsInput> = {
 };
 
 export const ColumnTypes: StoryObj<typeof RowPermissionsInput> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsInput
       onPermissionsChange={action('onPermissionsChange')}
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
@@ -556,7 +557,7 @@ export const ColumnTypes: StoryObj<typeof RowPermissionsInput> = {
 };
 
 export const BooleanArrayType: StoryObj<typeof RowPermissionsInput> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsInput
       onPermissionsChange={action('onPermissionsChange')}
       table={['Album']}
@@ -570,19 +571,21 @@ export const BooleanArrayType: StoryObj<typeof RowPermissionsInput> = {
 
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    expect(canvas.getByTestId('Author-operator-root')).toBeInTheDocument();
+    await expect(
+      canvas.getByTestId('Author-operator-root'),
+    ).toBeInTheDocument();
     const element = await canvas.getByLabelText('Author._ceq-comparator');
     await expect(element.getAttribute('id')).toEqual(
-      'Author._ceq-comparator-select-value'
+      'Author._ceq-comparator-select-value',
     );
-    expect(
-      canvas.getByTestId('Author._ceq-column-comparator-entry')
+    await expect(
+      canvas.getByTestId('Author._ceq-column-comparator-entry'),
     ).toBeInTheDocument();
   },
 };
 
 export const BooleanArrayTypeRoot: StoryObj<typeof RowPermissionsInput> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsInput
       onPermissionsChange={action('onPermissionsChange')}
       table={['Album']}
@@ -605,39 +608,41 @@ export const BooleanArrayTypeRoot: StoryObj<typeof RowPermissionsInput> = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    expect(
-      canvas.getByTestId('Author._ceq-column-comparator-entry')
+    await expect(
+      canvas.getByTestId('Author._ceq-column-comparator-entry'),
     ).toHaveValue('$');
 
-    fireEvent.click(canvas.getByTestId('Author._ceq-column-comparator-entry'));
+    await fireEvent.click(
+      canvas.getByTestId('Author._ceq-column-comparator-entry'),
+    );
 
     // Author._ceq-column-comparator-entry shows currently selected table columns (id, name, and surname)
-    expect(
-      canvas.getByTestId('Author._ceq-column-comparator-entry-id')
+    await expect(
+      canvas.getByTestId('Author._ceq-column-comparator-entry-id'),
     ).toBeInTheDocument();
-    expect(
-      canvas.getByTestId('Author._ceq-column-comparator-entry-name')
+    await expect(
+      canvas.getByTestId('Author._ceq-column-comparator-entry-name'),
     ).toBeInTheDocument();
-    expect(
-      canvas.getByTestId('Author._ceq-column-comparator-entry-surname')
+    await expect(
+      canvas.getByTestId('Author._ceq-column-comparator-entry-surname'),
     ).toBeInTheDocument();
 
-    fireEvent.click(
-      canvas.getByTestId('Author._ceq-root-column-comparator-entry')
+    await fireEvent.click(
+      canvas.getByTestId('Author._ceq-root-column-comparator-entry'),
     );
 
     // Author._ceq-root-column-comparator-entry shows root columns (id and title)
-    expect(
-      canvas.getByTestId('Author._ceq-root-column-comparator-entry-id')
+    await expect(
+      canvas.getByTestId('Author._ceq-root-column-comparator-entry-id'),
     ).toBeInTheDocument();
-    expect(
-      canvas.getByTestId('Author._ceq-root-column-comparator-entry-title')
+    await expect(
+      canvas.getByTestId('Author._ceq-root-column-comparator-entry-title'),
     ).toBeInTheDocument();
   },
 };
 
 export const StringObjectType: StoryObj<typeof RowPermissionsInput> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsInput
       onPermissionsChange={action('onPermissionsChange')}
       table={{ name: 'user_location', schema: 'public' }}
@@ -662,14 +667,14 @@ export const StringObjectType: StoryObj<typeof RowPermissionsInput> = {
 
     // Test that it is handled like a string input field i.e. not creating input fields recursively
     const input = await canvas.getByTestId('location._st_d_within-value-input');
-    expect(input).toHaveValue(
-      '{"distance":100000,"from":{"coordinates":[1.4,2.5],"type":"Point"},"use_spheroid":false}'
+    await expect(input).toHaveValue(
+      '{"distance":100000,"from":{"coordinates":[1.4,2.5],"type":"Point"},"use_spheroid":false}',
     );
   },
 };
 
 export const NumericValue: StoryObj<typeof RowPermissionsInput> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsInput
       onPermissionsChange={action('onPermissionsChange')}
       table={['Album']}
@@ -683,14 +688,14 @@ export const NumericValue: StoryObj<typeof RowPermissionsInput> = {
 
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    expect(
-      canvas.getByTestId('id._eq-value-input-x-hasura-user-id')
+    await expect(
+      canvas.getByTestId('id._eq-value-input-x-hasura-user-id'),
     ).toBeInTheDocument();
   },
 };
 
 export const NumericIntValue: StoryObj<typeof RowPermissionsInput> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsInput
       onPermissionsChange={action('onPermissionsChange')}
       table={['Album']}
@@ -704,7 +709,7 @@ export const NumericIntValue: StoryObj<typeof RowPermissionsInput> = {
 };
 
 export const ArrayValueWithInput: StoryObj<typeof RowPermissionsInput> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsInput
       onPermissionsChange={action('onPermissionsChange')}
       table={['Album']}
@@ -720,7 +725,7 @@ export const ArrayValueWithInput: StoryObj<typeof RowPermissionsInput> = {
 export const ArrayValueWithSessionVariable: StoryObj<
   typeof RowPermissionsInput
 > = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsInput
       onPermissionsChange={action('onPermissionsChange')}
       table={['Album']}
@@ -734,7 +739,7 @@ export const ArrayValueWithSessionVariable: StoryObj<
 };
 
 export const NumericFloatValue: StoryObj<typeof RowPermissionsInput> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsInput
       onPermissionsChange={action('onPermissionsChange')}
       table={['Album']}
@@ -748,7 +753,7 @@ export const NumericFloatValue: StoryObj<typeof RowPermissionsInput> = {
 };
 
 export const JsonbColumns: StoryObj<typeof RowPermissionsInput> = {
-  render: args => {
+  render: (args) => {
     const { tables } = usePermissionTables({
       dataSourceName: 'default',
       tablesToLoad: [
@@ -786,15 +791,15 @@ export const JsonbColumns: StoryObj<typeof RowPermissionsInput> = {
     });
     // Expect jason._contained_in-comparator to be in the document
     const element = await canvas.getByLabelText(
-      'jason._contained_in-comparator'
+      'jason._contained_in-comparator',
     );
     await expect(element.getAttribute('id')).toEqual(
-      'jason._contained_in-comparator-select-value'
+      'jason._contained_in-comparator-select-value',
     );
     // Expect jason._contained_in-value-input to have value "{"a": "b"}"
-    expect(canvas.getByTestId('jason._contained_in-value-input')).toHaveValue(
-      '{"a":"b"}'
-    );
+    await expect(
+      canvas.getByTestId('jason._contained_in-value-input'),
+    ).toHaveValue('{"a":"b"}');
   },
 
   parameters: {
@@ -803,7 +808,7 @@ export const JsonbColumns: StoryObj<typeof RowPermissionsInput> = {
 };
 
 export const JsonbColumnsHasKeys: StoryObj<typeof RowPermissionsInput> = {
-  render: args => {
+  render: (args) => {
     const { tables } = usePermissionTables({
       dataSourceName: 'default',
       tablesToLoad: [
@@ -839,7 +844,7 @@ export const JsonbColumnsHasKeys: StoryObj<typeof RowPermissionsInput> = {
 };
 
 export const StringColumns: StoryObj<typeof RowPermissionsInput> = {
-  render: args => {
+  render: (args) => {
     const [permissions, setPermissions] = useState<Permissions>({
       name: { _eq: '' },
     });
@@ -861,7 +866,7 @@ export const StringColumns: StoryObj<typeof RowPermissionsInput> = {
     if (!tables || isEmpty(comparators)) return <>Loading</>;
     return (
       <RowPermissionsInput
-        onPermissionsChange={p => {
+        onPermissionsChange={(p) => {
           setPermissions(p);
           args.onPermissionsChange?.(p);
         }}
@@ -885,7 +890,7 @@ export const StringColumns: StoryObj<typeof RowPermissionsInput> = {
     // Write a number in the input
     await userEvent.type(canvas.getByTestId('name._eq-value-input'), '1337');
 
-    expect(args.onPermissionsChange).toHaveBeenCalledWith({
+    await expect(args.onPermissionsChange).toHaveBeenCalledWith({
       name: {
         _eq: '1337',
       },
@@ -898,7 +903,7 @@ export const StringColumns: StoryObj<typeof RowPermissionsInput> = {
 };
 
 export const NumberColumns: StoryObj<typeof RowPermissionsInput> = {
-  render: args => {
+  render: (args) => {
     const [permissions, setPermissions] = useState<Permissions>({
       id: { _eq: '1234' },
     });
@@ -920,7 +925,7 @@ export const NumberColumns: StoryObj<typeof RowPermissionsInput> = {
     if (!tables || isEmpty(comparators)) return <>Loading</>;
     return (
       <RowPermissionsInput
-        onPermissionsChange={p => {
+        onPermissionsChange={(p) => {
           setPermissions(p);
           args.onPermissionsChange?.(p);
         }}
@@ -943,15 +948,15 @@ export const NumberColumns: StoryObj<typeof RowPermissionsInput> = {
 
     // Wait until it loads
     // This happens when id-operator-root selector has value id
-    await waitFor(() => {
-      expect(canvas.getByTestId('id-operator-root')).toHaveValue('id');
+    await waitFor(async () => {
+      await expect(canvas.getByTestId('id-operator-root')).toHaveValue('id');
     });
 
     // Write a number in the input
     await userEvent.type(canvas.getByTestId('id._eq-value-input'), '1337');
 
     await waitFor(async () => {
-      expect(args.onPermissionsChange).toHaveBeenCalledWith({
+      await expect(args.onPermissionsChange).toHaveBeenCalledWith({
         id: {
           _eq: 12341337,
         },
@@ -960,7 +965,7 @@ export const NumberColumns: StoryObj<typeof RowPermissionsInput> = {
 
     await waitFor(async () => {
       await userEvent.click(canvas.getByText('[x-hasura-user-id]'));
-      expect(args.onPermissionsChange).toHaveBeenCalledWith({
+      await expect(args.onPermissionsChange).toHaveBeenCalledWith({
         id: {
           _eq: 'X-Hasura-User-Id',
         },
@@ -974,7 +979,7 @@ export const NumberColumns: StoryObj<typeof RowPermissionsInput> = {
 };
 
 export const OperatorDropdownHandling: StoryObj<typeof RowPermissionsInput> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsInput
       onPermissionsChange={action('onPermissionsChange')}
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
@@ -993,42 +998,42 @@ export const OperatorDropdownHandling: StoryObj<typeof RowPermissionsInput> = {
 
     await userEvent.selectOptions(
       canvas.getByTestId('_not-operator-root'),
-      '_or'
+      '_or',
     );
 
     await userEvent.selectOptions(
       canvas.getByTestId('_or-operator-root'),
-      '_exists'
+      '_exists',
     );
 
     await userEvent.selectOptions(
       canvas.getByTestId('_exists-operator-root'),
-      '_and'
+      '_and',
     );
 
     await userEvent.selectOptions(
       canvas.getByTestId('_and.1-operator'),
-      'Period'
+      'Period',
     );
 
     await userEvent.selectOptions(
       canvas.getByTestId('_and-operator-root'),
-      '_or'
+      '_or',
     );
 
     await userEvent.selectOptions(
       canvas.getByTestId('_or.1-operator'),
-      'Period'
+      'Period',
     );
   },
 };
 
 export const ReplaceArrayWithColumn: StoryObj<typeof RowPermissionsInput> = {
-  render: args => {
+  render: (args) => {
     const [permissions, setPermissions] = useState<Permissions>({ _and: [{}] });
     return (
       <RowPermissionsInput
-        onPermissionsChange={p => {
+        onPermissionsChange={(p) => {
           setPermissions(p);
         }}
         table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
@@ -1045,10 +1050,10 @@ export const ReplaceArrayWithColumn: StoryObj<typeof RowPermissionsInput> = {
     // Should be able to select the _and dropdown and change it to be a column
     await userEvent.selectOptions(
       canvas.getByTestId('_and-operator-root'),
-      'Series_reference'
+      'Series_reference',
     );
-    expect(
-      canvas.getByTestId('Series_reference-operator-root')
+    await expect(
+      canvas.getByTestId('Series_reference-operator-root'),
     ).toBeInTheDocument();
   },
 };
@@ -1057,11 +1062,11 @@ export const ReplaceArrayWithColumn: StoryObj<typeof RowPermissionsInput> = {
 // There was a bug where this case did not work, so adding a test for it
 export const ReplaceEmptyArrayWithColumn: StoryObj<typeof RowPermissionsInput> =
   {
-    render: args => {
+    render: (args) => {
       const [permissions, setPermissions] = useState<Permissions>({ _and: [] });
       return (
         <RowPermissionsInput
-          onPermissionsChange={p => {
+          onPermissionsChange={(p) => {
             setPermissions(p);
           }}
           table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
@@ -1078,16 +1083,16 @@ export const ReplaceEmptyArrayWithColumn: StoryObj<typeof RowPermissionsInput> =
       // Should be able to select the _and dropdown and change it to be a column
       await userEvent.selectOptions(
         canvas.getByTestId('_and-operator-root'),
-        'Series_reference'
+        'Series_reference',
       );
-      expect(
-        canvas.getByTestId('Series_reference-operator-root')
+      await expect(
+        canvas.getByTestId('Series_reference-operator-root'),
       ).toBeInTheDocument();
     },
   };
 
 export const RemoteRelationships: StoryObj<typeof RowPermissionsInput> = {
-  render: args => {
+  render: (args) => {
     const [permissions, setPermissions] = useState<Permissions>({});
     const { tables } = usePermissionTables({
       dataSourceName: 'OhMy',
@@ -1104,7 +1109,7 @@ export const RemoteRelationships: StoryObj<typeof RowPermissionsInput> = {
     if (!tables || isEmpty(comparators)) return <>Loading</>;
     return (
       <RowPermissionsInput
-        onPermissionsChange={p => {
+        onPermissionsChange={(p) => {
           setPermissions(p);
           args.onPermissionsChange?.(p);
         }}
@@ -1132,12 +1137,12 @@ export const RemoteRelationships: StoryObj<typeof RowPermissionsInput> = {
     // Open dropdown
     await userEvent.click(canvas.getByTestId('root-operator'));
     // Should not display remote relationships
-    expect(canvas.queryByText('Album_Artist')).not.toBeInTheDocument();
+    await expect(canvas.queryByText('Album_Artist')).not.toBeInTheDocument();
   },
 };
 
 export const NestedObjects: StoryObj<typeof RowPermissionsInput> = {
-  render: args => {
+  render: (args) => {
     const { tables } = usePermissionTables({
       dataSourceName: 'M',
       tablesToLoad: [
@@ -1172,15 +1177,15 @@ export const NestedObjects: StoryObj<typeof RowPermissionsInput> = {
     const canvas = within(canvasElement);
 
     // Should display city
-    expect(
-      await canvas.findByTestId('address.city-operator-root')
+    await expect(
+      await canvas.findByTestId('address.city-operator-root'),
     ).toBeInTheDocument();
   },
 };
 
 export const NestedObjectsInitiallyEmpty: StoryObj<typeof RowPermissionsInput> =
   {
-    render: args => {
+    render: (args) => {
       const { tables } = usePermissionTables({
         dataSourceName: 'M',
         tablesToLoad: [
@@ -1218,7 +1223,7 @@ export const NestedObjectsInitiallyEmpty: StoryObj<typeof RowPermissionsInput> =
         async () => {
           await canvas.findByTestId('RootInputReady');
         },
-        { timeout: 1000 }
+        { timeout: 1000 },
       );
 
       await canvas.findAllByRole('option', {
@@ -1227,24 +1232,24 @@ export const NestedObjectsInitiallyEmpty: StoryObj<typeof RowPermissionsInput> =
       // Open root dropdown
       await userEvent.selectOptions(
         await canvas.findByTestId('root-operator'),
-        'address'
+        'address',
       );
       // Open address dropdown
       await userEvent.selectOptions(
         await canvas.findByTestId('address-operator'),
         await canvas.findAllByRole('option', {
           name: 'city',
-        })
+        }),
       );
       // Should display city
-      expect(
-        await canvas.findByTestId('address.city-operator-root')
+      await expect(
+        await canvas.findByTestId('address.city-operator-root'),
       ).toBeInTheDocument();
     },
   };
 
 export const NestedObjectsAnd: StoryObj<typeof RowPermissionsInput> = {
-  render: args => {
+  render: (args) => {
     const { tables } = usePermissionTables({
       dataSourceName: 'M',
       tablesToLoad: [
@@ -1279,14 +1284,14 @@ export const NestedObjectsAnd: StoryObj<typeof RowPermissionsInput> = {
     const canvas = within(canvasElement);
 
     // Should display city
-    expect(
-      await canvas.findByTestId('_and.0.address.city-operator-root')
+    await expect(
+      await canvas.findByTestId('_and.0.address.city-operator-root'),
     ).toBeInTheDocument();
   },
 };
 
 export const NestedObjectsOr: StoryObj<typeof RowPermissionsInput> = {
-  render: args => {
+  render: (args) => {
     const { tables } = usePermissionTables({
       dataSourceName: 'M',
       tablesToLoad: [
@@ -1321,8 +1326,8 @@ export const NestedObjectsOr: StoryObj<typeof RowPermissionsInput> = {
     const canvas = within(canvasElement);
 
     // Should display city
-    expect(
-      await canvas.findByTestId('_or.1.address.city-operator-root')
+    await expect(
+      await canvas.findByTestId('_or.1.address.city-operator-root'),
     ).toBeInTheDocument();
   },
 };

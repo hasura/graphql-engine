@@ -2,20 +2,21 @@ import { Capabilities } from '@hasura/dc-api-types';
 import isObject from 'lodash/isObject';
 
 export const getDriversSupportedQueryTypes = (
-  driverCapabilities: Capabilities
+  driverCapabilities: Capabilities,
 ) => {
   if (!driverCapabilities) return [];
 
   const { mutations, queries } = driverCapabilities;
-  const supportedQueryTypes = [];
+  const supportedQueryTypes: string[] = [];
 
-  const supportedMutations =
+  const supportedMutations: string[] =
     (isObject(mutations) &&
       Object.keys(mutations).filter(
-        mutationType =>
-          mutationType === 'insert' ||
-          mutationType === 'update' ||
-          mutationType === 'delete'
+        (mutationType) =>
+          (mutationType === 'insert' ||
+            mutationType === 'update' ||
+            mutationType === 'delete') &&
+          mutations[mutationType],
       )) ||
     [];
   supportedQueryTypes.push(...supportedMutations);

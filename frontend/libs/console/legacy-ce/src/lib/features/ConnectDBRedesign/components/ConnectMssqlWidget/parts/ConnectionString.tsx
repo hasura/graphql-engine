@@ -1,4 +1,4 @@
-import { InputField, Radio } from '../../../../../new-components/Form';
+import { Card, InputField, RadioGroupField } from '@hasura/shared/ui';
 import { useFormContext } from 'react-hook-form';
 import { ConnectionInfoSchema } from '../schema';
 import { WarningCard } from '../../Common/WarningCard';
@@ -14,9 +14,9 @@ export const ConnectionString = ({ name }: { name: string }) => {
   const connectionType = watch(`${name}.connectionType`);
 
   return (
-    <div className="bg-white border border-hasGray-300 rounded-md shadow-sm overflow-hidden p-4">
-      <div className="bg-white py-1.5 font-semibold">
-        <Radio
+    <Card size="2">
+      <div className="py-1.5">
+        <RadioGroupField
           name={`${name}.connectionType`}
           label="Connect Database via"
           options={options}
@@ -31,16 +31,21 @@ export const ConnectionString = ({ name }: { name: string }) => {
           <InputField
             name={`${name}.url`}
             label="Database URL"
-            placeholder="Driver={ODBC Driver 18 for SQL Server};Server=serveraddress;Database=dbname;Uid=username;Pwd=password"
+            fieldProps={{
+              placeholder:
+                'Driver={ODBC Driver 18 for SQL Server};Server=serveraddress;Database=dbname;Uid=username;Pwd=password',
+            }}
           />
         </>
       ) : (
         <InputField
           name={`${name}.envVar`}
           label="Environment variable"
-          placeholder="HASURA_GRAPHQL_DB_URL_FROM_ENV"
+          fieldProps={{
+            placeholder: 'HASURA_GRAPHQL_DB_URL_FROM_ENV',
+          }}
         />
       )}
-    </div>
+    </Card>
   );
 };

@@ -1,4 +1,4 @@
-import { Table } from '../../../../hasura-metadata-types';
+import { Table } from '@hasura/shared/types';
 import {
   addConstraintName,
   filterTableRelationships,
@@ -79,7 +79,7 @@ describe('addConstraintName', () => {
       ];
 
       expect(addConstraintName(relationships, 'hasura-default')).toEqual(
-        expected
+        expected,
       );
     });
   });
@@ -123,7 +123,7 @@ describe('addConstraintName', () => {
       ];
 
       expect(addConstraintName(relationships, 'graphql-default')).toEqual(
-        expected
+        expected,
       );
     });
   });

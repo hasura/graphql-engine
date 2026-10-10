@@ -1,52 +1,42 @@
 import isEqual from 'lodash/isEqual';
-
-import { TableColumn } from '../../../../../../DataSource';
-import { getTypeName } from '../../../../../../GraphQLUtils';
-
-import { Metadata } from '../../../../../../hasura-metadata-types';
-
+import { TableColumn, Operator } from '@hasura/metadata/data-source';
+import { getTypeName } from '@hasura/shared/utils';
 import { PermissionsSchema } from '../../../../../schema';
-
-import type { QueryType } from '../../../../../types';
-import { SourceCustomization } from '../../../../../../hasura-metadata-types/source/source';
-import { Operator } from '../../../../../../DataSource/types';
-
 import {
+  SourceCustomization,
+  DataQueryType,
   ComputedField,
-  MetadataDataSource,
-  TableEntry,
-} from '../../../../../../../metadata/types';
-
-import { createPermissionsObject } from './utils';
-import z from 'zod';
-import { inputValidationSchema } from '../../../../../../../components/Services/Data/TablePermissions/InputValidation/InputValidation';
+  Source,
+  MetadataTable,
+} from '@hasura/shared/types';
+import { createPermissionsObject, DefaultPermissionValues } from './utils';
+import { TablePermissionInputValidationSchema } from '../../../../components/InputValidation/InputValidation';
 
 interface GetMetadataTableArgs {
   table: unknown;
-  trackedTables: TableEntry[] | undefined;
+  trackedTables: MetadataTable[] | undefined;
 }
 
 const getMetadataTable = ({ table, trackedTables }: GetMetadataTableArgs) => {
   // find selected table
-  const currentTable = trackedTables?.find(trackedTable =>
-    isEqual(trackedTable.table, table)
+  const currentTable = trackedTables?.find((trackedTable) =>
+    isEqual(trackedTable.table, table),
   );
 
   return currentTable;
 };
 
 export interface CreateDefaultValuesArgs {
-  queryType: QueryType;
+  queryType: DataQueryType;
   roleName: string;
   table: unknown;
   dataSourceName: string;
-  metadata: Metadata | undefined;
   tableColumns: TableColumn[];
   tableComputedFields: ComputedField[];
   defaultQueryRoot: string | never[];
-  metadataSource: MetadataDataSource | undefined;
+  metadataSource: Source | undefined;
   supportedOperators: Operator[];
-  validateInput: z.infer<typeof inputValidationSchema>;
+  validateInput: TablePermissionInputValidationSchema;
 }
 
 export const createDefaultValues = ({
@@ -59,7 +49,7 @@ export const createDefaultValues = ({
   metadataSource,
   supportedOperators,
   validateInput,
-}: CreateDefaultValuesArgs) => {
+}: CreateDefaultValuesArgs): PermissionsSchema => {
   const selectedTable = getMetadataTable({
     table,
     trackedTables: metadataSource?.tables,
@@ -72,14 +62,19 @@ export const createDefaultValues = ({
     configuration: selectedTable?.configuration,
   });
 
-  const baseDefaultValues: DefaultValues = {
+  const baseDefaultValues: DefaultPermissionValues = {
     queryType: 'select',
     comment: '',
     filterType: 'none',
+    filter: undefined,
     columns: {},
-    computed_fields: {},
+    computed_fields: [],
     supportedOperators,
     validateInput,
+    aggregationEnabled: false,
+    customRootFieldEnabled: false,
+    query_root_fields: [],
+    subscription_root_fields: [],
   };
 
   if (selectedTable) {
@@ -93,12 +88,8 @@ export const createDefaultValues = ({
       metadataSource,
     });
 
-    return { ...baseDefaultValues, ...permissionsObject };
+    return Object.assign(baseDefaultValues, permissionsObject);
   }
 
   return baseDefaultValues;
-};
-
-type DefaultValues = PermissionsSchema & {
-  operators?: Record<string, unknown>;
 };

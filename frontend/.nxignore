@@ -1,0 +1,6 @@
+# Build output must never be scanned for projects. `storybook build` writes a
+# nameless `project.json` (Storybook metadata) into its output dir, which Nx
+# would otherwise pick up as a project and fail with ProjectsWithNoNameError.
+# .gitignore covers these too, but isn't honoured in every CI checkout.
+/dist
+storybook-static

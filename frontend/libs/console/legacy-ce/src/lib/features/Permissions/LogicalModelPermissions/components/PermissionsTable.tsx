@@ -1,68 +1,83 @@
-import { createRef } from 'react';
 import { Action, Permission } from './types';
-import { PermissionsRow } from './PermissionsRow';
-import { PermissionsIcon } from '../../PermissionsTable/components/PermissionsIcons';
+import { usePermissionsFormContext } from '../hooks/usePermissionForm';
+import {
+  PermissionsLegend,
+  PermissionsTableRow,
+  PermissionsTableView,
+} from '../../PermissionsTable';
 
 export type PermissionsTableProps = {
   allowedActions: Action[];
   permissions: Permission[];
 };
 
+const actions = ['insert', 'select', 'update', 'delete'];
+
+const columns = actions.map((action) => ({
+  key: action,
+  label: action.toUpperCase(),
+}));
+
 export const PermissionsTable = ({
   allowedActions,
   permissions,
 }: PermissionsTableProps) => {
-  const actions = ['insert', 'select', 'update', 'delete'];
-  const inputRef = createRef<HTMLInputElement>();
-  return (
-    <div className="grid gap-2" data-testid="permissions-table">
-      <div className="flex gap-4">
-        <span>
-          <PermissionsIcon type="fullAccess" />
-          &nbsp;-&nbsp;full access
-        </span>
-        <span>
-          <PermissionsIcon type="noAccess" />
-          &nbsp;-&nbsp;no access
-        </span>
-        <span>
-          <PermissionsIcon type="partialAccess" />
-          &nbsp;-&nbsp;partial access
-        </span>
-      </div>
-      <div className="overflow-x-auto border border-gray-300 rounded">
-        <table className="min-w-full divide-y divide-gray-200 text-left">
-          <thead>
-            <tr className="divide-x divide-gray-300">
-              <th className="w-0 bg-gray-50 border-r border-gray-200 px-md py-sm text-sm font-semibold text-muted uppercase tracking-wider">
-                ROLE
-              </th>
-              {actions.map(action => (
-                <th
-                  className="bg-gray-50 px-md py-sm text-sm font-semibold text-muted text-center uppercase tracking-wider"
-                  key={action}
-                >
-                  {action.toUpperCase()}
-                </th>
-              ))}
-            </tr>
-          </thead>
+  const {
+    setActivePermission,
+    activePermission,
+    unsetActivePermission,
+    permissionAccess,
+    setNewRoleName,
+  } = usePermissionsFormContext();
 
-          <tbody className="bg-white divide-y divide-gray-300">
-            {permissions.map((permission, index) => (
-              // Using index as key instead of role.name because role.name is editable
-              <PermissionsRow
-                key={index}
-                index={index}
-                ref={inputRef}
-                permission={permission}
-                actions={actions}
-                allowedActions={allowedActions}
-              />
-            ))}
-          </tbody>
-        </table>
-      </div>
+  const rows: PermissionsTableRow[] = permissions.map((permission, index) => ({
+    roleName: permission.roleName,
+    roleCell: permission.isNew
+      ? {
+          isNewRole: true,
+          newRoleValue: permission.roleName,
+          onNewRoleValueChange: setNewRoleName,
+        }
+      : undefined,
+    cells: Object.fromEntries(
+      actions.map((actionName) => {
+        const action = allowedActions.find(
+          (allowedAction) => allowedAction === actionName,
+        );
+        return [
+          actionName,
+          {
+            isEditable: Boolean(action),
+            access: permissionAccess(action, permission),
+            isCurrentEdit:
+              activePermission === index && permission.action === action,
+            testId: `${permission.roleName}-${actionName}-permissions-cell`,
+            onClick: () => {
+              // Close form if user clicks cell for empty permission
+              if (
+                activePermission !== index &&
+                permission.isNew &&
+                permission.roleName === ''
+              ) {
+                unsetActivePermission();
+              }
+              // Focus on input so that user can enter new role name
+              if (permission.isNew && permission.roleName === '') {
+                document.getElementById('new-role-input')?.focus();
+              } else {
+                setActivePermission(index);
+              }
+            },
+          },
+        ];
+      }),
+    ),
+  }));
+
+  return (
+    <div data-testid="permissions-table">
+      <PermissionsLegend className="mb-4" />
+      <PermissionsTableView columns={columns} rows={rows} />
     </div>
   );
 };

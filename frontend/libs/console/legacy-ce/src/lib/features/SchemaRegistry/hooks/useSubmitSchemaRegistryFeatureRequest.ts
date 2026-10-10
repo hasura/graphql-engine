@@ -1,4 +1,4 @@
-import { useMutation } from 'react-query';
+import { useMutation } from '@tanstack/react-query';
 import { GraphQLError } from 'graphql';
 import globals from '../../../Globals';
 import {
@@ -9,7 +9,7 @@ import {
 
 export const useSubmitSchemaRegistryFeatureRequest = (
   successCb: () => void,
-  errorCb: (error?: GraphQLError) => void
+  errorCb: (error?: GraphQLError) => void,
 ) => {
   const addSchemaRegistryFtRequestMutation = () => {
     return controlPlaneClient.query<{
@@ -23,8 +23,9 @@ export const useSubmitSchemaRegistryFeatureRequest = (
     });
   };
 
-  const mutation = useMutation(addSchemaRegistryFtRequestMutation, {
-    onSuccess: data => {
+  const mutation = useMutation({
+    mutationFn: addSchemaRegistryFtRequestMutation,
+    onSuccess: (data) => {
       if (data.errors && data.errors.length > 0) {
         errorCb(data.errors[0]);
       } else {
@@ -42,6 +43,6 @@ export const useSubmitSchemaRegistryFeatureRequest = (
 
   return {
     onSubmit,
-    loading: mutation.isLoading,
+    loading: mutation.isPending,
   };
 };

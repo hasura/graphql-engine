@@ -8,9 +8,8 @@
   "peerDependencies": {
     "@storybook/addons": "^7.0.7",
     "@storybook/api": "^7.0.7",
-    "@storybook/components": "^7.0.7",
-    "react": "17.0.2",
-    "react-dom": "17.0.2"
+    "react": "*",
+    "react-dom": "*"
   },
   "exports": {
     ".": {

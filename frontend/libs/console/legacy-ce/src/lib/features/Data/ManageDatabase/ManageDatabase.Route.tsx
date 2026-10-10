@@ -1,33 +1,46 @@
-import { MetadataSelectors } from '../../hasura-metadata-api';
-import { MetadataWrapper, ReactQueryStatusUI } from '../components';
-import { useTableDefinition } from '../hooks';
-import { ManageDatabase } from './ManageDatabase';
+import { MetadataSelectors } from '@hasura/metadata/helpers';
+import { MetadataWrapper } from '../components';
+import { IndicatorCard } from '@hasura/shared/ui';
+import { Outlet, useParams } from 'react-router';
+import { DataSourceContext } from '../context/DataSourceContext';
 
 export const ManageDatabaseRoute = () => {
-  const urlData = useTableDefinition(window.location);
-
-  if (urlData.querystringParseResult === 'error')
-    return <>Something went wrong while parsing the URL parameters</>;
-
-  const { database } = urlData.data;
+  const params = useParams();
+  if (!params.source)
+    return (
+      <div className="p-8">
+        <IndicatorCard status="negative" showIcon>
+          Source could not be found in Metadata!
+        </IndicatorCard>
+      </div>
+    );
 
   return (
     <MetadataWrapper
-      selector={MetadataSelectors.findSource(database)}
-      render={({ data: source }) => {
+      render={({ data: meta }) => {
+        const source = MetadataSelectors.findSource(params.source)(meta);
+
         // if we don't find the source, report an error:
-        if (!source) {
+        if (!source || !meta) {
           return (
-            <ReactQueryStatusUI
-              status="error"
-              error={{
-                message: `Source ${database}" could not be found in Metadata!`,
-              }}
-            />
+            <div className="p-8">
+              <IndicatorCard status="negative" showIcon>
+                Source {params.source} could not be found in Metadata!
+              </IndicatorCard>
+            </div>
           );
         }
 
-        return <ManageDatabase dataSourceName={database} />;
+        return (
+          <DataSourceContext.Provider
+            value={{
+              ...meta,
+              currentSource: source,
+            }}
+          >
+            <Outlet />
+          </DataSourceContext.Provider>
+        );
       }}
     />
   );

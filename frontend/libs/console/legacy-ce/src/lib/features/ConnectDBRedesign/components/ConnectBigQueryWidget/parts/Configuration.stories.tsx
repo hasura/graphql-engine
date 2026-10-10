@@ -1,6 +1,5 @@
-import { SimpleForm } from '../../../../../new-components/Form';
-import { Button } from '../../../../../new-components/Button';
-import { StoryFn, Meta } from '@storybook/react';
+import { Button, SimpleForm } from '@hasura/shared/ui';
+import { StoryFn, Meta } from '@storybook/react-webpack5';
 import { z } from 'zod';
 
 import { Configuration } from './Configuration';
@@ -11,7 +10,7 @@ export default {
 
 export const Primary: StoryFn<typeof Configuration> = () => (
   <SimpleForm
-    onSubmit={data => console.log(data)}
+    onSubmit={(data) => console.log(data)}
     schema={z.any()}
     options={{
       defaultValues: {

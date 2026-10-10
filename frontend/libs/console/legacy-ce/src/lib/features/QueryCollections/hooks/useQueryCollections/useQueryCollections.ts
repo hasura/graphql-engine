@@ -1,7 +1,9 @@
-import { MetadataSelector, useMetadata } from '../../../MetadataAPI';
+import { useMetadata } from '@hasura/metadata/api';
 
 export const useQueryCollections = () => {
-  const { data, ...rest } = useMetadata(MetadataSelector.getQueryCollections);
+  const { data, ...rest } = useMetadata(
+    (m) => m.metadata?.query_collections ?? [],
+  );
 
   return {
     data:

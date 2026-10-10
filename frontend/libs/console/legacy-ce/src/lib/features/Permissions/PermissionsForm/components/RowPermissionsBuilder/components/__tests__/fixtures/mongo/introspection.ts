@@ -2333,6 +2333,6 @@ export const introspection = {
 
 export const schema = new GraphQLSchema(
   buildClientSchema(
-    introspection.data as unknown as IntrospectionQuery
-  ).toConfig()
+    introspection.data as unknown as IntrospectionQuery,
+  ).toConfig(),
 );

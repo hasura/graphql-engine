@@ -1,5 +1,5 @@
-import { StoryFn, Meta } from '@storybook/react';
-import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
+import { StoryFn, Meta } from '@storybook/react-webpack5';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
 
 import { UntrackedFunctions } from './UntrackedFunctions';
 
@@ -9,5 +9,5 @@ export default {
 } as Meta<typeof UntrackedFunctions>;
 
 export const Primary: StoryFn<typeof UntrackedFunctions> = () => (
-  <UntrackedFunctions dataSourceName="chinook" />
+  <UntrackedFunctions dataSourceName="chinook" untrackedFunctions={[]} />
 );

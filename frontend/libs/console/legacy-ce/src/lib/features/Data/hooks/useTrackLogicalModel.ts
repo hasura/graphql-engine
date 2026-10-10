@@ -1,24 +1,24 @@
-import { transformErrorResponse } from '../../ConnectDBRedesign/utils';
-import { useMetadataMigration } from '../../MetadataAPI';
-import { MetadataMigrationOptions } from '../../MetadataAPI/hooks/useMetadataMigration';
-import { useMetadata } from '../../hasura-metadata-api';
-import { LogicalModel, Source } from '../../hasura-metadata-types';
+import {
+  useMetadata,
+  useMetadataMigration,
+  MetadataMigrationOptions,
+  TMigrationSingleQuery,
+} from '@hasura/metadata/api';
+import { LogicalModel, Source } from '@hasura/shared/types';
 import {
   LogicalModelMigrationBuilder,
   NativeQueryMigrationBuilder,
   StoredProcedureMigrationBuilder,
 } from '../LogicalModels/MigrationBuilder';
 import { findReferencedEntities } from '../LogicalModels/LogicalModel/utils/findReferencedEntities';
-import { getSourceDriver } from './utils';
+import { getDriverPrefix } from '@hasura/metadata/helpers';
 
 export const getTrackLogicalModelPayload = ({
   data: { dataSourceName, name, fields },
   editDetails,
   sources,
-}: TrackLogicalModelArgs & { sources: Source[] }):
-  | never
-  | Record<string, unknown>[] => {
-  const driver = getSourceDriver(sources, dataSourceName);
+}: TrackLogicalModelArgs & { sources: Source[] }): TMigrationSingleQuery[] => {
+  const driver = sources.find((s) => s.name === dataSourceName)?.kind;
 
   if (!driver) {
     throw new Error('Source could not be found. Unable to identify driver.');
@@ -33,7 +33,7 @@ export const getTrackLogicalModelPayload = ({
   });
 
   // create initial migration payload for the logical model:
-  let payload: Record<string, unknown>[] = editDetails
+  let payload: TMigrationSingleQuery[] = editDetails
     ? builder.untrack(editDetails.originalName).track().payload()
     : builder.track().payload();
 
@@ -46,7 +46,7 @@ export const getTrackLogicalModelPayload = ({
     //1. first find any entities that refer to this logical model:
     const { native_queries, stored_procedures, logical_models, count } =
       findReferencedEntities({
-        source: sources.find(s => s.name === dataSourceName),
+        source: sources.find((s) => s.name === dataSourceName),
         logicalModelName: editDetails.originalName,
       });
 
@@ -57,7 +57,7 @@ export const getTrackLogicalModelPayload = ({
     // if there are any other entities that refer to this logical model:
     // migrate any stored procedures whose return type is THIS logical model
     const spMigrations = stored_procedures
-      .map(p => {
+      .map((p) => {
         const migration = new StoredProcedureMigrationBuilder({
           dataSourceName,
           driver,
@@ -72,7 +72,7 @@ export const getTrackLogicalModelPayload = ({
 
     // migrate any native query whose return type is THIS logical model
     const nqMigrations = native_queries
-      .map(q => {
+      .map((q) => {
         const migration = new NativeQueryMigrationBuilder({
           dataSourceName,
           driver,
@@ -87,7 +87,7 @@ export const getTrackLogicalModelPayload = ({
 
     // migrate any logical model fields that refer to THIS logical model
     const lmMigrations = logical_models
-      .map(result => {
+      .map((result) => {
         const migration = new LogicalModelMigrationBuilder({
           dataSourceName,
           driver,
@@ -122,21 +122,22 @@ export type TrackLogicalModelArgs = {
 } & MetadataMigrationOptions;
 
 export const useTrackLogicalModel = (
-  globalMutateOptions?: MetadataMigrationOptions
+  globalMutateOptions?: MetadataMigrationOptions,
 ) => {
   /**
    * Get the required metadata variables - sources & resource_version
    */
-  const { data: { sources = [], resource_version } = {} } = useMetadata(m => ({
-    sources: m.metadata.sources,
-    resource_version: m.resource_version,
-  }));
+  const { data: { sources = [], resource_version } = {} } = useMetadata(
+    (m) => ({
+      sources: m.metadata.sources,
+      resource_version: m.resource_version,
+    }),
+  );
 
   const { mutate, ...rest } = useMetadataMigration({
     ...globalMutateOptions,
-    errorTransform: transformErrorResponse,
-    onSuccess: (data, variable, ctx) => {
-      globalMutateOptions?.onSuccess?.(data, variable, ctx);
+    onSuccess: (data, variable, onMutateResult, context) => {
+      globalMutateOptions?.onSuccess?.(data, variable, onMutateResult, context);
     },
   });
 
@@ -160,7 +161,7 @@ export const useTrackLogicalModel = (
             args: payload,
           },
         },
-        options
+        options,
       );
     }
   };
@@ -176,21 +177,20 @@ export const useTrackLogicalModel = (
       {
         query: {
           resource_version,
-          type: `${dataSourceKind}_untrack_logical_model`,
+          type: `${getDriverPrefix(dataSourceKind)}_untrack_logical_model` as const,
           args: {
             source: dataSourceName,
             name,
           },
         },
       },
-      options
+      options,
     );
   };
 
   return {
     trackLogicalModel,
     untrackLogicalModel,
-    getTrackLogicalModelPayload,
     ...rest,
   };
 };

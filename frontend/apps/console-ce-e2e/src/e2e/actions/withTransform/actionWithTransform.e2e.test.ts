@@ -1,8 +1,9 @@
-import type { Metadata } from '@hasura/console-legacy-ce';
+import { cliUrl, hgeUrl } from '../../../support/endpoints';
 import { logMetadataRequests } from './utils/requests/logMetadataRequests';
 import { readMetadata } from './utils/services/readMetadata';
 import { loginActionMustNotExist } from './utils/testState/loginActionMustNotExist';
 import { checkMetadataPayload } from '../../utils/checkMetadataPayload';
+import { Metadata } from '@hasura/shared/types';
 
 describe('Actions with Transform', () => {
   before(() => {
@@ -42,7 +43,7 @@ describe('Actions with Transform', () => {
         `type Mutation {
               login (username: String!, password: String!): LoginResponse
             }`,
-        { force: true, delay: 0 }
+        { force: true, delay: 0 },
       );
 
     // --------------------
@@ -53,7 +54,7 @@ describe('Actions with Transform', () => {
         `type LoginResponse {
           accessToken: String!
         }`,
-        { force: true, delay: 0 }
+        { force: true, delay: 0 },
       );
 
     // --------------------
@@ -101,7 +102,7 @@ describe('Actions with Transform', () => {
       'https://handler.com',
       {
         delay: 1,
-      }
+      },
     );
 
     // --------------------
@@ -109,7 +110,7 @@ describe('Actions with Transform', () => {
       cy.log('**--- Check the Preview of the Request URL Template**');
       cy.get('[data-test=transform-requestUrl-preview]').should(
         'have.value',
-        'https://handler.com/users'
+        'https://handler.com/users',
       );
     });
 
@@ -149,7 +150,7 @@ describe('Actions with Transform', () => {
       {
         parseSpecialCharSequences: false,
         delay: 0,
-      }
+      },
     );
 
     // --------------------
@@ -195,7 +196,7 @@ describe('Actions with Transform', () => {
           // something like
           // "name": {{$body.input.username}}name
           // in the textarea (the closing "name" is a mistake)
-          { force: true, delay: 1, parseSpecialCharSequences: false }
+          { force: true, delay: 1, parseSpecialCharSequences: false },
         );
     });
 
@@ -230,7 +231,7 @@ describe('Actions with Transform', () => {
           // something like
           // "name": {{$body.input.username}}name
           // in the textarea (the closing "name" is a mistake)
-          { force: true, delay: 1, parseSpecialCharSequences: false }
+          { force: true, delay: 1, parseSpecialCharSequences: false },
         );
     });
 
@@ -238,14 +239,14 @@ describe('Actions with Transform', () => {
     cy.log('**--- Click the Create button**');
     // cy.wait(1000) because of debounce
 
-    cy.intercept('POST', 'http://localhost:8080/v1/metadata', req => {
+    cy.intercept('POST', hgeUrl('/v1/metadata'), (req) => {
       if (JSON.stringify(req.body).includes('create_action')) {
         req.alias = 'createAction';
       }
       req.continue();
     });
 
-    cy.intercept('POST', 'http://localhost:9693/apis/migrate', req => {
+    cy.intercept('POST', cliUrl('/apis/migrate'), (req) => {
       if (JSON.stringify(req.body).includes('create_action')) {
         req.alias = 'createAction';
       }
@@ -255,7 +256,7 @@ describe('Actions with Transform', () => {
 
     cy.get('[data-test=create-action-btn]').click();
 
-    cy.wait('@createAction').then(interception => {
+    cy.wait('@createAction').then((interception) => {
       checkMetadataPayload(interception, { name: 'Action payload' });
     });
 
@@ -279,7 +280,7 @@ describe('Actions with Transform', () => {
 
     readMetadata().then((md: { body: Metadata['metadata'] }) => {
       cy.wrap(
-        (md.body.actions || []).find(action => action.name === 'login')
+        (md.body.actions || []).find((action) => action.name === 'login'),
       ).toMatchSnapshot({ name: 'Action metadata' });
     });
 
@@ -329,12 +330,14 @@ describe('Actions with Transform', () => {
     // --------------------
     cy.log('**--- Go the the action page**');
     cy.get('[data-test=actions-table-links]').within(() => {
-      cy.get('[data-test=login]').click();
+      // The sidebar action link no longer carries a per-name data-test; it renders
+      // the action name as its label, so target it by text.
+      cy.contains('login').click();
     });
 
     // --------------------
     cy.log('**--- Set the prompt value**');
-    cy.window().then(win => cy.stub(win, 'prompt').returns('login'));
+    cy.window().then((win) => cy.stub(win, 'prompt').returns('login'));
 
     cy.log('**--- Click the Delete button**');
     cy.get('[data-test=delete-action]').click();

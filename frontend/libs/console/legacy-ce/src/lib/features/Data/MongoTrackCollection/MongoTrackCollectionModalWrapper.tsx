@@ -1,17 +1,15 @@
-import { hasuraToast } from '../../../new-components/Toasts';
-import { useMetadataMigration } from '../../MetadataAPI';
+import { DisplayToastErrorMessage, hasuraToast } from '@hasura/shared/ui';
 import {
-  MetadataSelectors,
-  MetadataUtils,
+  useMetadataMigration,
   useMetadata,
-} from '../../hasura-metadata-api';
-import { LogicalModel } from '../../hasura-metadata-types';
+  useTrackTables,
+  getTrackTablesArgs,
+} from '@hasura/metadata/api';
+import { LogicalModel } from '@hasura/shared/types';
 import { COLLECTION_TRACK_TRACK_ERROR } from '../LogicalModels/constants';
-import { DisplayToastErrorMessage } from '../components/DisplayErrorMessage';
-import { transformErrorResponse } from '../errorUtils';
-import { useTrackLogicalModel } from '../hooks/useTrackLogicalModel';
-import { useTrackTables } from '../hooks/useTrackTables';
+import { getTrackLogicalModelPayload } from '../hooks/useTrackLogicalModel';
 import { MongoTrackCollectionModal, Schema } from './MongoTrackCollectionModal';
+import { areTablesEqual, MetadataSelectors } from '@hasura/metadata/helpers';
 
 type MongoTrackCollectionModalProps = {
   dataSourceName: string;
@@ -26,58 +24,42 @@ export const MongoTrackCollectionModalWrapper = ({
   onClose,
   isVisible,
 }: MongoTrackCollectionModalProps) => {
-  const { data: logicalModels } = useMetadata(
-    m => MetadataUtils.findMetadataSource(dataSourceName, m)?.logical_models
+  const { data: meta } = useMetadata();
+  const sources = meta?.metadata.sources ?? [];
+  const source = MetadataSelectors.findSource(dataSourceName)(meta);
+  const logicalModels = source?.logical_models ?? [];
+  const metadataTable = source?.tables.find((t) =>
+    areTablesEqual(t.table, [collectionName]),
   );
+  const configuration = metadataTable?.configuration;
+  const driver = source?.kind;
 
-  const { data: configuration } = useMetadata(
-    m =>
-      MetadataUtils.findMetadataTable(dataSourceName, collectionName, m)
-        ?.configuration
-  );
+  const { trackTables } = useTrackTables();
 
-  const { data: { driver, sources = [], resource_version } = {} } = useMetadata(
-    m => ({
-      driver: MetadataSelectors.findSource(dataSourceName)(m)?.kind,
-      sources: m.metadata.sources,
-      resource_version: m.resource_version,
-    })
-  );
-
-  const { getTrackLogicalModelPayload } = useTrackLogicalModel();
-  const { getTrackTablesPayload } = useTrackTables({
-    dataSourceName,
-  });
-
-  const { mutate, isLoading: isTracking } = useMetadataMigration({
-    onSuccess: () => {
-      hasuraToast({
-        type: 'success',
-        title: 'Collection tracked successfully',
-      });
-    },
-    onError: err => {
-      hasuraToast({
-        type: 'error',
-        title: COLLECTION_TRACK_TRACK_ERROR,
-        children: <DisplayToastErrorMessage message={err.message} />,
-      });
-    },
-    errorTransform: transformErrorResponse,
-  });
+  const { mutate: migrateMetadata, isPending: isTracking } =
+    useMetadataMigration({
+      onSuccess: () => {
+        hasuraToast({
+          type: 'success',
+          title: 'Collection tracked successfully',
+        });
+      },
+      onError: (err) => {
+        hasuraToast({
+          type: 'error',
+          title: COLLECTION_TRACK_TRACK_ERROR,
+          children: <DisplayToastErrorMessage message={err.message} />,
+        });
+      },
+    });
 
   const onSubmit = async (data: Schema, logicalModels: LogicalModel[]) => {
     if (data.logicalModelForm === 'json-validation-schema') {
-      const trackTablesPayload = getTrackTablesPayload({
-        driver,
-        dataSourceName,
+      trackTables({
+        source: dataSourceName,
         tables: [
           {
-            id: '',
-            type: 'collection',
-            name: collectionName,
             table: [collectionName],
-            is_tracked: false,
             configuration: {
               ...(data.custom_name ? { custom_name: data.custom_name } : {}),
               ...(data.custom_root_fields
@@ -87,19 +69,9 @@ export const MongoTrackCollectionModalWrapper = ({
           },
         ],
       });
-
-      mutate({
-        query: {
-          resource_version,
-          type: 'bulk',
-          args: [trackTablesPayload],
-        },
-      });
-    }
-
-    if (data.logicalModelForm === 'sample-documents') {
+    } else if (data.logicalModelForm === 'sample-documents') {
       // create logical model and track collection
-      const trackLogicalModelsPayload = logicalModels.map(logicalModel =>
+      const trackLogicalModelsPayload = logicalModels.map((logicalModel) =>
         getTrackLogicalModelPayload({
           data: {
             dataSourceName: dataSourceName,
@@ -107,33 +79,31 @@ export const MongoTrackCollectionModalWrapper = ({
             fields: logicalModel.fields,
           },
           sources,
-        })
+        }),
       );
 
-      const trackTablesPayload = getTrackTablesPayload({
-        driver,
-        dataSourceName,
-        tables: [
-          {
-            id: '',
-            type: 'collection',
-            name: collectionName,
-            table: [collectionName],
-            is_tracked: false,
-            configuration: {
-              ...(data.custom_name ? { custom_name: data.custom_name } : {}),
-              ...(data.custom_root_fields
-                ? { custom_root_fields: data.custom_root_fields }
-                : {}),
-              logical_model: logicalModels[0].name,
+      const trackTablesPayload = getTrackTablesArgs(
+        {
+          tables: [
+            {
+              source: dataSourceName,
+              table: [collectionName],
+              configuration: {
+                ...(data.custom_name ? { custom_name: data.custom_name } : {}),
+                ...(data.custom_root_fields
+                  ? { custom_root_fields: data.custom_root_fields }
+                  : {}),
+                logical_model: logicalModels[0].name,
+              },
             },
-          },
-        ],
-      });
+          ],
+        },
+        driver ?? 'mongodb',
+      );
 
-      mutate({
+      migrateMetadata({
         query: {
-          resource_version,
+          resource_version: meta?.resource_version,
           type: 'bulk',
           args: [
             ...trackLogicalModelsPayload.flat().reverse(),
@@ -145,30 +115,28 @@ export const MongoTrackCollectionModalWrapper = ({
 
     if (data.logicalModelForm === 'logical-models') {
       // track collection with selected logical model
-      const trackTablesPayload = getTrackTablesPayload({
-        driver,
-        dataSourceName,
-        tables: [
-          {
-            id: '',
-            type: 'collection',
-            name: collectionName,
-            table: [collectionName],
-            is_tracked: false,
-            configuration: {
-              ...(data.custom_name ? { custom_name: data.custom_name } : {}),
-              ...(data.custom_root_fields
-                ? { custom_root_fields: data.custom_root_fields }
-                : {}),
-              logical_model: logicalModels[0].name,
+      const trackTablesPayload = getTrackTablesArgs(
+        {
+          tables: [
+            {
+              source: dataSourceName,
+              table: [collectionName],
+              configuration: {
+                ...(data.custom_name ? { custom_name: data.custom_name } : {}),
+                ...(data.custom_root_fields
+                  ? { custom_root_fields: data.custom_root_fields }
+                  : {}),
+                logical_model: logicalModels[0].name,
+              },
             },
-          },
-        ],
-      });
+          ],
+        },
+        driver!,
+      );
 
-      mutate({
+      migrateMetadata({
         query: {
-          resource_version,
+          resource_version: meta?.resource_version,
           type: 'bulk',
           args: [trackTablesPayload],
         },

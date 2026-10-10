@@ -1,4 +1,4 @@
-import { Metadata } from '../../../../hasura-metadata-types';
+import { Metadata, MetadataTable } from '@hasura/shared/types';
 
 // make sure we are using the Metadata type and we won't create phantom errors in the code because our objects don't adhere to the underlying types!
 export const metadata: Metadata = {
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
               name: 'Album',
               schema: 'public',
             },
-          },
+          } as MetadataTable,
         ],
         logical_models: [
           {
@@ -156,61 +156,61 @@ export const metadata: Metadata = {
               name: 'Album',
               schema: 'dbo',
             },
-          },
+          } as MetadataTable,
           {
             table: {
               name: 'Artist',
               schema: 'dbo',
             },
-          },
+          } as MetadataTable,
           {
             table: {
               name: 'Customer',
               schema: 'dbo',
             },
-          },
+          } as MetadataTable,
           {
             table: {
               name: 'Employee',
               schema: 'dbo',
             },
-          },
+          } as MetadataTable,
           {
             table: {
               name: 'Genre',
               schema: 'dbo',
             },
-          },
+          } as MetadataTable,
           {
             table: {
               name: 'Invoice',
               schema: 'dbo',
             },
-          },
+          } as MetadataTable,
           {
             table: {
               name: 'InvoiceLine',
               schema: 'dbo',
             },
-          },
+          } as MetadataTable,
           {
             table: {
               name: 'MediaType',
               schema: 'dbo',
             },
-          },
+          } as MetadataTable,
           {
             table: {
               name: 'Playlist',
               schema: 'dbo',
             },
-          },
+          } as MetadataTable,
           {
             table: {
               name: 'PlaylistTrack',
               schema: 'dbo',
             },
-          },
+          } as MetadataTable,
         ],
         logical_models: [
           {

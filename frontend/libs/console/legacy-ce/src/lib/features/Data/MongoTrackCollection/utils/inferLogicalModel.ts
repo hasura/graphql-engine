@@ -1,9 +1,6 @@
 import { inferSchema } from '@jsonhero/schema-infer';
-import {
-  LogicalModel,
-  LogicalModelField,
-} from '../../../hasura-metadata-types';
-import { sanitizeGraphQLFieldNames } from '../../../../utils';
+import { LogicalModel, LogicalModelField } from '@hasura/shared/types';
+import { sanitizeGraphQLFieldNames } from '@hasura/shared/utils';
 
 type ObjectSchema = {
   type: 'object';
@@ -28,7 +25,7 @@ const getLogicalModelsFromProperties = (
   name: string,
   properties: ObjectSchema['properties'],
   requiredProperties: string[] = [],
-  parentName = ''
+  parentName = '',
 ): LogicalModel[] => {
   const logicalModels: LogicalModel[] = [];
   const fields: LogicalModelField[] = [];
@@ -41,7 +38,7 @@ const getLogicalModelsFromProperties = (
 
     // Get scalars from MongoDB objectid and date objects
     const handleMongoDBFieldTypes = (
-      properties: ObjectSchema['properties']
+      properties: ObjectSchema['properties'],
     ): { type: 'objectId' | 'date' | 'string' | 'none'; name?: string } => {
       if (!properties) {
         return { type: 'string' };
@@ -74,7 +71,7 @@ const getLogicalModelsFromProperties = (
         `${collectionName}_${logicalModelPath}`,
         fieldSchema.properties,
         fieldSchema.required,
-        logicalModelPath
+        logicalModelPath,
       );
       logicalModels.push(...newLogicalModels);
       fields.push({
@@ -93,12 +90,12 @@ const getLogicalModelsFromProperties = (
         if (typeof obj !== 'object' || obj === null) return false;
         if ('anyOf' in obj) return true;
         return Object.values(obj).some(
-          val => typeof val === 'object' && checkNestedAnyOf(val)
+          (val) => typeof val === 'object' && checkNestedAnyOf(val),
         );
       })(fieldSchema.items);
       if (hasNestedAnyOf) {
         throw new Error(
-          `The array for field "${fieldName}" contains both multiple types (objects, string, int, etc.). Please check and ensure it only contains one for inference. \n Exact key with issue: "${logicalModelPath}"`
+          `The array for field "${fieldName}" contains both multiple types (objects, string, int, etc.). Please check and ensure it only contains one for inference. \n Exact key with issue: "${logicalModelPath}"`,
         );
       }
 
@@ -106,7 +103,7 @@ const getLogicalModelsFromProperties = (
       if (fieldSchema.items.type === 'object') {
         // Check for special mongo scalars
         const mongoDBFieldType = handleMongoDBFieldTypes(
-          fieldSchema.items.properties
+          fieldSchema.items.properties,
         );
         if (mongoDBFieldType.type !== 'none') {
           fields.push({
@@ -125,7 +122,7 @@ const getLogicalModelsFromProperties = (
             `${collectionName}_${logicalModelPath}`,
             fieldSchema.items.properties,
             fieldSchema.items?.required || [],
-            logicalModelPath
+            logicalModelPath,
           );
 
           logicalModels.push(...newLogicalModels);
@@ -246,7 +243,7 @@ const getLogicalModelsFromProperties = (
 const getLogicalModels = (
   collectionName: string,
   name: string,
-  schema: ObjectSchema | ArraySchema
+  schema: ObjectSchema | ArraySchema,
 ): LogicalModel[] => {
   const sanitizedModelName = sanitizeGraphQLFieldNames(name);
   if (schema.type === 'object') {
@@ -254,7 +251,7 @@ const getLogicalModels = (
       collectionName,
       sanitizedModelName,
       schema.properties,
-      schema.required
+      schema.required,
     );
   }
 
@@ -263,7 +260,7 @@ const getLogicalModels = (
       collectionName,
       sanitizedModelName,
       schema.items.properties,
-      schema.items.required
+      schema.items.required,
     );
   }
 
@@ -272,7 +269,7 @@ const getLogicalModels = (
 
 export const inferLogicalModels = (
   collectionName: string,
-  json: string
+  json: string,
 ): LogicalModel[] => {
   const document = JSON.parse(json);
   const schema = inferSchema(document).toJSONSchema();
@@ -280,7 +277,7 @@ export const inferLogicalModels = (
   const logicalModels: LogicalModel[] = getLogicalModels(
     collectionName,
     collectionName,
-    schema as unknown as ObjectSchema | ArraySchema
+    schema as unknown as ObjectSchema | ArraySchema,
   );
 
   return logicalModels;

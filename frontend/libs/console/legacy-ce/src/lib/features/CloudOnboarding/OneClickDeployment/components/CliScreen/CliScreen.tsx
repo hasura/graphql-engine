@@ -8,11 +8,11 @@ type Props = {
   fallbackApps: FallbackApp[];
 };
 
-export const CliScreen: React.VFC<Props> = props => {
+export const CliScreen: React.FC<Props> = (props) => {
   const { state, triggerDeployment, fallbackApps } = props;
   return (
     <div className="font-mono overflow-auto bg-[#0F172A] h-[30rem]">
-      <div className="p-md pb-xl">
+      <div className="p-4 pb-xl">
         {Object.keys(state).map((key, index) => {
           const step = key as UserFacingStep;
           const status = state[step];

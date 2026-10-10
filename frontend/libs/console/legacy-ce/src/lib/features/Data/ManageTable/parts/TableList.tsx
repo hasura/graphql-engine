@@ -1,27 +1,26 @@
 import React, { useState } from 'react';
 import { FaFilter } from 'react-icons/fa';
-import { DropDown } from '../../../../new-components/AdvancedDropDown';
-import { Button } from '../../../../new-components/Button';
-import { CardedTable } from '../../../../new-components/CardedTable';
-import { IndicatorCard } from '../../../../new-components/IndicatorCard';
-import { hasuraToast } from '../../../../new-components/Toasts';
-import { usePushRoute } from '../../../ConnectDBRedesign/hooks';
-import { manageTableUrl } from '../../../DataSidebar/navigation-utils';
-import { PostgresTable } from '../../../DataSource';
 import {
-  availableFeatureFlagIds,
-  useIsFeatureFlagEnabled,
-} from '../../../FeatureFlags';
+  Button,
+  IndicatorCard,
+  hasuraToast,
+  DropdownMenu,
+  Table,
+  showErrorNotification,
+} from '@hasura/shared/ui';
 import { TrackableListMenu } from '../../TrackResources/components/TrackableListMenu';
 import { usePaginatedSearchableList } from '../../TrackResources/hooks';
 import { filterByTableType, filterByText } from '../../TrackResources/utils';
-import { DisplayToastErrorMessage } from '../../components/DisplayErrorMessage';
-import { useTrackTables } from '../../hooks/useTrackTables';
-import { TrackableTable } from '../types';
+import {
+  TrackableTable,
+  useTrackTables,
+  useUntrackTables,
+} from '@hasura/metadata/api';
 import { TableRow } from './TableRow';
+import { QualifiedDataSource } from '@hasura/shared/types';
 
 interface TableListProps {
-  dataSourceName: string;
+  source: QualifiedDataSource;
   tables: TrackableTable[];
   viewingTablesThatAre: 'tracked' | 'untracked';
   onChange?: () => void;
@@ -30,12 +29,6 @@ interface TableListProps {
   onSingleTableTrack?: (table: TrackableTable) => void;
   trackMultipleEnabled: boolean;
 }
-
-// const getDefaultSelectedTableType = (availableTableTypes: string[]) => {
-//   return availableTableTypes.includes('BASE TABLE')
-//     ? ['BASE TABLE']
-//     : availableTableTypes;
-// };
 
 const countByType = (tables: TrackableTable[]) =>
   tables.reduce<Record<string, number>>((prev, current) => {
@@ -49,7 +42,7 @@ const countByType = (tables: TrackableTable[]) =>
 
 export const TableList = ({
   viewingTablesThatAre,
-  dataSourceName,
+  source,
   tables,
   onChange,
   defaultFilter,
@@ -61,7 +54,7 @@ export const TableList = ({
 
   const availableTableTypes = React.useMemo(
     () => Object.keys(typeCounts),
-    [typeCounts]
+    [typeCounts],
   );
 
   const [selectedTableTypes, setSelectedTableTypes] = useState<string[]>([]);
@@ -74,7 +67,7 @@ export const TableList = ({
         filterByTableType(table.type, selectedTableTypes)
       );
     },
-    [selectedTableTypes]
+    [selectedTableTypes],
   );
   const listProps = usePaginatedSearchableList<TrackableTable>({
     data: tables,
@@ -88,9 +81,8 @@ export const TableList = ({
     getCheckedItems: getCheckedTables,
   } = listProps;
 
-  const { trackTables, isLoading, untrackTables } = useTrackTables({
-    dataSourceName,
-  });
+  const { trackTables, isPending: trackLoading } = useTrackTables();
+  const { untrackTables, isPending: untrackLoading } = useUntrackTables();
 
   const verb = viewingTablesThatAre === 'untracked' ? 'tracked' : 'untracked';
   const action =
@@ -102,73 +94,57 @@ export const TableList = ({
     // count the items by type in the payload
     const actionCounts = countByType(getCheckedTables());
 
-    action({
-      tables: getCheckedTables(),
-      onSuccess: () => {
-        // create an array of item types where the number tracked/untracked is the same as the total (user tracked/untracked ALL of that type)
-        const toRemove = Object.entries(actionCounts).reduce<string[]>(
-          (prev, [key, value]) => {
-            if (value === currentCounts[key]) {
-              prev = [...prev, key];
-            }
-            return prev;
-          },
-          []
-        );
-
-        // if we found any, filter them out of the selectedTableTypes
-        if (toRemove.length > 0) {
-          setSelectedTableTypes(prev =>
-            prev.filter(t => !toRemove.includes(t))
+    action(
+      {
+        tables: getCheckedTables(),
+        source: source.name,
+      },
+      {
+        onSuccess: () => {
+          // create an array of item types where the number tracked/untracked is the same as the total (user tracked/untracked ALL of that type)
+          const toRemove = Object.entries(actionCounts).reduce<string[]>(
+            (prev, [key, value]) => {
+              if (value === currentCounts[key]) {
+                prev = [...prev, key];
+              }
+              return prev;
+            },
+            [],
           );
-        }
 
-        resetCheckboxes();
+          // if we found any, filter them out of the selectedTableTypes
+          if (toRemove.length > 0) {
+            setSelectedTableTypes((prev) =>
+              prev.filter((t) => !toRemove.includes(t)),
+            );
+          }
 
-        hasuraToast({
-          type: 'success',
-          title: `Successfully ${verb}`,
-          message: `${getCheckedTables().length} ${
-            getCheckedTables().length <= 1 ? 'table' : 'tables'
-          } ${verb}!`,
-        });
-        onMultipleTablesTrack?.();
-        onChange?.();
+          resetCheckboxes();
+
+          hasuraToast({
+            type: 'success',
+            title: `Successfully ${verb}`,
+            message: `${getCheckedTables().length} ${
+              getCheckedTables().length <= 1 ? 'table' : 'tables'
+            } ${verb}!`,
+          });
+          onMultipleTablesTrack?.();
+          onChange?.();
+        },
+        onError: (err) => {
+          showErrorNotification({
+            title: `Failed to ${verb} tables`,
+            error: err,
+          });
+        },
       },
-      onError: err => {
-        hasuraToast({
-          type: 'error',
-          title: err.name,
-          children: <DisplayToastErrorMessage message={err.message} />,
-        });
-      },
-    });
+    );
   };
-
-  const pushRoute = usePushRoute();
 
   const onTableRowTableTrack = (table: TrackableTable) => {
     onSingleTableTrack?.(table);
     onChange?.();
   };
-
-  const { enabled } = useIsFeatureFlagEnabled(
-    availableFeatureFlagIds.performanceMode
-  );
-
-  const onTableRowTableNameClick = (table: TrackableTable) =>
-    viewingTablesThatAre === 'tracked'
-      ? () => {
-          if (!enabled && 'schema' in (table.table as any)) {
-            const { name, schema } = table.table as PostgresTable;
-
-            pushRoute(
-              `/data/${dataSourceName}/schema/${schema}/tables/${name}/modify`
-            );
-          } else
-            pushRoute(manageTableUrl({ dataSourceName, table: table.table }));
-        }
-      : undefined;
 
   if (!tables.length) {
     return (
@@ -190,40 +166,38 @@ export const TableList = ({
           handleCheckAction();
         }}
         showButton={trackMultipleEnabled}
-        isLoading={isLoading}
+        isLoading={trackLoading || untrackLoading}
         searchChildren={
-          <DropDown.Root
-            trigger={
-              <Button icon={<FaFilter />}>
-                {selectedTableTypes.length ? (
-                  <>Type ({selectedTableTypes.length} selected)</>
-                ) : (
-                  <>No Filters applied</>
-                )}
-              </Button>
-            }
-          >
-            <DropDown.Label>Table Types:</DropDown.Label>
-            <>
-              {availableTableTypes.map(tableType => (
-                <DropDown.CheckItem
+          <DropdownMenu.Root
+            items={[
+              <DropdownMenu.Label key="table-types-label">
+                Table Types:
+              </DropdownMenu.Label>,
+              ...availableTableTypes.map((tableType) => (
+                <DropdownMenu.CheckboxItem
                   key={tableType}
-                  onCheckChange={() => {
+                  onCheckedChange={() => {
                     if (selectedTableTypes.includes(tableType))
-                      setSelectedTableTypes(t =>
-                        t.filter(x => x !== tableType)
+                      setSelectedTableTypes((t) =>
+                        t.filter((x) => x !== tableType),
                       );
-                    else setSelectedTableTypes(t => [...t, tableType]);
+                    else setSelectedTableTypes((t) => [...t, tableType]);
                   }}
                   checked={selectedTableTypes.includes(tableType)}
                 >
-                  <div>
-                    {tableType} ({typeCounts[tableType]})
-                  </div>
-                </DropDown.CheckItem>
-              ))}
-            </>
-          </DropDown.Root>
+                  {tableType} ({typeCounts[tableType]})
+                </DropdownMenu.CheckboxItem>
+              )),
+            ]}
+          >
+            <Button leftIcon={FaFilter} mode="default">
+              {selectedTableTypes.length ? (
+                <>Type ({selectedTableTypes.length} selected)</>
+              ) : (
+                <>No Filters applied</>
+              )}
+            </Button>
+          </DropdownMenu.Root>
         }
         {...listProps}
       />
@@ -235,43 +209,34 @@ export const TableList = ({
           } tables found found for the applied filter`}</IndicatorCard>
         </div>
       ) : (
-        <CardedTable.Table>
-          <CardedTable.TableHead>
-            <CardedTable.TableHeadRow>
+        <Table.Root variant="surface">
+          <Table.Header>
+            <Table.Row>
               {trackMultipleEnabled && (
-                <th className="w-0 bg-gray-50 px-sm text-sm font-semibold text-muted uppercase tracking-wider border-r">
-                  {checkAllElement()}
-                </th>
+                <Table.RowHeaderCell>{checkAllElement()}</Table.RowHeaderCell>
               )}
-              <CardedTable.TableHeadCell>Table</CardedTable.TableHeadCell>
-              <CardedTable.TableHeadCell>Type</CardedTable.TableHeadCell>
-              <CardedTable.TableHeadCell>Actions</CardedTable.TableHeadCell>
-            </CardedTable.TableHeadRow>
-          </CardedTable.TableHead>
+              <Table.RowHeaderCell>Table</Table.RowHeaderCell>
+              <Table.RowHeaderCell>Type</Table.RowHeaderCell>
+              <Table.RowHeaderCell>Actions</Table.RowHeaderCell>
+            </Table.Row>
+          </Table.Header>
 
-          <CardedTable.TableBody>
-            {paginatedTables.map(table => (
+          <Table.Body>
+            {paginatedTables.map((table) => (
               <TableRow
                 key={table.id}
                 table={table}
-                dataSourceName={dataSourceName}
+                source={source}
                 checked={checkedIds.includes(table.id)}
                 reset={resetCheckboxes}
                 onChange={() => onCheck(table.id)}
                 onTableTrack={onTableRowTableTrack}
-                onTableNameClick={onTableRowTableNameClick(table)}
                 isRowSelectionEnabled={trackMultipleEnabled}
               />
             ))}
-          </CardedTable.TableBody>
-        </CardedTable.Table>
+          </Table.Body>
+        </Table.Root>
       )}
-      <style
-        // fixes double scroll bar issue on page:
-        dangerouslySetInnerHTML={{
-          __html: `div[class^="RightContainer_main"] { overflow: unset; }`,
-        }}
-      />
     </div>
   );
 };

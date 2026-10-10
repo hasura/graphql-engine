@@ -1,8 +1,8 @@
 import React from 'react';
 import * as z from 'zod';
-import { StoryObj, Meta } from '@storybook/react';
-import { action } from '@storybook/addon-actions';
-import { SimpleForm } from '../../../../../new-components/Form';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
+import { action } from 'storybook/actions';
+import { SimpleForm } from '@hasura/shared/ui';
 import {
   refRemoteSchemaSelectorKey,
   RefRsSelector,
@@ -18,7 +18,7 @@ export default {
     'Features/Remote Relationships/Components/Reference Remote Schema Selector',
   component: RefRsSelector,
   decorators: [
-    StoryComponent => (
+    (StoryComponent) => (
       <SimpleForm
         schema={z.any()}
         onSubmit={action('onSubmit')}

@@ -1,4 +1,7 @@
-import { RunSQLResponse } from '../../../../Datasources/types';
+type RunSQLResponse = {
+  result_type: string;
+  result: string[][];
+};
 
 export const mssqlStoredProceduresMockResponse: RunSQLResponse = {
   result_type: 'TuplesOk',

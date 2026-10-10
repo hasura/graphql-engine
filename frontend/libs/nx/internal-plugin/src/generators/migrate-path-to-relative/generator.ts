@@ -3,14 +3,14 @@ import {
   readProjectConfiguration,
   visitNotIgnoredFiles,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import * as ts from 'typescript';
 import * as path from 'path';
 import { MigratePathToRelativeGeneratorSchema } from './schema';
 
 export function transformInputText(
   node: ts.StringLiteral,
-  fileFolder: string
+  fileFolder: string,
 ): string {
   const importString = node.text;
   if (!importString.startsWith('@/')) {
@@ -18,7 +18,7 @@ export function transformInputText(
   }
   const replacedValue = importString.replace(
     '@/',
-    'libs/console/legacy-ce/src/lib/'
+    'libs/console/legacy-ce/src/lib/',
   );
   let shortestPath = path.relative(fileFolder, replacedValue);
   if (shortestPath.length === 0) {
@@ -31,7 +31,7 @@ export function transformInputText(
 
 export async function lookAtFiles(tree: Tree, sourceRoot: string) {
   const { tsquery } = await import('@phenomnomnominal/tsquery');
-  visitNotIgnoredFiles(tree, sourceRoot, filePath => {
+  visitNotIgnoredFiles(tree, sourceRoot, (filePath) => {
     let fileContent = tree.read(filePath, 'utf-8');
 
     if (!fileContent?.includes("'@/")) {
@@ -41,12 +41,12 @@ export async function lookAtFiles(tree: Tree, sourceRoot: string) {
     fileContent = tsquery.replace(
       fileContent,
       'ImportDeclaration > StringLiteral',
-      node => {
+      (node) => {
         if (!ts.isStringLiteral(node)) {
           return node.getText();
         }
         return transformInputText(node, fileFolder);
-      }
+      },
     );
 
     tree.write(filePath, fileContent);
@@ -55,7 +55,7 @@ export async function lookAtFiles(tree: Tree, sourceRoot: string) {
 
 export default async function (
   tree: Tree,
-  options: MigratePathToRelativeGeneratorSchema
+  options: MigratePathToRelativeGeneratorSchema,
 ) {
   const project = readProjectConfiguration(tree, 'console-legacy-ce');
   if (!project) {

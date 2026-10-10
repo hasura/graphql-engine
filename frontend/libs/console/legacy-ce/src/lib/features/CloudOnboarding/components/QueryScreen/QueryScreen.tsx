@@ -1,7 +1,7 @@
-import React from 'react';
-import { Button } from '../../../../new-components/Button';
+import { Button, Card, GraphqlCodeBlock, Text } from '@hasura/shared/ui';
 import { FaPlayCircle } from 'react-icons/fa';
-import { Analytics } from '../../../Analytics';
+import { Analytics } from '@hasura/shared/analytics';
+import { Flex, Strong } from '@radix-ui/themes';
 
 export interface Props {
   schemaImage: string;
@@ -13,68 +13,76 @@ export interface Props {
 export function QueryScreen(props: Props) {
   const { schemaImage, onRunHandler, onSkipHandler, query } = props;
   return (
-    <>
-      <div className="flex flex-col items-center justify-center overflow-auto bg-gray-200 border border-gray-300 rounded-b p-md mb-md">
+    <Card className="overflow-auto mb-4">
+      <Flex direction="column" align="center" justify="center">
         <div>
           <div>
             <img className="mb-4" src={schemaImage} alt="graphql-schema" />
           </div>
-          <div className="flex justify-center mb-4">
-            <div className="text-sm text-gray-700">
-              We&apos;ve created a structure with two tables <b>customer</b> and{' '}
-              <b>order</b> connected through a foreign key relationship.
-            </div>
-          </div>
+          <Flex justify="center" className="mb-4">
+            <Text>
+              We&apos;ve created a structure with two tables{' '}
+              <Strong>customer</Strong> and <Strong>order</Strong> connected
+              through a foreign key relationship.
+            </Text>
+          </Flex>
           <div className="w-full" data-testid="query-dialog-sample-query">
-            <pre className="border border-gray-300 bg-gray-100 text-muted font-mono text-sm px-4 py-4">
-              <div className="font-semibold text-gray-600 text-xs mb-sm">
+            <pre className="px-4 py-4">
+              <Text as="p" weight="bold">
                 SAMPLE GRAPHQL QUERY
-              </div>
-              {query}
+              </Text>
+              <GraphqlCodeBlock text={query} className="mt-2" />
             </pre>
           </div>
         </div>
-      </div>
+      </Flex>
 
       <div className="w-full">
-        <div className="w-full mb-sm">
-          <div className="border border-gray-300 border-l-4 border-l-[#297393] shadow-md rounded bg-white p-md">
-            <div className="flex items-center">
-              <div className="flex w-3/4 items-center">
-                <div className="text-lg text-gray-700 ml-sm">
-                  <span className="mr-xs" role="img" aria-label="rocket">
+        <div className="w-full mb-2">
+          <Card>
+            <Flex align="center">
+              <Flex align="center" className="w-3/4">
+                <Text size="3">
+                  <span className="mr-1" role="img" aria-label="rocket">
                     🚀
-                  </span>
-                  <b className="mr-sm">You&apos;re ready to go!</b>
-                  Run your first sample query to get started.
-                </div>
-              </div>
-              <div className="flex w-1/4 justify-end">
+                  </span>{' '}
+                  <Strong>You&apos;re ready to go!</Strong> Run your first
+                  sample query to get started.
+                </Text>
+              </Flex>
+              <Flex justify="end" className="w-1/4">
                 <Analytics
                   name="query-screen-get-started-button"
                   passHtmlAttributesToChildren
                 >
-                  <Button mode="primary" onClick={onRunHandler}>
-                    Run a Sample Query <FaPlayCircle />
+                  <Button
+                    mode="primary"
+                    onClick={onRunHandler}
+                    rightIcon={FaPlayCircle}
+                  >
+                    Run a Sample Query
                   </Button>
                 </Analytics>
-              </div>
-            </div>
-          </div>
+              </Flex>
+            </Flex>
+          </Card>
         </div>
-        <div className="flex justify-start items-center w-full">
+        <Flex justify="start" align="center" className="w-full mt-2">
           <Analytics name="onboarding-skip-button">
-            <a
-              className="w-auto text-secondary cursor-pointer text-sm hover:text-secondary-dark"
+            <Button
+              variant="ghost"
+              size="1"
+              color="gray"
+              className="w-auto"
               onClick={() => {
                 onSkipHandler();
               }}
             >
               Skip, continue to Console
-            </a>
+            </Button>
           </Analytics>
-        </div>
+        </Flex>
       </div>
-    </>
+    </Card>
   );
 }

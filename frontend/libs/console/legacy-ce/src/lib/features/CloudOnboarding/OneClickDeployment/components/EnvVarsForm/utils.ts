@@ -1,25 +1,22 @@
 import { z, ZodString } from 'zod';
-import { isJsonString } from '../../../../../components/Common/utils/export.utils';
+import { isJsonString } from '@hasura/shared/utils';
 import { NeonButtonProps } from './types';
 import { RequiredEnvVar } from '../../types';
-import { NeonIntegrationStatus } from '../../../../../components/Services/Data/DataSources/CreateDataSource/Neon/useNeonIntegration';
-import { getProjectHealth } from '../../../../../components/Services/Data/DataSources/CreateDataSource/utils';
+import { NeonIntegrationStatus } from '../../../NeonOnboardingWizard/hooks/useNeonIntegration';
+import { getProjectHealth } from '../../../utils/cloudDatasourceEnvVars';
 
 export const generateDefaultValues = (envVars: RequiredEnvVar[]) => {
   const defaultValues: any = {};
-  envVars.forEach(envVar => {
+  envVars.forEach((envVar) => {
     if (envVar.Default) defaultValues[envVar.Name] = String(envVar.Default);
   });
   return defaultValues;
 };
 
 export const generateEnvVarsFormSchema = (envVars: RequiredEnvVar[]) => {
-  const dynamicSchemaObject: Record<
-    string,
-    ZodString | z.ZodEffects<z.ZodString, string, string>
-  > = {};
+  const dynamicSchemaObject: Record<string, ZodString> = {};
 
-  envVars.forEach(envVar => {
+  envVars.forEach((envVar) => {
     if (envVar.Mandatory) {
       if (envVar.ValueType === 'JSON') {
         dynamicSchemaObject[envVar.Name] = z
@@ -42,7 +39,7 @@ export const generateEnvVarsFormSchema = (envVars: RequiredEnvVar[]) => {
 
 export const getFormProperties = (
   envVars: RequiredEnvVar[],
-  tenantEnvVars: Record<string, string>
+  tenantEnvVars: Record<string, string>,
 ) => {
   const schema = generateEnvVarsFormSchema(envVars);
   const defaultValues = generateDefaultValues(envVars);
@@ -57,7 +54,7 @@ export const getFormProperties = (
 };
 
 export const transformNeonIntegrationStatusToNeonButtonProps = (
-  neonIntegrationStatus: NeonIntegrationStatus
+  neonIntegrationStatus: NeonIntegrationStatus,
 ): NeonButtonProps => {
   let neonButtonProps: NeonButtonProps;
   switch (neonIntegrationStatus.status) {
@@ -78,7 +75,6 @@ export const transformNeonIntegrationStatusToNeonButtonProps = (
         },
         buttonText: 'Authenticating with Neon',
         onClickConnect: () => null,
-        icon: 'loading',
       };
       break;
     case 'authentication-error':
@@ -101,7 +97,6 @@ export const transformNeonIntegrationStatusToNeonButtonProps = (
         },
         buttonText: 'Creating Database',
         onClickConnect: () => null,
-        icon: 'loading',
       };
       break;
     case 'neon-database-creation-error':
@@ -143,7 +138,7 @@ export const transformNeonIntegrationStatusToNeonButtonProps = (
 export const verifyProjectHealthAndProceed = (
   successCallback: VoidFunction,
   errorCallback: VoidFunction,
-  retryCount = 0
+  retryCount = 0,
 ) => {
   if (retryCount === 10) {
     errorCallback();
@@ -158,25 +153,27 @@ export const verifyProjectHealthAndProceed = (
         verifyProjectHealthAndProceed(
           successCallback,
           errorCallback,
-          retryCount + 1
+          retryCount + 1,
         );
       }, 1500);
     });
 };
 
 export function getEnvVarFormSegments(envVars: RequiredEnvVar[]) {
-  const databaseEnvVars = envVars.filter(ev => ev.Kind === 'ENV_TYPE_DATABASE');
+  const databaseEnvVars = envVars.filter(
+    (ev) => ev.Kind === 'ENV_TYPE_DATABASE',
+  );
 
-  const dynamicEnvVars = envVars.filter(ev => ev.Kind === 'ENV_TYPE_DYNAMIC');
+  const dynamicEnvVars = envVars.filter((ev) => ev.Kind === 'ENV_TYPE_DYNAMIC');
 
-  const staticEnvVars = envVars.filter(ev => ev.Kind === 'ENV_TYPE_STATIC');
+  const staticEnvVars = envVars.filter((ev) => ev.Kind === 'ENV_TYPE_STATIC');
 
   databaseEnvVars.sort((a, b) =>
-    (a.Position ?? 1) <= (b.Position ?? 1) ? -1 : 1
+    (a.Position ?? 1) <= (b.Position ?? 1) ? -1 : 1,
   );
 
   const isPGDatabaseEnvVarPresent = databaseEnvVars.some(
-    envVariable => envVariable.SubKind === 'postgres'
+    (envVariable) => envVariable.SubKind === 'postgres',
   );
 
   return {

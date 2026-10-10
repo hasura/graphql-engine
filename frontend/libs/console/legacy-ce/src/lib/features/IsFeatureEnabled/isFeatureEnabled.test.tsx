@@ -245,7 +245,7 @@ describe('isFeatureEnabled', () => {
           <IsFeatureEnabled
             // TODO: use a real feature
             feature="unitTestActiveEeTrialFake"
-            ifDisabled={result => {
+            ifDisabled={(result) => {
               // Types testing
               // @ts-expect-error The error is expected because here we are checking that the value reflects the runtime value
               expect(result.doNotMatch.ee?.withoutLicense).toBe(undefined);
@@ -256,7 +256,7 @@ describe('isFeatureEnabled', () => {
           >
             <div>TODO:</div>
           </IsFeatureEnabled>
-        </StoreProvider>
+        </StoreProvider>,
       );
 
       expect(screen.getByText('Disabled')).toBeInTheDocument();

@@ -12,14 +12,14 @@ export function useInstallTemplate(
   dataSourceName: string,
   templateBaseUrl: string,
   onSuccessCb: () => void,
-  onErrorCb: (errorMsg?: string) => void
+  onErrorCb: (errorMsg?: string) => void,
 ) {
   // fetch the function to apply metadata
   const { updateMetadata } = useInstallMetadata(
     dataSourceName,
     getMetadataUrl(templateBaseUrl),
     onSuccessCb,
-    onErrorCb
+    onErrorCb,
   );
 
   // fetch the function to apply migration
@@ -32,7 +32,7 @@ export function useInstallTemplate(
         updateMetadata();
       }
     },
-    onErrorCb
+    onErrorCb,
   );
 
   const install = useCallback(() => {

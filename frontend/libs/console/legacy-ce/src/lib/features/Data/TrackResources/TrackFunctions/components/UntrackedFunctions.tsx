@@ -1,31 +1,38 @@
 import { SlOptionsVertical } from 'react-icons/sl';
-import Skeleton from 'react-loading-skeleton';
-import { Button } from '../../../../../new-components/Button';
-import { CardedTable } from '../../../../../new-components/CardedTable';
-import { DropdownMenu } from '../../../../../new-components/DropdownMenu';
-import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
-import { LearnMoreLink } from '../../../../../new-components/LearnMoreLink';
-import { IntrospectedFunction, nativeDrivers } from '../../../../DataSource';
+import { Flex } from '@radix-ui/themes';
 import {
-  MetadataSelectors,
+  Button,
+  CardedTable,
+  DropdownMenu,
+  IndicatorCard,
+  LearnMoreLink,
+  useHasuraAlert,
+  hasuraToast,
+  SkeletonList,
+  showErrorNotification,
+} from '@hasura/shared/ui';
+import {
+  IntrospectedFunction,
+  useInvalidateTrackableFunctions,
+} from '@hasura/metadata/data-source';
+import {
   useInvalidateMetadata,
   useMetadata,
-} from '../../../../hasura-metadata-api';
+  useTrackFunctions,
+} from '@hasura/metadata/api';
 import { FunctionDisplayName } from './FunctionDisplayName';
-
-import React, { useEffect, useState } from 'react';
-import { useHasuraAlert } from '../../../../../new-components/Alert';
-import { hasuraToast } from '../../../../../new-components/Toasts';
-import { QualifiedFunction } from '../../../../hasura-metadata-types';
-import { DisplayToastErrorMessage } from '../../../components/DisplayErrorMessage';
-import { useTrackFunction } from '../../../hooks/useTrackFunction';
+import React, { useState } from 'react';
+import { TableFunction } from '@hasura/shared/types';
 import { TrackableListMenu } from '../../components/TrackableListMenu';
 import { usePaginatedSearchableList } from '../../hooks';
 import {
   TrackFunctionForm,
   TrackFunctionFormSchema,
 } from './TrackFunctionForm';
-import { useInvalidateIntrospectedFunction } from '../../../hooks/useTrackableFunctions';
+import {
+  isNativeDriver as _isNativeDriver,
+  MetadataSelectors,
+} from '@hasura/metadata/helpers';
 
 export type UntrackedFunctionsProps = {
   dataSourceName: string;
@@ -38,23 +45,8 @@ export type AllowedFunctionTypes = 'mutation' | 'query' | 'root_field';
 export const UntrackedFunctions = (props: UntrackedFunctionsProps) => {
   const { dataSourceName, untrackedFunctions = [], isLoading } = props;
 
-  const functionsWithId = React.useMemo(
-    () =>
-      Array.isArray(untrackedFunctions)
-        ? untrackedFunctions.map(f => ({ ...f, id: f.name }))
-        : [],
-    [untrackedFunctions]
-  );
-
-  const invalidateUntrackedFunctions = useInvalidateIntrospectedFunction();
+  const invalidateUntrackedFunctions = useInvalidateTrackableFunctions();
   const invalidateMetadata = useInvalidateMetadata();
-
-  // Fire this when the component loads because RunSQL could add/remove functions from the database.
-  // This is an extra call but it's unavoidable at the moment.
-  useEffect(() => {
-    invalidateUntrackedFunctions(dataSourceName);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const [activeRow, setActiveRow] = useState<number | undefined>();
 
@@ -68,28 +60,17 @@ export const UntrackedFunctions = (props: UntrackedFunctionsProps) => {
   const { hasuraConfirm } = useHasuraAlert();
 
   const { data: driver = '' } = useMetadata(
-    m => MetadataSelectors.findSource(dataSourceName)(m)?.kind
+    (m) => MetadataSelectors.findSource(dataSourceName)(m)?.kind,
   );
 
-  const isNativeDriver = nativeDrivers.includes(driver);
+  const isNativeDriver = _isNativeDriver(driver);
 
-  const { trackFunction, isLoading: isTrackingInProgress } = useTrackFunction({
-    dataSourceName,
-    onSuccess: () => {
-      hasuraToast({
-        type: 'success',
-        title: 'Success',
-        message: `Tracked object successfully`,
-      });
-    },
-    onError: err => {
-      hasuraToast({
-        type: 'error',
-        title: err.name,
-        children: <DisplayToastErrorMessage message={err.message} />,
-      });
-    },
-  });
+  const { trackFunctions, isPending: isTrackingInProgress } =
+    useTrackFunctions();
+
+  const functionsWithId = Array.isArray(untrackedFunctions)
+    ? untrackedFunctions.map((f) => ({ ...f, id: f.name }))
+    : [];
 
   const listProps = usePaginatedSearchableList({
     data: functionsWithId,
@@ -98,13 +79,13 @@ export const UntrackedFunctions = (props: UntrackedFunctionsProps) => {
     },
   });
 
-  if (isLoading) return <Skeleton count={5} height={20} className="mb-1" />;
+  if (isLoading) return <SkeletonList count={5} />;
 
   if (!untrackedFunctions.length)
     return (
       <IndicatorCard status="info" headline="No untracked functions found">
-        We couldn't find any compatible functions in your database that can be
-        tracked in Hasura.{' '}
+        We couldn&apos;t find any compatible functions in your database that can
+        be tracked in Hasura.{' '}
         <LearnMoreLink href="https://hasura.io/docs/latest/schema/postgres/postgres-guides/functions/" />
       </IndicatorCard>
     );
@@ -116,8 +97,8 @@ export const UntrackedFunctions = (props: UntrackedFunctionsProps) => {
 
   const handleTrack = (
     index: number,
-    fn: QualifiedFunction,
-    type: AllowedFunctionTypes
+    fn: TableFunction,
+    type: AllowedFunctionTypes,
   ) => {
     // hack until capabilities or function schema can tell us if the function supports return types
     if (!isNativeDriver) {
@@ -132,9 +113,10 @@ export const UntrackedFunctions = (props: UntrackedFunctionsProps) => {
 
     setActiveRow(index);
     setActiveOperation(type);
-    trackFunction({
-      functionsToBeTracked: [
+    trackFunctions(
+      [
         {
+          source: dataSourceName,
           function: fn,
           ...(type !== 'root_field'
             ? {
@@ -145,11 +127,26 @@ export const UntrackedFunctions = (props: UntrackedFunctionsProps) => {
             : {}),
         },
       ],
-      onSettled: () => {
-        setActiveRow(undefined);
-        setActiveOperation(undefined);
+      {
+        onSuccess: () => {
+          hasuraToast({
+            type: 'success',
+            title: 'Success',
+            message: `Tracked object successfully`,
+          });
+        },
+        onError: (err) => {
+          showErrorNotification({
+            title: 'Tracking function failed',
+            error: err,
+          });
+        },
+        onSettled: () => {
+          setActiveRow(undefined);
+          setActiveOperation(undefined);
+        },
       },
-    });
+    );
   };
 
   return (
@@ -160,128 +157,122 @@ export const UntrackedFunctions = (props: UntrackedFunctionsProps) => {
           isLoading={isLoading ?? false}
           {...listProps}
         />
-
-        <CardedTable.Table>
-          <CardedTable.TableHead>
-            <CardedTable.TableHeadRow>
-              <CardedTable.TableHeadCell>Function</CardedTable.TableHeadCell>
-              <CardedTable.TableHeadCell>
-                <div className="float-right">
-                  <DropdownMenu
-                    items={[
-                      [
-                        <span
-                          className="py-2"
-                          onClick={() => {
-                            invalidateUntrackedFunctions(dataSourceName);
-                            invalidateMetadata({
-                              componentName: 'UntrackedFunctions',
-                              reasons: [
-                                'Refreshing untracked functions on Dropdown Menu item click.',
-                              ],
-                            });
-                          }}
-                        >
-                          Refresh
-                        </span>,
-                      ],
-                    ]}
-                    options={{
-                      content: {
-                        alignOffset: -50,
-                        avoidCollisions: false,
-                      },
+        <CardedTable
+          columns={[
+            'Function',
+            <Flex key="options-column" align="center" justify="end">
+              <DropdownMenu.Root
+                items={[
+                  <DropdownMenu.Item
+                    key="refresh"
+                    onSelect={() => {
+                      invalidateUntrackedFunctions(dataSourceName);
+                      invalidateMetadata({
+                        componentName: 'UntrackedFunctions',
+                        reasons: [
+                          'Refreshing untracked functions on Dropdown Menu item click.',
+                        ],
+                      });
                     }}
                   >
-                    <SlOptionsVertical />
-                  </DropdownMenu>
-                </div>
-              </CardedTable.TableHeadCell>
-            </CardedTable.TableHeadRow>
-          </CardedTable.TableHead>
-          <CardedTable.TableBody>
-            {paginatedData.map((untrackedFunction, index) => (
-              <CardedTable.TableBodyRow key={untrackedFunction.id}>
-                <CardedTable.TableBodyCell>
-                  <FunctionDisplayName
-                    qualifiedFunction={untrackedFunction.qualifiedFunction}
-                  />
-                </CardedTable.TableBodyCell>
-                <CardedTable.TableBodyCell>
-                  <div className="flex gap-2 justify-end">
-                    {untrackedFunction.isVolatile ? (
-                      <>
-                        <Button
-                          onClick={() => {
+                    Refresh
+                  </DropdownMenu.Item>,
+                ]}
+                options={{
+                  content: {
+                    alignOffset: -50,
+                    avoidCollisions: false,
+                  },
+                }}
+              >
+                <SlOptionsVertical />
+              </DropdownMenu.Root>
+            </Flex>,
+          ]}
+          data={paginatedData.map((untrackedFunction, index) => [
+            <FunctionDisplayName
+              key={`name-${untrackedFunction.name}`}
+              qualifiedFunction={untrackedFunction.function}
+            />,
+            <Flex
+              key={`actions-${untrackedFunction.name}`}
+              gap="2"
+              justify="end"
+            >
+              {untrackedFunction.isVolatile ? (
+                <>
+                  <Button
+                    mode="default"
+                    onClick={() => {
+                      handleTrack(
+                        index,
+                        untrackedFunction.function,
+                        'mutation',
+                      );
+                    }}
+                    loading={
+                      activeRow === index &&
+                      isTrackingInProgress &&
+                      activeOperation === 'mutation'
+                    }
+                    disabled={activeRow === index && isTrackingInProgress}
+                    loadingText="Please wait..."
+                  >
+                    Track as Mutation
+                  </Button>
+                  <Button
+                    mode="primary"
+                    onClick={() =>
+                      hasuraConfirm({
+                        message:
+                          'Queries are supposed to be read only and as such recommended to be STABLE or IMMUTABLE',
+                        title: `Confirm tracking ${untrackedFunction.name} as a query`,
+                        onClose: ({ confirmed }) => {
+                          if (confirmed)
                             handleTrack(
                               index,
-                              untrackedFunction.qualifiedFunction,
-                              'mutation'
+                              untrackedFunction.function,
+                              'query',
                             );
-                          }}
-                          isLoading={
-                            activeRow === index &&
-                            isTrackingInProgress &&
-                            activeOperation === 'mutation'
-                          }
-                          disabled={activeRow === index && isTrackingInProgress}
-                          loadingText="Please wait..."
-                        >
-                          Track as Mutation
-                        </Button>
-                        <Button
-                          onClick={() =>
-                            hasuraConfirm({
-                              message:
-                                'Queries are supposed to be read only and as such recommended to be STABLE or IMMUTABLE',
-                              title: `Confirm tracking ${untrackedFunction.name} as a query`,
-                              onClose: ({ confirmed }) => {
-                                if (confirmed)
-                                  handleTrack(
-                                    index,
-                                    untrackedFunction.qualifiedFunction,
-                                    'query'
-                                  );
-                              },
-                            })
-                          }
-                          isLoading={
-                            activeRow === index &&
-                            isTrackingInProgress &&
-                            activeOperation === 'query'
-                          }
-                          disabled={activeRow === index && isTrackingInProgress}
-                          loadingText="Please wait..."
-                        >
-                          Track as Query
-                        </Button>
-                      </>
-                    ) : (
-                      <Button
-                        onClick={() => {
-                          handleTrack(
-                            index,
-                            untrackedFunction.qualifiedFunction,
-                            'root_field'
-                          );
-                        }}
-                        isLoading={
-                          activeRow === index &&
-                          isTrackingInProgress &&
-                          activeOperation === 'root_field'
-                        }
-                        disabled={activeRow === index && isTrackingInProgress}
-                        loadingText="Please wait..."
-                      >
-                        Track as Root Field
-                      </Button>
-                    )}
-                  </div>
-                </CardedTable.TableBodyCell>
-              </CardedTable.TableBodyRow>
-            ))}
-          </CardedTable.TableBody>
-        </CardedTable.Table>
+                        },
+                      })
+                    }
+                    loading={
+                      activeRow === index &&
+                      isTrackingInProgress &&
+                      activeOperation === 'query'
+                    }
+                    disabled={activeRow === index && isTrackingInProgress}
+                    loadingText="Please wait..."
+                  >
+                    Track as Query
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  mode="default"
+                  size="1"
+                  onClick={() => {
+                    handleTrack(
+                      index,
+                      untrackedFunction.function,
+                      'root_field',
+                    );
+                  }}
+                  loading={
+                    activeRow === index &&
+                    isTrackingInProgress &&
+                    activeOperation === 'root_field'
+                  }
+                  disabled={activeRow === index && isTrackingInProgress}
+                  loadingText="Please wait..."
+                >
+                  Track as Root Field
+                </Button>
+              )}
+            </Flex>,
+          ])}
+        />
       </div>
       <div>
         {isModalOpen ? (

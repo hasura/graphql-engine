@@ -6,7 +6,7 @@
 'use strict'
 
 import { graphql, GraphQLSchema } from 'graphql'
-import { afterAll, beforeAll, expect, test } from '@jest/globals'
+import { afterAll, beforeAll, expect, test } from 'vitest'
 
 import * as openAPIToGraphQL from '../src/index'
 import { startServer, stopServer } from './example_api_server'

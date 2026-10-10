@@ -7,12 +7,12 @@ export const trackStoredProcedureValidationSchema = z.object({
     custom_name: z.string().optional(),
   }),
   stored_procedure: z.any().refine(
-    val => {
+    (val) => {
       return !!val;
     },
     {
       message: 'Stored Procedure is a required field!',
-    }
+    },
   ),
   returns: z.string().min(1, 'Return type is required!'),
   arguments: z
@@ -21,7 +21,7 @@ export const trackStoredProcedureValidationSchema = z.object({
         name: z.string(),
         type: z.string(),
         nullable: z.boolean().optional(),
-      })
+      }),
     )
     .optional(),
 });
@@ -35,5 +35,6 @@ export const defaultEmptyValues: AddStoredProcedureFormData = {
   configuration: {
     exposed_as: 'query',
   },
+  stored_procedure: undefined,
   returns: '',
 };

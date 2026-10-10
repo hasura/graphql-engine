@@ -1,126 +1,70 @@
-import React from 'react';
-
-import { useConsoleForm } from '../../../../../new-components/Form';
-import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
-import { Button } from '../../../../../new-components/Button';
+import { Flex } from '@radix-ui/themes';
 import {
-  allowedMetadataTypes,
-  useMetadataMigration,
-} from '../../../../MetadataAPI';
-
-import { useFireNotification } from '../../../../../new-components/Notifications';
-import { useFormContext } from 'react-hook-form';
+  useConsoleForm,
+  IndicatorCard,
+  Button,
+  Card,
+  Text,
+} from '@hasura/shared/ui';
+import { useUpsertRemoteSchemaRemoteRelationship } from '@hasura/metadata/api';
 import {
   RelationshipTypeCardRadioGroup,
   RemoteRelOption,
 } from './RelationshipTypeCardRadioGroup';
-
 import { FormElements } from './FormElements';
-import { generateLhsFields } from '../../utils';
-import { rsToRsFormSchema, RsToRsSchema } from '../../types';
-import { useDefaultValues } from './hooks';
+import { generateLhsFields } from '../../../utils';
+import {
+  getDefaultRemoteRelationshipValues,
+  rsToRsFormSchema,
+  RsToRsSchema,
+} from './schemas';
+import { RemoteRelationship } from '@hasura/shared/types';
 
 export type RemoteSchemaToRemoteSchemaFormProps = {
   sourceRemoteSchema: string;
   typeName?: string;
-  existingRelationshipName?: string;
+  existingRelationship?: RemoteRelationship;
   closeHandler: () => void;
   relModeHandler: (v: RemoteRelOption) => void;
   onSuccess?: () => void;
 };
 
-type ResetterProps = {
-  sourceRemoteSchema: string;
-  typeName?: string;
-  existingRelationshipName?: string;
-};
-
-const SetDefaults = ({
+// Wrapper to provide Form Context
+export const RemoteSchemaToRemoteSchemaForm = ({
   sourceRemoteSchema,
   typeName,
-  existingRelationshipName,
-}: ResetterProps) => {
-  const {
-    data: defaultValues,
-    isLoading,
-    isError,
-  } = useDefaultValues({
-    sourceRemoteSchema,
-    typeName,
-    remoteRelationshipName: existingRelationshipName,
-  });
+  existingRelationship,
+  closeHandler,
+  relModeHandler,
+  onSuccess,
+}: RemoteSchemaToRemoteSchemaFormProps) => {
+  const { mutate: upsertRemoteSchemaRemoteRelationship, isPending } =
+    useUpsertRemoteSchemaRemoteRelationship();
 
-  const { reset } = useFormContext<RsToRsSchema>();
-
-  React.useEffect(() => {
-    reset(defaultValues);
-  }, [defaultValues, reset]);
-
-  if (isError) {
-    return <div>Error loading schema details</div>;
-  }
-
-  if (isLoading && existingRelationshipName) {
-    return <div>Loading existing schema...</div>;
-  }
-
-  return null;
-};
-
-// Wrapper to provide Form Context
-export const RemoteSchemaToRemoteSchemaForm = (
-  props: RemoteSchemaToRemoteSchemaFormProps
-) => {
-  const {
-    sourceRemoteSchema,
-    typeName,
-    existingRelationshipName,
-    closeHandler,
-    relModeHandler,
-  } = props;
-  const { fireNotification } = useFireNotification();
-  const mutation = useMetadataMigration({
-    onSuccess: () => {
-      fireNotification({
-        title: 'Success!',
-        message: 'Relationship saved successfully',
-        type: 'success',
-      });
-      if (closeHandler) closeHandler();
-    },
-    onError: (error: Error) => {
-      fireNotification({
-        title: 'Error',
-        message: error?.message ?? 'Error while creating the relationship',
-        type: 'error',
-      });
-    },
-  });
-
-  const submit = (values: Record<string, unknown>) => {
+  const submit = (values: RsToRsSchema) => {
     const lhs_fields = generateLhsFields(
-      values.resultSet as Record<string, unknown>
+      values.resultSet as Record<string, unknown>,
     );
-    const type = existingRelationshipName ? 'update' : 'create';
-
-    const requestBody = {
-      type: `${type}_remote_schema_remote_relationship` as allowedMetadataTypes,
-      args: {
-        remote_schema: values.sourceRemoteSchema,
-        type_name: values.rsSourceType,
-        name: values.name,
-        definition: {
-          to_remote_schema: {
-            remote_schema: values.referenceRemoteSchema,
-            lhs_fields,
-            remote_field: values.resultSet,
+    upsertRemoteSchemaRemoteRelationship(
+      {
+        action: existingRelationship ? 'update' : 'create',
+        args: {
+          remote_schema: sourceRemoteSchema,
+          type_name: values.rsSourceType,
+          name: values.name,
+          definition: {
+            to_remote_schema: {
+              remote_schema: values.referenceRemoteSchema,
+              lhs_fields,
+              remote_field: values.resultSet,
+            },
           },
         },
       },
-    };
-    mutation.mutate({
-      query: requestBody,
-    });
+      {
+        onSuccess,
+      },
+    );
   };
 
   const {
@@ -128,31 +72,34 @@ export const RemoteSchemaToRemoteSchemaForm = (
     Form,
   } = useConsoleForm({
     schema: rsToRsFormSchema,
+    options: {
+      defaultValues: getDefaultRemoteRelationshipValues(
+        existingRelationship,
+        typeName,
+      ),
+    },
   });
 
+  const relationshipTitle = existingRelationship
+    ? 'Edit Relationship'
+    : 'Add Relationship';
   return (
     <Form onSubmit={submit} className="p-4">
       <>
-        <SetDefaults
-          sourceRemoteSchema={sourceRemoteSchema}
-          typeName={typeName}
-          existingRelationshipName={existingRelationshipName}
-        />
-        <div className="grid border border-gray-300 rounded shadow-sm p-4 w-full">
-          <div className="flex items-center gap-4 w-full mb-md">
-            <Button type="button" size="sm" onClick={closeHandler}>
+        <Card size="2">
+          <Flex align="center" gap="4" className="w-full mb-4">
+            <Button
+              mode="default"
+              type="button"
+              size="sm"
+              onClick={closeHandler}
+            >
               Cancel
             </Button>
-            <p className="font-semibold m-0">
-              {existingRelationshipName
-                ? 'Edit Relationship'
-                : 'Add Relationship'}
-            </p>
-          </div>
+            <Text weight="bold">{relationshipTitle}</Text>
+          </Flex>
 
-          <hr className="mb-md border-gray-300" />
-
-          {existingRelationshipName ? null : (
+          {existingRelationship ? null : (
             <RelationshipTypeCardRadioGroup
               value="remoteSchema"
               onChange={relModeHandler}
@@ -161,26 +108,24 @@ export const RemoteSchemaToRemoteSchemaForm = (
 
           <FormElements
             sourceRemoteSchema={sourceRemoteSchema}
-            existingRelationshipName={existingRelationshipName}
+            existingRelationship={existingRelationship}
           />
 
           {/* submit */}
-          <div>
+          <div className="mt-4">
             <Button
               mode="primary"
               size="md"
               type="submit"
-              isLoading={mutation.isLoading}
+              loading={isPending}
               loadingText={
-                existingRelationshipName
+                existingRelationship
                   ? 'Updating relationship'
                   : 'Creating relationship'
               }
               data-test="add-rs-relationship"
             >
-              {existingRelationshipName
-                ? 'Edit Relationship'
-                : 'Add Relationship'}
+              {relationshipTitle}
             </Button>
           </div>
 
@@ -189,7 +134,7 @@ export const RemoteSchemaToRemoteSchemaForm = (
               Error saving relationship
             </IndicatorCard>
           )}
-        </div>
+        </Card>
       </>
     </Form>
   );

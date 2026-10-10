@@ -1,10 +1,15 @@
 import clsx from 'clsx';
 import { useFormContext } from 'react-hook-form';
 import { FaPlay } from 'react-icons/fa';
-import { Button } from '../../../new-components/Button';
-import { Dialog } from '../../../new-components/Dialog';
-import { FieldWrapper, InputField, Radio } from '../../../new-components/Form';
-import { Tabs } from '../../../new-components/Tabs';
+import {
+  Button,
+  DialogFooter,
+  FieldWrapper,
+  InputField,
+  RadioGroupField,
+  Tabs,
+} from '@hasura/shared/ui';
+
 import { GraphQLSchemaInput } from './GraphQLSchemaInput/GraphQLSchemaInput';
 import { useCustomSchemaForm } from './hooks/useCustomSchemaForm';
 import { JsonSchemaInput } from './JsonSchemaInput/JsonSchemaInput';
@@ -20,13 +25,13 @@ export type CustomSchemaFormProps = {
   callToDeny?: string;
 };
 
-export const CustomSchemaForm: React.VFC<CustomSchemaFormProps> = props => {
+export const CustomSchemaForm: React.FC<CustomSchemaFormProps> = (props) => {
   const { Form, handleSubmit } = useCustomSchemaForm(props);
 
   return (
     <Form onSubmit={handleSubmit}>
       <div>
-        <div className="pl-md pr-md pb-sm">
+        <div className="pl-md pr-md pb-2">
           <div className={clsx('flex text-muted flex-col')}>
             <div>
               Customize tracked objects and their GraphQL API representations.
@@ -46,9 +51,11 @@ export const CustomSchemaForm: React.VFC<CustomSchemaFormProps> = props => {
             ]}
           />
         </div>
-        <Dialog.Footer
+        <DialogFooter
           callToAction={props.callToAction}
-          callToActionLoadingText={props.callToActionLoadingText}
+          callToActionProps={{
+            loadingText: props.callToActionLoadingText,
+          }}
           callToDeny={props.callToDeny}
           className="sticky w-full bottom-0 left-0 z-10"
         />
@@ -64,7 +71,7 @@ function CustomSchemaFields(props: CustomSchemaFormProps) {
   return (
     <>
       <div>
-        <Radio
+        <RadioGroupField
           name="schemaType"
           label="Schema Type"
           options={[
@@ -91,13 +98,11 @@ function CustomSchemaFields(props: CustomSchemaFormProps) {
               name="schemaSamplingSize"
               label="Schema Sampling Size"
               description="How many records should be sampled from Collections for inferring the Collection’s schema?"
-              placeholder="1000"
-              type="number"
-              rightButton={
-                <Button icon={<FaPlay className="w-3 h-3 text-base" />}>
-                  Sample Schema
-                </Button>
-              }
+              fieldProps={{
+                placeholder: '1000',
+                type: 'number',
+                rightButton: <Button leftIcon={FaPlay}>Sample Schema</Button>,
+              }}
             />
           </div>
           <div>
@@ -122,7 +127,7 @@ function GraphQLSchemaField() {
     >
       <GraphQLSchemaInput
         value={value}
-        onChange={newValue => setValue(name, newValue)}
+        onChange={(newValue) => setValue(name, newValue)}
       />
     </FieldWrapper>
   );
@@ -141,7 +146,7 @@ function JsonSchemaField() {
     >
       <JsonSchemaInput
         value={value}
-        onChange={newValue => setValue(name, newValue)}
+        onChange={(newValue) => setValue(name, newValue)}
       />
     </FieldWrapper>
   );

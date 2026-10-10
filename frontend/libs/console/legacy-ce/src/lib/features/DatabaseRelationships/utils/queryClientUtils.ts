@@ -1,4 +1,4 @@
-import { Table } from '../../hasura-metadata-types';
+import { Table } from '@hasura/shared/types';
 
 interface BaseParams {
   dataSourceName: string;
@@ -53,9 +53,3 @@ export const generateQueryKeys = {
       params.relationshipName,
     ] as const,
 };
-
-/**
- * TODO: We need to set this to 3600 * 1000 (1 hour) after removing the useQuery usage from the component level hooks
- * which seems to be interferring with qc.invalidateQuery effect from trickling down to the leaf level hooks.
- */
-export const DEFAULT_STALE_TIME = 0;

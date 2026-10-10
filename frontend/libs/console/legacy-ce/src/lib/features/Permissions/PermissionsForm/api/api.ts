@@ -1,9 +1,8 @@
-import { allowedMetadataTypes } from '../../../MetadataAPI';
-
-import { AccessType, QueryType } from '../../types';
+import { getDriverPrefix } from '@hasura/metadata/helpers';
 import { PermissionsSchema } from '../../schema';
 import { createInsertArgs, ExistingPermission } from './utils';
-import { Table } from '../../../hasura-metadata-types';
+import { AccessType, DataQueryType, Table } from '@hasura/shared/types';
+import { TMigrationBulkQuery, TMigrationQuery } from '@hasura/metadata/api';
 
 interface CreateBodyArgs {
   dataSourceName: string;
@@ -13,7 +12,7 @@ interface CreateBodyArgs {
 }
 
 interface CreateDeleteBodyArgs extends CreateBodyArgs {
-  queries: QueryType[];
+  queries: DataQueryType[];
   driver: string;
 }
 
@@ -24,14 +23,10 @@ const createDeleteBody = ({
   role,
   resourceVersion,
   queries,
-}: CreateDeleteBodyArgs): {
-  type: allowedMetadataTypes;
-  source: string;
-  resource_version: number;
-  args: BulkArgs[];
-} => {
-  const args = queries.map(queryType => ({
-    type: `${driver}_drop_${queryType}_permission` as allowedMetadataTypes,
+}: CreateDeleteBodyArgs): TMigrationBulkQuery => {
+  const prefix = getDriverPrefix(driver);
+  const args = queries.map((queryType) => ({
+    type: `${prefix}_drop_${queryType}_permission` as const,
     args: {
       table,
       role,
@@ -40,8 +35,7 @@ const createDeleteBody = ({
   }));
 
   const body = {
-    type: 'bulk' as allowedMetadataTypes,
-    source: 'default',
+    type: 'bulk' as const,
     resource_version: resourceVersion,
     args,
   };
@@ -49,73 +43,15 @@ const createDeleteBody = ({
   return body;
 };
 
-interface CreateBulkDeleteBodyArgs {
-  dataSourceName: string;
-  table: unknown;
-  resourceVersion: number;
-  roleList?: Array<{ roleName: string; queries: string[] }>;
-  driver: string;
-}
-
-interface BulkArgs {
-  type: allowedMetadataTypes;
-  args: Record<string, string | allowedMetadataTypes | unknown>;
-}
-
-const createBulkDeleteBody = ({
-  dataSourceName,
-  driver,
-  table,
-  resourceVersion,
-  roleList,
-}: CreateBulkDeleteBodyArgs): {
-  type: allowedMetadataTypes;
-  source: string;
-  resource_version: number;
-  args: BulkArgs[];
-} => {
-  const args =
-    roleList?.reduce<BulkArgs[]>((acc, role) => {
-      role.queries.forEach(queryType => {
-        acc.push({
-          type: `${driver}_drop_${queryType}_permission` as allowedMetadataTypes,
-          args: {
-            table,
-            role: role.roleName,
-            source: dataSourceName,
-          },
-        });
-      });
-
-      return acc;
-    }, []) || [];
-
-  const body = {
-    type: 'bulk' as allowedMetadataTypes,
-    source: dataSourceName,
-    resource_version: resourceVersion,
-    args: args ?? [],
-  };
-
-  return body;
-};
-
 interface CreateInsertBodyArgs extends CreateBodyArgs {
-  queryType: QueryType;
+  queryType: DataQueryType;
   formData: PermissionsSchema;
   accessType: AccessType;
   existingPermissions: ExistingPermission[];
   driver: string;
-  tables: Table[];
   dataSourceName: string;
   table: Table;
   role: string;
-}
-
-export interface InsertBodyResult {
-  type: allowedMetadataTypes;
-  resource_version: number;
-  args: Record<string, any>[];
 }
 
 const createInsertBody = ({
@@ -128,8 +64,7 @@ const createInsertBody = ({
   resourceVersion,
   existingPermissions,
   driver,
-  tables,
-}: CreateInsertBodyArgs): InsertBodyResult => {
+}: CreateInsertBodyArgs): TMigrationQuery => {
   const args = createInsertArgs({
     driver,
     dataSourceName,
@@ -139,11 +74,10 @@ const createInsertBody = ({
     formData,
     accessType,
     existingPermissions,
-    tables,
   });
 
   const formBody = {
-    type: 'bulk' as allowedMetadataTypes,
+    type: 'bulk' as const,
     resource_version: resourceVersion,
     args: args ?? [],
   };
@@ -154,5 +88,4 @@ const createInsertBody = ({
 export const api = {
   createInsertBody,
   createDeleteBody,
-  createBulkDeleteBody,
 };

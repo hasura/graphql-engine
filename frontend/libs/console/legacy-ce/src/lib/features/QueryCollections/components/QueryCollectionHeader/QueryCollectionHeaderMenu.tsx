@@ -1,147 +1,129 @@
-import { getConfirmation } from '../../../../components/Common/utils/jsUtils';
+import { getConfirmation } from '@hasura/shared/utils';
 import { useAddToAllowList, useRemoveFromAllowList } from '../../../AllowLists';
-import { useMetadata } from '../../../MetadataAPI';
-import { QueryCollectionEntry } from '../../../../metadata/types';
-import { Button } from '../../../../new-components/Button';
-import { DropdownMenu } from '../../../../new-components/DropdownMenu';
-import { Tooltip } from '../../../../new-components/Tooltip';
-import { useFireNotification } from '../../../../new-components/Notifications';
+import { Button, DropdownMenu, Tooltip, hasuraToast } from '@hasura/shared/ui';
 import React from 'react';
 import { FaEllipsisH } from 'react-icons/fa';
-import { useDeleteQueryCollections } from '../../hooks/useDeleteQueryCollections';
+import { useDeleteQueryCollections, useMetadata } from '@hasura/metadata/api';
+import type { QueryCollection } from '@hasura/shared/types';
 
 interface QueryCollectionHeaderMenuProps {
-  queryCollection: QueryCollectionEntry;
+  queryCollection: QueryCollection;
   onDelete: (name: string) => void;
   onRename: (name: string, newName: string) => void;
   setIsRenameModalOpen: (isRenameModalOpen: boolean) => void;
 }
 export const QueryCollectionHeaderMenu: React.FC<
   QueryCollectionHeaderMenuProps
-> = props => {
+> = (props) => {
   const { queryCollection, onDelete, setIsRenameModalOpen } = props;
-
-  const { deleteQueryCollection, isLoading: deleteLoading } =
+  const { deleteQueryCollection, isPending: deleteLoading } =
     useDeleteQueryCollections();
-  const { fireNotification } = useFireNotification();
-
   const { addToAllowList, isLoading: addLoading } = useAddToAllowList();
   const { removeFromAllowList, isLoading: removeLoding } =
     useRemoveFromAllowList();
 
   const { data: metadata } = useMetadata();
   return queryCollection.name !== 'allowed-queries' ? (
-    <DropdownMenu
+    <DropdownMenu.Root
       items={[
-        [
-          <div
-            className="py-xs font-semibold"
+        <DropdownMenu.Item
+          key="edit-collection-name"
+          onSelect={() => setIsRenameModalOpen(true)}
+        >
+          Edit Collection Name
+        </DropdownMenu.Item>,
+        metadata?.metadata.allowlist?.find(
+          (entry) => entry.collection === queryCollection.name,
+        ) ? (
+          <DropdownMenu.Item
+            key="allow-list"
             onClick={() => {
-              // this is a workaround for a weird but caused by interaction of radix ui dialog and dropdown menu
-              setTimeout(() => {
-                setIsRenameModalOpen(true);
-              }, 0);
+              removeFromAllowList(queryCollection.name, {
+                onSuccess: () => {
+                  hasuraToast({
+                    type: 'success',
+                    title: 'Success',
+                    message: `Removed ${queryCollection.name} from allow list`,
+                  });
+                },
+                onError: () => {
+                  hasuraToast({
+                    type: 'error',
+                    title: 'Error',
+                    message: `Failed to remove ${queryCollection.name} from allow list`,
+                  });
+                },
+              });
             }}
           >
-            Edit Collection Name
-          </div>,
-          metadata?.metadata.allowlist?.find(
-            entry => entry.collection === queryCollection.name
-          ) ? (
-            <div
-              className="py-xs font-semibold"
-              onClick={() => {
-                removeFromAllowList(queryCollection.name, {
-                  onSuccess: () => {
-                    fireNotification({
-                      type: 'success',
-                      title: 'Success',
-                      message: `Removed ${queryCollection.name} from allow list`,
-                    });
-                  },
-                  onError: () => {
-                    fireNotification({
-                      type: 'error',
-                      title: 'Error',
-                      message: `Failed to remove ${queryCollection.name} from allow list`,
-                    });
-                  },
-                });
-              }}
-            >
-              Remove from Allow List
-            </div>
-          ) : (
-            <div
-              className="font-semibold"
-              onClick={() => {
-                addToAllowList(queryCollection.name, {
-                  onSuccess: () => {
-                    fireNotification({
-                      type: 'success',
-                      title: 'Success',
-                      message: `Added ${queryCollection.name} to allow list`,
-                    });
-                  },
-                  onError: () => {
-                    fireNotification({
-                      type: 'error',
-                      title: 'Error',
-                      message: `Failed to add ${queryCollection.name} to allow list`,
-                    });
-                  },
-                });
-              }}
-            >
-              Add to Allow List
-            </div>
-          ),
-        ],
-        [
-          <div
-            className="py-xs font-semibold text-red-600"
+            Remove from Allow List
+          </DropdownMenu.Item>
+        ) : (
+          <DropdownMenu.Item
+            key="allow-list"
             onClick={() => {
-              const confirmMessage = `This will permanently delete the query collection "${queryCollection.name}"`;
-              const isOk = getConfirmation(
-                confirmMessage,
-                true,
-                queryCollection.name
-              );
-              if (isOk) {
-                deleteQueryCollection(queryCollection.name, {
-                  onSuccess: () => {
-                    fireNotification({
-                      type: 'success',
-                      title: 'Collection deleted',
-                      message: `Query collection "${queryCollection.name}" deleted successfully`,
-                    });
-                    onDelete(queryCollection.name);
-                  },
-                  onError: () => {
-                    fireNotification({
-                      type: 'error',
-                      title: 'Error deleting collection',
-                      message: `Error deleting query collection "${queryCollection.name}"`,
-                    });
-                  },
-                });
-              }
+              addToAllowList(queryCollection.name, {
+                onSuccess: () => {
+                  hasuraToast({
+                    type: 'success',
+                    title: 'Success',
+                    message: `Added ${queryCollection.name} to allow list`,
+                  });
+                },
+                onError: () => {
+                  hasuraToast({
+                    type: 'error',
+                    title: 'Error',
+                    message: `Failed to add ${queryCollection.name} to allow list`,
+                  });
+                },
+              });
             }}
           >
-            Delete Collection
-          </div>,
-        ],
+            Add to Allow List
+          </DropdownMenu.Item>
+        ),
+        <DropdownMenu.Item
+          key="delete"
+          color="red"
+          onClick={() => {
+            const confirmMessage = `This will permanently delete the query collection "${queryCollection.name}"`;
+            const isOk = getConfirmation(
+              confirmMessage,
+              true,
+              queryCollection.name,
+            );
+            if (isOk) {
+              deleteQueryCollection(queryCollection.name, {
+                onSuccess: () => {
+                  hasuraToast({
+                    type: 'success',
+                    title: 'Collection deleted',
+                    message: `Query collection "${queryCollection.name}" deleted successfully`,
+                  });
+                  onDelete(queryCollection.name);
+                },
+                onError: () => {
+                  hasuraToast({
+                    type: 'error',
+                    title: 'Error deleting collection',
+                    message: `Error deleting query collection "${queryCollection.name}"`,
+                  });
+                },
+              });
+            }
+          }}
+        >
+          Delete Collection
+        </DropdownMenu.Item>,
       ]}
     >
-      <Button isLoading={deleteLoading || addLoading || removeLoding}>
+      <Button loading={deleteLoading || addLoading || removeLoding}>
         <FaEllipsisH />
       </Button>
-    </DropdownMenu>
+    </DropdownMenu.Root>
   ) : (
-    <Tooltip
-      tooltipContentChildren="You cannot rename or delete the default allowed-queries
-              collection"
-    >
+    <Tooltip content="You cannot rename or delete the default allowed-queries collection">
       <Button disabled>
         <FaEllipsisH />
       </Button>

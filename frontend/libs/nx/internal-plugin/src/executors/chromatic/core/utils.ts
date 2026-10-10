@@ -1,5 +1,5 @@
 import type { Tree } from 'nx/src/generators/tree';
-import { readJson } from '@nrwl/devkit';
+import { readJson } from '@nx/devkit';
 
 // ------------------------------------------------------------
 
@@ -20,7 +20,7 @@ export async function readDiagnosticFile(tree: Tree, path: string) {
 export function getPullRequestNumber(
   // BUILDKITE_PULL_REQUEST should be a number but I'm not 100% sure...
   // see: https://buildkite.com/docs/pipelines/environment-variables#BUILDKITE_PULL_REQUEST
-  buildkitePullRequest: unknown
+  buildkitePullRequest: unknown,
 ) {
   if (!buildkitePullRequest) return;
 

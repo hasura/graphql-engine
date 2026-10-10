@@ -9,6 +9,9 @@ const express = require('express');
 const graphql = require('graphql');
 const { graphqlHTTP } = require('express-graphql');
 const app = express();
+// Express 5 defaults to the 'simple' parser, which doesn't expand nested
+// query params like `a[b][c]=1` into objects (Express 4's default did)
+app.set('query parser', 'extended');
 const openAPIToGraphQL = require('../dist/index');
 
 // const oas = require('./fixtures/example_oas.json')
@@ -45,13 +48,13 @@ openAPIToGraphQL
       graphqlHTTP({
         schema: schema,
         graphiql: true,
-      })
+      }),
     );
 
     app.listen(3000, () => {
       console.log('GraphQL accessible at: http://localhost:3000/graphql');
     });
   })
-  .catch(err => {
+  .catch((err) => {
     console.log(err);
   });

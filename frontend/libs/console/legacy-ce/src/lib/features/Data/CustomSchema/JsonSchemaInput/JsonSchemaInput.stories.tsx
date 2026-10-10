@@ -1,4 +1,4 @@
-import { StoryObj, Meta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
 import { useState } from 'react';
 import { JsonSchemaInput, JsonSchemaInputProps } from './JsonSchemaInput';
 
@@ -305,7 +305,7 @@ const listingsAndReviews = {
 const json = JSON.stringify(listingsAndReviews, null, 2);
 
 export const Primary: StoryObj<JsonSchemaInputProps> = {
-  render: args => {
+  render: (args) => {
     const [value, setValue] = useState<string>(json);
     return <JsonSchemaInput value={value} onChange={setValue} />;
   },

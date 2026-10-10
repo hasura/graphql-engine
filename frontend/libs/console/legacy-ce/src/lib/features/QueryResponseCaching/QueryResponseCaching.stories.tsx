@@ -1,7 +1,9 @@
-import { Meta, StoryObj } from '@storybook/react';
+import { Meta, StoryObj } from '@storybook/react-webpack5';
 
-import { ConsoleTypeDecorator } from '../../storybook/decorators';
-import { ReactQueryDecorator } from '../../storybook/decorators/react-query';
+import {
+  ConsoleTypeDecorator,
+  ReactQueryDecorator,
+} from '@hasura/shared/testing';
 import { eeLicenseInfo } from '../EETrial/mocks/http';
 import {
   registerEETrialLicenseActiveMutation,

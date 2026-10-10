@@ -1,0 +1,26 @@
+{
+  "name": "metadata-helpers",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/metadata/helpers/src",
+  "projectType": "library",
+  "tags": ["scope:metadata"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/metadata/helpers",
+        "main": "libs/metadata/helpers/src/index.ts",
+        "tsConfig": "libs/metadata/helpers/tsconfig.lib.json",
+        "assets": []
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "coverage/libs/metadata/helpers"
+      }
+    }
+  }
+}

@@ -2,11 +2,19 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
-    "module": "commonjs",
-    "types": ["jest", "node"]
+    "types": [
+      "vitest/globals",
+      "vitest/importMeta",
+      "vite/client",
+      "node",
+      "vitest"
+    ]
   },
   "include": [
-    "jest.config.ts",
+    "vite.config.ts",
+    "vite.config.mts",
+    "vitest.config.ts",
+    "vitest.config.mts",
     "**/*.test.ts",
     "**/*.spec.ts",
     "**/*.test.tsx",
@@ -18,8 +26,8 @@
     "**/*.d.ts"
   ],
   "files": [
-    "../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
-    "../../node_modules/@nrwl/react/typings/image.d.ts",
+    "../../node_modules/@nx/react/typings/cssmodule.d.ts",
+    "../../node_modules/@nx/react/typings/image.d.ts",
     "../../types/externalNotTypesLibs.d.ts"
   ]
 }

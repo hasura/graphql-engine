@@ -1,26 +1,16 @@
 import React from 'react';
-import Spinner from '../Common/Spinner/Spinner';
-
 import PageNotFound, { NotFoundError } from './PageNotFound';
 import RuntimeError from './RuntimeError';
-import { registerRunTimeError } from '../Main/Actions';
-import { redirectToMetadataStatus } from '../Common/utils/routesUtils';
-import { loadInconsistentObjects } from '../../metadata/actions';
-import { Dispatch, FixMe } from '../../types';
-
-export const isMetadataStatusPage = () => {
-  return window.location.pathname.includes('/settings/metadata-status');
-};
-
-export interface Metadata {
-  inconsistentObjects: Record<string, unknown>[];
-  ongoingRequest: boolean;
-  allowedQueries: Record<string, unknown>[];
-}
+import { trackRuntimeError } from '../../telemetry';
+import type { Location, NavigateFunction } from 'react-router';
+import { METADATA_STATUS_PATH } from '@hasura/shared/types';
+import type { UseReloadMetadata } from '@hasura/metadata/api';
 
 export interface ErrorBoundaryProps {
-  metadata: Metadata;
-  dispatch: Dispatch;
+  location: Location;
+  navigate: NavigateFunction;
+  reloadMetadata: UseReloadMetadata['reloadMetadata'];
+  children?: React.ReactNode;
 }
 
 interface ErrorBoundaryState {
@@ -46,7 +36,7 @@ class ErrorBoundary extends React.Component<
   }
 
   override componentDidCatch(error: Error) {
-    const { dispatch } = this.props;
+    const { reloadMetadata, navigate } = this.props;
 
     // ATTENTION: No need to setup anything for Sentry here, Sentry automatically tracks the error
     // caught from the error boundaries!
@@ -61,22 +51,21 @@ class ErrorBoundary extends React.Component<
     this.setState({ hasError: true, error });
 
     // trigger telemetry
-    dispatch(
-      registerRunTimeError({ message: error.message, stack: error.stack })
-    );
+    trackRuntimeError(error);
+    console.error(error);
 
-    dispatch(
-      loadInconsistentObjects({ shouldReloadMetadata: true }) as FixMe
-    ).then(() => {
-      if (this.props.metadata.inconsistentObjects.length > 0) {
-        if (!isMetadataStatusPage()) {
-          this.resetState();
-          this.props.dispatch(redirectToMetadataStatus());
+    reloadMetadata({})
+      .then((isConsistent) => {
+        if (!isConsistent) {
+          if (!location.pathname.includes('/settings/metadata-status')) {
+            this.resetState();
+            navigate(METADATA_STATUS_PATH);
+          }
         }
-      } else {
-        console.error(error);
-      }
-    });
+      })
+      .catch((err) => {
+        console.error('failed to reload metadata', err);
+      });
   }
 
   resetState = () => {
@@ -84,12 +73,7 @@ class ErrorBoundary extends React.Component<
   };
 
   override render() {
-    const { metadata } = this.props;
     const { hasError, type, error } = this.state;
-
-    if (hasError && metadata.ongoingRequest) {
-      return <Spinner />;
-    }
 
     if (hasError) {
       return type === '404' ? (

@@ -1,4 +1,4 @@
-import { TableColumn } from '../../../../DataSource';
+import { TableColumn } from '@hasura/metadata/data-source';
 import {
   getSectionStatusLabel,
   SectionLabelProps,
@@ -17,7 +17,7 @@ describe('hasSelectedPrimaryKey', () => {
         { name: 'AlbumId', isPrimaryKey: true },
       ] as TableColumn[];
       expect(hasSelectedPrimaryKey({ AlbumId: false }, tableColumns)).toEqual(
-        false
+        false,
       );
     });
   });
@@ -27,7 +27,7 @@ describe('hasSelectedPrimaryKey', () => {
         { name: 'AlbumId', isPrimaryKey: true },
       ] as TableColumn[];
       expect(hasSelectedPrimaryKey({ AlbumId: true }, tableColumns)).toEqual(
-        true
+        true,
       );
     });
   });
@@ -191,117 +191,100 @@ describe('getSectionStatusLabel', () => {
 });
 
 describe('getPermissionCheckboxState', () => {
-  describe('root permissions is null', () => {
-    it('returns disabled and checked', () => {
-      const args: PermissionCheckboxStateArg = {
-        permission: '',
-        hasEnabledAggregations: false,
-        hasSelectedPrimaryKeys: false,
-        isSubscriptionStreamingEnabled: false,
-        rootPermissions: null,
-      };
-      expect(getPermissionCheckboxState(args)).toEqual({
-        disabled: true,
-        checked: true,
-      });
+  // `checked` state is owned by the form (CheckboxesField bound via
+  // react-hook-form); these utils only compute per-permission enablement
+  // (`disabled` + tooltip `title`) based on the current prerequisites.
+  it('leaves a permission without prerequisites enabled (e.g. "select")', () => {
+    const args: PermissionCheckboxStateArg = {
+      permission: 'select',
+      hasEnabledAggregations: false,
+      hasSelectedPrimaryKeys: false,
+      isSubscriptionStreamingEnabled: false,
+    };
+    expect(getPermissionCheckboxState(args)).toEqual({ disabled: false });
+  });
+
+  it('disables "select_by_pk" until a primary key is selected', () => {
+    const args: PermissionCheckboxStateArg = {
+      permission: 'select_by_pk',
+      hasEnabledAggregations: false,
+      hasSelectedPrimaryKeys: false,
+      isSubscriptionStreamingEnabled: false,
+    };
+    expect(getPermissionCheckboxState(args)).toEqual({
+      disabled: true,
+      title: 'Allow access to the table primary key column(s) first',
     });
   });
 
-  describe('when permission is select', () => {
-    describe('when permission is in root permissions', () => {
-      it('returns default state', () => {
-        const args: PermissionCheckboxStateArg = {
-          rootPermissions: ['select'],
-          permission: 'select',
-          hasEnabledAggregations: false,
-          hasSelectedPrimaryKeys: false,
-          isSubscriptionStreamingEnabled: false,
-        };
-        expect(getPermissionCheckboxState(args)).toEqual({
-          disabled: false,
-          checked: true,
-        });
-      });
+  it('disables "select_stream" until streaming subscriptions are enabled', () => {
+    const args: PermissionCheckboxStateArg = {
+      permission: 'select_stream',
+      hasEnabledAggregations: false,
+      hasSelectedPrimaryKeys: false,
+      isSubscriptionStreamingEnabled: false,
+    };
+    expect(getPermissionCheckboxState(args)).toEqual({
+      disabled: true,
+      title: 'Enable the streaming subscriptions experimental feature first',
     });
   });
-  describe('when permission is NOT in root permissions', () => {
-    it('returns default state', () => {
-      const args: PermissionCheckboxStateArg = {
-        rootPermissions: ['select_by_pk'],
-        permission: 'select',
-        hasEnabledAggregations: false,
-        hasSelectedPrimaryKeys: false,
-        isSubscriptionStreamingEnabled: false,
-      };
-      expect(getPermissionCheckboxState(args)).toEqual({
-        disabled: false,
-        checked: false,
-      });
+
+  it('disables "select_aggregate" until aggregation permissions are enabled', () => {
+    const args: PermissionCheckboxStateArg = {
+      permission: 'select_aggregate',
+      hasEnabledAggregations: false,
+      hasSelectedPrimaryKeys: false,
+      isSubscriptionStreamingEnabled: false,
+    };
+    expect(getPermissionCheckboxState(args)).toEqual({
+      disabled: true,
+      title: 'Enable aggregation queries permissions first',
     });
   });
 });
 
 describe('getSelectByPkCheckboxState', () => {
   it.each`
-    rootPermissions     | permission        | hasSelectedPrimaryKeys | expected
-    ${['select_by_pk']} | ${'select_by_pk'} | ${false}               | ${{ checked: false, disabled: true, title: 'Allow access to the table primary key column(s) first' }}
-    ${['select_by_pk']} | ${'select_by_pk'} | ${true}                | ${{ checked: true, disabled: false, title: '' }}
-    ${['select']}       | ${'select_by_pk'} | ${true}                | ${{ checked: false, disabled: false, title: '' }}
+    hasSelectedPrimaryKeys | expected
+    ${false}               | ${{ disabled: true, title: 'Allow access to the table primary key column(s) first' }}
+    ${true}                | ${{ disabled: false, title: '' }}
   `(
-    'returns the select_by_pk checkbox state for rootPermissions $rootPermissions, permission $permission, hasSelectedPrimaryKeys $hasSelectedPrimaryKeys',
-    ({ rootPermissions, permission, hasSelectedPrimaryKeys, expected }) => {
-      expect(
-        getSelectByPkCheckboxState({
-          hasSelectedPrimaryKeys,
-          rootPermissions,
-          permission,
-        })
-      ).toEqual(expected);
-    }
+    'returns the select_by_pk checkbox state for hasSelectedPrimaryKeys $hasSelectedPrimaryKeys',
+    ({ hasSelectedPrimaryKeys, expected }) => {
+      expect(getSelectByPkCheckboxState({ hasSelectedPrimaryKeys })).toEqual(
+        expected,
+      );
+    },
   );
 });
 
 describe('getSelectStreamCheckboxState', () => {
   it.each`
-    rootPermissions      | permission         | isSubscriptionStreamingEnabled | expected
-    ${['select_stream']} | ${'select_stream'} | ${false}                       | ${{ checked: true, disabled: true, title: 'Enable the streaming subscriptions experimental feature first' }}
-    ${['select_stream']} | ${'select_by_pk'}  | ${false}                       | ${{ checked: false, disabled: true, title: 'Enable the streaming subscriptions experimental feature first' }}
-    ${['select_stream']} | ${'select_by_pk'}  | ${true}                        | ${{ checked: false, disabled: false, title: '' }}
+    isSubscriptionStreamingEnabled | expected
+    ${false}                       | ${{ disabled: true, title: 'Enable the streaming subscriptions experimental feature first' }}
+    ${true}                        | ${{ disabled: false, title: '' }}
   `(
-    'returns the select_stream checkbox state for rootPermissions $rootPermissions, permission $permission, isSubscriptionStreamingEnabled $isSubscriptionStreamingEnabled',
-    ({
-      rootPermissions,
-      permission,
-      isSubscriptionStreamingEnabled,
-      expected,
-    }) => {
+    'returns the select_stream checkbox state for isSubscriptionStreamingEnabled $isSubscriptionStreamingEnabled',
+    ({ isSubscriptionStreamingEnabled, expected }) => {
       expect(
-        getSelectStreamCheckboxState({
-          isSubscriptionStreamingEnabled,
-          rootPermissions,
-          permission,
-        })
+        getSelectStreamCheckboxState({ isSubscriptionStreamingEnabled }),
       ).toEqual(expected);
-    }
+    },
   );
 });
 
 describe('getSelectAggregateCheckboxState', () => {
   it.each`
-    rootPermissions      | permission         | hasEnabledAggregations | expected
-    ${['select_stream']} | ${'select_stream'} | ${false}               | ${{ checked: false, disabled: true, title: 'Enable aggregation queries permissions first' }}
-    ${['select_stream']} | ${'select_stream'} | ${true}                | ${{ checked: true, disabled: false, title: '' }}
-    ${['select_stream']} | ${'select'}        | ${true}                | ${{ checked: false, disabled: false, title: '' }}
+    hasEnabledAggregations | expected
+    ${false}               | ${{ disabled: true, title: 'Enable aggregation queries permissions first' }}
+    ${true}                | ${{ disabled: false, title: '' }}
   `(
-    'returns the select_stream checkbox state for rootPermissions $rootPermissions, permission $permission, hasEnabledAggregations $hasEnabledAggregations',
-    ({ rootPermissions, permission, hasEnabledAggregations, expected }) => {
+    'returns the select_aggregate checkbox state for hasEnabledAggregations $hasEnabledAggregations',
+    ({ hasEnabledAggregations, expected }) => {
       expect(
-        getSelectAggregateCheckboxState({
-          hasEnabledAggregations,
-          rootPermissions,
-          permission,
-        })
+        getSelectAggregateCheckboxState({ hasEnabledAggregations }),
       ).toEqual(expected);
-    }
+    },
   );
 });

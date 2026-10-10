@@ -6,9 +6,10 @@ import { ColumnComparatorEntry } from './EntryTypes/ColumnComparatorEntry';
 import { useOperators } from './utils/comparatorsFromSchema';
 import { ValueInput } from './ValueInput';
 import { useForbiddenFeatures } from './ForbiddenFeaturesProvider';
-import { Button } from '../../../../../../new-components/Button';
+import { Button } from '@hasura/shared/ui';
 import { useContext } from 'react';
 import { rowPermissionsContext } from './RowPermissionsProvider';
+import { Flex } from '@radix-ui/themes';
 
 export const EntryType = ({
   k,
@@ -21,7 +22,7 @@ export const EntryType = ({
 }) => {
   const { setValue } = useContext(rowPermissionsContext);
   const operators = useOperators({ path });
-  const operator = operators.find(o => o.name === k);
+  const operator = operators.find((o) => o.name === k);
   const { hasFeature } = useForbiddenFeatures();
   if (isColumnComparator(k)) {
     return <ColumnComparatorEntry k={k} path={path} v={v} />;
@@ -29,7 +30,7 @@ export const EntryType = ({
   if (k === '_nin' || k === '_in') {
     if (typeof v === 'string') {
       return (
-        <div className="flex items-center">
+        <Flex align="center">
           <ValueInput key={k} value={v} path={path} />{' '}
           <Button
             onClick={() => setValue([...path, String(0)], '')}
@@ -39,7 +40,7 @@ export const EntryType = ({
           >
             Add input
           </Button>
-        </div>
+        </Flex>
       );
     }
     // TODO: Turn into generic array entry instead of handling only _in and _nin

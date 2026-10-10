@@ -13,7 +13,7 @@ interface Env {
   enableTelemetry: boolean;
   featuresCompatibility: string;
   isAdminSecretSet: boolean;
-  isproduction: boolean;
+  isProduction: boolean;
   nodeEnv: string;
   serverVersion: string;
   telemetryTopic: string;
