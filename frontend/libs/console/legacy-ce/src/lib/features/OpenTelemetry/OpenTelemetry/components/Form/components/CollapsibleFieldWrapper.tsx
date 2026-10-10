@@ -1,9 +1,12 @@
 import * as React from 'react';
-import Skeleton from 'react-loading-skeleton';
 
-import { IconTooltip } from '../../../../../../new-components/Tooltip';
-import { Collapsible } from '../../../../../../new-components/Collapsible';
-import { LearnMoreLink } from '../../../../../../new-components/LearnMoreLink';
+import {
+  IconTooltip,
+  Collapsible,
+  LearnMoreLink,
+  Text,
+} from '@hasura/shared/ui';
+import { Flex, Skeleton, Strong } from '@radix-ui/themes';
 
 interface CollapsibleFieldWrapperProps {
   inputFieldName: string;
@@ -11,6 +14,7 @@ interface CollapsibleFieldWrapperProps {
   tooltip: string;
   loading?: boolean;
   learnMoreLink?: string;
+  children?: React.ReactNode;
 }
 
 /**
@@ -24,30 +28,26 @@ interface CollapsibleFieldWrapperProps {
  * TODO: Fix the a11y issue for which a button cannot be child of another button (speaking about the
  * tooltip trigger being a child of the collapsible trigger)
  */
-export const CollapsibleFieldWrapper: React.FC<
-  CollapsibleFieldWrapperProps
-> = props => {
+export const CollapsibleFieldWrapper: React.FC<CollapsibleFieldWrapperProps> = (
+  props,
+) => {
   const { inputFieldName, label, tooltip, children, loading, learnMoreLink } =
     props;
 
-  if (loading) return <Skeleton className="h-8" />;
+  if (loading) return <Skeleton height="30px" width="200px" />;
 
   return (
     <Collapsible
       triggerChildren={
-        <label
-          htmlFor={inputFieldName}
-          className="block pt-1 text-gray-600 mb-xs pr-8 flex-grow220px"
-        >
-          <span className="flex items-center ">
-            <span className="font-semibold">{label}</span>
-            <span className="ml-1">(Optional)</span>
+        <Text as="label" htmlFor={inputFieldName}>
+          <Flex align="center" gap="2">
+            <Strong>{label}</Strong>
+            <span>(Optional)</span>
 
-            {/* TODO: solve the "button inside a button" a11y problem */}
             <IconTooltip message={tooltip} />
             {!!learnMoreLink && <LearnMoreLink href={learnMoreLink} />}
-          </span>
-        </label>
+          </Flex>
+        </Text>
       }
     >
       {children}

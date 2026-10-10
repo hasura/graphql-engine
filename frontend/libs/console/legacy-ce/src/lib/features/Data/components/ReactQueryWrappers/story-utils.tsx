@@ -1,5 +1,4 @@
-import { expect } from '@storybook/jest';
-import { waitFor, within } from '@storybook/testing-library';
+import { expect, waitFor, within } from 'storybook/test';
 import { TestIds } from './ReactQueryStatusUI';
 
 /**
@@ -42,26 +41,26 @@ export const checkForStatusElements = async ({
 // these are for stories that implement the providers so they can wait for overlays to be gone for interactions to continue
 export const waitForSpinnerOverlay = async (
   canvasElement: HTMLElement,
-  timeout = 2000
+  timeout = 2000,
 ) => {
   const canvas = within(canvasElement);
 
   return waitFor(
     async () =>
       expect(canvas.queryByTestId(TestIds.spinner)).not.toBeInTheDocument(),
-    { timeout }
+    { timeout },
   );
 };
 export const waitForSkeletonOverlay = async (
   canvasElement: HTMLElement,
-  timeout = 2000
+  timeout = 2000,
 ) => {
   const canvas = within(canvasElement);
 
   return waitFor(
     async () =>
       expect(canvas.queryByTestId(TestIds.skeleton)).not.toBeInTheDocument(),
-    { timeout }
+    { timeout },
   );
 };
 

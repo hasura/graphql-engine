@@ -1,12 +1,15 @@
-import { default as handleAsyncError } from 'await-to-js';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
-import { DataSource, Feature } from '../../../DataSource';
-import { useHttpClient } from '../../../Network';
-import { transformSchemaToZodObject } from '../../../OpenApi3Form/utils';
+import {
+  getDatabaseMethods,
+  NotImplementedError,
+} from '@hasura/metadata/data-source';
 import { graphQLCustomizationSchema } from '../GraphQLCustomization/schema';
 import { OpenApiSchema } from '@hasura/dc-api-types';
-import { reqString } from '../../../../utils/zodUtils';
+import { reqString } from '@hasura/shared/utils';
+import { useAuthFetchJson } from '@hasura/shared/hooks';
+import { useAppContext } from '@hasura/shared/context';
+import { transformSchemaToZodObject } from '@hasura/shared/ui';
 
 type GDCConfigSchemas = {
   configSchema: OpenApiSchema;
@@ -18,7 +21,7 @@ const createValidationSchema = (configSchemas: GDCConfigSchemas) =>
     name: z.string().min(1, 'Name is a required field!'),
     configuration: transformSchemaToZodObject(
       configSchemas.configSchema,
-      configSchemas.otherSchemas
+      configSchemas.otherSchemas,
     ),
     customization: graphQLCustomizationSchema.optional(),
     timeout: z.coerce
@@ -46,12 +49,19 @@ export type TemplateVariableMap = Record<
 >;
 // this takes care of adapting the template variables from an array to a map
 export const templateVariableArrayToMap = (
-  variableArray: GDCFormSchema['template_variables']
+  variableArray: GDCFormSchema['template_variables'],
 ): TemplateVariableMap => {
   try {
     return variableArray.reduce<TemplateVariableMap>((map, obj) => {
-      const { name, ...rest } = obj;
-      map[name] = { ...rest };
+      if (!obj.name || (!obj.type && !obj.filepath)) {
+        return map;
+      }
+
+      map[obj.name] = {
+        type: obj.type ?? '',
+        filepath: obj.filepath ?? '',
+      };
+
       return map;
     }, {});
   } catch (e) {
@@ -61,20 +71,24 @@ export const templateVariableArrayToMap = (
 };
 
 export const useFormValidationSchema = (driver: string) => {
-  const httpClient = useHttpClient();
+  const { endpoints } = useAppContext();
+  const fetchJson = useAuthFetchJson();
   return useQuery({
     queryKey: ['form-schema', driver],
     queryFn: async () => {
-      const [err, configSchemas] = await handleAsyncError(
-        DataSource(httpClient).connectDB.getConfigSchema(driver)
-      );
-
-      if (err) {
-        throw err;
+      const dbMethods = getDatabaseMethods(driver);
+      if (!dbMethods.introspection?.getDatabaseConfiguration) {
+        throw new NotImplementedError(
+          'Could not retrieve config schema info for driver',
+        );
       }
 
-      if (!configSchemas || configSchemas === Feature.NotImplemented)
-        throw Error('Could not retrieve config schema info for driver');
+      const configSchemas =
+        await dbMethods.introspection.getDatabaseConfiguration({
+          driver,
+          endpoints,
+          fetchJson,
+        });
 
       const validationSchema = createValidationSchema(configSchemas);
 

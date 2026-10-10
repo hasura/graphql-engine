@@ -13,7 +13,7 @@ describe('inferLogicalModels', () => {
 
     const logicalModels = inferLogicalModels(
       'documents',
-      JSON.stringify(document)
+      JSON.stringify(document),
     );
     expect(logicalModels).toEqual([
       {
@@ -53,7 +53,7 @@ describe('inferLogicalModels', () => {
 
     const logicalModels = inferLogicalModels(
       'documents',
-      JSON.stringify(document)
+      JSON.stringify(document),
     );
     expect(logicalModels).toEqual([
       {
@@ -126,7 +126,7 @@ describe('inferLogicalModels', () => {
 
     const logicalModels = inferLogicalModels(
       'documents',
-      JSON.stringify(document)
+      JSON.stringify(document),
     );
     expect(logicalModels).toEqual([
       {
@@ -177,7 +177,7 @@ describe('inferLogicalModels', () => {
 
     const logicalModels = inferLogicalModels(
       'documents',
-      JSON.stringify(document)
+      JSON.stringify(document),
     );
 
     expect(logicalModels).toEqual([
@@ -201,7 +201,7 @@ describe('inferLogicalModels', () => {
 
     const logicalModels = inferLogicalModels(
       'documents',
-      JSON.stringify(document)
+      JSON.stringify(document),
     );
 
     expect(logicalModels).toEqual([
@@ -224,7 +224,7 @@ describe('inferLogicalModels', () => {
 
     const logicalModels = inferLogicalModels(
       'new-documents',
-      JSON.stringify(document)
+      JSON.stringify(document),
     );
 
     expect(logicalModels).toEqual([
@@ -253,7 +253,7 @@ describe('inferLogicalModels', () => {
 
     const logicalModels = inferLogicalModels(
       'new-documents',
-      JSON.stringify(document)
+      JSON.stringify(document),
     );
 
     expect(logicalModels).toEqual([
@@ -289,7 +289,7 @@ describe('inferLogicalModels', () => {
 
     const logicalModels = inferLogicalModels(
       'new-documents',
-      JSON.stringify(document)
+      JSON.stringify(document),
     );
 
     expect(logicalModels).toEqual([

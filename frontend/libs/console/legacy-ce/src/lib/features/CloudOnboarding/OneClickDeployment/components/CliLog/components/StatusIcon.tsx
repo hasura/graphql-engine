@@ -1,10 +1,10 @@
-import React from 'react';
-import { FaCheck, FaSpinner, FaTimes } from 'react-icons/fa';
+import { FaCheck, FaTimes } from 'react-icons/fa';
 import {
   OneClickDeploymentState,
   ProgressStateStatus,
   UserFacingStep,
 } from '../../../types';
+import { Spinner } from '@hasura/shared/ui';
 
 export function StatusIcon(props: {
   step: UserFacingStep;
@@ -22,6 +22,6 @@ export function StatusIcon(props: {
     case 'success':
       return <FaCheck className="text-emerald-500" />;
     default:
-      return <FaSpinner className="animate-spin text-slate-400" />;
+      return <Spinner />;
   }
 }

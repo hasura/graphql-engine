@@ -1,6 +1,6 @@
-import { StoryObj, Meta } from '@storybook/react';
-import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
-import { useQueryClient } from 'react-query';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
+import { useQueryClient } from '@tanstack/react-query';
 import { SurveyQueryKey } from '../../../features/Surveys';
 import { Root } from './Root';
 import {
@@ -20,7 +20,8 @@ export const WithSurvey: StoryObj = {
   render: () => {
     const queryClient = useQueryClient();
     // need to invalidate as useSurveysData hook is using a stale time
-    void queryClient.invalidateQueries(SurveyQueryKey.fetchAllSurveyData, {
+    void queryClient.invalidateQueries({
+      queryKey: [SurveyQueryKey.fetchAllSurveyData],
       refetchActive: false,
     });
 
@@ -41,7 +42,8 @@ export const WithoutSurvey: StoryObj = {
   render: () => {
     const queryClient = useQueryClient();
     // need to invalidate as `useSurveysData` hook is using a stale time
-    void queryClient.invalidateQueries(SurveyQueryKey.fetchAllSurveyData, {
+    void queryClient.invalidateQueries({
+      queryKey: [SurveyQueryKey.fetchAllSurveyData],
       refetchActive: false,
     });
 

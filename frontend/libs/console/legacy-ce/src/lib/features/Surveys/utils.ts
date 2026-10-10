@@ -1,18 +1,17 @@
-import moment from 'moment';
-import { reactQueryClient } from '../../lib/reactQuery';
+import { format } from 'date-fns';
 import {
   FETCH_ALL_SURVEYS_DATA,
   ADD_SURVEY_ANSWER,
-  SuccessOrError,
   controlPlaneClient,
-  SaveSurveyAnswerV2Payload,
+  AddSurveyAnswerV2MutationVariables,
+  AddSurveyAnswerV2Mutation,
 } from '../ControlPlane';
-import { SurveyData, SurveyQueryKey, SurveysResponseData } from './types';
+import { SurveyData, SurveysResponseData } from './types';
 
 export const convertDateTimeToUTC = (dateTime: string | Date | number) => {
-  return moment
-    .utc(dateTime, moment.ISO_8601)
-    .format('yyyy-MM-DDTHH:mm:ss.SSSSSZ');
+  const date = new Date(dateTime);
+  const utcDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+  return `${format(utcDate, "yyyy-MM-dd'T'HH:mm:ss.SSSSS")}+00:00`;
 };
 
 export const fetchAllSurveysDataQueryVariables = {
@@ -22,23 +21,16 @@ export const fetchAllSurveysDataQueryVariables = {
 export const fetchAllSurveysDataQueryFn = () =>
   controlPlaneClient.query<SurveysResponseData>(
     FETCH_ALL_SURVEYS_DATA,
-    fetchAllSurveysDataQueryVariables
+    fetchAllSurveysDataQueryVariables,
   );
 
 export const addSurveyAnswerMutationFn = (
-  mutationVariables: SaveSurveyAnswerV2Payload
+  mutationVariables: AddSurveyAnswerV2MutationVariables,
 ) =>
-  controlPlaneClient.query<SuccessOrError, SaveSurveyAnswerV2Payload>(
-    ADD_SURVEY_ANSWER,
-    mutationVariables
-  );
-
-export const prefetchSurveysData = () => {
-  reactQueryClient.prefetchQuery(
-    SurveyQueryKey.fetchAllSurveyData,
-    fetchAllSurveysDataQueryFn
-  );
-};
+  controlPlaneClient.query<
+    AddSurveyAnswerV2Mutation,
+    AddSurveyAnswerV2MutationVariables
+  >(ADD_SURVEY_ANSWER, mutationVariables);
 
 interface ArrayItem {
   position: number;

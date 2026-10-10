@@ -1,4 +1,4 @@
-import { Driver } from '../../../../dataSources';
+import { SupportedDriver } from '@hasura/shared/types';
 
 /**
  * - contains `dataSource`: driver (e.g. postgres, mssql, etc.) and database name (e.g. default, test, etc.)
@@ -19,7 +19,7 @@ export interface NewDataTarget {
 }
 
 export interface NewDataSource {
-  driver: Driver;
+  driver: SupportedDriver;
   database: string;
 }
 
@@ -40,10 +40,3 @@ export interface DataLeaf {
   name: string;
   leaf?: DataLeaf;
 }
-
-export type SupportedDrivers =
-  | 'postgres'
-  | 'bigquery'
-  | 'mssql'
-  | 'citus'
-  | 'gdc';

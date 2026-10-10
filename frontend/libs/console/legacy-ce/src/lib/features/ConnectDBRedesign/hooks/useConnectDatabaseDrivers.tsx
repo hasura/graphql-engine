@@ -1,7 +1,10 @@
-import { sortBy, uniqBy } from 'lodash'; // eslint-disable-line @typescript-eslint/no-restricted-imports
-import { useAvailableDrivers } from '../../ConnectDB/hooks';
-import { DriverInfo } from '../../DataSource';
-import { SuperConnectorDrivers as SuperDrivers } from '../../hasura-metadata-types';
+import sortBy from 'lodash/sortBy';
+import uniqBy from 'lodash/uniqBy';
+import {
+  getDriverLabel,
+  useAvailableDrivers,
+} from '@hasura/metadata/data-source';
+import { DriverInfo } from '@hasura/metadata/data-source';
 import { DatabaseLogo } from '../components';
 import { resolveDbLogo } from '../graphics/db-logos';
 
@@ -10,20 +13,11 @@ type useDatabaseConnectDriversProps = {
   showEnterpriseDrivers?: boolean;
 };
 
-export const kindNameMap: Record<SuperDrivers, string> = {
-  sqlite: 'Hasura SQLite',
-  athena: 'Amazon Athena',
-  snowflake: 'Snowflake',
-  mysql8: 'MySql',
-  mariadb: 'MariaDB',
-  oracle: 'Oracle',
-};
-
 // a GDC driver is only "available" once an agent is added for it
 // these are drivers are a special case bc we may want to display them in the UI before their agent's are added in certain cases
 const SuperConnectorDrivers: readonly DriverInfo[] = [
   {
-    name: 'mysql8',
+    name: 'mysql',
     displayName: 'MySQL',
     native: false,
     release: 'GA',
@@ -75,22 +69,22 @@ export const useDatabaseConnectDrivers = ({
     onFirstSuccess,
   });
 
-  const availableDrivers = data?.map(d => ({
+  const availableDrivers = data?.map((d) => ({
     ...d,
-    displayName: d.displayName || kindNameMap[d.name] || d.name,
+    displayName: d.displayName || getDriverLabel(d.name),
   }));
 
   const allDrivers = sortBy(
     uniqBy(
       [...(availableDrivers ?? []), ...SuperConnectorDrivers],
-      d => d.name
+      (d) => d.name,
     ),
-    d => d.displayName
+    (d) => d.displayName,
   );
 
   const cardData = allDrivers
-    .filter(d => d.enterprise !== true || showEnterpriseDrivers)
-    .map(d => ({
+    .filter((d) => d.enterprise !== true || showEnterpriseDrivers)
+    .map((d) => ({
       value: d.name,
       content: (
         <DatabaseLogo

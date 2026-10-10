@@ -46,7 +46,7 @@ describe('comparatorsFromSchema', () => {
         type: 'comparision',
         graphqlType: typeFromAST(
           schema,
-          parseType('[number!]') as NamedTypeNode
+          parseType('[number!]') as NamedTypeNode,
         ),
       },
       {
@@ -89,7 +89,7 @@ describe('comparatorsFromSchema', () => {
         type: 'comparision',
         graphqlType: typeFromAST(
           schema,
-          parseType('[number!]') as NamedTypeNode
+          parseType('[number!]') as NamedTypeNode,
         ),
       },
       {

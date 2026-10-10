@@ -1,16 +1,16 @@
 import { FaInfo } from 'react-icons/fa';
-import { IndicatorCard } from '../../../../new-components/IndicatorCard';
+import { Flex } from '@radix-ui/themes';
+import { IndicatorCard } from '@hasura/shared/ui';
 
 export const JSONValidationSchemaBadge = () => {
   return (
     <IndicatorCard
       status="info"
-      className="py-4 px-md"
+      className="py-4 px-4"
       showIcon
-      contentFullWidth
       customIcon={() => <FaInfo />}
     >
-      <div className='flex items-center justify-between mx-4"'>
+      <Flex align="center" justify="between" className='mx-4"'>
         <div>
           <h1 className="font-bold text-lg">
             A JSON Validation Schema is required
@@ -22,7 +22,7 @@ export const JSONValidationSchemaBadge = () => {
             {/* <LearnMoreLink href="" text="(Know More)" /> */}
           </div>
         </div>
-      </div>
+      </Flex>
     </IndicatorCard>
   );
 };

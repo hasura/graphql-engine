@@ -1,11 +1,8 @@
 import React from 'react';
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
-import { ReduxDecorator } from '../../../../storybook/decorators/redux-decorator';
-import ReactJson from 'react-json-view';
-import { StoryObj, Meta } from '@storybook/react';
-import { Button } from '../../../../new-components/Button';
+import { ReactQueryDecorator, handlers } from '@hasura/shared/testing';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
+import { Button, JsonCodeBlock } from '@hasura/shared/ui';
 
-import { handlers } from '../../../../mocks/metadata.mock';
 import { useAddToAllowList } from './useAddToAllowList';
 
 const UseQueryCollections: React.FC<{ name: string }> = ({ name }) => {
@@ -13,9 +10,8 @@ const UseQueryCollections: React.FC<{ name: string }> = ({ name }) => {
 
   return (
     <div>
-      <ReactJson
-        name="Hook State"
-        src={{
+      <JsonCodeBlock
+        value={{
           isSuccess,
           isLoading,
           error: error?.message,
@@ -34,10 +30,7 @@ export const Primary: StoryObj = {
 
 export default {
   title: 'hooks/Allow List/useAddToAllowList',
-  decorators: [
-    ReduxDecorator({ tables: { currentDataSource: 'default' } }),
-    ReactQueryDecorator(),
-  ],
+  decorators: [ReactQueryDecorator()],
   parameters: {
     msw: handlers({ delay: 500 }),
   },

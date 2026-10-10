@@ -1,22 +1,13 @@
-import { Meta, StoryObj } from '@storybook/react';
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
+import { Meta, StoryObj } from '@storybook/react-webpack5';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
 import { ApolloFederation } from './ApolloFederation';
-import { ReduxDecorator } from '../../../../storybook/decorators';
+import { MetadataTable, Source } from '@hasura/shared/types';
 
 type Story = StoryObj<typeof ApolloFederation>;
 
 export default {
   component: ApolloFederation,
-  decorators: [
-    ReactQueryDecorator(),
-    ReduxDecorator({
-      tables: {
-        dataHeaders: {
-          'x-hasura-admin-secret': 'myadminsecretkey',
-        } as any,
-      },
-    }),
-  ],
+  decorators: [ReactQueryDecorator()],
   parameters: {
     layout: 'fullscreen',
   },
@@ -26,8 +17,8 @@ export const Basic: Story = {
   render: () => (
     <div className="p-5">
       <ApolloFederation
-        dataSourceName={'chinook_12345'}
-        table={{ name: 'Album', schema: 'public' }}
+        source={{ name: 'chinook_12345', kind: 'postgres' } as Source}
+        table={{ table: { name: 'Album', schema: 'public' } } as MetadataTable}
       />
     </div>
   ),

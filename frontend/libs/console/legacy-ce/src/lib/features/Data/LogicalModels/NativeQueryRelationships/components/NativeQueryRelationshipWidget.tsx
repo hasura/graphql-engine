@@ -1,8 +1,5 @@
 import { useCallback } from 'react';
-import { Button } from '../../../../../new-components/Button';
-import { Dialog } from '../../../../../new-components/Dialog';
-import { useConsoleForm } from '../../../../../new-components/Form';
-import { MetadataUtils } from '../../../../hasura-metadata-api';
+import { Button, Dialog, useConsoleForm } from '@hasura/shared/ui';
 
 import {
   NativeQueryRelationshipFormSchema,
@@ -10,6 +7,8 @@ import {
 } from '../schema';
 import { TrackNativeQueryRelationshipForm } from './TrackNativeQueryRelationshipForm';
 import { MetadataWrapper } from '../../../components';
+import { MetadataSelectors } from '@hasura/metadata/helpers';
+import { Flex } from '@radix-ui/themes';
 
 export type NativeQueryRelationshipWidgetProps = {
   fromNativeQuery: string;
@@ -43,12 +42,12 @@ export const NativeQueryRelationshipWidget = ({
   const targetNativeQuery = watch();
 
   const metadataSelector = useCallback(
-    m => {
-      const source = MetadataUtils.findMetadataSource(dataSourceName, m);
+    (m) => {
+      const source = MetadataSelectors.findMetadataSource(dataSourceName, m);
 
       if (!source)
         throw new Error(
-          `Unabled to find source ${dataSourceName} for Native Query Relationships Widget`
+          `Unabled to find source ${dataSourceName} for Native Query Relationships Widget`,
         );
 
       const data = {
@@ -57,17 +56,17 @@ export const NativeQueryRelationshipWidget = ({
       };
 
       const fromQuery = data.queries.find(
-        q => q.root_field_name === fromNativeQuery
+        (q) => q.root_field_name === fromNativeQuery,
       );
       const targetQuery = data.queries.find(
-        q => q.root_field_name === targetNativeQuery.toNativeQuery
+        (q) => q.root_field_name === targetNativeQuery.toNativeQuery,
       );
       const fromModel = data.models.find(
-        model => model.name === fromQuery?.returns
+        (model) => model.name === fromQuery?.returns,
       );
 
       const targetModel = data.models.find(
-        model => model.name === targetQuery?.returns
+        (model) => model.name === targetQuery?.returns,
       );
 
       return {
@@ -78,7 +77,7 @@ export const NativeQueryRelationshipWidget = ({
         targetModel,
       };
     },
-    [dataSourceName, fromNativeQuery, targetNativeQuery.toNativeQuery]
+    [dataSourceName, fromNativeQuery, targetNativeQuery.toNativeQuery],
   );
 
   const onSubmit = (data: NativeQueryRelationshipFormSchema) => {
@@ -91,24 +90,31 @@ export const NativeQueryRelationshipWidget = ({
       <MetadataWrapper
         selector={metadataSelector}
         loader="skeleton"
-        skeletonProps={{ count: 8, height: 20 }}
+        loadingStyle="overlay"
+        skeletonProps={{
+          count: 8,
+        }}
         render={({ data }) => (
-          <div className="px-md">
+          <div className="px-4">
             <Form onSubmit={!asDialog ? onSubmit : () => {}}>
               <TrackNativeQueryRelationshipForm
                 fromNativeQuery={data.fromQuery?.root_field_name ?? ''}
                 nativeQueryOptions={data.queries
-                  .map(q => q.root_field_name)
-                  .filter(q => q !== fromNativeQuery)}
-                fromFieldOptions={data.fromModel?.fields.map(f => f.name) ?? []}
-                toFieldOptions={data.targetModel?.fields.map(f => f.name) ?? []}
+                  .map((q) => q.root_field_name)
+                  .filter((q) => q !== fromNativeQuery)}
+                fromFieldOptions={
+                  data.fromModel?.fields.map((f) => f.name) ?? []
+                }
+                toFieldOptions={
+                  data.targetModel?.fields.map((f) => f.name) ?? []
+                }
               />
               {!asDialog && (
-                <div className="flex justify-end">
+                <Flex justify="end">
                   <Button type="submit" mode="primary">
                     {isEditMode ? 'Edit Relationship' : 'Add Relationship'}
                   </Button>
-                </div>
+                </Flex>
               )}
             </Form>
           </div>
@@ -139,7 +145,6 @@ export const NativeQueryRelationshipWidget = ({
         onCancelAnalyticsName: 'actions-tab-generate-types-cancel',
       }}
       title={`${props.mode === 'create' ? 'Add' : 'Edit'} Relationship`}
-      hasBackdrop
       onClose={props.onCancel}
     >
       {body()}

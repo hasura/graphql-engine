@@ -1,25 +1,34 @@
 import React from 'react';
 import { FiSettings } from 'react-icons/fi';
-import { CustomFieldNames } from '../..';
-import { APIError } from '../../../../hooks/error';
-import { Button } from '../../../../new-components/Button';
-import { CardedTable } from '../../../../new-components/CardedTable';
-import { hasuraToast } from '../../../../new-components/Toasts';
-import { MetadataTable } from '../../../hasura-metadata-types';
-import { useTrackTables } from '../../hooks/useTrackTables';
+import { Flex } from '@radix-ui/themes';
+import {
+  Button,
+  Checkbox,
+  hasuraToast,
+  showErrorNotification,
+  Table,
+} from '@hasura/shared/ui';
+import { MetadataTable, QualifiedDataSource } from '@hasura/shared/types';
 import { TableDisplayName } from '../components/TableDisplayName';
-import { TrackableTable } from '../types';
+import {
+  TrackableTable,
+  useTrackTables,
+  useUntrackTables,
+} from '@hasura/metadata/api';
 import { MongoTrackCollectionModalWrapper } from '../../MongoTrackCollection/MongoTrackCollectionModalWrapper';
-import { useDriverCapabilities } from '../../hooks/useDriverCapabilities';
-import { supportsSchemaLessTables } from '../../LogicalModels/LogicalModelWidget/utils';
+import {
+  useDriverCapabilities,
+  supportsSchemaLessTables,
+} from '@hasura/metadata/data-source';
+import { dataRoutes } from '@hasura/shared/utils';
+import { CustomFieldNames } from '../../CustomFieldNames';
 
 interface TableRowProps {
-  dataSourceName: string;
+  source: QualifiedDataSource;
   table: TrackableTable;
   checked: boolean;
   reset: () => void;
   onChange: () => void;
-  onTableNameClick?: () => void;
   onTableTrack?: (table: TrackableTable) => void;
   isRowSelectionEnabled: boolean;
 }
@@ -27,23 +36,21 @@ interface TableRowProps {
 export const TableRow = React.memo(
   ({
     checked,
-    dataSourceName,
+    source,
     table,
     reset,
     onChange,
-    onTableNameClick,
     onTableTrack,
     isRowSelectionEnabled,
   }: TableRowProps) => {
     const [showCustomModal, setShowCustomModal] = React.useState(false);
     const [isMongoTrackingModalVisible, setShowMongoTrackingModalVisible] =
       React.useState(false);
-    const { trackTables, untrackTables, isLoading } = useTrackTables({
-      dataSourceName,
-    });
+    const { trackTables, isPending: trackLoading } = useTrackTables();
+    const { untrackTables, isPending: untrackLoading } = useUntrackTables();
 
     const { data: capabilities } = useDriverCapabilities({
-      dataSourceName: dataSourceName,
+      source,
     });
 
     const areSchemaLessTablesSupported = supportsSchemaLessTables(capabilities);
@@ -54,144 +61,160 @@ export const TableRow = React.memo(
         t.configuration = customConfiguration;
       }
 
-      trackTables({
-        tables: [t],
-        onSuccess: () => {
-          hasuraToast({
-            type: 'success',
-            title: 'Success!',
-            message: 'Object tracked successfully.',
-          });
-          reset();
-          setShowCustomModal(false);
-          onTableTrack?.(table);
+      trackTables(
+        {
+          tables: [t],
+          source: source.name,
         },
-        onError: err => {
-          hasuraToast({
-            type: 'error',
-            title: 'Unable to perform operation',
-            message: (err as APIError).message,
-          });
+        {
+          onSuccess: () => {
+            hasuraToast({
+              type: 'success',
+              title: 'Success!',
+              message: 'Object tracked successfully.',
+            });
+            reset();
+            setShowCustomModal(false);
+            onTableTrack?.(table);
+          },
+          onError: (err) => {
+            showErrorNotification({
+              title: 'Unable to perform operation',
+              error: err,
+            });
+          },
         },
-      });
+      );
     };
 
     const untrack = () => {
-      untrackTables({
-        tables: [table],
-        onSuccess: () => {
-          hasuraToast({
-            type: 'success',
-            title: 'Success!',
-            message: 'Object untracked successfully.',
-          });
-          reset();
-          onTableTrack?.(table);
+      untrackTables(
+        {
+          tables: [table],
+          source: source.name,
         },
-        onError: err => {
-          hasuraToast({
-            type: 'error',
-            title: 'Unable to perform operation',
-            message: (err as APIError).message,
-          });
+        {
+          onSuccess: () => {
+            hasuraToast({
+              type: 'success',
+              title: 'Success!',
+              message: 'Object untracked successfully.',
+            });
+            reset();
+            onTableTrack?.(table);
+          },
+          onError: (err) => {
+            showErrorNotification({
+              title: 'Unable to perform operation',
+              error: err,
+            });
+          },
         },
-      });
+      );
     };
 
     return (
-      <CardedTable.TableBodyRow
-        className={checked ? 'bg-blue-50' : 'bg-transparent'}
-      >
+      <Table.Row className={checked ? 'bg-indigo-50' : 'bg-transparent'}>
         {isRowSelectionEnabled && (
-          <td className="w-0 px-sm text-sm font-semibold text-muted uppercase tracking-wider">
-            <input
-              type="checkbox"
-              className="cursor-pointer rounded border shadow-sm border-gray-400 hover:border-gray-500 focus:ring-yellow-400"
-              value={table.id}
-              checked={checked}
-              onChange={onChange}
-            />
-          </td>
+          <Table.Cell className="w-10">
+            <Flex align="center" className="h-full">
+              <Checkbox value={checked} onChange={onChange} />
+            </Flex>
+          </Table.Cell>
         )}
-        <CardedTable.TableBodyCell>
-          <TableDisplayName onClick={onTableNameClick} table={table.table} />
-        </CardedTable.TableBodyCell>
-        <CardedTable.TableBodyCell>{table.type}</CardedTable.TableBodyCell>
-        <CardedTable.TableBodyCell>
-          {table.is_tracked ? (
-            <Button
-              data-testid={`untrack-${table.name}`}
-              size="sm"
-              onClick={() => untrack()}
-              isLoading={isLoading}
-              loadingText="Please wait"
-            >
-              Untrack
-            </Button>
-          ) : (
-            <div className="flex flex-row">
+        <Table.Cell>
+          <TableDisplayName
+            to={
+              table.is_tracked
+                ? dataRoutes.manageTable(source.name, table.table)
+                : undefined
+            }
+            table={table.table}
+          />
+        </Table.Cell>
+        <Table.Cell>
+          <Flex align="center" className="h-full">
+            {table.type}
+          </Flex>
+        </Table.Cell>
+        <Table.Cell>
+          <Flex direction="row" align="center" gap="2" className="h-full">
+            {table.is_tracked ? (
               <Button
-                data-testid={`track-${table.name}`}
+                data-testid={`untrack-${table.name}`}
                 size="sm"
-                onClick={() => {
-                  if (areSchemaLessTablesSupported) {
-                    setShowMongoTrackingModalVisible(true);
-                    return;
-                  }
-                  track();
-                }}
-                isLoading={isLoading}
+                onClick={() => untrack()}
+                loading={untrackLoading}
                 loadingText="Please wait"
               >
-                Track
+                Untrack
               </Button>
-
-              {/* Hiding this customize button while loading as it looks odd to have two buttons in "loading mode" */}
-              {!areSchemaLessTablesSupported && !isLoading && (
+            ) : (
+              <>
                 <Button
+                  mode="primary"
+                  data-testid={`track-${table.name}`}
                   size="sm"
-                  className="ml-2"
                   onClick={() => {
                     if (areSchemaLessTablesSupported) {
                       setShowMongoTrackingModalVisible(true);
                       return;
                     }
-                    setShowCustomModal(true);
+                    track();
                   }}
-                  icon={<FiSettings />}
+                  loading={trackLoading}
+                  loadingText="Please wait"
                 >
-                  Customize &amp; Track
+                  Track
                 </Button>
-              )}
+                {!areSchemaLessTablesSupported &&
+                  !trackLoading &&
+                  !untrackLoading && (
+                    <Button
+                      mode="default"
+                      size="sm"
+                      onClick={() => {
+                        if (areSchemaLessTablesSupported) {
+                          setShowMongoTrackingModalVisible(true);
+                          return;
+                        }
+                        setShowCustomModal(true);
+                      }}
+                      leftIcon={FiSettings}
+                    >
+                      Customize &amp; Track
+                    </Button>
+                  )}
 
-              <CustomFieldNames.Modal
-                tableName={table.name}
-                onSubmit={(formValues, config) => {
-                  track(config);
-                }}
-                onClose={() => {
-                  setShowCustomModal(false);
-                }}
-                callToAction="Customize & Track"
-                callToDeny="Cancel"
-                callToActionLoadingText="Saving..."
-                isLoading={isLoading}
-                show={showCustomModal}
-                source={dataSourceName}
-              />
-
-              {isMongoTrackingModalVisible && (
-                <MongoTrackCollectionModalWrapper
-                  dataSourceName={dataSourceName}
-                  collectionName={table.name}
-                  isVisible={isMongoTrackingModalVisible}
-                  onClose={() => setShowMongoTrackingModalVisible(false)}
+                <CustomFieldNames.Modal
+                  tableName={table.name}
+                  onSubmit={(formValues, config) => {
+                    track(config);
+                  }}
+                  onClose={() => {
+                    setShowCustomModal(false);
+                  }}
+                  callToAction="Customize & Track"
+                  callToDeny="Cancel"
+                  callToActionLoadingText="Saving..."
+                  isLoading={trackLoading}
+                  show={showCustomModal}
+                  source={source.name}
                 />
-              )}
-            </div>
-          )}
-        </CardedTable.TableBodyCell>
-      </CardedTable.TableBodyRow>
+
+                {isMongoTrackingModalVisible && (
+                  <MongoTrackCollectionModalWrapper
+                    dataSourceName={source.name}
+                    collectionName={table.name}
+                    isVisible={isMongoTrackingModalVisible}
+                    onClose={() => setShowMongoTrackingModalVisible(false)}
+                  />
+                )}
+              </>
+            )}
+          </Flex>
+        </Table.Cell>
+      </Table.Row>
     );
-  }
+  },
 );

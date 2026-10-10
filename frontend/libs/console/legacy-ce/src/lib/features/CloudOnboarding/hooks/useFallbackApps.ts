@@ -18,7 +18,7 @@ export const useFallbackApps = (kind: OnboardingKind): FallbackApp[] => {
             href: `/deploy?github_repo=${git_repository_url}&hasura_dir=${hasura_directory}&branch=${git_repository_branch}`,
             rank,
           };
-        }
+        },
       )
       .sort(({ rank: rank1 }, { rank: rank2 }) => {
         if (rank1 > rank2) return 1;

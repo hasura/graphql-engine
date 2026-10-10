@@ -1,16 +1,21 @@
 import React from 'react';
-import { CgSpinner } from 'react-icons/cg';
-
-import { Button } from '../../../../new-components/Button';
-import { Switch } from '../../../../new-components/Switch';
-import { MetadataSelector, useMetadata } from '../../../MetadataAPI';
-import { useFireNotification } from '../../../../new-components/Notifications';
-import { IndicatorCard } from '../../../../new-components/IndicatorCard';
-
-import { FaCheck, FaPlusCircle } from 'react-icons/fa';
+import { Flex, Heading, Skeleton, Strong } from '@radix-ui/themes';
+import {
+  Button,
+  Switch,
+  IndicatorCard,
+  Text,
+  Table,
+  Input,
+  PermissionsIcon,
+} from '@hasura/shared/ui';
+import { FaPlusCircle } from 'react-icons/fa';
 import { useSetRoleToAllowListPermission } from '../../hooks/AllowListPermissions/useSetRoleToAllowListPermissions';
 import { useEnabledRolesFromAllowListState } from '../../hooks/AllowListPermissions/useEnabledRolesFromAllowListState';
 import { useAddToAllowList } from '../../hooks/useAddToAllowList';
+import { hasuraToast } from '@hasura/shared/ui';
+import { useMetadata } from '@hasura/metadata/api';
+import { MetadataSelectors } from '@hasura/metadata/helpers';
 
 export interface AllowListPermissionsTabProps {
   collectionName: string;
@@ -23,7 +28,7 @@ export const AllowListPermissions: React.FC<AllowListPermissionsTabProps> = ({
     useEnabledRolesFromAllowListState(collectionName);
 
   const { data: isCollectionInAllowlist, isLoading } = useMetadata(
-    MetadataSelector.isCollectionInAllowlist(collectionName)
+    MetadataSelectors.isCollectionInAllowlist(collectionName),
   );
 
   const { setRoleToAllowListPermission } =
@@ -31,8 +36,6 @@ export const AllowListPermissions: React.FC<AllowListPermissionsTabProps> = ({
 
   const { addToAllowList, isLoading: addToAllowListLoading } =
     useAddToAllowList();
-
-  const { fireNotification } = useFireNotification();
 
   const [updatingRoles, setUpdatingRoles] = React.useState<string[]>([]);
 
@@ -46,7 +49,7 @@ export const AllowListPermissions: React.FC<AllowListPermissionsTabProps> = ({
     // add roleName to enabledRoles, remove duplicates
     if (enabledRoles.includes(roleName)) {
       newEnabledRoles = Array.from(
-        new Set(enabledRoles.filter(role => role !== roleName))
+        new Set(enabledRoles.filter((role) => role !== roleName)),
       );
     } else {
       newEnabledRoles = Array.from(new Set([...enabledRoles, roleName]));
@@ -54,20 +57,20 @@ export const AllowListPermissions: React.FC<AllowListPermissionsTabProps> = ({
 
     setRoleToAllowListPermission(newEnabledRoles, {
       onSuccess: () => {
-        fireNotification({
+        hasuraToast({
           type: 'success',
           message: 'Allow list permissions updated',
           title: 'Success',
         });
-        setUpdatingRoles(updatingRoles.filter(role => role !== roleName));
+        setUpdatingRoles(updatingRoles.filter((role) => role !== roleName));
       },
-      onError: e => {
-        fireNotification({
+      onError: (e) => {
+        hasuraToast({
           type: 'error',
           message: `Error updating allow list permissions: ${e.message}`,
           title: 'Error',
         });
-        setUpdatingRoles(updatingRoles.filter(role => role !== roleName));
+        setUpdatingRoles(updatingRoles.filter((role) => role !== roleName));
       },
     });
   };
@@ -90,28 +93,34 @@ export const AllowListPermissions: React.FC<AllowListPermissionsTabProps> = ({
 
   if (!isCollectionInAllowlist) {
     return (
-      <div className="flex flex-col items-center justify-center h-full">
-        <div className="text-2xl font-bold text-gray-500">
+      <Flex
+        direction="column"
+        align="center"
+        justify="center"
+        className="h-full"
+        gap="4"
+      >
+        <Heading size="5" color="gray">
           This collection is not in the allowlist
-        </div>
-        <div className="text-gray-500">
+        </Heading>
+        <Text as="p">
           Please add this collection to the allowlist to manage permissions
-        </div>
+        </Text>
         <Button
-          icon={<FaPlusCircle />}
+          leftIcon={FaPlusCircle}
           mode="primary"
           className="mt-4"
           onClick={() => {
             addToAllowList(collectionName, {
               onSuccess: () => {
-                fireNotification({
+                hasuraToast({
                   type: 'success',
                   title: 'Collection added to allowlist',
                   message: `Collection ${collectionName} has been added to the allowlist`,
                 });
               },
-              onError: e => {
-                fireNotification({
+              onError: (e) => {
+                hasuraToast({
                   type: 'error',
                   title: 'Collection not added to allowlist',
                   message: `Collection ${collectionName} could not be added to the allowlist: ${e.message}`,
@@ -119,97 +128,80 @@ export const AllowListPermissions: React.FC<AllowListPermissionsTabProps> = ({
               },
             });
           }}
-          isLoading={addToAllowListLoading}
+          loading={addToAllowListLoading}
         >
           Add to allowlist
         </Button>
-      </div>
+      </Flex>
     );
   }
 
   return (
     <>
-      <div className="overflow-x-auto border border-gray-300 rounded mb-md">
-        <table className="min-w-full divide-y divide-gray-300 text-left">
-          <thead>
-            <tr className="divide-x divide-gray-300">
-              <th className="w-0 bg-gray-50 px-sm py-xs text-sm font-semibold text-muted uppercase tracking-wider">
-                Role
-              </th>
-              <th className="text-center bg-gray-50 px-sm py-xs text-sm font-semibold text-muted uppercase tracking-wider">
-                Access
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-300">
-            <tr className="group divide-x divide-gray-300">
-              <td className="w-0 bg-gray-50 p-sm font-semibold text-muted">
-                <div className="flex items-center">
-                  <label className="flex items-center">admin</label>
-                </div>
-              </td>
-              <td className="text-center p-sm whitespace-nowrap cursor-not-allowed">
-                <FaCheck className="text-green-600" />
-              </td>
-            </tr>
-            {allAvailableRoles.map(roleName => (
-              <tr className="divide-x divide-gray-300">
-                <td className="w-0 bg-gray-50 p-sm font-semibold text-muted">
-                  <div className="flex items-center">
-                    <label>{roleName}</label>
-                  </div>
-                </td>
-                <td className="group relative text-center p-sm whitespace-nowrap cursor-pointer">
-                  {updatingRoles.length > 0 ? (
-                    <CgSpinner className={`animate-spin ${'w-5 h-5'}`} />
-                  ) : (
-                    <Switch
-                      checked={enabledRoles.includes(roleName)}
-                      onCheckedChange={() => handleToggle(roleName)}
-                      data-testid={roleName}
-                    />
-                  )}
-                </td>
-              </tr>
-            ))}
-            {newRoles.map((newRole, index) => (
-              <tr className="divide-x divide-gray-300">
-                <td className="w-0 bg-gray-50 p-2 font-semibold text-muted">
-                  <input
-                    x-model="newRole"
-                    type="text"
-                    className="block w-full h-input min-w-max shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
-                    placeholder="Create New Role..."
-                    value={newRole}
-                    onChange={e => handleNewRole(e.target.value, index)}
+      <Table.Root variant="surface" className="min-w-full divide-y">
+        <Table.Header>
+          <Table.Row>
+            <Table.RowHeaderCell className="uppercase tracking-wider">
+              Role
+            </Table.RowHeaderCell>
+            <Table.RowHeaderCell className="uppercase tracking-wider">
+              Access
+            </Table.RowHeaderCell>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
+          <Table.Row>
+            <Table.ColumnHeaderCell>admin</Table.ColumnHeaderCell>
+            <Table.Cell className="cursor-not-allowed">
+              <PermissionsIcon type="fullAccess" />
+            </Table.Cell>
+          </Table.Row>
+          {allAvailableRoles.map((roleName) => (
+            <Table.Row key={roleName}>
+              <Table.ColumnHeaderCell>{roleName}</Table.ColumnHeaderCell>
+              <Table.Cell>
+                <Skeleton loading={updatingRoles.length > 0}>
+                  <Switch
+                    value={enabledRoles.includes(roleName)}
+                    onChange={() => handleToggle(roleName)}
+                    data-testid={roleName}
                   />
-                </td>
-                <td className="group relative text-center p-sm whitespace-nowrap cursor-pointer flex items-center justify-center">
-                  {updatingRoles.length > 0 ? (
-                    <CgSpinner className={`animate-spin ${'w-5 h-5'}`} />
-                  ) : (
-                    <Switch
-                      checked={enabledRoles.includes(newRole)}
-                      onCheckedChange={
-                        newRole !== '' ? () => handleToggle(newRole) : () => {}
-                      }
-                      data-testid={newRole}
-                    />
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                </Skeleton>
+              </Table.Cell>
+            </Table.Row>
+          ))}
+          {newRoles.map((newRole, index) => (
+            <Table.Row key={index}>
+              <Table.ColumnHeaderCell>
+                <Input
+                  x-model="newRole"
+                  type="text"
+                  placeholder="Create New Role..."
+                  value={newRole}
+                  onChange={(e) => handleNewRole(e.target.value, index)}
+                />
+              </Table.ColumnHeaderCell>
+              <Table.Cell>
+                <Skeleton loading={updatingRoles.length > 0}>
+                  <Switch
+                    value={enabledRoles.includes(newRole)}
+                    onChange={
+                      newRole !== '' ? () => handleToggle(newRole) : () => {}
+                    }
+                    data-testid={newRole}
+                  />
+                </Skeleton>
+              </Table.Cell>
+            </Table.Row>
+          ))}
+        </Table.Body>
+      </Table.Root>
       {enabledRoles.length === 0 && (
-        <IndicatorCard>
-          <p className="m-0">
-            The collection is in <span className="font-bold">global mode</span>:
-            all users are enabled. If you want to assign permissions in a more
-            granular way, enable specific roles. If you want to disable all
-            users, remove the collection from the allow list{' '}
-          </p>
+        <IndicatorCard className="mt-4">
+          The collection is in <Strong>global mode</Strong>: all users are
+          enabled. If you want to assign permissions in a more granular way,
+          enable specific roles. If you want to disable all users, remove the
+          collection from the allow list{' '}
         </IndicatorCard>
       )}
     </>

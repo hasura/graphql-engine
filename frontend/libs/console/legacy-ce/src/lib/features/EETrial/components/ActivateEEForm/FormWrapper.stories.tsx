@@ -1,6 +1,6 @@
 import React from 'react';
-import { StoryObj, Meta } from '@storybook/react';
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
 import { registerEETrialLicenseActiveMutation } from '../../mocks/registration.mock';
 
 import { FormWrapper } from './FormWrapper';

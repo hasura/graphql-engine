@@ -1,8 +1,8 @@
-import { BooleanInput } from './BooleanInput';
+import { SwitchField } from '@hasura/shared/ui';
 
 export const UsePreparedStatements = ({ name }: { name: string }) => {
   return (
-    <BooleanInput
+    <SwitchField
       name={name}
       label="Use Prepared Statements"
       tooltip="Prepared statements are disabled by default"

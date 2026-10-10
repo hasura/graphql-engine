@@ -184,7 +184,7 @@ describe('generateDepConstrainMdTable', () => {
         },
       },
       'scope:',
-      MOCK_URL
+      MOCK_URL,
     );
 
     expect(result).toMatchInlineSnapshot(`
@@ -215,7 +215,7 @@ describe('generateDepConstrainMdTable', () => {
         },
       },
       'scope:',
-      MOCK_URL
+      MOCK_URL,
     );
 
     expect(result).toMatchInlineSnapshot(`
@@ -321,7 +321,7 @@ describe('generateDepConstrainMdTable', () => {
         },
       },
       'scope:',
-      MOCK_URL
+      MOCK_URL,
     );
 
     expect(result).toMatchInlineSnapshot(`
@@ -343,7 +343,7 @@ describe('generateMarkdownDocumentationForTags', () => {
     const output = generateMarkdownDocumentationForTags(
       tagGroups,
       tagDefs,
-      MOCK_URL
+      MOCK_URL,
     );
 
     expect(output).toMatchInlineSnapshot(`

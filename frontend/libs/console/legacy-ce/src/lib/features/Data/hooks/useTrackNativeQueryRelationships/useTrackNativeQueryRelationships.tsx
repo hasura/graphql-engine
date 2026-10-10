@@ -1,12 +1,15 @@
-import { transformErrorResponse } from '../../../ConnectDBRedesign/utils';
-import { useMetadataMigration } from '../../../MetadataAPI';
-import { MetadataMigrationOptions } from '../../../MetadataAPI/hooks/useMetadataMigration';
-import { MetadataSelectors, useMetadata } from '../../../hasura-metadata-api';
+import {
+  useMetadataMigration,
+  MetadataMigrationOptions,
+  useMetadata,
+} from '@hasura/metadata/api';
+import { MetadataSelectors } from '@hasura/metadata/helpers';
+
 import {
   NativeQuery,
   NativeQueryRelationship,
   Source,
-} from '../../../hasura-metadata-types';
+} from '@hasura/shared/types';
 import { NativeQueryMigrationBuilder } from '../../LogicalModels/MigrationBuilder';
 
 export type TrackNativeQueryRelationshipsProps = NativeQueryRelationship & {
@@ -21,25 +24,24 @@ export type UntrackNativeQuery = { source: Source } & Pick<
 export const useTrackNativeQueryRelationships = (
   dataSourceName: string,
   nativeQueryName: string,
-  globalMutateOptions?: MetadataMigrationOptions
+  globalMutateOptions?: MetadataMigrationOptions,
 ) => {
   /**
    * Get the required metadata variables - sources & resource_version
    */
   const { data: { driver, originNativeQuery, resource_version } = {} } =
-    useMetadata(m => ({
+    useMetadata((m) => ({
       driver: MetadataSelectors.findSource(dataSourceName)(m)?.kind,
       originNativeQuery: MetadataSelectors.findSource(dataSourceName)(
-        m
-      )?.native_queries?.find(nq => nq.root_field_name === nativeQueryName),
+        m,
+      )?.native_queries?.find((nq) => nq.root_field_name === nativeQueryName),
       resource_version: m.resource_version,
     }));
 
   const { mutate, ...rest } = useMetadataMigration({
     ...globalMutateOptions,
-    errorTransform: transformErrorResponse,
-    onSuccess: (data, variable, ctx) => {
-      globalMutateOptions?.onSuccess?.(data, variable, ctx);
+    onSuccess: (data, variable, onMutateResult, context) => {
+      globalMutateOptions?.onSuccess?.(data, variable, onMutateResult, context);
     },
   });
 
@@ -84,7 +86,7 @@ export const useTrackNativeQueryRelationships = (
           args: nativeQueryPayload.payload(),
         },
       },
-      options
+      options,
     );
   };
 
@@ -98,7 +100,7 @@ export const useTrackNativeQueryRelationships = (
       throw Error('Driver/Native Query not found');
 
     const relationship = originNativeQuery[`${type}_relationships`]?.find(
-      n => n.name === relationshipName
+      (n) => n.name === relationshipName,
     );
 
     if (!relationship) {
@@ -122,7 +124,7 @@ export const useTrackNativeQueryRelationships = (
           args: nativeQueryPayload.payload(),
         },
       },
-      options
+      options,
     );
   };
 

@@ -1,60 +1,68 @@
-import { HasuraMetadataV3 } from '@hasura/console-legacy-ce';
+import { HasuraMetadataV3, SchemaTable } from '@hasura/shared/types';
+import { cliUrl, hgeUrl } from '../../support/endpoints';
 import { readMetadata } from '../actions/withTransform/utils/services/readMetadata';
 import { postgres } from '../data/manage-database/postgres.spec';
 
+const EVENT_TRIGGER_NAME = 'event_trigger_test';
+
+// Removes `event_trigger_test` whatever state a previous run left it in: from
+// metadata, and its `notify_hasura_*` SQL functions, which HGE leaves behind
+// (and then reports as "already exists") when the table is dropped via SQL
+// while the trigger still exists.
+const deleteLeftoverEventTrigger = () => {
+  cy.request({
+    method: 'POST',
+    url: hgeUrl('/v1/metadata'),
+    failOnStatusCode: false,
+    body: {
+      type: 'pg_delete_event_trigger',
+      args: { name: EVENT_TRIGGER_NAME, source: 'default' },
+    },
+  });
+  cy.request('POST', hgeUrl('/v2/query'), {
+    type: 'run_sql',
+    args: {
+      source: 'default',
+      sql: ['INSERT', 'UPDATE', 'DELETE']
+        .map(
+          (op) =>
+            `DROP FUNCTION IF EXISTS hdb_catalog."notify_hasura_${EVENT_TRIGGER_NAME}_${op}"() CASCADE;`,
+        )
+        .join(' '),
+    },
+  });
+};
+
 describe('Create event trigger with shortest possible path', () => {
   before(() => {
+    // If an earlier suite's `after` cleanup was interrupted it can leave both
+    // `user_table` and its event trigger behind. Remove the trigger first (so
+    // the non-cascading table drop is not blocked by a dependency), then drop
+    // the leftover table, so this setup is self-contained and `createTable`
+    // cannot fail with "relation already exists".
+    deleteLeftoverEventTrigger();
+    postgres.helpers.dropTableIfExists('user_table');
+
     // create a table first
     postgres.helpers.createTable('user_table');
 
-    // track the table
-    cy.visit('/data/default/schema/public', {
-      timeout: 10000,
-    });
-
-    cy.get('[data-test=add-track-table-user_table]', {
-      timeout: 10000,
-    }).click();
-
-    // if there is a trigger from a previous test, delete it
-    cy.visit('/events/data/event_trigger_test/modify', {
-      timeout: 10000,
-      onBeforeLoad(win) {
-        cy.stub(win, 'prompt').returns('event_trigger_test');
-      },
-    });
-
-    // wait for loading to not be visible
-    cy.get('span:contains("Loading...")', { timeout: 10000 }).should(
-      'not.be.visible'
-    );
-
-    cy.get('body').then($body => {
-      cy.log(
-        '**--- Delete the ET',
-        $body.find('button[data-test=delete-trigger]')
-      );
-      if ($body.find('button[data-test=delete-trigger]').length > 0) {
-        cy.log('**--- Delete the ET 2');
-        cy.intercept('POST', 'http://localhost:8080/v1/metadata', req => {
-          if (JSON.stringify(req.body).includes('delete_event_trigger')) {
-            req.alias = 'deleteTrigger';
-          }
-          req.continue();
-        });
-
-        cy.intercept('POST', 'http://localhost:9693/apis/migrate', req => {
-          if (JSON.stringify(req.body).includes('delete_event_trigger')) {
-            req.alias = 'deleteTrigger';
-          }
-        });
-
-        cy.get('button[data-test=delete-trigger]').click();
-        cy.wait('@deleteTrigger');
-      }
-    });
+    // Track the table as a prerequisite via the metadata API (see
+    // postgres.helpers.trackTable) — deterministic setup. The event-trigger CRUD
+    // under test is still driven through the UI in each `it`; only this setup
+    // step moved off the UI, so these before-hooks no longer exercise the
+    // Data-manager "untracked"/Track-button flow.
+    postgres.helpers.trackTable('user_table');
+  });
+  // Runs before every attempt (including CI retries): a trigger left over
+  // from a failed attempt would make the create fail with "already exists".
+  beforeEach(() => {
+    deleteLeftoverEventTrigger();
   });
   after(() => {
+    // Delete the trigger before the table so a failed run doesn't leave its
+    // SQL functions behind.
+    deleteLeftoverEventTrigger();
+
     // delete the table
     cy.log('**--- Delete the table');
     postgres.helpers.deleteTable('user_table');
@@ -86,16 +94,15 @@ describe('Create event trigger with shortest possible path', () => {
 
     // select source
     cy.log('**--- Select the DB');
-    cy.get('[name="source"]').select('default');
+    cy.get('[name="source"]').radixSelect('default');
 
-    // select schema and table
+    // select schema and table (a single "schema / table" select)
     cy.log('**--- Select the schema and table');
-    cy.get('[name="schema"]').select('public');
-    cy.get('[name="tableName"]').select('user_table');
+    cy.get('[name="tableName"]').radixSelect('public / user_table');
 
     // select the trigger operation
     cy.log('**--- Select the ET operation');
-    cy.get('[name=insert]').click();
+    cy.findByRole('checkbox', { name: 'Insert' }).click();
 
     // add webhook url
     cy.log('**--- Add webhook url');
@@ -104,6 +111,9 @@ describe('Create event trigger with shortest possible path', () => {
     // click on create button to save ET
     cy.log('**--- Click on Create Event Trigger');
     cy.findByRole('button', { name: 'Create Event Trigger' }).click();
+
+    // On success the console navigates to the trigger's modify page.
+    cy.location('pathname', { timeout: 15000 }).should('include', '/modify');
 
     cy.log('**------------------------------**');
     cy.log('**------------------------------**');
@@ -115,11 +125,12 @@ describe('Create event trigger with shortest possible path', () => {
 
     // modfy the trigger operation
     cy.log(
-      '**--- Click on Edit trigger operation and modfiy the trigger operation'
+      '**--- Click on Edit trigger operation and modfiy the trigger operation',
     );
     cy.get('[data-test=edit-operations]').click();
-    cy.get('[name=update]').click();
-    cy.get('[name=column-id]', { timeout: 1000 }).click();
+    cy.findByRole('checkbox', { name: 'Update' }).click();
+    cy.findByRole('radio', { name: 'Choose columns' }).click();
+    cy.findByRole('checkbox', { name: 'id' }).click();
     cy.findByRole('button', { name: 'Save' }).click();
 
     // modify the retry config
@@ -146,8 +157,18 @@ describe('Create event trigger with shortest possible path', () => {
     // add Request Options Transform
     cy.log('**--- Click on Add Request Options Transform and fill the form');
     cy.findByText('Add Request Options Transform').click();
-    cy.get('[name=GET]').click();
+    cy.findByRole('radio', { name: 'GET' }).click();
     cy.get('[name=request_url]').type('/transformUrl');
+    // The request URL is propagated into the saved form state on a 1s debounce
+    // (editorDebounceTime); saving before it fires drops `request_transform.url`
+    // from the metadata. The read-only Preview field is rendered from the
+    // propagated value (with `{{$base_url}}` resolved to the webhook), so wait
+    // for it to show the final URL before continuing — a deterministic wait on
+    // the real state, not a fixed delay.
+    cy.get('[data-test=transform-requestUrl-preview]').should(
+      'have.value',
+      'http://httpbin.org/post/transformUrl',
+    );
     cy.findAllByPlaceholderText('Key...').eq(2).type('x-hasura-user-id');
     cy.findAllByPlaceholderText('Value...').eq(2).type('my-user-id');
 
@@ -162,21 +183,22 @@ describe('Create event trigger with shortest possible path', () => {
     readMetadata().then((md: { body: HasuraMetadataV3 }) => {
       cy.wrap(
         (md.body.sources || [])
-          .find(source => source.name === 'default')
-          .tables.find(table => table?.table?.name === 'user_table')
-          ?.event_triggers?.[0]
+          .find((source) => source.name === 'default')
+          ?.tables.find(
+            (table) => (table?.table as SchemaTable)?.name === 'user_table',
+          )?.event_triggers?.[0],
       ).toMatchSnapshot({ name: 'Modify the shotest path to longest' });
     });
 
     // delete ET
-    cy.intercept('POST', 'http://localhost:8080/v1/metadata', req => {
+    cy.intercept('POST', hgeUrl('/v1/metadata'), (req) => {
       if (JSON.stringify(req.body).includes('delete_event_trigger')) {
         req.alias = 'deleteTrigger';
       }
       req.continue();
     });
 
-    cy.intercept('POST', 'http://localhost:9693/apis/migrate', req => {
+    cy.intercept('POST', cliUrl('/apis/migrate'), (req) => {
       if (JSON.stringify(req.body).includes('delete_event_trigger')) {
         req.alias = 'deleteTrigger';
       }
@@ -188,16 +210,24 @@ describe('Create event trigger with shortest possible path', () => {
 
 describe('Create event trigger with logest possible path', () => {
   before(() => {
+    // Remove a leftover trigger first, then drop any table the previous suite's
+    // interrupted `after` cleanup left behind, so `createTable` here cannot fail
+    // with "relation already exists". (On the hosted job the shortest-path
+    // suite's `after all` reported an uncaught app error, then this hook found
+    // `user_table` still present. The original React error's nested cause was
+    // not captured; fixture cleanup must not depend on its diagnosis.)
+    deleteLeftoverEventTrigger();
+    postgres.helpers.dropTableIfExists('user_table');
+
     // create a table first
     postgres.helpers.createTable('user_table');
 
-    // track the table
-    cy.visit('/data/default/schema/public', {
-      timeout: 10000,
-    });
-    cy.get('[data-test=add-track-table-user_table]', {
-      timeout: 10000,
-    }).click();
+    // Track the table as a prerequisite via the metadata API (see
+    // postgres.helpers.trackTable) — deterministic setup, consistent with the
+    // shortest-path suite. This before-hook no longer drives the Data-manager
+    // "untracked"/Track-button UI flow; the event-trigger CRUD under test is
+    // still exercised through the UI in the `it`.
+    postgres.helpers.trackTable('user_table');
   });
   after(() => {
     // delete the table
@@ -230,16 +260,15 @@ describe('Create event trigger with logest possible path', () => {
 
     // select source
     cy.log('**--- Select the DB');
-    cy.get('[name="source"]').select('default');
+    cy.get('[name="source"]').radixSelect('default');
 
-    // select schema and table
+    // select schema and table (a single "schema / table" select)
     cy.log('**--- Select the schema and table');
-    cy.get('[name="schema"]').select('public');
-    cy.get('[name="tableName"]').select('user_table');
+    cy.get('[name="tableName"]').radixSelect('public / user_table');
 
     // select the trigger operation
     cy.log('**--- Select the ET operation');
-    cy.get('[name=insert]').click();
+    cy.findByRole('checkbox', { name: 'Insert' }).click();
 
     // add webhook url
     cy.log('**--- Add webhook url');
@@ -266,8 +295,18 @@ describe('Create event trigger with logest possible path', () => {
     // add Request Options Transform
     cy.log('**--- Click on Add Request Options Transform and fill the form');
     cy.findByText('Add Request Options Transform').click();
-    cy.get('[name=GET]').click();
+    cy.findByRole('radio', { name: 'GET' }).click();
     cy.get('[name=request_url]').type('/transformUrl');
+    // The request URL is propagated into the saved form state on a 1s debounce
+    // (editorDebounceTime); saving before it fires drops `request_transform.url`
+    // from the metadata. The read-only Preview field is rendered from the
+    // propagated value (with `{{$base_url}}` resolved to the webhook), so wait
+    // for it to show the final URL before continuing — a deterministic wait on
+    // the real state, not a fixed delay.
+    cy.get('[data-test=transform-requestUrl-preview]').should(
+      'have.value',
+      'http://httpbin.org/post/transformUrl',
+    );
     cy.findAllByPlaceholderText('Key...').eq(2).type('x-hasura-user-id');
     cy.findAllByPlaceholderText('Value...').eq(2).type('my-user-id');
 
@@ -289,12 +328,13 @@ describe('Create event trigger with logest possible path', () => {
 
     // modfy the trigger operation
     cy.log(
-      '**--- Click on Edit trigger operation and modfiy the trigger operation'
+      '**--- Click on Edit trigger operation and modfiy the trigger operation',
     );
     cy.findAllByRole('button', { name: 'Edit' }).eq(1).click();
-    cy.get('[name=update]').click();
+    cy.findByRole('checkbox', { name: 'Update' }).click();
 
-    cy.get('[name=column-id]').click();
+    cy.findByRole('radio', { name: 'Choose columns' }).click();
+    cy.findByRole('checkbox', { name: 'id' }).click();
     cy.findByRole('button', { name: 'Save' }).click();
 
     // remove Request Options Transform
@@ -311,22 +351,23 @@ describe('Create event trigger with logest possible path', () => {
 
     readMetadata().then((md: { body: HasuraMetadataV3 }) => {
       cy.wrap(
-        (md.body.sources || [])
-          .find(source => source.name === 'default')
-          .tables.find(table => table?.table?.name === 'user_table')
-          ?.event_triggers?.[0]
+        (md?.body?.sources || [])
+          .find((source) => source?.name === 'default')
+          ?.tables.find(
+            (table) => (table?.table as SchemaTable)?.name === 'user_table',
+          )?.event_triggers?.[0],
       ).toMatchSnapshot({ name: 'Modify the longest path to shortest path' });
     });
 
     // delete ET
-    cy.intercept('POST', 'http://localhost:8080/v1/metadata', req => {
+    cy.intercept('POST', hgeUrl('/v1/metadata'), (req) => {
       if (JSON.stringify(req.body).includes('delete_event_trigger')) {
         req.alias = 'deleteTrigger';
       }
       req.continue();
     });
 
-    cy.intercept('POST', 'http://localhost:9693/apis/migrate', req => {
+    cy.intercept('POST', cliUrl('/apis/migrate'), (req) => {
       if (JSON.stringify(req.body).includes('delete_event_trigger')) {
         req.alias = 'deleteTrigger';
       }

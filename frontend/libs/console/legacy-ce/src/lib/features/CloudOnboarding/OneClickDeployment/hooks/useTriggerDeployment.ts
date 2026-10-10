@@ -4,9 +4,10 @@ import {
   TriggerOneClickDeploymentMutationVariables,
   TRIGGER_ONE_CLICK_DEPLOYMENT,
 } from '../../../ControlPlane';
-import { useFireNotification } from '../../../../new-components/Notifications';
 import { GraphQLError } from 'graphql';
-import { useMutation } from 'react-query';
+import { useMutation } from '@tanstack/react-query';
+import { hasuraToast } from '@hasura/shared/ui';
+import { useErrorNotification } from '@hasura/metadata/api';
 
 type TriggerOneClickDeploymentResponse = {
   data?: TriggerOneClickDeploymentMutation;
@@ -14,7 +15,7 @@ type TriggerOneClickDeploymentResponse = {
 };
 
 export const useTriggerDeployment = (projectId: string) => {
-  const { fireNotification } = useFireNotification();
+  const showErrorNotification = useErrorNotification();
 
   const triggerOneClickDeploymentMutationFn = (variables: {
     projectId: string;
@@ -25,8 +26,9 @@ export const useTriggerDeployment = (projectId: string) => {
     >(TRIGGER_ONE_CLICK_DEPLOYMENT, variables);
   };
 
-  const mutation = useMutation(triggerOneClickDeploymentMutationFn, {
-    onSuccess: data => {
+  const mutation = useMutation({
+    mutationFn: triggerOneClickDeploymentMutationFn,
+    onSuccess: (data) => {
       // As graphql does not return error codes, react-query will always consider a
       // successful request, we have to parse the data to check for errors
       if (data.errors && data.errors.length > 0) {
@@ -36,18 +38,16 @@ export const useTriggerDeployment = (projectId: string) => {
           !data.errors[0].message ||
           data.errors[0].message !== 'http exception when calling webhook'
         ) {
-          fireNotification({
-            type: 'error',
-            title: 'Error!',
-            message: 'Something went wrong while triggering deployment',
-            error: data.errors[0],
+          showErrorNotification({
+            title: 'Triggering deployment failed',
+            error: data.errors,
           });
         }
       }
     },
     // there might still be network errors, etc. which could be caught here
     onError: () => {
-      fireNotification({
+      hasuraToast({
         type: 'error',
         title: 'Error!',
         message: 'Something went wrong while triggering deployment',

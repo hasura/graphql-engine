@@ -2,16 +2,15 @@ import React from 'react';
 
 import { useTableMachine, PermissionsTable } from '../PermissionsTable';
 import { BulkDelete, PermissionsForm } from '../PermissionsForm';
-
-import { AccessType } from '../types';
+import { AccessType, MetadataTable, Source } from '@hasura/shared/types';
 
 export interface PermissionsTabProps {
-  dataSourceName: string;
-  table: unknown;
+  source: Source;
+  table: MetadataTable;
 }
 
 export const PermissionsTab: React.FC<PermissionsTabProps> = ({
-  dataSourceName,
+  source,
   table,
 }) => {
   const machine = useTableMachine();
@@ -21,8 +20,8 @@ export const PermissionsTab: React.FC<PermissionsTabProps> = ({
     <div className="p-4">
       <div className="grid gap-4">
         <PermissionsTable
-          dataSourceName={dataSourceName}
-          table={table}
+          source={source}
+          table={table.table}
           machine={machine}
         />
 
@@ -30,15 +29,15 @@ export const PermissionsTab: React.FC<PermissionsTabProps> = ({
           !!state.context.bulkSelections.length && (
             <BulkDelete
               roles={state.context.bulkSelections}
-              dataSourceName={dataSourceName}
-              table={table}
+              dataSourceName={source.name}
+              table={table.table}
               handleClose={() => send('CLOSE')}
             />
           )}
 
         {state.value === 'formOpen' && (
           <PermissionsForm
-            dataSourceName={dataSourceName}
+            source={source}
             table={table}
             roleName={state.context.selectedForm.roleName || ''}
             accessType={state.context.selectedForm.accessType as AccessType}

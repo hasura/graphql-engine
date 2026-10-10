@@ -1,7 +1,6 @@
 import React from 'react';
-import { Badge } from '../../../../new-components/Badge';
-import { Button } from '../../../../new-components/Button';
-import { SearchBar } from './SearchBar';
+import { Badge, Button, SearchInput } from '@hasura/shared/ui';
+import { Flex } from '@radix-ui/themes';
 import { PaginatedSearchableListProps } from '../hooks/usePaginatedSearchableList';
 import { PageSizeDropdown } from './PageSizeDropdown';
 
@@ -11,12 +10,12 @@ export const TrackableListMenu = (
     handleTrackButton?: () => void;
     checkActionText: string;
     showButton?: boolean;
-    searchChildren?: React.ReactChild;
-    actionChildren?: React.ReactChild;
-  }
+    searchChildren?: React.ReactNode;
+    actionChildren?: React.ReactNode;
+  },
 ) => (
-  <div className="flex justify-between space-x-4">
-    <div className="flex gap-5">
+  <Flex justify="between" className="space-x-4">
+    <Flex gap="5">
       {/* Check Action button */}
       {props.showButton && (
         <>
@@ -24,7 +23,7 @@ export const TrackableListMenu = (
             mode="primary"
             disabled={!props.checkData.checkedIds.length}
             onClick={props.handleTrackButton}
-            isLoading={props.isLoading}
+            loading={props.isLoading}
             loadingText="Please Wait"
           >
             {props.checkActionText}
@@ -35,14 +34,14 @@ export const TrackableListMenu = (
       )}
 
       {/* Search Input */}
-      <div className="flex gap-2">
-        <SearchBar onSearch={props.handleSearch} />
+      <Flex gap="2" align="center">
+        <SearchInput onSearch={props.handleSearch} />
         {props.searchChildren && props.searchChildren}
         {props.searchIsActive ? (
           <Badge>{props.filteredData.length} results found</Badge>
         ) : null}
-      </div>
-    </div>
+      </Flex>
+    </Flex>
     <PageSizeDropdown {...props} />
-  </div>
+  </Flex>
 );

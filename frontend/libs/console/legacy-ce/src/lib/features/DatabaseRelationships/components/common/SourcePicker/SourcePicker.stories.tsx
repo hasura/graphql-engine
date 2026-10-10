@@ -1,10 +1,10 @@
 import React from 'react';
 import { z } from 'zod';
-import { action } from '@storybook/addon-actions';
+import { action } from 'storybook/actions';
 import { FaArrowAltCircleRight } from 'react-icons/fa';
-import { StoryFn, Meta } from '@storybook/react';
-import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
-import { SimpleForm } from '../../../../../new-components/Form';
+import { StoryFn, Meta } from '@storybook/react-webpack5';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
+import { SimpleForm } from '@hasura/shared/ui';
 import { SourcePicker } from './SourcePicker';
 import { SourceSelectorItem } from './SourcePicker.types';
 import { mapItemsToSourceOptions } from './SourcePicker.utils';
@@ -55,7 +55,7 @@ export const Preselected: StoryFn<typeof SourcePicker> = () => {
         items={items}
         label="Label"
         labelIcon={
-          <FaArrowAltCircleRight className="fill-emerald-700 ml-1.5" />
+          <FaArrowAltCircleRight className="fill-emerald-700 h-4 w-4 ml-1.5" />
         }
         disabled
       />

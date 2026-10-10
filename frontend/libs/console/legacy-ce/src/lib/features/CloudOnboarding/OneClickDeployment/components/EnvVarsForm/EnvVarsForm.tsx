@@ -1,13 +1,13 @@
 import React, { useEffect } from 'react';
 import { GraphQLError } from 'graphql';
-import { SimpleForm } from '../../../../../new-components/Form';
-import { Dialog } from '../../../../../new-components/Dialog';
-import { useFireNotification } from '../../../../../new-components/Notifications';
 import { useGetTenantEnvs, useUpdateTenantEnv } from './hooks';
 import { getFormProperties } from './utils';
 import { EnvVarsFormState, RequiredEnvVar } from '../../types';
 import { UpdateEnvObj } from './types';
 import { EnvVarsFormFields, CustomFooter } from './components';
+import { SimpleForm, Dialog, Text } from '@hasura/shared/ui';
+import { useErrorNotification } from '@hasura/metadata/api';
+import { Flex, Heading } from '@radix-ui/themes';
 
 export type EnvVarsFormProps = {
   envVars: RequiredEnvVar[];
@@ -18,8 +18,8 @@ export type EnvVarsFormProps = {
 };
 
 export function EnvVarsForm(props: EnvVarsFormProps) {
-  const { fireNotification } = useFireNotification();
   const { envVars, formState, setFormState, successCb } = props;
+  const showErrorNotification = useErrorNotification();
 
   const { data: tenantEnvData } = useGetTenantEnvs();
 
@@ -29,10 +29,8 @@ export function EnvVarsForm(props: EnvVarsFormProps) {
       tenantEnvData.errors &&
       tenantEnvData.errors.length > 0
     ) {
-      fireNotification({
-        type: 'error',
-        title: 'Error!',
-        message: 'Error fetching Environment Variables',
+      showErrorNotification({
+        title: 'Error fetching Environment Variables',
         error: tenantEnvData.errors[0],
       });
     }
@@ -43,7 +41,7 @@ export function EnvVarsForm(props: EnvVarsFormProps) {
 
   const { schema, defaultValues } = React.useMemo(
     () => getFormProperties(envVars, tenantEnvVars),
-    [envVars, tenantEnvVars]
+    [envVars, tenantEnvVars],
   );
 
   const updateTenantEnvSuccessCb = () => {
@@ -52,10 +50,8 @@ export function EnvVarsForm(props: EnvVarsFormProps) {
 
   const updateTenantEnvErrorCb = (error?: GraphQLError) => {
     setFormState('error');
-    fireNotification({
-      type: 'error',
-      title: 'Error!',
-      message: 'Error updating Environment Variables',
+    showErrorNotification({
+      title: 'Error updating Environment Variables',
       error,
     });
   };
@@ -70,10 +66,10 @@ export function EnvVarsForm(props: EnvVarsFormProps) {
     Object.entries(formData).forEach(([k, v]) => {
       formData[k] = (v as string).trim();
 
-      const envVar = envVars.find(env => k === env.Name);
+      const envVar = envVars.find((env) => k === env.Name);
       if (envVar?.ValueType === 'STRING_ARRAY') {
         formData[k] = JSON.stringify(
-          (v as string).split(',').map(d => d.trim())
+          (v as string).split(',').map((d) => d.trim()),
         );
       }
     });
@@ -87,22 +83,24 @@ export function EnvVarsForm(props: EnvVarsFormProps) {
   };
 
   return (
-    <Dialog size="xl" hasBackdrop>
+    <Dialog size="xl">
       <SimpleForm
         schema={schema}
         onSubmit={onSubmit}
         options={{ defaultValues }}
       >
-        <div className="max-h-[calc(100vh-20rem)] overflow-y-auto font-sans px-8 pt-10 mb-sm">
-          <div className="text-4xl text-slate-900 font-semibold mb-xs">
-            Environment Variables
-          </div>
-          <div className="text-gray-600 font-normal text-m mb-md">
+        <Flex
+          direction="column"
+          gap="4"
+          className="max-h-[calc(100vh-20rem)] overflow-y-auto"
+        >
+          <Heading size="6">Environment Variables</Heading>
+          <Text>
             The following variables are required to set up your project.
-          </div>
+          </Text>
 
           <EnvVarsFormFields envVars={envVars} />
-        </div>
+        </Flex>
         <CustomFooter formState={formState} />
       </SimpleForm>
     </Dialog>

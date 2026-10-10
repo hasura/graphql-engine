@@ -1,7 +1,8 @@
 import React from 'react';
 // import { MdSignalWifiStatusbarConnectedNoInternet1 } from 'react-icons/md';
-import { Badge } from '../../../new-components/Badge';
+import { Badge, Text } from '@hasura/shared/ui';
 import { IoCloudOfflineOutline } from 'react-icons/io5';
+import { Flex } from '@radix-ui/themes';
 
 export const DatabaseLogo: React.FC<{
   title: string;
@@ -11,17 +12,24 @@ export const DatabaseLogo: React.FC<{
 }> = ({ title, image, releaseName, noConnection }) => {
   return (
     // adding pointer evens none just to make sure none of this captures clicks since that's handled in the parent for the radio buttons
-    <div className="flex flex-col mt-2 items-center justify-center absolute h-full w-full pointer-events-none">
+    <Flex
+      direction="column"
+      align="center"
+      justify="center"
+      className="mt-2 absolute h-full w-full pointer-events-none"
+    >
       <img
         src={image}
         className="h-[24px] mb-2 object-contain"
         alt={`${title} logo`}
       />
-      <div className="text-black text-base">{title}</div>
+      <Text>{title}</Text>
 
       {noConnection ? (
-        <div className="absolute top-0 right-0 m-3 ">
-          <IoCloudOfflineOutline size={20} className="text-red-500" />
+        <div className="absolute top-0 right-0 m-3">
+          <Text color="red">
+            <IoCloudOfflineOutline size={20} />
+          </Text>
         </div>
       ) : (
         releaseName &&
@@ -31,6 +39,6 @@ export const DatabaseLogo: React.FC<{
           </div>
         )
       )}
-    </div>
+    </Flex>
   );
 };

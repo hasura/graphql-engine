@@ -1,12 +1,13 @@
-import React from 'react';
+import { IconBaseProps, IconType } from 'react-icons';
 
-const AddIcon: React.FC = () => {
+const AddIcon: IconType = (props: IconBaseProps) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      className="w-5 mr-xs"
+      className="w-5 mr-1"
       viewBox="0 0 20 20"
       fill="currentColor"
+      {...props}
     >
       <path
         fillRule="evenodd"

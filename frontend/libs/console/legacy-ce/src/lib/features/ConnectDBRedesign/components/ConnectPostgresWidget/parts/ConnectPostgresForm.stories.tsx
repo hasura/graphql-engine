@@ -1,14 +1,15 @@
-import { SimpleForm } from '../../../../../new-components/Form';
-import { Button } from '../../../../../new-components/Button';
-import { Meta, StoryObj } from '@storybook/react';
+import { SimpleForm, Button } from '@hasura/shared/ui';
+
+import { Meta, StoryObj } from '@storybook/react-webpack5';
 
 import { ConnectPostgresForm } from './ConnectPostgresForm';
 import { PostgresConnectionSchema, getDefaultValues, schema } from '../schema';
-import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
+import {
+  ReactQueryDecorator,
+  ConsoleTypeDecorator,
+} from '@hasura/shared/testing';
 import { useState } from 'react';
-import { userEvent, waitFor, within } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
-import { ConsoleTypeDecorator } from '../../../../../storybook/decorators';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 export default {
   component: ConnectPostgresForm,
@@ -23,7 +24,7 @@ export const TestPostgresForm: StoryObj<typeof ConnectPostgresForm> = {
     const [formValues, setFormValues] = useState<PostgresConnectionSchema>();
     return (
       <SimpleForm
-        onSubmit={data => setFormValues(data)}
+        onSubmit={(data) => setFormValues(data)}
         schema={schema}
         options={{
           defaultValues: getDefaultValues(),
@@ -42,7 +43,7 @@ export const TestPostgresForm: StoryObj<typeof ConnectPostgresForm> = {
     const canvas = within(canvasElement);
 
     const databaseUrlOption = await canvas.findByTestId(
-      'configuration.connectionInfo.databaseUrl.connectionType-databaseUrl'
+      'configuration.connectionInfo.databaseUrl.connectionType-databaseUrl',
     );
     await expect(databaseUrlOption).toBeInTheDocument();
     await userEvent.click(databaseUrlOption);
@@ -51,14 +52,14 @@ export const TestPostgresForm: StoryObj<typeof ConnectPostgresForm> = {
 
     await userEvent.type(
       await canvas.findByLabelText('Database name'),
-      'chinook'
+      'chinook',
     );
 
     await userEvent.type(
       await canvas.findByPlaceholderText(
-        'postgresql://username:password@hostname:port/postgres'
+        'postgresql://username:password@hostname:port/postgres',
       ),
-      'postgresql://myusername:password123@localhost:5432/chinook'
+      'postgresql://myusername:password123@localhost:5432/chinook',
     );
 
     await userEvent.click(await canvas.findByText('Submit'));
@@ -76,23 +77,23 @@ export const TestPostgresForm: StoryObj<typeof ConnectPostgresForm> = {
                 },
               },
             },
-          })
+          }),
         );
       },
       {
         timeout: 5000,
-      }
+      },
     );
 
     await userEvent.click(
       await canvas.findByTestId(
-        'configuration.connectionInfo.databaseUrl.connectionType-envVar'
-      )
+        'configuration.connectionInfo.databaseUrl.connectionType-envVar',
+      ),
     );
 
     await userEvent.type(
       await canvas.findByPlaceholderText('HASURA_GRAPHQL_DB_URL_FROM_ENV'),
-      'MY_SECRET_ENV_VAR'
+      'MY_SECRET_ENV_VAR',
     );
 
     await userEvent.click(await canvas.findByText('Submit'));
@@ -110,35 +111,35 @@ export const TestPostgresForm: StoryObj<typeof ConnectPostgresForm> = {
                 },
               },
             },
-          })
+          }),
         );
       },
       {
         timeout: 5000,
-      }
+      },
     );
 
     await userEvent.click(
       await canvas.findByTestId(
-        'configuration.connectionInfo.databaseUrl.connectionType-connectionParams'
-      )
+        'configuration.connectionInfo.databaseUrl.connectionType-connectionParams',
+      ),
     );
 
     await userEvent.type(
       await canvas.findByPlaceholderText('postgres_user'),
-      'myusername'
+      'myusername',
     );
     await userEvent.type(
       await canvas.findByPlaceholderText('password'),
-      'password123'
+      'password123',
     );
     await userEvent.type(
       await canvas.findByPlaceholderText('postgres'),
-      'chinook'
+      'chinook',
     );
     await userEvent.type(
       await canvas.findByPlaceholderText('localhost'),
-      'localhost'
+      'localhost',
     );
     await userEvent.type(await canvas.findByPlaceholderText('5432'), '5432');
 
@@ -161,12 +162,12 @@ export const TestPostgresForm: StoryObj<typeof ConnectPostgresForm> = {
                 },
               },
             },
-          })
+          }),
         );
       },
       {
         timeout: 5000,
-      }
+      },
     );
 
     await userEvent.click(await canvas.findByText('Advanced Settings'));
@@ -177,7 +178,7 @@ export const TestPostgresForm: StoryObj<typeof ConnectPostgresForm> = {
     await userEvent.type(await canvas.findByPlaceholderText('600'), '100100');
     await userEvent.type(
       await canvas.findByPlaceholderText('public'),
-      'public_schema'
+      'public_schema',
     );
 
     await userEvent.click(await canvas.findByText('Submit'));
@@ -208,34 +209,34 @@ export const TestPostgresForm: StoryObj<typeof ConnectPostgresForm> = {
               },
               extensionSchema: 'public_schema',
             },
-          })
+          }),
         );
       },
       {
         timeout: 5000,
-      }
+      },
     );
 
     await userEvent.click(await canvas.findByText('GraphQL Customization'));
     await userEvent.type(
       await canvas.findByTestId('customization.rootFields.namespace'),
-      'root_field_namespace'
+      'root_field_namespace',
     );
     await userEvent.type(
       await canvas.findByTestId('customization.rootFields.prefix'),
-      'root_field_prefix'
+      'root_field_prefix',
     );
     await userEvent.type(
       await canvas.findByTestId('customization.rootFields.suffix'),
-      'root_field_suffix'
+      'root_field_suffix',
     );
     await userEvent.type(
       await canvas.findByTestId('customization.typeNames.prefix'),
-      'type_names_prefix'
+      'type_names_prefix',
     );
     await userEvent.type(
       await canvas.findByTestId('customization.typeNames.suffix'),
-      'type_names_suffix'
+      'type_names_suffix',
     );
 
     await userEvent.click(await canvas.findByText('Submit'));
@@ -277,12 +278,12 @@ export const TestPostgresForm: StoryObj<typeof ConnectPostgresForm> = {
                 suffix: 'type_names_suffix',
               },
             },
-          })
+          }),
         );
       },
       {
         timeout: 5000,
-      }
+      },
     );
   },
 };

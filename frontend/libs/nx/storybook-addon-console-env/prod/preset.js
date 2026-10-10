@@ -9,7 +9,7 @@ function managerEntries(entry = []) {
 module.exports = {
   config,
   managerEntries,
-  previewBody: body => `
+  previewBody: (body) => `
     ${body}
   <script>
     // Working as iframe and parent are on the same domain

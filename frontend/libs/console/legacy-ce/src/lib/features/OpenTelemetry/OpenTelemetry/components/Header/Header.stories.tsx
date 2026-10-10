@@ -1,6 +1,4 @@
-import type { StoryFn } from '@storybook/react';
-import * as React from 'react';
-
+import type { StoryFn } from '@storybook/react-webpack5';
 import { Header } from './Header';
 
 export default {

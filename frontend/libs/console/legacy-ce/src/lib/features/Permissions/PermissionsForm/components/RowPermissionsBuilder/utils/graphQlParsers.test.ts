@@ -14,7 +14,7 @@ test('correctly fetches items for dropdown from schema', () => {
   expect(result.boolOperators.length).toBe(3);
   expect(result.columns.length).toBe(4);
   expect(result.relationships.length).toBe(1);
-  expect(result.columns.map(col => col.name)).toEqual([
+  expect(result.columns.map((col) => col.name)).toEqual([
     'age',
     'email',
     'id',

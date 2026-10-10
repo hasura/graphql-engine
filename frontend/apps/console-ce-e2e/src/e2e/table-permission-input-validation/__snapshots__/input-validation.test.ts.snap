@@ -29,7 +29,7 @@ exports[`Create a update type table permission with input validation > When the 
   {
     "comment": "",
     "permission": {
-      "check": null,
+      "check": {},
       "columns": [],
       "filter": {},
       "validate_input": {

@@ -6,38 +6,33 @@
   "tags": ["scope:console", "type:feature", "meta:legacy"],
   "targets": {
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["libs/console/legacy-ce/**/*.{ts,tsx,js,jsx,json}"]
       }
     },
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/libs/console/legacy-ce"],
+    "lint-fix": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
       "options": {
-        "jestConfig": "libs/console/legacy-ce/jest.config.ts",
-        "passWithNoTests": true
+        "fix": true,
+        "lintFilePatterns": ["libs/console/legacy-ce/**/*.{ts,tsx,js,jsx,json}"]
       }
     },
-    "storybook": {
-      "executor": "@nrwl/storybook:storybook",
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "port": 4400,
-        "configDir": "libs/console/legacy-ce/.storybook"
-      },
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
+        "reportsDirectory": "coverage/libs/console/legacy-ce",
+        "configFile": "libs/console/legacy-ce/vite.config.mts"
       }
     },
     "build-storybook": {
-      "executor": "@nrwl/storybook:build",
-      "outputs": ["{options.outputDir}"],
+      "outputs": ["{projectRoot}/{options.output-dir}"],
       "options": {
-        "configDir": "libs/console/legacy-ce/.storybook",
-        "outputDir": "dist/storybook/console/legacy-ce"
+        "config-dir": ".storybook",
+        "output-dir": "../../../dist/storybook/console/legacy-ce"
       },
       "configurations": {
         "ci": {
@@ -58,6 +53,17 @@
       "configurations": {
         "ci": {
           "command": "start-server-and-test 'nx run console-legacy-ce:storybook' 4400 'nx run console-legacy-ce:test-storybook'"
+        }
+      }
+    },
+    "storybook": {
+      "options": {
+        "port": 4400,
+        "config-dir": ".storybook"
+      },
+      "configurations": {
+        "ci": {
+          "args": ["--quiet"]
         }
       }
     }

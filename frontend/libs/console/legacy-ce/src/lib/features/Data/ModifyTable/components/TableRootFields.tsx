@@ -1,76 +1,64 @@
 import { CustomFieldNames } from '../..';
-import { MetadataSelectors, useMetadata } from '../../../hasura-metadata-api';
-import { Button } from '../../../../new-components/Button';
-import { IndicatorCard } from '../../../../new-components/IndicatorCard';
+import { Button, Text } from '@hasura/shared/ui';
+import { getTableDisplayName } from '@hasura/shared/utils';
 import React from 'react';
-import Skeleton from 'react-loading-skeleton';
 import { useUpdateTableConfiguration } from '../hooks';
-import { ModifyTableProps } from '../ModifyTable';
+import { ModifyTableProps } from '../types';
+import { Strong } from '@radix-ui/themes';
 
-export const RootField: React.VFC<{ property: string; value: string }> = ({
+export const RootField: React.FC<{ property: string; value: string }> = ({
   property,
   value,
 }) => (
   <div className="mb-2">
-    <strong>{property}</strong>
-    <span className="mx-2">→</span>
-    <span>{value}</span>
+    <Text>
+      <Strong>{property}</Strong>
+      <span className="mx-2">→</span>
+      <span>{value}</span>
+    </Text>
   </div>
 );
 
-export const TableRootFields: React.VFC<ModifyTableProps> = props => {
-  const { dataSourceName, table, tableName } = props;
+export const TableRootFields: React.FC<ModifyTableProps> = ({
+  source,
+  table,
+}) => {
   const [showCustomModal, setShowCustomModal] = React.useState(false);
 
-  const {
-    data: metadataTable,
-    isLoading,
-    isError,
-  } = useMetadata(MetadataSelectors.findTable(dataSourceName, table));
-
-  const { updateCustomRootFields, isLoading: saving } =
-    useUpdateTableConfiguration(dataSourceName, table);
-
-  if (isLoading) return <Skeleton count={5} height={20} />;
-
-  if (isError)
-    return (
-      <IndicatorCard status="negative" headline="Error">
-        Unable to fetch table data.
-      </IndicatorCard>
-    );
+  const { updateCustomRootFields, isPending: saving } =
+    useUpdateTableConfiguration(source.name, table.table);
 
   const isEmpty =
-    !metadataTable?.configuration?.custom_name &&
-    (!metadataTable?.configuration?.custom_root_fields ||
-      Object.keys(metadataTable?.configuration?.custom_root_fields).length ===
-        0);
+    !table.configuration?.custom_name &&
+    (!table.configuration?.custom_root_fields ||
+      Object.keys(table.configuration?.custom_root_fields).length === 0);
 
   return (
     <div>
-      <Button onClick={() => setShowCustomModal(true)} className="mb-2">
+      <Button
+        mode="default"
+        size="1"
+        onClick={() => setShowCustomModal(true)}
+        className="mb-2"
+      >
         {isEmpty ? 'Add Custom Field Names' : 'Edit Custom Field Names'}
       </Button>
       <div className="p-2">
-        {isEmpty && (
-          <div className="text-gray-500 mx-2">
-            No custom fields are currently set.
-          </div>
-        )}
-        {metadataTable?.configuration?.custom_name && (
+        {isEmpty && <Text>No custom fields are currently set.</Text>}
+        {table.configuration?.custom_name && (
           <RootField
             property="custom_table_name"
-            value={metadataTable.configuration.custom_name}
+            value={table.configuration.custom_name}
           />
         )}
-        {Object.entries(
-          metadataTable?.configuration?.custom_root_fields ?? {}
-        ).map(([key, value]) => (
-          <RootField key={key} property={key} value={value} />
-        ))}
+        {Object.entries(table.configuration?.custom_root_fields ?? {}).map(
+          ([key, value]) => (
+            <RootField key={key} property={key} value={value} />
+          ),
+        )}
       </div>
       <CustomFieldNames.Modal
-        tableName={tableName}
+        tableName={getTableDisplayName(table.table)}
         onSubmit={(formValues, config) => {
           updateCustomRootFields(config).then(() => {
             setShowCustomModal(false);
@@ -82,8 +70,8 @@ export const TableRootFields: React.VFC<ModifyTableProps> = props => {
         isLoading={saving}
         dialogDescription=""
         show={showCustomModal}
-        currentConfiguration={metadataTable?.configuration}
-        source={dataSourceName}
+        currentConfiguration={table.configuration}
+        source={source.name}
       />
     </div>
   );

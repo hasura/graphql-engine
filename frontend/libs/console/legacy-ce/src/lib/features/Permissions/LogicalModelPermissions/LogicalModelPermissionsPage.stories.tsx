@@ -1,16 +1,18 @@
-import { Meta, StoryObj } from '@storybook/react';
+import { Meta, StoryObj } from '@storybook/react-webpack5';
 import { LogicalModelPermissionsPage } from './LogicalModelPermissionsPage';
 import { handlers, deleteHandlers } from './mocks';
 
 import { RouteWrapper } from '../../Data/LogicalModels/components/RouteWrapper';
-import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
-import { ConsoleTypeDecorator } from '../../../storybook/decorators';
+import {
+  ReactQueryDecorator,
+  ConsoleTypeDecorator,
+} from '@hasura/shared/testing';
 
 const name = 'LogicalModel';
 const source = 'Postgres';
 
 export default {
-  component: params => {
+  component: (params) => {
     return (
       <RouteWrapper
         route={

@@ -1,32 +1,35 @@
 import clsx from 'clsx';
+import { Flex } from '@radix-ui/themes';
 import { useState } from 'react';
 import { FaAngleDown, FaAngleUp, FaExclamationTriangle } from 'react-icons/fa';
-import { Feature } from '../../../../DataSource';
-import { InconsistentObject } from '../../../../hasura-metadata-api';
 import { InconsistentSourceDetails } from './InconsistentSourceDetails';
+import { InconsistentObject } from '@hasura/shared/types';
+import { findInconsistentSource } from '@hasura/metadata/helpers';
 
 export const DisplayDetails = ({
   details,
+  isSupported,
 }: {
   details: {
-    version: string | Feature.NotImplemented;
+    version: string;
   };
+  isSupported: boolean;
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const { version } = details;
 
-  if (version === Feature.NotImplemented) return null;
+  if (!isSupported) return null;
 
   if (version)
     return (
-      <div className="flex justify-start">
+      <Flex justify="start">
         <div
           className={clsx(
             'max-w-md',
             isExpanded
               ? 'whitespace-pre-line max-w-xl'
-              : 'overflow-hidden text-ellipsis whitespace-nowrap'
+              : 'overflow-hidden text-ellipsis whitespace-nowrap',
           )}
           title={version}
         >
@@ -34,9 +37,11 @@ export const DisplayDetails = ({
           {version}
         </div>
 
-        <div
+        <Flex
+          align="center"
+          gap="2"
           onClick={() => setIsExpanded(!isExpanded)}
-          className="cursor-pointer font-semibold flex items-center gap-2"
+          className="cursor-pointer font-semibold"
         >
           {isExpanded ? (
             <>
@@ -49,15 +54,15 @@ export const DisplayDetails = ({
               More
             </>
           )}
-        </div>
-      </div>
+        </Flex>
+      </Flex>
     );
 
   return (
-    <div className="flex gap-2 items-center">
+    <Flex gap="2" align="center">
       <FaExclamationTriangle className="text-yellow-500" /> Could not fetch
       version info.
-    </div>
+    </Flex>
   );
 };
 
@@ -65,21 +70,23 @@ export const Details = ({
   dataSourceName,
   details,
   inconsistentSources,
+  isSupported,
 }: {
   dataSourceName: string;
   details: {
-    version: string | Feature.NotImplemented;
+    version: string;
   };
   inconsistentSources: InconsistentObject[];
+  isSupported: boolean;
 }) => {
-  const inconsistentSource = inconsistentSources.find(
-    source => source.definition === dataSourceName
+  const inconsistentSource = findInconsistentSource(
+    inconsistentSources,
+    dataSourceName,
   );
-
   if (inconsistentSource)
     return (
       <InconsistentSourceDetails inconsistentSource={inconsistentSource} />
     );
 
-  return <DisplayDetails details={details} />;
+  return <DisplayDetails details={details} isSupported={isSupported} />;
 };

@@ -1,13 +1,14 @@
 import { GraphQLType, isScalarType } from 'graphql';
-import React, { ReactText } from 'react';
-import { isJsonString } from '../../../../../../../components/Common/utils/jsUtils';
+import React from 'react';
+import { Flex } from '@radix-ui/themes';
+import { isJsonString } from '@hasura/shared/utils';
 import { ArgValue } from '../../../types';
 
 const fieldStyle =
   'block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400';
 type StaticArgValueProps = {
   localArgValue: ArgValue;
-  onValueChangeHandler: (value: React.ReactText) => void;
+  onValueChangeHandler: (value: number | string) => void;
   argType: GraphQLType;
 };
 const SCALAR_PREFIX = '__SCALAR__';
@@ -71,9 +72,12 @@ const StaticArgValue = ({
         : false;
 
     return (
-      <div className="flex">
-        {[true, false].map(bool => (
-          <p className="flex items-center font-semibold text-muted">
+      <Flex>
+        {[true, false].map((bool) => (
+          <p
+            key={String(bool)}
+            className="flex items-center font-semibold text-muted"
+          >
             <input
               id={`radio-select-${bool}`}
               type="radio"
@@ -85,13 +89,13 @@ const StaticArgValue = ({
             />
             <label
               htmlFor={`radio-select-${bool}`}
-              className="cursor-pointer ml-sm mr-md font-semibold"
+              className="cursor-pointer ml-2 mr-4 font-semibold"
             >
               {bool ? 'true' : 'false'}
             </label>
           </p>
         ))}
-      </div>
+      </Flex>
     );
   }
 
@@ -101,8 +105,8 @@ const StaticArgValue = ({
       name="argValue"
       id="argValue"
       className={fieldStyle}
-      value={localArgValue.value as ReactText}
-      onChange={e => onValueChangeHandler(e.target.value)}
+      value={localArgValue.value as string}
+      onChange={(e) => onValueChangeHandler(e.target.value)}
       data-test="select-static-value"
     />
   );

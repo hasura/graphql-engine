@@ -6,7 +6,7 @@
 'use strict';
 
 import { graphql, GraphQLObjectType, GraphQLSchema } from 'graphql';
-import { afterAll, beforeAll, expect, test } from '@jest/globals';
+import { afterAll, beforeAll, expect, test } from 'vitest';
 
 import * as openAPIToGraphQL from '../src/index';
 import { startServer, stopServer } from './example_api2_server';
@@ -59,7 +59,7 @@ test('The option operationIdFieldNames should allow both operations to be presen
   }
 
   const gqlTypes = Object.keys(
-    (createdSchema.getTypeMap().Query as GraphQLObjectType).getFields()
+    (createdSchema.getTypeMap().Query as GraphQLObjectType).getFields(),
   ).length;
   expect(gqlTypes).toEqual(oasGetCount);
 });
@@ -73,7 +73,7 @@ test('Querying the two operations', () => {
       name
     }
   }`;
-  return graphql({ schema: createdSchema, source: query }).then(result => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         getUser: {

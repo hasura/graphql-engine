@@ -1,6 +1,4 @@
-import { InputField } from '../../../../../../../new-components/Form';
-import React from 'react';
-import { FaCheckCircle } from 'react-icons/fa';
+import { IndicatorCard, InputField, Text } from '@hasura/shared/ui';
 import { NeonButtonProps } from '../../types';
 import { NeonButton } from './NeonButton';
 import { RequiredEnvVar } from '../../../../types';
@@ -16,23 +14,25 @@ export function InputWrapper(props: InputWrapperProps) {
   const { neonDBURL, showNeonButton, neonButtonProps, dbEnvVar } = props;
 
   return (
-    <>
+    <div className="mt-2">
       {neonDBURL ? (
-        <div className="flex justify-start items-center mb-xs">
-          <FaCheckCircle className="text-emerald-500 mr-2" />
-          <span className="text-gray-600">
-            Neon Database created successfully!
-          </span>
-        </div>
+        <IndicatorCard status="positive" showIcon className="mb-1">
+          <Text>Neon Database created successfully!</Text>
+        </IndicatorCard>
       ) : (
         <>
           {showNeonButton ? (
             <NeonButton neonButtonProps={neonButtonProps} dbEnvVar={dbEnvVar} />
           ) : (
-            <InputField name={dbEnvVar.Name} placeholder={dbEnvVar.Name} />
+            <InputField
+              name={dbEnvVar.Name}
+              fieldProps={{
+                placeholder: dbEnvVar.Name,
+              }}
+            />
           )}
         </>
       )}
-    </>
+    </div>
   );
 }

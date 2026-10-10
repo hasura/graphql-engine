@@ -1,11 +1,10 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`optimizer API should generate correctly 1`] = `
+exports[`optimizer API > should generate correctly 1`] = `
 {
   "action": "type Mutation {
   optimiseOptimisePost(optimiserRequestInput: OptimiserRequestInput!): OptimiserResponse
-}
-",
+}",
   "actionType": "mutation",
   "baseUrl": "",
   "description": "",
@@ -84,36 +83,7 @@ exports[`optimizer API should generate correctly 1`] = `
     }
   }
 }",
-  "types": "input FeatureInput {
-  end: Int!
-  featureType: String!
-  name: String!
-  optimise: Boolean!
-  start: Int!
-}
-
-input OptimisationParamsInput {
-  avoidPatterns: [String]
-  enforceGc: Boolean
-  hardCodons: [String]
-  maxRepeatLength: Int
-  optimiseForSpecies: String
-  sequence: String
-  sequenceName: String
-}
-
-input OptimiserRequestInput {
-  features: [FeatureInput]!
-  fromJson: Boolean
-  geneName: String!
-  optimisationParams: OptimisationParamsInput!
-  optimise: Boolean!
-  score: Boolean
-  sequence: String!
-  toJson: Boolean
-}
-
-type OptimiserResponse {
+  "types": "type OptimiserResponse {
   geneName: String
   postOptimisationPenalties: [Penalty]
   postOptimisationScoreDetail: PostOptimisationScoreDetail
@@ -142,6 +112,34 @@ type PreOptimisationScoreDetail {
   level: String!
   score: Float!
 }
-",
+
+input OptimiserRequestInput {
+  features: [FeatureInput]!
+  fromJson: Boolean
+  geneName: String!
+  optimisationParams: OptimisationParamsInput!
+  optimise: Boolean!
+  score: Boolean
+  sequence: String!
+  toJson: Boolean
+}
+
+input FeatureInput {
+  end: Int!
+  featureType: String!
+  name: String!
+  optimise: Boolean!
+  start: Int!
+}
+
+input OptimisationParamsInput {
+  avoidPatterns: [String]
+  enforceGc: Boolean
+  hardCodons: [String]
+  maxRepeatLength: Int
+  optimiseForSpecies: String
+  sequence: String
+  sequenceName: String
+}",
 }
 `;

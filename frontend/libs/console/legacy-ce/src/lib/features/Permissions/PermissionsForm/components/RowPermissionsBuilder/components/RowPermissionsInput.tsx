@@ -1,4 +1,4 @@
-import { LogicalModel, Table } from '../../../../../hasura-metadata-types';
+import { LogicalModel, Table } from '@hasura/shared/types';
 import {
   Tables,
   Operators,
@@ -17,7 +17,23 @@ import {
   ForbiddenFeaturesProvider,
   Feature,
 } from './ForbiddenFeaturesProvider';
-import { LogicalModelWithSourceName } from '../../../../LogicalModelPermissions/components/types';
+import { LogicalModelWithSource } from '@hasura/metadata/helpers';
+import { Flex } from '@radix-ui/themes';
+
+const operators: Operators = {
+  boolean: {
+    label: 'Bool operators',
+    items: [
+      { name: '_and', value: '_and' },
+      { name: '_not', value: '_not' },
+      { name: '_or', value: '_or' },
+    ],
+  },
+  exist: {
+    label: 'Exist operators',
+    items: [{ name: '_exists', value: '_exists' }],
+  },
+};
 
 export const RowPermissionsInput = ({
   permissions,
@@ -34,7 +50,7 @@ export const RowPermissionsInput = ({
   permissions: Permissions;
   tables: Tables;
   table: Table | undefined;
-  logicalModels: LogicalModelWithSourceName[];
+  logicalModels: LogicalModelWithSource[];
   logicalModel: LogicalModel['name'] | undefined;
   onPermissionsChange?: (permissions: Permissions) => void;
   onLoadRelationships?: (relationships: Relationships) => void;
@@ -42,20 +58,6 @@ export const RowPermissionsInput = ({
   forbidden?: Feature[];
   isLoading?: boolean;
 }) => {
-  const operators: Operators = {
-    boolean: {
-      label: 'Bool operators',
-      items: [
-        { name: '_and', value: '_and' },
-        { name: '_not', value: '_not' },
-        { name: '_or', value: '_or' },
-      ],
-    },
-    exist: {
-      label: 'Exist operators',
-      items: [{ name: '_exists', value: '_exists' }],
-    },
-  };
   return (
     <ForbiddenFeaturesProvider forbidden={forbidden}>
       <RootLogicalModelProvider
@@ -73,10 +75,10 @@ export const RowPermissionsInput = ({
           >
             <TypesProvider>
               <TableProvider table={table}>
-                <div className="flex flex-col space-y-4 w-full">
+                <Flex direction="column" className="space-y-4 w-full">
                   <JsonEditor />
                   <RootInput />
-                </div>
+                </Flex>
               </TableProvider>
             </TypesProvider>
           </RowPermissionsProvider>

@@ -1,8 +1,30 @@
-import DomParser from 'dom-parser';
+import { Parser } from 'htmlparser2';
 
 export type Asset = {
   tag: string;
   url: string;
+};
+
+// Escape a (possibly entity-decoded) attribute value so the serialised tag is
+// valid HTML and a value containing `"` or `&` can't corrupt the markup. Only the
+// serialised `tag` string is escaped — the `url`/`href` read off `attribs` is kept
+// verbatim (it is used as an on-disk asset path, not re-parsed as HTML).
+const escapeAttrValue = (value: string): string =>
+  value.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+
+/** Serialise an opening tag from htmlparser2 attributes, preserving order. */
+const serializeTag = (
+  name: string,
+  attribs: Record<string, string>,
+  selfClosing: boolean,
+): string => {
+  const attrs = Object.entries(attribs)
+    .map(([key, value]) =>
+      value === '' ? key : `${key}="${escapeAttrValue(value)}"`,
+    )
+    .join(' ');
+  const open = `<${name}${attrs ? ` ${attrs}` : ''}`;
+  return selfClosing ? `${open}/>` : `${open}></${name}>`;
 };
 
 export type JsAsset = Asset & {
@@ -21,44 +43,57 @@ export type Assets = {
 
 export const extractAssets = (html: string): Assets => {
   const assets: Assets = { js: [], css: [] };
-  const domParser = new DomParser();
-  const parsedDocument = domParser.parseFromString(html);
-  parsedDocument.getElementsByTagName('script')?.forEach(element => {
-    if (
-      element.getAttribute('src') &&
-      !element.getAttribute('src')?.startsWith('http')
-    ) {
-      assets.js.push({
-        tag: element.outerHTML,
-        url: element.getAttribute('src') || 'not_found',
-        jsModule: element.getAttribute('type') === 'module',
-        type: 'js',
-      });
-    }
-  });
-  parsedDocument
-    .getElementsByAttribute('rel', 'stylesheet')
-    ?.forEach(element => {
-      if (
-        element.getAttribute('href') &&
-        !element.getAttribute('href')?.startsWith('http')
-      ) {
-        assets.css.push({
-          tag: element.outerHTML,
-          url: element.getAttribute('href') || 'not_found',
-          type: 'css',
-        });
-      }
-    });
+
+  // Use htmlparser2 (a real streaming HTML parser) rather than a naive regex
+  // parser: the webpack-generated index.html contains a large inline env-var
+  // <script>, multiple hashed CSS/JS chunks and `type="module"` script tags, which
+  // the previous `dom-parser` choked on (`Cannot read properties of null (reading
+  // 'isSelfCloseTag')`). htmlparser2 treats <script>/<style> bodies as raw text,
+  // so inline JS/CSS can't be mis-parsed as markup.
+  const parser = new Parser(
+    {
+      onopentag(name, attribs) {
+        if (name === 'script') {
+          const src = attribs.src;
+          if (src && !src.startsWith('http')) {
+            assets.js.push({
+              tag: serializeTag('script', attribs, false),
+              url: src,
+              jsModule: attribs.type === 'module',
+              type: 'js',
+            });
+          }
+        } else if (name === 'link') {
+          const href = attribs.href;
+          if (
+            attribs.rel === 'stylesheet' &&
+            href &&
+            !href.startsWith('http')
+          ) {
+            assets.css.push({
+              tag: serializeTag('link', attribs, true),
+              url: href,
+              type: 'css',
+            });
+          }
+        }
+      },
+    },
+    // Recognise `<script .../>` self-closing shorthand (used in the unit tests and
+    // tolerated by some tooling) so following siblings aren't swallowed as script body.
+    { recognizeSelfClosing: true },
+  );
+  parser.write(html);
+  parser.end();
 
   if (assets.css.length === 0) {
     throw new Error(
-      'No css assets found, there is an issue with the provided html.'
+      'No css assets found, there is an issue with the provided html.',
     );
   }
   if (assets.js.length === 0) {
     throw new Error(
-      'No js assets found, there is an issue with the provided html.'
+      'No js assets found, there is an issue with the provided html.',
     );
   }
   return assets;
@@ -66,11 +101,11 @@ export const extractAssets = (html: string): Assets => {
 
 export const generateDynamicLoadCalls = (assets: Assets): string => {
   const cssMap = assets.css
-    .map(it => `loadCss(basePath + "${it.url}");\n`)
+    .map((it) => `loadCss(basePath + "${it.url}");\n`)
     .join('');
 
   const jsMap = assets.js
-    .map(it => {
+    .map((it) => {
       if (it.jsModule) {
         return `loadJs(basePath + "${it.url}", "module");\n`;
       }

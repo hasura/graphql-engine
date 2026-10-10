@@ -1,17 +1,22 @@
 import clsx from 'clsx';
 import React from 'react';
-import Skeleton from 'react-loading-skeleton';
-import { useQueryClient } from 'react-query';
-import { Button, ButtonProps } from '../../../../new-components/Button';
+import { Card, Flex, Heading } from '@radix-ui/themes';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  Button,
+  ButtonProps,
+  ErrorMessage,
+  Spinner,
+  Text,
+} from '@hasura/shared/ui';
 import {
   EE_LICENSE_INFO_QUERY_NAME,
   EE_TRIAL_CONTACT_US_URL,
 } from '../../constants';
 import { EELiteAccessStatus } from '../../types';
 import { EnableEEButtonWrapper } from '../EnableEnterpriseButton/EnableEEButton';
-import { ErrorMessage } from '../ErrorMessage/ErrorMessage';
-import { LoadingMessage } from '../LoadingMessage/LoadingMessage';
-import { Analytics } from '../../../Analytics';
+import { Analytics } from '@hasura/shared/analytics';
+import { Skeleton } from '@radix-ui/themes';
 
 interface EETrialCardProps extends React.ComponentProps<'div'> {
   /**
@@ -53,15 +58,10 @@ export const EETrialCard = ({
   id,
 }: EETrialCardProps) => {
   const queryClient = useQueryClient();
-  const cardClassName = clsx(
-    'flex bg-white border-2 shadow-sm p-5 rounded',
-    !horizontal && 'flex-col',
-    className
-  );
   const isButtonFull = !horizontal;
 
   const handleFormClose = React.useCallback(() => {
-    queryClient.invalidateQueries(EE_LICENSE_INFO_QUERY_NAME);
+    queryClient.invalidateQueries({ queryKey: EE_LICENSE_INFO_QUERY_NAME });
   }, [queryClient]);
 
   const enableButtonDisabled =
@@ -69,53 +69,46 @@ export const EETrialCard = ({
     eeAccess === 'deactivated' ||
     eeAccess === 'forbidden';
 
+  const isLoading = eeAccess === 'loading';
   return (
     <div>
-      <div className={cardClassName}>
-        <div className="flex flex-col gap-1 flex-grow">
-          {eeAccess === 'loading' ? (
-            <Skeleton height={40} />
-          ) : (
-            <div className="text-xl text-slate-900">{cardTitle}</div>
-          )}
-          {eeAccess === 'loading' ? (
-            <Skeleton count={2} />
-          ) : (
-            <div className="text-base text-muted">{cardText}</div>
-          )}
-        </div>
-        <div
-          className={clsx(
-            horizontal ? 'justify-self-end ml-lg self-start' : 'mt-xs'
-          )}
-        >
-          <EnableEEButtonWrapper
-            disabled={enableButtonDisabled}
-            showBenefitsView
-            onFormClose={handleFormClose}
-          >
-            {eeAccess === 'loading' ? (
-              <Skeleton width={120.35} height={35} />
-            ) : (
-              <Analytics name={`ee-trial-card-${id}-register-button`}>
-                <Button
-                  mode={buttonType}
-                  className={clsx(isButtonFull && 'w-full')}
-                  disabled={enableButtonDisabled}
-                >
-                  {buttonLabel}
-                </Button>
-              </Analytics>
-            )}
-          </EnableEEButtonWrapper>
-        </div>
-      </div>
+      <Card size="3">
+        <Flex gap="2">
+          <Flex direction="column" gap="2" className="grow">
+            <Skeleton loading={isLoading}>
+              <Heading size="4">{cardTitle}</Heading>
+            </Skeleton>
+            <Skeleton loading={isLoading}>
+              <Text>{cardText}</Text>
+            </Skeleton>
+          </Flex>
+          <div className="mt-2">
+            <EnableEEButtonWrapper
+              disabled={enableButtonDisabled}
+              showBenefitsView
+              onFormClose={handleFormClose}
+            >
+              <Skeleton loading={isLoading}>
+                <Analytics name={`ee-trial-card-${id}-register-button`}>
+                  <Button
+                    mode={buttonType}
+                    className={clsx(isButtonFull && 'w-full')}
+                    disabled={enableButtonDisabled}
+                  >
+                    {buttonLabel}
+                  </Button>
+                </Analytics>
+              </Skeleton>
+            </EnableEEButtonWrapper>
+          </div>
+        </Flex>
+      </Card>
       {eeAccess === 'loading' ? (
-        <LoadingMessage message="Loading your EE trial information..." />
+        <Spinner>Loading your EE trial information...</Spinner>
       ) : null}
       {eeAccess === 'deactivated' && (
         <ErrorMessage
-          message={
+          error={
             <span>
               Your EE trial has been deactivated. Please{' '}
               <a
@@ -133,7 +126,7 @@ export const EETrialCard = ({
       )}
       {eeAccess === 'expired' && (
         <ErrorMessage
-          message={
+          error={
             <span>
               Your EE trial has expired. Please{' '}
               <a

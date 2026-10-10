@@ -1,2 +1,2 @@
 export { PermissionsForm } from './PermissionsForm';
-export { BulkDelete } from './BulkDelete';
+export { BulkDelete } from './components/BulkDelete';

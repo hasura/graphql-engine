@@ -1,6 +1,6 @@
 import { ValidateJavascriptBundleOutputExecutorSchema } from './schema';
 import { globSync } from 'glob';
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext } from '@nx/devkit';
 import * as fs from 'node:fs';
 import {
   createForbiddenFileName,
@@ -39,15 +39,15 @@ const checks: CheckerFunction[] = [
 
 export default async function runExecutor(
   options: ValidateJavascriptBundleOutputExecutorSchema,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) {
   const projectName = context.projectName;
   if (!projectName) {
     throw new Error('No project name was given.');
   }
   const distTarget =
-    context.workspace?.projects?.[projectName]?.targets?.build?.options
-      ?.outputPath ?? `dist/apps/${projectName}`;
+    context.projectsConfigurations?.projects?.[projectName]?.targets?.build
+      ?.options?.outputPath ?? `dist/apps/${projectName}`;
 
   const allFilesWeShouldLookAt = globSync('**/*', {
     cwd: distTarget,
@@ -55,33 +55,33 @@ export default async function runExecutor(
   });
 
   const results = allFilesWeShouldLookAt
-    .map(it => ({
+    .map((it) => ({
       fileName: it,
       fileContent: fs.readFileSync(distTarget + '/' + it, 'utf8'),
     }))
     .map(({ fileName, fileContent }) =>
-      checks.map(check => ({
+      checks.map((check) => ({
         ...check({ fileContent, fileName, distTarget }),
         fileName,
-      }))
+      })),
     )
     .flat();
 
   const errorMessages = results
-    .map(it => {
+    .map((it) => {
       if (it.ok) {
         return '';
       }
-      return it.errors.map(err => `${it.fileName}: ${err}`);
+      return it.errors.map((err) => `${it.fileName}: ${err}`);
     })
     .flat()
-    .filter(value => value !== '');
+    .filter((value) => value !== '');
 
   if (errorMessages.length > 0) {
     console.error(
-      'Found ' + errorMessages.length + ' critical issues, aborting.'
+      'Found ' + errorMessages.length + ' critical issues, aborting.',
     );
-    errorMessages.forEach(error => console.error('- ' + error));
+    errorMessages.forEach((error) => console.error('- ' + error));
     throw new Error('Non valid bundle.');
   }
   console.log('No issues found in the bundle.');

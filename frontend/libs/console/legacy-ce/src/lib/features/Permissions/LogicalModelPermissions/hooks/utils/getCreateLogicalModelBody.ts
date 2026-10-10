@@ -1,7 +1,11 @@
 import { getPermissionValues } from './getPermissionValues';
-import { LogicalModel, Source } from '../../../../hasura-metadata-types';
+import {
+  LogicalModel,
+  SingleMetadataTypes,
+  Source,
+} from '@hasura/shared/types';
 import { Permission } from '../../components/types';
-import { mapPostgresToPg } from '.';
+import { getDriverPrefix } from '@hasura/metadata/helpers';
 
 export interface CreateLogicalModalBodyArgs {
   logicalModels: LogicalModel[];
@@ -16,17 +20,18 @@ type PermissionArgsType = {
   permission?: Record<string, unknown>;
   source: string;
 };
+
 type PermissionBodyType = {
-  type: string;
+  type: SingleMetadataTypes;
   args: PermissionArgsType;
 };
 
 const doesRoleExist = (logicalModel: LogicalModel, roleName: string) => {
   const permissionKeys = ['select_permissions'] as ['select_permissions'];
   return permissionKeys.some(
-    key =>
+    (key) =>
       Array.isArray(logicalModel[key]) &&
-      logicalModel[key]?.some(permission => permission.role === roleName)
+      logicalModel[key]?.some((permission) => permission.role === roleName),
   );
 };
 
@@ -37,11 +42,11 @@ export const getCreateLogicalModelBody = ({
   source,
 }: CreateLogicalModalBodyArgs): PermissionBodyType[] => {
   const permissionValues = getPermissionValues(permission);
-  const args = [
+  const args: PermissionBodyType[] = [
     {
-      type: `${mapPostgresToPg(source.kind)}_create_logical_model_${
+      type: `${getDriverPrefix(source.kind)}_create_logical_model_${
         permission.action
-      }_permission`,
+      }_permission` as const,
       args: {
         name: logicalModelName,
         role: permission.roleName,
@@ -52,14 +57,14 @@ export const getCreateLogicalModelBody = ({
   ];
 
   const permissionAlreadyExists = logicalModels.find((model: LogicalModel) =>
-    doesRoleExist(model, permission.roleName)
+    doesRoleExist(model, permission.roleName),
   );
 
   if (permissionAlreadyExists) {
     args.unshift({
-      type: `${mapPostgresToPg(source.kind)}_drop_logical_model_${
+      type: `${getDriverPrefix(source.kind)}_drop_logical_model_${
         permission.action
-      }_permission`,
+      }_permission` as const,
       args: {
         permission: {},
         name: logicalModelName,

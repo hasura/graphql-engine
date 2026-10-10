@@ -1,7 +1,7 @@
 import React from 'react';
-import { StoryFn, StoryObj, Meta } from '@storybook/react';
-import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
-import { Dialog } from '../../../../../new-components/Dialog';
+import { StoryFn, StoryObj, Meta } from '@storybook/react-webpack5';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
+import { Dialog } from '@hasura/shared/ui';
 import {
   registerEETrialErrorMutation,
   registerEETrialLicenseActiveMutation,
@@ -17,7 +17,7 @@ export default {
 
 export const Default: StoryObj<typeof Form> = {
   render: () => (
-    <Dialog size="sm" onClose={() => {}} hasBackdrop>
+    <Dialog size="sm" onClose={() => {}}>
       <Form onSuccess={() => {}} />
     </Dialog>
   ),
@@ -31,9 +31,9 @@ export const Default: StoryObj<typeof Form> = {
 
 export const GraphqlError: StoryObj<typeof Form> = {
   render: () => (
-    <Dialog size="sm" onClose={() => {}} hasBackdrop>
+    <Dialog size="sm" onClose={() => {}}>
       <>
-        <div className="px-md mt-1 text-red-500 text-lg">
+        <div className="px-4 mt-1 text-red-500 text-lg">
           Tip: Fill and submit the form to see error states.
         </div>
         <Form onSuccess={() => {}} />
@@ -50,9 +50,9 @@ export const GraphqlError: StoryObj<typeof Form> = {
 
 export const LicenseAlreadyApplied: StoryObj<typeof Form> = {
   render: () => (
-    <Dialog size="sm" onClose={() => {}} hasBackdrop>
+    <Dialog size="sm" onClose={() => {}}>
       <>
-        <div className="px-md mt-1 text-red-500 text-lg">
+        <div className="px-4 mt-1 text-red-500 text-lg">
           Tip: Fill and submit the form to see error states.
         </div>
         <Form onSuccess={() => {}} />
@@ -68,7 +68,7 @@ export const LicenseAlreadyApplied: StoryObj<typeof Form> = {
 };
 
 export const ActivateExistingLicense: StoryFn<typeof Form> = () => (
-  <Dialog size="sm" onClose={() => {}} hasBackdrop>
+  <Dialog size="sm" onClose={() => {}}>
     <Form onSuccess={() => {}} formState="activate" />
   </Dialog>
 );

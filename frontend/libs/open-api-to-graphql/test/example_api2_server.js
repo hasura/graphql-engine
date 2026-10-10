@@ -13,6 +13,9 @@ let server; // holds server object for shutdown
 function startServer(PORT) {
   const express = require('express');
   const app = express();
+  // Express 5 defaults to the 'simple' parser, which doesn't expand nested
+  // query params like `a[b][c]=1` into objects (Express 4's default did)
+  app.set('query parser', 'extended');
 
   const bodyParser = require('body-parser');
   app.use(bodyParser.json());
@@ -29,7 +32,7 @@ function startServer(PORT) {
     });
   });
 
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     server = app.listen(PORT, () => {
       console.log(`Example API accessible on port ${PORT}`);
       resolve();
@@ -41,7 +44,7 @@ function startServer(PORT) {
  * Stops server.
  */
 function stopServer() {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     server.close(() => {
       console.log(`Stopped API server`);
       resolve();

@@ -1,17 +1,21 @@
 import React from 'react';
 
 import z from 'zod';
-import { Dialog } from '../../../../new-components/Dialog';
 import {
+  Dialog,
   CodeEditorField,
   InputField,
   useConsoleForm,
-} from '../../../../new-components/Form';
+  Tabs,
+  DialogFooter,
+  FileInputField,
+} from '@hasura/shared/ui';
+
 import { SubmitHandler } from 'react-hook-form';
-import { QueryCollection } from '../../../../metadata/types';
-import { Tabs } from '../../../../new-components/Tabs';
+
 import { QuickAdd } from './QuickAdd';
 import { parseQueryString, readFileAsync } from './utils';
+import { QueryCollectionQuery } from '@hasura/shared/types';
 
 type UploadedQueryPayload = {
   gqlFile?: any;
@@ -29,8 +33,8 @@ const schema = z.discriminatedUnion('option', [
     gqlFile: z.union([
       z
         .any()
-        .refine(files => files?.length === 1, 'GraphQL file is required.')
-        .refine(async files => {
+        .refine((files) => files?.length === 1, 'GraphQL file is required.')
+        .refine(async (files) => {
           let validQuery = true;
           const data = await readFileAsync(files![0]);
           try {
@@ -44,7 +48,7 @@ const schema = z.discriminatedUnion('option', [
         z.object({
           name: z.string(),
           query: z.string(),
-        })
+        }),
       ),
     ]),
   }),
@@ -57,13 +61,13 @@ interface QueryCollectionOperationDialogProps {
   callToAction: string;
   onSubmit: SubmitHandler<QueryCollectionOperation>;
   onClose: () => void;
-  operation?: QueryCollection;
+  operation?: QueryCollectionQuery;
   isLoading: boolean;
   defaultValues: QueryCollectionOperation;
 }
 
 export const QueryCollectionOperationDialog = (
-  props: QueryCollectionOperationDialogProps
+  props: QueryCollectionOperationDialogProps,
 ) => {
   const { onClose, title, callToAction, onSubmit, isLoading, defaultValues } =
     props;
@@ -85,129 +89,126 @@ export const QueryCollectionOperationDialog = (
     },
   });
 
-  const handleOnSubmit: SubmitHandler<
-    QueryCollectionOperation
-  > = async values => {
+  const handleOnSubmit: SubmitHandler<QueryCollectionOperation> = async (
+    values,
+  ) => {
     const data = { ...values };
     if ((values as UploadedQueryPayload).gqlFile) {
       const gqlFileValue = (values as UploadedQueryPayload).gqlFile;
       (data as UploadedQueryPayload).gqlFile = parseQueryString(
-        await readFileAsync(gqlFileValue[0])
+        await readFileAsync(gqlFileValue[0]),
       );
     }
     onSubmit(data);
   };
 
   return (
-    <Form onSubmit={handleOnSubmit}>
-      <Dialog hasBackdrop title={title} onClose={onClose}>
-        <>
-          {title === 'Add Operation' ? (
-            <Tabs
-              value={tabValue}
-              onValueChange={value => {
-                handleTab();
-                if (
-                  value === 'write operation' ||
-                  value === 'upload operation'
-                ) {
-                  setValue('option', value);
-                }
-              }}
-              items={[
-                {
-                  value: 'write operation',
-                  label: 'Write Operation',
-                  content: (
-                    <div className="p-4">
-                      <InputField
+    <Dialog title={title} onClose={onClose}>
+      <Form onSubmit={handleOnSubmit}>
+        {title === 'Add Operation' ? (
+          <Tabs
+            value={tabValue}
+            onValueChange={(value) => {
+              handleTab();
+              if (value === 'write operation' || value === 'upload operation') {
+                setValue('option', value);
+              }
+            }}
+            items={[
+              {
+                value: 'write operation',
+                label: 'Write Operation',
+                content: (
+                  <div className="p-4">
+                    <InputField
+                      size="full"
+                      id="name"
+                      name="name"
+                      className="max-w-full"
+                      label="Operation Name"
+                    />
+                    <QuickAdd
+                      onAdd={(operation) => {
+                        if (operation.name !== 'unnamed') {
+                          setValue('name', operation.name);
+                        }
+                        setValue('query', operation.query);
+                      }}
+                    />
+                    <CodeEditorField
+                      id="query"
+                      name="query"
+                      label="Operation"
+                      editorProps={{
+                        mode: 'graphqlschema',
+                      }}
+                      editorOptions={{
+                        minLines: 10,
+                        maxLines: 10,
+                        showLineNumbers: true,
+                      }}
+                    />
+                  </div>
+                ),
+              },
+              {
+                value: 'upload operation',
+                label: 'Upload Operation',
+                content: (
+                  <div className="p-2 overflow-y-auto max-h-[calc(100vh-14rem)]">
+                    <div>
+                      <FileInputField
                         size="full"
-                        id="name"
-                        name="name"
-                        className="max-w-full"
-                        label="Operation Name"
-                      />
-                      <QuickAdd
-                        onAdd={operation => {
-                          if (operation.name !== 'unnamed') {
-                            setValue('name', operation.name);
-                          }
-                          setValue('query', operation.query);
-                        }}
-                      />
-                      <CodeEditorField
-                        id="query"
-                        name="query"
-                        label="Operation"
-                        editorOptions={{
-                          minLines: 10,
-                          maxLines: 10,
-                          showLineNumbers: true,
-                        }}
+                        id="gqlFile"
+                        name="gqlFile"
+                        label="Upload GraphQL File"
+                        tooltip=".graphql file with operations"
                       />
                     </div>
-                  ),
-                },
-                {
-                  value: 'upload operation',
-                  label: 'Upload Operation',
-                  content: (
-                    <div className="p-sm overflow-y-auto max-h-[calc(100vh-14rem)]">
-                      <div>
-                        <InputField
-                          size="full"
-                          type="file"
-                          id="gqlFile"
-                          name="gqlFile"
-                          label="Upload GraphQL File"
-                          tooltip=".graphql file with operations"
-                        />
-                      </div>
-                    </div>
-                  ),
-                },
-              ]}
-            />
-          ) : (
-            <Tabs
-              value={tabValue}
-              items={[
-                {
-                  value: 'write operation',
-                  label: 'Write Operation',
-                  content: (
-                    <div className="p-4">
-                      <InputField
-                        size="full"
-                        id="name"
-                        name="name"
-                        label="Operation Name"
-                      />
-                      <CodeEditorField
-                        id="query"
-                        name="query"
-                        label="Operation"
-                        editorOptions={{
-                          minLines: 10,
-                          maxLines: 10,
-                          showLineNumbers: true,
-                        }}
-                      />
-                    </div>
-                  ),
-                },
-              ]}
-            />
-          )}
-
-          <Dialog.Footer
-            callToDeny="Cancel"
-            callToAction={callToAction}
-            onClose={onClose}
-            isLoading={isLoading}
+                  </div>
+                ),
+              },
+            ]}
           />
-        </>
-      </Dialog>
-    </Form>
+        ) : (
+          <Tabs
+            value={tabValue}
+            items={[
+              {
+                value: 'write operation',
+                label: 'Write Operation',
+                content: (
+                  <div className="p-4">
+                    <InputField
+                      size="full"
+                      id="name"
+                      name="name"
+                      label="Operation Name"
+                    />
+                    <CodeEditorField
+                      id="query"
+                      name="query"
+                      label="Operation"
+                      editorOptions={{
+                        minLines: 10,
+                        maxLines: 10,
+                        showLineNumbers: true,
+                      }}
+                    />
+                  </div>
+                ),
+              },
+            ]}
+          />
+        )}
+
+        <DialogFooter
+          callToDeny="Cancel"
+          callToAction={callToAction}
+          onClose={onClose}
+          isLoading={isLoading}
+        />
+      </Form>
+    </Dialog>
   );
 };

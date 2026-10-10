@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { schemaRegsitryControlPlaneClient } from '../utils';
 import { FETCH_REGISTRY_SCHEMA_QUERY } from '../queries';
 import { GetRegistrySchemaResponseWithError } from '../types';
@@ -35,7 +35,7 @@ export const useGetSchema = (schemaId: string): FetchSchemaResponse => {
     queryKey: FETCH_REGISTRY_SCHEMA_QUERY_NAME,
     queryFn: () => fetchRegistrySchemaQueryFn(schemaId),
     refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
     staleTime: SCHEMA_REGISTRY_REFRESH_TIME,
   });
   React.useEffect(() => {

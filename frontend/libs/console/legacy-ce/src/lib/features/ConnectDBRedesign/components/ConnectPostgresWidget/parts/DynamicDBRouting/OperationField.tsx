@@ -1,13 +1,12 @@
-import React from 'react';
-import { InputField, Select } from '../../../../../../new-components/Form';
+import { InputField, SelectField } from '@hasura/shared/ui';
+import { Flex } from '@radix-ui/themes';
 
 export const OperationField = () => {
   return (
-    <div className="flex">
+    <Flex>
       <div>
-        <Select
+        <SelectField
           name="validation.operation_type"
-          selectClassName="rounded-r-none bg-slate-100 font-semibold color-slate-900"
           options={[
             { label: 'Query', value: 'query' },
             { label: 'Mutation', value: 'mutation' },
@@ -18,11 +17,12 @@ export const OperationField = () => {
       <div className="flex-1">
         <InputField
           name="validation.operation_name"
-          type="text"
-          placeholder="Operation Name"
-          inputClassName="rounded-l-none"
+          fieldProps={{
+            type: 'text',
+            placeholder: 'Operation Name',
+          }}
         />
       </div>
-    </div>
+    </Flex>
   );
 };

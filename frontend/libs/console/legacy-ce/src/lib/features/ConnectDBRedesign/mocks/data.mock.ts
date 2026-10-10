@@ -1,4 +1,4 @@
-import { Metadata } from '../../hasura-metadata-types';
+import { Metadata } from '@hasura/shared/types';
 
 export const mockMetadata: Metadata = {
   resource_version: 1,
@@ -93,7 +93,6 @@ export const mockMetadata: Metadata = {
         tables: [],
         configuration: {
           datasets: ['sample_dataset', 'sample_dataset_2'],
-          global_select_limit: '1.0',
           project_id: 'hasura-test',
           service_account: {
             client_email: 'service-account@someemail.com',
@@ -251,7 +250,7 @@ export const mockSourceKinds = {
         available: true,
         builtin: false,
         display_name: 'MySQL',
-        kind: 'mysql8',
+        kind: 'mysql',
         release_name: 'Alpha',
       },
       {
@@ -265,7 +264,7 @@ export const mockSourceKinds = {
         available: true,
         builtin: false,
         display_name: 'MongoDB',
-        kind: 'mongo',
+        kind: 'mongodb',
         release_name: 'GA',
       },
       {
@@ -333,7 +332,7 @@ export const mockSourceKinds = {
         available: false,
         builtin: false,
         //display_name: 'MySQL',
-        kind: 'mysql8',
+        kind: 'mysql',
         release_name: 'Alpha',
       },
     ],

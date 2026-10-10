@@ -1,14 +1,11 @@
 import React from 'react';
-import { useAppDispatch } from '../../../../../storeHooks';
-import { programmaticallyTraceError } from '../../../../Analytics';
+import { programmaticallyTraceError } from '@hasura/shared/analytics';
 import {
   FetchOneClickDeploymentStateLogSubscriptionSubscription,
   FetchOneClickDeploymentStateLogSubscriptionSubscriptionVariables,
   FETCH_ONE_CLICK_DEPLOYMENT_STATE_LOG_SUBSCRIPTION,
   controlPlaneClient,
 } from '../../../../ControlPlane';
-import { reactQueryClient } from '../../../../../lib/reactQuery';
-import { forceGraphiQLIntrospection } from '../../../../../components/Services/ApiExplorer/OneGraphExplorer/utils';
 import {
   RequiredEnvVar,
   OneClickDeploymentState,
@@ -21,17 +18,17 @@ import {
   isHasuraPath,
   shouldTriggerFirstDeployment,
 } from '../../util';
-import { fillSampleQueryInGraphiQL } from '../../../utils';
 import { CliScreen } from '../CliScreen/CliScreen';
 import { RedirectCountDown } from '../RedirectCountdown/RedirectCountDown';
 import { Disclaimer } from '../Disclaimer/Disclaimer';
 import { EnvVarsForm } from '../EnvVarsForm/EnvVarsForm';
 import { useTriggerDeployment, useSampleQuery } from '../../hooks';
 import { getTenantEnvVarsQueryKey } from '../../constants';
+import { useQueryClient } from '@tanstack/react-query';
 
 type WorkflowProgressProps = {
   setStepperIndex: React.Dispatch<React.SetStateAction<number>>;
-  deploymentId: number;
+  deploymentId: string;
   projectId: string;
   gitRepoName: string;
   onCompleteSuccess?: VoidFunction;
@@ -50,10 +47,9 @@ export function WorkflowProgress(props: WorkflowProgressProps) {
     fallbackApps,
     sampleQueriesFileUrl,
   } = props;
-  const dispatch = useAppDispatch();
-
+  const queryClient = useQueryClient();
   const [progressState, setProgressState] = React.useState<ProgressState>(
-    getCliProgressState([])
+    getCliProgressState([]),
   );
   const [requiredEnvVars, setRequiredEnvVars] = React.useState<
     RequiredEnvVar[]
@@ -72,7 +68,9 @@ export function WorkflowProgress(props: WorkflowProgressProps) {
     if (awaitingStepStatus.kind === 'awaiting') {
       // refetch queries every time deployment goes into awaiting state,
       // overriding the stale time
-      reactQueryClient.refetchQueries(getTenantEnvVarsQueryKey);
+      queryClient.refetchQueries({
+        queryKey: [getTenantEnvVarsQueryKey],
+      });
 
       if ('envs' in awaitingStepStatus.payload) {
         setRequiredEnvVars(awaitingStepStatus.payload.envs);
@@ -96,16 +94,6 @@ export function WorkflowProgress(props: WorkflowProgressProps) {
       progressState[OneClickDeploymentState.ApplyingMetadataMigrationsSeeds]
         .kind === 'success'
     ) {
-      // trigger introspection in graphiql after the deployment is successful
-      // so that graphiql is ready to use when onboarding is dismissed
-      forceGraphiQLIntrospection(dispatch);
-
-      // this timeout makes sure that there's a delay in setting query after introspection has been fired
-      // this timeout does not intend to wait for introspection to finish
-      setTimeout(() => {
-        // update the default sample query in GraphiQL tab to the query provided by user, or replace it by empty string.
-        fillSampleQueryInGraphiQL(query, dispatch);
-      }, 500);
       setStepperIndex(3);
       return;
     }
@@ -133,7 +121,7 @@ export function WorkflowProgress(props: WorkflowProgressProps) {
       {
         id: props.deploymentId,
       },
-      data => {
+      (data) => {
         const oneClickDeploy = data.one_click_deployment_by_pk;
         if (!oneClickDeploy) {
           unsubscribe();
@@ -148,22 +136,22 @@ export function WorkflowProgress(props: WorkflowProgressProps) {
         // if the deployment workflow hasn't started, trigger it
         if (
           shouldTriggerFirstDeployment(
-            oneClickDeploy.one_click_deployment_state_logs
+            oneClickDeploy.one_click_deployment_state_logs,
           )
         ) {
           triggerDeployment();
         }
 
         setProgressState(
-          getCliProgressState(oneClickDeploy.one_click_deployment_state_logs)
+          getCliProgressState(oneClickDeploy.one_click_deployment_state_logs),
         );
       },
-      error => {
+      (error) => {
         programmaticallyTraceError({
           error: 'failed subscribing to one click deployment status',
           cause: error,
         });
-      }
+      },
     );
     return () => {
       unsubscribe();
@@ -198,7 +186,7 @@ export function WorkflowProgress(props: WorkflowProgressProps) {
         />
       )}
       {!isHasuraPath(gitRepoName) ? (
-        <div className="mt-sm w-full">
+        <div className="mt-2 w-full">
           <Disclaimer />
         </div>
       ) : null}

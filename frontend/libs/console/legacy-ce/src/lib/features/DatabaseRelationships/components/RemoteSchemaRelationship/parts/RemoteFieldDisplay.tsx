@@ -8,7 +8,7 @@ export const RemoteFieldDisplay = ({
 }) => {
   return (
     <input
-      className="pl-sm mt-xs block h-input w-full shadow-sm rounded cursor-not-allowed bg-gray-100 border border-gray-300"
+      className="pl-sm mt-2 block h-input w-full shadow-sm rounded cursor-not-allowed bg-gray-100 border border-gray-300"
       disabled
       value={JSON.stringify(buildServerRemoteFieldObject(relationshipFields))}
     />

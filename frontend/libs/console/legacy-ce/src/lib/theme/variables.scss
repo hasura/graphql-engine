@@ -6,12 +6,14 @@
  *
  */
 
+@use 'sass:color';
+
 // Custom Colors
 $cyan: #33e0ff;
 $humility: #777;
 
 // Bootstrap Variables
-$brand-primary: darken(#428bca, 6.5%);
+$brand-primary: color.adjust(#428bca, $lightness: -6.5%);
 $btn-primary-bg: #fec53d;
 $btn-primary-color: #606060;
 $brand-secondary: #e25139;

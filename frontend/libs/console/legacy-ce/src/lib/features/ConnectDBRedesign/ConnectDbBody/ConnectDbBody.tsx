@@ -1,4 +1,4 @@
-import { DriverInfo } from '../../DataSource';
+import { DriverInfo } from '@hasura/metadata/data-source';
 import { EELiteAccess } from '../../EETrial';
 import { DbConnectConsoleType } from '../types';
 import { Cloud, Oss, Pro, ProLite } from './parts';
@@ -17,7 +17,12 @@ export const ConnectDbBody = ({
 }: ConnectDbBodyProps) => {
   switch (consoleType) {
     case 'oss':
-      return <Oss selectedDriver={selectedDriver} />;
+      return (
+        <Oss
+          selectedDriver={selectedDriver}
+          isDriverAvailable={isDriverAvailable}
+        />
+      );
     case 'pro-lite':
       return (
         <ProLite

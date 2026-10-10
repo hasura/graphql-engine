@@ -1,10 +1,11 @@
-import { RestEndpointEntry } from '../../../metadata/types';
-import { Header, Variable } from '../components/RestEndpointDetails';
 import {
   getCurrentPageHost,
   getValueWithType,
-} from '../../../components/Services/ApiExplorer/Rest/utils';
-import { useMutation } from 'react-query';
+} from '../../ApiExplorer/components/Rest/utils';
+import { DataHeader } from '@hasura/shared/types';
+import { Variable } from '../components/RestEndpointDetails';
+import { useMutation } from '@tanstack/react-query';
+import { RestEndpoint } from '@hasura/shared/types';
 
 interface IApiArgs {
   headers: Record<string, string>;
@@ -33,23 +34,23 @@ async function fetchApi<T = unknown, V = T>(args: IApiArgs): Promise<V> {
 
 export const useRestEndpointRequest = () => {
   const makeRequest = async (options: {
-    endpoint: RestEndpointEntry | undefined;
-    headers: Header[];
+    endpoint: RestEndpoint | undefined;
+    headers: DataHeader[];
     variables: Variable[];
   }) => {
     const { endpoint, headers, variables } = options;
 
     const selectedHeaders = headers
-      .filter(h => !!h.name && h.selected)
-      .map(h => ({ name: h.name, value: h.value }));
+      .filter((h) => !!h.key && h.selected)
+      .map((h) => ({ name: h.key, value: h.value }));
 
-    const processedVariable = variables.map(v => ({
+    const processedVariable = variables.map((v) => ({
       name: v.name,
       value: getValueWithType(v),
     }));
 
-    const bodyVariables = [];
-    const queryParams = [];
+    const bodyVariables: { name: string; value: any }[] = [];
+    const queryParams: string[] = [];
 
     if (!endpoint) {
       return;
@@ -72,7 +73,7 @@ export const useRestEndpointRequest = () => {
           // Use the value directly as processed by getValueWithType
           // This ensures consistent handling between GET and other methods
           queryParams.push(
-            `${variable.name}=${encodeURIComponent(String(variable.value))}`
+            `${variable.name}=${encodeURIComponent(String(variable.value))}`,
           );
         } else {
           // For non-scalar types (arrays, objects), switch to using the body
@@ -95,18 +96,24 @@ export const useRestEndpointRequest = () => {
       url: fullUrl,
       body:
         bodyVariables.length > 0 && method !== 'GET'
-          ? bodyVariables.reduce((acc, curr) => {
-              // Use the value directly as processed by getValueWithType
-              acc[curr.name] = curr.value;
-              return acc;
-            }, {} as Record<string, unknown>)
+          ? bodyVariables.reduce(
+              (acc, curr) => {
+                // Use the value directly as processed by getValueWithType
+                acc[curr.name] = curr.value;
+                return acc;
+              },
+              {} as Record<string, unknown>,
+            )
           : undefined,
-      headers: selectedHeaders.reduce((acc, curr) => {
-        acc[curr.name] = curr.value;
-        return acc;
-      }, {} as Record<string, string>),
+      headers: selectedHeaders.reduce(
+        (acc, curr) => {
+          acc[curr.name] = curr.value;
+          return acc;
+        },
+        {} as Record<string, string>,
+      ),
     });
   };
 
-  return useMutation(makeRequest);
+  return useMutation({ mutationFn: makeRequest });
 };

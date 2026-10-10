@@ -5,8 +5,7 @@ import {
   FaExclamationTriangle,
   FaMinusCircle,
 } from 'react-icons/fa';
-import ToolTip from '../../../../../../lib/components/Common/Tooltip/Tooltip';
-import { Badge, BadgeColor } from '../../../../../new-components/Badge';
+import { Badge, BadgeColor, Tooltip } from '@hasura/shared/ui';
 import { Latency } from '../../../types';
 
 type AvgLatency = Latency['avgLatency'];
@@ -29,7 +28,7 @@ const getBadgeProps = (avgLatency: AvgLatency): GetBadgeProps => {
   if (avgLatency >= 200) {
     return {
       color: 'red',
-      icon: <FaExclamationTriangle className="mr-xs" />,
+      icon: <FaExclamationTriangle className="mr-1" />,
       label: 'Elevated Latency',
     };
   }
@@ -37,7 +36,7 @@ const getBadgeProps = (avgLatency: AvgLatency): GetBadgeProps => {
   if (avgLatency >= 100 && avgLatency < 200) {
     return {
       color: 'yellow',
-      icon: <FaMinusCircle className="mr-xs" />,
+      icon: <FaMinusCircle className="mr-1" />,
       label: 'Acceptable',
     };
   }
@@ -45,14 +44,14 @@ const getBadgeProps = (avgLatency: AvgLatency): GetBadgeProps => {
   if (avgLatency > 0) {
     return {
       color: 'green',
-      icon: <FaCheck className="mr-xs" />,
+      icon: <FaCheck className="mr-1" />,
       label: 'Connection',
     };
   }
 
   return {
-    color: 'light-gray',
-    icon: <FaExclamationCircle className="mr-xs" />,
+    color: 'gray',
+    icon: <FaExclamationCircle className="mr-1" />,
     label: 'Failed to get latency',
   };
 };
@@ -65,14 +64,14 @@ export const LatencyBadge = ({
     () => ({
       avgLatency:
         latencies.find(
-          latencyInfo => latencyInfo.dataSourceName === dataSourceName
+          (latencyInfo) => latencyInfo.dataSourceName === dataSourceName,
         )?.avgLatency || 0,
       hasError: latencies.find(
-        latencyInfo =>
-          latencyInfo.dataSourceName === dataSourceName && !!latencyInfo.error
+        (latencyInfo) =>
+          latencyInfo.dataSourceName === dataSourceName && !!latencyInfo.error,
       ),
     }),
-    [latencies, dataSourceName]
+    [latencies, dataSourceName],
   );
 
   if (!avgLatency && !hasError) {
@@ -83,10 +82,10 @@ export const LatencyBadge = ({
   const badgeProps = getBadgeProps(avgLatency);
 
   return (
-    <ToolTip message={message} placement="top">
+    <Tooltip content={message} side="top">
       <Badge color={badgeProps.color}>
         {badgeProps.icon} {badgeProps.label}
       </Badge>
-    </ToolTip>
+    </Tooltip>
   );
 };

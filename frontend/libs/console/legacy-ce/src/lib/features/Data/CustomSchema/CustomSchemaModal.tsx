@@ -1,4 +1,4 @@
-import { Dialog } from '../../../new-components/Dialog';
+import { Dialog } from '@hasura/shared/ui';
 import React from 'react';
 import { CustomSchemaForm } from './CustomSchemaForm';
 import { CustomSchemaFormVals } from './types';
@@ -30,7 +30,6 @@ export const CustomSchemaModal: React.FC<CustomSchemaModalProps> = ({
 
   return (
     <Dialog
-      hasBackdrop
       title={tableName}
       description={dialogDescription}
       onClose={onClose}

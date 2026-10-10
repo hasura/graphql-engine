@@ -80,7 +80,11 @@ function Prometheus() {
       ifDisabled={(doNotMatch, current: { hasuraPlan }) => {
         if (doNotMatch.ee) {
           if (hasuraPlan.type === 'ce') {
-            return <div>Try EE Lite and give all the paid feature a try for free!</div>;
+            return (
+              <div>
+                Try EE Lite and give all the paid feature a try for free!
+              </div>
+            );
           }
 
           return <div>Prometheus is enabled for EE Lite only</div>;
@@ -106,7 +110,9 @@ function Prometheus() {
   if (status === 'disabled') {
     if (doNotMatch.ee) {
       if (hasuraPlan.type === 'ce') {
-        return <div>Try EE Lite and give all the paid feature a try for free!</div>;
+        return (
+          <div>Try EE Lite and give all the paid feature a try for free!</div>
+        );
       }
 
       return <div>Prometheus is enabled for EE Lite only</div>;
@@ -123,9 +129,9 @@ function Prometheus() {
 
 ❌ It's not possible to use the new APIs in Storybook yet. ❌
 
-### Jest
+### Vitest
 
-❌ It's not possible to use the new APIs in Jest yet. ❌
+❌ It's not possible to use the new APIs in Vitest yet. ❌
 
 ## Adding more source of truths or Console types to the Hasura plan
 

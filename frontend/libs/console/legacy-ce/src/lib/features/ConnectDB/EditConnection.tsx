@@ -1,66 +1,28 @@
-import { CustomizationForm } from '.';
-import { Button } from '../../new-components/Button';
-import { InputField, Select, useConsoleForm } from '../../new-components/Form';
-import { IndicatorCard } from '../../new-components/IndicatorCard';
-import React, { useEffect } from 'react';
-import { useQuery } from 'react-query';
+import {
+  Button,
+  InputField,
+  SelectField,
+  useConsoleForm,
+  IndicatorCard,
+} from '@hasura/shared/ui';
+import { useEffect } from 'react';
 import { z } from 'zod';
-import { useTableDefinition } from '../Data';
-import { DataSource, exportMetadata } from '../DataSource';
-import { useHttpClient } from '../Network';
 import { Configuration } from './components/Configuration';
-import { useEditDataSourceConnection } from './hooks';
-
-const useEditDataSourceConnectionInfo = () => {
-  const httpClient = useHttpClient();
-  const urlData = useTableDefinition(window.location);
-
-  return useQuery({
-    queryKey: ['edit-connection'],
-    queryFn: async () => {
-      if (urlData.querystringParseResult === 'error')
-        throw Error('Something went wrong while parsing the URL parameters');
-      const { database: dataSourceName } = urlData.data;
-      const { metadata } = await exportMetadata({ httpClient });
-
-      if (!metadata) throw Error('Unavailable to fetch metadata');
-
-      const metadataSource = metadata.sources.find(
-        source => source.name === dataSourceName
-      );
-
-      if (!metadataSource) throw Error('Unavailable to fetch metadata source');
-
-      const schema = await DataSource(httpClient).connectDB.getFormSchema(
-        metadataSource.kind
-      );
-
-      return {
-        schema,
-        configuration: metadataSource.configuration,
-        driver: metadataSource.kind,
-        name: metadataSource.name,
-        customization: metadataSource.customization,
-      };
-    },
-  });
-};
+import {
+  useEditDataSourceConnection,
+  useEditDataSourceConnectionInfo,
+} from './hooks';
+import { CustomizationForm } from './components/Customization';
 
 export const EditConnection = () => {
   const { data, isLoading } = useEditDataSourceConnectionInfo();
-  const {
-    schema = z.any(),
-    name,
-    driver,
-    configuration,
-    customization,
-  } = data || {};
-  const { submit, isLoading: submitIsLoading } = useEditDataSourceConnection();
+  const { schema, name, driver, configuration, customization } = data || {};
+  const { submit, isPending: submitIsLoading } = useEditDataSourceConnection();
   const {
     methods: { formState, reset },
     Form,
   } = useConsoleForm({
-    schema,
+    schema: schema || z.any(),
   });
 
   useEffect(() => {
@@ -88,10 +50,10 @@ export const EditConnection = () => {
       </div>
       <Form onSubmit={submit} className="p-0 pl-sm">
         <div className="max-w-5xl">
-          <InputField type="text" name="name" label="Database Display Name" />
+          <InputField name="name" label="Database Display Name" />
 
-          <Select
-            options={[{ label: driver || '', value: driver }]}
+          <SelectField
+            options={driver ? [{ label: driver, value: driver }] : []}
             name="driver"
             label="Data Source Driver"
             disabled
@@ -104,7 +66,7 @@ export const EditConnection = () => {
             <CustomizationForm />
           </div>
           <div className="mt-4">
-            <Button type="submit" mode="primary" isLoading={submitIsLoading}>
+            <Button type="submit" mode="primary" loading={submitIsLoading}>
               Edit Connection
             </Button>
           </div>

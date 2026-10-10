@@ -1,8 +1,10 @@
-import { AxiosInstance } from 'axios';
 import { sendTelemetryEvent } from '../../telemetry';
-import { Driver } from '../../dataSources';
-import { DataSource, Feature } from '../DataSource';
-import { hashString } from '../../components/Common/utils/jsUtils';
+import {
+  DataSourceNetworkArgs,
+  getDatabaseMethods,
+} from '@hasura/metadata/data-source';
+import type { SupportedDriver } from '@hasura/shared/types';
+import { hashString } from '@hasura/shared/utils';
 
 // returns the correct indefinite article based on the first character of the input string
 export const indefiniteArticle = (word: string): string => {
@@ -18,34 +20,22 @@ export const getDriverNameFromUrlParams = (): string | undefined => {
   return driver ?? undefined;
 };
 
-export const transformErrorResponse = (error: unknown) => {
-  const err = error as Record<string, any>;
-
-  let message = '';
-
-  if ('internal' in err) message = JSON.stringify(err?.internal, null, '\t');
-  else message = err.error;
-
-  return {
-    name: `Error code: ${err.code}`,
-    message,
-  };
-};
-
 export const sendConnectDatabaseTelemetryEvent = async ({
-  httpClient,
   dataSourceName,
   driver,
+  ...rest
 }: {
   dataSourceName: string;
-  driver: Driver;
-  httpClient: AxiosInstance;
-}) => {
-  const tables = await DataSource(httpClient).introspectTables({
-    dataSourceName,
-  });
-  if (tables !== Feature.NotImplemented) {
-    const entities = tables.map(table => table.name);
+  driver: SupportedDriver;
+} & DataSourceNetworkArgs) => {
+  const databaseMethods = getDatabaseMethods(driver);
+  if (databaseMethods.introspection.getTrackableTables) {
+    const tables = await databaseMethods.introspection.getTrackableTables({
+      dataSourceName,
+      configuration: null,
+      ...rest,
+    });
+    const entities = tables.map((table) => table.name);
     // ensure a consistent hash for the same set of tables. ie. we would like to have ["article", "author"] and ["author", "article"] to result in the same hash
     entities.sort();
     const entity_count = entities.length;

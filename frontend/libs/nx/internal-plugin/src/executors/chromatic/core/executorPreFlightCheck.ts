@@ -1,4 +1,4 @@
-import type { ProjectConfiguration } from '@nrwl/devkit';
+import type { ProjectConfiguration } from '@nx/devkit';
 
 import { getPullRequestNumber } from './utils';
 
@@ -28,7 +28,7 @@ export type PreFlightCheckResult =
  * Check if the executor must run or not. It the executor must run, the dist target directory is returned.
  */
 export function executorPreFlightCheck(
-  params: PreFlightCheckParams
+  params: PreFlightCheckParams,
 ): PreFlightCheckResult {
   const {
     executorContextProjectName: { projectName, projectConfiguration },

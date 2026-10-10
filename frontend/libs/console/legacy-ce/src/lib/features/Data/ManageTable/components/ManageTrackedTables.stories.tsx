@@ -1,16 +1,12 @@
-import React from 'react';
-
-import { StoryObj, Meta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
 import {
+  expect,
   userEvent,
   waitFor,
-  waitForElementToBeRemoved,
   within,
-} from '@storybook/testing-library';
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
-import { expect } from '@storybook/jest';
-import { dangerouslyDelay } from '../../../../storybook/utils/dangerouslyDelay';
-
+  waitForElementToBeRemoved,
+} from 'storybook/test';
+import { dangerouslyDelay, ReactQueryDecorator } from '@hasura/shared/testing';
 import { handlers, resetMetadata } from './handlers.mock';
 import { ManageTrackedTables } from '../../ManageTable/components/ManageTrackedTables';
 
@@ -32,7 +28,7 @@ export const UntrackedTables: StoryObj<typeof ManageTrackedTables> = {
     resetMetadata();
 
     // Wait until it finishes loading
-    await waitFor(() => canvas.findByTestId('trackable-resource-tabs'), {
+    await waitFor(async () => canvas.findByTestId('trackable-resource-tabs'), {
       timeout: 5000,
     });
 
@@ -44,7 +40,7 @@ export const UntrackedTables: StoryObj<typeof ManageTrackedTables> = {
     await expect(canvas.getByText('public / Track')).toBeInTheDocument();
     await expect(canvas.getByText('public / Playlist')).toBeInTheDocument();
     await expect(
-      canvas.getByText('public / PlaylistTrack')
+      canvas.getByText('public / PlaylistTrack'),
     ).toBeInTheDocument();
     await expect(canvas.getByText('public / MediaType')).toBeInTheDocument();
   },
@@ -61,11 +57,11 @@ export const Untrack: StoryObj<typeof ManageTrackedTables> = {
     resetMetadata();
 
     // Wait until it finishes loading
-    await waitFor(() => canvas.findByTestId('trackable-resource-tabs'), {
+    await waitFor(async () => canvas.findByTestId('trackable-resource-tabs'), {
       timeout: 5000,
     });
 
-    userEvent.click(await canvas.findByText('Tracked'));
+    await userEvent.click(await canvas.findByText('Tracked'));
 
     // Wait for the button to appear on the screen using findBy. Store it in a variable to click it afterwards.
     const button = await canvas.findByTestId(`untrack-public.Artist`);
@@ -77,14 +73,14 @@ export const Untrack: StoryObj<typeof ManageTrackedTables> = {
     await dangerouslyDelay(1000);
 
     // Track public.Invoice
-    userEvent.click(button);
+    await userEvent.click(button);
 
     // It should not be in the Tracked tab anymore
     await waitForElementToBeRemoved(
       () => canvas.queryByText('public / Artist'),
       {
         timeout: 2000,
-      }
+      },
     );
   },
 };
@@ -100,7 +96,7 @@ export const Track: StoryObj<typeof ManageTrackedTables> = {
     resetMetadata();
 
     // Wait until it finishes loading
-    await waitFor(() => canvas.findByTestId('trackable-resource-tabs'), {
+    await waitFor(async () => canvas.findByTestId('trackable-resource-tabs'), {
       timeout: 5000,
     });
 
@@ -116,14 +112,14 @@ export const Track: StoryObj<typeof ManageTrackedTables> = {
     await dangerouslyDelay(1000);
 
     // Track public.Invoice
-    userEvent.click(button);
+    await userEvent.click(button);
 
     // It should not be in the Untracked tab anymore
     await waitForElementToBeRemoved(
       () => canvas.queryByText('public / Invoice'),
       {
         timeout: 2000,
-      }
+      },
     );
   },
 };
@@ -139,7 +135,7 @@ export const TrackedTables: StoryObj<typeof ManageTrackedTables> = {
     resetMetadata();
 
     // Wait until it finishes loading
-    await waitFor(() => canvas.findByTestId('trackable-resource-tabs'), {
+    await waitFor(async () => canvas.findByTestId('trackable-resource-tabs'), {
       timeout: 5000,
     });
 

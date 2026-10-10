@@ -1219,7 +1219,7 @@ export const PrometheusAnimation: React.FC<PrometheusAnimationProps> = ({
         height="100%"
         viewBox="0 0 823 258"
         fill="none"
-        className={clsx('w-full max-w-screen-md', className)}
+        className={clsx('w-full max-w-(--breakpoint-lg)', className)}
         xmlns="http://www.w3.org/2000/svg"
       >
         <g id="Variant=Disabled">

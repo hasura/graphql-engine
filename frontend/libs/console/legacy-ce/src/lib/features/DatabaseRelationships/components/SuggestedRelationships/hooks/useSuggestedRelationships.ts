@@ -1,10 +1,9 @@
-import inflection from 'inflection';
-import camelCase from 'lodash/camelCase';
 import { SuggestedRelationship } from '../../../types';
-import { getTableDisplayName } from '../../../utils/helpers';
-import { NamingConvention, Table } from '../../../../hasura-metadata-types';
-import { areTablesEqual } from '../../../../hasura-metadata-api';
+import { NamingConvention, Table } from '@hasura/shared/types';
+import { areTablesEqual } from '@hasura/metadata/helpers';
 
+import { getTableDisplayName } from '@hasura/shared/utils';
+import { camelize, pluralize, singularize } from 'inflection';
 export type SuggestedRelationshipsResponse = {
   relationships: SuggestedRelationship[];
 };
@@ -18,7 +17,7 @@ export const filterTableRelationships = ({
   table,
   relationships,
 }: FilterTableRelationshipsArgs) =>
-  relationships.filter(relationship => {
+  relationships.filter((relationship) => {
     if (areTablesEqual(relationship.from.table, relationship.to.table)) {
       return false;
     }
@@ -40,19 +39,19 @@ const formatRelationToTableName = ({
 }: GetRelationTableNameArg) => {
   const baseTableName = getTableDisplayName(table);
   if (relationshipType === 'array') {
-    return inflection.pluralize(baseTableName);
+    return pluralize(baseTableName);
   }
 
-  return inflection.singularize(getTableDisplayName(table));
+  return singularize(getTableDisplayName(table));
 };
 
 const makeStringGraphQLCompliant = (text: string) => text.replace(/\./g, '_');
 
 export const addConstraintName = (
   relationships: SuggestedRelationship[],
-  namingConvention: NamingConvention
+  namingConvention: NamingConvention,
 ): SuggestedRelationshipWithName[] =>
-  relationships.map(relationship => {
+  relationships.map((relationship) => {
     const toTableName = formatRelationToTableName({
       table: relationship.to.table,
       relationshipType: relationship.type,
@@ -62,7 +61,7 @@ export const addConstraintName = (
 
     const constraintName =
       namingConvention === 'graphql-default'
-        ? camelCase(baseConstraintName)
+        ? camelize(baseConstraintName, true)
         : baseConstraintName;
 
     return {

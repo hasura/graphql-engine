@@ -8,11 +8,7 @@ export type FeatureFlagSections =
   | 'settings';
 
 export type FeatureFlagStatus =
-  | 'alpha'
-  | 'beta'
-  | 'release candidate'
-  | 'stable'
-  | 'experimental';
+  'alpha' | 'beta' | 'release candidate' | 'stable' | 'experimental';
 
 export type FeatureFlagId = string;
 

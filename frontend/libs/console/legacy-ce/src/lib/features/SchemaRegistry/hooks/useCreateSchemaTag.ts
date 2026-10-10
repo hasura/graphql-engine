@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { useMutation } from 'react-query';
+import { useMutation } from '@tanstack/react-query';
 import { ADD_SCHEMA_TAG } from '../queries';
 import { schemaRegsitryControlPlaneClient } from '../utils';
-import { CreateSchemaRegistryTagResponseWithError } from '../types';
-import { hasuraToast } from '../../../new-components/Toasts';
-import { SchemaRegistryTag } from '../types';
+import {
+  CreateSchemaRegistryTagResponseWithError,
+  SchemaRegistryTag,
+} from '../types';
+import { hasuraToast } from '@hasura/shared/ui';
 
 type createSchemaRegistryTagMutationFnArgs = {
   tagName: string;
@@ -14,7 +15,7 @@ type createSchemaRegistryTagMutationFnArgs = {
 };
 
 export const useCreateSchemaTag = (
-  onSuccess: (data: SchemaRegistryTag) => void
+  onSuccess: (data: SchemaRegistryTag) => void,
 ) => {
   const createSchemaRegistryTagMutationFn = (variables: {
     tagName: string;
@@ -28,49 +29,47 @@ export const useCreateSchemaTag = (
     >(ADD_SCHEMA_TAG, variables);
   };
 
-  const createSchemaRegistryTagMutation = useMutation(
-    (args: createSchemaRegistryTagMutationFnArgs) =>
+  const createSchemaRegistryTagMutation = useMutation({
+    mutationFn: (args: createSchemaRegistryTagMutationFnArgs) =>
       createSchemaRegistryTagMutationFn(args),
-    {
-      onSuccess: data => {
-        if (data.errors && data.errors.length > 0) {
-          if (
-            data.errors[0].message ||
-            data.errors[0].message ===
-              'Uniqueness violation. duplicate key value violates unique constraint "schema_registry_tags_entry_hash_name_key"'
-          ) {
-            hasuraToast({
-              type: 'error',
-              title: 'Error!',
-              message: 'Tag already exists!',
-            });
-          } else {
-            hasuraToast({
-              type: 'error',
-              title: 'Error!',
-              message: 'Something unexpected happened!',
-            });
-          }
+    onSuccess: (data) => {
+      if (data.errors && data.errors.length > 0) {
+        if (
+          data.errors[0].message ||
+          data.errors[0].message ===
+            'Uniqueness violation. duplicate key value violates unique constraint "schema_registry_tags_entry_hash_name_key"'
+        ) {
+          hasuraToast({
+            type: 'error',
+            title: 'Error!',
+            message: 'Tag already exists!',
+          });
         } else {
           hasuraToast({
-            type: 'success',
-            title: 'Success!',
-            message: 'Tag created successfully!',
+            type: 'error',
+            title: 'Error!',
+            message: 'Something unexpected happened!',
           });
-
-          if (data.data) onSuccess(data.data.insert_schema_registry_tags_one);
         }
-      },
-      onError: () => {
+      } else {
         hasuraToast({
-          type: 'error',
-          title: 'Error!',
-          message:
-            'Something went wrong while creating the tag for Schema Registry',
+          type: 'success',
+          title: 'Success!',
+          message: 'Tag created successfully!',
         });
-      },
-    }
-  );
+
+        if (data.data) onSuccess(data.data.insert_schema_registry_tags_one);
+      }
+    },
+    onError: () => {
+      hasuraToast({
+        type: 'error',
+        title: 'Error!',
+        message:
+          'Something went wrong while creating the tag for Schema Registry',
+      });
+    },
+  });
 
   return {
     createSchemaRegistryTagMutation,

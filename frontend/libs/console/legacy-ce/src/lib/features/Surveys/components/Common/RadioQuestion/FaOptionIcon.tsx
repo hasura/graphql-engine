@@ -2,7 +2,7 @@ import * as AllReactIcons from 'react-icons/fa';
 import { FaPlay } from 'react-icons/fa';
 
 export function FaOptionIcon(
-  react_icons_component_name: string | undefined | null
+  react_icons_component_name: string | undefined | null,
 ) {
   if (!react_icons_component_name) {
     return <FaPlay className="text-yellow-500 text-xl" />;

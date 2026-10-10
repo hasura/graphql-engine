@@ -1,17 +1,17 @@
 import React from 'react';
 import * as z from 'zod';
-import { action } from '@storybook/addon-actions';
-import { StoryObj, Meta } from '@storybook/react';
-import { SimpleForm } from '../../../../../new-components/Form';
-import { Button } from '../../../../../new-components/Button';
+import { action } from 'storybook/actions';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
+import { SimpleForm, Button } from '@hasura/shared/ui';
+
 import {
-  remoteSchemaSelectorKey,
   RsSourceTypeSelector,
   RsSourceTypeSelectorProps,
 } from './RsSourceTypeSelector';
+import { refRemoteSchemaSelectorKey } from '../RefRsSelector';
 
 const defaultValues = {
-  [remoteSchemaSelectorKey]: 'remoteSchema2',
+  [refRemoteSchemaSelectorKey]: 'remoteSchema2',
 };
 
 export default {
@@ -19,7 +19,7 @@ export default {
     'Features/Remote Relationships/Components/Remote Schema Source Type Selector',
   component: RsSourceTypeSelector,
   decorators: [
-    StoryComponent => (
+    (StoryComponent) => (
       <SimpleForm
         schema={z.any()}
         onSubmit={action('onSubmit')}

@@ -1,28 +1,16 @@
-import { StoryObj, Meta } from '@storybook/react';
-import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
 import {
   ListNativeQueryRelationships,
   ListNativeQueryRow,
 } from './ListNativeQueryRelationships';
-import { ReduxDecorator } from '../../../../../storybook/decorators/redux-decorator';
 import { handlers } from '../mocks/handlers';
-import globals from '../../../../../Globals';
-import { userEvent, within } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
+import { expect, userEvent, within } from 'storybook/test';
 import { useState } from 'react';
 
 export default {
   component: ListNativeQueryRelationships,
-  decorators: [
-    ReactQueryDecorator(),
-    ReduxDecorator({
-      tables: {
-        dataHeaders: {
-          'x-hasura-admin-secret': globals.adminSecret as any,
-        },
-      },
-    }),
-  ],
+  decorators: [ReactQueryDecorator()],
 } as Meta<typeof ListNativeQueryRelationships>;
 
 export const Basic: StoryObj<typeof ListNativeQueryRelationships> = {
@@ -46,8 +34,8 @@ export const TestBasicFlow: StoryObj<typeof ListNativeQueryRelationships> = {
         <ListNativeQueryRelationships
           dataSourceName="chinook"
           nativeQueryName="get_authors"
-          onEditRow={data => updateResult(data)}
-          onDeleteRow={data => updateResult(data)}
+          onEditRow={(data) => updateResult(data)}
+          onDeleteRow={(data) => updateResult(data)}
         />
         <div data-testid="result">{JSON.stringify(result)}</div>
       </div>
@@ -62,7 +50,7 @@ export const TestBasicFlow: StoryObj<typeof ListNativeQueryRelationships> = {
     const canvas = within(canvasElement);
 
     const nativeQueryRelationshipsTable = await canvas.findByTestId(
-      'native-query-relationships'
+      'native-query-relationships',
     );
 
     await expect(nativeQueryRelationshipsTable).toBeInTheDocument();
@@ -73,14 +61,14 @@ export const TestBasicFlow: StoryObj<typeof ListNativeQueryRelationships> = {
     await expect(nativeQueryRelationshipsTable.children.length).toEqual(2);
 
     const rows = await canvas.findAllByTestId(
-      /^native-query-relationships-row-.*$/
+      /^native-query-relationships-row-.*$/,
     );
     /**
      * There should be two rows
      */
     await expect(rows.length).toEqual(2);
     let rowValues = await canvas.findAllByTestId(
-      /^native-query-relationships-cell-0-*.*$/
+      /^native-query-relationships-cell-0-*.*$/,
     );
 
     /**
@@ -101,7 +89,7 @@ export const TestBasicFlow: StoryObj<typeof ListNativeQueryRelationships> = {
           remote_native_query: 'get_article',
         },
         type: 'array',
-      })
+      }),
     );
 
     let deleteBtn = await within(rowValues[2]).findByTestId('delete-button');
@@ -115,11 +103,11 @@ export const TestBasicFlow: StoryObj<typeof ListNativeQueryRelationships> = {
           remote_native_query: 'get_article',
         },
         type: 'array',
-      })
+      }),
     );
 
     rowValues = await canvas.findAllByTestId(
-      /^native-query-relationships-cell-1-*.*$/
+      /^native-query-relationships-cell-1-*.*$/,
     );
 
     await expect(rowValues[0]).toHaveTextContent('author_details');
@@ -137,7 +125,7 @@ export const TestBasicFlow: StoryObj<typeof ListNativeQueryRelationships> = {
           remote_native_query: 'get_author_details',
         },
         type: 'object',
-      })
+      }),
     );
 
     deleteBtn = await within(rowValues[2]).findByTestId('delete-button');
@@ -151,7 +139,7 @@ export const TestBasicFlow: StoryObj<typeof ListNativeQueryRelationships> = {
           remote_native_query: 'get_author_details',
         },
         type: 'object',
-      })
+      }),
     );
   },
 };

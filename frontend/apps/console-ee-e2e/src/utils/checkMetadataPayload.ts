@@ -4,6 +4,7 @@
  * TODO: properly type the interception.
  */
 
+import { hgeUrl } from '../support/endpoints';
 import { Interception } from 'cypress/types/net-stubbing';
 
 type Options = { name?: string };
@@ -12,7 +13,7 @@ export function readMetadata() {
   Cypress.log({ message: '**--- Metadata read: start**' });
 
   return cy
-    .request('POST', 'http://localhost:8080/v1/metadata', {
+    .request('POST', hgeUrl('/v1/metadata'), {
       args: {},
       type: 'export_metadata',
     })
@@ -23,7 +24,7 @@ export function readMetadata() {
 
 export function checkMetadataPayload(
   interception: Interception,
-  options: Options
+  options: Options,
 ) {
   let bodyToSnapshot: unknown;
 

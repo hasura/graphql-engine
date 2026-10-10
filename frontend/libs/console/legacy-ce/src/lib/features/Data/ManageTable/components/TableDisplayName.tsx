@@ -1,14 +1,16 @@
-import { Table } from '../../../hasura-metadata-types';
-import { Link } from '../../TrackResources/components/parts/Link';
+import { Table } from '@hasura/shared/types';
 import { getQualifiedTable } from '../utils';
 import { FaTable } from 'react-icons/fa';
+import { Flex } from '@radix-ui/themes';
+import { To } from 'react-router';
+import { RelativeLink } from '@hasura/shared/ui';
 
 export const TableDisplayName = ({
   dataSourceName,
   table,
-  onClick,
+  to,
 }: {
-  onClick?: () => void;
+  to?: To;
   dataSourceName?: string;
   table: Table;
 }) => {
@@ -16,8 +18,8 @@ export const TableDisplayName = ({
 
   const tableName = getQualifiedTable(table);
   const content = () => (
-    <>
-      <FaTable className="text-sm text-muted mr-xs" />
+    <Flex align="center" gap="1">
+      <FaTable />
       {dataSourceName ? (
         <>
           {dataSourceName} / {tableName.join(' / ')}
@@ -25,12 +27,8 @@ export const TableDisplayName = ({
       ) : (
         <>{tableName.join(' / ')}</>
       )}
-    </>
+    </Flex>
   );
 
-  return onClick ? (
-    <Link onClick={onClick}>{content()}</Link>
-  ) : (
-    <div>{content()}</div>
-  );
+  return to ? <RelativeLink to={to}>{content()}</RelativeLink> : content();
 };

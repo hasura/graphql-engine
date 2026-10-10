@@ -1,4 +1,3 @@
-import { DatasetTable, SchemaTable } from '../../../../DataSource/utils';
 import {
   getTableLabel,
   SourcePickerLabel,
@@ -6,9 +5,8 @@ import {
   mapItemsToSourceOptions,
   RemoteSchemaSourcePickerLabel,
 } from './SourcePicker.utils';
-import type { GDCTable } from '../../../../../features/DataSource';
-import type { MultiSelectItem } from '../../../../../new-components/Form';
 import { SourceSelectorItem } from './SourcePicker.types';
+import { GDCTable } from '@hasura/shared/types';
 
 describe('getTableLabel', () => {
   describe('when table is GDC table', () => {
@@ -20,14 +18,14 @@ describe('getTableLabel', () => {
       };
 
       expect(getTableLabel(input)).toEqual(
-        <SourcePickerLabel prefix="Chinook /" tableName="Album" />
+        <SourcePickerLabel prefix="Chinook /" tableName="Album" />,
       );
     });
   });
 
   describe('when table is dataset table', () => {
     it('returns the label', () => {
-      const table: DatasetTable = {
+      const table = {
         dataset: 'ds',
         name: 'tbl',
       };
@@ -37,14 +35,14 @@ describe('getTableLabel', () => {
       };
 
       expect(getTableLabel(input)).toEqual(
-        <SourcePickerLabel prefix="Chinook / ds /" tableName="tbl" />
+        <SourcePickerLabel prefix="Chinook / ds /" tableName="tbl" />,
       );
     });
   });
 
   describe('when table is dataset table', () => {
     it('returns the label', () => {
-      const table: DatasetTable = {
+      const table = {
         dataset: 'ds',
         name: 'tbl',
       };
@@ -54,14 +52,14 @@ describe('getTableLabel', () => {
       };
 
       expect(getTableLabel(input)).toEqual(
-        <SourcePickerLabel prefix="Chinook / ds /" tableName="tbl" />
+        <SourcePickerLabel prefix="Chinook / ds /" tableName="tbl" />,
       );
     });
   });
 
   describe('when table is schema table', () => {
     it('returns the label', () => {
-      const table: SchemaTable = {
+      const table = {
         schema: 'public',
         name: 'tbl',
       };
@@ -71,7 +69,7 @@ describe('getTableLabel', () => {
       };
 
       expect(getTableLabel(input)).toEqual(
-        <SourcePickerLabel prefix="Chinook / public /" tableName="tbl" />
+        <SourcePickerLabel prefix="Chinook / public /" tableName="tbl" />,
       );
     });
   });
@@ -95,7 +93,7 @@ describe('mapItemsToSourceOptions', () => {
       },
     ];
 
-    const expected: MultiSelectItem[] = [
+    const expected = [
       {
         label: <SourcePickerLabel prefix="Chinook /" tableName="Album" />,
         value: {

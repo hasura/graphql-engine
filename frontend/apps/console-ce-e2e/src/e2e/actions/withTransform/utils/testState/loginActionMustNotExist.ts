@@ -7,10 +7,10 @@ import { deleteLoginAction } from '../services/deleteLoginAction';
 export function loginActionMustNotExist() {
   Cypress.log({ message: '**--- Action check: start**' });
 
-  readMetadata().then(response => {
+  readMetadata().then((response) => {
     const actionExists = !!response.body.actions?.find(
       // TODO: properly type it
-      action => action.name === 'login'
+      (action: any) => action.name === 'login',
     );
 
     if (actionExists) {

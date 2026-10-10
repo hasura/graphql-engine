@@ -1,0 +1,266 @@
+import {
+  DiscoverBehavior,
+  PrefetchBehavior,
+  RelativeRoutingType,
+  Link as RouterLink,
+  To,
+} from 'react-router';
+import { Link, LinkProps } from './Link';
+
+export type RelativeLinkProps = Omit<LinkProps, 'href' | 'asChild'> & {
+  /**
+   * Defines the link [lazy route discovery](../../explanation/lazy-route-discovery) behavior.
+   *
+   * - **render** — default, discover the route when the link renders
+   * - **none** — don't eagerly discover, only discover if the link is clicked
+   *
+   * ```tsx
+   * <Link /> // default ("render")
+   * <Link discover="render" />
+   * <Link discover="none" />
+   * ```
+   */
+  discover?: DiscoverBehavior;
+  /**
+   * Defines the data and module prefetching behavior for the link.
+   *
+   * ```tsx
+   * <Link /> // default
+   * <Link prefetch="none" />
+   * <Link prefetch="intent" />
+   * <Link prefetch="render" />
+   * <Link prefetch="viewport" />
+   * ```
+   *
+   * - **none** — default, no prefetching
+   * - **intent** — prefetches when the user hovers or focuses the link
+   * - **render** — prefetches when the link renders
+   * - **viewport** — prefetches when the link is in the viewport, very useful for mobile
+   *
+   * Prefetching is done with HTML [`<link rel="prefetch">`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
+   * tags. They are inserted after the link.
+   *
+   * ```tsx
+   * <a href="..." />
+   * <a href="..." />
+   * <link rel="prefetch" /> // might conditionally render
+   * ```
+   *
+   * Because of this, if you are using `nav :last-child` you will need to use
+   * `nav :last-of-type` so the styles don't conditionally fall off your last link
+   * (and any other similar selectors).
+   */
+  prefetch?: PrefetchBehavior;
+  /**
+   * Will use document navigation instead of client side routing when the link is
+   * clicked: the browser will handle the transition normally (as if it were an
+   * [`<a href>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a)).
+   *
+   * ```tsx
+   * <Link to="/logout" reloadDocument />
+   * ```
+   */
+  reloadDocument?: boolean;
+  /**
+   * Replaces the current entry in the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
+   * stack instead of pushing a new one onto it.
+   *
+   * ```tsx
+   * <Link replace />
+   * ```
+   *
+   * ```
+   * # with a history stack like this
+   * A -> B
+   *
+   * # normal link click pushes a new entry
+   * A -> B -> C
+   *
+   * # but with `replace`, B is replaced by C
+   * A -> C
+   * ```
+   */
+  replace?: boolean;
+  /**
+   * Adds persistent client side routing state to the next location.
+   *
+   * ```tsx
+   * <Link to="/somewhere/else" state={{ some: "value" }} />
+   * ```
+   *
+   * The location state is accessed from the `location`.
+   *
+   * ```tsx
+   * function SomeComp() {
+   *   const location = useLocation();
+   *   location.state; // { some: "value" }
+   * }
+   * ```
+   *
+   * This state is inaccessible on the server as it is implemented on top of
+   * [`history.state`](https://developer.mozilla.org/en-US/docs/Web/API/History/state)
+   */
+  state?: any;
+  /**
+   * Prevents the scroll position from being reset to the top of the window when
+   * the link is clicked and the app is using {@link ScrollRestoration}. This only
+   * prevents new locations resetting scroll to the top, scroll position will be
+   * restored for back/forward button navigation.
+   *
+   * ```tsx
+   * <Link to="?tab=one" preventScrollReset />
+   * ```
+   */
+  preventScrollReset?: boolean;
+  /**
+   * Defines the relative path behavior for the link.
+   *
+   * ```tsx
+   * <Link to=".." /> // default: "route"
+   * <Link relative="route" />
+   * <Link relative="path" />
+   * ```
+   *
+   * Consider a route hierarchy where a parent route pattern is `"blog"` and a child
+   * route pattern is `"blog/:slug/edit"`.
+   *
+   * - **route** — default, resolves the link relative to the route pattern. In the
+   * example above, a relative link of `"..."` will remove both `:slug/edit` segments
+   * back to `"/blog"`.
+   * - **path** — relative to the path so `"..."` will only remove one URL segment up
+   * to `"/blog/:slug"`
+   *
+   * Note that index routes and layout routes do not have paths so they are not
+   * included in the relative path calculation.
+   */
+  relative?: RelativeRoutingType;
+  /**
+   * Can be a string or a partial {@link Path}:
+   *
+   * ```tsx
+   * <Link to="/some/path" />
+   *
+   * <Link
+   *   to={{
+   *     pathname: "/some/path",
+   *     search: "?query=string",
+   *     hash: "#hash",
+   *   }}
+   * />
+   * ```
+   */
+  to: To;
+  /**
+   * Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
+   * for this navigation.
+   *
+   * ```jsx
+   * <Link to={to} viewTransition>
+   *   Click me
+   * </Link>
+   * ```
+   *
+   * To apply specific styles for the transition, see {@link useViewTransitionState}
+   */
+  viewTransition?: boolean;
+  /**
+   * Specify the default revalidation behavior for the navigation.
+   *
+   * ```tsx
+   * <Link to="/some/path" defaultShouldRevalidate={false} />
+   * ```
+   *
+   * If no `shouldRevalidate` functions are present on the active routes, then this
+   * value will be used directly.  Otherwise it will be passed into `shouldRevalidate`
+   * so the route can make the final determination on revalidation. This can be
+   * useful when updating search params and you don't want to trigger a revalidation.
+   *
+   * By default (when not specified), loaders will revalidate according to the routers
+   * standard revalidation behavior.
+   */
+  defaultShouldRevalidate?: boolean;
+  /**
+   * Masked path for this navigation, when you want to navigate the router to
+   * one location but display a separate location in the URL bar.
+   *
+   * This is useful for contextual navigations such as opening an image in a modal
+   * on top of a gallery while keeping the underlying gallery active. If a user
+   * shares the masked URL, or opens the link in a new tab, they will only load
+   * the masked location without the underlying contextual location.
+   *
+   * This feature relies on `history.state` and is thus only intended for SPA uses
+   * and SSR renders will not respect the masking.
+   *
+   * ```tsx
+   * // routes/gallery.tsx
+   * export function clientLoader({ request }: Route.LoaderArgs) {
+   *   let sp = new URL(request.url).searchParams;
+   *   return {
+   *     images: getImages(),
+   *     modalImage: sp.has("image") ? getImage(sp.get("image")!) : null,
+   *   };
+   * }
+   *
+   * export default function Gallery({ loaderData }: Route.ComponentProps) {
+   *   return (
+   *     <>
+   *       <GalleryGrid>
+   *        {loaderData.images.map((image) => (
+   *          <Link
+   *            key={image.id}
+   *            to={`/gallery?image=${image.id}`}
+   *            mask={`/images/${image.id}`}
+   *          >
+   *            <img src={image.url} alt={image.alt} />
+   *          </Link>
+   *        ))}
+   *       </GalleryGrid>
+   *
+   *       {data.modalImage ? (
+   *         <dialog open>
+   *           <img src={data.modalImage.url} alt={data.modalImage.alt} />
+   *         </dialog>
+   *       ) : null}
+   *     </>
+   *   );
+   * }
+   * ```
+   */
+  mask?: To;
+};
+
+export const RelativeLink = ({
+  discover,
+  prefetch,
+  reloadDocument,
+  preventScrollReset,
+  relative,
+  state,
+  replace,
+  defaultShouldRevalidate,
+  viewTransition,
+  to,
+  mask,
+  children,
+  ...linkProps
+}: RelativeLinkProps) => {
+  return (
+    <Link asChild {...linkProps}>
+      <RouterLink
+        discover={discover}
+        prefetch={prefetch}
+        reloadDocument={reloadDocument}
+        preventScrollReset={preventScrollReset}
+        relative={relative}
+        state={state}
+        replace={replace}
+        defaultShouldRevalidate={defaultShouldRevalidate}
+        viewTransition={viewTransition}
+        to={to}
+        mask={mask}
+      >
+        {children}
+      </RouterLink>
+    </Link>
+  );
+};

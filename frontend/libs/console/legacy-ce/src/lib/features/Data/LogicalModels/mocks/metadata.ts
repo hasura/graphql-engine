@@ -1,4 +1,4 @@
-import { LogicalModel, Metadata } from '../../../hasura-metadata-types';
+import { LogicalModel, Metadata } from '@hasura/shared/types';
 
 const testQueries = {
   postgres: [

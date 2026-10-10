@@ -1,16 +1,17 @@
 import * as React from 'react';
 import { OnboardingKind, OnboardingResponseData } from '../types';
 import { APIError } from '../../../hooks/error';
-import { getLSItem, LS_KEYS, removeLSItem } from '../../../utils';
+import { getLSItem, removeLSItem } from '@hasura/shared/utils';
 import { skippedOnboardingThroughURLParamVariables } from '../constants';
 import { emitOnboardingEvent } from '../utils';
 import { oneClickDeploymentOnboardingKind } from '../OneClickDeployment/util';
 import { OneClickDeploymentState } from '../OneClickDeployment';
+import { LS_KEYS } from '@hasura/shared/types';
 
 export const useOnboardingKind = (
   onboardingData: OnboardingResponseData | undefined,
   error: APIError | null,
-  isLoading: boolean
+  isLoading: boolean,
 ) => {
   const [kind, setKind] = React.useState<OnboardingKind>({ kind: 'none' });
 

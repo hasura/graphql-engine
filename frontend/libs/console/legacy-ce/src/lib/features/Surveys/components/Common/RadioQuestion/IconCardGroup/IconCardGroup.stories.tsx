@@ -1,14 +1,12 @@
 import React from 'react';
-import { action } from '@storybook/addon-actions';
-import { StoryObj, StoryFn, Meta } from '@storybook/react';
-import { userEvent, within } from '@storybook/testing-library';
+import { action } from 'storybook/actions';
+import { StoryObj, StoryFn, Meta } from '@storybook/react-webpack5';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { FaStar, FaHeart, FaUser, FaBookmark } from 'react-icons/fa';
-import { waitFor } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
 import { IconCardGroup } from './IconCardGroup';
 
 export default {
-  title: 'components/IconCardGroup',
+  title: 'features/Surveys/components/Common/RadioQuestion/IconCardGroup',
   component: IconCardGroup,
   argTypes: {
     onCardClick: { action: true },
@@ -64,7 +62,7 @@ export const Playground: StoryFn = () => {
 
   return (
     <IconCardGroup
-      onChange={value => setSelected(value)}
+      onChange={(value) => setSelected(value)}
       items={data}
       value={selected}
     />
@@ -72,9 +70,12 @@ export const Playground: StoryFn = () => {
 };
 
 export const PlaygroundWithTest: StoryObj = {
-  render: args => {
+  render: (args) => {
     return (
-      <IconCardGroup onChange={value => args.onCardClick(value)} items={data} />
+      <IconCardGroup
+        onChange={(value) => args.onCardClick(value)}
+        items={data}
+      />
     );
   },
 
@@ -84,15 +85,19 @@ export const PlaygroundWithTest: StoryObj = {
     // Click on the first card, and expect the onChange prop to be called with `1`
     await userEvent.click(canvas.getByText('Description of card-1'));
 
-    await waitFor(() => expect(args.onCardClick).toHaveBeenCalledTimes(1));
+    await waitFor(async () =>
+      expect(args.onCardClick).toHaveBeenCalledTimes(1),
+    );
 
-    expect(args.onCardClick).toBeCalledWith('1');
+    await expect(args.onCardClick).toBeCalledWith('1');
 
     // Click on the fourth card, and expect the onChange prop to be called with `4`
     await userEvent.click(canvas.getByText('Description of card-4'));
 
-    await waitFor(() => expect(args.onCardClick).toHaveBeenCalledTimes(2));
+    await waitFor(async () =>
+      expect(args.onCardClick).toHaveBeenCalledTimes(2),
+    );
 
-    expect(args.onCardClick).toBeCalledWith('4');
+    await expect(args.onCardClick).toBeCalledWith('4');
   },
 };

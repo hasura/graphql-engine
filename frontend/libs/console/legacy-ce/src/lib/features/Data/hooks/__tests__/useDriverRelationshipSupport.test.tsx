@@ -1,15 +1,20 @@
-import { renderHook } from '@testing-library/react-hooks';
+import { renderHook } from '@testing-library/react';
 import { useDriverRelationshipSupport } from '../useDriverRelationshipSupport';
-import { useDriverCapabilities } from '../useDriverCapabilities';
-import { useAvailableDrivers } from '../../../ConnectDB';
-import { Provider } from 'react-redux';
-import { store } from '../../../../store';
-import { QueryClient, QueryClientProvider } from 'react-query';
-import { useMetadata } from '../../../hasura-metadata-api';
+import {
+  useAvailableDrivers,
+  useDriverCapabilities,
+} from '@hasura/metadata/data-source';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useMetadata } from '@hasura/metadata/api';
+import { vi } from 'vitest';
+import type { Mock } from 'vitest';
 
-jest.mock('../useDriverCapabilities');
-jest.mock('../../hasura-metadata-api');
-jest.mock('../../../ConnectDB');
+vi.mock('@hasura/metadata/data-source');
+vi.mock('@hasura/metadata/api');
+
+const mockUseMetadata = useMetadata as unknown as Mock;
+const mockUseDriverCapabilities = useDriverCapabilities as unknown as Mock;
+const mockUseAvailableDrivers = useAvailableDrivers as unknown as Mock;
 
 const fullSupport = {
   data: {
@@ -38,25 +43,23 @@ const noSupport = { data: {} };
 
 const queryClient = new QueryClient();
 const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <Provider store={store}>
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  </Provider>
+  <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
 
 describe('useDriverRelationshipSupport', () => {
   beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   it('should always return truthy for native data sources', () => {
-    useMetadata.mockReturnValue({
+    mockUseMetadata.mockReturnValue({
       data: {
         kind: 'postgres',
       },
     });
-    useDriverCapabilities.mockReturnValue(noSupport);
+    mockUseDriverCapabilities.mockReturnValue(noSupport);
 
-    useAvailableDrivers.mockReturnValue({
+    mockUseAvailableDrivers.mockReturnValue({
       data: [
         {
           name: 'postgres',
@@ -67,7 +70,7 @@ describe('useDriverRelationshipSupport', () => {
 
     const { result } = renderHook(
       () => useDriverRelationshipSupport({ dataSourceName: 'postgres' }),
-      { wrapper }
+      { wrapper },
     );
 
     expect(result.current.driverSupportsLocalRelationship).toBe(true);
@@ -75,15 +78,15 @@ describe('useDriverRelationshipSupport', () => {
   });
 
   it('should return a true for local relationship support for non native source', () => {
-    useMetadata.mockReturnValue({
+    mockUseMetadata.mockReturnValue({
       data: {
         kind: 'mysql',
       },
     });
 
-    useDriverCapabilities.mockReturnValue(localSupport);
+    mockUseDriverCapabilities.mockReturnValue(localSupport);
 
-    useAvailableDrivers.mockReturnValue({
+    mockUseAvailableDrivers.mockReturnValue({
       data: [
         {
           name: 'MySQL',
@@ -93,7 +96,7 @@ describe('useDriverRelationshipSupport', () => {
     });
 
     const { result } = renderHook(() =>
-      useDriverRelationshipSupport({ dataSourceName: 'MySQL' })
+      useDriverRelationshipSupport({ dataSourceName: 'MySQL' }),
     );
 
     expect(result.current.driverSupportsLocalRelationship).toBe(true);
@@ -101,14 +104,14 @@ describe('useDriverRelationshipSupport', () => {
   });
 
   it('should return a true for remote relationship support for non native source', () => {
-    useMetadata.mockReturnValue({
+    mockUseMetadata.mockReturnValue({
       data: {
         kind: 'mysql',
       },
     });
-    useDriverCapabilities.mockReturnValue(remoteSupport);
+    mockUseDriverCapabilities.mockReturnValue(remoteSupport);
 
-    useAvailableDrivers.mockReturnValue({
+    mockUseAvailableDrivers.mockReturnValue({
       data: [
         {
           name: 'MySQL',
@@ -118,7 +121,7 @@ describe('useDriverRelationshipSupport', () => {
     });
 
     const { result } = renderHook(() =>
-      useDriverRelationshipSupport({ dataSourceName: 'MySQL' })
+      useDriverRelationshipSupport({ dataSourceName: 'MySQL' }),
     );
 
     expect(result.current.driverSupportsLocalRelationship).toBe(false);
@@ -126,14 +129,14 @@ describe('useDriverRelationshipSupport', () => {
   });
 
   it('should return a true for remote and local relationship support for non native source', () => {
-    useMetadata.mockReturnValue({
+    mockUseMetadata.mockReturnValue({
       data: {
         kind: 'mysql',
       },
     });
-    useDriverCapabilities.mockReturnValue(fullSupport);
+    mockUseDriverCapabilities.mockReturnValue(fullSupport);
 
-    useAvailableDrivers.mockReturnValue({
+    mockUseAvailableDrivers.mockReturnValue({
       data: [
         {
           name: 'MySQL',
@@ -143,7 +146,7 @@ describe('useDriverRelationshipSupport', () => {
     });
 
     const { result } = renderHook(() =>
-      useDriverRelationshipSupport({ dataSourceName: 'MySQL' })
+      useDriverRelationshipSupport({ dataSourceName: 'MySQL' }),
     );
 
     expect(result.current.driverSupportsLocalRelationship).toBe(true);

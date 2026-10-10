@@ -3,5 +3,5 @@ export const buildDockerCommand = (containerName: string, port: number) =>
 export const buildAgentPath = (
   path: string,
   port: number,
-  protocol: 'http' | 'https'
+  protocol: 'http' | 'https',
 ) => `${protocol}://${path}:${port}`;

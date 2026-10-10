@@ -1,19 +1,24 @@
-import { InputField, useConsoleForm } from '../../../../new-components/Form';
-import { Button } from '../../../../new-components/Button';
 import { useEffect, useState } from 'react';
 import { GraphQLCustomization } from '../GraphQLCustomization/GraphQLCustomization';
 import { getDefaultValues, MssqlConnectionSchema, schema } from './schema';
 import { ReadReplicas } from './parts/ReadReplicas';
 import { useManageDatabaseConnection } from '../../hooks/useManageDatabaseConnection';
-import { hasuraToast } from '../../../../new-components/Toasts';
-import { useMetadata } from '../../../hasura-metadata-api';
+import {
+  hasuraToast,
+  InputField,
+  useConsoleForm,
+  Button,
+  Collapsible,
+  Tabs,
+  DisplayToastErrorMessage,
+  Text,
+} from '@hasura/shared/ui';
+import { useMetadata } from '@hasura/metadata/api';
 import { generateMssqlRequestPayload } from './utils/generateRequests';
 import { ConnectionString } from './parts/ConnectionString';
-import { Collapsible } from '../../../../new-components/Collapsible';
 import { PoolSettings } from './parts/PoolSettings';
 import { LimitedFeatureWrapper } from '../LimitedFeatureWrapper/LimitedFeatureWrapper';
-import { Tabs } from '../../../../new-components/Tabs';
-import { DisplayToastErrorMessage } from '../Common/DisplayToastErrorMessage';
+import { Flex, Heading } from '@radix-ui/themes';
 
 interface ConnectMssqlWidgetProps {
   dataSourceName?: string;
@@ -25,11 +30,11 @@ export const ConnectMssqlWidget = (props: ConnectMssqlWidgetProps) => {
   const isEditMode = !!dataSourceName;
   const [tab, setTab] = useState('connectionDetails');
 
-  const { data: metadataSource } = useMetadata(m =>
-    m.metadata.sources.find(source => source.name === dataSourceName)
+  const { data: metadataSource } = useMetadata((m) =>
+    m.metadata.sources.find((source) => source.name === dataSourceName),
   );
 
-  const { createConnection, editConnection, isLoading } =
+  const { createConnection, editConnection, isPending } =
     useManageDatabaseConnection({
       onSuccess: () => {
         hasuraToast({
@@ -39,7 +44,7 @@ export const ConnectMssqlWidget = (props: ConnectMssqlWidgetProps) => {
             : 'Database added successfully!',
         });
       },
-      onError: err => {
+      onError: (err) => {
         hasuraToast({
           type: 'error',
           title: err.name,
@@ -82,52 +87,50 @@ export const ConnectMssqlWidget = (props: ConnectMssqlWidgetProps) => {
 
   return (
     <div>
-      <div className="text-xl text-gray-600 font-semibold">
+      <Heading size="4">
         {isEditMode ? 'Edit MSSQL Connection' : 'Connect MSSQL Database'}
-      </div>
+      </Heading>
 
       <Tabs
         value={tab}
-        onValueChange={value => setTab(value)}
+        onValueChange={(value) => setTab(value)}
         items={[
           {
             value: 'connectionDetails',
             label: 'Connection Details',
             content: (
-              <div className="mt-sm">
+              <div className="mt-4">
                 <Form onSubmit={handleSubmit}>
                   <InputField
                     name="name"
                     label="Database name"
-                    placeholder="Database name"
+                    fieldProps={{
+                      placeholder: 'Database name',
+                    }}
                   />
                   <ConnectionString name="configuration.connectionInfo.connectionString" />
 
-                  <div className="mt-sm">
+                  <div className="mt-4">
                     <Collapsible
                       triggerChildren={
-                        <div className="font-semibold text-muted">
-                          Advanced Settings
-                        </div>
+                        <Text weight="bold">Advanced Settings</Text>
                       }
                     >
                       <PoolSettings name="configuration.connectionInfo.poolSettings" />
                     </Collapsible>
                   </div>
 
-                  <div className="mt-sm">
+                  <div className="mt-4">
                     <Collapsible
                       triggerChildren={
-                        <div className="font-semibold text-muted">
-                          GraphQL Customization
-                        </div>
+                        <Text weight="bold">GraphQL Customization</Text>
                       }
                     >
                       <GraphQLCustomization name="customization" />
                     </Collapsible>
                   </div>
 
-                  <div className="mt-sm">
+                  <div className="mt-4">
                     <LimitedFeatureWrapper
                       title="Looking to add Read Replicas?"
                       id="read-replicas"
@@ -135,9 +138,7 @@ export const ConnectMssqlWidget = (props: ConnectMssqlWidgetProps) => {
                     >
                       <Collapsible
                         triggerChildren={
-                          <div className="font-semibold text-muted">
-                            Read Replicas
-                          </div>
+                          <Text weight="bold">Read Replicas</Text>
                         }
                       >
                         <ReadReplicas name="configuration.readReplicas" />
@@ -145,16 +146,16 @@ export const ConnectMssqlWidget = (props: ConnectMssqlWidgetProps) => {
                     </LimitedFeatureWrapper>
                   </div>
 
-                  <div className="flex justify-end mt-sm">
+                  <Flex justify="end" className="mt-4">
                     <Button
                       type="submit"
                       mode="primary"
-                      isLoading={isLoading}
+                      loading={isPending}
                       loadingText="Saving"
                     >
                       {isEditMode ? 'Update Connection' : 'Connect Database'}
                     </Button>
-                  </div>
+                  </Flex>
                 </Form>
               </div>
             ),

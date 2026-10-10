@@ -10,14 +10,9 @@ import {
   SchemaChangeListDumpWithSiblingSchema,
   SchemaChangeListSiblingSchema,
 } from './types';
-import {
-  getLSItem,
-  LS_KEYS,
-  removeLSItem,
-  setLSItem,
-} from '../../utils/localStorage';
-import { useCallback, useLayoutEffect, useRef } from 'react';
-import moment from 'moment';
+import { getLSItem, removeLSItem, setLSItem } from '@hasura/shared/utils';
+import { format } from 'date-fns';
+import { LS_KEYS } from '@hasura/shared/types';
 
 export const CapitalizeFirstLetter = (str: string) => {
   if (str === '') {
@@ -28,7 +23,7 @@ export const CapitalizeFirstLetter = (str: string) => {
 
 export const findIfSubStringExists = (
   originalString: string,
-  subString: string
+  subString: string,
 ) => {
   return originalString.toLowerCase().includes(subString.toLocaleLowerCase());
 };
@@ -37,7 +32,7 @@ export const schemaRegsitryLuxDataEndpoint = endpoints.schemaRegistry;
 
 export const schemaRegsitryControlPlaneClient = createControlPlaneClient(
   schemaRegsitryLuxDataEndpoint,
-  {}
+  {},
 );
 export const getSearchParam = (search: string, param: string) => {
   try {
@@ -56,7 +51,7 @@ export const setSearchParam = (pageNumber: number) => {
 };
 
 export const schemaChangeListTransformFn = (
-  dumps: SchemaChangeListDumpWithSiblingSchema[]
+  dumps: SchemaChangeListDumpWithSiblingSchema[],
 ) => {
   const schemaList: SchemaChangeCard[] = [];
   dumps.forEach((dump: SchemaChangeListDumpWithSiblingSchema) => {
@@ -68,7 +63,7 @@ export const schemaChangeListTransformFn = (
           role: childSchema.hasura_schema_role,
         };
         schemaRoles.push(schemaRole);
-      }
+      },
     );
     const schema: SchemaChangeCard = {
       hash: dump.schema_hash,
@@ -85,12 +80,14 @@ export const schemaChangeListTransformFn = (
 };
 
 export const schemaTransformFn = (
-  fetchedData: NonNullable<GetRegistrySchemaResponseWithError['data']>
-) => {
+  fetchedData: NonNullable<GetRegistrySchemaResponseWithError['data']>,
+): Schema | null => {
   const data =
     fetchedData.schema_registry_dumps[0] ||
-    fetchedData.schema_registry_dumps_v2[0] ||
-    [];
+    fetchedData.schema_registry_dumps_v2[0];
+  if (!data) {
+    return null;
+  }
 
   const roleBasedSchemas: RoleBasedSchema[] = [];
 
@@ -127,8 +124,7 @@ export const schemaTransformFn = (
 };
 
 export const getPublishTime = (isoStringTs: string) => {
-  const published = moment(isoStringTs);
-  return published.format('DD/MM/YYYY HH:mm:ss');
+  return format(new Date(isoStringTs), 'dd/MM/yyyy HH:mm:ss');
 };
 
 export const SLACK_CALLBACK_SEARCH = LS_KEYS.slackCallbackSearch;
@@ -143,31 +139,6 @@ export const getPersistedSlackCallbackSearch = () => {
 
 export const clearPersistedSlackCallbackSearch = () => {
   removeLSItem(SLACK_CALLBACK_SEARCH);
-};
-
-export function useIsUnmounted() {
-  const rIsUnmounted = useRef<'mounting' | 'mounted' | 'unmounted'>('mounting');
-
-  useLayoutEffect(() => {
-    rIsUnmounted.current = 'mounted';
-    return () => {
-      rIsUnmounted.current = 'unmounted';
-    };
-  }, []);
-
-  return useCallback(() => rIsUnmounted.current !== 'mounted', []);
-}
-
-export const generateRandomString = (stringLength = 16) => {
-  const allChars =
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let str = '';
-
-  for (let i = 0; i < stringLength; i++) {
-    const randomNum = Math.floor(Math.random() * allChars.length);
-    str += allChars.charAt(randomNum);
-  }
-  return str;
 };
 
 export const hexToRGB = (hex: string, alpha: number) => {

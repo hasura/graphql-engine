@@ -1,12 +1,11 @@
-import * as Dialog from '@radix-ui/react-dialog';
-import { ReactNode } from 'react';
+import { ReactNode, type JSX } from 'react';
 import { FiAlertTriangle } from 'react-icons/fi';
-import Skeleton from 'react-loading-skeleton';
-import { UseQueryResult } from 'react-query';
-import { APIError } from '../../../../hooks/error';
-import { IndicatorCard } from '../../../../new-components/IndicatorCard';
+import { UseQueryResult } from '@tanstack/react-query';
+import { IndicatorCard, SkeletonList } from '@hasura/shared/ui';
 import { CenteredSpinner } from '../../../components';
 import { CommonProps } from './types';
+import { Dialog, Skeleton } from '@radix-ui/themes';
+import { getErrorMessage } from '@hasura/shared/utils';
 
 // Only for rendering loading / error UI given react query status/error object:
 const ID_PREFIX = 'react-query-status-ui';
@@ -28,11 +27,12 @@ const twSkeletonOverley = `w-full h-full absolute inset-0 grid grid-flow-row dyn
 
 export type ReactQueryStatusUIProps<
   TData = unknown,
-  TError = unknown
+  TError = unknown,
 > = CommonProps<TData> & {
-  status: UseQueryResult['status'];
+  status: UseQueryResult['status'] | 'idle';
   error: TError;
   children?: ReactNode;
+  renderLoading?: () => JSX.Element;
 };
 export function ReactQueryStatusUI<TData = unknown>({
   status,
@@ -70,9 +70,9 @@ export function ReactQueryStatusUI<TData = unknown>({
                   __html: `.dynamic-skeleton-grid > br { display: none }`,
                 }}
               />
-              <Skeleton
+              <SkeletonList
                 containerClassName={twSkeletonOverley}
-                count={props.skeletonCount}
+                {...props.skeletonProps}
               />
             </div>
             <div className={'transition-all opacity-0 pointer-events-none'}>
@@ -132,7 +132,8 @@ export function ReactQueryStatusUI<TData = unknown>({
     }
   };
 
-  const error = APIError.fromUnknown(rawError);
+  const error =
+    rawError instanceof Error ? rawError : new Error(getErrorMessage(rawError));
 
   // error rendered using an indicator card. is the default error display if nor renderError prop is given:
   const errorIndicator = () => (
@@ -209,7 +210,7 @@ export function ReactQueryStatusUI<TData = unknown>({
     return childContent();
   } else if (status === 'idle') {
     return idleUI();
-  } else if (status === 'loading') {
+  } else if (status === 'pending') {
     return loadingUI();
   } else {
     return errorUI();

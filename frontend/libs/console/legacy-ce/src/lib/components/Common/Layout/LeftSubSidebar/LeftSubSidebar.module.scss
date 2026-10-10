@@ -1,8 +1,4 @@
-@import '../../Common.module';
-
-.displayFlexContainer {
-  display: flex;
-}
+@use 'sass:color';
 
 .flexRow {
   display: flex;
@@ -40,7 +36,10 @@
   hr {
     margin: 0;
     /* taken from bootsrap $navbar-inverse-color variable */
-    border-color: lighten(lighten(#000, 46.7%), 15%);
+    border-color: color.adjust(
+      color.adjust(#000, $lightness: 46.7%),
+      $lightness: 15%
+    );
   }
 
   ul {
@@ -79,7 +78,7 @@
 
 .main {
   padding: 0;
-  height: $mainContainerHeight;
+  height: calc(100vh - 54px - 6px);
   overflow: auto;
 }
 
@@ -120,6 +119,7 @@
   // overflow-y: auto;
   overflow: auto;
   padding-left: 20px;
+  padding-right: 20px;
   max-height: calc(100vh - 275px);
   border-bottom: 1px solid #e6e6e6;
 }
@@ -223,7 +223,7 @@
 
 .loaderBar {
   position: relative;
-  padding: 0px $headerHeight;
+  padding: 0px 54px;
   background-color: #f0f0f0;
   color: #e5e5e5;
   border-radius: 4px;

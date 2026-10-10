@@ -1,8 +1,7 @@
-import { Source, Table } from '../../../../../hasura-metadata-types';
+import { ComputedField, Source, Table } from '@hasura/shared/types';
 import { GraphQLType } from 'graphql';
 import { Relationship } from '../../../../../DatabaseRelationships';
-import { TableColumn } from '../../../../../DataSource';
-import { ComputedField } from '../../../../../../metadata/types';
+import { TableColumn } from '@hasura/metadata/data-source';
 
 export type Operators = Record<
   string,

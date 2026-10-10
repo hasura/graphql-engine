@@ -1,0 +1,203 @@
+.inputWidth {
+  width: 200px;
+}
+
+.inputWidthLarge {
+  width: 300px;
+}
+
+.dropdown_wrapper {
+  width: 300px;
+}
+
+.selectTrigger {
+  width: 300px;
+  display: inline-block;
+}
+
+.settingsSection {
+  table {
+    width: 80%;
+    margin-top: 20px;
+  }
+}
+
+.retryLabel {
+  display: block;
+}
+
+.retrySection {
+  margin-right: 20px;
+  width: 100%;
+  float: left;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+}
+.tabletdCenter {
+  height: 21px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tableArrowCenter {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+}
+.invocationsSection {
+  li {
+    display: block;
+    padding: 5px 10px;
+    margin-right: -10px;
+    margin-left: -10px;
+    line-height: 23px;
+    border-bottom: 1px solid #e1e4e8;
+  }
+
+  .invocationSuccess {
+    color: #28a745;
+  }
+  .invocationFailure {
+    color: red;
+  }
+}
+
+.invocationLogs {
+  margin-top: 20px;
+
+  li {
+    display: block;
+    padding: 5px 10px;
+    margin-right: -10px;
+    margin-left: -10px;
+    line-height: 23px;
+    border-bottom: 1px solid #e1e4e8;
+  }
+
+  .invocationSuccess {
+    color: #28a745;
+  }
+  .invocationFailure {
+    color: red;
+  }
+}
+
+.selectOperations {
+  label {
+    cursor: pointer;
+  }
+}
+
+.advancedToggleBtn {
+  width: 300px;
+
+  i {
+    padding-left: 5px;
+  }
+}
+
+.watchBtn {
+  i {
+    font-size: 12px;
+  }
+}
+
+.loadOlder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff3d5;
+  padding: 5px;
+  min-height: 41px;
+}
+
+.loadNewer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff3d5;
+  padding: 5px;
+  min-height: 41px;
+  position: relative;
+}
+
+.filterAll {
+  position: absolute;
+  left: 10px;
+
+  input {
+    display: inline-block;
+    width: auto;
+    margin-left: 10px;
+  }
+}
+
+.retryEvent {
+  cursor: pointer;
+}
+
+.redeliverModal {
+  width: 75%;
+  margin-bottom: 0;
+}
+
+.redeliverEventSection {
+  clear: both;
+  margin: 0;
+}
+
+.triggerSettingsModifyButton {
+  margin-right: 10px;
+  border-radius: 3px;
+}
+
+.dropDownGroup {
+  max-width: 300px;
+}
+
+.status_code_right {
+  text-align: right;
+  font-weight: bold;
+  font-size: 15px;
+  padding-bottom: 20px;
+  margin-top: 0;
+  margin-bottom: 0;
+
+  i {
+    margin-left: 5px;
+  }
+}
+
+.toggleAdvanced {
+  cursor: pointer;
+
+  b {
+    font-size: 15px;
+  }
+
+  i:hover {
+    color: #4d4d4d;
+  }
+}
+
+.listenColumnWrapper {
+  max-width: 700px;
+}
+
+.width300 {
+  width: 300px;
+}
+
+.wd100 {
+  width: 100%;
+  float: left;
+  clear: both;
+}
+
+.redeliverEventSection {
+  clear: both;
+  margin: 0;
+}

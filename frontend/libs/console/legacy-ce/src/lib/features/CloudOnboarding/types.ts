@@ -13,7 +13,7 @@ export type User = {
 };
 
 export type OneClickDeploymentByProject = {
-  id: number;
+  id: string;
   state: One_Click_Deployment_States_Enum;
   git_repository_url: string;
   git_repository_branch?: string;
@@ -46,7 +46,7 @@ export type OnboardingKind =
   | {
       kind: 'one-click-deployment';
       deployment: {
-        deploymentId: number;
+        deploymentId: string;
         gitRepoDetails: GitRepoDetails;
       };
       fallbackApps: OnboardingResponseData['data']['one_click_deployment_sample_apps'];

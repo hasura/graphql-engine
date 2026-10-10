@@ -2,7 +2,7 @@
   "recommendations": [
     "nrwl.angular-console",
     "esbenp.prettier-vscode",
-    "firsttris.vscode-jest-runner",
+    "vitest.explorer",
     "dbaeumer.vscode-eslint",
     "bradlc.vscode-tailwindcss"
   ]

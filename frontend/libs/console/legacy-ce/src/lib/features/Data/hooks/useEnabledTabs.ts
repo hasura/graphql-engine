@@ -1,15 +1,10 @@
 import { Capabilities } from '@hasura/dc-api-types';
-import { MetadataSelectors, useMetadata } from '../../hasura-metadata-api';
-import { useDriverCapabilities } from './useDriverCapabilities';
-import { Feature } from '../../DataSource';
+import { useMetadata } from '@hasura/metadata/api';
+import { useDriverCapabilities } from '@hasura/metadata/data-source';
+import { MetadataSelectors } from '@hasura/metadata/helpers';
 
-function supportsRelationships(
-  capabilities: Feature | Capabilities | undefined
-) {
-  if (!capabilities || capabilities === Feature.NotImplemented) {
-    return false;
-  }
-  return Boolean(capabilities.relationships);
+function supportsRelationships(capabilities: Capabilities | undefined) {
+  return Boolean(capabilities?.relationships);
 }
 
 export type EnabledTabs = {
@@ -21,8 +16,7 @@ export type EnabledTabs = {
 };
 
 export function getEnabledTabs(
-  kind: string | undefined,
-  capabilities: Feature | Capabilities | undefined
+  capabilities: Capabilities | undefined,
 ): EnabledTabs {
   return {
     browse: true,
@@ -34,9 +28,11 @@ export function getEnabledTabs(
 }
 
 export function useEnabledTabs(dataSourceName: string): EnabledTabs {
-  const { data } = useMetadata(m =>
-    MetadataSelectors.findSource(dataSourceName)(m)
+  const { data: source } = useMetadata(
+    MetadataSelectors.findSource(dataSourceName),
   );
-  const { data: capabilities } = useDriverCapabilities({ dataSourceName });
-  return getEnabledTabs(data?.kind, capabilities);
+
+  const { data: capabilities } = useDriverCapabilities({ source });
+
+  return getEnabledTabs(capabilities);
 }

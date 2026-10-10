@@ -26,8 +26,8 @@ export const registrationSchema = z.object({
   consent: z
     .boolean()
     .refine(
-      value => value === true,
-      'Please agree to our Terms of Service and Privacy Policy'
+      (value) => value === true,
+      'Please agree to our Terms of Service and Privacy Policy',
     ),
   hasuraUseCase: z.string(),
   eeUseCase: z.array(z.string()).nonempty({

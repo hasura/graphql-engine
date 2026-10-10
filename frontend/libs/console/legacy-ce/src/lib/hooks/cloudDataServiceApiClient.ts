@@ -1,5 +1,5 @@
+import { requestJson } from '@hasura/shared/utils';
 import Endpoints from '../Endpoints';
-import { Api } from './apiUtils';
 
 /**
  * Calls hasura cloud data service with provided query and variables. Uses the common `fetch` api client.
@@ -9,23 +9,22 @@ import { Api } from './apiUtils';
  */
 export function cloudDataServiceApiClient<
   ResponseData,
-  TransformedData = ResponseData
+  TransformedData = ResponseData,
 >(
   query: string,
   variables: Record<string, unknown>,
   headers: Record<string, string>,
-  transformFn?: (data: ResponseData) => TransformedData
+  transformFn?: (data: ResponseData) => TransformedData,
 ): Promise<TransformedData> {
-  return Api.post<ResponseData, TransformedData>(
-    {
-      url: Endpoints.luxDataGraphql,
-      headers,
-      body: {
-        query,
-        variables: variables || {},
-      },
-      credentials: 'include',
-    },
-    transformFn
+  return requestJson<ResponseData>(Endpoints.luxDataGraphql, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      query,
+      variables: variables || {},
+    }),
+    credentials: 'include',
+  }).then((data) =>
+    transformFn ? transformFn(data) : (data as unknown as TransformedData),
   );
 }

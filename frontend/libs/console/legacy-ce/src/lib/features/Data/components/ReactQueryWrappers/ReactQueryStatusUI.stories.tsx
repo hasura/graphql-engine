@@ -1,12 +1,9 @@
-import { expect } from '@storybook/jest';
-import { Meta, StoryObj } from '@storybook/react';
-import { within } from '@storybook/testing-library';
+import { expect, within } from 'storybook/test';
+import { Meta, StoryObj } from '@storybook/react-webpack5';
 import { useState } from 'react';
-import { Button } from '../../../../new-components/Button';
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
+import { Button } from '@hasura/shared/ui';
 import { ReactQueryStatusUI, TestIds } from './ReactQueryStatusUI';
 import { checkForStatusElements, shorterTextContent } from './story-utils';
-import { ErrorType } from './types';
 
 export default {
   component: ReactQueryStatusUI,
@@ -23,7 +20,7 @@ export default {
           <div>
             <Button
               data-testid="clicker"
-              onClick={() => setCount(prev => prev + 1)}
+              onClick={() => setCount((prev) => prev + 1)}
             >
               For Testing Overlays
             </Button>
@@ -35,14 +32,14 @@ export default {
   ],
 } satisfies Meta<typeof ReactQueryStatusUI>;
 
-const defaultError: ErrorType = { name: 'foo', message: 'Error message' };
+const defaultError = { name: 'foo', message: 'Error message' };
 
 export const Playground: StoryObj<typeof ReactQueryStatusUI> = {
   args: {
-    status: 'loading',
+    status: 'pending',
     error: defaultError,
   },
-  render: args => <ReactQueryStatusUI {...args} />,
+  render: (args) => <ReactQueryStatusUI {...args} />,
 };
 
 export const Success: typeof Playground = {
@@ -50,7 +47,7 @@ export const Success: typeof Playground = {
     status: 'success',
     error: defaultError,
   },
-  render: args => (
+  render: (args) => (
     <ReactQueryStatusUI status={args.status} error={args.error}>
       <div>{shorterTextContent}</div>
     </ReactQueryStatusUI>
@@ -66,7 +63,7 @@ export const Success: typeof Playground = {
 export const LoadingSpinner: typeof Playground = {
   ...Playground,
   name: 'Loading - Spinner - instead of content (default)',
-  render: args => (
+  render: (args) => (
     <ReactQueryStatusUI status={args.status} error={args.error}>
       <div>{shorterTextContent}</div>
     </ReactQueryStatusUI>
@@ -82,12 +79,12 @@ export const LoadingSpinner: typeof Playground = {
 export const LoadingSkeleton: typeof Playground = {
   ...LoadingSpinner,
   name: 'Loading - Skeleton - instead of content',
-  render: args => (
+  render: (args) => (
     <ReactQueryStatusUI
       status={args.status}
       error={args.error}
       loader="skeleton"
-      skeletonProps={{ count: 3, height: 30 }}
+      skeletonProps={{ count: 3, height: '30px' }}
     >
       <div>{shorterTextContent}</div>
     </ReactQueryStatusUI>
@@ -103,14 +100,14 @@ export const LoadingSkeleton: typeof Playground = {
 export const LoadingSkeletonOverley: typeof Playground = {
   ...LoadingSpinner,
   name: 'Loading - Skeleton - overlay',
-  render: args => (
+  render: (args) => (
     <ReactQueryStatusUI
       status={args.status}
       error={args.error}
       fallbackData={[]}
       loader="skeleton"
       loadingStyle="overlay"
-      skeletonCount={3}
+      skeletonProps={{ count: 3, height: '30px' }}
     >
       <div>
         <div>{shorterTextContent}</div>
@@ -147,7 +144,7 @@ export const LoadingSkeletonOverley: typeof Playground = {
 export const SpinnerOver: typeof Playground = {
   ...Playground,
   name: 'Loading - Spinner - overlay',
-  render: args => (
+  render: (args) => (
     <ReactQueryStatusUI
       status={args.status}
       error={args.error}
@@ -176,7 +173,7 @@ export const ErrorInsteadOfChildren: typeof Playground = {
     ...Playground.args,
     status: 'error',
   },
-  render: args => (
+  render: (args) => (
     <ReactQueryStatusUI status={args.status} error={args.error}>
       <div>Children</div>
     </ReactQueryStatusUI>
@@ -198,7 +195,7 @@ export const ErrorAboveChildren: typeof Playground = {
     ...Playground.args,
     status: 'error',
   },
-  render: args => (
+  render: (args) => (
     <ReactQueryStatusUI
       status={args.status}
       error={args.error}
@@ -224,7 +221,7 @@ export const ErrorBelowChildren: typeof Playground = {
     ...Playground.args,
     status: 'error',
   },
-  render: args => (
+  render: (args) => (
     <ReactQueryStatusUI
       status={args.status}
       error={args.error}
@@ -250,14 +247,14 @@ export const CustomError: typeof Playground = {
     ...Playground.args,
     status: 'error',
   },
-  render: args => (
+  render: (args) => (
     <ReactQueryStatusUI
       status={args.status}
       error={args.error}
       renderError={({ error }) => (
         <div>
           <div>This is my custom error UI!</div>
-          <div>Here's the error message:</div>
+          <div>Here&apos;s the error message:</div>
           <br />
           <strong>{error?.message}</strong>
         </div>
@@ -283,7 +280,7 @@ export const CustomErrorBelowChildren: typeof Playground = {
     ...Playground.args,
     status: 'error',
   },
-  render: args => (
+  render: (args) => (
     <ReactQueryStatusUI
       status={args.status}
       error={args.error}
@@ -314,7 +311,7 @@ export const CustomErrorBelowChildren: typeof Playground = {
 export const CustomLoadingDisplay: typeof Playground = {
   ...Playground,
   name: 'Custom Loading - instead of children',
-  render: args => {
+  render: (args) => {
     return (
       <ReactQueryStatusUI
         status={args.status}
@@ -343,7 +340,7 @@ export const CustomLoadingDisplay: typeof Playground = {
 export const CustomLoadingDisplayOverlay: typeof Playground = {
   ...Playground,
   name: 'Custom Loading - instead of children',
-  render: args => {
+  render: (args) => {
     return (
       <ReactQueryStatusUI
         status={args.status}
@@ -380,7 +377,7 @@ export const CustomIdleDisplay: typeof Playground = {
     ...Playground.args,
     status: 'idle',
   },
-  render: args => {
+  render: (args) => {
     return (
       <ReactQueryStatusUI
         status={args.status}

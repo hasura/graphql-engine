@@ -1,31 +1,38 @@
-import BreadCrumb from '../../../../components/Common/Layout/BreadCrumb/BreadCrumb';
-import { getRoute } from '../../../../utils/getDataRoute';
+import { Breadcrumbs, IndicatorCard } from '@hasura/shared/ui';
 import { ConnectBigQueryWidget } from '../ConnectBigQueryWidget/ConnectBigQueryWidget';
 import { ConnectGDCSourceWidget } from '../ConnectGDCSourceWidget/ConnectGDCSourceWidget';
 import { ConnectMssqlWidget } from '../ConnectMssqlWidget/ConnectMssqlWidget';
 import { ConnectPostgresWidget } from '../ConnectPostgresWidget/ConnectPostgresWidget';
+import { dataRoutes } from '@hasura/shared/utils';
+import { useSearchParams } from 'react-router';
 
-const getDataSourceNameFromUrlParams = (): string | undefined => {
-  const urlParams = new URLSearchParams(window.location.search);
-
+const getDataSourceNameFromUrlParams = (
+  urlParams: URLSearchParams,
+): string | undefined => {
   const database = urlParams.get('database');
 
   return database ?? undefined;
 };
 
-const getDriverNameFromUrlParams = (): string | undefined => {
-  const urlParams = new URLSearchParams(window.location.search);
-
+const getDriverNameFromUrlParams = (
+  urlParams: URLSearchParams,
+): string | undefined => {
   const driver = urlParams.get('driver');
 
   return driver ?? undefined;
 };
 
 const ConnectDatabaseWrapper = () => {
-  const dataSourceName = getDataSourceNameFromUrlParams();
-  const driver = getDriverNameFromUrlParams();
+  const [searchParams] = useSearchParams();
+  const dataSourceName = getDataSourceNameFromUrlParams(searchParams);
+  const driver = getDriverNameFromUrlParams(searchParams);
 
-  if (!driver) return <div>Error. No driver found.</div>;
+  if (!driver)
+    return (
+      <IndicatorCard status="negative" showIcon>
+        Error. No driver found.
+      </IndicatorCard>
+    );
 
   if (driver === 'postgres')
     return <ConnectPostgresWidget dataSourceName={dataSourceName} />;
@@ -68,11 +75,14 @@ const ConnectDatabaseWrapper = () => {
 };
 
 export const ConnectUIContainer = () => {
-  const driver = getDriverNameFromUrlParams();
+  const [searchParams] = useSearchParams();
+  const driver = getDriverNameFromUrlParams(searchParams);
+
   return (
-    <div className="p-4">
-      <BreadCrumb
-        breadCrumbs={[
+    <div className="p-6">
+      <Breadcrumbs
+        className="mb-4"
+        items={[
           {
             url: '/data',
             title: 'Data',
@@ -82,11 +92,11 @@ export const ConnectUIContainer = () => {
             title: 'Manage',
           },
           {
-            url: '/data/v2/manage/connect',
+            url: dataRoutes.connectDatabase(),
             title: 'Connect',
           },
           {
-            url: getRoute().connectDatabase(driver),
+            url: dataRoutes.connectDatabase(driver),
             title: driver ?? '',
           },
         ]}

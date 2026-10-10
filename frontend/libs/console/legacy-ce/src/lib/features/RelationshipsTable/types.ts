@@ -1,14 +1,12 @@
 import {
-  ArrayRelationship,
-  ObjectRelationship,
+  LocalArrayRelationship,
+  LocalObjectRelationship,
   RemoteRelationship,
-} from '../../metadata/types';
+} from '@hasura/shared/types';
 
 export type RelationshipType =
-  | ObjectRelationship
-  | ArrayRelationship
-  | RemoteRelationship
-  | any; // TODO to_source is not supported on the latest metadata
+  LocalObjectRelationship | LocalArrayRelationship | RemoteRelationship; // TODO to_source is not supported on the latest metadata
+
 export type RelationshipSourceType =
   | 'local_object'
   | 'local_array'

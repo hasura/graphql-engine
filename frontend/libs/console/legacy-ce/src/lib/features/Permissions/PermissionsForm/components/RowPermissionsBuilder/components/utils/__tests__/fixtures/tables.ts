@@ -1,11 +1,9 @@
-import { Tables } from '../../../types';
-
 export const tables = [
   {
     table: ['Album'],
     dataSource: {
       name: 'MySQ',
-      kind: 'mysql8',
+      kind: 'mysql',
       tables: [
         {
           table: ['Album'],
@@ -351,7 +349,7 @@ export const tables = [
     table: ['Artist'],
     dataSource: {
       name: 'MySQ',
-      kind: 'mysql8',
+      kind: 'mysql',
       tables: [
         {
           table: ['Album'],
@@ -669,7 +667,7 @@ export const tables = [
     table: ['Customer'],
     dataSource: {
       name: 'MySQ',
-      kind: 'mysql8',
+      kind: 'mysql',
       tables: [
         {
           table: ['Album'],
@@ -1135,7 +1133,7 @@ export const tables = [
     table: ['Employee'],
     dataSource: {
       name: 'MySQ',
-      kind: 'mysql8',
+      kind: 'mysql',
       tables: [
         {
           table: ['Album'],
@@ -1641,7 +1639,7 @@ export const tables = [
     table: ['Genre'],
     dataSource: {
       name: 'MySQ',
-      kind: 'mysql8',
+      kind: 'mysql',
       tables: [
         {
           table: ['Album'],
@@ -1959,7 +1957,7 @@ export const tables = [
     table: ['Invoice'],
     dataSource: {
       name: 'MySQ',
-      kind: 'mysql8',
+      kind: 'mysql',
       tables: [
         {
           table: ['Album'],
@@ -2377,7 +2375,7 @@ export const tables = [
     table: ['InvoiceLine'],
     dataSource: {
       name: 'MySQ',
-      kind: 'mysql8',
+      kind: 'mysql',
       tables: [
         {
           table: ['Album'],
@@ -2747,7 +2745,7 @@ export const tables = [
     table: ['MediaType'],
     dataSource: {
       name: 'MySQ',
-      kind: 'mysql8',
+      kind: 'mysql',
       tables: [
         {
           table: ['Album'],
@@ -3065,7 +3063,7 @@ export const tables = [
     table: ['Playlist'],
     dataSource: {
       name: 'MySQ',
-      kind: 'mysql8',
+      kind: 'mysql',
       tables: [
         {
           table: ['Album'],
@@ -3383,7 +3381,7 @@ export const tables = [
     table: ['PlaylistTrack'],
     dataSource: {
       name: 'MySQ',
-      kind: 'mysql8',
+      kind: 'mysql',
       tables: [
         {
           table: ['Album'],
@@ -3717,7 +3715,7 @@ export const tables = [
     table: ['Track'],
     dataSource: {
       name: 'MySQ',
-      kind: 'mysql8',
+      kind: 'mysql',
       tables: [
         {
           table: ['Album'],
@@ -4179,4 +4177,4 @@ export const tables = [
       },
     ],
   },
-] as Tables;
+] as any[];

@@ -1,5 +1,5 @@
 import globals from '../../Globals';
-import { BASE_URL_TEMPLATE } from '../../components/Services/Data/Schema/TemplateGallery/templateGalleryConfig';
+import { BASE_URL_TEMPLATE } from '../TemplateGallery/types';
 import { UseCases } from './UseCaseOnboarding/Root';
 
 // This config is stored in root level index.js, and there is a config file in each directory which stores which
@@ -9,7 +9,7 @@ const ROOT_DIR = 'postgres';
 const TEMPLATE_DIR = 'getting-started';
 export const NEON_TEMPLATE_BASE_PATH = `${BASE_URL_TEMPLATE}/${ROOT_DIR}/${TEMPLATE_DIR}`;
 
-export const onboardingQueryKey = 'onboardingData';
+export const onboardingQueryKey = ['onboardingData'];
 
 /**
  * GraphQl query to fetch all onboarding related data

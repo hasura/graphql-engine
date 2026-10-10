@@ -1,45 +1,48 @@
 import { useState } from 'react';
-import { InjectedRouter, Link, withRouter } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
+import { Flex } from '@radix-ui/themes';
 import {
   useDestructiveAlert,
   useHasuraAlert,
-} from '../../../../new-components/Alert';
-import { Button } from '../../../../new-components/Button';
-import { Tabs } from '../../../../new-components/Tabs';
-import { hasuraToast } from '../../../../new-components/Toasts';
-import {
-  useEnvironmentState,
-  usePushRoute,
-} from '../../../ConnectDBRedesign/hooks';
+  Button,
+  RelativeLink,
+  Tabs,
+  hasuraToast,
+} from '@hasura/shared/ui';
+
+import { useEnvironmentState } from '../../../ConnectDBRedesign/hooks';
 import { useTrackLogicalModel } from '../../hooks/useTrackLogicalModel';
 import { useTrackNativeQuery } from '../../hooks/useTrackNativeQuery';
 import { findReferencedEntities } from '../LogicalModel/utils/findReferencedEntities';
 import { LogicalModelWidget } from '../LogicalModelWidget/LogicalModelWidget';
-
 import { LimitedFeatureWrapper } from '../../../ConnectDBRedesign/components/LimitedFeatureWrapper/LimitedFeatureWrapper';
-import { useSyncResourceVersionOnMount } from '../../../hasura-metadata-api';
-import { extractModelsAndQueriesFromMetadata } from '../../../hasura-metadata-api/selectors';
-import { Metadata } from '../../../hasura-metadata-types';
+import {
+  MetadataSelectors,
+  LogicalModelWithSource,
+  NativeQueryWithSource,
+} from '@hasura/metadata/helpers';
+import { Metadata } from '@hasura/shared/types';
 import { MetadataWrapper } from '../../components';
 import { DisplayReferencedLogicalModelEntities } from '../LogicalModel/DisplayLogicalModelReferencedEntities';
 import { RouteWrapper } from '../components/RouteWrapper';
 import { injectRouteDetails } from '../components/route-wrapper-utils';
 import { NATIVE_QUERY_ROUTE_DETAIL, Routes } from '../constants';
-import { LogicalModelWithSource, NativeQueryWithSource } from '../types';
+import {} from '../types';
 import { CodeHighlight } from './components/CodeHighlight';
 import { ListLogicalModels } from './components/ListLogicalModels';
 import { ListNativeQueries } from './components/ListNativeQueries';
 import { ListStoredProcedures } from './components/ListStoredProcedures';
 
 const metadataSelector = (m: Metadata) => {
-  const modelsAndQueries = extractModelsAndQueriesFromMetadata(m);
+  const modelsAndQueries =
+    MetadataSelectors.extractModelsAndQueriesFromMetadata(m);
   return {
     storedProcedures: m.metadata.sources
       .map(({ name, stored_procedures }) =>
-        (stored_procedures ?? []).map(stored_procedure => ({
+        (stored_procedures ?? []).map((stored_procedure) => ({
           dataSourceName: name,
           ...stored_procedure,
-        }))
+        })),
       )
       .flat(),
     sources: m.metadata.sources,
@@ -67,10 +70,7 @@ export const LandingPageUI = ({
   pathname: string;
   data: LandingPageData;
 }) => {
-  const push = usePushRoute();
-
-  useSyncResourceVersionOnMount({ componentName: 'LandingPage' });
-
+  const push = useNavigate();
   const { consoleType } = useEnvironmentState();
 
   const [isLogicalModelsDialogOpen, setIsLogicalModelsDialogOpen] =
@@ -88,27 +88,32 @@ export const LandingPageUI = ({
       resourceType: 'Native Query',
       destroyTerm: 'remove',
       onConfirm: () =>
-        new Promise(resolve => {
-          untrackNativeQuery({
-            data: { root_field_name: q.root_field_name, source: q.source },
-            onSuccess: () => {
-              resolve(true);
+        untrackNativeQuery(
+          {
+            rootFieldName: q.root_field_name,
+            sourceName: q.source.name,
+          },
+          {
+            onError: (error) => {
+              throw error;
             },
-            onError: err => {
-              hasuraToast({
-                type: 'error',
-                title: 'Error',
-                message: err.message,
-              });
-              resolve(false);
-            },
-          });
-        }),
+          },
+        )
+          .then(() => true)
+          .catch((err) => {
+            hasuraToast({
+              type: 'error',
+              title: 'Error',
+              message: err.message,
+            });
+
+            return false;
+          }),
     });
   };
   const handleRemoveLogicalModel = (m: LogicalModelWithSource) => {
     const entities = findReferencedEntities({
-      source: sources.find(s => s.name === m.source.name),
+      source: sources.find((s) => s.name === m.source.name),
       logicalModelName: m.name,
     });
 
@@ -133,7 +138,7 @@ export const LandingPageUI = ({
       resourceType: 'Logical Model',
       destroyTerm: 'remove',
       onConfirm: () =>
-        new Promise(resolve => {
+        new Promise((resolve) => {
           untrackLogicalModel({
             data: {
               dataSourceName: m.source.name,
@@ -143,7 +148,7 @@ export const LandingPageUI = ({
             onSuccess: () => {
               resolve(true);
             },
-            onError: err => {
+            onError: (err) => {
               hasuraToast({
                 type: 'error',
                 title: 'Error',
@@ -158,7 +163,7 @@ export const LandingPageUI = ({
 
   return (
     <div className="w-full">
-      <div className="flex flex-col">
+      <Flex direction="column">
         {isLogicalModelsDialogOpen ? (
           <LogicalModelWidget
             onCancel={() => {
@@ -173,7 +178,7 @@ export const LandingPageUI = ({
         <Tabs
           key={pathname}
           defaultValue={pathname}
-          onValueChange={value => {
+          onValueChange={(value) => {
             push?.(value);
           }}
           items={[
@@ -181,25 +186,25 @@ export const LandingPageUI = ({
               value: Routes.NativeQueries,
               label: `Native Queries (${nativeQueries.length})`,
               content: (
-                <div className="mt-md">
+                <div className="mt-4">
                   <ListNativeQueries
                     nativeQueries={nativeQueries}
-                    onEditClick={query => {
+                    onEditClick={(query) => {
                       push(
                         injectRouteDetails(Routes.EditNativeQuery, {
                           itemSourceName: query.source.name,
                           itemName: query.root_field_name,
                           itemTabName: 'details',
-                        })
+                        }),
                       );
                     }}
                     onRemoveClick={handleRemoveNativeQuery}
                   />
-                  <div className="flex justify-end mt-sm">
-                    <Link to={Routes.CreateNativeQuery}>
+                  <Flex justify="start" className="mt-4">
+                    <RelativeLink to={Routes.CreateNativeQuery}>
                       <Button mode="primary">Create Native Query</Button>
-                    </Link>
-                  </div>
+                    </RelativeLink>
+                  </Flex>
                 </div>
               ),
             },
@@ -207,21 +212,21 @@ export const LandingPageUI = ({
               value: Routes.LogicalModels,
               label: `Logical Models (${logicalModels.length})`,
               content: (
-                <div className="mt-md">
+                <div className="mt-4">
                   <ListLogicalModels
                     logicalModels={logicalModels}
-                    onEditClick={model => {
+                    onEditClick={(model) => {
                       push(
                         injectRouteDetails(Routes.EditLogicalModel, {
                           itemName: model.name,
                           itemSourceName: model.source.name,
                           itemTabName: 'details',
-                        })
+                        }),
                       );
                     }}
                     onRemoveClick={handleRemoveLogicalModel}
                   />
-                  <div className="flex justify-end mt-sm">
+                  <div className="mt-4">
                     <Button
                       mode="primary"
                       onClick={() => {
@@ -240,20 +245,20 @@ export const LandingPageUI = ({
                     value: Routes.StoredProcedures,
                     label: `Stored Procedures (${storedProcedures.length})`,
                     content: (
-                      <div className="mt-md">
+                      <div className="mt-4">
                         <LimitedFeatureWrapper
                           title="Looking to add Stored Procedures for SQL Server?"
                           id="native-queries"
                           description="Get production-ready today with a 30-day free trial of Hasura EE, no credit card required."
                         >
                           <ListStoredProcedures />
-                          <div className="flex justify-end mt-sm">
-                            <Link to={Routes.TrackStoredProcedure}>
+                          <Flex justify="end" className="mt-2">
+                            <RelativeLink to={Routes.TrackStoredProcedure}>
                               <Button mode="primary">
                                 Track Stored Procedure
                               </Button>
-                            </Link>
-                          </div>
+                            </RelativeLink>
+                          </Flex>
                         </LimitedFeatureWrapper>
                       </div>
                     ),
@@ -262,15 +267,13 @@ export const LandingPageUI = ({
               : []),
           ]}
         />
-      </div>
+      </Flex>
     </div>
   );
 };
 
-export const LandingPageRoute = withRouter<{
-  location: Location;
-  router: InjectedRouter;
-}>(({ location, router }) => {
+export const LandingPageRoute = () => {
+  const location = useLocation();
   return (
     <RouteWrapper
       route={location.pathname as keyof typeof NATIVE_QUERY_ROUTE_DETAIL}
@@ -278,4 +281,4 @@ export const LandingPageRoute = withRouter<{
       <LandingPage pathname={location.pathname} />
     </RouteWrapper>
   );
-});
+};

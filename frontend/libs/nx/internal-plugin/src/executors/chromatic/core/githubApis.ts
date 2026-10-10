@@ -8,17 +8,19 @@ export async function getExistingPrComment(octokit: Octokit, prNumber: number) {
     issue_number: prNumber,
   });
 
-  return prComments.data.find(comment =>
+  return prComments.data.find((comment) =>
     // it takes for granted only one comment exists
-    comment.body?.includes(CHROMATIC_COMMENT_NEEDLE)
+    comment.body?.includes(CHROMATIC_COMMENT_NEEDLE),
   );
 }
+
+type IssuesApi = Octokit['rest']['issues'];
 
 export async function addNewPrComment(
   octokit: Octokit,
   prNumber: number,
-  comment: string
-) {
+  comment: string,
+): ReturnType<IssuesApi['createComment']> {
   return await octokit.rest.issues.createComment({
     owner: 'hasura',
     repo: 'graphql-engine-mono',
@@ -30,8 +32,8 @@ export async function addNewPrComment(
 export async function updatePrComment(
   octokit: Octokit,
   comment: string,
-  commentId: number
-) {
+  commentId: number,
+): ReturnType<IssuesApi['updateComment']> {
   return await octokit.rest.issues.updateComment({
     owner: 'hasura',
     repo: 'graphql-engine-mono',

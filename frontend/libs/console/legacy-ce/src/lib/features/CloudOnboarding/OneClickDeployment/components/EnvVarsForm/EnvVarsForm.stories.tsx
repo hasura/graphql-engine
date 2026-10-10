@@ -1,6 +1,5 @@
-import React from 'react';
-import { StoryFn, Meta } from '@storybook/react';
-import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
+import { StoryFn, Meta } from '@storybook/react-webpack5';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
 import { EnvVarsForm, EnvVarsFormProps } from './EnvVarsForm';
 import { RequiredEnvVar } from '../../types';
 
@@ -33,14 +32,6 @@ const sampleEnvVars: RequiredEnvVar[] = [
     Mandatory: false,
     Description: 'Postgres database URL 2',
     Position: 1,
-  },
-  {
-    Kind: 'ENV_TYPE_DATABASE',
-    Name: 'MYSQL_DATABASE_URL',
-    SubKind: 'mysql',
-    Mandatory: true,
-    Description: 'MYSQL database URL',
-    Position: 2,
   },
   {
     Kind: 'ENV_TYPE_DATABASE',

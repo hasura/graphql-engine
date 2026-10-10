@@ -1,21 +1,20 @@
 import React, { useMemo, useCallback, useEffect } from 'react';
 import {
-  Args,
-  ArgTypes,
   useGlobals,
   useGlobalTypes,
   useParameter,
-} from '@storybook/api';
-import { AddonPanel } from '@storybook/components';
+} from 'storybook/manager-api';
+import type { Args, ArgTypes } from 'storybook/internal/types';
+import { AddonPanel } from 'storybook/internal/components';
 import { ADDON_ID } from './constants';
-import { PureArgsTable } from '@storybook/blocks';
+import { PureArgsTable } from '@storybook/addon-docs/blocks';
 
 type PanelProps = {
   active?: boolean;
 };
 
 const filterUncontrolledTypes = (globalTypes: ArgTypes) =>
-  Object.entries(globalTypes).reduce((acc, [key, arg]) => {
+  Object.entries(globalTypes).reduce((acc, [key, arg]: [string, any]) => {
     if (arg['control'] !== undefined) acc[key] = arg;
     return acc;
   }, {} as ArgTypes);
@@ -27,11 +26,11 @@ export const Panel = ({ active = true }: PanelProps) => {
   const [globals, updateGlobals] = useGlobals();
   const adminSecretSetParameter = useParameter(
     'adminSecretSet',
-    globalTypes['adminSecretSet']?.defaultValue
+    globalTypes['adminSecretSet']?.defaultValue,
   );
   const consoleTypeParameter = useParameter(
     'consoleType',
-    globalTypes['consoleType']?.defaultValue
+    globalTypes['consoleType']?.defaultValue,
   );
 
   const refreshAndUpdateGlobal = useCallback(
@@ -41,12 +40,12 @@ export const Panel = ({ active = true }: PanelProps) => {
         // Force reload iFrame
         (
           document.getElementById(
-            'storybook-preview-iframe'
+            'storybook-preview-iframe',
           ) as HTMLIFrameElement
         ).contentDocument?.location.reload();
       });
     },
-    [updateGlobals]
+    [updateGlobals],
   );
 
   useEffect(() => {

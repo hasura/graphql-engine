@@ -1,12 +1,17 @@
 import * as React from 'react';
-import { render, screen, cleanup, fireEvent } from '@testing-library/react';
-import { renderHook, act } from '@testing-library/react-hooks';
-import { QueryClient, QueryClientProvider } from 'react-query';
+import {
+  render,
+  screen,
+  fireEvent,
+  renderHook,
+  act,
+  waitFor,
+} from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { GraphQLError } from 'graphql';
 import { ExchangeTokenResponse, useSlackOAuth } from './useSlackOAuth';
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
-import 'whatwg-fetch';
 
 import { SLACK_CALLBACK_SEARCH } from '../utils';
 
@@ -85,15 +90,15 @@ Object.defineProperty(window, 'open', { value: mockPopupImpl.openPopup });
 const server = setupServer();
 server.events.on('response:mocked', () => {
   //
-  jest.advanceTimersByTime(10);
-  jest.runAllTicks();
+  vi.advanceTimersByTime(10);
+  vi.runAllTicks();
 });
 
 const mockHTTPResponse = (status = 200, returnBody: any) => {
   server.use(
-    rest.all('*', (req, res, context) => {
-      return res(context.json(returnBody), context.status(status));
-    })
+    http.all('*', () => {
+      return HttpResponse.json(returnBody, { status });
+    }),
   );
 };
 
@@ -117,8 +122,8 @@ const wrapper = ({ children }: Props) => {
 function closeFakePopup() {
   act(() => {
     mockPopupImpl.closePopup();
-    jest.advanceTimersByTime(4000);
-    jest.runAllTicks();
+    vi.advanceTimersByTime(4000);
+    vi.runAllTicks();
   });
 }
 
@@ -132,22 +137,21 @@ describe('Slack', () => {
   });
   afterAll(() => {
     server.close();
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
   beforeEach(() => {
-    cleanup();
     mockLocalStorage.clear();
     mockPopupImpl.closePopup();
 
-    jest.useFakeTimers();
-    jest.clearAllTimers();
-    jest.clearAllMocks();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.clearAllTimers();
+    vi.clearAllMocks();
     server.resetHandlers();
   });
 
   it('Happy path', async () => {
     // Arrange
-    const { waitForValueToChange, result } = renderHook(() => useSlackOAuth(), {
+    const { result } = renderHook(() => useSlackOAuth(), {
       wrapper,
     });
 
@@ -177,24 +181,26 @@ describe('Slack', () => {
     const oauth2State = result.current.oauth2State;
     mockLocalStorage.setItem(
       SLACK_CALLBACK_SEARCH,
-      `code=test_code&state=${oauth2State}`
+      `code=test_code&state=${oauth2State}`,
     );
 
     closeFakePopup();
-    jest.runAllTicks();
+    vi.runAllTicks();
     // --------------------------------------------------
 
     // --------------------------------------------------
 
     // ALl good until here
     // Assert
-    await waitForValueToChange(() => result.current.slackOauthStatus);
+    await waitFor(() =>
+      expect(result.current.slackOauthStatus.status).toEqual('authenticated'),
+    );
 
     expect(result.current.slackOauthStatus.status).toEqual('authenticated');
 
     // @ts-expect-error we know better than typescript here
     expect(result.current.slackOauthStatus?.channelName).toEqual(
-      response.data?.slackExchangeOAuthToken.channel_name
+      response.data?.slackExchangeOAuthToken.channel_name,
     );
   });
 
@@ -219,7 +225,7 @@ describe('Slack', () => {
 
     // Assert
     expect(screen.getByTestId('error')).toHaveTextContent(
-      'Slack integration closed unexpectedly. Please try again.'
+      'Slack integration closed unexpectedly. Please try again.',
     );
   });
 
@@ -241,7 +247,7 @@ describe('Slack', () => {
 
     // Assert
     expect(screen.getByTestId('error')).toHaveTextContent(
-      'Error authenticating with Slack. Please try again.'
+      'Error authenticating with Slack. Please try again.',
     );
   });
 
@@ -258,20 +264,20 @@ describe('Slack', () => {
     // results in state mismatch error
     mockLocalStorage.setItem(
       SLACK_CALLBACK_SEARCH,
-      'code=test_code&state=test_state'
+      'code=test_code&state=test_state',
     );
     closeFakePopup();
     // --------------------------------------------------
 
     // Assert
     expect(screen.getByTestId('error')).toHaveTextContent(
-      'Invalid OAuth session state. Please try again.'
+      'Invalid OAuth session state. Please try again.',
     );
   });
 
   it('Renders oauth error when there is an error exchanging the token', async () => {
     // Arrange
-    const { waitForValueToChange, result } = renderHook(() => useSlackOAuth(), {
+    const { result } = renderHook(() => useSlackOAuth(), {
       wrapper,
     });
 
@@ -286,7 +292,7 @@ describe('Slack', () => {
     const oauth2State = result.current.oauth2State;
     mockLocalStorage.setItem(
       SLACK_CALLBACK_SEARCH,
-      `code=test_code&state=${oauth2State}`
+      `code=test_code&state=${oauth2State}`,
     );
 
     const response: { errors: GraphQLError[] } = {
@@ -303,14 +309,16 @@ describe('Slack', () => {
 
     // Assert
 
-    await waitForValueToChange(() => result.current.slackOauthStatus);
+    await waitFor(() =>
+      expect(result.current.slackOauthStatus.status).toEqual('error'),
+    );
     console.log(result.current.slackOauthStatus);
 
     expect(result.current.slackOauthStatus.status).toEqual('error');
 
     // @ts-expect-error we know better than typescript here
     expect(result.current.slackOauthStatus?.error?.message).toEqual(
-      'Something went wrong while integrating Slack.'
+      'Something went wrong while integrating Slack.',
     );
   });
 });

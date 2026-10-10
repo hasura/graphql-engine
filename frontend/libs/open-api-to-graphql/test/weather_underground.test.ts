@@ -5,7 +5,7 @@
 
 'use strict';
 
-import { afterAll, beforeAll, expect, test } from '@jest/globals';
+import { afterAll, beforeAll, expect, test } from 'vitest';
 import { GraphQLObjectType, GraphQLSchema } from 'graphql';
 
 import * as openAPIToGraphQL from '../src/index';
@@ -30,7 +30,7 @@ test('All Weather Underground query endpoints present', () => {
     }
   }
   const gqlTypes = Object.keys(
-    (createdSchema.getTypeMap().Query as GraphQLObjectType).getFields()
+    (createdSchema.getTypeMap().Query as GraphQLObjectType).getFields(),
   ).length;
   expect(gqlTypes).toEqual(oasGetCount);
 });

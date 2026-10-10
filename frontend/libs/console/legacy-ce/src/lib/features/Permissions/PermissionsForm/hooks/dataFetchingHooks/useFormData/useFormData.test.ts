@@ -26,7 +26,17 @@ const formDataMockResult = {
 };
 
 test('returns correctly formatted formData', () => {
-  const result = createFormData(createFormDataMock);
+  // createFormData expects a `source: Source` prop (see the real call site
+  // in ModifyPermission/index.tsx: `createFormData({ source: dataSource,
+  // ... })`), but the mock object stores that same value under
+  // `metadataSource` (mirroring how `createDefaultValues` is called with
+  // `metadataSource: dataSource`). Map it across rather than spreading the
+  // mock as-is, which left `source` (and therefore `source.name`) undefined.
+  const result = createFormData({
+    ...createFormDataMock,
+    source: createFormDataMock.metadataSource,
+    validateInput: { enabled: false },
+  });
   expect(result).toEqual(formDataMockResult);
 });
 
@@ -63,8 +73,21 @@ const defaultValuesMockResult: ReturnType<typeof createDefaultValues> = {
   ],
   comment: '',
   filter: { _not: { Data_value: { _eq: 1337 } } },
-  rowCount: '0',
+  // The mock's `asdf` select permission for `sample_table` has no `limit`
+  // field at all, so getRowCount (createDefaultValues/utils.ts) correctly
+  // returns '' (it only returns a non-empty string when `permission.limit`
+  // is set).
+  rowCount: '',
   aggregationEnabled: false,
+  // customRootFieldEnabled and validateInput are real fields on
+  // PermissionsSchema (see libs/console/legacy-ce/src/lib/features/Permissions/schema/index.ts)
+  // that createDefaultValues always includes: customRootFieldEnabled is
+  // derived from whether query_root_fields/subscription_root_fields are
+  // set (false here, since the mock's permission sets neither), and
+  // validateInput is passed straight through from the caller (undefined
+  // here, since the mock doesn't provide one).
+  customRootFieldEnabled: false,
+  validateInput: undefined,
   operators: {
     filter: {
       name: '_not',
@@ -78,9 +101,9 @@ const defaultValuesMockResult: ReturnType<typeof createDefaultValues> = {
       },
     },
   },
-  query_root_fields: null,
-  subscription_root_fields: null,
-  computed_fields: {},
+  query_root_fields: [],
+  subscription_root_fields: [],
+  computed_fields: [],
 };
 
 test('use default values returns values correctly', () => {

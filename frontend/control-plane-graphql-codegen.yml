@@ -3,7 +3,27 @@ schema:
   - 'http://data.lux-dev.hasura.me/v1/graphql':
       headers:
         'x-hasura-admin-secret': 'randomsecret'
+        'x-hasura-role': 'user'
 documents: 'libs/console/legacy-ce/src/lib/features/ControlPlane/queries.ts'
 generates:
   libs/console/legacy-ce/src/lib/features/ControlPlane/generatedGraphQLTypes.ts:
-    plugins: ['typescript', 'typescript-operations']
+    plugins: ['typescript-operations']
+    config:
+      # Generate enums as TypeScript enums (not unions)
+      enumType: native
+      # Map custom scalars to TypeScript types
+      scalars:
+        uuid: string
+        timestamptz: string
+        timestamp: string
+        date: string
+        jsonb: any
+        json: any
+        tsvector: any
+        # BigInts are encoded as strings to ensure large numbers are supported
+        bigint: string
+        numeric: number
+        bytea: string
+        citext: string
+        float8: number
+        _uuid: any

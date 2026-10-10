@@ -1,79 +1,78 @@
 import { useCallback } from 'react';
-import { useFireNotification } from '../../../../new-components/Notifications';
-import { useMetadataMigration } from '../../../MetadataAPI';
-import { MetadataUtils, useMetadata } from '../../../hasura-metadata-api';
-import { MetadataTable } from '../../../hasura-metadata-types';
+import {
+  useErrorNotification,
+  useMetadataMigration,
+  useMetadata,
+} from '@hasura/metadata/api';
+import { MetadataTable, Table } from '@hasura/shared/types';
+import { hasuraToast } from '@hasura/shared/ui';
+import { getDriverPrefix, MetadataSelectors } from '@hasura/metadata/helpers';
 
 export const useUpdateTableConfiguration = (
   dataSourceName: string,
-  table: unknown
+  table: Table,
 ) => {
-  const { mutate, ...rest } = useMetadataMigration();
+  const { mutateAsync, ...rest } = useMetadataMigration();
+  const showErrorNotification = useErrorNotification();
 
-  const { fireNotification } = useFireNotification();
-
-  const { data } = useMetadata(m => ({
-    source: MetadataUtils.findMetadataSource(dataSourceName, m),
+  const { data } = useMetadata((m) => ({
+    source: MetadataSelectors.findMetadataSource(dataSourceName, m),
     resource_version: m.resource_version,
-    metadataTable: MetadataUtils.findMetadataTable(dataSourceName, table, m),
+    metadataTable: MetadataSelectors.findMetadataTable(
+      dataSourceName,
+      table,
+      m,
+    ),
   }));
 
   const { source, metadataTable, resource_version } = data || {};
 
   const updateTableConfiguration = useCallback(
     (config: MetadataTable['configuration']) => {
-      const driver = source?.kind;
+      if (!source?.kind) {
+        throw Error('Data Source not found!');
+      }
 
-      return new Promise<void>((resolve, reject) => {
-        if (!source) {
-          throw Error('Data Source not found!');
-        }
-
-        mutate(
-          {
-            query: {
-              resource_version,
-              type: `${driver}_set_table_customization`,
-              args: {
-                source: dataSourceName,
-                table,
-                configuration: Object.assign(
-                  metadataTable?.configuration || {},
-                  config
-                ),
-              },
+      return mutateAsync(
+        {
+          query: {
+            resource_version,
+            type: `${getDriverPrefix(source.kind)}_set_table_customization`,
+            args: {
+              source: dataSourceName,
+              table,
+              configuration: Object.assign(
+                metadataTable?.configuration || {},
+                config,
+              ),
             },
           },
-          {
-            onSuccess: () => {
-              fireNotification({
-                type: 'success',
-                title: 'Success!',
-                message: 'Configuration saved!',
-              });
-              resolve();
-            },
-            onError: err => {
-              fireNotification({
-                type: 'error',
-                title: 'Failed to save configuration.',
-                message: err?.message,
-              });
-              reject();
-            },
-          }
-        );
-      });
+        },
+        {
+          onSuccess: () => {
+            hasuraToast({
+              type: 'success',
+              title: 'Success!',
+              message: 'Configuration saved!',
+            });
+          },
+          onError: (err) => {
+            showErrorNotification({
+              title: 'Failed to save configuration.',
+              error: err,
+            });
+          },
+        },
+      );
     },
     [
       dataSourceName,
-      fireNotification,
-      mutate,
+      mutateAsync,
       metadataTable,
       resource_version,
       source,
       table,
-    ]
+    ],
   );
 
   // helper function
@@ -88,7 +87,7 @@ export const useUpdateTableConfiguration = (
       return updateTableConfiguration(newConfig);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [updateTableConfiguration]
+    [updateTableConfiguration],
   );
 
   return {

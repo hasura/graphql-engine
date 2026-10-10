@@ -1,9 +1,8 @@
-import { expect } from '@storybook/jest';
-import { Meta, StoryObj } from '@storybook/react';
-import { waitFor, within } from '@storybook/testing-library';
-import { rest } from 'msw';
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
-import { metadataWithSourcesAndTables } from '../../../hasura-metadata-api/mocks/metadata.mock';
+import { expect, waitFor, within } from 'storybook/test';
+import { Meta, StoryObj } from '@storybook/react-webpack5';
+import { http, HttpResponse, delay } from 'msw';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
+import { metadataWithSourcesAndTables } from '@hasura/metadata/api';
 import { MetadataWrapper } from './MetadataWrapper';
 import { TestIds as StatusTestIds } from './ReactQueryStatusUI';
 import { TestIds } from './ReactQueryUIWrapper';
@@ -11,7 +10,7 @@ import { checkForStatusElements } from './story-utils';
 const LOADING_TIME = 2000;
 
 const waitForLoading = async () =>
-  await waitFor(() => new Promise(res => setTimeout(res, LOADING_TIME)), {
+  await waitFor(() => new Promise((res) => setTimeout(res, LOADING_TIME)), {
     timeout: LOADING_TIME + 1000,
   });
 
@@ -20,12 +19,12 @@ export default {
   decorators: [ReactQueryDecorator()],
   parameters: {
     msw: [
-      rest.post(`http://localhost:8080/v1/metadata`, async (req, res, ctx) => {
-        return res(
-          ctx.status(200),
-          ctx.delay(LOADING_TIME),
-          ctx.json(metadataWithSourcesAndTables)
-        );
+      http.post(`http://localhost:8080/v1/metadata`, async () => {
+        await delay(LOADING_TIME);
+
+        return HttpResponse.json(metadataWithSourcesAndTables, {
+          status: 200,
+        });
       }),
     ],
   },
@@ -63,7 +62,7 @@ export const WithSelector: StoryObj<typeof MetadataWrapper> = {
     return (
       <div>
         <MetadataWrapper
-          selector={m => m.metadata.sources}
+          selector={(m) => m.metadata.sources}
           render={({ data }) => (
             <div>
               Metadata Loaded! Source Name: <pre>{data[0].name}</pre>

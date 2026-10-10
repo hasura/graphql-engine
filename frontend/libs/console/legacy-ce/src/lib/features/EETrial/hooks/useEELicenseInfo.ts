@@ -1,20 +1,34 @@
-import { useQuery } from 'react-query';
-import { useAppSelector } from '../../../storeHooks';
-import { fetchEELicenseInfo } from '../utils';
+import { useQuery } from '@tanstack/react-query';
 import {
   EE_LICENSE_INFO_QUERY_NAME,
   LICENSE_REFRESH_INTERVAL,
 } from '../constants';
+import { useAppContext } from '@hasura/shared/context';
+import { useAuthFetchJson } from '@hasura/shared/hooks';
+import { EELicenseInfo } from '../types';
 
 export const useEELicenseInfo = (opts?: { enabled: boolean }) => {
-  const headers = useAppSelector(state => state.tables.dataHeaders);
+  const fetchJson = useAuthFetchJson();
+  const { endpoints } = useAppContext();
+
   return useQuery({
     queryKey: EE_LICENSE_INFO_QUERY_NAME,
-    queryFn: () => {
-      return fetchEELicenseInfo(headers);
+    queryFn: async () => {
+      return fetchJson(endpoints.entitlement, {
+        method: 'GET',
+      }).then((resp: any) => {
+        const licenseInfo: EELicenseInfo = {
+          status: resp.status,
+          type: resp.type,
+          expiry_at: resp.expiry_at ? new Date(resp.expiry_at) : undefined,
+          grace_at: resp.grace_at ? new Date(resp.grace_at) : undefined,
+        };
+
+        return licenseInfo;
+      });
     },
     refetchOnMount: false,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
     staleTime: LICENSE_REFRESH_INTERVAL,
     enabled: opts?.enabled !== false,
   });

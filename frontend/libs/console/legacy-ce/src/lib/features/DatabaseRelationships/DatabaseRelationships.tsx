@@ -1,42 +1,33 @@
 import { useState } from 'react';
 import { FaPlusCircle } from 'react-icons/fa';
-import { Button } from '../../new-components/Button';
+import { Button, SkeletonList } from '@hasura/shared/ui';
 import {
-  MetadataSelectors,
-  useMetadata,
-  useSyncResourceVersionOnMount,
-} from '../hasura-metadata-api';
-import {
-  BulkAtomicResponse,
-  BulkKeepGoingResponse,
+  QualifiedDataSource,
   Table,
   isBulkAtomicResponseError,
-} from '../hasura-metadata-types';
+} from '@hasura/shared/types';
 import { AvailableRelationshipsList } from './components/AvailableRelationshipsList/AvailableRelationshipsList';
 import Legend from './components/Legend';
 import { RenderWidget } from './components/RenderWidget/RenderWidget';
 import { SuggestedRelationships } from './components/SuggestedRelationships/SuggestedRelationships';
 import { NOTIFICATIONS } from './components/constants';
 import { MODE, Relationship } from './types';
-import { useDriverCapabilities } from '../Data/hooks/useDriverCapabilities';
-import { Feature } from '../DataSource';
-import Skeleton from 'react-loading-skeleton';
-import { useAppDispatch } from '../../storeHooks';
-import { updateSchemaInfo } from '../../components/Services/Data/DataActions';
-import { DisplayToastErrorMessage } from '../Data/components/DisplayErrorMessage';
-import { hasuraToast } from '../../new-components/Toasts';
-import { safeParseErrors } from './hooks/useCreateTableRelationships/utils';
+import { hasuraToast } from '@hasura/shared/ui';
+import { useDriverCapabilities } from '@hasura/metadata/data-source';
+import { useErrorNotification } from '@hasura/metadata/api';
+import { Flex } from '@radix-ui/themes';
 
 export interface DatabaseRelationshipsProps {
-  dataSourceName: string;
+  source: QualifiedDataSource;
   table: Table;
 }
 
 export const DatabaseRelationships = ({
-  dataSourceName,
+  source,
   table,
 }: DatabaseRelationshipsProps) => {
-  const [{ mode, relationship }, setTabState] = useState<{
+  const showErrorNotification = useErrorNotification();
+  const [tabState, setTabState] = useState<{
     mode?: MODE;
     relationship?: Relationship;
   }>({
@@ -44,21 +35,16 @@ export const DatabaseRelationships = ({
     relationship: undefined,
   });
 
-  const { data: driver } = useMetadata(
-    m => MetadataSelectors.findSource(dataSourceName)(m)?.kind
-  );
-  const dispatch = useAppDispatch();
-
-  const isLoadSchemaRequired = driver === 'mssql' || driver === 'postgres';
-
-  const { data: areForeignKeysSupported, isLoading } = useDriverCapabilities({
-    dataSourceName,
-    select: data => {
-      if (data === Feature.NotImplemented) return false;
-
-      return data.data_schema?.supports_foreign_keys;
+  const { data: areForeignKeysSupported, isLoading } = useDriverCapabilities(
+    {
+      source,
     },
-  });
+    {
+      select: (data) => {
+        return data.data_schema?.supports_foreign_keys ?? false;
+      },
+    },
+  );
 
   const onCancel = () => {
     setTabState({
@@ -67,25 +53,17 @@ export const DatabaseRelationships = ({
     });
   };
 
-  useSyncResourceVersionOnMount({
-    componentName: 'DatabaseRelationships',
-  });
-
   const onError = (err: Error) => {
-    if (mode) {
-      hasuraToast({
-        type: 'error',
-        title: NOTIFICATIONS.onError[mode],
-        message: err?.message ?? '',
+    if (tabState.mode) {
+      showErrorNotification({
+        title: NOTIFICATIONS.onError[tabState.mode],
+        error: err,
       });
-      if (isLoadSchemaRequired) {
-        dispatch(updateSchemaInfo());
-      }
     }
   };
 
-  const onSuccess = (data: BulkAtomicResponse | BulkKeepGoingResponse) => {
-    if (mode) {
+  const onSuccess = (data: unknown) => {
+    if (tabState.mode) {
       /**
        * Errors for BulkAtomic are reported with a 500/400 response from the server. We aleady handle this
        * with onError callback
@@ -95,23 +73,16 @@ export const DatabaseRelationships = ({
         : [];
 
       if (errors.length) {
-        hasuraToast({
-          type: 'error',
-          title: NOTIFICATIONS.onError[mode],
-          children: (
-            <DisplayToastErrorMessage message={safeParseErrors(errors)} />
-          ),
+        showErrorNotification({
+          title: NOTIFICATIONS.onError[tabState.mode],
+          error: errors,
         });
       } else {
         hasuraToast({
           type: 'success',
           title: 'Success!',
-          message: NOTIFICATIONS.onSuccess[mode],
+          message: NOTIFICATIONS.onSuccess[tabState.mode],
         });
-      }
-
-      if (isLoadSchemaRequired) {
-        dispatch(updateSchemaInfo());
       }
     }
 
@@ -121,13 +92,13 @@ export const DatabaseRelationships = ({
     });
   };
 
-  if (isLoading) return <Skeleton count={10} height={20} />;
+  if (isLoading) return <SkeletonList count={5} />;
 
   return (
-    <div className="my-2">
-      <div>
+    <div className="my-4">
+      <Flex direction="column" gap="4">
         <AvailableRelationshipsList
-          dataSourceName={dataSourceName}
+          dataSourceName={source.name}
           table={table}
           onAction={(_relationship, _mode) => {
             setTabState({
@@ -138,21 +109,18 @@ export const DatabaseRelationships = ({
         />
 
         {areForeignKeysSupported && (
-          <SuggestedRelationships
-            dataSourceName={dataSourceName}
-            table={table}
-          />
+          <SuggestedRelationships dataSourceName={source.name} table={table} />
         )}
 
         <Legend />
-      </div>
+      </Flex>
       <div>
-        {mode && (
+        {tabState.mode && (
           <RenderWidget
-            dataSourceName={dataSourceName}
+            dataSourceName={source.name}
             table={table}
-            mode={mode}
-            relationship={relationship}
+            mode={tabState.mode}
+            relationship={tabState.relationship}
             onSuccess={onSuccess}
             onCancel={onCancel}
             onError={onError}
@@ -160,9 +128,11 @@ export const DatabaseRelationships = ({
         )}
       </div>
       <div>
-        {!mode && (
+        {!tabState.mode && (
           <Button
-            icon={<FaPlusCircle />}
+            mode="default"
+            type="button"
+            leftIcon={FaPlusCircle}
             onClick={() => {
               setTabState({
                 mode: MODE.CREATE,

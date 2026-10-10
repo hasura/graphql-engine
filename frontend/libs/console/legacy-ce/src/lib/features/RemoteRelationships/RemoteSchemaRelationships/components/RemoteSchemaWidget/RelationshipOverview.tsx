@@ -1,5 +1,7 @@
 import { FaArrowRight } from 'react-icons/fa';
-import { RsToRsSchema } from '../../types';
+import { Flex } from '@radix-ui/themes';
+import { Text } from '@hasura/shared/ui';
+import { RsToRsSchema } from '../RemoteSchemaToRemoteSchemaForm/schemas';
 
 function extractPaths(resultSet: RsToRsSchema['resultSet']): string[] {
   try {
@@ -31,15 +33,15 @@ export const RelationshipOverview = (props: RelationshipOverviewProps) => {
   const { resultSet } = props;
   const paths = extractPaths(resultSet ?? {});
   return (
-    <div className="flex items-center">
+    <Flex align="center">
       {paths.map((path, i) => (
         <>
-          <div key={path} className="text-gray-600 font-semibold">
+          <Text key={path} weight="bold">
             {path}
-          </div>
+          </Text>
           {i !== paths.length - 1 && <FaArrowRight className="mx-2" />}
         </>
       ))}
-    </div>
+    </Flex>
   );
 };

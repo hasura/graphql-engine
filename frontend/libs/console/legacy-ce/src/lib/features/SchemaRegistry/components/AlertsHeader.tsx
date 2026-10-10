@@ -1,7 +1,8 @@
 import React from 'react';
+import { Flex } from '@radix-ui/themes';
 
 type AlertHeaderProps = {
-  icon: React.ReactNode | React.ReactElement;
+  icon: React.ReactNode | React.ReactElement<any>;
   title: string;
   description?: string;
 };
@@ -12,7 +13,7 @@ export const AlertHeader: React.FC<AlertHeaderProps> = ({
   description,
 }) => {
   return (
-    <div className="flex items-top p-md">
+    <Flex className="items-top p-4">
       <div className="text-yellow-500">{icon}</div>
       <div>
         <p className="text-lg font-semibold">{title}</p>
@@ -22,6 +23,6 @@ export const AlertHeader: React.FC<AlertHeaderProps> = ({
           </div>
         )}
       </div>
-    </div>
+    </Flex>
   );
 };

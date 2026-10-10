@@ -1,4 +1,4 @@
-@import '../Common/Common.module';
+@use 'sass:color';
 
 @font-face {
   font-family: arcadeClassic;
@@ -98,7 +98,7 @@
   border-right: 1px solid #788095;
   width: 20%;
   min-width: 240px;
-  height: $headerHeight;
+  height: 54px;
 
   .logoParent {
     display: flex;
@@ -579,7 +579,7 @@
   /* taken from bootsrap $navbar-inverse-bg variable */
   background: #222;
   /* taken from bootsrap $navbar-inverse-color variable */
-  color: lighten(lighten(#000, 46.7%), 15%);
+  color: color.adjust(color.adjust(#000, $lightness: 46.7%), $lightness: 15%);
   height: 50px;
   text-align: right;
   padding: 0;
@@ -593,7 +593,7 @@
   .headerItem {
     display: inline-block;
     /* taken from bootsrap $navbar-inverse-color variable */
-    color: lighten(lighten(#000, 46.7%), 15%);
+    color: color.adjust(color.adjust(#000, $lightness: 46.7%), $lightness: 15%);
     line-height: 15px;
     font-size: 15px;
     padding: 17.5px 15px;
@@ -615,19 +615,26 @@
 
   .headerItem * {
     /* taken from bootsrap $navbar-inverse-color variable */
-    color: lighten(lighten(#000, 46.7%), 15%);
+    color: color.adjust(color.adjust(#000, $lightness: 46.7%), $lightness: 15%);
   }
 }
 
 .main {
   padding: 0 !important;
   // width: 100vw;
-  min-width: $minContainerWidth;
+  min-width: 1350px;
   background-color: #f8fafb;
   clear: both;
   font-family: 'Gudea';
   // color: #767E93;
   color: #4d4d4d;
+}
+
+// Dark mode: the page background/text follow the Radix theme tokens (resolved
+// from the surrounding <Theme>) when the document root carries `.dark`.
+:global(html.dark) .main {
+  background-color: var(--color-background, #0f172a);
+  color: var(--gray-12, #e2e8f0);
 }
 
 .mainCollapsed {

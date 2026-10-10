@@ -1,6 +1,6 @@
-import type { MetadataResponse } from '@hasura/console-legacy-ce';
+import { Metadata } from '@hasura/shared/types';
 
-export const export_metadata: MetadataResponse = {
+export const export_metadata: Metadata = {
   resource_version: 0,
   metadata: {
     version: 3,

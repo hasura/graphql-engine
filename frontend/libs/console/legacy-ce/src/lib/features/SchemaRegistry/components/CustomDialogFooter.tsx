@@ -1,6 +1,7 @@
 import React from 'react';
-import { Button } from '../../../new-components/Button';
-import { Analytics } from '../../Analytics';
+import { Flex } from '@radix-ui/themes';
+import { Button } from '@hasura/shared/ui';
+import { Analytics } from '@hasura/shared/analytics';
 
 type CustomDialogFooterProps = {
   onSet: () => void;
@@ -14,30 +15,30 @@ export const CustomDialogFooter: React.FC<CustomDialogFooterProps> = ({
   isLoading,
 }) => {
   return (
-    <div className="flex justify-between border-t border-gray-300 bg-white p-sm">
+    <Flex justify="between" className="border-t border-gray-300 bg-white p-2">
       <div>
         <p className="text-muted">
           Email alerts will be sent to the owner of this project.
         </p>
       </div>
-      <div className="flex">
+      <Flex>
         <Button onClick={onClose}>Cancel</Button>
         <Analytics name="data-schema-registry-alerts-set-btn">
           <div className="ml-2">
             <Button
               mode="primary"
-              onClick={e => {
+              onClick={(e) => {
                 e.preventDefault();
                 onSet();
               }}
-              isLoading={isLoading}
+              loading={isLoading}
               disabled={isLoading}
             >
               Set
             </Button>
           </div>
         </Analytics>
-      </div>
-    </div>
+      </Flex>
+    </Flex>
   );
 };

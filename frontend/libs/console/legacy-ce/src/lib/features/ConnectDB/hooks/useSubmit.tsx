@@ -1,64 +1,49 @@
-import { useQueryClient } from 'react-query';
-import { useDispatch } from 'react-redux';
-import { push } from 'react-router-redux';
+import { useQueryClient } from '@tanstack/react-query';
 import { APIError } from '../../../hooks/error';
-import { exportMetadata } from '../../../metadata/actions';
-import { useFireNotification } from '../../../new-components/Notifications';
-import { getDriverPrefix } from '../../DataSource';
-import { allowedMetadataTypes, useMetadataMigration } from '../../MetadataAPI';
-import { SupportedDrivers } from '../../hasura-metadata-types';
-import { useAvailableDrivers } from './useAvailableDrivers';
+import { useMetadataMigration, useMetadata } from '@hasura/metadata/api';
+import { SupportedDriver } from '@hasura/shared/types';
+import { useAvailableDrivers } from '@hasura/metadata/data-source';
+import { hasuraToast } from '@hasura/shared/ui';
+import { useNavigate } from 'react-router';
+import { getDriverPrefix } from '@hasura/metadata/helpers';
 
-type UseRedirectArgs = {
-  redirectWithLatencyCheck: boolean;
+export const getAddSourceQueryType = (driver: SupportedDriver) => {
+  const prefix = getDriverPrefix(driver);
+  return `${prefix}_add_source` as const;
 };
 
-// TODO this is temporary while we are still using the redux based manage page
-const useRedirect = ({ redirectWithLatencyCheck = false }: UseRedirectArgs) => {
-  const dispatch = useDispatch();
-  const redirect = async () => {
-    await dispatch(exportMetadata());
-    dispatch(
-      push({
-        pathname: redirectWithLatencyCheck
-          ? '/data/manage?trigger_db_latency_check=true'
-          : '/data/manage',
-      })
-    );
+export const getEditSourceQueryType = (driver: SupportedDriver) => {
+  const prefix = getDriverPrefix(driver);
+  return `${prefix}_update_source` as const;
+};
+
+const useRedirect = () => {
+  const navigate = useNavigate();
+  const { refetch: refreshMetadata } = useMetadata(undefined, {
+    enabled: false,
+  });
+
+  return async () => {
+    await refreshMetadata();
+    navigate({
+      pathname: '/data/manage',
+    });
   };
-
-  return redirect;
-};
-
-export const getAddSourceQueryType = (
-  driver: SupportedDrivers
-): allowedMetadataTypes => {
-  const prefix = getDriverPrefix(driver);
-  return `${prefix}_add_source`;
-};
-
-export const getEditSourceQueryType = (
-  driver: SupportedDrivers
-): allowedMetadataTypes => {
-  const prefix = getDriverPrefix(driver);
-  return `${prefix}_update_source`;
 };
 
 export const useSubmit = () => {
   const drivers = useAvailableDrivers();
-  const { fireNotification } = useFireNotification();
-  const redirect = useRedirect({ redirectWithLatencyCheck: false });
-
+  const redirect = useRedirect();
   const { mutate, ...rest } = useMetadataMigration({
     onError: (error: APIError) => {
-      fireNotification({
+      hasuraToast({
         type: 'error',
         title: 'Error',
         message: error?.message ?? 'Unable to connect to database',
       });
     },
     onSuccess: () => {
-      fireNotification({
+      hasuraToast({
         type: 'success',
         title: 'Success',
         message: 'Successfully created database connection',
@@ -77,15 +62,15 @@ export const useSubmit = () => {
 
     if (
       !drivers.data
-        ?.map(driver => driver.name)
-        .includes(values.driver as 'mysql' | SupportedDrivers)
+        ?.map((driver) => driver.name)
+        .includes(values.driver as 'mysql' | SupportedDriver)
     )
       throw new Error(`Unmanaged ${values.driver} driver`);
 
     mutate(
       {
         query: {
-          type: getAddSourceQueryType(values.driver as SupportedDrivers),
+          type: getAddSourceQueryType(values.driver as SupportedDriver),
           args: values,
         },
       },
@@ -93,7 +78,7 @@ export const useSubmit = () => {
         onSuccess: () => {
           redirect();
         },
-      }
+      },
     );
   };
 
@@ -101,23 +86,22 @@ export const useSubmit = () => {
 };
 
 export const useEditDataSourceConnection = () => {
-  const { fireNotification } = useFireNotification();
-  const redirect = useRedirect({ redirectWithLatencyCheck: false });
+  const redirect = useRedirect();
   const queryClient = useQueryClient();
 
   const { mutate, ...rest } = useMetadataMigration({
     onError: (error: APIError) => {
-      fireNotification({
+      hasuraToast({
         type: 'error',
         title: 'Error',
         message: error?.message ?? 'Unable to connect to database',
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries('treeview');
-      queryClient.invalidateQueries(['edit-connection']);
+      queryClient.invalidateQueries({ queryKey: ['treeview'] });
+      queryClient.invalidateQueries({ queryKey: ['edit-connection'] });
 
-      fireNotification({
+      hasuraToast({
         type: 'success',
         title: 'Success',
         message: 'Successfully created database connection',
@@ -131,13 +115,13 @@ export const useEditDataSourceConnection = () => {
     mutate(
       {
         query: {
-          type: getEditSourceQueryType(values.driver as SupportedDrivers),
+          type: getEditSourceQueryType(values.driver as SupportedDriver),
           args: values,
         },
       },
       {
         onSuccess: redirect,
-      }
+      },
     );
   };
 

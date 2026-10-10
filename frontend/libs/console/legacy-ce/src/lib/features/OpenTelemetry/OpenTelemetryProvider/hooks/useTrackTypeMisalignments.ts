@@ -1,10 +1,9 @@
-import type { Metadata } from '../../../hasura-metadata-types';
-
-import { parseOpenTelemetry } from '../../../hasura-metadata-types';
+import type { Metadata } from '@hasura/shared/types';
+import { parseOpenTelemetry } from '@hasura/metadata/helpers';
 import {
   programmaticallyTraceError,
   trackCustomEvent,
-} from '../../../Analytics';
+} from '@hasura/shared/analytics';
 
 /**
  * Parse the OpenTelemetry config stored in metadata. There are two possibilities where server's
@@ -34,7 +33,7 @@ import {
  * navigates to the OpenTelemetry page.
  */
 export function useTrackTypeMisalignments(
-  openTelemetry: Metadata['metadata']['opentelemetry']
+  openTelemetry: Metadata['metadata']['opentelemetry'],
 ) {
   // metadata.opentelemetry is not there if the users never set it up
   if (openTelemetry === undefined) return;
@@ -55,7 +54,7 @@ export function useTrackTypeMisalignments(
       data: {
         openTelemetry: JSON.stringify(openTelemetry),
       },
-    }
+    },
   );
 
   programmaticallyTraceError({

@@ -1,5 +1,5 @@
-import { Widget } from './Widget';
+import { WidgetContainer } from './WidgetContainer';
 
 export const RelationshipForm = {
-  Widget,
+  Widget: WidgetContainer,
 };

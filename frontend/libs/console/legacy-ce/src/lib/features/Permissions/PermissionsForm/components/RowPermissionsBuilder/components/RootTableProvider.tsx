@@ -1,16 +1,16 @@
 import { createContext } from 'react';
-import { Table } from '../../../../../hasura-metadata-types';
-import { areTablesEqual } from '../../../../../hasura-metadata-api';
+import { Table } from '@hasura/shared/types';
 import { Tables } from './types';
+import { areTablesEqual } from '@hasura/metadata/helpers';
 
 type RootTableState = {
   tables: Tables;
-  table: Table;
+  table: Table | undefined;
   rootTable: Tables[number] | undefined;
 };
 
 export const rootTableContext = createContext<RootTableState>({
-  table: {},
+  table: [],
   tables: [],
   rootTable: undefined,
 });
@@ -30,7 +30,9 @@ export const RootTableProvider = ({
 }: Omit<RootTableState, 'rootTable'> & {
   children?: React.ReactNode | undefined;
 }) => {
-  const rootTable = tables.find(t => areTablesEqual(t.table, table));
+  const rootTable = table
+    ? tables.find((t) => areTablesEqual(t.table, table))
+    : undefined;
   return (
     <rootTableContext.Provider
       value={{

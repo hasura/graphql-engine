@@ -1,13 +1,10 @@
-import { useQuery } from 'react-query';
-import {
-  DataSource,
-  exportMetadata,
-  TableColumn,
-} from '../../../../../DataSource';
-import { MetadataTable } from '../../../../../hasura-metadata-types';
-import { useHttpClient } from '../../../../../Network';
-import { areTablesEqual } from '../../../../../hasura-metadata-api';
+import { useQuery } from '@tanstack/react-query';
+import { getDatabaseMethods, TableColumn } from '@hasura/metadata/data-source';
+import { Metadata, MetadataTable } from '@hasura/shared/types';
 import { TableToLoad } from '../components';
+import { useAuthFetchJson } from '@hasura/shared/hooks';
+import { useAppContext } from '@hasura/shared/context';
+import { areTablesEqual } from '@hasura/metadata/helpers';
 
 export type TableWithColumns = {
   metadataTable: MetadataTable;
@@ -15,36 +12,43 @@ export type TableWithColumns = {
   sourceName: string;
 };
 
+const USE_TABLE_WITH_COLUMNS_QUERY_KEY = 'USE_TABLE_WITH_COLUMNS';
+
 export const useTablesWithColumns = ({
   tablesToLoad,
+  metadata,
 }: {
+  metadata: Metadata['metadata'];
   tablesToLoad: TableToLoad;
 }) => {
-  const httpClient = useHttpClient();
+  const { endpoints } = useAppContext();
+  const fetchJson = useAuthFetchJson();
+
   return useQuery<TableWithColumns[], Error>({
-    queryKey: [tablesToLoad],
+    queryKey: [USE_TABLE_WITH_COLUMNS_QUERY_KEY, tablesToLoad],
     queryFn: async () => {
-      const { metadata } = await exportMetadata({
-        httpClient,
-      });
-
-      if (!metadata) throw Error('metadata not found');
-
       const result: TableWithColumns[] = [];
 
       for (const source of metadata.sources) {
         for (const metadataTable of source.tables) {
           if (
             tablesToLoad.find(
-              t =>
+              (t) =>
                 areTablesEqual(metadataTable.table, t.table) &&
-                source.name === t?.source
+                source.name === t?.source,
             )
           ) {
-            const columns = await DataSource(httpClient).getTableColumns({
-              dataSourceName: source.name,
-              table: metadataTable.table,
-            });
+            const databaseMethods = getDatabaseMethods(source.kind);
+
+            const columns = await databaseMethods.introspection.getTableColumns(
+              {
+                dataSourceName: source.name,
+                table: metadataTable.table,
+                endpoints,
+                fetchJson,
+              },
+            );
+
             result.push({ metadataTable, columns, sourceName: source.name });
           } else {
             result.push({

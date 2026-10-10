@@ -1,7 +1,7 @@
 import { useFormContext } from 'react-hook-form';
-import { QueryType } from '../../types';
+import type { DataQueryType } from '@hasura/shared/types';
 
-export const useIsDisabled = (queryType: QueryType) => {
+export const useIsDisabled = (queryType: DataQueryType) => {
   const { watch } = useFormContext();
   const checkType = watch('checkType');
   const filterType = watch('filterType');

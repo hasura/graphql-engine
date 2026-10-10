@@ -1,16 +1,15 @@
 import React from 'react';
-import { useQuery, useMutation } from 'react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { GraphQLError } from 'graphql';
 import {
   controlPlaneClient,
   GET_TENANT_ENV,
   UPDATE_TENANT_ENV,
 } from '../../../../ControlPlane';
-import { getTenantId } from '../../../../../utils/cloudConsole';
-import globals from '../../../../../Globals';
-import { useNeonOAuth } from '../../../../../components/Services/Data/DataSources/CreateDataSource/Neon/useNeonOAuth';
-import { useNeonDatabase } from '../../../../../components/Services/Data/DataSources/CreateDataSource/Neon/useNeonDatabase';
-import { NeonIntegrationStatus } from '../../../../../components/Services/Data/DataSources/CreateDataSource/Neon/useNeonIntegration';
+import { getTenantId } from '@hasura/shared/utils';
+import { useNeonOAuth } from '../../../NeonOnboardingWizard/hooks/useNeonOAuth';
+import { useNeonDatabase } from '../../../NeonOnboardingWizard/hooks/useNeonDatabase';
+import { NeonIntegrationStatus } from '../../../NeonOnboardingWizard/hooks/useNeonIntegration';
 import { verifyProjectHealthAndProceed } from './utils';
 import {
   GetTenantEnvResponse,
@@ -18,12 +17,15 @@ import {
   UpdateEnvObj,
 } from './types';
 import { getTenantEnvVarsQueryKey } from '../../constants';
+import { useAppContext } from '@hasura/shared/context';
 
 export const useGetTenantEnvs = () => {
+  const { envVars } = useAppContext();
+
   return useQuery({
     queryKey: [getTenantEnvVarsQueryKey],
     queryFn: () => {
-      const tenantId = getTenantId(globals);
+      const tenantId = getTenantId(envVars);
       if (!tenantId) {
         throw Error('Tenant was not found');
       }
@@ -42,10 +44,12 @@ export const useGetTenantEnvs = () => {
 
 export const useUpdateTenantEnv = (
   successCb: () => void,
-  errorCb: (error?: GraphQLError) => void
+  errorCb: (error?: GraphQLError) => void,
 ) => {
+  const { envVars } = useAppContext();
+
   const updateTenantEnvMutationFn = (variables: Record<string, any>) => {
-    const tenantId = getTenantId(globals);
+    const tenantId = getTenantId(envVars);
     if (!tenantId) {
       throw Error('Tenant was not found');
     }
@@ -55,12 +59,13 @@ export const useUpdateTenantEnv = (
       {
         tenantId,
         ...variables,
-      }
+      },
     );
   };
 
-  const mutation = useMutation(updateTenantEnvMutationFn, {
-    onSuccess: data => {
+  const mutation = useMutation({
+    mutationFn: updateTenantEnvMutationFn,
+    onSuccess: (data) => {
       // As graphql does not return error codes, react-query will always consider a
       // successful request, we have to parse the data to check for errors
       if (data.errors && data.errors.length > 0) {

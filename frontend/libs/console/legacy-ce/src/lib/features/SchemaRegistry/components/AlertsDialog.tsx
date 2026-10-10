@@ -1,8 +1,7 @@
 import React from 'react';
-import { Tabs } from '../../../new-components/Tabs';
+import { Tabs, Dialog } from '@hasura/shared/ui';
 import { EmailAlerts } from './EmailAlerts';
 import { SlackAlerts } from './SlackAlerts';
-import { Dialog } from '../../../new-components/Dialog';
 
 type DialogProps = {
   onClose: () => void;
@@ -12,12 +11,11 @@ export const AlertsDialog: React.FC<DialogProps> = ({ onClose }) => {
   const [tabState, setTabState] = React.useState('email');
 
   return (
-    <Dialog hasBackdrop onClose={tabState === 'slack' ? onClose : undefined}>
+    <Dialog onClose={tabState === 'slack' ? onClose : undefined}>
       <div className="h-full ml-4">
         <Tabs
           value={tabState}
-          onValueChange={state => setTabState(state)}
-          headerTabBackgroundColor="white"
+          onValueChange={(state) => setTabState(state)}
           items={[
             {
               value: 'email',

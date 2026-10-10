@@ -1,5 +1,4 @@
-import React from 'react';
-import { Button } from '../../../../new-components/Button';
+import { IconButton, Select, Text } from '@hasura/shared/ui';
 import { DEFAULT_PAGE_SIZES } from '../constants';
 import {
   FaAngleDoubleLeft,
@@ -8,6 +7,12 @@ import {
   FaAngleRight,
 } from 'react-icons/fa';
 import { PaginatedSearchableListProps } from '../hooks/usePaginatedSearchableList';
+import { Flex } from '@radix-ui/themes';
+
+const selectOptions = DEFAULT_PAGE_SIZES.map((pageSize) => ({
+  label: `Show ${pageSize} items`,
+  value: String(pageSize),
+}));
 
 export const PageSizeDropdown = ({
   pageNumber,
@@ -20,42 +25,44 @@ export const PageSizeDropdown = ({
   dataSize,
   totalPages,
 }: PaginatedSearchableListProps) => (
-  <div className="flex gap-1 items-center">
-    <span className="whitespace-nowrap mr-2">
+  <Flex gap="1" align="center">
+    <Text className="whitespace-nowrap mr-2">
       Page {pageNumber} of {totalPages}
-    </span>
-    <Button
-      icon={<FaAngleDoubleLeft />}
+    </Text>
+    <IconButton
+      mode="default"
       onClick={goToFirstPage}
       disabled={pageNumber === 1}
-    />
-    <Button
-      icon={<FaAngleLeft />}
+    >
+      <FaAngleDoubleLeft />
+    </IconButton>
+    <IconButton
+      mode="default"
       onClick={decrementPage}
       disabled={pageNumber === 1}
-    />
-    <select
-      value={pageSize}
-      onChange={e => {
-        setPageSize(Number(e.target.value));
-      }}
-      className="block w-full max-w-xl h-8 min-h-full shadow-sm rounded pl-3 pr-6 py-0.5 border border-gray-300 hover:border-gray-400 focus-visible:outline-0 focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:border-yellow-400"
     >
-      {DEFAULT_PAGE_SIZES.map(_pageSize => (
-        <option key={_pageSize} value={_pageSize}>
-          Show {_pageSize} items
-        </option>
-      ))}
-    </select>
-    <Button
-      icon={<FaAngleRight />}
+      <FaAngleLeft />
+    </IconButton>
+    <Select
+      value={pageSize.toString()}
+      onChange={(value) => {
+        setPageSize(Number(value));
+      }}
+      options={selectOptions}
+    />
+    <IconButton
+      mode="default"
       onClick={incrementPage}
       disabled={pageNumber >= dataSize / pageSize}
-    />
-    <Button
-      icon={<FaAngleDoubleRight />}
+    >
+      <FaAngleRight />
+    </IconButton>
+    <IconButton
+      mode="default"
       onClick={goToLastPage}
       disabled={pageNumber >= dataSize / pageSize}
-    />
-  </div>
+    >
+      <FaAngleDoubleRight />
+    </IconButton>
+  </Flex>
 );

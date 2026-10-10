@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import { LogicalModel } from '../../../../../hasura-metadata-types';
+import { LogicalModel } from '@hasura/shared/types';
 
 type LogicalModelState = {
   rootLogicalModel: LogicalModel | undefined;
@@ -20,7 +20,7 @@ export const RootLogicalModelProvider = ({
 }: Omit<LogicalModelState, 'rootLogicalModel'> & {
   children?: React.ReactNode | undefined;
 }) => {
-  const rootLogicalModel = logicalModels.find(t => t.name === logicalModel);
+  const rootLogicalModel = logicalModels.find((t) => t.name === logicalModel);
   return (
     <logicalModelContext.Provider
       value={{

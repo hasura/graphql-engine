@@ -1,24 +1,31 @@
 import React, { useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { Button } from '../../../../new-components/Button';
-import { Collapse } from '../../../../new-components/deprecated';
-import { TableColumn } from '../../../DataSource';
-import { useListAllTableColumns } from '../../../Data';
+import { Flex, Strong } from '@radix-ui/themes';
+import {
+  Button,
+  Checkbox,
+  CheckboxesField,
+  Collapsible,
+  CollapsibleHeader,
+  IndicatorCard,
+  Text,
+} from '@hasura/shared/ui';
+import { TableColumn, useTableColumns } from '@hasura/metadata/data-source';
 import { PermissionsConfirmationModal } from './RootFieldPermissions/PermissionsConfirmationModal';
-import { getEdForm } from '../../../../components/Services/Data/utils';
 import { useIsDisabled } from '../hooks/useIsDisabled';
-import { QueryType } from '../../types';
 import { isPermissionModalDisabled } from '../utils/getPermissionModalStatus';
-
 import {
   getPermissionsModalTitle,
   getPermissionsModalDescription,
 } from './RootFieldPermissions/PermissionsConfirmationModal.utils';
 import {
-  SubscriptionRootPermissionType,
+  DataQueryType,
+  MetadataTable,
+  QualifiedDataSource,
   QueryRootPermissionType,
-} from './RootFieldPermissions/types';
-import { MetadataSelectors, useMetadata } from '../../../hasura-metadata-api';
+  SubscriptionRootPermissionType,
+} from '@hasura/shared/types';
+import { getEdForm } from '@hasura/shared/utils';
 
 const getAccessText = (queryType: string) => {
   if (queryType === 'insert') {
@@ -33,12 +40,12 @@ const getAccessText = (queryType: string) => {
 };
 
 export interface ColumnPermissionsSectionProps {
-  queryType: QueryType;
+  queryType: DataQueryType;
   roleName: string;
   columns?: string[];
   computedFields?: string[];
-  table: unknown;
-  dataSourceName: string;
+  table: MetadataTable;
+  source: QualifiedDataSource;
 }
 
 const useStatus = (disabled: boolean) => {
@@ -50,7 +57,7 @@ const useStatus = (disabled: boolean) => {
   }
 
   const columnValues = Object.values(formColumns);
-  const selectedColumns = columnValues.filter(value => !!value);
+  const selectedColumns = columnValues.filter((value) => value);
 
   if (disabled) {
     return { data: 'Disabled: Set row permissions first', isError: false };
@@ -71,12 +78,12 @@ const checkIfConfirmationIsNeeded = (
   fieldName: string,
   tableColumns: TableColumn[],
   selectedColumns: Record<string, boolean>,
-  queryRootFields: QueryRootPermissionType,
-  subscriptionRootFields: SubscriptionRootPermissionType
+  queryRootFields: QueryRootPermissionType[],
+  subscriptionRootFields: SubscriptionRootPermissionType[],
 ) => {
   const primaryKeys = tableColumns
-    ?.filter(column => column.isPrimaryKey)
-    ?.map(column => column.name);
+    ?.filter((column) => column.isPrimaryKey)
+    ?.map((column) => column.name);
   const pkRootFieldsAreSelected =
     queryRootFields?.includes('select_by_pk') ||
     subscriptionRootFields?.includes('select_by_pk');
@@ -89,28 +96,14 @@ const checkIfConfirmationIsNeeded = (
 
 export const ColumnPermissionsSection: React.FC<
   ColumnPermissionsSectionProps
-> = ({
-  roleName,
-  queryType,
-  columns,
-  table,
-  computedFields,
-  dataSourceName,
-}) => {
+> = ({ roleName, queryType, columns, table, computedFields, source }) => {
   const { setValue, watch } = useFormContext();
   const [showConfirmation, setShowConfirmationModal] = useState<string | null>(
-    null
+    null,
   );
-  watch();
 
-  const [
-    selectedColumns,
-    selectedComputedFields,
-    queryRootFields,
-    subscriptionRootFields,
-  ] = watch([
+  const [selectedColumns, queryRootFields, subscriptionRootFields] = watch([
     'columns',
-    'computed_fields',
     'query_root_fields',
     'subscription_root_fields',
   ]);
@@ -120,26 +113,21 @@ export const ColumnPermissionsSection: React.FC<
 
   const { data: status, isError } = useStatus(disabled);
 
-  const { columns: tableColumns } = useListAllTableColumns(
-    dataSourceName,
-    table
-  );
+  const { data: tableColumns } = useTableColumns({
+    source,
+    table: table.table,
+  });
 
-  const metadataTableResult = useMetadata(
-    MetadataSelectors.findTable(dataSourceName, table)
-  );
-  const tableComputedFields = metadataTableResult.data?.computed_fields?.map(
-    ({ name }) => name
-  );
+  const tableComputedFields = table.computed_fields?.map(({ name }) => name);
 
   const onClick = () => {
-    columns?.forEach(column => {
+    columns?.forEach((column) => {
       const toggleAllOn = status !== 'All columns';
       // if status is not all columns: toggle all on
       // otherwise toggle all off
       setValue(`columns.${column}`, toggleAllOn);
     });
-    computedFields?.forEach(field => {
+    computedFields?.forEach((field) => {
       const toggleAllOn = status !== 'All columns';
       // if status is not all columns: toggle all on
       // otherwise toggle all off
@@ -148,17 +136,23 @@ export const ColumnPermissionsSection: React.FC<
   };
 
   if (isError) {
-    return <div>Error loading column permission data</div>;
+    return (
+      <IndicatorCard status="negative" showIcon>
+        Error loading column permission data
+      </IndicatorCard>
+    );
   }
 
   const handleUpdate = (fieldName: string) => {
     setValue(
       'query_root_fields',
-      queryRootFields.filter((field: string) => field !== 'select_by_pk')
+      queryRootFields.filter((field: string) => field !== 'select_by_pk'),
     );
     setValue(
       'subscription_root_fields',
-      subscriptionRootFields.filter((field: string) => field !== 'select_by_pk')
+      subscriptionRootFields.filter(
+        (field: string) => field !== 'select_by_pk',
+      ),
     );
     setValue(`columns.${fieldName}`, !selectedColumns[fieldName]);
   };
@@ -166,9 +160,9 @@ export const ColumnPermissionsSection: React.FC<
   const permissionsModalTitle = getPermissionsModalTitle({
     scenario: 'pks',
     role: roleName,
-    primaryKeyColumns: tableColumns
-      ?.filter(column => column.isPrimaryKey)
-      ?.map(column => column.name)
+    primaryKeyColumns: tableColumns?.columns
+      ?.filter((column) => column.isPrimaryKey)
+      ?.map((column) => column.name)
       ?.join(','),
   });
 
@@ -176,97 +170,82 @@ export const ColumnPermissionsSection: React.FC<
 
   return (
     <>
-      <Collapse defaultOpen={!disabled}>
-        <Collapse.Header
-          title={`Column ${queryType} permissions`}
-          tooltip={`Choose columns allowed to be ${getEdForm(queryType)}`}
-          status={status}
-          disabled={disabled}
-          disabledMessage="Set row permissions first"
-        />
-        <Collapse.Content>
-          <div
-            title={disabled ? 'Set row permissions first' : ''}
-            className="grid gap-2"
-          >
-            <div className="flex gap-2 items-center">
-              <p>
-                Allow role <strong>{roleName}</strong>{' '}
-                {getAccessText(queryType)}
-                &nbsp;
-                <strong>columns</strong>:
-              </p>
-            </div>
-            <fieldset className="flex gap-4 flex-wrap">
-              {columns?.map(fieldName => (
-                <label key={fieldName} className="flex gap-2 items-center">
-                  <input
-                    type="checkbox"
-                    title={disabled ? 'Set a row permission first' : ''}
-                    disabled={disabled}
-                    style={{ marginTop: '0px !important' }}
-                    className="rounded shadow-sm border border-gray-300 hover:border-gray-400 focus:ring-yellow-400"
-                    checked={selectedColumns[fieldName]}
-                    onChange={() => {
-                      const hideModal = isPermissionModalDisabled();
-                      if (
-                        !hideModal &&
-                        !showConfirmation &&
-                        checkIfConfirmationIsNeeded(
-                          fieldName,
-                          tableColumns,
-                          selectedColumns,
-                          queryRootFields,
-                          subscriptionRootFields
-                        )
-                      ) {
-                        setShowConfirmationModal(fieldName);
-                        return;
-                      }
-                      setValue(
-                        `columns.${fieldName}`,
-                        !selectedColumns[fieldName]
-                      );
-                    }}
-                  />
-                  <i>{fieldName}</i>
-                </label>
-              ))}
-              {queryType === 'select' &&
-                tableComputedFields?.map(fieldName => (
-                  <label key={fieldName} className="flex gap-2 items-center">
-                    <input
-                      type="checkbox"
-                      title={disabled ? 'Set a row permission first' : ''}
-                      disabled={disabled}
-                      style={{ marginTop: '0px !important' }}
-                      className="rounded shadow-sm border border-gray-300 hover:border-gray-400 focus:ring-yellow-400"
-                      checked={selectedComputedFields[fieldName]}
-                      onChange={() => {
-                        setValue(
-                          `computed_fields.${fieldName}`,
-                          !selectedComputedFields[fieldName]
-                        );
-                      }}
-                    />
-                    <i>{fieldName}</i>
-                  </label>
-                ))}
-              <Button
-                type="button"
-                size="sm"
+      <Collapsible
+        defaultOpen={!disabled}
+        triggerChildren={
+          <CollapsibleHeader
+            title={`Column ${queryType} permissions`}
+            tooltip={`Choose columns allowed to be ${getEdForm(queryType)}`}
+            status={status}
+            // disabledMessage="Set row permissions first"
+          />
+        }
+      >
+        <div title={disabled ? 'Set row permissions first' : ''}>
+          <div className="mb-2">
+            <Text>
+              Allow role <Strong>{roleName}</Strong> {getAccessText(queryType)}
+              &nbsp;
+              <Strong>columns</Strong>:
+            </Text>
+          </div>
+          <Flex gap="4" wrap="wrap">
+            {columns?.map((fieldName) => (
+              <Checkbox
+                key={fieldName}
                 title={disabled ? 'Set a row permission first' : ''}
                 disabled={disabled}
-                onClick={onClick}
-                data-test="toggle-all-col-btn"
+                value={selectedColumns[fieldName]}
+                onChange={() => {
+                  const hideModal = isPermissionModalDisabled();
+                  if (
+                    !hideModal &&
+                    !showConfirmation &&
+                    checkIfConfirmationIsNeeded(
+                      fieldName,
+                      tableColumns?.columns ?? [],
+                      selectedColumns,
+                      queryRootFields,
+                      subscriptionRootFields,
+                    )
+                  ) {
+                    setShowConfirmationModal(fieldName);
+                    return;
+                  }
+                  setValue(`columns.${fieldName}`, !selectedColumns[fieldName]);
+                }}
               >
-                Toggle All
-              </Button>
-            </fieldset>
-          </div>
-          {/* {getExternalTablePermissionsMsg()} */}
-        </Collapse.Content>
-      </Collapse>
+                <Text className="italic">{fieldName}</Text>
+              </Checkbox>
+            ))}
+            {queryType === 'select' && !!tableComputedFields?.length && (
+              <CheckboxesField
+                disabled={disabled}
+                name="computed_fields"
+                orientation="horizontal"
+                noErrorPlaceholder
+                options={tableComputedFields.map((fieldName) => ({
+                  label: <Text className="italic">{fieldName}</Text>,
+                  value: fieldName,
+                  title: disabled ? 'Set a row permission first' : undefined,
+                }))}
+              />
+            )}
+            <Button
+              type="button"
+              size="sm"
+              mode="default"
+              title={disabled ? 'Set a row permission first' : ''}
+              disabled={disabled}
+              onClick={onClick}
+              data-test="toggle-all-col-btn"
+            >
+              Toggle All
+            </Button>
+          </Flex>
+        </div>
+        {/* {getExternalTablePermissionsMsg()} */}
+      </Collapsible>
       {showConfirmation && (
         <PermissionsConfirmationModal
           title={permissionsModalTitle}

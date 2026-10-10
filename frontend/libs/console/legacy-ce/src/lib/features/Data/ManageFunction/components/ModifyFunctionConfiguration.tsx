@@ -1,31 +1,29 @@
 import { z } from 'zod';
-import { Dialog } from '../../../../new-components/Dialog';
 import {
+  Dialog,
   InputField,
-  Select,
+  DialogFooter,
   useConsoleForm,
-} from '../../../../new-components/Form';
-import { QualifiedFunction } from '../../../hasura-metadata-types';
-import { useEffect } from 'react';
-import {
-  MetadataSelectors,
-  areTablesEqual,
-  useMetadata,
-} from '../../../hasura-metadata-api';
-import { getQualifiedTable } from '../../ManageTable/utils';
+  hasuraToast,
+  Collapsible,
+  showErrorNotification,
+  Text,
+  RadioGroupField,
+} from '@hasura/shared/ui';
+import { MetadataFunction, Source } from '@hasura/shared/types';
 import { useSetFunctionConfiguration } from '../../hooks/useSetFunctionConfiguration';
-import { hasuraToast } from '../../../../new-components/Toasts';
-import { DisplayToastErrorMessage } from '../../components/DisplayErrorMessage';
 import { cleanEmpty } from '../../../ConnectDBRedesign/components/ConnectPostgresWidget/utils/helpers';
-import { Collapsible } from '../../../../new-components/Collapsible';
-import { adaptFunctionName } from '../../TrackResources/TrackFunctions';
+import { functionDisplayName } from '@hasura/metadata/helpers';
 
 export type ModifyFunctionConfigurationProps = {
-  qualifiedFunction: QualifiedFunction;
-  dataSourceName: string;
+  currentFunction: MetadataFunction;
+  source: Source;
+  isVolatile?: boolean;
   onClose: () => void;
   onSuccess: () => void;
 };
+
+const exposeAsEnums = ['query', 'mutation'] as const;
 
 const validationSchema = z.object({
   custom_name: z.string().optional(),
@@ -35,99 +33,90 @@ const validationSchema = z.object({
       function_aggregate: z.string().optional(),
     })
     .optional(),
-  response: z
-    .object({
-      type: z.literal('table'),
-      table: z.string().min(1, { message: 'The return type is mandatory' }),
-    })
-    .optional(),
+  session_argument: z.string().optional(),
+  exposed_as: z.enum(exposeAsEnums).default('query'),
 });
 
 export type Schema = z.infer<typeof validationSchema>;
 
-export const ModifyFunctionConfiguration = (
-  props: ModifyFunctionConfigurationProps
-) => {
-  const { setFunctionConfiguration, isLoading } = useSetFunctionConfiguration({
-    dataSourceName: props.dataSourceName,
+export const ModifyFunctionConfiguration = ({
+  source,
+  currentFunction,
+  onSuccess,
+  onClose,
+  isVolatile,
+}: ModifyFunctionConfigurationProps) => {
+  const { setFunctionConfiguration, isPending } = useSetFunctionConfiguration({
+    dataSourceName: source.name,
   });
-
-  const { data: tableOptions = [] } = useMetadata(m =>
-    MetadataSelectors.findSource(props.dataSourceName)(m)?.tables.map(t => ({
-      label: getQualifiedTable(t.table).join(' / '),
-      value: JSON.stringify(t.table),
-    }))
-  );
-
-  const { data: metadataFunction, isFetched } = useMetadata(m =>
-    MetadataSelectors.findSource(props.dataSourceName)(m)?.functions?.find(f =>
-      areTablesEqual(f.function, props.qualifiedFunction)
-    )
-  );
 
   const {
     Form,
-    methods: { handleSubmit, reset, watch },
+    methods: { handleSubmit, watch },
   } = useConsoleForm({
     schema: validationSchema,
+    options: {
+      defaultValues: {
+        custom_name: currentFunction?.configuration?.custom_name ?? '',
+        custom_root_fields: currentFunction?.configuration?.custom_root_fields,
+        exposed_as: currentFunction.configuration?.exposed_as ?? 'query',
+        session_argument: currentFunction.configuration?.session_argument,
+      },
+    },
   });
-
-  useEffect(() => {
-    if (isFetched && metadataFunction) {
-      reset({
-        ...metadataFunction.configuration,
-        response: {
-          type: metadataFunction.configuration?.response?.type ?? 'table',
-          table: JSON.stringify(
-            metadataFunction.configuration?.response?.table
-          ),
-        },
-      });
-    }
-  }, [isFetched, metadataFunction, reset]);
 
   const onHandleSubmit = (data: Schema) => {
     setFunctionConfiguration({
-      qualifiedFunction: props.qualifiedFunction,
-      configuration: cleanEmpty({
-        ...data,
-        response: {
-          ...data.response,
-          table: data.response?.table ? JSON.parse(data.response?.table) : {},
-        },
-      }),
+      qualifiedFunction: currentFunction.function,
+      // the comment is edited separately; don't drop it when saving the rest
+      configuration: {
+        ...(currentFunction.configuration?.comment
+          ? { comment: currentFunction.configuration.comment }
+          : {}),
+        ...cleanEmpty(data),
+      },
       onSuccess: () => {
         hasuraToast({
           type: 'success',
           title: 'Success',
           message: `Updated successfully`,
         });
-        props.onSuccess();
+        onSuccess();
       },
-      onError: err => {
-        hasuraToast({
-          type: 'error',
-          title: err.name,
-          children: <DisplayToastErrorMessage message={err.message} />,
+      onError: (err) => {
+        showErrorNotification({
+          title: 'Updating function failed',
+          error: err,
         });
       },
     });
   };
 
   const customName = watch('custom_name');
+  const functionName = functionDisplayName({
+    qualifiedFunction: currentFunction.function,
+    separator: '_',
+  });
+
+  const exposedAsOptions = exposeAsEnums.map((exposedAs) => ({
+    label: exposedAs,
+    value: exposedAs,
+    disabled: exposedAs === 'mutation' && !isVolatile,
+  }));
+
+  const disabled = isPending;
 
   return (
     <Dialog
-      hasBackdrop
       title="Edit Function Configuration"
-      onClose={props.onClose}
+      onClose={onClose}
       footer={
-        <Dialog.Footer
+        <DialogFooter
           onSubmit={() => {
             handleSubmit(onHandleSubmit)();
           }}
-          isLoading={isLoading}
-          onClose={props.onClose}
+          isLoading={isPending}
+          onClose={onClose}
           callToDeny="Cancel"
           callToAction="Save Configuration"
           onSubmitAnalyticsName="actions-tab-generate-types-submit"
@@ -135,68 +124,69 @@ export const ModifyFunctionConfiguration = (
         />
       }
     >
-      <div className="p-4">
-        <Form
-          onSubmit={data => {
-            console.log('>>>', data);
-          }}
-        >
-          <InputField
-            name="custom_name"
-            label="Custom Name"
-            placeholder={adaptFunctionName(props.qualifiedFunction).join('_')}
-            clearButton
-            tooltip="The GraphQL nodes for the function will be generated according to the custom name"
-          />
+      <Form onSubmit={() => {}}>
+        <InputField
+          name="custom_name"
+          label="Custom Name"
+          fieldProps={{ placeholder: functionName, clearable: true, disabled }}
+          tooltip="The GraphQL nodes for the function will be generated according to the custom name"
+          learnMoreLink="https://hasura.io/docs/latest/graphql/core/schema/custom-functions.html#custom-function-root-fields"
+        />
 
-          <Collapsible
-            triggerChildren={
-              <div className="font-semibold text-muted">Custom Root Fields</div>
-            }
-          >
+        <InputField
+          name="session_argument"
+          label="Session argument"
+          tooltip="Function argument which accepts session info JSON"
+          learnMoreLink="http://hasura.io/docs/2.0/schema/postgres/custom-functions/#accessing-hasura-session-variables-in-custom-functions"
+          fieldProps={{
+            placeholder: 'hasura_session',
+            disabled,
+          }}
+        />
+        <div className="mb-4">
+          <RadioGroupField
+            label="Exposed as"
+            orientation="horizontal"
+            tooltip="In which part of the schema should we expose this function?"
+            name="exposed_as"
+            options={exposedAsOptions}
+            noErrorPlaceholder
+            disabled={disabled}
+          />
+        </div>
+        <Collapsible
+          triggerChildren={<Text weight="medium">Custom Root Fields</Text>}
+          defaultOpen={Boolean(
+            currentFunction?.configuration?.custom_name ||
+            currentFunction?.configuration?.custom_root_fields,
+          )}
+        >
+          <div className="mb-4">
             <InputField
               name="custom_root_fields.function"
               label="Function"
-              placeholder={
-                customName?.length
-                  ? customName
-                  : adaptFunctionName(props.qualifiedFunction).join('_')
-              }
+              noErrorPlaceholder
+              fieldProps={{
+                placeholder: customName || functionName,
+                clearable: true,
+                disabled,
+              }}
               tooltip="Customize the <function-name> root field"
-              clearButton
             />
-            <InputField
-              name="custom_root_fields.function_aggregate"
-              label="Function Aggregate"
-              placeholder={`${
-                customName?.length
-                  ? customName
-                  : adaptFunctionName(props.qualifiedFunction).join('_')
-              }_aggregate`}
-              tooltip="Customize the <function-name>_aggregate root field"
-              clearButton
-            />
-          </Collapsible>
-
-          <Collapsible
-            triggerChildren={
-              <div className="font-semibold text-muted">Response Settings</div>
-            }
-            defaultOpen
-          >
-            <div className="hidden">
-              <InputField name="response.type" label="type" />
-            </div>
-
-            <Select
-              label="Select a return type"
-              placeholder="Return type must be one of the tables tracked"
-              name="response.table"
-              options={tableOptions}
-            />
-          </Collapsible>
-        </Form>
-      </div>
+          </div>
+          <InputField
+            name="custom_root_fields.function_aggregate"
+            label="Function Aggregate"
+            noErrorPlaceholder
+            fieldProps={{
+              placeholder: `${customName || functionName}_aggregate`,
+              clearable: true,
+              disabled,
+            }}
+            tooltip="Customize the <function-name>_aggregate root field"
+          />
+        </Collapsible>
+      </Form>
     </Dialog>
   );
 };

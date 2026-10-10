@@ -1,14 +1,13 @@
 import React from 'react';
-import { StoryObj, Meta } from '@storybook/react';
-import { within, userEvent, waitFor } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 import {
   RestEndpointDetails,
   RestEndpointDetailsProps,
 } from './RestEndpointDetails';
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
-import { handlers } from '../../../../mocks/metadata.mock';
-import { rest } from 'msw';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
+// import { handlers } from '@hasura/shared/testing';
+import { http, HttpResponse, delay as mswDelay } from 'msw';
 
 const meta = {
   title: 'Features/REST endpoints/Rest Endpoint Details',
@@ -16,20 +15,18 @@ const meta = {
   decorators: [ReactQueryDecorator()],
   parameters: {
     msw: [
-      ...handlers({ delay: 0 }),
-      rest.post('**/api/rest/test/1', (req, res, ctx) =>
-        res(
-          ctx.delay(0),
-          ctx.json({
-            data: {
-              update_user_by_pk: {
-                id: 1,
-                name: 'Hasura',
-              },
+      // ...handlers({ delay: 0 }),
+      http.post('**/api/rest/test/1', async () => {
+        await mswDelay(0);
+        return HttpResponse.json({
+          data: {
+            update_user_by_pk: {
+              id: 1,
+              name: 'Hasura',
             },
-          })
-        )
-      ),
+          },
+        });
+      }),
     ],
   },
   argTypes: {},
@@ -38,7 +35,7 @@ const meta = {
 export default meta;
 
 export const Default: StoryObj<RestEndpointDetailsProps> = {
-  render: args => {
+  render: (args) => {
     return <RestEndpointDetails {...args} name="MyQuery" />;
   },
 };
@@ -46,8 +43,8 @@ export const Default: StoryObj<RestEndpointDetailsProps> = {
 Default.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
-  await waitFor(() => {
-    expect(canvas.queryByText('Run Request')).toBeEnabled();
+  await waitFor(async () => {
+    await expect(canvas.queryByText('Run Request')).toBeEnabled();
   });
 
   // await expect(screen.queryByText('user')).toBeInTheDocument();
@@ -68,7 +65,7 @@ Default.play = async ({ canvasElement }) => {
 
   await userEvent.type(
     canvas.getByTestId('variable-object'),
-    '{"object": {"name": "Hasura"}}'
+    '{"object": {"name": "Hasura"}}',
   );
 
   await userEvent.click(canvas.getByText('Run Request'));

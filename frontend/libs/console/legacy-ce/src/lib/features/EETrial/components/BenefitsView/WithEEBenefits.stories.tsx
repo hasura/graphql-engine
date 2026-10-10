@@ -1,14 +1,15 @@
 import React from 'react';
-import { StoryObj, Meta } from '@storybook/react';
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
-import { Button } from '../../../../new-components/Button';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
+import { Flex } from '@radix-ui/themes';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
+import { Button } from '@hasura/shared/ui';
 import { eeLicenseInfo } from '../../mocks/http';
 import { WithEEBenefits } from './WithEEBenefits';
-import { useQueryClient } from 'react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { EE_LICENSE_INFO_QUERY_NAME } from '../../constants';
 
 export default {
-  title: 'features/EETrial/ BenefitsView 🧬️',
+  title: 'features/EETrial/WithEEBenefits 🧬️',
   parameters: {
     Benefits: {
       source: { type: 'code' },
@@ -20,9 +21,9 @@ export default {
     // So we need to refetch the cache data, so it doesn't persist across different stories. And
     // it makes sure that our component actually does the network call, letting msw mocks return the
     // desired response.
-    Story => {
+    (Story) => {
       const queryClient = useQueryClient();
-      void queryClient.refetchQueries(EE_LICENSE_INFO_QUERY_NAME);
+      void queryClient.refetchQueries({ queryKey: EE_LICENSE_INFO_QUERY_NAME });
       return <Story />;
     },
     ReactQueryDecorator(),
@@ -30,12 +31,12 @@ export default {
 } as Meta<typeof WithEEBenefits>;
 
 export const ButtonWithEEBenefits: StoryObj<typeof WithEEBenefits> = {
-  render: args => (
-    <div className="w-full h-20 flex items-center justify-center bg-slate-600">
+  render: (args) => (
+    <Flex align="center" justify="center" className="w-full h-20 bg-slate-600">
       <WithEEBenefits id="button-with-ee-benefits">
         <Button mode="primary">Button With EE Benefits</Button>
       </WithEEBenefits>
-    </div>
+    </Flex>
   ),
 
   parameters: {

@@ -1,24 +1,29 @@
-import React from 'react';
 import { FieldError, useFieldArray, useFormContext } from 'react-hook-form';
-import { Select } from '../../../../../new-components/Form';
+import {
+  Button,
+  getDialogPortalTarget,
+  IconButton,
+  IndicatorCard,
+  ReactSelectField,
+  Text,
+} from '@hasura/shared/ui';
 import {
   FaArrowAltCircleLeft,
   FaArrowAltCircleRight,
   FaArrowRight,
-  FaExclamationCircle,
   FaTimesCircle,
 } from 'react-icons/fa';
-import { Button } from '../../../../../new-components/Button';
-import { TableColumn } from '../../../../DataSource';
+import { TableColumn } from '@hasura/metadata/data-source';
 import get from 'lodash/get';
+import { Flex } from '@radix-ui/themes';
+import { createFilter } from 'react-select';
 
-type Schema = Record<
-  string,
-  {
-    from: string;
-    to: string;
-  }[]
->;
+type SchemaValue = {
+  from?: string;
+  to?: string;
+};
+
+type Schema = Record<string, SchemaValue[]>;
 
 export const MapColumns = ({
   name,
@@ -39,32 +44,43 @@ export const MapColumns = ({
 
   const maybeError = get(errors, name) as unknown as FieldError;
 
-  const columnMappings: {
-    from: string;
-    to: string;
-  }[] = watch(name);
+  const columnMappings: SchemaValue[] = watch(name);
+  const commonSelectProps = {
+    filterOption: createFilter({
+      ignoreCase: true,
+      matchFrom: 'any',
+    }),
+    menuPortalTarget: getDialogPortalTarget(),
+  };
 
   return (
-    <div className="px-md pb-md mb-md mt-0 h">
-      <div className="grid grid-cols-12 mb-1 items-center font-semibold text-muted">
-        <div className="col-span-6 flex items-center">
-          Source Column{' '}
-          <FaArrowAltCircleRight className="fill-emerald-700 ml-1.5" />
-        </div>
-        <div className="col-span-6 flex items-center">
-          Reference Column{' '}
-          <FaArrowAltCircleLeft className="fill-violet-700 ml-1.5" />
-        </div>
-      </div>
+    <div className="my-4">
+      <Flex align="center" justify="between" className="mb-2">
+        <Flex align="center" gap="2" className="w-5/12">
+          <Text>Source Column</Text>
+          <Text color="green">
+            <FaArrowAltCircleRight />
+          </Text>
+        </Flex>
+        <Flex align="center" gap="2" className="w-5/12">
+          <Text>Reference Column</Text>
+          <Text color="purple">
+            <FaArrowAltCircleLeft />
+          </Text>
+        </Flex>
+      </Flex>
       {fields.map((field, index) => {
         return (
-          <div
-            className="grid grid-cols-12 items-center mb-sm"
+          <Flex
+            align="center"
+            justify="between"
+            gap="2"
+            className="mb-2"
             key={`${index}_column_map_row`}
           >
-            <div className="col-span-5">
-              <Select
-                options={sourceTableColumns.map(column => ({
+            <Flex align="center" justify="between" className="w-5/12">
+              <ReactSelectField
+                options={sourceTableColumns.map((column) => ({
                   label: column.name,
                   value: column.name,
                 }))}
@@ -72,15 +88,13 @@ export const MapColumns = ({
                 disabled={!sourceTableColumns?.length}
                 placeholder="Select source column"
                 noErrorPlaceholder
+                selectProps={commonSelectProps}
               />
-            </div>
-
-            <div className="flex justify-around">
-              <FaArrowRight className="fill-muted" />
-            </div>
-            <div className="col-span-5">
-              <Select
-                options={(targetTableColumns ?? []).map(column => ({
+            </Flex>
+            <FaArrowRight className="fill-muted" />
+            <Flex align="center" justify="between" className="w-5/12" gap="2">
+              <ReactSelectField
+                options={(targetTableColumns ?? []).map((column) => ({
                   label: column.name,
                   value: column.name,
                 }))}
@@ -88,34 +102,36 @@ export const MapColumns = ({
                 disabled={!targetTableColumns?.length}
                 placeholder="Select reference column"
                 noErrorPlaceholder
+                selectProps={commonSelectProps}
               />
-            </div>
-            <div className="flex justify-around">
-              <Button
+              <IconButton
                 type="button"
-                size="sm"
-                className="h-10"
-                icon={<FaTimesCircle />}
+                mode="primary"
+                variant="ghost"
+                radius="full"
                 onClick={() => {
                   setValue(
                     name,
-                    columnMappings.filter((_, i) => index !== i)
+                    columnMappings.filter((_, i) => index !== i),
                   );
                 }}
-              />
-            </div>
-          </div>
+              >
+                <FaTimesCircle />
+              </IconButton>
+            </Flex>
+          </Flex>
         );
       })}
       {maybeError && (
-        <div className="text-red-600 mt-1 flex items-center text-sm">
-          <FaExclamationCircle className="fill-current h-4 w-4 mr-xs shrink-0" />{' '}
+        <IndicatorCard status="negative" showIcon>
           {maybeError.message}
-        </div>
+        </IndicatorCard>
       )}
       <div className="my-4">
         <Button
           type="button"
+          size="1"
+          mode="default"
           onClick={() => append({})}
           disabled={!targetTableColumns?.length || !sourceTableColumns?.length}
         >

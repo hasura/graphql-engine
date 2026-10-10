@@ -1,5 +1,3 @@
-import produce from 'immer';
-
 import type {
   PreFlightCheckParams,
   PreFlightCheckResult,
@@ -14,7 +12,7 @@ const happyPathParams: PreFlightCheckParams = {
       root: 'libs/console/legacy-ce',
       targets: {
         'build-storybook': {
-          executor: '@nrwl/storybook:build',
+          executor: '@nx/storybook:build',
           options: {
             outputPath: 'dist/storybook/console/legacy-ce',
           },
@@ -43,10 +41,14 @@ describe('executorPreFlightCheck', () => {
   describe('Env vars combinations', () => {
     describe('BUILDKITE_PULL_REQUEST', () => {
       it('When passed with a number for BUILDKITE_PULL_REQUEST, it returns we are on the pr branch', () => {
-        const params = produce(happyPathParams, draft => {
-          // @ts-expect-error Trying every crazy possible env var value
-          draft.envVars.BUILDKITE_PULL_REQUEST = 9999;
-        });
+        const params: PreFlightCheckParams = {
+          ...happyPathParams,
+          envVars: {
+            ...happyPathParams.envVars,
+            // @ts-expect-error Trying every crazy possible env var value
+            BUILDKITE_PULL_REQUEST: 9999,
+          },
+        };
 
         const expected: PreFlightCheckResult = {
           mode: 'pr',
@@ -59,9 +61,13 @@ describe('executorPreFlightCheck', () => {
       });
 
       it('When passed with an empty BUILDKITE_PULL_REQUEST, it returns we are on the main branch', () => {
-        const params = produce(happyPathParams, draft => {
-          draft.envVars.BUILDKITE_PULL_REQUEST = '';
-        });
+        const params: PreFlightCheckParams = {
+          ...happyPathParams,
+          envVars: {
+            ...happyPathParams.envVars,
+            BUILDKITE_PULL_REQUEST: '',
+          },
+        };
 
         const expected: PreFlightCheckResult = {
           mode: 'mainBranch',
@@ -73,9 +79,13 @@ describe('executorPreFlightCheck', () => {
       });
 
       it('When passed with an undefined BUILDKITE_PULL_REQUEST, it returns we are on the main branch', () => {
-        const params = produce(happyPathParams, draft => {
-          draft.envVars.BUILDKITE_PULL_REQUEST = undefined;
-        });
+        const params: PreFlightCheckParams = {
+          ...happyPathParams,
+          envVars: {
+            ...happyPathParams.envVars,
+            BUILDKITE_PULL_REQUEST: undefined,
+          },
+        };
 
         const expected: PreFlightCheckResult = {
           mode: 'mainBranch',
@@ -87,9 +97,13 @@ describe('executorPreFlightCheck', () => {
       });
 
       it('When passed with a "false" BUILDKITE_PULL_REQUEST, it returns we are on the main branch', () => {
-        const params = produce(happyPathParams, draft => {
-          draft.envVars.BUILDKITE_PULL_REQUEST = 'false';
-        });
+        const params: PreFlightCheckParams = {
+          ...happyPathParams,
+          envVars: {
+            ...happyPathParams.envVars,
+            BUILDKITE_PULL_REQUEST: 'false',
+          },
+        };
 
         const expected: PreFlightCheckResult = {
           mode: 'mainBranch',
@@ -103,42 +117,64 @@ describe('executorPreFlightCheck', () => {
 
     describe('BUILDKITE', () => {
       it('When passed with an empty BUILDKITE, it returns we are on the main branch', () => {
-        const params = produce(happyPathParams, draft => {
-          draft.envVars.BUILDKITE = '';
-        });
+        const params: PreFlightCheckParams = {
+          ...happyPathParams,
+          envVars: {
+            ...happyPathParams.envVars,
+            BUILDKITE: '',
+          },
+        };
 
         expect(() => executorPreFlightCheck(params)).toThrow(
-          new Error('Chromatic executor should only been run in CI')
+          new Error('Chromatic executor should only been run in CI'),
         );
       });
 
       it('When passed with an undefined BUILDKITE, it returns we are on the main branch', () => {
-        const params = produce(happyPathParams, draft => {
-          draft.envVars.BUILDKITE = undefined;
-        });
+        const params: PreFlightCheckParams = {
+          ...happyPathParams,
+          envVars: {
+            ...happyPathParams.envVars,
+            BUILDKITE: undefined,
+          },
+        };
 
         expect(() => executorPreFlightCheck(params)).toThrow(
-          new Error('Chromatic executor should only been run in CI')
+          new Error('Chromatic executor should only been run in CI'),
         );
       });
     });
   });
 
   it('When the projectName is empty, it must throw', () => {
-    const params = produce(happyPathParams, draft => {
-      draft.executorContextProjectName.projectName = '';
-    });
+    const params: PreFlightCheckParams = {
+      ...happyPathParams,
+      executorContextProjectName: {
+        ...happyPathParams.executorContextProjectName,
+        projectName: '',
+      },
+    };
 
     expect(() => executorPreFlightCheck(params)).toThrow(
-      new Error(`Unexpected project name `)
+      new Error(`Unexpected project name `),
     );
   });
 
   it('When the outputPath is missing, it must return a default value', () => {
-    const params = produce(happyPathParams, draft => {
-      if (draft.executorContextProjectName.projectConfiguration)
-        draft.executorContextProjectName.projectConfiguration.targets = {};
-    });
+    const params: PreFlightCheckParams = happyPathParams
+      .executorContextProjectName.projectConfiguration
+      ? {
+          ...happyPathParams,
+          executorContextProjectName: {
+            ...happyPathParams.executorContextProjectName,
+            projectConfiguration: {
+              ...happyPathParams.executorContextProjectName
+                .projectConfiguration,
+              targets: {},
+            },
+          },
+        }
+      : happyPathParams;
 
     const expected: PreFlightCheckResult = {
       mode: 'pr',

@@ -1,22 +1,10 @@
-import React from 'react';
-import { useHttpClient } from '../../Network';
-import { useQuery } from 'react-query';
 import { useFormContext } from 'react-hook-form';
-import { SupportedDrivers } from '../../hasura-metadata-types';
-import { DataSource, Feature } from '../../DataSource';
-import { OpenApi3Form } from '../../OpenApi3Form';
-import { IndicatorCard } from '../../../new-components/IndicatorCard';
-
-const useConfigSchema = (driver: SupportedDrivers) => {
-  const httpClient = useHttpClient();
-  return useQuery({
-    queryKey: [driver, 'configSchema'],
-    queryFn: async () => {
-      return DataSource(httpClient).connectDB.getConfigSchema(driver);
-    },
-    enabled: !!driver,
-  });
-};
+import { SupportedDriver } from '@hasura/shared/types';
+import { IndicatorCard, OpenApi3Form } from '@hasura/shared/ui';
+import {
+  NotImplementedError,
+  useDatabaseConfiguration,
+} from '@hasura/metadata/data-source';
 
 interface Props {
   name: string;
@@ -24,18 +12,21 @@ interface Props {
 
 export const Configuration = ({ name }: Props) => {
   const { watch } = useFormContext();
-  const driver: SupportedDrivers = watch('driver');
-  const { data: schema, isLoading, isError } = useConfigSchema(driver);
+  const driver: SupportedDriver = watch('driver');
+  const { data: schema, isLoading, error } = useDatabaseConfiguration(driver);
 
-  if (isError)
+  if (error) {
+    if (error instanceof NotImplementedError) {
+      return (
+        <IndicatorCard>Feature is not available for {driver}</IndicatorCard>
+      );
+    }
+
     return (
       <IndicatorCard status="negative">
         Error loading driver configuration
       </IndicatorCard>
     );
-
-  if (schema === Feature.NotImplemented) {
-    return <IndicatorCard>Feature is not available for {driver}</IndicatorCard>;
   }
 
   if (!driver) {

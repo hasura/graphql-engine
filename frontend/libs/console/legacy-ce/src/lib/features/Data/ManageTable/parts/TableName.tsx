@@ -1,104 +1,139 @@
-import { Badge } from '../../../../new-components/Badge';
-import { Button } from '../../../../new-components/Button';
-import { DropdownMenu } from '../../../../new-components/DropdownMenu';
-import React from 'react';
-import { FaChevronDown, FaTable } from 'react-icons/fa';
-import { useUntrackTable } from '../hooks/useUntrackTable';
-import { Table } from '../../../hasura-metadata-types';
-import { hasuraToast } from '../../../../new-components/Toasts';
-import { useAppDispatch } from '../../../../storeHooks';
-import { getRoute } from '../../../../utils/getDataRoute';
-import _push from '../../../../components/Services/Data/push';
-import AceEditor from 'react-ace';
-import { CreateRestEndpoint } from '../../../../components/Common/EditableHeading/CreateRestEndpoints';
-import { MetadataSelectors, useMetadata } from '../../../hasura-metadata-api';
+import {
+  Badge,
+  DestructiveDialogCascade,
+  DropdownButton,
+  DropdownMenu,
+  getDestructiveDescription,
+  hasuraToast,
+  showErrorNotification,
+  Text,
+} from '@hasura/shared/ui';
+import { Flex } from '@radix-ui/themes';
+import React, { useState } from 'react';
+import { FaTable } from 'react-icons/fa';
+import { Source, Table } from '@hasura/shared/types';
+import { CreateRestEndpoint } from '../../../ApiExplorer/components/Rest/CreateRestEndpoints';
+import { useUntrackTable } from '@hasura/metadata/api';
+import { useNavigate } from 'react-router';
+import { dataRoutes, extractTableInfo } from '@hasura/shared/utils';
+import { isNativeDriver } from '@hasura/metadata/helpers';
+import { getDatabaseMethods, useDropTable } from '@hasura/metadata/data-source';
+import { SchemaDropdown } from '../../ManageDatabase/parts';
 
-export const TableName: React.VFC<{
-  dataSourceName: string;
+export const TableName: React.FC<{
+  source: Source;
   table: Table;
   tableName: string;
-}> = ({ tableName, dataSourceName, table }) => {
-  const dispatch = useAppDispatch();
-  const { data: driver = '' } = useMetadata(
-    m => MetadataSelectors.findSource(dataSourceName)(m)?.kind
-  );
-  const { untrackTable } = useUntrackTable({
-    onSuccess: () => {
-      hasuraToast({
-        type: 'success',
-        title: 'Successfully untracked table',
+}> = ({ source, table, tableName }) => {
+  const navigate = useNavigate();
+  const { mutateAsync: untrackTable, isPending: isUntracking } =
+    useUntrackTable();
+  const { mutate: dropTable, isPending: isDropping } = useDropTable();
+  const [openDestructiveDialog, setOpenDestructiveDialog] = useState<
+    'none' | 'untrack' | 'delete'
+  >('none');
+
+  const dbMethods = getDatabaseMethods(source.kind);
+
+  const handleUntrack = (cascade: boolean) => {
+    return untrackTable({ source, table, cascade })
+      .then(() => {
+        hasuraToast({
+          type: 'success',
+          title: 'Successfully untracked table',
+        });
+        setOpenDestructiveDialog('none');
+        navigate(dataRoutes.manageDatabaseSource(source.name));
+      })
+      .catch((err) => {
+        showErrorNotification({
+          title: 'Error while untracking table',
+          error: err,
+        });
       });
-      dispatch(_push(getRoute().database(dataSourceName)));
-    },
-    onError: err => {
-      hasuraToast({
-        type: 'error',
-        title: 'Error while untracking table',
-        children: (
-          <div className="overflow-hidden">
-            <AceEditor
-              theme="github"
-              setOptions={{
-                maxLines: Infinity,
-                showGutter: false,
-                useWorker: false,
-              }}
-              value={JSON.stringify(err)}
-              readOnly
-            />
-          </div>
-        ),
-      });
-    },
-  });
+  };
+
+  const handleDelete = (cascade: boolean) => {
+    return dropTable(
+      {
+        source,
+        table,
+        cascade,
+      },
+      {
+        onSuccess: () => {
+          navigate(dataRoutes.manageDatabaseSource(source.name));
+        },
+      },
+    );
+  };
 
   return (
-    <div className="flex items-center gap-3 mb-3">
-      <div className="group relative">
+    <>
+      <Flex align="center" gap="3" className="mb-3">
+        <SchemaDropdown source={source} />
+        <DropdownButton
+          mode="default"
+          variant="ghost"
+          leftIcon={FaTable}
+          disabled={isUntracking || isDropping}
+          items={[
+            <DropdownMenu.Item
+              key="untrack"
+              onSelect={() => setOpenDestructiveDialog('untrack')}
+            >
+              Untrack
+            </DropdownMenu.Item>,
+          ].concat(
+            dbMethods.modify?.dropTable
+              ? [
+                  <DropdownMenu.Item
+                    key="delete"
+                    color="red"
+                    onSelect={() => setOpenDestructiveDialog('delete')}
+                  >
+                    Delete
+                  </DropdownMenu.Item>,
+                ]
+              : [],
+          )}
+        >
+          <Text weight="bold">{tableName}</Text>
+        </DropdownButton>
         <div>
-          <DropdownMenu
-            items={[
-              [
-                <span
-                  className="py-xs text-red-600"
-                  onClick={() => {
-                    untrackTable({ dataSourceName, table });
-                  }}
-                >
-                  Untrack {tableName}
-                </span>,
-              ],
-            ]}
-          >
-            <div className="flex gap-0.5 items-center">
-              <Button
-                iconPosition="end"
-                icon={
-                  <FaChevronDown
-                    size={12}
-                    className="text-gray-400 text-sm transition-transform group-radix-state-open:rotate-180"
-                  />
-                }
-              >
-                <div className="flex flex-row items-center ">
-                  <FaTable className="mr-1.5" size={12} />
-                  <span className="text-lg">{tableName}</span>
-                </div>
-              </Button>
-            </div>
-          </DropdownMenu>
+          <Badge color="green">Tracked</Badge>
         </div>
-      </div>
-      <div>
-        <Badge color="green">Tracked</Badge>
-      </div>
-      {['postgres', 'mssql', 'bigquery'].includes(driver) && (
-        <CreateRestEndpoint
-          tableName={tableName.split('.')[tableName.split('.').length - 1]}
-          dataSourceName={dataSourceName}
-          table={table}
-        />
+        {isNativeDriver(source.kind) && (
+          <CreateRestEndpoint
+            tableName={
+              extractTableInfo(table)?.name ||
+              tableName.split('.').pop() ||
+              tableName
+            }
+            dataSourceName={source.name}
+            table={table}
+          />
+        )}
+      </Flex>
+      {openDestructiveDialog !== 'none' && (
+        <DestructiveDialogCascade
+          title={
+            openDestructiveDialog === 'untrack'
+              ? 'Untrack table'
+              : 'Delete table'
+          }
+          onClose={() => setOpenDestructiveDialog('none')}
+          onConfirm={
+            openDestructiveDialog === 'untrack' ? handleUntrack : handleDelete
+          }
+        >
+          {getDestructiveDescription({
+            destroyTerm: openDestructiveDialog,
+            resourceName: tableName,
+            resourceType: 'table',
+          })}
+        </DestructiveDialogCascade>
       )}
-    </div>
+    </>
   );
 };

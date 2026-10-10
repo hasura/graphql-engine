@@ -1,4 +1,4 @@
-import { MetadataTable } from '../../../hasura-metadata-types/source/table';
+import { MetadataTable } from '@hasura/shared/types';
 export const partiallyAppliedPermissionsData = {
   table: ['Album'],
   select_permissions: [

@@ -1,13 +1,12 @@
 import { FaCheck } from 'react-icons/fa';
-import { IndicatorCard } from '../../../../new-components/IndicatorCard';
+import { IndicatorCard } from '@hasura/shared/ui';
 
 export const SuccessLogicalModelsInferBadge = () => {
   return (
     <IndicatorCard
       status="positive"
-      className="py-4 px-md"
+      className="py-4 px-4"
       showIcon
-      contentFullWidth
       customIcon={() => <FaCheck />}
     >
       <div className='flex items-center justify-between mx-4"'>

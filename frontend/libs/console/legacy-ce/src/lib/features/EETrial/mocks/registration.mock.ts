@@ -1,6 +1,6 @@
-import { graphql } from 'msw';
+import { HttpResponse } from 'msw';
+import { graphql } from 'msw/graphql';
 import { eeTrialsLuxDataEndpoint } from '../utils';
-import { GraphQLError } from 'graphql';
 import { EETrialRegistrationResponse } from '../types';
 
 const controlPlaneApi = graphql.link(eeTrialsLuxDataEndpoint);
@@ -8,42 +8,45 @@ const controlPlaneApi = graphql.link(eeTrialsLuxDataEndpoint);
 export const registerEETrialLicenseActiveMutation =
   controlPlaneApi.mutation<EETrialRegistrationResponse>(
     'registerEETrial',
-    (req, res, ctx) => {
-      return res(
-        ctx.status(200),
-        ctx.data({
-          registerEETrial: {
-            client_id: 'id',
-            client_secret: 'secret',
+    () => {
+      return HttpResponse.json(
+        {
+          data: {
+            registerEETrial: {
+              client_id: 'id',
+              client_secret: 'secret',
+            },
           },
-        })
+        },
+        { status: 200 },
       );
-    }
+    },
   );
 
-export const registerEETrialErrorMutation = controlPlaneApi.mutation<
-  GraphQLError[]
->('registerEETrial', (req, res, ctx) => {
-  return res(
-    ctx.status(200),
-    ctx.errors([
+export const registerEETrialErrorMutation = controlPlaneApi.mutation(
+  'registerEETrial',
+  () => {
+    return HttpResponse.json(
       {
-        extensions: {
-          code: 'legacyError',
-        },
-        message: "couldn't find registerEETrial in mutation_root",
+        errors: [
+          {
+            extensions: {
+              code: 'legacyError',
+            },
+            message: "couldn't find registerEETrial in mutation_root",
+          },
+        ],
       },
-    ])
-  );
-});
+      { status: 200 },
+    );
+  },
+);
 
 export const registerEETrialLicenseAlreadyAppliedMutation =
-  controlPlaneApi.mutation<GraphQLError[]>(
-    'registerEETrial',
-    (req, res, ctx) => {
-      return res(
-        ctx.status(200),
-        ctx.errors([
+  controlPlaneApi.mutation('registerEETrial', () => {
+    return HttpResponse.json(
+      {
+        errors: [
           {
             extensions: {
               code: 'legacyError',
@@ -51,23 +54,26 @@ export const registerEETrialLicenseAlreadyAppliedMutation =
             },
             message: 'license already applied',
           },
-        ])
-      );
-    }
-  );
+        ],
+      },
+      { status: 200 },
+    );
+  });
 
 export const activateEETrialMutatationSuccess =
   controlPlaneApi.mutation<EETrialRegistrationResponse>(
     'registerEETrial',
-    (req, res, ctx) => {
-      return res(
-        ctx.status(200),
-        ctx.data({
-          registerEETrial: {
-            client_id: 'id',
-            client_secret: 'secret',
+    () => {
+      return HttpResponse.json(
+        {
+          data: {
+            registerEETrial: {
+              client_id: 'id',
+              client_secret: 'secret',
+            },
           },
-        })
+        },
+        { status: 200 },
       );
-    }
+    },
   );

@@ -1,16 +1,16 @@
 import { FaInfo } from 'react-icons/fa';
-import { IndicatorCard } from '../../../../new-components/IndicatorCard';
+import { IndicatorCard } from '@hasura/shared/ui';
+import { Flex } from '@radix-ui/themes';
 
 export const LogicalModelsBadge = () => {
   return (
     <IndicatorCard
       status="info"
-      className="py-4 px-md"
+      className="py-4 px-4"
       showIcon
-      contentFullWidth
       customIcon={() => <FaInfo />}
     >
-      <div className='flex items-center justify-between mx-4"'>
+      <Flex align="center" justify="between" className='mx-4"'>
         <div>
           <h1 className="font-bold text-lg">
             A Logical Model is required for your Collection schema.
@@ -20,7 +20,7 @@ export const LogicalModelsBadge = () => {
             Logical Model.
           </div>
         </div>
-      </div>
+      </Flex>
     </IndicatorCard>
   );
 };

@@ -1,5 +1,5 @@
 import startCase from 'lodash/startCase';
-import { BreadcrumbItem } from '../../../../new-components/Breadcrumbs/Breadcrumbs';
+import { BreadcrumbItem } from '@hasura/shared/ui';
 import { RouteWrapperProps } from './RouteWrapper';
 
 export const injectRouteDetails = (
@@ -8,7 +8,7 @@ export const injectRouteDetails = (
     itemName,
     itemSourceName,
     itemTabName,
-  }: Pick<RouteWrapperProps, 'itemName' | 'itemSourceName' | 'itemTabName'>
+  }: Pick<RouteWrapperProps, 'itemName' | 'itemSourceName' | 'itemTabName'>,
 ) => {
   return path
     .replace('{{source}}', itemSourceName ?? '')
@@ -19,7 +19,7 @@ export const injectRouteDetails = (
 export const pathsToBreadcrumbs = (
   paths: string[],
   props: RouteWrapperProps,
-  _push: (path: string) => void
+  _push: (path: string) => void,
 ): BreadcrumbItem[] =>
   paths.reduce<BreadcrumbItem[]>((prev, path, index, arr) => {
     // skip source in path
@@ -47,7 +47,7 @@ export const pathsToBreadcrumbs = (
 
                 const newPath = injectRouteDetails(
                   `/${paths.slice(0, pathIndex + 1).join('/')}`,
-                  props
+                  props,
                 );
 
                 _push(newPath);

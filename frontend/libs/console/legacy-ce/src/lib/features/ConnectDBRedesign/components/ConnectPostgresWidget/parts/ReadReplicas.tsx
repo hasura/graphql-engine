@@ -1,10 +1,19 @@
 import { useFieldArray, useFormContext } from 'react-hook-form';
-import { Button } from '../../../../../new-components/Button';
-import { CardedTable } from '../../../../../new-components/CardedTable';
+import {
+  Button,
+  CardedTable,
+  IndicatorCard,
+  Dialog,
+  Collapsible,
+  Card,
+  Text,
+  IconButton,
+} from '@hasura/shared/ui';
+
 import { useState } from 'react';
 import { ConnectionInfoSchema } from '../schema';
 import { FaEdit, FaPlus, FaTrash } from 'react-icons/fa';
-import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
+
 import {
   areSSLSettingsEnabled,
   getDatabaseConnectionDisplayName,
@@ -14,8 +23,6 @@ import { PoolSettings } from './PoolSettings';
 import { IsolationLevel } from './IsolationLevel';
 import { UsePreparedStatements } from './UsePreparedStatements';
 import { SslSettings } from './SslSettings';
-import { Dialog } from '../../../../../new-components/Dialog';
-import { Collapsible } from '../../../../../new-components/Collapsible';
 
 export const ReadReplicas = ({
   name,
@@ -38,60 +45,67 @@ export const ReadReplicas = ({
   const [activeRow, setActiveRow] = useState<number>();
 
   return (
-    <div className="my-2">
-      {!fields?.length ? (
-        <IndicatorCard status="info">No read replicas added.</IndicatorCard>
-      ) : (
-        <CardedTable
-          columns={['No', 'Read Replica', null]}
-          data={(readReplicas ?? []).map((field, i) => [
-            i + 1,
-            <div>{getDatabaseConnectionDisplayName(field.databaseUrl)}</div>,
-            <div className="flex gap-3 justify-end">
-              <Button
-                size="sm"
-                icon={<FaEdit />}
-                onClick={() => {
-                  setActiveRow(i);
-                  setMode('edit');
-                }}
-              />
-              <Button
-                size="sm"
-                icon={<FaTrash />}
-                onClick={() => {
-                  setValue(
-                    name,
-                    readReplicas.filter((_, index) => index !== i)
-                  );
-                }}
-              />
-            </div>,
-          ])}
-          showActionCell
-        />
-      )}
-
+    <>
+      <div className="mb-2">
+        {!fields?.length ? (
+          <IndicatorCard status="info">No read replicas added.</IndicatorCard>
+        ) : (
+          <CardedTable
+            columns={['No', 'Read Replica', null]}
+            data={(readReplicas ?? []).map((field, i) => [
+              i + 1,
+              <div key={`url-${i}`}>
+                {getDatabaseConnectionDisplayName(field.databaseUrl)}
+              </div>,
+              <div key={`actions-${i}`} className="flex gap-3 justify-end">
+                <IconButton
+                  variant="ghost"
+                  onClick={() => {
+                    setActiveRow(i);
+                    setMode('edit');
+                  }}
+                >
+                  <FaEdit />
+                </IconButton>
+                <IconButton
+                  variant="ghost"
+                  color="red"
+                  onClick={() => {
+                    setValue(
+                      name,
+                      readReplicas.filter((_, index) => index !== i),
+                    );
+                  }}
+                >
+                  <FaTrash />
+                </IconButton>
+              </div>,
+            ])}
+          />
+        )}
+      </div>
       {mode === 'idle' && (
-        <Button
-          type="button"
-          onClick={() => {
-            setMode('add');
-            append({
-              databaseUrl: { connectionType: 'databaseUrl', url: '' },
-            });
-            setActiveRow(readReplicas?.length ?? 0);
-          }}
-          mode="primary"
-          icon={<FaPlus />}
-        >
-          Add New Read Replica
-        </Button>
+        <div className="mt-2">
+          <Button
+            type="button"
+            onClick={() => {
+              setMode('add');
+              append({
+                databaseUrl: { connectionType: 'databaseUrl', url: '' },
+              });
+              setActiveRow(readReplicas?.length ?? 0);
+            }}
+            mode="default"
+            size="1"
+            leftIcon={FaPlus}
+          >
+            Add New Read Replica
+          </Button>
+        </div>
       )}
 
       {(mode === 'add' || mode === 'edit') && (
         <Dialog
-          hasBackdrop
           title={mode === 'edit' ? 'Edit Read Replica' : 'Add Read Replica'}
           onClose={() => {
             setMode('idle');
@@ -99,51 +113,36 @@ export const ReadReplicas = ({
           titleTooltip="Optional list of read replica configuration"
           size="xxxl"
         >
-          <div className="p-4">
-            <div className="bg-white border border-hasGray-300 rounded-md shadow-sm overflow-hidden p-4">
+          <div>
+            <Card size="2">
               <DatabaseUrl
                 name={`${name}.${activeRow}.databaseUrl`}
                 hideOptions={hideOptions}
               />
-            </div>
+            </Card>
 
-            <div className="bg-white border border-hasGray-300 rounded-md shadow-sm overflow-hidden p-4 mt-sm">
+            <Card className="my-4" size="2">
               <Collapsible
                 triggerChildren={
-                  <div className="font-semibold text-muted">
+                  <Text weight="bold" className="cursor-pointer">
                     Advanced Settings
-                  </div>
+                  </Text>
                 }
               >
                 <PoolSettings name={`${name}.${activeRow}.poolSettings`} />
-                <IsolationLevel name={`${name}.${activeRow}.isolationLevel`} />
+                <div className="pb-2">
+                  <IsolationLevel
+                    name={`${name}.${activeRow}.isolationLevel`}
+                  />
+                </div>
                 <UsePreparedStatements
                   name={`${name}.${activeRow}.usePreparedStatements`}
                 />
                 {areSSLSettingsEnabled() && (
-                  <Collapsible
-                    triggerChildren={
-                      <div className="font-semibold text-muted">
-                        SSL Certificates Settings
-                        <span className="px-1.5 italic font-light">
-                          (Certificates will be loaded from{' '}
-                          <a
-                            href="https://hasura.io/docs/2.0/databases/postgres/gcp/#step-72-add-env-vars"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            environment variables
-                          </a>
-                          )
-                        </span>
-                      </div>
-                    }
-                  >
-                    <SslSettings name={`${name}.${activeRow}.sslSettings`} />
-                  </Collapsible>
+                  <SslSettings name={`${name}.${activeRow}.sslSettings`} />
                 )}
               </Collapsible>
-            </div>
+            </Card>
             <Button
               onClick={async () => {
                 // validate the current open read replica state before closing.
@@ -162,6 +161,6 @@ export const ReadReplicas = ({
           </div>
         </Dialog>
       )}
-    </div>
+    </>
   );
 };

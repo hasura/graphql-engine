@@ -1,18 +1,21 @@
+import { KnownEnterpriseDriver } from '@hasura/shared/types';
 import { useAddAgent } from '../../../../ManageAgents/hooks';
 import { AddAgentResponse } from '../../../../ManageAgents/hooks/useAddAgent';
-import { SuperConnectorDrivers } from '../../../../hasura-metadata-types';
 
-export const agentPaths: Record<SuperConnectorDrivers, string> = {
+export const agentPaths: Record<KnownEnterpriseDriver, string> = {
   snowflake: '/api/v1/snowflake',
   athena: '/api/v1/athena',
-  mysql8: '/api/v1/mysql',
+  mysql: '/api/v1/mysql',
   mariadb: '/api/v1/mariadb',
   oracle: '/api/v1/oracle',
+  redshift: '/api/v1/redshift',
+  mongodb: '/',
+  sqlite: '/health',
 };
 
 function ensure<T>(
   argument: T | undefined | null,
-  message = 'This value was promised to be there.'
+  message = 'This value was promised to be there.',
 ): T {
   if (argument === undefined || argument === null) {
     throw new TypeError(message);
@@ -26,19 +29,19 @@ export const useAddSuperConnectorAgents = () => {
 
   const addAgents = async (
     superConnectorPath: string,
-    selectedAgent: SuperConnectorDrivers
+    selectedAgent: KnownEnterpriseDriver,
   ) => {
     const args = Object.entries<string>(agentPaths).map(
       ([driverKind, agentPath]) => ({
         name: driverKind,
         url: superConnectorPath + agentPath,
-      })
+      }),
     );
 
     const responses = await addMultipleAgents(args);
 
     const selectedAgentResponse = ensure<AddAgentResponse>(
-      responses.find(r => r.name === selectedAgent)
+      responses.find((r) => r.name === selectedAgent),
     );
 
     return {

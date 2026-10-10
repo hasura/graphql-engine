@@ -40,23 +40,19 @@ import {
   GraphQLInputType,
   GraphQLInputFieldConfigMap,
 } from 'graphql';
-import GraphQLUpload from 'graphql-upload/GraphQLUpload.js';
-
 // Imports:
-import { GraphQLBigInt, GraphQLJSON } from 'graphql-scalars';
+import { GraphQLBigInt, GraphQLJSON } from './scalars';
 import * as Oas3Tools from './oas_3_tools';
 import { getResolver, OPENAPI_TO_GRAPHQL } from './resolver_builder';
 import { createDataDef } from './preprocessor';
-import debug from 'debug';
 import { handleWarning, sortObject, MitigationTypes } from './utils';
-import crossFetch from 'cross-fetch';
 
 type GetArgsParams<TSource, TContext, TArgs> = {
   requestPayloadDef?: DataDefinition;
   parameters: ParameterObject[];
   operation?: Operation;
   data: PreprocessingData<TSource, TContext, TArgs>;
-  fetch: typeof crossFetch;
+  fetch: typeof fetch;
 };
 
 type CreateOrReuseComplexTypeParams<TSource, TContext, TArgs> = {
@@ -65,7 +61,7 @@ type CreateOrReuseComplexTypeParams<TSource, TContext, TArgs> = {
   iteration?: number; // Count of recursions used to create type
   isInputObjectType?: boolean; // Does not require isInputObjectType because unions must be composed of objects
   data: PreprocessingData<TSource, TContext, TArgs>; // Data produced by preprocessing
-  fetch: typeof crossFetch;
+  fetch: typeof fetch;
 };
 
 type CreateOrReuseSimpleTypeParams<TSource, TContext, TArgs> = {
@@ -80,7 +76,7 @@ type CreateFieldsParams<TSource, TContext, TArgs> = {
   iteration: number;
   isInputObjectType: boolean;
   data: PreprocessingData<TSource, TContext, TArgs>;
-  fetch: typeof crossFetch;
+  fetch: typeof fetch;
 };
 
 type LinkOpRefToOpIdParams<TSource, TContext, TArgs> = {
@@ -99,7 +95,7 @@ type LinkOpRefToOpIdParams<TSource, TContext, TArgs> = {
  */
 const CleanGraphQLJSON = new GraphQLScalarType({
   ...GraphQLJSON.toConfig(),
-  serialize: value => {
+  serialize: (value) => {
     let cleanValue;
 
     /**
@@ -134,7 +130,7 @@ const CleanGraphQLJSON = new GraphQLScalarType({
   },
 });
 
-const translationLog = debug('translation');
+const translationLog = console.log;
 
 /**
  * Creates and returns a GraphQL type for the given JSON schema.
@@ -147,8 +143,7 @@ export function getGraphQLType<TSource, TContext, TArgs extends object>({
   isInputObjectType = false,
   fetch,
 }: CreateOrReuseComplexTypeParams<TSource, TContext, TArgs>):
-  | GraphQLOutputType
-  | GraphQLInputType {
+  GraphQLOutputType | GraphQLInputType | undefined {
   const name = isInputObjectType
     ? def.graphQLInputObjectTypeName
     : def.graphQLTypeName;
@@ -156,7 +151,7 @@ export function getGraphQLType<TSource, TContext, TArgs extends object>({
   // Avoid excessive iterations
   if (iteration === 50) {
     throw new Error(
-      `GraphQL type ${name} has excessive nesting of other types`
+      `GraphQL type ${name} has excessive nesting of other types`,
     );
   }
 
@@ -230,9 +225,16 @@ export function getGraphQLType<TSource, TContext, TArgs extends object>({
       def.graphQLType = GraphQLBigInt;
       return def.graphQLType;
 
+    /**
+     * CASE: file upload - unsupported
+     *
+     * Hasura's GraphQL engine does not support file uploads (no
+     * `graphql-upload`-style multipart request handling), so properties and
+     * parameters backed by a `format: binary` schema are dropped from the
+     * generated schema rather than mapped to an `Upload` scalar.
+     */
     case TargetGraphQLType.upload:
-      def.graphQLType = GraphQLUpload as any;
-      return def.graphQLType;
+      return undefined;
   }
 }
 
@@ -259,8 +261,7 @@ function createOrReuseOt<TSource, TContext, TArgs extends object>({
   isInputObjectType,
   fetch,
 }: CreateOrReuseComplexTypeParams<TSource, TContext, TArgs>):
-  | GraphQLObjectType
-  | GraphQLInputObjectType {
+  GraphQLObjectType | GraphQLInputObjectType {
   // Try to reuse a preexisting (input) object type
 
   // CASE: query - reuse object type
@@ -270,7 +271,7 @@ function createOrReuseOt<TSource, TContext, TArgs extends object>({
         `Reuse object type '${def.graphQLTypeName}'` +
           (typeof operation === 'object'
             ? ` (for operation '${operation.operationString}')`
-            : '')
+            : ''),
       );
 
       return def.graphQLType as GraphQLObjectType | GraphQLInputObjectType;
@@ -286,7 +287,7 @@ function createOrReuseOt<TSource, TContext, TArgs extends object>({
         `Reuse input object type '${def.graphQLInputObjectTypeName}'` +
           (typeof operation === 'object'
             ? ` (for operation '${operation.operationString}')`
-            : '')
+            : ''),
       );
       return def.graphQLInputObjectType as GraphQLInputObjectType;
     }
@@ -303,7 +304,7 @@ function createOrReuseOt<TSource, TContext, TArgs extends object>({
       `Create object type '${def.graphQLTypeName}'` +
         (typeof operation === 'object'
           ? ` (for operation '${operation.operationString}')`
-          : '')
+          : ''),
     );
 
     def.graphQLType = new GraphQLObjectType({
@@ -330,7 +331,7 @@ function createOrReuseOt<TSource, TContext, TArgs extends object>({
       `Create input object type '${def.graphQLInputObjectTypeName}'` +
         (typeof operation === 'object'
           ? ` (for operation '${operation.operationString}')`
-          : '')
+          : ''),
     );
 
     def.graphQLInputObjectType = new GraphQLInputObjectType({
@@ -369,7 +370,7 @@ function createOrReuseUnion<TSource, TContext, TArgs extends object>({
       `Reuse union type '${def.graphQLTypeName}'` +
         (typeof operation === 'object'
           ? ` (for operation '${operation.operationString}')`
-          : '')
+          : ''),
     );
     return def.graphQLType as GraphQLUnionType;
   } else {
@@ -377,7 +378,7 @@ function createOrReuseUnion<TSource, TContext, TArgs extends object>({
       `Create union type '${def.graphQLTypeName}'` +
         (typeof operation === 'object'
           ? ` (for operation '${operation.operationString}')`
-          : '')
+          : ''),
     );
 
     const schema = def.schema;
@@ -390,7 +391,7 @@ function createOrReuseUnion<TSource, TContext, TArgs extends object>({
     const memberTypeDefinitions = def.subDefinitions as DataDefinition[];
 
     const types = Object.values(memberTypeDefinitions).map(
-      memberTypeDefinition => {
+      (memberTypeDefinition) => {
         return getGraphQLType({
           def: memberTypeDefinition,
           operation,
@@ -399,7 +400,7 @@ function createOrReuseUnion<TSource, TContext, TArgs extends object>({
           isInputObjectType: false,
           fetch,
         }) as GraphQLObjectType;
-      }
+      },
     );
 
     /**
@@ -416,7 +417,7 @@ function createOrReuseUnion<TSource, TContext, TArgs extends object>({
       resolveType: (source, context, info) => {
         const properties = Object.keys(source)
           // Remove custom _openAPIToGraphQL property used to pass data
-          .filter(property => property !== '_openAPIToGraphQL');
+          .filter((property) => property !== '_openAPIToGraphQL');
 
         /**
          * Find appropriate member type
@@ -429,12 +430,14 @@ function createOrReuseUnion<TSource, TContext, TArgs extends object>({
          * identified if, for whatever reason, the return data is a superset
          * of the fields specified in the OAS
          */
-        return types.find(type => {
+        return types.find((type) => {
           const typeFields = Object.keys(type.getFields());
 
           // The type should be a superset of the properties
           if (properties.length <= typeFields.length) {
-            return properties.every(property => typeFields.includes(property));
+            return properties.every((property) =>
+              typeFields.includes(property),
+            );
           }
 
           return false;
@@ -454,7 +457,7 @@ function createOrReuseUnion<TSource, TContext, TArgs extends object>({
 function checkAmbiguousMemberTypes<TSource, TContext, TArgs>(
   def: DataDefinition,
   types: GraphQLObjectType[],
-  data: PreprocessingData<TSource, TContext, TArgs>
+  data: PreprocessingData<TSource, TContext, TArgs>,
 ): void {
   types.sort((a, b) => {
     const aFieldLength = Object.keys(a.getFields()).length;
@@ -477,7 +480,7 @@ function checkAmbiguousMemberTypes<TSource, TContext, TArgs>(
 
       // TODO: Check the value, not just the field name
       if (
-        Object.keys(currentType.getFields()).every(field => {
+        Object.keys(currentType.getFields()).every((field) => {
           return Object.keys(otherType.getFields()).includes(field);
         })
       ) {
@@ -554,7 +557,7 @@ function createOrReuseList<TSource, TContext, TArgs extends object>({
     fetch,
   });
 
-  if (itemsType !== null) {
+  if (itemsType) {
     const listObjectType = new GraphQLList(itemsType);
 
     // Store newly created list type
@@ -567,7 +570,7 @@ function createOrReuseList<TSource, TContext, TArgs extends object>({
   } else {
     throw new Error(
       `Cannot create list item object type '${itemsName}' in list ` +
-        `'${name}' with schema '${JSON.stringify(itemsSchema)}'.`
+        `'${name}' with schema '${JSON.stringify(itemsSchema)}'.`,
     );
   }
 }
@@ -596,8 +599,8 @@ function createOrReuseEnum<TSource, TContext, TArgs>({
       def.schema[Oas3Tools.OAS_GRAPHQL_EXTENSIONS.EnumMapping] || {};
 
     def.schema.enum
-      .filter(value => value)
-      .forEach(enumValue => {
+      .filter((value) => value)
+      .forEach((enumValue) => {
         const enumValueString = enumValue.toString();
 
         const extensionEnumValue = extensionEnumMapping[enumValueString];
@@ -607,7 +610,7 @@ function createOrReuseEnum<TSource, TContext, TArgs>({
             `Cannot create enum value "${extensionEnumValue}".\nYou ` +
               `provided "${extensionEnumValue}" in ` +
               `${Oas3Tools.OAS_GRAPHQL_EXTENSIONS.EnumMapping}, but it is not ` +
-              `GraphQL-safe."`
+              `GraphQL-safe."`,
           );
         }
 
@@ -617,7 +620,7 @@ function createOrReuseEnum<TSource, TContext, TArgs>({
             enumValueString,
             !data.options.simpleEnumValues
               ? Oas3Tools.CaseStyle.ALL_CAPS
-              : Oas3Tools.CaseStyle.simple
+              : Oas3Tools.CaseStyle.simple,
           );
 
         if (extensionEnumValue in values) {
@@ -625,7 +628,7 @@ function createOrReuseEnum<TSource, TContext, TArgs>({
             `Cannot create enum value "${extensionEnumValue}".\nYou ` +
               `provided "${extensionEnumValue}" in ` +
               `${Oas3Tools.OAS_GRAPHQL_EXTENSIONS.EnumMapping}, but it ` +
-              `conflicts with another value "${extensionEnumValue}".`
+              `conflicts with another value "${extensionEnumValue}".`,
           );
         }
         values[emumValue] = { value: enumValue };
@@ -653,8 +656,7 @@ function createFields<TSource, TContext, TArgs extends object>({
   isInputObjectType,
   fetch,
 }: CreateFieldsParams<TSource, TContext, TArgs>):
-  | GraphQLFieldConfigMap<any, any>
-  | GraphQLInputFieldConfigMap {
+  GraphQLFieldConfigMap<any, any> | GraphQLInputFieldConfigMap {
   let fields: GraphQLFieldConfigMap<any, any> = {};
 
   const fieldTypeDefinitions = def.subDefinitions as {
@@ -689,7 +691,7 @@ function createFields<TSource, TContext, TArgs extends object>({
           `Cannot create field with name "${extensionFieldName}".\nYou ` +
             `provided "${extensionFieldName}" in ` +
             `${Oas3Tools.OAS_GRAPHQL_EXTENSIONS.FieldName}, but it is not ` +
-            `GraphQL-safe."`
+            `GraphQL-safe."`,
         );
       }
 
@@ -698,7 +700,7 @@ function createFields<TSource, TContext, TArgs extends object>({
           `Cannot create field with name "${extensionFieldName}".\nYou ` +
             `provided "${extensionFieldName}" in ` +
             `${Oas3Tools.OAS_GRAPHQL_EXTENSIONS.FieldName}, but it ` +
-            `conflicts with another field named "${extensionFieldName}".`
+            `conflicts with another field named "${extensionFieldName}".`,
         );
       }
 
@@ -708,13 +710,13 @@ function createFields<TSource, TContext, TArgs extends object>({
           fieldName,
           !data.options.simpleNames
             ? Oas3Tools.CaseStyle.camelCase
-            : Oas3Tools.CaseStyle.simple
+            : Oas3Tools.CaseStyle.simple,
         );
 
       const sanePropName = Oas3Tools.storeSaneName(
         saneFieldName,
         fieldName,
-        data.saneMap
+        data.saneMap,
       );
 
       fields[sanePropName] = {
@@ -785,7 +787,7 @@ function createFields<TSource, TContext, TArgs extends object>({
           // Get arguments that are not provided by the linked operation
           let dynamicParams = linkedOp.parameters;
           if (typeof argsFromLink === 'object') {
-            dynamicParams = dynamicParams.filter(param => {
+            dynamicParams = dynamicParams.filter((param) => {
               return typeof argsFromLink[param.name] === 'undefined';
             });
           }
@@ -963,7 +965,7 @@ function linkOpRefToOpId<TSource, TContext, TArgs>({
           try {
             // Start at +1 because we do not want the starting '/'
             linkMethod = Oas3Tools.methodToHttpMethod(
-              linkRelativePathAndMethod.substring(pivotSlashIndex + 1)
+              linkRelativePathAndMethod.substring(pivotSlashIndex + 1),
             );
           } catch {
             handleWarning({
@@ -1115,7 +1117,7 @@ function linkOpRefToOpId<TSource, TContext, TArgs>({
 function skipArg<TSource, TContext, TArgs>(
   parameter: ParameterObject,
   operation: Operation,
-  data: PreprocessingData<TSource, TContext, TArgs>
+  data: PreprocessingData<TSource, TContext, TArgs>,
 ): boolean {
   if (typeof data.options === 'object') {
     switch (parameter.in) {
@@ -1130,7 +1132,7 @@ function skipArg<TSource, TContext, TArgs>(
           const headers = data.options.headers(
             operation.method,
             operation.path,
-            operation.oas.info.title
+            operation.oas.info.title,
           );
 
           if (typeof headers === 'object') {
@@ -1150,7 +1152,7 @@ function skipArg<TSource, TContext, TArgs>(
             const headers = data.options.requestOptions.headers(
               operation.method,
               operation.path,
-              operation.oas.info.title
+              operation.oas.info.title,
             );
 
             if (typeof headers === 'object') {
@@ -1200,7 +1202,7 @@ export function getArgs<TSource, TContext, TArgs extends object>({
   let args = {};
 
   // Handle params:
-  parameters.forEach(parameter => {
+  parameters.forEach((parameter) => {
     // We need at least a name
     if (typeof parameter.name !== 'string') {
       handleWarning({
@@ -1277,7 +1279,7 @@ export function getArgs<TSource, TContext, TArgs extends object>({
       schema as SchemaObject,
       true,
       data,
-      operation.oas
+      operation.oas,
     );
 
     const type = getGraphQLType({
@@ -1289,6 +1291,20 @@ export function getArgs<TSource, TContext, TArgs extends object>({
       fetch,
     });
 
+    // Unsupported type (e.g. file upload) - ignore the parameter
+    if (!type) {
+      handleWarning({
+        mitigationType: MitigationTypes.FILE_UPLOAD_UNSUPPORTED,
+        message:
+          `The operation '${operation.operationString}' contains a ` +
+          `parameter '${parameter.name}' of an unsupported type (e.g. file ` +
+          `upload). The parameter will not be created`,
+        data,
+        log: translationLog,
+      });
+      return;
+    }
+
     /**
      * Sanitize the argument name
      *
@@ -1299,7 +1315,7 @@ export function getArgs<TSource, TContext, TArgs extends object>({
       parameter.name,
       !data.options.simpleNames
         ? Oas3Tools.CaseStyle.camelCase
-        : Oas3Tools.CaseStyle.simple
+        : Oas3Tools.CaseStyle.simple,
     );
 
     // Parameters are not required when a default exists:
@@ -1364,6 +1380,20 @@ export function getArgs<TSource, TContext, TArgs extends object>({
       fetch,
     });
 
+    // Unsupported type (e.g. file upload) - ignore the request payload
+    if (!reqObjectType) {
+      handleWarning({
+        mitigationType: MitigationTypes.FILE_UPLOAD_UNSUPPORTED,
+        message:
+          `The operation '${operation.operationString}' has a request ` +
+          `payload of an unsupported type (e.g. file upload). The request ` +
+          `payload will not be created`,
+        data,
+        log: translationLog,
+      });
+      return args;
+    }
+
     // Sanitize the argument name
     const saneName = data.options.genericPayloadArgName
       ? 'requestBody'
@@ -1404,13 +1434,13 @@ function getLinkLocationType(linkLocation: string): string {
 function getOasFromLinkLocation<TSource, TContext, TArgs>(
   linkLocation: string,
   link: LinkObject,
-  data: PreprocessingData<TSource, TContext, TArgs>
+  data: PreprocessingData<TSource, TContext, TArgs>,
 ): Oas3 {
   // May be an external reference
   switch (getLinkLocationType(linkLocation)) {
     case 'title':
       // Get the possible
-      const possibleOass = data.oass.filter(oas => {
+      const possibleOass = data.oass.filter((oas) => {
         return oas.info.title === linkLocation;
       });
 

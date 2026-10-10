@@ -1,11 +1,9 @@
-import React from 'react';
 import { FaCheck } from 'react-icons/fa';
-import styles from '../Common.module.scss';
 
 const Check = ({ className = '', title = '' }) => {
   return (
     <FaCheck
-      className={`${styles.iconCheck} ${className}`}
+      className={`text-[green] text-xl ${className}`}
       aria-hidden="true"
       title={title}
     />

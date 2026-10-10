@@ -1,10 +1,14 @@
 import React from 'react';
 import z from 'zod';
-import { Dialog } from '../../../../new-components/Dialog';
-import { InputField, useConsoleForm } from '../../../../new-components/Form';
-import { useFireNotification } from '../../../../new-components/Notifications';
-import { Analytics, REDACT_EVERYTHING } from '../../../Analytics';
-import { useRenameQueryCollection } from '../../../QueryCollections/hooks/useRenameQueryCollection';
+import {
+  Dialog,
+  InputField,
+  useConsoleForm,
+  hasuraToast,
+  DialogFooter,
+} from '@hasura/shared/ui';
+import { Analytics, REDACT_EVERYTHING } from '@hasura/shared/analytics';
+import { useRenameQueryCollection } from '@hasura/metadata/api';
 
 interface QueryCollectionCreateDialogProps {
   onClose: () => void;
@@ -17,11 +21,9 @@ const schema = z.object({
 });
 export const QueryCollectionRenameDialog: React.FC<
   QueryCollectionCreateDialogProps
-> = props => {
+> = (props) => {
   const { onClose, currentName, onRename } = props;
-  const { renameQueryCollection, isLoading } = useRenameQueryCollection();
-  const { fireNotification } = useFireNotification();
-
+  const { renameQueryCollection, isPending } = useRenameQueryCollection();
   const {
     methods: { watch, setError, trigger },
     Form,
@@ -32,7 +34,7 @@ export const QueryCollectionRenameDialog: React.FC<
 
   return (
     <Form onSubmit={() => {}}>
-      <Dialog hasBackdrop title="Rename Collection" onClose={onClose}>
+      <Dialog title="Rename Collection" onClose={onClose}>
         <>
           <Analytics name="QueryCollectionRenameDialog" {...REDACT_EVERYTHING}>
             <div className="p-4">
@@ -40,11 +42,13 @@ export const QueryCollectionRenameDialog: React.FC<
                 id="name"
                 name="name"
                 label="New Collection Name"
-                placeholder="New Collection Name..."
+                fieldProps={{
+                  placeholder: 'New Collection Name...',
+                }}
               />
             </div>
           </Analytics>
-          <Dialog.Footer
+          <DialogFooter
             callToDeny="Cancel"
             callToAction="Rename Collection"
             onClose={onClose}
@@ -55,18 +59,18 @@ export const QueryCollectionRenameDialog: React.FC<
                   onSuccess: () => {
                     onClose();
                     onRename(currentName, name as string);
-                    fireNotification({
+                    hasuraToast({
                       type: 'success',
                       title: 'Collection renamed',
                       message: `Collection ${currentName} was renamed to ${name}`,
                     });
                   },
-                  onError: error => {
+                  onError: (error) => {
                     setError('name', {
                       type: 'manual',
                       message: (error as Error).message,
                     });
-                    fireNotification({
+                    hasuraToast({
                       type: 'error',
                       title: 'Error renaming collection',
                       message: (error as Error).message,
@@ -75,7 +79,7 @@ export const QueryCollectionRenameDialog: React.FC<
                 });
               }
             }}
-            isLoading={isLoading}
+            isLoading={isPending}
           />
         </>
       </Dialog>

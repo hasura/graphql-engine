@@ -1,17 +1,17 @@
 import React from 'react';
 import { EETrialCard, useEELiteAccess } from '../EETrial';
 // import { StatusBadge } from './StatusBadge';
-import { LearnMoreLink } from '../../new-components/LearnMoreLink';
+import { LearnMoreLink } from '@hasura/shared/ui';
 import { QueryResponseCachingSvg } from './QueryResponseCachingSvg';
-import globals from '../../Globals';
+import { Flex } from '@radix-ui/themes';
 // import { StatusText } from './StatusText';
 
 const Header = () => (
   <>
-    <div className="flex items-center gap-4 mb-xs">
+    <Flex align="center" gap="4" className="mb-1">
       <h1 className="text-xl font-semibold">Query Response Caching</h1>
-    </div>
-    <p className="text-muted mb-xs">
+    </Flex>
+    <p className="text-muted mb-1">
       Improve API performance by caching frequently executed GraphQL queries.
       <LearnMoreLink href="https://hasura.io/docs/latest/enterprise/caching/" />
     </p>
@@ -21,9 +21,9 @@ const Header = () => (
 
 const Body = () => {
   return (
-    <div className="mt-md">
+    <div className="mt-4">
       {/*<StatusText status="disabled" />*/}
-      <div className="font-semibold text-muted mt-sm">
+      <div className="font-semibold text-muted mt-2">
         Setup Query Caching
       </div>{' '}
       <p className="text-muted">
@@ -49,8 +49,8 @@ const Body = () => {
   );
 };
 
-export const QueryResponseCaching: React.VFC<Record<string, never>> = () => {
-  const eeLite = useEELiteAccess(globals);
+export const QueryResponseCaching: React.FC<Record<string, never>> = () => {
+  const eeLite = useEELiteAccess();
 
   const isFeatureForbidden = eeLite.access === 'forbidden';
 
@@ -59,14 +59,14 @@ export const QueryResponseCaching: React.VFC<Record<string, never>> = () => {
   if (isFeatureForbidden) return null;
 
   return (
-    <div className="max-w-screen-md p-md">
+    <div className="max-w-(--breakpoint-lg) p-4">
       <div className="max-w-3xl">
         <Header />
         {isFeatureActive ? (
           <Body />
         ) : (
           <EETrialCard
-            className="mt-md"
+            className="mt-4"
             id="query-response-caching"
             cardTitle="Improve performance and save resources with query response caching"
             cardText={

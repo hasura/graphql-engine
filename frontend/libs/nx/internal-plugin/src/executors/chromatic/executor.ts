@@ -1,4 +1,4 @@
-import type { ExecutorContext } from '@nrwl/devkit';
+import type { ExecutorContext } from '@nx/devkit';
 import runCommands from 'nx/src/executors/run-commands/run-commands.impl';
 import { FsTree } from 'nx/src/generators/tree';
 import fetch from 'node-fetch';
@@ -13,11 +13,11 @@ import { executorPreFlightCheck } from './core/executorPreFlightCheck';
  */
 export default async function runExecutor(
   options: ChromaticExecutorSchema,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) {
   // PRE-FLIGHT CHECK
   const { projectName } = context;
-  if (!context.workspace) {
+  if (!context.projectsConfigurations) {
     throw new Error('Worspace not found.');
   }
 
@@ -28,7 +28,8 @@ export default async function runExecutor(
     },
     executorContextProjectName: {
       projectName,
-      projectConfiguration: context.workspace.projects[projectName ?? ''],
+      projectConfiguration:
+        context.projectsConfigurations.projects[projectName ?? ''],
     },
   });
 
@@ -66,7 +67,7 @@ export default async function runExecutor(
         We need it to control what happens in CI after Chromatic's build.
 
 
-        --diagnostics
+        --diagnostics-file=chromatic-diagnostics.json
         Emits the diagnostic file that we parse to then post a comment on the PR.
 
 
@@ -94,10 +95,10 @@ export default async function runExecutor(
         And despite the Chromatic says "Wrote Chromatic diagnostics report to chromatic-diagnostics.json",
         in reality the diagnostic file is not emitted.
         */
-        command: `npx chromatic --storybook-build-dir=${distTarget} --exit-zero-on-changes --diagnostics --force-rebuild`,
+        command: `npx chromatic --storybook-build-dir=${distTarget} --exit-zero-on-changes --diagnostics-file=chromatic-diagnostics.json --force-rebuild`,
         __unparsed__: [],
       },
-      context
+      context,
     );
   } catch (error: unknown) {
     uncaughtChromaticError = error;

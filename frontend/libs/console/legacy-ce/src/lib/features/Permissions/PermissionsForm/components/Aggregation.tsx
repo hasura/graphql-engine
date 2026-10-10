@@ -1,29 +1,31 @@
 import React, { useState } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { Collapse } from '../../../../new-components/deprecated';
-
-import { isFeatureSupported } from '../../../../dataSources';
 import { useIsDisabled } from '../hooks/useIsDisabled';
-import { QueryType } from '../../types';
 import { PermissionsConfirmationModal } from './RootFieldPermissions/PermissionsConfirmationModal';
 import {
   getPermissionsModalTitle,
   getPermissionsModalDescription,
 } from './RootFieldPermissions/PermissionsConfirmationModal.utils';
 import { isPermissionModalDisabled } from '../utils/getPermissionModalStatus';
+import { DataQueryType, Source } from '@hasura/shared/types';
+import { Checkbox, Collapsible, CollapsibleHeader } from '@hasura/shared/ui';
+import { getDatabaseMethods } from '@hasura/metadata/data-source';
+import { PermissionsSchema } from '../../schema';
 
 export interface AggregationProps {
-  queryType: QueryType;
+  dataSource: Source;
+  queryType: DataQueryType;
   roleName: string;
   defaultOpen?: boolean;
 }
 
 export const AggregationSection: React.FC<AggregationProps> = ({
+  dataSource,
   queryType,
   roleName,
   defaultOpen,
 }) => {
-  const { watch, setValue } = useFormContext();
+  const { watch, setValue } = useFormContext<PermissionsSchema>();
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   // if no row permissions are selected selection should be disabled
   const disabled = useIsDisabled(queryType);
@@ -34,24 +36,30 @@ export const AggregationSection: React.FC<AggregationProps> = ({
     'subscription_root_fields',
   ]);
 
-  if (!isFeatureSupported('tables.permissions.aggregation')) {
+  if (
+    !getDatabaseMethods(dataSource.kind).check.isFeatureSupported(
+      'tables.permissions.aggregation',
+    )
+  ) {
     return null;
   }
 
   const handleUpdate = () => {
     setValue('aggregationEnabled', !enabled);
-    setValue(
-      'query_root_fields',
-      (queryRootFields ?? []).filter(
-        (field: string) => field !== 'select_aggregate'
-      )
-    );
-    setValue(
-      'subscription_root_fields',
-      (subscriptionRootFields ?? []).filter(
-        (field: string) => field !== 'select_aggregate'
-      )
-    );
+    if (queryRootFields?.length) {
+      setValue(
+        'query_root_fields',
+        queryRootFields.filter((field: string) => field !== 'select_aggregate'),
+      );
+    }
+    if (subscriptionRootFields?.length) {
+      setValue(
+        'subscription_root_fields',
+        subscriptionRootFields.filter(
+          (field: string) => field !== 'select_aggregate',
+        ),
+      );
+    }
   };
 
   const permissionsModalTitle = getPermissionsModalTitle({
@@ -64,48 +72,45 @@ export const AggregationSection: React.FC<AggregationProps> = ({
 
   return (
     <>
-      <Collapse
-        title="Aggregation queries permissions"
-        tooltip="Allow queries with aggregate functions like sum, count, avg,
-    max, min, etc"
-        status={enabled ? 'Enabled' : 'Disabled'}
+      <Collapsible
         data-test="toggle-agg-permission"
         disabled={disabled}
         defaultOpen={defaultOpen || enabled}
+        triggerChildren={
+          <CollapsibleHeader
+            title="Aggregation queries permissions"
+            tooltip="Allow queries with aggregate functions like sum, count, avg, max, min, etc"
+            status={enabled ? 'Enabled' : 'Disabled'}
+          />
+        }
       >
-        <Collapse.Content>
-          <div title={disabled ? 'Set row permissions first' : ''}>
-            <label className="flex items-center gap-4">
-              <input
-                type="checkbox"
-                title={disabled ? 'Set row permissions first' : ''}
-                disabled={disabled}
-                className="m-0 mt-0 rounded shadow-sm border border-gray-300 hover:border-gray-400 focus:ring-yellow-400"
-                checked={enabled}
-                onChange={() => {
-                  const pkRootFieldsAreSelected =
-                    queryRootFields?.includes('select_aggregate') ||
-                    subscriptionRootFields?.includes('select_aggregate');
-                  const hideModal = isPermissionModalDisabled();
-                  if (
-                    !showConfirmationModal &&
-                    pkRootFieldsAreSelected &&
-                    !hideModal
-                  ) {
-                    setShowConfirmationModal(true);
-                    return;
-                  }
-                  handleUpdate();
-                }}
-              />
-              <span>
-                Allow role <strong>{roleName}</strong> to make aggregation
-                queries
-              </span>
-            </label>
-          </div>
-        </Collapse.Content>
-      </Collapse>
+        <div title={disabled ? 'Set row permissions first' : ''}>
+          <label className="flex items-center gap-4">
+            <Checkbox
+              title={disabled ? 'Set row permissions first' : ''}
+              disabled={disabled}
+              value={enabled}
+              onChange={() => {
+                const pkRootFieldsAreSelected =
+                  queryRootFields?.includes('select_aggregate') ||
+                  subscriptionRootFields?.includes('select_aggregate');
+                const hideModal = isPermissionModalDisabled();
+                if (
+                  !showConfirmationModal &&
+                  pkRootFieldsAreSelected &&
+                  !hideModal
+                ) {
+                  setShowConfirmationModal(true);
+                  return;
+                }
+                handleUpdate();
+              }}
+            >
+              Allow role <strong>{roleName}</strong> to make aggregation queries
+            </Checkbox>
+          </label>
+        </div>
+      </Collapsible>
       {showConfirmationModal && (
         <PermissionsConfirmationModal
           title={permissionsModalTitle}

@@ -21,6 +21,7 @@ export enum MitigationTypes {
   COMBINE_SCHEMAS = 'COMBINE_SCHEMAS',
   DUPLICATE_FIELD_NAME = 'DUPLICATE_FIELD_NAME',
   DUPLICATE_LINK_KEY = 'DUPLICATE_LINK_KEY',
+  FILE_UPLOAD_UNSUPPORTED = 'FILE_UPLOAD_UNSUPPORTED',
   INVALID_HTTP_METHOD = 'INVALID_HTTP_METHOD',
   INPUT_UNION = 'INPUT_UNION',
   MISSING_RESPONSE_SCHEMA = 'MISSING_RESPONSE_SCHEMA',
@@ -68,6 +69,7 @@ export const mitigations: { [mitigationType in MitigationTypes]: string } = {
   COMBINE_SCHEMAS: 'Ignore combine schema keyword and continue.',
   DUPLICATE_FIELD_NAME: 'Ignore field and maintain preexisting field.',
   DUPLICATE_LINK_KEY: 'Ignore link and maintain preexisting link.',
+  FILE_UPLOAD_UNSUPPORTED: 'Ignore field/parameter and continue.',
   INPUT_UNION: 'The data will be stored in an arbitrary JSON type.',
   INVALID_HTTP_METHOD: 'Ignore operation and continue.',
   MISSING_RESPONSE_SCHEMA: 'Ignore operation.',
@@ -160,7 +162,7 @@ export function sortObject<T>(o: T): T {
  * Finds the common property names between two objects
  */
 export function getCommonPropertyNames(object1, object2): string[] {
-  return Object.keys(object1).filter(propertyName => {
+  return Object.keys(object1).filter((propertyName) => {
     return propertyName in object2;
   });
 }

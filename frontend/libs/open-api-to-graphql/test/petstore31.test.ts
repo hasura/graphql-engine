@@ -5,7 +5,7 @@
 
 'use strict';
 
-import { beforeAll, expect, test } from '@jest/globals';
+import { beforeAll, expect, test } from 'vitest';
 import { GraphQLObjectType, GraphQLSchema } from 'graphql';
 
 import * as openAPIToGraphQL from '../src/index';
@@ -22,14 +22,14 @@ beforeAll(() => {
     .then(({ schema, report }) => {
       createdSchema = schema;
     })
-    .catch(e => {
+    .catch((e) => {
       console.log(e);
     });
 });
 
 test('Petstore 3.1 works', () => {
   const gqlTypes = Object.keys(
-    (createdSchema.getTypeMap().Query as GraphQLObjectType).getFields()
+    (createdSchema.getTypeMap().Query as GraphQLObjectType).getFields(),
   );
   expect(gqlTypes.length).toEqual(2);
 });

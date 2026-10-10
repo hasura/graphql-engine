@@ -1,19 +1,17 @@
 import * as React from 'react';
-import { Button } from '../../../new-components/Button';
-import globals from '../../../Globals';
+import { Button, useAppearance } from '@hasura/shared/ui';
 import { FaStar, FaTimesCircle } from 'react-icons/fa';
 import { useEELiteAccess } from '../hooks/useEELiteAccess';
 import { EELiteAccess } from '../types';
 import { WithEEBenefits } from './BenefitsView/WithEEBenefits';
 import { getDaysFromNow } from '../utils';
 import { EnableEEButtonWrapper } from './EnableEnterpriseButton';
-import { Analytics } from '../../Analytics';
+import { Analytics } from '@hasura/shared/analytics';
 
-export const NavbarButton: React.VFC<{
+export const NavbarButton: React.FC<{
   className?: string;
-  globals: typeof globals;
-}> = props => {
-  const eeLite = useEELiteAccess(globals);
+}> = (props) => {
+  const eeLite = useEELiteAccess();
   const { access } = eeLite;
 
   if (access !== 'active') {
@@ -31,7 +29,7 @@ type ButtonProps = {
   accessInfo: EELiteAccess;
 };
 
-export const EnterpriseButton: React.VFC<ButtonProps> = props => {
+export const EnterpriseButton: React.FC<ButtonProps> = (props) => {
   const { accessInfo } = props;
 
   switch (accessInfo.access) {
@@ -109,20 +107,20 @@ type EEButtonProps =
       kind: 'loading';
       text: string;
     };
-export const EEButton: React.FC<EEButtonProps> = props => {
-  const { kind } = props;
-  switch (kind) {
+export const EEButton: React.FC<EEButtonProps> = (props) => {
+  const { appearance } = useAppearance();
+
+  switch (props.kind) {
     case 'active': {
-      const { text } = props;
       return (
         <Analytics name="ee-navbar-button" passHtmlAttributesToChildren>
           <Button
-            mode="default"
-            size="md"
-            className="bg-none text-current pointer-effects-none bg-transparent border-primary hover:border-primary text-primary text-sm hover:brightness-90"
-            icon={<FaStar className="text-primary" />}
+            color="amber"
+            size="2"
+            variant={appearance === 'dark' ? 'surface' : 'solid'}
+            leftIcon={FaStar}
           >
-            <span className="text-primary font-semibold text-lg">{text}</span>
+            {props.text}
           </Button>
         </Analytics>
       );
@@ -131,21 +129,10 @@ export const EEButton: React.FC<EEButtonProps> = props => {
       const { primaryText, secondaryText } = props;
       return (
         <Analytics name="ee-navbar-button" passHtmlAttributesToChildren>
-          <Button
-            mode="default"
-            size="md"
-            className={
-              'bg-none pointer-effects-none bg-transparent border-slate-400 text-sm'
-            }
-            icon={<FaTimesCircle className="text-slate-400" />}
-          >
-            <span className="font-semibold text-slate-400 text-lg uppercase">
-              {primaryText}
-            </span>
+          <Button color="gray" size="2" leftIcon={FaTimesCircle}>
+            {primaryText}
             &nbsp;
-            <span className="font-normal text-slate-400 text-lg">
-              {secondaryText}
-            </span>
+            {secondaryText}
           </Button>
         </Analytics>
       );
@@ -154,16 +141,7 @@ export const EEButton: React.FC<EEButtonProps> = props => {
       const { text } = props;
       return (
         <Analytics name="ee-navbar-button" passHtmlAttributesToChildren>
-          <Button
-            mode="default"
-            size="md"
-            disabled
-            loadingText={
-              <span className="text-primary font-semibold text-lg">{text}</span>
-            }
-            isLoading
-            className="bg-none bg-transparent border-none border-primary text-primary text-lg"
-          >
+          <Button size="md" disabled loadingText={text} loading>
             {text}
           </Button>
         </Analytics>

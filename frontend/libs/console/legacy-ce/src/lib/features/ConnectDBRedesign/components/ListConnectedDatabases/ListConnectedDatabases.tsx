@@ -1,29 +1,33 @@
-import to from 'await-to-js';
 import React, { useState } from 'react';
 import { BiTimer } from 'react-icons/bi';
 import { FaEdit, FaTrash, FaUndo } from 'react-icons/fa';
-import Skeleton from 'react-loading-skeleton';
-import globals from '../../../../Globals';
-import _push from '../../../../components/Services/Data/push';
-import { exportMetadata } from '../../../../metadata/actions';
-import { useDestructiveAlert } from '../../../../new-components/Alert';
-import { Button } from '../../../../new-components/Button';
-import { CardedTable } from '../../../../new-components/CardedTable';
-import { IndicatorCard } from '../../../../new-components/IndicatorCard';
-import { hasuraToast } from '../../../../new-components/Toasts';
-import { useAppDispatch } from '../../../../storeHooks';
-import { getProjectId, isCloudConsole } from '../../../../utils/cloudConsole';
-
-import { useMetadata } from '../../../hasura-metadata-api';
-import { Source } from '../../../hasura-metadata-types';
+import {
+  useDestructiveAlert,
+  Button,
+  CardedTable,
+  IndicatorCard,
+  hasuraToast,
+} from '@hasura/shared/ui';
+import { dataRoutes, getProjectId, isCloudConsole } from '@hasura/shared/utils';
+import {
+  useInconsistentMetadata,
+  useMetadata,
+  inconsistentSourcesSelector,
+  useDropSource,
+} from '@hasura/metadata/api';
+import { Source } from '@hasura/shared/types';
 import { useDatabaseLatencyCheck } from '../../hooks/useDatabaseLatencyCheck';
-import { useDatabaseVersion } from '../../hooks/useDatabaseVersion';
-import { useDropSource } from '../../hooks/useDropSource';
-import { useInconsistentSources } from '../../hooks/useInconsistentSources';
 import { useReloadSource } from '../../hooks/useReloadSource';
 import { useUpdateProjectRegion } from '../../hooks/useUpdateProjectRegion';
 import { Latency } from '../../types';
 import { AccelerateProject, Details, LatencyBadge } from './parts';
+import { useNavigate } from 'react-router';
+import {
+  NotImplementedError,
+  useDatabaseVersion,
+} from '@hasura/metadata/data-source';
+import { Skeleton } from '@radix-ui/themes';
+import { useAppContext } from '@hasura/shared/context';
 
 type DatabaseItem = {
   dataSourceName: Source['name'];
@@ -31,76 +35,91 @@ type DatabaseItem = {
 };
 
 export const ListConnectedDatabases = (props?: { className?: string }) => {
+  const navigate = useNavigate();
+  const { envVars } = useAppContext();
   const [showAccelerateProjectSection, setShowAccelerateProjectSection] =
     useState(false);
+
+  const {
+    data: databaseList,
+    isLoading,
+    isFetching,
+    refetch: refetchMetadata,
+  } = useMetadata((m) =>
+    m.metadata.sources.map((source) => ({
+      dataSourceName: source.name,
+      driver: source.kind,
+    })),
+  );
 
   const {
     data: { latencies, rowId } = {},
     refetch,
     isLoading: databaseCheckLoading,
+    isSuccess: isDatabaseCheckSuccess,
+    isError: isDatabaseCheckError,
   } = useDatabaseLatencyCheck({
     enabled: false,
-    onSuccess: data => {
-      const result = (data as any).latencies as Latency[];
-      const isAnyLatencyHigh = result.find(latency => latency.avgLatency > 200);
+  });
+
+  React.useEffect(() => {
+    if (isDatabaseCheckSuccess) {
+      const result = (latencies as any as Latency[]) ?? [];
+      const isAnyLatencyHigh = result.find(
+        (latency) => latency.avgLatency > 200,
+      );
       setShowAccelerateProjectSection(!!isAnyLatencyHigh);
-    },
-    onError: err => {
+    }
+  }, [isDatabaseCheckSuccess, latencies]);
+
+  React.useEffect(() => {
+    if (isDatabaseCheckError) {
       hasuraToast({
         type: 'error',
         title: 'Could not fetch latency data!',
         message: 'Something went wrong',
       });
       setShowAccelerateProjectSection(false);
-    },
-  });
-
-  const dispatch = useAppDispatch();
+    }
+  }, [isDatabaseCheckError]);
 
   const [activeRow, setActiveRow] = useState<number>();
 
-  const { reloadSource, isLoading: isSourceReloading } = useReloadSource();
+  const { reloadSource, isPending: isSourceReloading } = useReloadSource();
 
-  const { dropSource, isLoading: isSourceRemovalInProgress } = useDropSource({
+  const { dropSource, isPending: isSourceRemovalInProgress } = useDropSource({
     onSuccess: () => {
-      dispatch(exportMetadata());
+      refetchMetadata();
     },
   });
 
   const {
     data: inconsistentSources,
     isLoading: isInconsistentFetchCallLoading,
-  } = useInconsistentSources();
+  } = useInconsistentMetadata(inconsistentSourcesSelector);
 
   const {
-    data: databaseList,
-    isLoading,
-    isFetching,
-  } = useMetadata(m =>
-    m.metadata.sources.map(source => ({
-      dataSourceName: source.name,
-      driver: source.kind,
-    }))
+    data: databaseVersions,
+    isLoading: isDatabaseVersionLoading,
+    error: databaseVersionError,
+  } = useDatabaseVersion(
+    (databaseList ?? []).map((d) => d.dataSourceName),
+    !isFetching,
   );
-
-  const { data: databaseVersions, isLoading: isDatabaseVersionLoading } =
-    useDatabaseVersion(
-      (databaseList ?? []).map(d => d.dataSourceName),
-      !isFetching
-    );
 
   const isCurrentRow = React.useCallback(
     (rowIndex: number) => rowIndex === activeRow,
-    [activeRow]
+    [activeRow],
   );
 
   const columns = ['database', 'driver', '', ''];
 
   const handleEdit = React.useCallback((databaseItem: DatabaseItem) => {
-    dispatch(
-      _push(
-        `/data/v2/manage/database/edit?driver=${databaseItem.driver}&database=${databaseItem.dataSourceName}`
-      )
+    navigate(
+      dataRoutes.editDatabase({
+        name: databaseItem.dataSourceName,
+        kind: databaseItem.driver,
+      }),
     );
   }, []);
 
@@ -114,80 +133,100 @@ export const ListConnectedDatabases = (props?: { className?: string }) => {
         destroyTerm: 'remove',
         appendTerm:
           'Any metadata dependent objects (relationships, permissions etc.) from other sources will also be dropped as a result.',
-        onConfirm: async () => {
-          let success = true;
-
-          const [err] = await to(
-            dropSource({
-              driver: databaseItem.driver,
-              dataSourceName: databaseItem.dataSourceName,
-            })
-          );
-
-          if (err) {
-            success = false;
-          }
-
-          return success;
+        onConfirm: () => {
+          return new Promise((resolve) => {
+            return dropSource(
+              {
+                source: {
+                  kind: databaseItem.driver,
+                  name: databaseItem.dataSourceName,
+                },
+              },
+              {
+                onSuccess: () => resolve(true),
+                onError: () => resolve(false),
+              },
+            );
+          });
         },
       });
     },
-    [destructivePrompt, dropSource]
+    [destructivePrompt, dropSource],
   );
 
   const rowData = React.useMemo(
     () =>
       (databaseList ?? []).map((databaseItem, index) => [
-        <div>{databaseItem.dataSourceName}</div>,
+        <div key={`name-${databaseItem.dataSourceName}`}>
+          {databaseItem.dataSourceName}
+        </div>,
         databaseItem.driver,
         isDatabaseVersionLoading || isInconsistentFetchCallLoading ? (
-          <Skeleton />
+          <Skeleton
+            key={`version-${databaseItem.dataSourceName}`}
+            height="20px"
+            width="200px"
+          />
         ) : (
           <Details
+            key={`version-${databaseItem.dataSourceName}`}
             inconsistentSources={inconsistentSources ?? []}
+            isSupported={
+              !(
+                databaseVersionError &&
+                databaseVersionError instanceof NotImplementedError
+              )
+            }
             details={{
               version:
                 (databaseVersions ?? []).find(
-                  entry => entry.dataSourceName === databaseItem.dataSourceName
+                  (entry) =>
+                    entry.dataSourceName === databaseItem.dataSourceName,
                 )?.version ?? '',
             }}
             dataSourceName={databaseItem.dataSourceName}
           />
         ),
-        <div className="flex justify-center">
+        <div
+          key={`latency-${databaseItem.dataSourceName}`}
+          className="flex justify-center"
+        >
           <LatencyBadge
             latencies={latencies ?? []}
             dataSourceName={databaseItem.dataSourceName}
           />
         </div>,
         <div
+          key={`actions-${databaseItem.dataSourceName}`}
           className="flex gap-4 justify-end px-4"
-          onClick={e => {
+          onClick={(e) => {
             setActiveRow(index);
           }}
         >
           <Button
-            icon={<FaUndo />}
-            size="sm"
+            mode="default"
+            leftIcon={FaUndo}
+            size="1"
             onClick={() => reloadSource(databaseItem.dataSourceName)}
-            isLoading={isSourceReloading && isCurrentRow(index)}
+            loading={isSourceReloading && isCurrentRow(index)}
             loadingText="Reloading"
           >
             Reload
           </Button>
           <Button
-            icon={<FaEdit />}
-            size="sm"
+            mode="primary"
+            leftIcon={FaEdit}
+            size="1"
             onClick={() => handleEdit(databaseItem)}
           >
             Edit
           </Button>
           <Button
-            icon={<FaTrash />}
+            leftIcon={FaTrash}
             mode="destructive"
-            size="sm"
+            size="1"
             onClick={() => handleRemove(databaseItem)}
-            isLoading={isSourceRemovalInProgress && isCurrentRow(index)}
+            loading={isSourceRemovalInProgress && isCurrentRow(index)}
             loadingText="Deleting"
           >
             Remove
@@ -207,7 +246,7 @@ export const ListConnectedDatabases = (props?: { className?: string }) => {
       isSourceRemovalInProgress,
       latencies,
       reloadSource,
-    ]
+    ],
   );
 
   const {
@@ -231,7 +270,7 @@ export const ListConnectedDatabases = (props?: { className?: string }) => {
 
       // redirect to the cloud "change region for project page"
 
-      const projectId = getProjectId(globals);
+      const projectId = getProjectId(envVars);
       if (!projectId) {
         return;
       }
@@ -239,7 +278,7 @@ export const ListConnectedDatabases = (props?: { className?: string }) => {
 
       window.open(cloudDetailsPage, '_blank');
     },
-    [updateProjectRegionForRowId]
+    [updateProjectRegionForRowId],
   );
 
   if (isLoading) return <>Loading...</>;
@@ -247,14 +286,10 @@ export const ListConnectedDatabases = (props?: { className?: string }) => {
   return (
     <div className={props?.className}>
       {rowData.length ? (
-        <CardedTable
-          columns={[...columns, null]}
-          data={rowData}
-          showActionCell
-        />
+        <CardedTable columns={[...columns, null]} data={rowData} />
       ) : (
         <IndicatorCard headline="No databases connected">
-          You don't have any data sources connected, please connect one to
+          You don&apos;t have any data sources connected, please connect one to
           continue.
         </IndicatorCard>
       )}
@@ -270,13 +305,13 @@ export const ListConnectedDatabases = (props?: { className?: string }) => {
           }}
         />
       ) : (
-        isCloudConsole(globals) && (
+        isCloudConsole(envVars) && (
           <Button
             onClick={() => {
               refetch();
             }}
-            icon={<BiTimer />}
-            isLoading={databaseCheckLoading}
+            leftIcon={BiTimer}
+            loading={databaseCheckLoading}
             loadingText="Measuring Latencies"
           >
             Check latency

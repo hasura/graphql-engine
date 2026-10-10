@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
-import { hasuraToast } from '../../../new-components/Toasts';
-import { useMetadataMigration } from '../../MetadataAPI';
+import { hasuraToast } from '@hasura/shared/ui';
+import { useMetadataMigration } from '@hasura/metadata/api';
 
 export const useReloadSource = () => {
   const { mutate, ...rest } = useMetadataMigration({
@@ -20,7 +20,7 @@ export const useReloadSource = () => {
         },
       });
     },
-    [mutate]
+    [mutate],
   );
   return { reloadSource, ...rest };
 };

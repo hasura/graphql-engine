@@ -46,7 +46,7 @@ const capitalizeFirstLetterTestCases: capitalizeFirstLetterTestCase[] = [
 
 describe('hexToRGB', () => {
   it('should transform Hex encoded strings to RBGA format', () => {
-    hexToRGBATestCases.forEach(tc => {
+    hexToRGBATestCases.forEach((tc) => {
       expect(hexToRGB(tc.hex, tc.alpha)).toEqual(tc.rgba);
     });
   });
@@ -54,7 +54,7 @@ describe('hexToRGB', () => {
 
 describe('CapitalizeFirstLetter', () => {
   it('should capitalize first letter of the string in the sentence', () => {
-    capitalizeFirstLetterTestCases.forEach(tc => {
+    capitalizeFirstLetterTestCases.forEach((tc) => {
       expect(CapitalizeFirstLetter(tc.input)).toEqual(tc.output);
     });
   });

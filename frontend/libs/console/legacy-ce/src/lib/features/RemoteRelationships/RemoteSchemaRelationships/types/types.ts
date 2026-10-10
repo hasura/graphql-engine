@@ -1,4 +1,4 @@
-import { EventDataNode } from 'antd/lib/tree';
+import type { JSX } from 'react';
 
 export type HasuraRsFields = string[];
 
@@ -39,10 +39,7 @@ export type RemoteField = {
 };
 
 export type InputArgumentValueType =
-  | string
-  | boolean
-  | number
-  | InputArgumentsType;
+  string | boolean | number | InputArgumentsType;
 
 export type InputArgumentsType = {
   [key: string]: InputArgumentValueType;
@@ -60,14 +57,3 @@ export type RemoteRelationship = {
     };
   };
 };
-
-export interface AntdTreeNode extends EventDataNode {
-  title: JSX.Element | string;
-  key: string;
-  checkable: boolean;
-  depth: number;
-  type: 'field' | 'arg';
-  disabled?: boolean;
-  argValue?: ArgValue | null;
-  children?: TreeNode[];
-}
