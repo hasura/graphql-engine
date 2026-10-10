@@ -68,7 +68,10 @@ where
 
 import Control.Arrow
 import Control.Arrow.Extended
-import Control.Monad.Trans.Writer
+-- The CPS writer: the lazy one leaves a chain of unevaluated (result, log)
+-- pairs, one per step, until the log is demanded.
+import Control.Monad.Trans.Writer.CPS
+import Data.Monoid (Monoid)
 
 -- | Translate a monadic writer effect stack of a computation into arrow-based
 -- effects.
@@ -79,14 +82,14 @@ import Control.Monad.Trans.Writer
 -- NB: This is conceptually different from `ArrowApply`, which expresses that a
 -- given `Arrow` /is/ a Kleisli arrow.  `ArrowInterpret` has no such condition
 -- on @arr@.
-interpretWriter :: (ArrowWriter w arr) => Writer w a `arr` a
+interpretWriter :: (Monoid w, ArrowWriter w arr) => Writer w a `arr` a
 interpretWriter = proc m -> do
   let (a, w) = runWriter m
   tellA -< w
   returnA -< a
 
 -- | 'interpretWriter' for some Kleisli arrow.
-interpretWriterT :: (ArrowKleisli m arr, ArrowWriter w arr) => WriterT w m a `arr` a
+interpretWriterT :: (Monoid w, ArrowKleisli m arr, ArrowWriter w arr) => WriterT w m a `arr` a
 interpretWriterT = proc m -> do
   (a, w) <- bindA -< runWriterT m
   tellA -< w
