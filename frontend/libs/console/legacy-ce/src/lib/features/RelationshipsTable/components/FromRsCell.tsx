@@ -1,39 +1,33 @@
-import React, { ReactText } from 'react';
+import React from 'react';
 import { FaFont } from 'react-icons/fa';
 import { FiType } from 'react-icons/fi';
+import { Flex } from '@radix-ui/themes';
 
-const RsLeafCell = ({ leafName }: { leafName: ReactText }) => (
-  <>
-    <FaFont
-      className="fill-current text-sm text-muted mr-1 p-0"
-      title="Field"
-    />
-    <span className="mr-2">{leafName}</span>
-  </>
+const RsLeafCell = ({ leafName }: { leafName: React.ReactNode }) => (
+  <Flex align="center" gap="1">
+    <FaFont title="Field" />
+    <span>{leafName}</span>
+  </Flex>
 );
 
 // the desgin mockup was using FA v5, instead of fa-project-diagram, I've used  fa-code-fork from FA v4 for the time being
 // this matches with the icon that we show on RS page
 // this can be changed once after we upgrade Font Awesome to v5
 const FromRsCell = ({
-  rsName,
   leafs,
+  rsType,
 }: {
-  rsName: ReactText;
-  leafs: ReactText[];
+  rsType: React.ReactNode;
+  leafs: React.ReactNode[];
 }) => (
-  <div className="flex items-center">
-    <FiType
-      className="fill-current text-sm text-muted mr-1 p-0"
-      title="Type"
-      style={{ strokeWidth: 4.5 }}
-    />
-    {rsName}
+  <Flex align="center" gap="1">
+    <FiType title="Type" />
+    {rsType}
     <span className="px-2">/</span>
-    {leafs.map(i => (
-      <RsLeafCell leafName={i} />
+    {leafs.map((i, index) => (
+      <RsLeafCell key={index} leafName={i} />
     ))}
-  </div>
+  </Flex>
 );
 
 export default FromRsCell;

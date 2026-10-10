@@ -1,27 +1,45 @@
-import { useQueries } from 'react-query';
+import { useQueries } from '@tanstack/react-query';
 import { z } from 'zod';
-import { useHttpClient } from '../../Network';
-import { DataSource } from '../../DataSource';
+import {
+  getAllSourceKinds,
+  getConnectDatabaseFormSchema,
+} from '@hasura/metadata/data-source';
 import { useDefaultValues } from './useDefaultValues';
+import { useAuthFetchJson } from '@hasura/shared/hooks';
+import { useAppContext } from '@hasura/shared/context';
+import { SupportedDriver } from '@hasura/shared/types';
 
 interface Args {
   name: string;
-  driver: string;
+  driver: SupportedDriver;
 }
 
 export const useLoadSchema = ({ name, driver }: Args) => {
-  const httpClient = useHttpClient();
-  const results = useQueries([
-    {
-      queryKey: ['validation-schema', driver],
-      queryFn: async () =>
-        DataSource(httpClient).connectDB.getFormSchema(driver),
-    },
-    {
-      queryKey: ['getDrivers'],
-      queryFn: async () => DataSource(httpClient).driver.getAllSourceKinds(),
-    },
-  ]);
+  const { endpoints } = useAppContext();
+  const fetchJson = useAuthFetchJson();
+
+  const results = useQueries({
+    queries: [
+      {
+        queryKey: [driver, 'validation-schema'],
+        queryFn: async () => {
+          return getConnectDatabaseFormSchema({
+            driver,
+            endpoints,
+            fetchJson,
+          });
+        },
+      },
+      {
+        queryKey: ['getDrivers'],
+        queryFn: () =>
+          getAllSourceKinds({
+            endpoints,
+            fetchJson,
+          }),
+      },
+    ],
+  });
 
   // get default values if existing connection info is passed in
   // it would be nice to do this as part of the useQueries array above
@@ -34,16 +52,16 @@ export const useLoadSchema = ({ name, driver }: Args) => {
   } = useDefaultValues({ name, driver });
 
   const isLoading =
-    results.some(result => result.isLoading) || defaultValuesIsLoading;
+    results.some((result) => result.isLoading) || defaultValuesIsLoading;
   const isError =
-    results.some(result => result.isError) || defaultValuesIsError;
+    results.some((result) => result.isError) || defaultValuesIsError;
 
   const [schemaResult, driversResult] = results;
 
   const schema = schemaResult.data || z.any();
   const drivers = driversResult.data;
 
-  const error = results.some(result => result.error) || defaultValuesError;
+  const error = results.some((result) => result.error) || defaultValuesError;
   return {
     data: { schema, drivers, defaultValues },
     isLoading,

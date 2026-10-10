@@ -1,22 +1,19 @@
-import React from 'react';
+import { Flex, FlexProps } from '@radix-ui/themes';
+import { PermissionsIcon } from '@hasura/shared/ui';
 
-import { PermissionsIcon } from './PermissionsIcons';
-
-export const PermissionsLegend: React.FC = () => (
-  <div className="grid gap-2">
-    <div className="flex gap-4">
-      <span>
-        <PermissionsIcon type="fullAccess" />
-        &nbsp;-&nbsp;full access
-      </span>
-      <span>
-        <PermissionsIcon type="noAccess" />
-        &nbsp;-&nbsp;no access
-      </span>
-      <span>
-        <PermissionsIcon type="partialAccess" />
-        &nbsp;-&nbsp;partial access
-      </span>
-    </div>
-  </div>
+export const PermissionsLegend = (props: FlexProps) => (
+  <Flex gap="4" {...props}>
+    <Flex align="center">
+      <PermissionsIcon type="fullAccess" />
+      &nbsp;-&nbsp;full access
+    </Flex>
+    <Flex align="center">
+      <PermissionsIcon type="noAccess" />
+      &nbsp;-&nbsp;no access
+    </Flex>
+    <Flex align="center">
+      <PermissionsIcon type="partialAccess" />
+      &nbsp;-&nbsp;partial access
+    </Flex>
+  </Flex>
 );

@@ -1,4 +1,4 @@
-import { getPathRoot } from '../Common/utils/urlUtils';
+import { getPathRoot } from '@hasura/shared/utils';
 
 export type IsBlockActiveArgs = {
   blockPath: string;

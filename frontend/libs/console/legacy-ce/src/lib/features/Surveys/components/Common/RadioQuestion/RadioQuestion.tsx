@@ -3,6 +3,7 @@ import { FaOptionIcon } from './FaOptionIcon';
 import { IconCardGroup, IconCardGroupItem } from './IconCardGroup';
 import { SurveyQuestionProps } from '../../../types';
 import { orderArrayItems } from '../../../utils';
+import { Flex } from '@radix-ui/themes';
 
 export function RadioQuestion(props: SurveyQuestionProps) {
   const { questionData, responses, setResponses } = props;
@@ -20,11 +21,11 @@ export function RadioQuestion(props: SurveyQuestionProps) {
   // order the option position before showing
   const surveyOptions: IconCardGroupItem<string>[] = useMemo(() => {
     const orderedOptions = orderArrayItems(
-      questionData.survey_question_options
+      questionData.survey_question_options,
     );
 
     return (
-      orderedOptions.map(val => {
+      orderedOptions.map((val) => {
         let template_config;
         try {
           template_config = JSON.parse(val.template_config);
@@ -43,16 +44,16 @@ export function RadioQuestion(props: SurveyQuestionProps) {
 
   return (
     <>
-      <div className="font-bold text-gray-600 mb-xs">
+      <div className="font-bold text-gray-600 mb-1">
         {questionData.question}
       </div>
-      <div className="flex justify-center">
+      <Flex justify="center">
         <IconCardGroup
           items={surveyOptions}
           disabled={false}
           onChange={onChange}
         />
-      </div>
+      </Flex>
     </>
   );
 }

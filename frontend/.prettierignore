@@ -9,3 +9,6 @@
 /snapshots.js
 /.yarn
 /tmp
+/.nx/cache
+/.nx/workspace-data
+.nx/self-healing

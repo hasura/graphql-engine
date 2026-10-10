@@ -1,5 +1,5 @@
-import { nativeDrivers } from '../../../DataSource';
+import { NATIVE_DRIVERS } from '@hasura/shared/types';
 
 export const useApolloFederationSupportedDrivers = () => {
-  return nativeDrivers;
+  return NATIVE_DRIVERS;
 };

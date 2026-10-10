@@ -1,4 +1,4 @@
-import { DataConnectorUri } from '../hasura-metadata-types';
+import { DataConnectorUri } from '@hasura/shared/types';
 
 export type DcAgent = {
   name: string;

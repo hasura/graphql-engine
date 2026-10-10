@@ -1,13 +1,12 @@
-import { type SsoIdentityProviders } from './types';
 import { globals } from '@hasura/console-legacy-ce';
 import { isEmpty } from './utils/validation';
+import { EnvVars, SsoIdentityProviders } from '@hasura/shared/types';
 
 type CeConsoleEnvVars = typeof window.__env;
 
 type EeConsoleEnvVars = CeConsoleEnvVars & {
   readonly hasuraMetricsUrl?: string;
   readonly hasuraOAuthUrl?: string;
-  readonly hasuraOAuthScopes?: string;
   readonly isPATSet?: boolean;
   readonly personalAccessToken?: string;
   readonly projectId?: string;
@@ -25,23 +24,35 @@ const stripTrailingSlash = (url: string) => url.replace(/\/$/, '');
 
 const windowEnv: EeConsoleEnvVars = window.__env;
 
-const getHasuraMetricsUrl = () =>
-  windowEnv.hasuraMetricsUrl ||
-  (windowEnv.hasuraOAuthUrl || '').replace('oauth', 'metrics') ||
-  'http://metrics.lux-dev.hasura.me';
+export const getHasuraMetricsUrl = (envVars: EnvVars): string => {
+  if (
+    envVars.consoleMode !== 'server' ||
+    !envVars.consoleType ||
+    envVars.consoleType === 'oss' ||
+    envVars.consoleType === 'cloud' ||
+    !envVars.projectID
+  ) {
+    return '';
+  }
+
+  const metricsUrl =
+    envVars.hasuraMetricsUrl ||
+    ('hasuraOAuthUrl' in envVars && envVars.hasuraOAuthUrl
+      ? envVars.hasuraOAuthUrl
+      : ''
+    ).replace('oauth', 'metrics') ||
+    'http://metrics.lux-dev.hasura.me';
+
+  return stripTrailingSlash(metricsUrl);
+};
 
 const extendedGlobals = {
   ...globals,
-  adminSecretLabel: 'admin-secret',
-  collabLabel: 'hasura-collaborator-token',
-  ssoLabel: 'hasura-sso-token',
-  patLabel: 'Hasura-Collaborator-Token',
   hasuraClientID: windowEnv.consoleId,
-  metricsApiUrl: stripTrailingSlash(getHasuraMetricsUrl()),
+  metricsApiUrl: stripTrailingSlash(getHasuraMetricsUrl(windowEnv)),
   hasuraOAuthUrl: stripTrailingSlash(
-    windowEnv.hasuraOAuthUrl || 'http://oauth.lux-dev.hasura.me'
+    windowEnv.hasuraOAuthUrl || 'http://oauth.lux-dev.hasura.me',
   ),
-  hasuraOAuthScopes: windowEnv.hasuraOAuthScopes || 'openid offline',
   relativeOAuthRedirectUrl: '/oauth2/callback',
   relativeOAuthTokenUrl: '/oauth2/token',
   isPATSet: windowEnv.isPATSet || false,

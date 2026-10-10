@@ -1,16 +1,20 @@
 import React from 'react';
-import { useRoles } from '../../../MetadataAPI';
-import { useEnabledRolesFromAllowList } from './useEnabledRolesFromAllowList';
+import { useMetadata } from '@hasura/metadata/api';
+import { MetadataSelectors } from '@hasura/metadata/helpers';
 
 export const useEnabledRolesFromAllowListState = (collectionName: string) => {
-  const { data: allAvailableRoles } = useRoles();
-  const { data: enabledRoles } = useEnabledRolesFromAllowList(collectionName);
+  const { data, ...rest } = useMetadata();
   const [newRoles, setNewRoles] = React.useState<string[]>(['']);
+  const allAvailableRoles = data ? MetadataSelectors.selectRoles(data) : [];
+  const enabledRoles = data
+    ? MetadataSelectors.getNewRolePermission(collectionName)(data)
+    : [];
 
   return {
     allAvailableRoles,
     enabledRoles: enabledRoles || [],
-    newRoles: newRoles.filter(role => !allAvailableRoles.includes(role)),
+    newRoles: newRoles.filter((role) => !allAvailableRoles.includes(role)),
     setNewRoles,
+    ...rest,
   };
 };

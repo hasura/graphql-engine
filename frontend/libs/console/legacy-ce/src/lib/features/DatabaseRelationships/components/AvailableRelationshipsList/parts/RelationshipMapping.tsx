@@ -1,8 +1,9 @@
 import { FaColumns, FaFont, FaPlug, FaTable } from 'react-icons/fa';
+import { Flex } from '@radix-ui/themes';
 import { getRemoteFieldPath } from '../../../../RelationshipsTable';
 import { Relationship } from '../../../types';
-import { getTableDisplayName } from '../../../utils/helpers';
-import { RelationshipIcon } from '../../RelationshipIcon';
+import { getTableDisplayName } from '@hasura/shared/utils';
+import { RelationshipIcon } from '@hasura/shared/ui';
 
 const Columns = ({
   mapping,
@@ -39,8 +40,8 @@ export const RelationshipMapping = ({
   }
 
   return (
-    <div className="flex items-center gap-6">
-      <div className="flex items-center gap-2">
+    <Flex align="center" gap="6">
+      <Flex align="center" gap="2">
         <FaTable />
         <span>{getTableDisplayName(relationship.fromTable)}</span>
         /
@@ -50,17 +51,17 @@ export const RelationshipMapping = ({
         ) : (
           <Columns mapping={relationship.definition.mapping} type="from" />
         )}
-      </div>
+      </Flex>
       <RelationshipIcon
         type={
           relationship.relationshipType === 'Array'
             ? 'one-to-many'
             : relationship.relationshipType === 'Object'
-            ? 'one-to-one'
-            : 'other'
+              ? 'one-to-one'
+              : 'other'
         }
       />
-      <div className="flex items-center gap-2">
+      <Flex align="center" gap="2">
         {relationship.type === 'remoteSchemaRelationship' ? (
           <>
             <FaPlug />
@@ -85,7 +86,7 @@ export const RelationshipMapping = ({
             <Columns mapping={relationship.definition.mapping} type="to" />
           </>
         )}
-      </div>
-    </div>
+      </Flex>
+    </Flex>
   );
 };

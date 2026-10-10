@@ -1,3 +1,4 @@
+import { hgeUrl } from '../../../../../support/endpoints';
 import { config } from './config';
 import { version } from './version';
 import { export_metadata } from './export_metadata';
@@ -6,7 +7,7 @@ import { get_inconsistent_metadata } from './get_inconsistent_metadata';
 
 export function stubInitialServerRequests() {
   cy.log('**--- Stub all the initial requests**');
-  cy.intercept('http://localhost:8080/v1/metadata', req => {
+  cy.intercept(hgeUrl('/v1/metadata'), (req) => {
     if (req.body.type === 'export_metadata') {
       req.alias = 'export_metadata';
       req.reply(export_metadata);
@@ -23,12 +24,8 @@ export function stubInitialServerRequests() {
     }
   });
 
-  cy.intercept('http://localhost:8080/v1alpha1/config', { body: config }).as(
-    'config'
-  );
-  cy.intercept('http://localhost:8080/v1/version', { body: version }).as(
-    'version'
-  );
+  cy.intercept(hgeUrl('/v1alpha1/config'), { body: config }).as('config');
+  cy.intercept(hgeUrl('/v1/version'), { body: version }).as('version');
 }
 
 export function waitForInitialServerRequests() {

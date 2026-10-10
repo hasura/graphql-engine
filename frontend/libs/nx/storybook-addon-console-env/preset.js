@@ -1,25 +1,21 @@
 function config(entry = []) {
   return [
     ...entry,
-    require.resolve(
-      './../../../dist/libs/nx/storybook-addon-console-env/src/lib/preset/preview'
-    ),
+    require.resolve('./../../../dist/libs/nx/storybook-addon-console-env/src/lib/preset/preview'),
   ];
 }
 
 function managerEntries(entry = []) {
   return [
     ...entry,
-    require.resolve(
-      './../../../dist/libs/nx/storybook-addon-console-env/src/lib/preset/manager'
-    ),
+    require.resolve('./../../../dist/libs/nx/storybook-addon-console-env/src/lib/preset/manager'),
   ];
 }
 
 module.exports = {
   config,
   managerEntries,
-  previewBody: body => `
+  previewBody: (body) => `
     ${body}
   <script>
     // Working as iframe and parent are on the same domain

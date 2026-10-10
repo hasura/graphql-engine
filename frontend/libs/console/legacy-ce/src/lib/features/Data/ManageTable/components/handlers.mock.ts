@@ -1,8 +1,8 @@
-import { RunSQLResponse } from '../../../DataSource';
-import { areTablesEqual } from '../../../hasura-metadata-api';
-import { Metadata } from '../../../hasura-metadata-types';
-import { TMigration } from '../../../MetadataAPI';
-import { rest } from 'msw';
+import { TMigration } from '@hasura/metadata/api';
+import { areTablesEqual } from '@hasura/metadata/helpers';
+
+import { Metadata, RunSQLResponse } from '@hasura/shared/types';
+import { http, HttpResponse } from 'msw';
 
 function initialMetadata(): Metadata {
   return {
@@ -44,7 +44,7 @@ function initialMetadata(): Metadata {
                 name: 'Genre',
               },
             },
-          ],
+          ] as any[],
           configuration: {
             connection_info: {
               database_url: 'http://localhost:80/postgres',
@@ -61,13 +61,13 @@ type Table = { schema: string; name: string };
 let metadata = initialMetadata();
 
 function trackTable(table: Table) {
-  metadata.metadata.sources[0].tables.push({ table });
+  metadata.metadata.sources[0].tables.push({ table, event_triggers: [] });
 }
 
 function untrackTable(table: Table) {
   metadata.metadata.sources[0].tables =
     metadata.metadata.sources[0].tables.filter(
-      t => !areTablesEqual(t.table, table)
+      (t) => !areTablesEqual(t.table, table),
     );
 }
 
@@ -117,7 +117,7 @@ const runSQLResponse = (size = 100): RunSQLResponse => ({
 });
 
 function createTables(count: number) {
-  const tables = [];
+  const tables: string[][] = [];
   for (let i = 0; i < count; i++) {
     tables.push([`table_${i}`, 'public', 'BASE TABLE']);
   }
@@ -125,21 +125,21 @@ function createTables(count: number) {
 }
 
 export const handlers = (amountOfTables = 1700) => [
-  rest.post(`http://localhost:8080/v1/metadata`, async (req, res, ctx) => {
-    const body = (await req.json()) as TMigration['query'];
+  http.post(`http://localhost:8080/v1/metadata`, async ({ request }) => {
+    const body = (await request.json()) as TMigration['query'];
     if (isTrackTable(body.type)) {
       body.args.tables.forEach((table: any) => trackTable(table.table));
     } else if (isUntrackTable(body.type)) {
       body.args.tables.forEach((table: any) => untrackTable(table.table));
     }
 
-    return res(ctx.json({ ...metadata }));
+    return HttpResponse.json({ ...metadata });
   }),
-  rest.post(`http://localhost:8080/v2/query`, async (req, res, ctx) => {
-    const body = (await req.json()) as TMigration['query'];
+  http.post(`http://localhost:8080/v2/query`, async ({ request }) => {
+    const body = (await request.json()) as TMigration['query'];
 
     console.log('!!1', body);
 
-    return res(ctx.json([runSQLResponse(amountOfTables), []]));
+    return HttpResponse.json([runSQLResponse(amountOfTables), []]);
   }),
 ];

@@ -1,32 +1,29 @@
-import React from 'react';
-import { connect } from 'react-redux';
-
-import { Link } from 'react-router';
-import Helmet from 'react-helmet';
-import globals from '../../Globals';
+import { Flex } from '@radix-ui/themes';
+import { useDocumentTitle } from '@hasura/shared/hooks';
+import { RelativeLink } from '@hasura/shared/ui';
+import { useAppContext } from '@hasura/shared/context';
 
 export class NotFoundError extends Error {}
 
 type PageNotFoundProps = {
-  resetCallback: () => void;
+  resetCallback?: () => void;
 };
 
 const PageNotFound = (props: PageNotFoundProps) => {
-  const errorImage = `${globals.assetsPath}/common/img/hasura_icon_green.svg`;
-
-  const { resetCallback } = props;
+  useDocumentTitle('404 - Page Not Found | Hasura');
+  const { envVars } = useAppContext();
+  const errorImage = `${envVars.assetsPath}/common/img/hasura_icon_green.svg`;
 
   return (
-    <div className="h-screen w-screen flex items-center justify-center ">
-      <Helmet title="404 - Page Not Found | Hasura" />
-      <div className="flex w-7/12 justify-between">
+    <Flex align="center" justify="center" className="h-screen w-screen">
+      <Flex justify="between" className="w-7/12">
         <div className="px-5 md:p-0">
           <h1 className="font-bold text-6xl">404</h1>
           <br />
           This page does not exist. Head back{' '}
-          <Link to="/" onClick={resetCallback}>
+          <RelativeLink to="/" onClick={props.resetCallback}>
             Home
-          </Link>
+          </RelativeLink>
           .
         </div>
         <div className="w-1/3">
@@ -36,9 +33,9 @@ const PageNotFound = (props: PageNotFoundProps) => {
             alt="Not found"
           />
         </div>
-      </div>
-    </div>
+      </Flex>
+    </Flex>
   );
 };
 
-export default connect()(PageNotFound);
+export default PageNotFound;

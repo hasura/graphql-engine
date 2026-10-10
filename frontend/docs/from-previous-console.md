@@ -54,15 +54,15 @@ However, one big change is that now all env variables **must be prefixed by `NX_
 ```
 NODE_ENV=development
 NX_PORT=4200
-NX_CDN_ASSETS=true
-NX_ASSETS_PATH=https://graphql-engine-cdn.hasura.io/console/assets
-NX_ASSETS_VERSION=channel/stable/v1.0
-NX_ENABLE_TELEMETRY=true
-NX_URL_PREFIX=/
-NX_DATA_API_URL=http://localhost:8080
-NX_SERVER_VERSION=v1.0.0
-NX_CONSOLE_MODE=server
-NX_IS_ADMIN_SECRET_SET=true
+NX_PUBLIC_CDN_ASSETS=true
+NX_PUBLIC_ASSETS_PATH=https://graphql-engine-cdn.hasura.io/console/assets
+NX_PUBLIC_ASSETS_VERSION=channel/stable/v1.0
+NX_PUBLIC_ENABLE_TELEMETRY=true
+NX_PUBLIC_URL_PREFIX=/
+NX_PUBLIC_DATA_API_URL=http://localhost:8080
+NX_PUBLIC_SERVER_VERSION=v1.0.0
+NX_PUBLIC_CONSOLE_MODE=server
+NX_PUBLIC_IS_ADMIN_SECRET_SET=true
 ```
 
 </details>

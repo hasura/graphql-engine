@@ -1,40 +1,105 @@
-import { setupServer } from 'msw/node';
-import { renderHook } from '@testing-library/react-hooks';
-import { handlers } from '../../../../mocks/metadata.mock';
+import { renderHook } from '@testing-library/react';
+import { useMetadata, useMetadataMigration } from '@hasura/metadata/api';
 import { useRemoveFromAllowList } from './useRemoveFromAllowList';
-import { wrapper } from '../../../../hooks/__tests__/common/decorator';
 
-const server = setupServer();
+vi.mock('@hasura/metadata/api', () => ({
+  useMetadata: vi.fn(),
+  useMetadataMigration: vi.fn(),
+}));
 
-beforeAll(() => server.listen());
-afterAll(() => server.close());
+const mockUseMetadata = vi.mocked(useMetadata);
+const mockUseMetadataMigration = vi.mocked(useMetadataMigration);
+
+const mutate = vi.fn();
+
+const setupMigration = (
+  overrides: Partial<ReturnType<typeof useMetadataMigration>> = {},
+) => {
+  mockUseMetadataMigration.mockReturnValue({
+    mutate,
+    isSuccess: false,
+    isPending: false,
+    error: null,
+    ...overrides,
+  } as unknown as ReturnType<typeof useMetadataMigration>);
+};
+
+const setupMetadata = (data: unknown) => {
+  mockUseMetadata.mockReturnValue({
+    data,
+  } as unknown as ReturnType<typeof useMetadata>);
+};
 
 describe('useRemoveFromAllowList', () => {
   beforeEach(() => {
-    server.use(...handlers({ url: '' }));
+    vi.clearAllMocks();
+    setupMetadata({ resource_version: 7 });
+    setupMigration();
   });
 
-  test('should work correctly when deleting an existing collection', async () => {
-    const { waitForValueToChange, result }: any = renderHook(
-      () => useRemoveFromAllowList(),
-      { wrapper }
+  it('dispatches a drop_collection_from_allowlist migration for the given collection', async () => {
+    const { result } = renderHook(() => useRemoveFromAllowList());
+
+    await result.current.removeFromAllowList('my_collection');
+
+    expect(mutate).toHaveBeenCalledTimes(1);
+    expect(mutate).toHaveBeenCalledWith(
+      {
+        query: {
+          resource_version: 7,
+          type: 'drop_collection_from_allowlist',
+          args: { collection: 'my_collection' },
+        },
+      },
+      undefined,
     );
+  });
 
-    await result.current.removeFromAllowList('allowed-queries');
+  it('omits resource_version when metadata is not yet available', async () => {
+    setupMetadata(undefined);
 
-    await waitForValueToChange(() => result.current.isSuccess);
+    const { result } = renderHook(() => useRemoveFromAllowList());
+
+    await result.current.removeFromAllowList('my_collection');
+
+    expect(mutate).toHaveBeenCalledWith(
+      {
+        query: {
+          type: 'drop_collection_from_allowlist',
+          args: { collection: 'my_collection' },
+        },
+      },
+      undefined,
+    );
+    const [payload] = mutate.mock.calls[0];
+    expect(payload.query).not.toHaveProperty('resource_version');
+  });
+
+  it('forwards mutate options (e.g. onSuccess/onError) to the migration', async () => {
+    const options = { onSuccess: vi.fn(), onError: vi.fn() };
+
+    const { result } = renderHook(() => useRemoveFromAllowList());
+
+    await result.current.removeFromAllowList('my_collection', options);
+
+    expect(mutate).toHaveBeenCalledWith(expect.any(Object), options);
+  });
+
+  it('exposes the loading state from the underlying migration (isPending -> isLoading)', () => {
+    setupMigration({ isPending: true } as never);
+
+    const { result } = renderHook(() => useRemoveFromAllowList());
+
+    expect(result.current.isLoading).toBe(true);
+  });
+
+  it('exposes success and error state from the underlying migration', () => {
+    const error = new Error('boom');
+    setupMigration({ isSuccess: true, error } as never);
+
+    const { result } = renderHook(() => useRemoveFromAllowList());
+
     expect(result.current.isSuccess).toBe(true);
-  });
-
-  test('should go in error state when deleting a non existing collection', async () => {
-    const { waitForValueToChange, result }: any = renderHook(
-      () => useRemoveFromAllowList(),
-      { wrapper }
-    );
-
-    await result.current.removeFromAllowList('not-existing');
-
-    await waitForValueToChange(() => result.current.error);
-    expect(result.current.error).toBeDefined();
+    expect(result.current.error).toBe(error);
   });
 });

@@ -5,7 +5,7 @@
 
 'use strict';
 
-import { afterAll, beforeAll, expect, test } from '@jest/globals';
+import { afterAll, beforeAll, expect, test } from 'vitest';
 import { GraphQLObjectType, GraphQLSchema } from 'graphql';
 
 import * as openAPIToGraphQL from '../src/index';
@@ -33,7 +33,7 @@ test('All Stripe query endpoints present', () => {
     (
       (createdSchema.getTypeMap().Query as GraphQLObjectType).getFields()
         .viewerAnyAuth.type as GraphQLObjectType
-    ).getFields()
+    ).getFields(),
   ).length;
 
   expect(gqlTypes).toEqual(oasGetCount);

@@ -1,9 +1,9 @@
-import { StoryObj, Meta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
 import {
   CustomFieldNamesModal,
   CustomFieldNamesModalProps,
 } from './CustomFieldNamesModal';
-import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
 
 export default {
   component: CustomFieldNamesModal,

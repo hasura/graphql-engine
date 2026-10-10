@@ -1,9 +1,8 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-webpack5';
 import type { ComponentPropsWithoutRef } from 'react';
 
-import { action } from '@storybook/addon-actions';
-import { expect } from '@storybook/jest';
-import { userEvent, within } from '@storybook/testing-library';
+import { action } from 'storybook/actions';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { Form } from './Form';
 import { defaultValues } from './schema';
@@ -36,7 +35,7 @@ export const ConnectButton: StoryObj<typeof Form> = {
     const canvas = within(canvasElement);
 
     const updateButton = await canvas.getByRole('button', { name: 'Update' });
-    expect(updateButton).toBeVisible();
+    await expect(updateButton).toBeVisible();
   },
 };
 
@@ -79,7 +78,7 @@ export const HappyPath: StoryObj<typeof Form> = {
     // STEP: Type the Endpoint
     await userEvent.type(
       await canvas.findByLabelText('Endpoint', { selector: 'input' }),
-      'http://hasura.io'
+      'http://hasura.io',
     );
 
     // STEP: Type the Batch Size
@@ -98,11 +97,11 @@ export const HappyPath: StoryObj<typeof Form> = {
 
     await userEvent.type(
       canvas.getByRole('textbox', { name: 'headers[0].name' }),
-      'x-hasura-name'
+      'x-hasura-name',
     );
     await userEvent.type(
       canvas.getByRole('textbox', { name: 'headers[0].value' }),
-      'hasura_user'
+      'hasura_user',
     );
 
     // STEP: Add one more header
@@ -111,15 +110,15 @@ export const HappyPath: StoryObj<typeof Form> = {
     // STEP: Add an env-var header
     await userEvent.selectOptions(
       canvas.getByRole('combobox', { name: 'headers[1].type' }),
-      'from_env'
+      'env',
     );
     await userEvent.type(
       canvas.getByRole('textbox', { name: 'headers[1].name' }),
-      'x-hasura-env'
+      'x-hasura-env',
     );
     await userEvent.type(
       canvas.getByRole('textbox', { name: 'headers[1].value' }),
-      'HASURA_USER'
+      'HASURA_USER',
     );
 
     // STEP: Open the collapsible attributes section
@@ -132,11 +131,11 @@ export const HappyPath: StoryObj<typeof Form> = {
     // STEP: Add an attribute
     await userEvent.type(
       canvas.getByRole('textbox', { name: 'attributes[0].name' }),
-      'foo'
+      'foo',
     );
     await userEvent.type(
       canvas.getByRole('textbox', { name: 'attributes[0].value' }),
-      'bar'
+      'bar',
     );
 
     // STEP: Click the Submit button
@@ -162,8 +161,8 @@ export const HappyPath: StoryObj<typeof Form> = {
     //   dataType: ['traces'],
     //   batchSize: 100,
     //   headers: [
-    //     { name: 'x-hasura-name', type: 'from_value', value: 'hasura_user' },
-    //     { name: 'x-hasura-env', type: 'from_env', value: 'HASURA_USER' },
+    //     { name: 'x-hasura-name', type: 'value', value: 'hasura_user' },
+    //     { name: 'x-hasura-env', type: 'env', value: 'HASURA_USER' },
     //   ],
     //   attributes: [{ name: 'foo', value: 'bar' }],
     // });

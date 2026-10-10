@@ -1,37 +1,33 @@
-import React from 'react';
-import { useDispatch } from 'react-redux';
-import { getRoute } from '..';
+import React, { type JSX } from 'react';
+import { useNavigate, useParams } from 'react-router';
 import {
   TypedObjectValidator,
   isObject,
   isTypedObject,
-} from '../../../components/Common/utils/jsUtils';
-import _push from '../../../components/Services/Data/push';
-import { IndicatorCard } from '../../../new-components/IndicatorCard';
-import { Tabs } from '../../../new-components/Tabs';
-import { sessionStore } from '../../../utils/sessionStorage';
-import { BrowseRowsContainer } from '../../BrowseRows';
-import { getTableName } from '../../DataSource';
+  getTableDisplayName,
+  dataRoutes,
+} from '@hasura/shared/utils';
+import { IndicatorCard, Tabs } from '@hasura/shared/ui';
+import { sessionStore } from '@hasura/shared/utils';
+import {
+  useDriverCapabilities,
+  useIsTableView,
+} from '@hasura/metadata/data-source';
 import { DatabaseRelationships } from '../../DatabaseRelationships';
-import { InsertRowFormContainer } from '../../InsertRow/InsertRowFormContainer';
+import { InsertRowFormContainer } from '../InsertRow/InsertRowFormContainer';
 import { PermissionsTab } from '../../Permissions';
-import { Table } from '../../hasura-metadata-types';
+import { MetadataTable, Source, Table } from '@hasura/shared/types';
 import { ModifyTable } from '../ModifyTable/ModifyTable';
-import { useDatabaseHierarchy, useTableDefinition } from '../hooks';
-import { useDriverCapabilities } from '../hooks/useDriverCapabilities';
+import { useTableDefinition } from '../hooks';
 import { EnabledTabs, useEnabledTabs } from '../hooks/useEnabledTabs';
-import { Breadcrumbs, TableName } from './parts';
+import { TableBreadcrumbs, TableName } from './parts';
+import { BrowseRowsContainer } from '../BrowseRows';
+import { useMetadata } from '@hasura/metadata/api';
+import { areTablesEqual, MetadataSelectors } from '@hasura/metadata/helpers';
+import { Skeleton } from '@radix-ui/themes';
 
 export type ManageTableTabs =
-  | 'modify'
-  | 'browse'
-  | 'relationships'
-  | 'permissions';
-export interface ManageTableProps {
-  params: {
-    operation: ManageTableTabs;
-  };
-}
+  'modify' | 'browse' | 'relationships' | 'permissions';
 
 type Tab = {
   value: string;
@@ -39,39 +35,32 @@ type Tab = {
   content: JSX.Element;
 };
 
-const isTabValidator: TypedObjectValidator = _item => {
+const isTabValidator: TypedObjectValidator = (_item) => {
   return 'value' in _item && 'label' in _item && 'content' in _item;
 };
 
 const availableTabs = (
-  dataSourceName: string,
-  table: Table,
-  tableName: string,
+  source: Source,
+  table: MetadataTable,
   areMutationsSupported: boolean,
-  enabledTabs: EnabledTabs
-): Tab[] =>
-  [
+  enabledTabs: EnabledTabs,
+  isView: boolean,
+): Tab[] => {
+  return [
     {
       value: 'browse',
       label: 'Browse',
-      content: (
-        <BrowseRowsContainer
-          // key is used to force remounting of the component when users switch between tables
-          key={'browse-' + JSON.stringify(table)}
-          dataSourceName={dataSourceName}
-          table={table}
-        />
-      ),
+      content: <BrowseRowsContainer source={source} table={table.table} />,
     },
-    areMutationsSupported && enabledTabs.insert
+    areMutationsSupported && enabledTabs.insert && !isView
       ? {
           value: 'insert',
           label: 'Insert Row',
           content: (
             <InsertRowFormContainer
-              dataSourceName={dataSourceName}
+              source={source}
               key={JSON.stringify(table)}
-              table={table}
+              table={table.table}
             />
           ),
         }
@@ -79,71 +68,67 @@ const availableTabs = (
     {
       value: 'modify',
       label: 'Modify',
-      content: (
-        <ModifyTable
-          key={JSON.stringify(table)}
-          dataSourceName={dataSourceName}
-          table={table}
-          tableName={tableName}
-        />
-      ),
+      content: <ModifyTable source={source} table={table} isView={isView} />,
     },
     {
       value: 'relationships',
       label: 'Relationships',
-      content: (
-        <DatabaseRelationships
-          key={JSON.stringify(table)}
-          dataSourceName={dataSourceName}
-          table={table}
-        />
-      ),
+      content: <DatabaseRelationships table={table.table} source={source} />,
     },
     {
       value: 'permissions',
       label: 'Permissions',
-      content: (
-        <PermissionsTab
-          key={JSON.stringify(table)}
-          dataSourceName={dataSourceName}
-          table={table}
-        />
-      ),
+      content: <PermissionsTab source={source} table={table} />,
     },
   ].filter(
     (item): item is Tab =>
       isTypedObject<Tab>(item, isTabValidator) &&
-      enabledTabs[item.value as keyof EnabledTabs]
+      enabledTabs[item.value as keyof EnabledTabs],
   );
+};
 
-export const ManageTable: React.VFC<ManageTableProps> = (
-  props: ManageTableProps
-) => {
-  const {
-    params: { operation },
-  } = props;
+export const ManageTable: React.FC = () => {
+  const urlData = useTableDefinition();
 
-  const urlData = useTableDefinition(window.location);
-  const dispatch = useDispatch();
-
-  if (urlData.querystringParseResult === 'error')
-    throw Error('Unable to render');
+  if (urlData.querystringParseResult === 'error' || !urlData.data.table) {
+    return <NotFoundComponent />;
+  }
 
   const { database: dataSourceName, table } = urlData.data;
 
-  const {
-    data: databaseHierarchy,
-    isLoading: isLoadingHierarchy,
-    isError: isErrorHierarchy,
-  } = useDatabaseHierarchy(dataSourceName);
+  return <ManageTableUI dataSourceName={dataSourceName} table={table} />;
+};
 
-  const tableName = databaseHierarchy
-    ? getTableName(table, databaseHierarchy)
-    : '';
+const NotFoundComponent = () => (
+  <IndicatorCard status="negative" showIcon>
+    Could not fetch the database hierarchy for the table.
+  </IndicatorCard>
+);
+
+const ManageTableUI = ({
+  dataSourceName,
+  table,
+}: {
+  dataSourceName: string;
+  table: Table;
+}) => {
+  const navigate = useNavigate();
+  const { operation } = useParams<{ operation: ManageTableTabs }>();
+  const {
+    data: source,
+    isFetching: isFetchingSource,
+    isError: isSourceError,
+  } = useMetadata(MetadataSelectors.findSource(dataSourceName));
+  const { data: isTableView, isFetching: isTableViewFetching } = useIsTableView(
+    {
+      source,
+      table,
+    },
+  );
 
   const { data: capabilities, isLoading: isLoadingCapabilities } =
     useDriverCapabilities({
-      dataSourceName,
+      source,
     });
 
   const areInsertMutationsSupported =
@@ -151,45 +136,55 @@ export const ManageTable: React.VFC<ManageTableProps> = (
 
   const enabledTabs = useEnabledTabs(dataSourceName);
 
-  const isLoading = isLoadingHierarchy || isLoadingCapabilities;
+  const isLoading =
+    isFetchingSource || isLoadingCapabilities || isTableViewFetching;
 
-  if (isErrorHierarchy)
-    return (
-      <IndicatorCard status="negative">
-        Could not fetch the database hierarchy for the table.
-      </IndicatorCard>
-    );
+  const metadataTable = table
+    ? source?.tables.find((t) => areTablesEqual(t.table, table))
+    : undefined;
 
-  if (isLoading) return <IndicatorCard status="info">Loading...</IndicatorCard>;
+  if (isLoading) {
+    return <Skeleton height="100px" />;
+  }
+
+  if (isSourceError || !metadataTable || !source) {
+    return <NotFoundComponent />;
+  }
 
   const tabItems = availableTabs(
-    dataSourceName,
-    table,
-    tableName,
+    source,
+    metadataTable,
     areInsertMutationsSupported,
-    enabledTabs
+    enabledTabs,
+    isTableView ?? false,
   );
 
+  const tableName = getTableDisplayName(table);
+
   return (
-    <div className="w-full bg-gray-50">
-      <div className="px-md pt-md mb-xs">
-        <Breadcrumbs dataSourceName={dataSourceName} tableName={tableName} />
+    <div className="w-full">
+      <div className="p-6">
+        <TableBreadcrumbs dataSourceName={dataSourceName} table={table} />
         <TableName
-          dataSourceName={dataSourceName}
+          source={source}
+          table={metadataTable.table}
           tableName={tableName}
-          table={table}
         />
         <Tabs
           value={operation}
-          onValueChange={_operation => {
-            dispatch(
-              _push(getRoute().table(dataSourceName, table, _operation))
+          onValueChange={(_operation) => {
+            navigate(
+              dataRoutes.manageTable(
+                dataSourceName,
+                metadataTable.table,
+                _operation,
+              ),
             );
 
             // save last tab to session storage:
             sessionStore.setItem(
               'manageTable.lastTab',
-              _operation as ManageTableTabs
+              _operation as ManageTableTabs,
             );
           }}
           items={tabItems}

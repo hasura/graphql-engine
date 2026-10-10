@@ -1,5 +1,5 @@
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
-import { StoryObj, Meta } from '@storybook/react';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
 import { handlers } from '../../mocks/handlers.mock';
 import { ListConnectedDatabases } from './ListConnectedDatabases';
 

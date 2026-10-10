@@ -3,32 +3,15 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/console-ce-e2e/src",
   "projectType": "application",
+  "tags": ["scope:console", "type:e2e", "meta:legacy"],
+  "implicitDependencies": ["console-ce"],
   "targets": {
-    "e2e": {
-      "executor": "@nrwl/cypress:cypress",
-      "options": {
-        "cypressConfig": "apps/console-ce-e2e/cypress.config.ts",
-        "devServerTarget": "console-ce:serve:development",
-        "testingType": "e2e"
-      },
-      "configurations": {
-        "production": {
-          "devServerTarget": "console-ce:serve:production"
-        },
-        "ci": {
-          "parallel": true,
-          "record": true
-        }
-      }
-    },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["apps/console-ce-e2e/**/*.{js,ts,json}"]
       }
     }
-  },
-  "tags": ["scope:console", "type:e2e", "meta:legacy"],
-  "implicitDependencies": ["console-ce"]
+  }
 }

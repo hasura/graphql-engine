@@ -1,16 +1,11 @@
-import { Table } from '../../hasura-metadata-types';
-import {
-  useMetadata,
-  MetadataSelectors,
-  areTablesEqual,
-} from '../../hasura-metadata-api';
-import { useSuggestedRelationships } from '../../Data/TrackResources/TrackRelationships/hooks/useSuggestedRelationships';
+import { Table } from '@hasura/shared/types';
+import { useMetadata, useSuggestedRelationships } from '@hasura/metadata/api';
 import {
   isLegacyRemoteSchemaRelationship,
   isManualArrayRelationship,
   isManualObjectRelationship,
   isRemoteSchemaRelationship,
-} from '../../DataSource';
+} from '@hasura/metadata/data-source';
 import {
   adaptLegacyRemoteSchemaRelationship,
   adaptLocalArrayRelationshipWithManualConfiguration,
@@ -19,6 +14,7 @@ import {
   adaptRemoteSchemaRelationship,
 } from '../utils/adaptResponse';
 import { LocalRelationship } from '../types';
+import { areTablesEqual, MetadataSelectors } from '@hasura/metadata/helpers';
 
 export const useListAllDatabaseRelationships = ({
   dataSourceName,
@@ -38,8 +34,8 @@ export const useListAllDatabaseRelationships = ({
   });
 
   const filteredTrackedFkRels: LocalRelationship[] = tracked
-    .filter(rel => areTablesEqual(rel.fromTable, table))
-    .map(rel => ({
+    .filter((rel) => areTablesEqual(rel.fromTable, table))
+    .map((rel) => ({
       name: rel.name,
       fromSource: dataSourceName,
       fromTable: rel.fromTable,
@@ -56,35 +52,35 @@ export const useListAllDatabaseRelationships = ({
     isLoading: isMetadataLoading,
     isFetching: isMetadataFetching,
     error: metadataError,
-  } = useMetadata(m => {
+  } = useMetadata((m) => {
     const metadataTable = MetadataSelectors.findTable(dataSourceName, table)(m);
 
     const localArrayRelationshipsWithManualConfig = (
       metadataTable?.array_relationships ?? []
     )
       .filter(isManualArrayRelationship)
-      .map(relationship =>
+      .map((relationship) =>
         adaptLocalArrayRelationshipWithManualConfiguration({
           table,
           dataSourceName,
           relationship,
-        })
+        }),
       );
 
     const localObjectRelationshipsWithManualConfig = (
       metadataTable?.object_relationships ?? []
     )
       .filter(isManualObjectRelationship)
-      .map(relationship =>
+      .map((relationship) =>
         adaptLocalObjectRelationshipWithManualConfiguration({
           table,
           dataSourceName,
           relationship,
-        })
+        }),
       );
 
     const remoteRels = (metadataTable?.remote_relationships ?? []).map(
-      relationship => {
+      (relationship) => {
         if (isRemoteSchemaRelationship(relationship))
           return adaptRemoteSchemaRelationship({
             table,
@@ -104,7 +100,7 @@ export const useListAllDatabaseRelationships = ({
           dataSourceName,
           relationship,
         });
-      }
+      },
     );
 
     return [

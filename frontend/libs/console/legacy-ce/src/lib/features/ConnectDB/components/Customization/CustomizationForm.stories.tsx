@@ -1,12 +1,9 @@
 import { CustomizationForm } from '../..';
-import { SimpleForm } from '../../../../new-components/Form';
-import { expect } from '@storybook/jest';
-import { StoryObj, Meta } from '@storybook/react';
-import { userEvent, waitFor, within } from '@storybook/testing-library';
-import { screen } from '@storybook/testing-library';
-import React from 'react';
+import { SimpleForm } from '@hasura/shared/ui';
+import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
 import { z } from 'zod';
-import { action } from '@storybook/addon-actions';
+import { action } from 'storybook/actions';
 
 const schema = z.object({
   customization: z
@@ -28,7 +25,7 @@ export default {
   title: 'Data/Connect/GraphQL Field Customization',
   component: CustomizationForm,
   decorators: [
-    s => {
+    (s) => {
       return (
         <SimpleForm schema={schema} onSubmit={action('onSubmit')}>
           {s}
@@ -48,7 +45,7 @@ export const Primary: StoryObj<typeof CustomizationForm> = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    inputIds.forEach(async id => {
+    for (const id of inputIds) {
       const parts = id.split('.');
       const subHeading = parts[1];
       const fieldName = parts[2];
@@ -61,7 +58,7 @@ export const Primary: StoryObj<typeof CustomizationForm> = {
       await waitFor(async () => {
         await expect(screen.getByTestId(id)).toHaveValue(textVal);
       });
-    });
+    }
   },
 };
 

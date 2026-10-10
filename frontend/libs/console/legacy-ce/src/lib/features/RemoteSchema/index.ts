@@ -1,5 +1,1 @@
-import { Create } from './components/Create';
-
-export const RemoteSchema = {
-  Create,
-};
+export { default as getRemoteSchemaRoutes } from './routes';

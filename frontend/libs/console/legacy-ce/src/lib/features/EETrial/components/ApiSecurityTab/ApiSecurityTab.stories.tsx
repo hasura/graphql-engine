@@ -1,10 +1,29 @@
-import { Meta, StoryObj } from '@storybook/react';
-import { SecurityTabs } from '../../../../components/Services/ApiExplorer/Security/SecurityTabs';
-import { ConsoleTypeDecorator } from '../../../../storybook/decorators';
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
+import { Meta, StoryObj, Decorator } from '@storybook/react-webpack5';
+import {
+  ConsoleTypeDecorator,
+  ReactQueryDecorator,
+} from '@hasura/shared/testing';
+import {
+  AppContext,
+  defaultAppState,
+  getEndpoints,
+} from '@hasura/shared/context';
 import { eeLicenseInfo } from '../../mocks/http';
 import { registerEETrialLicenseActiveMutation } from '../../mocks/registration.mock';
 import { ApiSecurityTabEELiteWrapper } from './ApiSecurityTab';
+import { SecurityTabs } from '../../../ApiExplorer/components/Security/SecurityTabs';
+// re-reads window.__env on every render so it picks up ConsoleTypeDecorator's updates
+const AppContextDecorator: Decorator = (Story) => (
+  <AppContext.Provider
+    value={{
+      ...defaultAppState,
+      envVars: window.__env ?? {},
+      endpoints: getEndpoints(window.__env ?? {}, 'http://localhost'),
+    }}
+  >
+    <Story />
+  </AppContext.Provider>
+);
 
 export default {
   title: 'features / EETrial / API Security Tab 🧬️',
@@ -12,6 +31,7 @@ export default {
   decorators: [
     ReactQueryDecorator(),
     ConsoleTypeDecorator({ consoleType: 'pro-lite' }),
+    AppContextDecorator,
   ],
 } as Meta<typeof ApiSecurityTabEELiteWrapper>;
 

@@ -1,29 +1,33 @@
-import React, { ReactNode } from 'react';
+import React from 'react';
 import {
-  SelectField,
-  SelectFieldProps,
-} from '../../../../../new-components/Form';
+  REACT_SELECT_FILTER_PROPS,
+  ReactSelectField,
+  ReactSelectFieldProps,
+} from '@hasura/shared/ui';
 import { mapItemsToSourceOptions } from './SourcePicker.utils';
 import { SourceSelectorItem } from './SourcePicker.types';
 
-type SourcePickerProps = Omit<SelectFieldProps, 'options'> & {
+type SourcePickerProps = Omit<ReactSelectFieldProps<any>, 'options'> & {
   items: SourceSelectorItem[];
 };
 
-export const SourcePicker: React.VFC<SourcePickerProps> = ({
+export const SourcePicker: React.FC<SourcePickerProps> = ({
   items,
   label,
   name,
   disabled,
 }) => {
-  const sourceOptions = mapItemsToSourceOptions(items);
+  const sourceOptions = mapItemsToSourceOptions(
+    items,
+  ) as ReactSelectFieldProps['options'];
 
   return (
-    <SelectField
+    <ReactSelectField
       label={label}
       name={name}
       options={sourceOptions}
       disabled={disabled}
+      selectProps={REACT_SELECT_FILTER_PROPS}
     />
   );
 };

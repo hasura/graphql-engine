@@ -1,15 +1,14 @@
-import { useEffect } from 'react';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { LocalRelationship } from '../../../types';
-import { getDriverPrefix, runMetadataQuery } from '../../../../DataSource';
-import { MetadataSelectors } from '../../../../hasura-metadata-api';
-import { useMetadata } from '../../../../hasura-metadata-api/useMetadata';
-import { useHttpClient } from '../../../../Network';
+import { getDriverPrefix } from '@hasura/metadata/helpers';
+import { runMetadataQuery } from '@hasura/metadata/api';
 import {
   addConstraintName,
   SuggestedRelationshipsResponse,
 } from './useSuggestedRelationships';
-import { NamingConvention, Table } from '../../../../hasura-metadata-types';
+import { NamingConvention, Source, Table } from '@hasura/shared/types';
+import { useAuthFetchJson } from '@hasura/shared/hooks';
+import { useAppContext } from '@hasura/shared/context';
 
 export type AddSuggestedRelationship = {
   name: string;
@@ -22,7 +21,7 @@ export type AddSuggestedRelationship = {
 };
 
 type UseSuggestedRelationshipsArgs = {
-  dataSourceName: string;
+  source: Source;
   existingRelationships?: LocalRelationship[];
   isEnabled: boolean;
   omitTracked: boolean;
@@ -30,26 +29,16 @@ type UseSuggestedRelationshipsArgs = {
 
 export const getAllSuggestedRelationshipsCacheQuery = (
   dataSourceName: string,
-  omitTracked: boolean
-) => ['all_suggested_relationships', dataSourceName, omitTracked];
+  omitTracked: boolean,
+) => [dataSourceName, 'all_suggested_relationships', omitTracked];
 
 export const useAllSuggestedRelationships = ({
-  dataSourceName,
+  source,
   isEnabled,
   omitTracked,
 }: UseSuggestedRelationshipsArgs) => {
-  const { data: metadataSource, isFetching } = useMetadata(
-    MetadataSelectors.findSource(dataSourceName)
-  );
-
-  const dataSourcePrefix = metadataSource?.kind
-    ? getDriverPrefix(metadataSource?.kind)
-    : undefined;
-
-  const namingConvention: NamingConvention =
-    metadataSource?.customization?.naming_convention || 'hasura-default';
-
-  const httpClient = useHttpClient();
+  const { endpoints } = useAppContext();
+  const fetchJson = useAuthFetchJson();
 
   const {
     data,
@@ -58,39 +47,36 @@ export const useAllSuggestedRelationships = ({
     isFetching: isFetchingAllSuggestedRelationships,
     ...rest
   } = useQuery({
-    queryKey: getAllSuggestedRelationshipsCacheQuery(
-      dataSourceName,
-      omitTracked
-    ),
+    queryKey: getAllSuggestedRelationshipsCacheQuery(source.name, omitTracked),
     queryFn: async () => {
+      const dataSourcePrefix = getDriverPrefix(source.kind);
+
       const body = {
-        type: `${dataSourcePrefix}_suggest_relationships`,
+        type: `${dataSourcePrefix}_suggest_relationships` as const,
         args: {
           omit_tracked: omitTracked,
-          source: dataSourceName,
+          source: source.name,
         },
       };
       const result = await runMetadataQuery<SuggestedRelationshipsResponse>({
-        httpClient,
+        url: endpoints.metadata,
+        fetchJson,
         body,
       });
       return result;
     },
-    enabled: isEnabled && !isFetching,
+    enabled: isEnabled,
     refetchOnWindowFocus: false,
   });
 
-  useEffect(() => {
-    if (dataSourcePrefix) {
-      refetchAllSuggestedRelationships();
-    }
-  }, [dataSourcePrefix]);
+  const namingConvention: NamingConvention =
+    source.customization?.naming_convention || 'hasura-default';
 
   const rawSuggestedRelationships = data?.relationships || [];
 
   const relationshipsWithConstraintName = addConstraintName(
     rawSuggestedRelationships,
-    namingConvention
+    namingConvention,
   );
 
   return {

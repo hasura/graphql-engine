@@ -1,4 +1,5 @@
-import React from 'react';
+import { Text } from '@hasura/shared/ui';
+import { Flex } from '@radix-ui/themes';
 import { IconType } from 'react-icons';
 import { FaColumns, FaDatabase, FaFont, FaPlug, FaTable } from 'react-icons/fa';
 import { FiType } from 'react-icons/fi';
@@ -32,20 +33,17 @@ const legend: { Icon: IconType; name: string }[] = [
 
 const Legend = () => {
   return (
-    <div className="mb-4 flex flex-row item-center justify-end">
-      {legend.map(item => {
+    <Flex justify="end" align="center" gap="2">
+      {legend.map((item) => {
         const { Icon, name } = item;
         return (
-          <span key={name} className="flex items-center">
-            <Icon
-              className="mr-1 ml-4 text-sm fill-muted stroke-muted"
-              style={{ strokeWidth: 4.5 }}
-            />
-            {name}
-          </span>
+          <Flex align="center" gap="1" key={name}>
+            <Icon />
+            <Text>{name}</Text>
+          </Flex>
         );
       })}
-    </div>
+    </Flex>
   );
 };
 

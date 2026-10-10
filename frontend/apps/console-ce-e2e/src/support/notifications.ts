@@ -1,6 +1,6 @@
 Cypress.Commands.add('expectSuccessNotification', () => {
   cy.get('[data-testid=notification][data-notificationtype=success]').should(
-    'be.visible'
+    'be.visible',
   );
 });
 
@@ -16,12 +16,12 @@ Cypress.Commands.add(
     cy.get('[data-testid=notification][data-notificationtype=success]')
       .should('be.visible')
       .should('contain', message);
-  }
+  },
 );
 
 Cypress.Commands.add('expectErrorNotification', () => {
   cy.get('[data-testid=notification][data-notificationtype=error]').should(
-    'be.visible'
+    'be.visible',
   );
 });
 
@@ -37,5 +37,5 @@ Cypress.Commands.add(
     cy.get('[data-testid=notification][data-notificationtype=error]')
       .should('be.visible')
       .should('contain', message);
-  }
+  },
 );

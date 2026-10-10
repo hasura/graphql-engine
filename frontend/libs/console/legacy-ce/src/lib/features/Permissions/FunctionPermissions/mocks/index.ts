@@ -1,18 +1,18 @@
 import metadata from './metadata';
-import { rest } from 'msw';
+import { http, HttpResponse, delay } from 'msw';
 import config from './config';
 
 export const handlers = () => [
-  rest.get('http://localhost:8080/v1alpha1/config', async (req, res, ctx) => {
-    return res(ctx.status(200), ctx.json(config));
+  http.get('http://localhost:8080/v1alpha1/config', async () => {
+    return HttpResponse.json(config, { status: 200 });
   }),
-  rest.post('http://localhost:8080/v1/metadata', async (req, res, ctx) => {
-    const reqBody = await req.json<{
+  http.post('http://localhost:8080/v1/metadata', async ({ request }) => {
+    const reqBody = (await request.json()) as {
       type: string;
       args: any;
-    }>();
+    };
     if (reqBody.type === 'export_metadata') {
-      return res(ctx.status(200), ctx.json({ metadata }));
+      return HttpResponse.json({ metadata }, { status: 200 });
     }
 
     if (
@@ -20,7 +20,8 @@ export const handlers = () => [
       reqBody.args.length === 1 &&
       reqBody.args[0].args.role === 'the_user'
     ) {
-      return res(ctx.status(500), ctx.delay(500));
+      await delay(500);
+      return new HttpResponse(null, { status: 500 });
     }
 
     if (
@@ -31,7 +32,8 @@ export const handlers = () => [
       metadata.sources[0].functions[0].permissions.push({
         role: reqBody.args[0].args.role,
       });
-      return res(ctx.status(200), ctx.delay(500));
+      await delay(500);
+      return new HttpResponse(null, { status: 200 });
     }
 
     if (
@@ -41,11 +43,12 @@ export const handlers = () => [
     ) {
       metadata.sources[0].functions[0].permissions =
         metadata.sources[0].functions[0].permissions.filter(
-          p => p.role !== reqBody.args[0].args.role
+          (p) => p.role !== reqBody.args[0].args.role,
         );
-      return res(ctx.status(200), ctx.delay(500));
+      await delay(500);
+      return new HttpResponse(null, { status: 200 });
     }
 
-    return res(ctx.status(400));
+    return new HttpResponse(null, { status: 400 });
   }),
 ];

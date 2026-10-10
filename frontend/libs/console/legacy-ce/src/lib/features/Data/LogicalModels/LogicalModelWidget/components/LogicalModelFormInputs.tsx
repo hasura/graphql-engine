@@ -1,23 +1,22 @@
-import { useFormContext } from 'react-hook-form';
 import { FaLock } from 'react-icons/fa';
 import { FiAlertTriangle } from 'react-icons/fi';
-import { SelectItem } from '../../../../../components/Common/SelectInputSplitField/SelectInputSplitField';
-import { CreateBooleanMap } from '../../../../../components/Common/utils/tsUtils';
 import {
   GraphQLSanitizedInputField,
-  Select,
-} from '../../../../../new-components/Form';
-import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
+  IndicatorCard,
+  SelectField,
+  SelectItemProps,
+} from '@hasura/shared/ui';
 import { LimitedFeatureWrapper } from '../../../../ConnectDBRedesign/components/LimitedFeatureWrapper/LimitedFeatureWrapper';
-
-import { LogicalModel } from '../../../../hasura-metadata-types';
+import { LogicalModel, Source } from '@hasura/shared/types';
 import { ReactQueryUIWrapper } from '../../../components';
-import { useSupportedDataTypes } from '../../../hooks/useSupportedDataTypes';
 import { AddLogicalModelFormData } from '../validationSchema';
 import { FieldsInput } from './FieldsInput';
+import { CreateBooleanMap } from '@hasura/shared/types';
+import { useSupportedScalars } from '@hasura/metadata/data-source';
 
 export type LogicalModelFormProps = {
-  sourceOptions: SelectItem[];
+  source: Source | undefined;
+  sourceOptions: SelectItemProps[];
   disabled?: CreateBooleanMap<AddLogicalModelFormData>;
   logicalModels: LogicalModel[];
   isThereBigQueryOrMssqlSource?: boolean;
@@ -25,20 +24,11 @@ export type LogicalModelFormProps = {
 };
 
 export const LogicalModelFormInputs = (props: LogicalModelFormProps) => {
-  const { watch } = useFormContext<AddLogicalModelFormData>();
-
-  const selectedDataSource = watch('dataSourceName');
-
-  const supportedDataTypesReturn = useSupportedDataTypes({
-    dataSourceName: selectedDataSource,
-    options: {
-      enabled: !!selectedDataSource,
-    },
-  });
+  const supportedDataTypesReturn = useSupportedScalars(props.source?.kind);
 
   return (
     <>
-      <Select
+      <SelectField
         name="dataSourceName"
         label="Select a source"
         options={props.sourceOptions}
@@ -46,7 +36,7 @@ export const LogicalModelFormInputs = (props: LogicalModelFormProps) => {
         placeholder="Pick a database..."
         disabled={props.disabled?.dataSourceName}
       />
-      <div className="max-w-4xl">
+      <div className="max-w-4xl my-2">
         {props.isThereBigQueryOrMssqlSource && (
           <LimitedFeatureWrapper
             title="Looking to add Logical Models for SQL Server/Big Query databases?"
@@ -70,14 +60,16 @@ export const LogicalModelFormInputs = (props: LogicalModelFormProps) => {
         dataTestId="name"
         name="name"
         label="Logical Model Name"
-        placeholder="Enter a name for your Logical Model"
-        icon={props?.nameIsLocked ? <FaLock /> : undefined}
-        disabled={props.disabled?.name}
         hideTips
+        fieldProps={{
+          placeholder: 'Enter a name for your Logical Model',
+          icon: props?.nameIsLocked ? FaLock : undefined,
+          disabled: props.disabled?.name,
+        }}
       />
       <ReactQueryUIWrapper
         useQueryResult={supportedDataTypesReturn}
-        fallbackData={[]}
+        fallbackData={[] as string[]}
         loadingStyle="overlay"
         loader="spinner"
         miniSpinnerBackdrop

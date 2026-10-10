@@ -1,12 +1,12 @@
-import { useQuery } from 'react-query';
-import { getLSItem, LS_KEYS } from '../../../utils/localStorage';
-import { isJsonString } from '../../../components/Common/utils/jsUtils';
+import { useQuery } from '@tanstack/react-query';
+import { getLSItem, isJsonString } from '@hasura/shared/utils';
 import {
   FeatureFlagType,
   FeatureFlagDefinition,
   FeatureFlagState,
 } from '../types';
 import { availableFeatureFlags } from '../availableFeatureFlags';
+import { LS_KEYS } from '@hasura/shared/types';
 
 const getFeatureFlagStore = (): FeatureFlagState[] => {
   const flagsFromLocalStorageAsString = getLSItem(LS_KEYS.featureFlag) ?? '';
@@ -25,10 +25,10 @@ const getAvailableFeatureFlags = (): FeatureFlagDefinition[] =>
 
 export const mergeFlagWithState = (
   flags: FeatureFlagDefinition[],
-  state: FeatureFlagState[]
+  state: FeatureFlagState[],
 ): FeatureFlagType[] => {
-  return flags.map(flag => {
-    const flagState = state.find(f => f.id === flag.id);
+  return flags.map((flag) => {
+    const flagState = state.find((f) => f.id === flag.id);
     return {
       ...flag,
       state: flagState ?? {
@@ -40,7 +40,7 @@ export const mergeFlagWithState = (
 };
 
 export const isFeatureFlagEnabled = (id: string) => {
-  const flag = getFeatureFlags().find(ff => ff.id === id);
+  const flag = getFeatureFlags().find((ff) => ff.id === id);
 
   if (!flag) return false;
 
@@ -54,7 +54,8 @@ export function getFeatureFlags(additionalFlags?: FeatureFlagDefinition[]) {
 }
 
 export function useFeatureFlags(additionalFlags?: FeatureFlagDefinition[]) {
-  return useQuery(['featureFlags', 'all'], () =>
-    getFeatureFlags(additionalFlags)
-  );
+  return useQuery({
+    queryKey: ['featureFlags', 'all'],
+    queryFn: () => getFeatureFlags(additionalFlags),
+  });
 }

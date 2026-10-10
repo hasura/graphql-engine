@@ -29,7 +29,7 @@ export function ConditionalTableProvider({
 
   if (type === 'relationship') {
     const relationship = relationships.find(
-      r => r.name === path[path.length - 1]
+      (r) => r.name === path[path.length - 1],
     );
     if (relationship) {
       if (!('toTable' in relationship.definition)) {

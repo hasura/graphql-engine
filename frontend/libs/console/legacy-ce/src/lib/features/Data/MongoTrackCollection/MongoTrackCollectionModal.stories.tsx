@@ -1,11 +1,10 @@
-import { expect } from '@storybook/jest';
-import { StoryObj, Meta } from '@storybook/react';
+import { expect, userEvent, within } from 'storybook/test';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
 import {
   MongoTrackCollectionModal,
   MongoTrackCollectionModalProps,
 } from './MongoTrackCollectionModal';
-import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
-import { userEvent, within } from '@storybook/testing-library';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
 
 export default {
   component: MongoTrackCollectionModal,
@@ -59,13 +58,13 @@ Primary.play = async ({ canvasElement }: any) => {
 
   // Sample document
   await expect(
-    canvas.getByText('Auto-generate Logical Models based on a sample document')
+    canvas.getByText('Auto-generate Logical Models based on a sample document'),
   ).toBeVisible();
 
   const editor = await canvas.getByText('Your sample document here');
 
   const textArea = editor.parentElement?.parentElement?.querySelector(
-    'textarea'
+    'textarea',
   ) as HTMLTextAreaElement;
 
   await userEvent.paste(textArea, '{ "id": "1", "name": "test" }');
@@ -102,7 +101,7 @@ Primary.play = async ({ canvasElement }: any) => {
 
   await userEvent.selectOptions(
     canvas.getByTestId('logicalModel'),
-    'logical_model_2'
+    'logical_model_2',
   );
   await expect(await canvas.findByText('logical_model_2')).toBeVisible();
 
@@ -110,12 +109,12 @@ Primary.play = async ({ canvasElement }: any) => {
   await userEvent.click(canvas.getByText('JSON Validation Schema'));
 
   await expect(
-    canvas.getByText('A JSON Validation Schema is required')
+    canvas.getByText('A JSON Validation Schema is required'),
   ).toBeVisible();
   await expect(
     canvas.getByText(
-      'Please ensure a JSON validation schema is loaded in your Collection. A JSON validation schema is required for Hasura to automatically generate a GraphQL types from your database.'
-    )
+      'Please ensure a JSON validation schema is loaded in your Collection. A JSON validation schema is required for Hasura to automatically generate a GraphQL types from your database.',
+    ),
   ).toBeVisible();
 
   await expect(canvas.getByText('Advanced Configuration')).toBeVisible();

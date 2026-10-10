@@ -1,9 +1,6 @@
 import { RiInformationFill } from 'react-icons/ri';
-import {
-  Collapsible,
-  CollapsibleProps,
-} from '../../../../new-components/Collapsible';
-import { IconTooltip } from '../../../../new-components/Tooltip';
+import { Flex } from '@radix-ui/themes';
+import { Collapsible, CollapsibleProps, IconTooltip } from '@hasura/shared/ui';
 
 export const CollapsibleResource: React.FC<
   {
@@ -13,7 +10,7 @@ export const CollapsibleResource: React.FC<
 > = ({ title, tooltip, children, ...rest }) => (
   <Collapsible
     triggerChildren={
-      <div className="flex mb-1 items-center">
+      <Flex align="center" className="mb-1">
         <div className="font-semibold inline-flex items-center text-lg">
           {title}
         </div>
@@ -22,7 +19,7 @@ export const CollapsibleResource: React.FC<
           message={tooltip}
           side="right"
         />
-      </div>
+      </Flex>
     }
     {...rest}
   >

@@ -1,21 +1,26 @@
 import { useCallback, useMemo } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { FaSave } from 'react-icons/fa';
-import { CreateBooleanMap } from '../../../../components/Common/utils/tsUtils';
-import { Badge } from '../../../../new-components/Badge';
-import { Button } from '../../../../new-components/Button';
-import { Collapsible } from '../../../../new-components/Collapsible';
-import { Dialog } from '../../../../new-components/Dialog';
-import { useConsoleForm } from '../../../../new-components/Form';
-import { hasuraToast } from '../../../../new-components/Toasts';
-import { MetadataSelectors, useMetadata } from '../../../hasura-metadata-api';
-import { extractModelsAndQueriesFromMetadata } from '../../../hasura-metadata-api/selectors';
-import { Metadata, Source } from '../../../hasura-metadata-types';
+import {
+  Badge,
+  Button,
+  Collapsible,
+  Dialog,
+  useConsoleForm,
+  hasuraToast,
+  DisplayToastErrorMessage,
+  DialogFooter,
+  Text,
+} from '@hasura/shared/ui';
+import { useMetadata } from '@hasura/metadata/api';
+import {
+  MetadataSelectors,
+  LogicalModelWithSource,
+  NativeQueryWithSource,
+} from '@hasura/metadata/helpers';
+import { Metadata, Source } from '@hasura/shared/types';
 import { ReactQueryStatusUI } from '../../components';
-import { DisplayToastErrorMessage } from '../../components/DisplayErrorMessage';
-
 import { multipleQueryUtils } from '../../components/ReactQueryWrappers/utils';
-import { useAllDriverCapabilities } from '../../hooks/useAllDriverCapabilities';
 import { useTrackLogicalModel } from '../../hooks/useTrackLogicalModel';
 import { DisplayReferencedLogicalModelEntities } from '../LogicalModel/DisplayLogicalModelReferencedEntities';
 import { findReferencedEntities } from '../LogicalModel/utils/findReferencedEntities';
@@ -25,15 +30,18 @@ import {
   LOGICAL_MODEL_EDIT_ERROR,
   LOGICAL_MODEL_EDIT_SUCCESS,
 } from '../constants';
-import { useSupportedDriversForNativeQueries } from '../hook';
-import { LogicalModelWithSource, NativeQueryWithSource } from '../types';
 import { LogicalModelFormInputs } from './components/LogicalModelFormInputs';
 import { formFieldToLogicalModelField } from './mocks/utils/formFieldToLogicalModelField';
-import { supportsSchemaLessTables } from './utils';
 import {
   AddLogicalModelFormData,
   addLogicalModelValidationSchema,
 } from './validationSchema';
+import { CreateBooleanMap } from '@hasura/shared/types';
+import {
+  useAllDriverCapabilities,
+  supportsSchemaLessTables,
+} from '@hasura/metadata/data-source';
+import { Flex } from '@radix-ui/themes';
 
 export type AddLogicalModelDialogProps = {
   defaultValues?: Partial<AddLogicalModelFormData>;
@@ -74,39 +82,31 @@ const DataBoundWidgetUI = (props: AddLogicalModelDialogProps) => {
 
   const selectedDataSource = watch('dataSourceName');
 
-  const allowedDrivers = useSupportedDriversForNativeQueries();
-
   const capabilitiesResult = useAllDriverCapabilities({
-    select: data => {
+    select: (data) => {
       return data
-        .filter(
-          source =>
-            allowedDrivers.includes(source.driver.kind) ||
-            supportsSchemaLessTables(source.capabilities)
-        )
-        .map(({ driver }) => ({
-          value: driver.name,
-          label: driver.name,
-        }));
+        .filter((source) => supportsSchemaLessTables(source.capabilities))
+        .map(({ driver }) => driver);
     },
   });
 
   const metadataSelector: (
-    m: Metadata
+    m: Metadata,
   ) => Omit<WidgetUIProps, 'typeOptions' | 'sourceOptions'> = useCallback(
     (m: Metadata) => {
       return {
         isThereBigQueryOrMssqlSource: !!m.metadata.sources.find(
-          s => s.kind === 'mssql' || s.kind === 'bigquery'
+          (s) => s.kind === 'mssql' || s.kind === 'bigquery',
         ),
-        modelsAndQueries: extractModelsAndQueriesFromMetadata(m),
+        modelsAndQueries:
+          MetadataSelectors.extractModelsAndQueriesFromMetadata(m),
         source: MetadataSelectors.findSource(selectedDataSource)(m),
       };
     },
-    [selectedDataSource]
+    [selectedDataSource],
   );
 
-  const metadataResult = useMetadata(metadataSelector);
+  const metadataResult = useMetadata();
 
   if (!metadataResult.isSuccess || !capabilitiesResult.isSuccess)
     return (
@@ -119,17 +119,21 @@ const DataBoundWidgetUI = (props: AddLogicalModelDialogProps) => {
       />
     );
 
+  const metadataProps = metadataSelector(metadataResult.data);
+  const sourceOptions = metadataResult.data.metadata.sources
+    .filter((source) => capabilitiesResult.data.includes(source.kind))
+    .map((source) => ({
+      value: source.name,
+      label: source.name,
+    }));
+
   return (
     <Form
       onSubmit={() => {
         //handled in children:
       }}
     >
-      <WidgetUI
-        {...props}
-        {...metadataResult.data}
-        sourceOptions={capabilitiesResult.data}
-      />
+      <WidgetUI {...props} {...metadataProps} sourceOptions={sourceOptions} />
     </Form>
   );
 };
@@ -146,7 +150,7 @@ const WidgetUI = ({
 
   const isEditMode = !!props.defaultValues?.name;
 
-  const { trackLogicalModel, isLoading: isTracking } = useTrackLogicalModel();
+  const { trackLogicalModel, isPending: isTracking } = useTrackLogicalModel();
 
   const logicalModels = modelsAndQueries?.models || [];
 
@@ -171,7 +175,7 @@ const WidgetUI = ({
     if (isEditMode) {
       if (!props.defaultValues?.name) {
         throw new Error(
-          'Cannot update Logical Model. Unable to find initial name value.'
+          'Cannot update Logical Model. Unable to find initial name value.',
         );
       }
       editDetails = { originalName: props.defaultValues.name };
@@ -193,7 +197,7 @@ const WidgetUI = ({
         });
         props.onSubmit?.(data);
       },
-      onError: err => {
+      onError: (err) => {
         hasuraToast({
           type: 'error',
           title: isEditMode
@@ -219,18 +223,18 @@ const WidgetUI = ({
       <div className="mb-3">
         <Collapsible
           triggerChildren={
-            <div className="font-semibold flex flex-row gap-2">
-              <span>Used By </span>
+            <Flex direction="row" gap="2">
+              <Text weight="bold">Used By </Text>
               <Badge color={entities.count > 0 ? 'blue' : 'gray'}>
                 {entities.count}
               </Badge>
-            </div>
+            </Flex>
           }
         >
           {!entities.count && (
-            <div>
+            <Text as="div">
               This Logical Model is not references by any other entities.
-            </div>
+            </Text>
           )}
           <div className="ml-3">
             <DisplayReferencedLogicalModelEntities entities={entities} />
@@ -242,10 +246,11 @@ const WidgetUI = ({
 
   return (
     <>
-      <div className="px-md">
+      <div>
         {referencedEntitiesUI()}
 
         <LogicalModelFormInputs
+          source={source}
           sourceOptions={sourceOptions}
           disabled={disabledFields}
           logicalModels={logicalModels}
@@ -254,7 +259,7 @@ const WidgetUI = ({
         />
       </div>
       {props.asDialog ? (
-        <Dialog.Footer
+        <DialogFooter
           onSubmit={() => handleSubmit(onSubmit)()}
           onClose={props.onCancel}
           isLoading={isTracking}
@@ -265,20 +270,20 @@ const WidgetUI = ({
           className="sticky w-full bottom-0 left-0"
         />
       ) : (
-        <div className="flex justify-end">
+        <Flex justify="end" className="mt-4">
           <Button
             disabled={disabledFields.callToAction}
             type="button"
             mode="primary"
-            icon={<FaSave />}
+            leftIcon={FaSave}
             onClick={() => {
               handleSubmit(onSubmit)();
             }}
-            isLoading={isTracking}
+            loading={isTracking}
           >
             {isEditMode ? 'Save' : 'Create'}
           </Button>
-        </div>
+        </Flex>
       )}
     </>
   );
@@ -292,7 +297,6 @@ export const LogicalModelWidget = (props: AddLogicalModelDialogProps) => {
         size="xl"
         description="Creating a logical model in advance can help generate Native Queries faster"
         title="Add Logical Model"
-        hasBackdrop
         onClose={props.onCancel}
       >
         <DataBoundWidgetUI {...props} />

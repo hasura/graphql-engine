@@ -1,8 +1,9 @@
-import React from 'react';
 import {
   TableFkRelationships,
   generateForeignKeyLabel,
-} from '../../../DataSource';
+} from '@hasura/metadata/data-source';
+import { Text } from '@hasura/shared/ui';
+import { Flex } from '@radix-ui/themes';
 
 export function ForeignKeyDescription({
   foreignKey,
@@ -12,8 +13,13 @@ export function ForeignKeyDescription({
   const label = generateForeignKeyLabel(foreignKey);
 
   return (
-    <div key={label} className="mb-2">
-      {label}
-    </div>
+    <Flex align="center" className="mb-2" gap="2">
+      <Text weight="medium">{label}</Text>
+      {foreignKey.name ? (
+        <>
+          -<Text className="italic">{foreignKey.name}</Text>
+        </>
+      ) : null}
+    </Flex>
   );
 }

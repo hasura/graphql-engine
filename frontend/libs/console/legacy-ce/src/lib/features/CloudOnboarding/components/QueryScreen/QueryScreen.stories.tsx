@@ -1,7 +1,6 @@
 import React from 'react';
-import { StoryObj, Meta } from '@storybook/react';
-import { userEvent, within } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
+import { expect, userEvent, within } from 'storybook/test';
 import { QueryScreen } from './QueryScreen';
 import type { Props } from './QueryScreen';
 
@@ -43,7 +42,7 @@ export default {
 } as Meta<typeof QueryScreen>;
 
 export const Base: StoryObj<Props> = {
-  render: args => (
+  render: (args) => (
     <QueryScreen
       schemaImage={args.schemaImage}
       onRunHandler={args.onRunHandler}
@@ -63,16 +62,16 @@ export const Base: StoryObj<Props> = {
     const skipButton = canvas.getByText('Skip, continue to Console');
 
     // Expect element renders successfully
-    expect(canvas.getByText(`You're ready to go!`)).toBeVisible();
+    await expect(canvas.getByText(`You're ready to go!`)).toBeVisible();
 
     // Expect button to be present in the dialog
-    expect(runButton).toBeInTheDocument();
-    expect(runButton).not.toBeDisabled();
-    expect(skipButton).toBeInTheDocument();
+    await expect(runButton).toBeInTheDocument();
+    await expect(runButton).not.toBeDisabled();
+    await expect(skipButton).toBeInTheDocument();
 
     await userEvent.click(runButton);
-    expect(args.onRunHandler).toBeCalledTimes(1);
+    await expect(args.onRunHandler).toBeCalledTimes(1);
     await userEvent.click(skipButton);
-    expect(args.onSkipHandler).toBeCalledTimes(1);
+    await expect(args.onSkipHandler).toBeCalledTimes(1);
   },
 };

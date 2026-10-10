@@ -1,14 +1,13 @@
-import React, { useEffect } from 'react';
-import { Dispatch } from '../../../../../types';
+import { useEffect } from 'react';
+import { Flex } from '@radix-ui/themes';
 
 import { OnboardingAnimation } from './components/OnboardingAnimation';
 import { NeonOnboarding } from './components/NeonOnboarding';
-import { trackCustomEvent } from '../../../../Analytics';
+import { trackCustomEvent } from '@hasura/shared/analytics';
 
 type ConnectDBScreenProps = {
   proceed: VoidFunction;
   dismissOnboarding: VoidFunction;
-  dispatch: Dispatch;
   setStepperIndex: (index: number) => void;
 };
 
@@ -20,19 +19,18 @@ export function ConnectDBScreen(props: ConnectDBScreenProps) {
       object: 'Neon Onboarding Wizard',
     });
   }, []);
-  const { proceed, dismissOnboarding, dispatch, setStepperIndex } = props;
+  const { proceed, dismissOnboarding, setStepperIndex } = props;
 
   return (
     <>
       <OnboardingAnimation />
-      <div className="flex items-center justify-between">
+      <Flex align="center" justify="between">
         <NeonOnboarding
-          dispatch={dispatch}
           dismiss={dismissOnboarding}
           proceed={proceed}
           setStepperIndex={setStepperIndex}
         />
-      </div>
+      </Flex>
     </>
   );
 }

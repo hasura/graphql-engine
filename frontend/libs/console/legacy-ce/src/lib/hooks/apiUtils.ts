@@ -1,7 +1,5 @@
 // Disabled based on https://github.com/typescript-eslint/typescript-eslint/issues/239
-/* eslint-disable no-inner-declarations */
-import globals from '../Globals';
-import { browserHistory } from 'react-router';
+
 import { APIError } from './error';
 
 interface IApiArgs {
@@ -23,7 +21,7 @@ async function fetchApi<T = unknown, V = T>(
    * they need a custom management. As/if the new format will be used more, it would be better to
    * remove this custom function to avoid the proliferation of custom usages.
    */
-  errorTransform?: (error: unknown) => unknown
+  errorTransform?: (error: unknown) => unknown,
 ): Promise<V> {
   try {
     const { headers, url, method, body, credentials } = args;
@@ -49,11 +47,11 @@ async function fetchApi<T = unknown, V = T>(
         throw errorMessage;
       }
       const errorMessage = await response.json();
-      if (errorMessage?.code === 'access-denied') {
-        if (window.location.pathname !== `${globals.urlPrefix}/login`) {
-          browserHistory.push(`${globals.urlPrefix}/login`);
-        }
-      }
+      // if (errorMessage?.code === 'access-denied') {
+      //   if (window.location.pathname !== `${globals.urlPrefix}/login`) {
+      //     navigateTo('/login');
+      //   }
+      // }
       throw errorMessage;
     }
     const unknownError = await response.text();
@@ -71,51 +69,51 @@ export namespace Api {
   export function get<T = unknown, V = T>(
     args: Omit<IApiArgs, 'body' | 'method'>,
     dataTransform?: (data: T) => V,
-    errorTransform?: (error: unknown) => unknown
+    errorTransform?: (error: unknown) => unknown,
   ) {
     return fetchApi<T, V>(
       { ...args, method: 'GET' },
       dataTransform,
-      errorTransform
+      errorTransform,
     );
   }
   export function post<T = unknown, V = T>(
     args: Omit<IApiArgs, 'method'>,
     dataTransform?: (data: T) => V,
-    errorTransform?: (error: unknown) => unknown
+    errorTransform?: (error: unknown) => unknown,
   ) {
     return fetchApi<T, V>(
       { ...args, method: 'POST' },
       dataTransform,
-      errorTransform
+      errorTransform,
     );
   }
   export function put<T = unknown, V = T>(
     args: Omit<IApiArgs, 'method'>,
     dataTransform?: (data: T) => V,
-    errorTransform?: (error: unknown) => unknown
+    errorTransform?: (error: unknown) => unknown,
   ) {
     return fetchApi<T, V>(
       { ...args, method: 'PUT' },
       dataTransform,
-      errorTransform
+      errorTransform,
     );
   }
   export function del<T = unknown, V = T>(
     args: Omit<IApiArgs, 'method'>,
     dataTransform?: (data: T) => V,
-    errorTransform?: (error: unknown) => unknown
+    errorTransform?: (error: unknown) => unknown,
   ) {
     return fetchApi<T, V>(
       { ...args, method: 'DELETE' },
       dataTransform,
-      errorTransform
+      errorTransform,
     );
   }
   export function base<T = unknown, V = T>(
     args: IApiArgs,
     dataTransform?: (data: T) => V,
-    errorTransform?: (error: unknown) => unknown
+    errorTransform?: (error: unknown) => unknown,
   ) {
     return fetchApi<T, V>(args, dataTransform, errorTransform);
   }

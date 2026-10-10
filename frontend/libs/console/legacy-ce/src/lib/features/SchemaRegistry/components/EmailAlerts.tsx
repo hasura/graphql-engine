@@ -1,5 +1,6 @@
 import React from 'react';
-import { Checkbox } from '../../../new-components/Form';
+import { Flex } from '@radix-ui/themes';
+import { Checkbox } from '@hasura/shared/ui';
 import { FaClock, FaBan, FaBell } from 'react-icons/fa';
 import { useGetAlertConfig } from '../hooks/useGetAlertConfig';
 import { CapitalizeFirstLetter } from '../utils';
@@ -47,52 +48,54 @@ export const EmailAlerts: React.FC<EmailAlertsProps> = ({ onClose }) => {
   }, [alertConfig]);
 
   return (
-    <div className="ml-[-14px]">
+    <div className="-ml-4">
       {kind === 'loading' ? (
         <AlertHeader
-          icon={<FaClock className="w-9 h-9 mt-sm mr-md fill-current" />}
+          icon={<FaClock className="w-9 h-9 mt-2 mr-4 fill-current" />}
           title="Loading..."
         />
       ) : kind === 'error' ? (
         <AlertHeader
-          icon={<FaBan className="w-9 h-9 mt-sm mr-md fill-red-500" />}
+          icon={<FaBan className="w-9 h-9 mt-2 mr-4 fill-red-500" />}
           title="Error"
           description={fetchAlertConfigResponse.message}
         />
       ) : (
         <>
           <AlertHeader
-            icon={<FaBell className="w-9 h-9 mt-sm mr-md fill-current" />}
+            icon={<FaBell className="w-9 h-9 mt-2 mr-4 fill-current" />}
             title="Email Alerts"
             description="Select the change categories for which an email should be
             sent!"
           />
 
-          <div className="flex flex-col ml-8">
-            {configKeys.map(c => {
+          <Flex direction="column" className="ml-8">
+            {configKeys.map((c) => {
               return (
-                <div
-                  className="flex items-center mb-xs cursor-pointer w-auto"
+                <Flex
+                  key={c}
+                  align="center"
+                  className="mb-1 cursor-pointer w-auto"
                   role="checkbox"
                   onClick={() => {
-                    setConfig(prevConfig => ({
+                    setConfig((prevConfig) => ({
                       ...prevConfig,
                       [c]: !prevConfig[c],
                     }));
                   }}
                 >
-                  <Checkbox checked={config[c]} />
+                  <Checkbox value={config[c]} />
                   <p>{CapitalizeFirstLetter(c)}&nbsp;changes</p>
-                </div>
+                </Flex>
               );
             })}
-          </div>
+          </Flex>
         </>
       )}
       <CustomDialogFooter
         onSet={onSet}
         onClose={onClose}
-        isLoading={setEmailAlertMutation.isLoading}
+        isLoading={setEmailAlertMutation.isPending}
       />
     </div>
   );

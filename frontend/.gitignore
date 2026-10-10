@@ -44,8 +44,7 @@ Thumbs.db
 .env
 .serve.env
 
-npm-debug.log*
-yarn-debug.log*
+*-debug.log*
 yarn-error.log*
 
 .pnp.*
@@ -55,3 +54,12 @@ yarn-error.log*
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+.nx/cache
+.nx/workspace-data
+.claude/worktrees
+.nx/polygraph
+.nx/self-healing
+.nx/migrate-runs
+vitest.config.*.timestamp*
+vite.config.*.timestamp*

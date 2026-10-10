@@ -1,25 +1,14 @@
-import { Meta, StoryObj } from '@storybook/react';
-import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
-import { ReduxDecorator } from '../../../../../storybook/decorators/redux-decorator';
+import { Meta, StoryObj } from '@storybook/react-webpack5';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
 import { NativeQueryRelationshipWidget } from './NativeQueryRelationshipWidget';
-import { userEvent, waitFor, within } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { handlers } from '../mocks/handlers';
 import { useState } from 'react';
 import { NativeQueryRelationshipFormSchema } from '../schema';
 
 export default {
   component: NativeQueryRelationshipWidget,
-  decorators: [
-    ReactQueryDecorator(),
-    ReduxDecorator({
-      tables: {
-        dataHeaders: {
-          'x-hasura-admin-secret': 'myadminsecretkey' as any,
-        },
-      },
-    }),
-  ],
+  decorators: [ReactQueryDecorator()],
 } as Meta<typeof NativeQueryRelationshipWidget>;
 
 export const DefaultView: StoryObj<typeof NativeQueryRelationshipWidget> = {
@@ -46,7 +35,7 @@ export const TestBasicInteraction: StoryObj<
           mode="create"
           fromNativeQuery="get_authors"
           dataSourceName="chinook"
-          onSubmit={data => setFormValues(data)}
+          onSubmit={(data) => setFormValues(data)}
         />
         <div data-testid="result">{JSON.stringify(formValues)}</div>
       </div>
@@ -61,49 +50,49 @@ export const TestBasicInteraction: StoryObj<
     await waitFor(
       async () => {
         return await expect(
-          canvas.getByLabelText('Relationship Name')
+          canvas.getByLabelText('Relationship Name'),
         ).toBeInTheDocument();
       },
       {
         timeout: 5000,
-      }
+      },
     );
 
     // console.log(await canvas.getByLabelText('Relationship Name'));
     await userEvent.type(
       await canvas.getByLabelText('Relationship Name'),
-      'articles'
+      'articles',
     );
 
     await userEvent.selectOptions(
       await canvas.getByLabelText('Target Native Query'),
-      'get_article'
+      'get_article',
     );
 
     await userEvent.selectOptions(
       await canvas.getByLabelText('Relationship Type'),
-      'array'
+      'array',
     );
 
     await waitFor(
       async () => {
         return await expect(
-          canvas.getByTestId('columnMapping_source_input_0')
+          canvas.getByTestId('columnMapping_source_input_0'),
         ).toBeInTheDocument();
       },
       {
         timeout: 5000,
-      }
+      },
     );
 
     await userEvent.selectOptions(
       await canvas.getByTestId('columnMapping_source_input_0'),
-      'id'
+      'id',
     );
 
     await userEvent.selectOptions(
       await canvas.getByTestId('columnMapping_target_input_0'),
-      'author_id'
+      'author_id',
     );
 
     await userEvent.click(canvas.getByText('Add Relationship'));
@@ -115,7 +104,7 @@ export const TestBasicInteraction: StoryObj<
           toNativeQuery: 'get_article',
           type: 'array',
           columnMapping: { id: 'author_id' },
-        })
+        }),
       );
     });
   },

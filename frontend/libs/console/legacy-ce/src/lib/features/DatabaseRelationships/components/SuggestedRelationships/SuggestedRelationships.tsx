@@ -1,16 +1,14 @@
 import { useState } from 'react';
-import { FaColumns, FaDatabase, FaMagic, FaTable } from 'react-icons/fa';
-import Skeleton from 'react-loading-skeleton';
-import { capitaliseFirstLetter } from '../../../../components/Common/ConfigureTransformation/utils';
-import { Button } from '../../../../new-components/Button';
-import { CardedTable } from '../../../../new-components/CardedTable';
-import { useSuggestedRelationships } from '../../../Data/TrackResources/TrackRelationships/hooks/useSuggestedRelationships';
-import { areTablesEqual } from '../../../hasura-metadata-api';
-import { Table } from '../../../hasura-metadata-types';
-import { getTableDisplayName } from '../../utils/helpers';
-import { RelationshipIcon } from '../RelationshipIcon';
+import { FaDatabase, FaMagic } from 'react-icons/fa';
+import { Button, CardedTable, SkeletonList, Text } from '@hasura/shared/ui';
+import { useSuggestedRelationships } from '@hasura/metadata/api';
+import { Table } from '@hasura/shared/types';
 import { SuggestedRelationshipTrackModal } from '../SuggestedRelationshipTrackModal/SuggestedRelationshipTrackModal';
 import { SuggestedRelationshipWithName } from './hooks/useSuggestedRelationships';
+import { areTablesEqual } from '@hasura/metadata/helpers';
+import { Flex } from '@radix-ui/themes';
+import { capitalizeFirstLetter } from '@hasura/shared/utils';
+import { DisplaySuggestedRelationship } from '../common/mapping/DisplaySuggestedRelationship';
 
 type SuggestedRelationshipsProps = {
   dataSourceName: string;
@@ -27,83 +25,60 @@ export const SuggestedRelationships = ({
       which: 'all',
     });
 
-  const untrackedSuggestedRelationships = untracked.filter(rel =>
-    areTablesEqual(rel.from.table, table)
+  const untrackedSuggestedRelationships = untracked.filter((rel) =>
+    areTablesEqual(rel.from.table, table),
   );
 
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedRelationship, setSelectedRelationship] =
     useState<SuggestedRelationshipWithName | null>(null);
 
-  if (isLoading) return <Skeleton count={4} height={30} />;
+  if (isLoading) return <SkeletonList count={4} />;
 
   return untrackedSuggestedRelationships.length > 0 ? (
     <>
-      <CardedTable.Table>
-        <CardedTable.Header
-          columns={[
-            <div>
-              <FaMagic className="fill-muted" /> SUGGESTED RELATIONSHIPS
-            </div>,
-            'SOURCE',
-            'TYPE',
-            'RELATIONSHIP',
-          ]}
-        />
-
-        <CardedTable.TableBody>
-          {untrackedSuggestedRelationships.map(relationship => (
-            <CardedTable.TableBodyRow key={relationship.constraintName}>
-              <CardedTable.TableBodyCell>
-                <div className="flex flex-row items-center">
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setSelectedRelationship(relationship);
-                      setModalVisible(true);
-                    }}
-                  >
-                    Add
-                  </Button>
-                  <div className="ml-2">{relationship.constraintName}</div>
-                </div>
-              </CardedTable.TableBodyCell>
-
-              <CardedTable.TableBodyCell>
-                <div className="flex items-center gap-2">
-                  <FaDatabase /> <span>{dataSourceName}</span>
-                </div>
-              </CardedTable.TableBodyCell>
-
-              <CardedTable.TableBodyCell>
-                {capitaliseFirstLetter(relationship.type)}
-              </CardedTable.TableBodyCell>
-
-              <CardedTable.TableBodyCell>
-                <div className="flex flex-row items-center gap-2">
-                  <FaTable />
-                  <span>{getTableDisplayName(relationship.from.table)}</span>
-                  /
-                  <FaColumns />
-                  <span>{relationship.from.columns.join(' ')}</span>
-                  <RelationshipIcon
-                    type={
-                      relationship.type === 'array'
-                        ? 'one-to-many'
-                        : 'one-to-one'
-                    }
-                  />
-                  <FaTable />
-                  <span>{getTableDisplayName(relationship.to.table)}</span>
-                  /
-                  <FaColumns />
-                  {relationship.to.columns.join(' ')}
-                </div>
-              </CardedTable.TableBodyCell>
-            </CardedTable.TableBodyRow>
-          ))}
-        </CardedTable.TableBody>
-      </CardedTable.Table>
+      <CardedTable
+        columns={[
+          <Flex align="center" gap="2" key="suggested-header">
+            <FaMagic /> SUGGESTED RELATIONSHIPS
+          </Flex>,
+          'SOURCE',
+          'TYPE',
+          'RELATIONSHIP',
+        ]}
+        data={untrackedSuggestedRelationships.map((relationship) => [
+          <Flex
+            direction="row"
+            align="center"
+            gap="2"
+            key={`${relationship.constraintName}-add`}
+          >
+            <Button
+              mode="default"
+              size="sm"
+              onClick={() => {
+                setSelectedRelationship(relationship);
+                setModalVisible(true);
+              }}
+            >
+              Add
+            </Button>
+            <Text>{relationship.constraintName}</Text>
+          </Flex>,
+          <Flex
+            align="center"
+            gap="2"
+            key={`${relationship.constraintName}-source`}
+          >
+            <FaDatabase /> <span>{dataSourceName}</span>
+          </Flex>,
+          capitalizeFirstLetter(relationship.type),
+          <DisplaySuggestedRelationship
+            key={`${relationship.constraintName}-mapping`}
+            relationship={relationship}
+          />,
+        ])}
+      />
       {isModalVisible && selectedRelationship && (
         <SuggestedRelationshipTrackModal
           relationship={selectedRelationship}

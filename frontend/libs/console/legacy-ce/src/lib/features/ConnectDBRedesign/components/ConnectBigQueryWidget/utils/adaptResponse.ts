@@ -1,13 +1,10 @@
-import {
-  BigQueryConfiguration,
-  Source,
-} from '../../../../hasura-metadata-types';
+import { BigQueryConfiguration, Source } from '@hasura/shared/types';
 import isArray from 'lodash/isArray';
 import { adaptGraphQLCustomization } from '../../GraphQLCustomization/utils/adaptResponse';
 import { BigQueryConnectionSchema } from '../schema';
 
 export const adaptPostgresConnection = (
-  metadataSource: Source
+  metadataSource: Source,
 ): BigQueryConnectionSchema => {
   if (metadataSource.kind !== 'bigquery')
     throw Error('Not a bigquery connection');
@@ -37,7 +34,7 @@ export const adaptPostgresConnection = (
         : { type: 'envVar', envVar: configuration.datasets.from_env },
     },
     customization: adaptGraphQLCustomization(
-      metadataSource.customization ?? {}
+      metadataSource.customization ?? {},
     ),
   };
 };

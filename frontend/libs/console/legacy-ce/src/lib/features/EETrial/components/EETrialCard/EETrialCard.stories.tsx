@@ -1,14 +1,15 @@
 import React from 'react';
-import { StoryObj, Meta } from '@storybook/react';
-import { QueryClient, QueryClientProvider } from 'react-query';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { EETrialCard } from './EETrialCard';
+import { Flex } from '@radix-ui/themes';
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: false,
-      cacheTime: 0,
+      gcTime: 0,
     },
   },
 });
@@ -25,7 +26,7 @@ Default CSS display is \`block\`, provided without padding and margin (displayed
     },
   },
   decorators: [
-    Story => {
+    (Story) => {
       window.localStorage.getItem = () => {
         return JSON.stringify([
           {
@@ -38,9 +39,14 @@ Default CSS display is \`block\`, provided without padding and margin (displayed
       };
       return (
         <QueryClientProvider client={queryClient}>
-          <div className="p-4 flex flex-col gap-5 items-center max-w-screen">
+          <Flex
+            direction="column"
+            gap="5"
+            align="center"
+            className="p-4 max-w-screen"
+          >
             {Story()}
-          </div>
+          </Flex>
         </QueryClientProvider>
       );
     },

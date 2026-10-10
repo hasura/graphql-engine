@@ -19,11 +19,11 @@ export const generateGDCRequestPayload = ({
         timeout: { seconds: values.timeout },
         template: values.template,
         template_variables: templateVariableArrayToMap(
-          values?.template_variables || []
+          values?.template_variables || [],
         ),
       },
       customization: generateGraphQLCustomizationInfo(
-        values.customization ?? {}
+        values.customization ?? {},
       ),
     },
   });

@@ -1,16 +1,14 @@
 import { GraphQLSchema, isInputObjectType } from 'graphql';
-import { columnOperatorsInfo } from '../../../../../../../components/Services/Data/TablePermissions/PermissionBuilder/utils';
-import lowerCase from 'lodash/lowerCase';
+import { columnOperatorsInfo } from './permissionBuilderOperators';
 import { tableContext } from '../TableProvider';
 import { Columns, Comparators, Tables, Operator } from '../types';
-import { areTablesEqual } from '../../../../../../hasura-metadata-api';
-import { Table } from '../../../../../../hasura-metadata-types';
+import { ComputedField, Table } from '@hasura/shared/types';
 import { useContext } from 'react';
 import { rowPermissionsContext } from '../RowPermissionsProvider';
 import { sourceDataTypes, SourceDataTypes } from './sourceDataTypes';
 import { rootTableContext } from '../RootTableProvider';
-import { columnDataType } from '../../../../../../DataSource/utils';
-import { ComputedField } from '../../../../../../../metadata/types';
+import { columnDataType } from '@hasura/metadata/data-source';
+import { areTablesEqual } from '@hasura/metadata/helpers';
 
 function columnOperators(): Array<Operator> {
   return Object.keys(columnOperatorsInfo).reduce((acc, key) => {
@@ -62,25 +60,25 @@ export function comparatorsFromSchema(schema: GraphQLSchema): Comparators {
   // Get input types ending in `_comparison_exp`
   // E.g: String_BigQuery_comparison_exp, string_SQLite_comparison_exp, String_comparison_exp, etc...
   const inputObjectTypes = Object.values(schema.getTypeMap()).filter(
-    type => isInputObjectType(type) && type.name.endsWith('_comparison_exp')
+    (type) => isInputObjectType(type) && type.name.endsWith('_comparison_exp'),
   );
   return inputObjectTypes.reduce((acc, inputType) => {
     if (!isInputObjectType(inputType)) {
       return acc;
     }
     const operators: Operator[] = Object.values(inputType.getFields()).map(
-      field => {
+      (field) => {
         const name = field.name;
-        const operator = allOperators.find(o => o.name === name);
+        const operator = allOperators.find((o) => o.name === name);
         return {
           type: operator?.type || '',
-          name: operator?.name ?? lowerCase(name),
+          name: operator?.name ?? name.toLowerCase(),
           operator: name,
           graphqlType: field.type,
           inputStructure: operator?.inputStructure,
           inputType: operator?.inputType,
         };
-      }
+      },
     );
     const key = inputType.name.replace('_comparison_exp', '');
     return {
@@ -136,16 +134,11 @@ const whitelist: Record<string, string[]> = {
 };
 
 type Sources =
-  | 'postgres'
-  | 'bigquery'
-  | 'mssql'
-  | 'citus'
-  | 'cockroach'
-  | 'alloy';
+  'postgres' | 'bigquery' | 'mssql' | 'citus' | 'cockroach' | 'alloy';
 
 export const mapScalarDataType = (
   dataSource: string | undefined,
-  dataType: SourceDataTypes
+  dataType: SourceDataTypes,
 ) => {
   if (!dataSource) return dataType;
   const dataTypes = sourceDataTypes[dataSource as Sources];
@@ -158,7 +151,7 @@ export function useOperators({ path }: { path: string[] }) {
   const { columns, table, computedFields } = useContext(tableContext);
 
   const columnName = path[path.length - 2];
-  const column = columns.find(c => c.name === columnName);
+  const column = columns.find((c) => c.name === columnName);
   let dataType = column?.dataType;
   if (dataType === 'USER-DEFINED') {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -174,8 +167,8 @@ export function useOperators({ path }: { path: string[] }) {
     table,
   });
   if (dataType && hasWhitelistedOperators(columnDataType(dataType))) {
-    return operators.filter(o =>
-      whitelist[columnDataType(dataType || '')]?.includes(o.name)
+    return operators.filter((o) =>
+      whitelist[columnDataType(dataType || '')]?.includes(o.name),
     );
   }
   return operators;
@@ -198,8 +191,8 @@ export const getDataTypeOperators = ({
   table,
 }: GetDataTypeOperatorsProps) => {
   const columnName = path[path.length - 2];
-  const column = columns.find(c => c.name === columnName);
-  const dataSourceKind = tables.find(t => areTablesEqual(t.table, table))
+  const column = columns.find((c) => c.name === columnName);
+  const dataSourceKind = tables.find((t) => areTablesEqual(t.table, table))
     ?.dataSource?.kind;
   // types associated to postgres don't have a suffix on the GraphQL Schema, whereas the other types have dataSource as suffix
   const comparatorSuffix =
@@ -210,13 +203,13 @@ export const getDataTypeOperators = ({
     const dataSource = tables?.[0]?.dataSource?.name;
     const dataType = mapScalarDataType(
       dataSource,
-      column?.dataType as SourceDataTypes
+      column?.dataType as SourceDataTypes,
     );
     const fallbackComparatorKey = column
       ? `${dataType}${comparatorSuffix}`
       : '';
     const lowerCaseComparators = Object.fromEntries(
-      Object.entries(comparators).map(([k, v]) => [k.toLowerCase(), v])
+      Object.entries(comparators).map(([k, v]) => [k.toLowerCase(), v]),
     );
     const backupOperators =
       lowerCaseComparators[fallbackComparatorKey]?.operators;

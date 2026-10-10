@@ -17,10 +17,10 @@ const dbTodbSchema = z.object({
     columnMap: z
       .array(z.object({ from: z.string(), to: z.string() }))
       .transform((columnMap, ctx) => {
-        return columnMap.map(map => {
+        return columnMap.map((map) => {
           if (!map.to || !map.from)
             ctx.addIssue({
-              code: z.ZodIssueCode.custom,
+              code: 'custom',
               message: `Column Mapping cannot be empty`,
             });
 

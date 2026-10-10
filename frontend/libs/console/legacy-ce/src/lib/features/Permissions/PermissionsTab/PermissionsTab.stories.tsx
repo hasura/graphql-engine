@@ -1,12 +1,10 @@
-import { StoryObj, Meta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
 
-import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
 
 import { PermissionsTab, PermissionsTabProps } from './PermissionsTab';
 import { handlers } from '../PermissionsForm/mocks/handlers.mock';
-import { waitFor, within } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
-import { userEvent } from '@storybook/testing-library';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 export default {
   component: PermissionsTab,
@@ -40,18 +38,18 @@ export const UpdatePermissions: StoryObj<PermissionsTabProps> = {
     // Type "viewer" into input with aria-label "create-new-role"
     await userEvent.type(
       await canvas.findByLabelText('create-new-role'),
-      'viewer'
+      'viewer',
     );
     // Wait until permission-table-button-newRole-select loads
     await waitFor(async () => {
       return await canvas.findByTestId(
-        'permission-table-button-newRole-select'
+        'permission-table-button-newRole-select',
       );
     });
 
     // Click permission-table-button-newRole-select
     await userEvent.click(
-      await canvas.findByTestId('permission-table-button-newRole-select')
+      await canvas.findByTestId('permission-table-button-newRole-select'),
     );
 
     // Click custom-check
@@ -61,38 +59,38 @@ export const UpdatePermissions: StoryObj<PermissionsTabProps> = {
       async () => {
         await canvas.findByTestId('RootInputReady');
       },
-      { timeout: 1000 }
+      { timeout: 1000 },
     );
 
     await userEvent.selectOptions(
       await canvas.findByTestId('root-operator'),
-      '_and'
+      '_and',
     );
 
     await waitFor(
       async () => {
         return userEvent.selectOptions(
           await canvas.findByTestId('_and.1-operator'),
-          'ArtistId'
+          'ArtistId',
         );
       },
       {
         timeout: 10000,
-      }
+      },
     );
 
     // click _and.1.ArtistId._eq-value-input-x-hasura-user-id
     await userEvent.click(
       await canvas.findByTestId(
-        '_and.1.ArtistId._eq-value-input-x-hasura-user-id'
-      )
+        '_and.1.ArtistId._eq-value-input-x-hasura-user-id',
+      ),
     );
 
     // Click submit button
     await userEvent.click(await canvas.findByTestId('permissions-form-submit'));
 
     await expect(
-      await canvas.findByText('Permissions saved successfully!')
+      await canvas.findByText('Permissions saved successfully!'),
     ).toBeInTheDocument();
   },
 };

@@ -1,5 +1,14 @@
 import { parse as gql } from 'graphql';
 
+export enum Plan {
+  CloudFree = 'cloud_free',
+  CloudFreeV2 = 'cloud_free_v2',
+  CloudPayg = 'cloud_payg',
+  CloudShared = 'cloud_shared',
+  Pro = 'pro',
+  CloudDedicatedVPC = 'cloud_dedicated_vpc',
+}
+
 /**
  * GraphQl query to fetch all growth experiments data related to the current user.
  */
@@ -26,20 +35,6 @@ query getTenantEnv($tenantId: uuid!) {
     envVars
   }
 }
-`);
-
-/**
- * GraphQL mutation to refresh and get the Heroku session of the current user
- */
-export const GET_HEROKU_SESSION = gql(`
-	mutation {
-		getHerokuSession {
-			access_token
-			refresh_token
-			expires_in
-			token_type
-		}
-	}
 `);
 
 /**
@@ -120,7 +115,7 @@ export const fetchDatabaseLatencyJobId = gql(`
 `);
 
 export const fetchInfoFromJobId = gql(`
-query ($id: uuid!) {
+query fetchInfoFromJobId($id: uuid!) {
   jobs_by_pk(id: $id) {
     id
     status
@@ -139,7 +134,7 @@ query ($id: uuid!) {
 `);
 
 export const insertInfoIntoDBLatencyQuery = gql(`
-mutation (
+mutation insertInfoIntoDBLatencyQuery(
   $jobId: uuid!,
   $projectId: uuid!,
   $isLatencyDisplayed: Boolean!,
@@ -157,7 +152,7 @@ mutation (
 `);
 
 export const updateUserClickedChangeProjectRegion = gql(`
-mutation ($rowId: uuid!, $isChangeRegionClicked: Boolean!) {
+mutation updateUserClickedChangeProjectRegion($rowId: uuid!, $isChangeRegionClicked: Boolean!) {
   update_db_latency(where: {id: {_eq: $rowId}}, _set: {is_change_region_clicked: $isChangeRegionClicked}) {
     affected_rows
     returning {
@@ -269,5 +264,41 @@ subscription FetchConfigStatus($tenantId: uuid!) {
     config_status(where: {is_active: {_eq: true}, tenant_id: {_eq: $tenantId}, worker_state: {_eq: "live"}}) {
     hash
     message
+  }
+}`);
+
+export const FETCH_PROJECT_INFO = gql(`
+query FetchProjectInfo($id: uuid!) {
+  users {
+    id
+  }
+  projects_by_pk(id: $id) {
+    id
+    owner {
+      id
+    }
+    name
+    collaborators {
+      collaborator {
+        id
+      }
+      id
+      project_collaborator_privileges {
+        privilege_slug
+      }
+    }
+    tenant {
+      region_info {
+        metrics_fqdn
+      }
+    }
+    plan_name
+    entitlements {
+      id
+      entitlement {
+        type
+        config_is_enabled
+      }
+    }
   }
 }`);

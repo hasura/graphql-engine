@@ -1,5 +1,5 @@
-import React from 'react';
-import { CardRadioGroup } from '../../../../../new-components/CardRadioGroup';
+import { RadioCardGroup, Text } from '@hasura/shared/ui';
+import { ReactNode } from 'react';
 
 export type RemoteRelOption = 'remoteSchema' | 'remoteDB';
 
@@ -8,28 +8,44 @@ interface RelationshipTypeCardRadioGroupProps {
   onChange: (option: RemoteRelOption) => void;
 }
 
-const items: { value: RemoteRelOption; title: string; body: string }[] = [
+const items: { value: RemoteRelOption; label: ReactNode }[] = [
   {
     value: 'remoteSchema',
-    title: 'Remote Schema',
-    body: 'Relationship from this remote schema to another remote schema.',
+    label: (
+      <div>
+        <Text as="div" weight="bold">
+          Remote Schema
+        </Text>
+        <Text as="div">
+          Relationship from this remote schema to another remote schema.
+        </Text>
+      </div>
+    ),
   },
   {
     value: 'remoteDB',
-    title: 'Remote Database',
-    body: 'Relationship from this remote schema to a remote database table.',
+    label: (
+      <div>
+        <Text as="div" weight="bold">
+          Remote Database
+        </Text>
+        <Text as="div">
+          Relationship from this remote schema to a remote database table.
+        </Text>
+      </div>
+    ),
   },
 ];
 
-export const RelationshipTypeCardRadioGroup = (
-  props: RelationshipTypeCardRadioGroupProps
-) => {
-  const { value = 'remoteSchema', onChange } = props;
+export const RelationshipTypeCardRadioGroup = ({
+  value = 'remoteSchema',
+  onChange,
+}: RelationshipTypeCardRadioGroupProps) => {
   return (
-    <CardRadioGroup<RemoteRelOption>
-      items={items}
+    <RadioCardGroup
+      options={items}
       value={value}
-      onChange={onChange}
+      onChange={onChange as (option: string) => void}
     />
   );
 };

@@ -1,16 +1,19 @@
-import { IconTooltip } from '../../../../new-components/Tooltip';
+import { IconTooltip } from '@hasura/shared/ui';
+import { Flex, Heading } from '@radix-ui/themes';
+import clsx from 'clsx';
 import React from 'react';
-import { SectionHeader } from './SectionHeader';
 
 export const Section: React.FC<{
-  headerText: string;
+  className?: string;
+  headerText: React.ReactNode;
   tooltipMessage?: string;
-}> = ({ children, headerText, tooltipMessage }) => (
-  <div className="mb-8">
-    <div className="flex flex-row items-center mb-formlabel">
-      <SectionHeader>{headerText}</SectionHeader>
+  children?: React.ReactNode;
+}> = ({ className, children, headerText, tooltipMessage }) => (
+  <div className={clsx('mb-4', className)}>
+    <Flex direction="row" align="center" gap="2" className="mb-2">
+      <Heading size="3">{headerText}</Heading>
       {!!tooltipMessage && <IconTooltip message={tooltipMessage} />}
-    </div>
+    </Flex>
     {children}
   </div>
 );

@@ -51,7 +51,7 @@ describe('transformInputText', () => {
     it(`should transform ${testItem.import} into ${testItem.expected} when in ${testItem.folder} folder`, () => {
       const result = transformInputText(
         ts.factory.createStringLiteral(testItem.import, true),
-        baseFolder + testItem.folder
+        baseFolder + testItem.folder,
       );
 
       expect(result).toEqual(`'${testItem.expected}'`);

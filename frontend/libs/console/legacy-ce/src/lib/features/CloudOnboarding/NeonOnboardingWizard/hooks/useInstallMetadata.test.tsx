@@ -1,10 +1,10 @@
 import React, { ReactNode } from 'react';
-import { matchRequestUrl, MockedRequest } from 'msw';
 import { waitFor, screen, render } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from 'react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
-import { Provider as ReduxProvider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
+import { vi } from 'vitest';
+import { AppContext, defaultAppState } from '@hasura/shared/context';
 import {
   fetchGithubMetadataHandler,
   metadataFailureHandler,
@@ -13,43 +13,41 @@ import {
 } from '../mocks/handlers.mock';
 import { useInstallMetadata } from './useInstallMetadata';
 import Endpoints from '../../../../Endpoints';
-import {
-  mockMetadataUrl,
-  MOCK_INITIAL_METADATA,
-  serverDownErrorMessage,
-} from '../mocks/constants';
-import 'whatwg-fetch';
+import { mockMetadataUrl, serverDownErrorMessage } from '../mocks/constants';
 
 const server = setupServer();
 
 function waitForRequest(method: string, url: string) {
   let requestId = '';
-  return new Promise<MockedRequest>((resolve, reject) => {
-    server.events.on('request:start', async req => {
-      const matchesMethod = req.method.toLowerCase() === method.toLowerCase();
-      const matchesUrl = matchRequestUrl(req.url, url).matches;
+  return new Promise<Request>((resolve, reject) => {
+    server.events.on('request:start', async ({ request, requestId: id }) => {
+      const matchesMethod =
+        request.method.toLowerCase() === method.toLowerCase();
+      const matchesUrl = request.url === url || request.url.startsWith(url);
       let matchesType = false;
 
       try {
-        const reqbody = await req.json();
+        const reqbody = await request.clone().json();
         matchesType = reqbody?.type === 'replace_metadata';
       } catch (err) {
         // not a metadata request, can be ignored
       }
 
       if (matchesMethod && matchesUrl && matchesType) {
-        requestId = req.id;
+        requestId = id;
       }
     });
-    server.events.on('request:match', req => {
-      if (req.id === requestId) {
-        resolve(req);
+    server.events.on('request:match', ({ request, requestId: id }) => {
+      if (id === requestId) {
+        resolve(request);
       }
     });
-    server.events.on('request:unhandled', req => {
-      if (req.id === requestId) {
+    server.events.on('request:unhandled', ({ request, requestId: id }) => {
+      if (id === requestId) {
         reject(
-          new Error(`The ${req.method} ${req.url.href} request was unhandled.`)
+          new Error(
+            `The ${request.method} ${request.url} request was unhandled.`,
+          ),
         );
       }
     });
@@ -58,7 +56,7 @@ function waitForRequest(method: string, url: string) {
 
 let reactQueryClient = new QueryClient();
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }));
+beforeAll(() => server.listen({ onUnhandledFrame: 'warn' }));
 beforeEach(() => {
   // provide a fresh reactQueryClient for each test to prevent state caching among tests
   reactQueryClient = new QueryClient();
@@ -75,16 +73,16 @@ beforeEach(() => {
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-const onSuccessCb = jest.fn(() => {});
+const onSuccessCb = vi.fn(() => {});
 
-const onErrorCb = jest.fn(() => {});
+const onErrorCb = vi.fn(() => {});
 
 const Component = () => {
   const { updateMetadata } = useInstallMetadata(
     'default',
     mockMetadataUrl,
     onSuccessCb,
-    onErrorCb
+    onErrorCb,
   );
 
   React.useEffect(() => {
@@ -100,21 +98,14 @@ type Props = {
   children?: ReactNode;
 };
 
-const store = configureStore({
-  reducer: {
-    tables: () => ({ currentDataSource: 'postgres', dataHeaders: {} }),
-    metadata: () => ({
-      metadataObject: MOCK_INITIAL_METADATA,
-    }),
-  },
-});
-
 const wrapper = ({ children }: Props) => (
-  <ReduxProvider store={store} key="provider">
-    <QueryClientProvider client={reactQueryClient}>
-      {children}
-    </QueryClientProvider>
-  </ReduxProvider>
+  <QueryClientProvider client={reactQueryClient}>
+    <MemoryRouter>
+      <AppContext.Provider value={{ ...defaultAppState, endpoints: Endpoints }}>
+        {children}
+      </AppContext.Provider>
+    </MemoryRouter>
+  </QueryClientProvider>
 );
 
 describe('Check useInstallMetadata installs the correct metadata', () => {
@@ -125,25 +116,25 @@ describe('Check useInstallMetadata installs the correct metadata', () => {
     render(<Component />, { wrapper });
 
     // STEP 1: expect our mock component renders successfully
-    expect(screen.queryByText('Welcome')).toBeInTheDocument();
+    expect(screen.getByText('Welcome')).toBeInTheDocument();
 
     // STEP 2: expect success callback to be called, after successful `replace_metadata` request
     await waitFor(() => expect(onSuccessCb).toHaveBeenCalledTimes(1));
 
     // STEP 3: expect the correct metadata being sent to the server
     const replaceMetadataRequest = await pendingRequest;
-    expect(JSON.parse(replaceMetadataRequest.body as string)).toMatchSnapshot();
+    expect(await replaceMetadataRequest.clone().json()).toMatchSnapshot();
   });
 
   it('fails to fetch metadata file from github, should call the error callback', async () => {
     server.use(
       mockGithubServerDownHandler(mockMetadataUrl),
-      metadataSuccessHandler
+      metadataSuccessHandler,
     );
     render(<Component />, { wrapper });
 
     // STEP 1: expect our mock component renders successfully
-    expect(screen.queryByText('Welcome')).toBeInTheDocument();
+    expect(screen.getByText('Welcome')).toBeInTheDocument();
 
     // STEP 2: expect error callback to be called, after fetching metadata file from github fails
     await waitFor(() => expect(onErrorCb).toHaveBeenCalledTimes(1));
@@ -159,7 +150,7 @@ describe('Check useInstallMetadata installs the correct metadata', () => {
     render(<Component />, { wrapper });
 
     // STEP 1: expect our mock component renders successfully
-    expect(screen.queryByText('Welcome')).toBeInTheDocument();
+    expect(screen.getByText('Welcome')).toBeInTheDocument();
 
     // STEP 2: expect error callback to be called, after applying metadata to server fails
     await waitFor(() => expect(onErrorCb).toHaveBeenCalledTimes(1));

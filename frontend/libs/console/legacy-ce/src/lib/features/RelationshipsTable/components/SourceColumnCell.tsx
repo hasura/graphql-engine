@@ -1,4 +1,5 @@
-import React, { ReactText } from 'react';
+import React from 'react';
+import { Flex } from '@radix-ui/themes';
 import { FaTable, FaDatabase, FaPlug } from 'react-icons/fa';
 import { RelationshipSourceType } from '../types';
 
@@ -37,14 +38,14 @@ const getRelationIcon = (type: RelationshipSourceType) => {
 
 type SourceColumnCellType = {
   type: RelationshipSourceType;
-  name: ReactText;
+  name: React.ReactNode;
 };
 
 const SourceColumnCell = ({ type, name }: SourceColumnCellType) => {
   return (
-    <div className="flex items-center">
+    <Flex align="center">
       {getRelationIcon(type)} {name}
-    </div>
+    </Flex>
   );
 };
 

@@ -1,8 +1,5 @@
-import { ConnectionSet } from '../../../../../../../metadata/types';
-import {
-  useMetadata,
-  useMetadataMigration,
-} from '../../../../../../MetadataAPI';
+import { useMetadata, useMetadataMigration } from '@hasura/metadata/api';
+import { PostgresConnectionSet, PostgresSource } from '@hasura/shared/types';
 
 type ConnectionTemplateTestArgs = {
   request_context: {
@@ -29,20 +26,19 @@ type ConnectionTemplateTestArgs = {
 );
 export const useDynamicDbRouting = ({ sourceName }: { sourceName: string }) => {
   const { data, isLoading: isMetadaLoading } = useMetadata();
-
-  const { mutate, isLoading } = useMetadataMigration({});
+  const { mutate, isPending: isLoading } = useMetadataMigration({});
 
   const source = data?.metadata?.sources.find(
-    source => source.name === sourceName
-  );
+    (source) => source.name === sourceName,
+  ) as PostgresSource | undefined;
 
   const connectionTemplate =
     source?.configuration?.connection_template?.template || null;
   const connectionSet = source?.configuration?.connection_set || [];
 
   const addConnection = async (
-    connection: ConnectionSet,
-    options?: Parameters<typeof mutate>[1]
+    connection: PostgresConnectionSet,
+    options?: Parameters<typeof mutate>[1],
   ): Promise<void> => {
     mutate(
       {
@@ -60,13 +56,13 @@ export const useDynamicDbRouting = ({ sourceName }: { sourceName: string }) => {
           },
         },
       },
-      options
+      options,
     );
   };
 
   const removeConnection = async (
     connectionName: string,
-    options?: Parameters<typeof mutate>[1]
+    options?: Parameters<typeof mutate>[1],
   ): Promise<void> => {
     mutate(
       {
@@ -82,19 +78,19 @@ export const useDynamicDbRouting = ({ sourceName }: { sourceName: string }) => {
               connection_set:
                 connectionSet.length === 1
                   ? null
-                  : connectionSet.filter(c => c.name !== connectionName),
+                  : connectionSet.filter((c) => c.name !== connectionName),
             },
           },
         },
       },
-      options
+      options,
     );
   };
 
   const updateConnection = async (
     connectionName: string,
-    connection: ConnectionSet,
-    options?: Parameters<typeof mutate>[1]
+    connection: PostgresConnectionSet,
+    options?: Parameters<typeof mutate>[1],
   ): Promise<void> => {
     mutate(
       {
@@ -107,20 +103,20 @@ export const useDynamicDbRouting = ({ sourceName }: { sourceName: string }) => {
             ...source,
             configuration: {
               ...source?.configuration,
-              connection_set: connectionSet.map(c =>
-                c.name === connectionName ? connection : c
+              connection_set: connectionSet.map((c) =>
+                c.name === connectionName ? connection : c,
               ),
             },
           },
         },
       },
-      options
+      options,
     );
   };
 
   const updateConnectionTemplate = async (
     connectionTemplate?: string | null,
-    options?: Parameters<typeof mutate>[1]
+    options?: Parameters<typeof mutate>[1],
   ): Promise<void> => {
     mutate(
       {
@@ -140,13 +136,13 @@ export const useDynamicDbRouting = ({ sourceName }: { sourceName: string }) => {
           },
         },
       },
-      options
+      options,
     );
   };
 
   const testConnectionTemplate = async (
     args: ConnectionTemplateTestArgs,
-    options?: Parameters<typeof mutate>[1]
+    options?: Parameters<typeof mutate>[1],
   ) => {
     await mutate(
       {
@@ -158,7 +154,7 @@ export const useDynamicDbRouting = ({ sourceName }: { sourceName: string }) => {
           args,
         },
       },
-      options
+      options,
     );
   };
 

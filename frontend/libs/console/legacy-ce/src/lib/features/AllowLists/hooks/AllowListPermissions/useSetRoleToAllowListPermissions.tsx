@@ -1,17 +1,13 @@
-import {
-  allowedMetadataTypes,
-  useMetadataMigration,
-} from '../../../MetadataAPI';
+import { useMetadataMigration } from '@hasura/metadata/api';
 
 export const useSetRoleToAllowListPermission = (collectionName: string) => {
   const { mutate } = useMetadataMigration();
 
   const setRoleToAllowListPermission = (
     roles: string[],
-    options?: Parameters<typeof mutate>[1]
+    options?: Parameters<typeof mutate>[1],
   ): void => {
-    const type: allowedMetadataTypes =
-      'update_scope_of_collection_in_allowlist';
+    const type = 'update_scope_of_collection_in_allowlist' as const;
     mutate(
       {
         query: {
@@ -28,7 +24,7 @@ export const useSetRoleToAllowListPermission = (collectionName: string) => {
           },
         },
       },
-      options
+      options,
     );
   };
 

@@ -1,17 +1,22 @@
 import React from 'react';
 import { MdRefresh } from 'react-icons/md';
-import { Button } from '../../../../../new-components/Button';
-import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
-import { HasuraLogoFull } from '../../../../../new-components/HasuraLogo';
-import { Analytics } from '../../../../Analytics';
+import {
+  Button,
+  Card,
+  HasuraLogoFull,
+  IndicatorCard,
+  Text,
+  useAppearance,
+} from '@hasura/shared/ui';
+import { Analytics } from '@hasura/shared/analytics';
 import { NeonIcon } from './NeonIcon';
-import _push from '../../../../../components/Services/Data/push';
 import { emitOnboardingEvent } from '../../../utils';
-import { Dispatch } from '../../../../../types';
 import { skippedNeonOnboardingToConnectOtherDB } from '../../../constants';
+import { useNavigate } from 'react-router';
+import { Flex, Link } from '@radix-ui/themes';
 
 const iconMap = {
-  refresh: <MdRefresh />,
+  refresh: MdRefresh,
 };
 
 type Status =
@@ -27,60 +32,57 @@ type Status =
       status: 'default';
     };
 
-export type Props = {
+export type NeonBannerProps = {
   status: Status;
   onClickConnect: VoidFunction;
   buttonText: string;
   icon?: keyof typeof iconMap;
-  setStepperIndex: (index: number) => void;
-  dispatch: Dispatch;
-  dismiss: VoidFunction;
+  setStepperIndex?: (index: number) => void;
+  dismiss?: VoidFunction;
 };
 
-export function NeonBanner(props: Props) {
-  const {
-    status,
-    onClickConnect,
-    buttonText,
-    icon,
-    setStepperIndex,
-    dispatch,
-    dismiss,
-  } = props;
+export function NeonBanner(props: NeonBannerProps) {
+  const { status, onClickConnect, buttonText, icon, setStepperIndex, dismiss } =
+    props;
+  const navigate = useNavigate();
+  const { appearance } = useAppearance();
   const isButtonDisabled = status.status === 'loading';
 
   /* This handles if a user wants to connect an existing DB or a non-postgres DB,
    it registers that user skipped onboarding and take them directly to connect database page*/
   const onClickConnectOtherDB = () => {
-    dispatch(_push('/data/manage/connect'));
+    navigate('/data/manage/connect');
     emitOnboardingEvent(skippedNeonOnboardingToConnectOtherDB);
-    dismiss();
+    dismiss?.();
   };
 
   return (
-    <div className="border border-gray-300 border-l-4 border-l-[#297393] shadow-md rounded bg-white p-md">
-      <div className="flex items-center">
-        <div className="flex w-3/4 items-center">
-          <div className="mr-sm">
-            <div className="flex items-center">
-              <HasuraLogoFull mode="brand" size="sm" />
-              <div className="font-bold mx-xs">+</div>
+    <Card mode="default" className="mt-4">
+      <Flex align="center">
+        <Flex align="center" className="w-3/4">
+          <div className="mr-2">
+            <Flex align="center" gap="2">
+              <HasuraLogoFull
+                mode={appearance === 'dark' ? 'primary' : 'brand'}
+                size="sm"
+              />
+              <Text weight="bold">+</Text>
               <a
                 href="https://neon.tech/"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <NeonIcon />
+                <NeonIcon color={appearance === 'dark' ? 'white' : 'black'} />
               </a>
-            </div>
+            </Flex>
           </div>
-          <div className="flex flex-col w-3/4 ml-xs">
-            <div className="text-md text-gray-700 mb-xs">
+          <Flex direction="column" gap="2" className="w-3/4 ml-xs">
+            <Text>
               Need a new database? We&apos;ve partnered with Neon to help you
               get started with a free Postgres database.
-            </div>
-            <div className="text-md text-gray-700">
-              <a
+            </Text>
+            <Text>
+              <Link
                 id="onboarding-connect-other-database-link"
                 className={`w-auto text-secondary hover:text-secondary-dark  ${
                   !isButtonDisabled ? 'cursor-pointer' : 'cursor-not-allowed'
@@ -95,12 +97,12 @@ export function NeonBanner(props: Props) {
                 }}
               >
                 Click here
-              </a>{' '}
+              </Link>{' '}
               to connect any other database.
-            </div>
-          </div>
-        </div>
-        <div className="flex w-1/4 justify-end">
+            </Text>
+          </Flex>
+        </Flex>
+        <Flex justify="end" className="w-1/4">
           <Analytics
             name="onboarding-wizard-neon-connect-db-button"
             passHtmlAttributesToChildren
@@ -108,27 +110,25 @@ export function NeonBanner(props: Props) {
             <Button
               data-testid="onboarding-wizard-neon-connect-db-button"
               mode={status.status === 'loading' ? 'default' : 'primary'}
-              isLoading={status.status === 'loading'}
+              loading={status.status === 'loading'}
               loadingText={buttonText}
               size="md"
-              icon={icon ? iconMap[icon] : undefined}
+              leftIcon={icon ? iconMap[icon] : undefined}
               onClick={() => {
                 if (!isButtonDisabled) {
-                  setStepperIndex(2);
+                  setStepperIndex?.(2);
                   onClickConnect();
                 }
               }}
               disabled={isButtonDisabled}
             >
-              <div className="text-black font-semibold text-md">
-                {buttonText}
-              </div>
+              {buttonText}
             </Button>
           </Analytics>
-        </div>
-      </div>
+        </Flex>
+      </Flex>
       {status.status === 'error' && (
-        <div className="mt-md">
+        <div className="mt-4">
           <IndicatorCard
             status="negative"
             headline={status.errorTitle}
@@ -138,6 +138,6 @@ export function NeonBanner(props: Props) {
           </IndicatorCard>
         </div>
       )}
-    </div>
+    </Card>
   );
 }

@@ -1,3 +1,3 @@
-import RightContainer from './RightContainer';
+import RightContainer, { RightContainerRoute } from './RightContainer';
 
-export { RightContainer };
+export { RightContainer, RightContainerRoute };

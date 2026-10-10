@@ -1,6 +1,5 @@
-import * as React from 'react';
-import Skeleton from 'react-loading-skeleton';
+import { Skeleton } from '@radix-ui/themes';
 
 export function BadgeSkeleton() {
-  return <Skeleton className="w-28 h-5" />;
+  return <Skeleton width="100px" height="20px" />;
 }

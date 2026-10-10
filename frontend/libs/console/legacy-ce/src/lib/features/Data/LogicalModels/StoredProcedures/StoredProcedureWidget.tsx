@@ -1,29 +1,28 @@
 import {
   InputField,
-  Select,
   useConsoleForm,
-} from '../../../../new-components/Form';
-import { MetadataSelectors, useMetadata } from '../../../hasura-metadata-api';
-import { Feature } from '../../../DataSource';
-import { getTableDisplayName } from '../../../DatabaseRelationships';
-import { useSupportedDataTypes } from '../../hooks/useSupportedDataTypes';
-import { Collapsible } from '../../../../new-components/Collapsible';
-import { Button } from '../../../../new-components/Button';
-import Skeleton from 'react-loading-skeleton';
+  Collapsible,
+  Button,
+  hasuraToast,
+  IndicatorCard,
+  DisplayToastErrorMessage,
+  SkeletonList,
+  SelectField,
+} from '@hasura/shared/ui';
+import { useMetadata } from '@hasura/metadata/api';
+import {
+  useStoredProcedures,
+  useSupportedScalars,
+} from '@hasura/metadata/data-source';
 import { useTrackStoredProcedure } from '../../hooks/useTrackStoredProcedure';
-import { StoredProcedureArgument } from '../../../hasura-metadata-types';
+import { StoredProcedureArgument } from '@hasura/shared/types';
 import {
   Routes,
   STORED_PROCEDURE_TRACK_ERROR,
   STORED_PROCEDURE_TRACK_SUCCESS,
 } from '../constants';
-import { hasuraToast } from '../../../../new-components/Toasts';
-import { DisplayToastErrorMessage } from '../../components/DisplayErrorMessage';
 import { ArgumentsInput } from './components/ArgumentsInput';
 import { cleanEmpty } from '../../../ConnectDBRedesign/components/ConnectPostgresWidget/utils/helpers';
-import { useStoredProcedures } from '../../hooks/useStoredProcedures';
-import { IndicatorCard } from '../../../../new-components/IndicatorCard';
-import { APIError } from '../../../../hooks/error';
 import {
   AddStoredProcedureFormData,
   defaultEmptyValues,
@@ -31,8 +30,11 @@ import {
 } from './schema';
 import { LogicalModelWidget } from '../LogicalModelWidget/LogicalModelWidget';
 import { useState } from 'react';
-import { usePushRoute } from '../../../ConnectDBRedesign/hooks';
 import { BiRefresh } from 'react-icons/bi';
+import { MetadataSelectors } from '@hasura/metadata/helpers';
+import { getTableDisplayName } from '@hasura/shared/utils';
+import { Flex } from '@radix-ui/themes';
+import { useNavigate } from 'react-router';
 
 export const StoredProcedureWidget = () => {
   const {
@@ -45,79 +47,65 @@ export const StoredProcedureWidget = () => {
     },
   });
 
-  const { trackStoredProcedure, isLoading } = useTrackStoredProcedure();
+  const { trackStoredProcedure, isPending } = useTrackStoredProcedure();
   const [isLogicalModelWidgetOpen, setIsLogicalModelWidgetOpen] =
     useState(false);
 
   const dataSourceName = watch('dataSourceName');
 
   const {
-    data: { sourceOptions = [], logicalModelOptions = [] } = {},
+    data: meta,
     isLoading: isMetadataLoading,
     error: metadataError,
-  } = useMetadata(m => ({
-    sourceOptions: MetadataSelectors.getSources()(m)
-      .filter(source => source.kind === 'mssql') // we need a better hook to supported driver by feature
-      .map(source => ({
-        label: source.name,
-        value: source.name,
-      })),
-    logicalModelOptions: MetadataSelectors.findSource(dataSourceName)(
-      m
-    )?.logical_models?.map(logicalModel => ({
-      label: logicalModel.name,
-      value: logicalModel.name,
-    })),
-  }));
+  } = useMetadata();
+
+  const source = MetadataSelectors.findSource(dataSourceName)(meta);
 
   const {
     data: storedProcedureOptions = [],
     isLoading: isIntrospectionLoading,
     error: introspectionError,
     refetch,
-  } = useStoredProcedures({
-    dataSourceName,
-    select: data => {
-      if (data === Feature.NotImplemented) return [];
-
-      return data.map(sp => ({
-        label: getTableDisplayName(sp),
-        value: JSON.stringify(sp),
-      }));
+  } = useStoredProcedures(
+    {
+      source: source!,
     },
-    options: {
+    {
+      select: (data) => {
+        return data.map((sp) => ({
+          label: getTableDisplayName(sp.stored_procedure),
+          value: JSON.stringify(sp),
+        }));
+      },
       // don't fire until there is a dataSource
-      enabled: !!dataSourceName,
+      enabled: !!source,
     },
-  });
+  );
 
   /**
    * Options for the data source types
    */
   const {
-    data: typeOptions = [],
+    data: typeOptions,
     isLoading: areTypeOptionsLoading,
     error: typeIntrospectionError,
-  } = useSupportedDataTypes({
-    dataSourceName,
-    options: {
-      enabled: !!dataSourceName,
-    },
+  } = useSupportedScalars(source?.kind, {
+    enabled: !!dataSourceName,
   });
 
-  const pushRoute = usePushRoute();
+  const pushRoute = useNavigate();
 
   if (isMetadataLoading)
-    return <Skeleton count={8} height={25} className="mb-2" />;
+    return <SkeletonList count={5} containerClassName="mb-2" />;
 
   if (metadataError || typeIntrospectionError || introspectionError) {
     return (
       <IndicatorCard status="negative" headline="Error" id="error-card">
         {[
-          (metadataError as APIError)?.message,
+          (metadataError as Error)?.message,
           typeIntrospectionError?.message,
-          introspectionError?.message,
-        ].map(error => error && <div>{error}</div>)}
+          (introspectionError as Error)?.message,
+        ].map((error, index) => error && <div key={index}>{error}</div>)}
       </IndicatorCard>
     );
   }
@@ -133,7 +121,7 @@ export const StoredProcedureWidget = () => {
             ...restOfTheProperties,
           },
         }),
-        {} as Record<string, StoredProcedureArgument>
+        {} as Record<string, StoredProcedureArgument>,
       ),
     };
     trackStoredProcedure({
@@ -145,7 +133,7 @@ export const StoredProcedureWidget = () => {
         });
         pushRoute(Routes.StoredProcedures);
       },
-      onError: err => {
+      onError: (err) => {
         hasuraToast({
           type: 'error',
           title: STORED_PROCEDURE_TRACK_ERROR,
@@ -155,9 +143,23 @@ export const StoredProcedureWidget = () => {
     });
   };
 
+  const hasDataSourceName = Boolean(dataSourceName);
+  const sourceOptions = MetadataSelectors.getSources()(meta)
+    .filter((source) => source.kind === 'mssql') // we need a better hook to supported driver by feature
+    .map((source) => ({
+      label: source.name,
+      value: source.name,
+    }));
+  const logicalModelOptions = MetadataSelectors.findSource(dataSourceName)(
+    meta,
+  )?.logical_models?.map((logicalModel) => ({
+    label: logicalModel.name,
+    value: logicalModel.name,
+  }));
+
   return (
     <Form onSubmit={handleSubmit}>
-      <Select
+      <SelectField
         name="dataSourceName"
         label="Select a source"
         options={sourceOptions}
@@ -165,25 +167,25 @@ export const StoredProcedureWidget = () => {
       />
 
       {isIntrospectionLoading ? (
-        <Skeleton count={4} height={25} className="mb-2" />
+        <SkeletonList count={4} containerClassName="mb-2" />
       ) : (
         <>
-          <div className="flex items-center gap-2">
-            <Select
+          <Flex align="center" gap="2">
+            <SelectField
               name="stored_procedure"
               label="Select a stored procedure"
               placeholder="Stored Procedure"
               options={storedProcedureOptions}
-              disabled={!storedProcedureOptions.length && dataSourceName}
+              disabled={!storedProcedureOptions.length && hasDataSourceName}
             />
             <div className="mt-3">
               <Button
-                icon={<BiRefresh />}
+                leftIcon={BiRefresh}
                 onClick={() => refetch()}
                 disabled={!dataSourceName}
               />
             </div>
-          </div>
+          </Flex>
 
           {!storedProcedureOptions.length && dataSourceName ? (
             <IndicatorCard headline="No Stored Procedures Found" status="info">
@@ -201,7 +203,7 @@ export const StoredProcedureWidget = () => {
           <div className="font-semibold text-muted">Advanced</div>
         }
       >
-        <Select
+        <SelectField
           name="configuration.exposed_as"
           label="Expose the procedure as"
           disabled
@@ -210,26 +212,28 @@ export const StoredProcedureWidget = () => {
         <InputField
           name="configuration.custom_name"
           label="Custom Name"
-          placeholder="If omitted, will use the stored_procedure name"
+          fieldProps={{
+            placeholder: 'If omitted, will use the stored_procedure name',
+          }}
         />
       </Collapsible>
-      <hr className="my-md" />
+      <hr className="my-4" />
 
       {areTypeOptionsLoading ? (
-        <Skeleton count={4} height={25} className="mb-2" />
+        <SkeletonList count={4} containerClassName="mb-2" />
       ) : (
-        <ArgumentsInput name="arguments" types={typeOptions} />
+        <ArgumentsInput name="arguments" types={typeOptions ?? []} />
       )}
 
-      <Select
+      <SelectField
         name="returns"
         label="Return Type"
         placeholder="Select a return type"
-        options={logicalModelOptions}
-        disabled={!logicalModelOptions.length && dataSourceName}
+        options={logicalModelOptions ?? []}
+        disabled={!logicalModelOptions?.length && hasDataSourceName}
       />
 
-      {!logicalModelOptions.length && dataSourceName ? (
+      {!logicalModelOptions?.length && dataSourceName ? (
         <IndicatorCard headline="No Logical Models Found" status="info">
           <div>
             Looks like you do not have any Logical Models associated with
@@ -240,7 +244,7 @@ export const StoredProcedureWidget = () => {
             used as the return type. You can create one on the fly.
           </div>
 
-          <div className="mt-sm">
+          <div className="mt-2">
             <Button
               onClick={() => {
                 setIsLogicalModelWidgetOpen(true);
@@ -251,7 +255,7 @@ export const StoredProcedureWidget = () => {
           </div>
         </IndicatorCard>
       ) : (
-        <div className="flex justify-end">
+        <Flex justify="end">
           <Button
             onClick={() => {
               setIsLogicalModelWidgetOpen(true);
@@ -259,10 +263,10 @@ export const StoredProcedureWidget = () => {
           >
             Create Logical Model
           </Button>
-        </div>
+        </Flex>
       )}
 
-      <hr className="my-md" />
+      <hr className="my-4" />
 
       {isLogicalModelWidgetOpen ? (
         <LogicalModelWidget
@@ -276,11 +280,11 @@ export const StoredProcedureWidget = () => {
         />
       ) : null}
 
-      <div className="flex justify-end">
-        <Button type="submit" mode="primary" isLoading={isLoading}>
+      <Flex justify="end">
+        <Button type="submit" mode="primary" loading={isPending}>
           Track Stored Procedure
         </Button>
-      </div>
+      </Flex>
     </Form>
   );
 };

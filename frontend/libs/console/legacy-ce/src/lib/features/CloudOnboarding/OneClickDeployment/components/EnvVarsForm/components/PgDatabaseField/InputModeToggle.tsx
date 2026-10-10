@@ -1,4 +1,4 @@
-import React from 'react';
+import { Flex } from '@radix-ui/themes';
 import { FaLink, FaPen } from 'react-icons/fa';
 
 type InputModeToggleProps = {
@@ -14,7 +14,9 @@ export function InputModeToggle(props: InputModeToggleProps) {
   };
 
   return (
-    <span
+    <Flex
+      align="center"
+      gap="2"
       onClick={handleClick}
       className={`font-[350] ${
         disabled
@@ -24,13 +26,13 @@ export function InputModeToggle(props: InputModeToggleProps) {
     >
       {showNeonButton ? (
         <>
-          <FaLink className="mb-1" /> Connect Existing Database
+          <FaLink /> Connect Existing Database
         </>
       ) : (
         <>
-          <FaPen className="mb-1" /> Create New Database
+          <FaPen /> Create New Database
         </>
       )}
-    </span>
+    </Flex>
   );
 }

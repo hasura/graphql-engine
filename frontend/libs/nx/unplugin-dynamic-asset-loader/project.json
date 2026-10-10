@@ -3,9 +3,10 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/nx/unplugin-dynamic-asset-loader/src",
   "projectType": "library",
+  "tags": ["scope:shared", "type:feature", "meta:package"],
   "targets": {
     "build": {
-      "executor": "@nrwl/js:swc",
+      "executor": "@nx/js:swc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/libs/nx/unplugin-dynamic-asset-loader",
@@ -17,18 +18,17 @@
     },
     "publish": {
       "executor": "nx:run-commands",
-      "options": {
-        "command": "node tools/scripts/publish.mjs nx-unplugin-dynamic-asset-loader {args.ver} {args.tag}"
-      },
       "dependsOn": [
         {
-          "projects": "self",
           "target": "build"
         }
-      ]
+      ],
+      "options": {
+        "command": "node tools/scripts/publish.mjs nx-unplugin-dynamic-asset-loader {args.ver} {args.tag}"
+      }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [
@@ -38,15 +38,11 @@
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": [
-        "{workspaceRoot}/coverage/libs/nx/unplugin-dynamic-asset-loader"
-      ],
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "jestConfig": "libs/nx/unplugin-dynamic-asset-loader/jest.config.ts",
-        "passWithNoTests": true
+        "reportsDirectory": "coverage/libs/nx/unplugin-dynamic-asset-loader"
       }
     }
-  },
-  "tags": ["scope:shared", "type:feature", "meta:package"]
+  }
 }

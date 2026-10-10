@@ -2,6 +2,7 @@ import React from 'react';
 import { GraphQLType } from 'graphql';
 import { ArgValueForm } from './ArgValueForm';
 import { RelationshipFields, ArgValue, HasuraRsFields } from '../../../types';
+import { Text } from '@hasura/shared/ui';
 
 type ArgFieldTitleProps = {
   title: string;
@@ -16,9 +17,6 @@ type ArgFieldTitleProps = {
   argType: GraphQLType;
 };
 
-const titleStyles =
-  'flex items-center cursor-pointer text-purple-600 whitespace-nowrap hover:text-purple-900';
-
 export const ArgFieldTitle = ({
   title,
   argKey,
@@ -29,9 +27,18 @@ export const ArgFieldTitle = ({
   fields,
   argType,
 }: ArgFieldTitleProps) => {
+  const textContent = (
+    <Text
+      className="cursor-pointer whitespace-nowrap hover:text-purple-500!"
+      color="purple"
+    >
+      {title}
+    </Text>
+  );
+
   return showForm ? (
     <>
-      <div className={titleStyles}>{title}</div>
+      {textContent}
       <ArgValueForm
         argKey={argKey}
         relationshipFields={relationshipFields}
@@ -42,6 +49,6 @@ export const ArgFieldTitle = ({
       />
     </>
   ) : (
-    <div className={titleStyles}>{title}</div>
+    textContent
   );
 };

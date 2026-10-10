@@ -1,4 +1,4 @@
-import { Button } from '../../../../new-components/Button';
+import { Button } from '@hasura/shared/ui';
 import React, { useRef } from 'react';
 import { FaUpload } from 'react-icons/fa';
 
@@ -25,7 +25,7 @@ export const UploadFile = (props: UploadFileProps) => {
         data-testid="file"
       />
 
-      <Button icon={<FaUpload />} iconPosition="end" onClick={handleClick}>
+      <Button mode="default" rightIcon={FaUpload} onClick={handleClick}>
         From File
       </Button>
     </div>

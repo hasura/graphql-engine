@@ -1,7 +1,7 @@
 import { GraphQLCustomizationSchema } from '../schema';
 
 export const generateGraphQLCustomizationInfo = (
-  values: GraphQLCustomizationSchema
+  values: GraphQLCustomizationSchema,
 ) => {
   return {
     root_fields: {

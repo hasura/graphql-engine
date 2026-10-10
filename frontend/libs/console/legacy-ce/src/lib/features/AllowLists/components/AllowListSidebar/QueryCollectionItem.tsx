@@ -1,31 +1,34 @@
-import clsx from 'clsx';
+import { RelativeLink } from '@hasura/shared/ui';
+import { Flex } from '@radix-ui/themes';
 import React from 'react';
 import { FaFolder, FaFolderOpen } from 'react-icons/fa';
+import { To } from 'react-router';
 
-interface QueryCollectionItemProps extends React.ComponentProps<'a'> {
+interface QueryCollectionItemProps {
+  className?: string;
   name: string;
   selected: boolean;
+  to: To;
+  onClick?: React.MouseEventHandler<HTMLAnchorElement>;
 }
 
-export const QueryCollectionItem: React.FC<
-  QueryCollectionItemProps
-> = props => {
+export const QueryCollectionItem: React.FC<QueryCollectionItemProps> = (
+  props,
+) => {
   const { name, selected, className, ...rest } = props;
   const Icon = selected ? FaFolderOpen : FaFolder;
-  const textClassName = selected
-    ? 'text-amber-500 hover:text-amber-600 focus:text-amber-600'
-    : 'text-muted hover:bg-gray-100 hover:text-gray-900';
+
   return (
-    <a
-      className={clsx(
-        `cursor-pointer flex items-center rounded py-1.5 px-sm hover:no-underline focus:no-underline`,
-        textClassName,
-        className
-      )}
+    <RelativeLink
+      className={className}
+      underline="none"
+      color={selected ? 'indigo' : 'gray'}
       {...rest}
     >
-      <Icon className="mr-1.5" />
-      {name}
-    </a>
+      <Flex align="center" gap="2" className="p-2">
+        <Icon />
+        {name}
+      </Flex>
+    </RelativeLink>
   );
 };

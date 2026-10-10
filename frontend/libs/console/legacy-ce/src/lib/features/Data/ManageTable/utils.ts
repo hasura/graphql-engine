@@ -1,5 +1,5 @@
 import isPlainObject from 'lodash/isPlainObject';
-import { Table } from '../../hasura-metadata-types';
+import { Table } from '@hasura/shared/types';
 
 type PostgresOrMssqlTable = {
   name: string;
@@ -15,7 +15,7 @@ function isRecordObject(x: unknown): x is Record<string, unknown> {
 }
 
 export function hasNameAndSchema(
-  table: unknown
+  table: unknown,
 ): table is PostgresOrMssqlTable {
   return isRecordObject(table) && 'schema' in table && 'name' in table;
 }

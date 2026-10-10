@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dialog } from '../../../new-components/Dialog';
+import { Dialog, DialogFooter } from '@hasura/shared/ui';
 
 type SlackDeleteConfirmationDialogProps = {
   onClose: () => void;
@@ -10,12 +10,12 @@ export const SlackDeleteConfirmationDialog: React.FC<
   SlackDeleteConfirmationDialogProps
 > = ({ onClose, onSubmit }) => {
   return (
-    <Dialog hasBackdrop>
+    <Dialog>
       <>
         <p className="font-bold text-lg ml-4 my-4">
           Are you sure you want to disable Slack alerts?
         </p>
-        <Dialog.Footer
+        <DialogFooter
           callToDeny="Cancel"
           callToAction="Yes"
           onClose={onClose}

@@ -17,21 +17,18 @@ import {
   GraphQLFieldResolver,
   GraphQLFieldConfig,
 } from 'graphql';
-import { Args, GraphQLOperationType } from './types/graphql';
+import { GraphQLOperationType } from './types/graphql';
 import {
   PreprocessingData,
   ProcessedSecurityScheme,
 } from './types/preprocessing_data';
+import { Fetch } from './types/options';
 
 // Imports:
 import { getGraphQLType } from './schema_builder';
 import * as Oas3Tools from './oas_3_tools';
-import debug from 'debug';
 import { handleWarning, sortObject, MitigationTypes } from './utils';
 import { createDataDef } from './preprocessor';
-import crossFetch from 'cross-fetch';
-
-const translationLog = debug('translation');
 
 /**
  * Load the field object in the appropriate root object
@@ -43,7 +40,7 @@ export function createAndLoadViewer<TSource, TContext, TArgs extends object>(
   queryFields: object,
   operationType: GraphQLOperationType,
   data: PreprocessingData<TSource, TContext, TArgs>,
-  fetch: typeof crossFetch
+  fetch: Fetch,
 ): { [key: string]: GraphQLFieldConfig<TSource, TContext, TArgs> } {
   const results = {};
   /**
@@ -96,7 +93,6 @@ export function createAndLoadViewer<TSource, TContext, TArgs extends object>(
               `Currently unsupported HTTP authentication protocol ` +
               `type 'http' and scheme '${scheme}'`,
             data,
-            log: translationLog,
           });
 
           continue;
@@ -110,17 +106,17 @@ export function createAndLoadViewer<TSource, TContext, TArgs extends object>(
       operationType === GraphQLOperationType.Query
         ? Oas3Tools.sanitize(
             `viewer ${viewerType}`,
-            Oas3Tools.CaseStyle.camelCase
+            Oas3Tools.CaseStyle.camelCase,
           )
         : operationType === GraphQLOperationType.Mutation
-        ? Oas3Tools.sanitize(
-            `mutation viewer ${viewerType}`,
-            Oas3Tools.CaseStyle.camelCase
-          )
-        : Oas3Tools.sanitize(
-            `subscription viewer ${viewerType}`,
-            Oas3Tools.CaseStyle.camelCase
-          );
+          ? Oas3Tools.sanitize(
+              `mutation viewer ${viewerType}`,
+              Oas3Tools.CaseStyle.camelCase,
+            )
+          : Oas3Tools.sanitize(
+              `subscription viewer ${viewerType}`,
+              Oas3Tools.CaseStyle.camelCase,
+            );
 
     // Ensure unique viewer name
     // If name already exists, append a number at the end of the name
@@ -136,7 +132,7 @@ export function createAndLoadViewer<TSource, TContext, TArgs extends object>(
       protocolName,
       securityType,
       queryFields[protocolName],
-      data
+      data,
     );
   }
 
@@ -145,15 +141,15 @@ export function createAndLoadViewer<TSource, TContext, TArgs extends object>(
     operationType === GraphQLOperationType.Query
       ? 'viewerAnyAuth'
       : operationType === GraphQLOperationType.Mutation
-      ? 'mutationViewerAnyAuth'
-      : 'subscriptionViewerAnyAuth';
+        ? 'mutationViewerAnyAuth'
+        : 'subscriptionViewerAnyAuth';
 
   // Add the AnyAuth object type to the specified root query object type
   results[anyAuthObjectName] = getViewerAnyAuthOT(
     anyAuthObjectName,
     anyAuthFields,
     data,
-    fetch
+    fetch,
   );
 
   return results;
@@ -167,7 +163,7 @@ function getViewerOT<TSource, TContext, TArgs>(
   protocolName: string,
   securityType: string,
   queryFields: GraphQLFieldConfigMap<any, any>,
-  data: PreprocessingData<TSource, TContext, TArgs>
+  data: PreprocessingData<TSource, TContext, TArgs>,
 ): GraphQLFieldConfig<TSource, TContext, TArgs> {
   const scheme: ProcessedSecurityScheme = data.security[protocolName];
 
@@ -176,12 +172,12 @@ function getViewerOT<TSource, TContext, TArgs>(
     source,
     args,
     context,
-    info
+    info,
   ) => {
     const security = {};
     const saneProtocolName = Oas3Tools.sanitize(
       protocolName,
-      Oas3Tools.CaseStyle.camelCase
+      Oas3Tools.CaseStyle.camelCase,
     );
     security[
       Oas3Tools.storeSaneName(saneProtocolName, protocolName, data.saneMap)
@@ -209,7 +205,7 @@ function getViewerOT<TSource, TContext, TArgs>(
       // The parameter name should be already sane as it is provided by OpenAPI-to-GraphQL
       const saneParameterName = Oas3Tools.sanitize(
         parameterName,
-        Oas3Tools.CaseStyle.camelCase
+        Oas3Tools.CaseStyle.camelCase,
       );
       args[saneParameterName] = { type: new GraphQLNonNull(GraphQLString) };
     }
@@ -252,14 +248,14 @@ function getViewerAnyAuthOT<TSource, TContext, TArgs extends object>(
   name: string,
   queryFields: GraphQLFieldConfigMap<any, any>,
   data: PreprocessingData<TSource, TContext, TArgs>,
-  fetch: typeof crossFetch
+  fetch: Fetch,
 ): GraphQLFieldConfig<TSource, TContext, TArgs> {
   // Resolve function:
   const resolve: GraphQLFieldResolver<TSource, TContext, TArgs> = (
     source,
     args,
     context,
-    info
+    info,
   ) => {
     return {
       _openAPIToGraphQL: {
@@ -277,7 +273,7 @@ function getViewerAnyAuthOT<TSource, TContext, TArgs extends object>(
       data.security[protocolName].schema,
       true,
       data,
-      data.security[protocolName].oas
+      data.security[protocolName].oas,
     );
 
     const type = getGraphQLType({
@@ -289,7 +285,7 @@ function getViewerAnyAuthOT<TSource, TContext, TArgs extends object>(
 
     const saneProtocolName = Oas3Tools.sanitize(
       protocolName,
-      Oas3Tools.CaseStyle.camelCase
+      Oas3Tools.CaseStyle.camelCase,
     );
     args[
       Oas3Tools.storeSaneName(saneProtocolName, protocolName, data.saneMap)

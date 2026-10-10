@@ -1,17 +1,20 @@
-import {
-  createColumnHelper,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
+import { createColumnHelper, useTable } from '@tanstack/react-table';
 import React, { useMemo } from 'react';
 import { FaEdit, FaTrash } from 'react-icons/fa';
-import { Badge } from '../../../../../new-components/Badge';
-import { Button } from '../../../../../new-components/Button';
+import { Flex } from '@radix-ui/themes';
+import {
+  Badge,
+  Button,
+  coreTableFeatures,
+  CoreTableFeatures,
+  CardedTableFromReactTable,
+} from '@hasura/shared/ui';
+
 import { findReferencedEntities } from '../../LogicalModel/utils/findReferencedEntities';
-import { CardedTableFromReactTable } from '../../components/CardedTableFromReactTable';
-import { LogicalModelWithSource } from '../../types';
+import { LogicalModelWithSource } from '@hasura/metadata/helpers';
 
 const columnHelper = createColumnHelper<
+  CoreTableFeatures,
   LogicalModelWithSource & {
     referencedEntities: ReturnType<typeof findReferencedEntities>;
   }
@@ -28,7 +31,7 @@ export const ListLogicalModels = ({
 }) => {
   const withReferencesEntities = useMemo(
     () =>
-      logicalModels?.map(m => {
+      logicalModels?.map((m) => {
         return {
           ...m,
           referencedEntities: findReferencedEntities({
@@ -37,91 +40,97 @@ export const ListLogicalModels = ({
           }),
         };
       }),
-    [logicalModels]
+    [logicalModels],
   );
-  const columns = React.useCallback(
-    () => [
-      columnHelper.accessor('name', {
-        id: 'name',
-        cell: info => <span>{info.getValue()}</span>,
-        header: info => <span>Name</span>,
-      }),
-      columnHelper.accessor('source', {
-        id: 'database',
-        cell: info => <span>{info.getValue().name}</span>,
-        header: info => <span>Database</span>,
-      }),
-      columnHelper.display({
-        id: 'refs',
-        header: 'Used By',
-        cell: ({
-          row: {
-            original: {
-              referencedEntities: {
-                tables,
-                native_queries,
-                logical_models,
-                stored_procedures,
+  const columns = React.useMemo(
+    () =>
+      columnHelper.columns([
+        columnHelper.accessor('name', {
+          id: 'name',
+          cell: (info) => <span>{info.getValue()}</span>,
+          header: (info) => <span>Name</span>,
+        }),
+        columnHelper.accessor('source', {
+          id: 'database',
+          cell: (info) => <span>{info.getValue().name}</span>,
+          header: (info) => <span>Database</span>,
+        }),
+        columnHelper.display({
+          id: 'refs',
+          header: 'Used By',
+          cell: ({
+            row: {
+              original: {
+                referencedEntities: {
+                  tables,
+                  native_queries,
+                  logical_models,
+                  stored_procedures,
+                },
               },
             },
-          },
-        }) => (
-          <div className="flex-col flex gap-1">
-            {!!tables.length && (
-              <div>
-                <Badge color="red">Tables: {tables.length}</Badge>
-              </div>
-            )}
-            {!!native_queries.length && (
-              <div>
-                <Badge color="blue">
-                  Native Queries: {native_queries.length}
-                </Badge>
-              </div>
-            )}
-            {!!stored_procedures.length && (
-              <div>
-                <Badge color="green">
-                  Stored Procedures: {stored_procedures.length}
-                </Badge>
-              </div>
-            )}
-            {!!logical_models.length && (
-              <div>
-                <Badge color="yellow">
-                  Logical Models: {logical_models.length}
-                </Badge>
-              </div>
-            )}
-          </div>
-        ),
-      }),
-      columnHelper.display({
-        id: 'actions',
-        header: 'Actions',
-        cell: ({ cell, row }) => (
-          <div className="flex flex-row gap-2">
-            <Button icon={<FaEdit />} onClick={() => onEditClick(row.original)}>
-              Edit
-            </Button>
-            <Button
-              mode="destructive"
-              icon={<FaTrash />}
-              onClick={() => onRemoveClick(row.original)}
-            >
-              Remove
-            </Button>
-          </div>
-        ),
-      }),
-    ],
-    [onEditClick, onRemoveClick]
+          }) => (
+            <Flex direction="column" gap="1">
+              {!!tables.length && (
+                <div>
+                  <Badge color="red">Tables: {tables.length}</Badge>
+                </div>
+              )}
+              {!!native_queries.length && (
+                <div>
+                  <Badge color="blue">
+                    Native Queries: {native_queries.length}
+                  </Badge>
+                </div>
+              )}
+              {!!stored_procedures.length && (
+                <div>
+                  <Badge color="green">
+                    Stored Procedures: {stored_procedures.length}
+                  </Badge>
+                </div>
+              )}
+              {!!logical_models.length && (
+                <div>
+                  <Badge color="yellow">
+                    Logical Models: {logical_models.length}
+                  </Badge>
+                </div>
+              )}
+            </Flex>
+          ),
+        }),
+        columnHelper.display({
+          id: 'actions',
+          header: 'Actions',
+          cell: ({ cell, row }) => (
+            <Flex direction="row" gap="2">
+              <Button
+                size="1"
+                leftIcon={FaEdit}
+                onClick={() => onEditClick(row.original)}
+              >
+                Edit
+              </Button>
+              <Button
+                size="1"
+                mode="destructive"
+                leftIcon={FaTrash}
+                onClick={() => onRemoveClick(row.original)}
+              >
+                Remove
+              </Button>
+            </Flex>
+          ),
+        }),
+      ]),
+    [onEditClick, onRemoveClick],
   );
 
-  const table = useReactTable({
+  const table = useTable({
+    features: coreTableFeatures,
     data: withReferencesEntities ?? [],
-    columns: columns(),
-    getCoreRowModel: getCoreRowModel(),
+    columns,
   });
 
   return (

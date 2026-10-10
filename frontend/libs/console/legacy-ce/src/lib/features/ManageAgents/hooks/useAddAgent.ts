@@ -1,7 +1,7 @@
-import { useMetadataMigration } from '../../MetadataAPI';
+import { useMetadataMigration } from '@hasura/metadata/api';
 import { useCallback } from 'react';
-import { useQueryClient } from 'react-query';
-import { hasuraToast } from '../../../new-components/Toasts';
+import { useQueryClient } from '@tanstack/react-query';
+import { hasuraToast } from '@hasura/shared/ui';
 
 type AddAgentServerResponse = {
   // this comes from the server
@@ -33,7 +33,7 @@ export const useAddAgent = () => {
   // we are always "resolving" the promise, and providing our own response object that aligns with the needs of the console
   const doMutation = useCallback(
     (args: AddAgentArgs) =>
-      new Promise<AddAgentResponse>(resolve =>
+      new Promise<AddAgentResponse>((resolve) =>
         mutation.mutate(
           {
             query: {
@@ -43,7 +43,7 @@ export const useAddAgent = () => {
           },
           {
             // moving the toast notifications to the consumer side so this hook can be re-used in other situations
-            onSuccess: serverResponse => {
+            onSuccess: (serverResponse) => {
               resolve({
                 ...serverResponse,
                 ...args,
@@ -57,7 +57,7 @@ export const useAddAgent = () => {
                     : 'added',
               });
             },
-            onError: error => {
+            onError: (error) => {
               resolve({
                 ...args,
                 error,
@@ -72,14 +72,15 @@ export const useAddAgent = () => {
                 message: error?.message,
               });
             },
-          }
-        )
+          },
+        ),
       ),
-    [mutation]
+    [mutation],
   );
 
   const invalidateRelatedQueries = useCallback(() => {
-    queryClient.refetchQueries(['agent_list'], {
+    queryClient.refetchQueries({
+      queryKey: ['agent_list'],
       exact: true,
     });
     // since the agents show up in the available drivers, we should invalidate this.
@@ -97,14 +98,14 @@ export const useAddAgent = () => {
       invalidateRelatedQueries();
       return responses;
     },
-    [doMutation, invalidateRelatedQueries]
+    [doMutation, invalidateRelatedQueries],
   );
 
   const addAgent = useCallback(
     async (args: AddAgentArgs) => {
       const prom = doMutation(args);
 
-      prom.then(data => {
+      prom.then((data) => {
         if (data.status === 'added') {
           invalidateRelatedQueries();
         }
@@ -112,7 +113,7 @@ export const useAddAgent = () => {
 
       return prom;
     },
-    [doMutation, invalidateRelatedQueries]
+    [doMutation, invalidateRelatedQueries],
   );
 
   return {

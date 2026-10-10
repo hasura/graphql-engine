@@ -1,26 +1,33 @@
-import {
-  createColumnHelper,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
-import clsx from 'clsx';
+import { createColumnHelper, useTable } from '@tanstack/react-table';
+import { Flex } from '@radix-ui/themes';
 import React from 'react';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import { FaPlusCircle } from 'react-icons/fa';
-import { Button } from '../../../../../new-components/Button';
 import {
+  Button,
+  FieldLabel,
   GraphQLSanitizedInputField,
-  fieldLabelStyles,
-} from '../../../../../new-components/Form';
-import { LogicalModel } from '../../../../hasura-metadata-types';
-import { BooleanInput } from '../../components/BooleanInput';
-import { useCardedTableFromReactTableWithRef } from '../../components/CardedTableFromReactTable';
+  SwitchField,
+  coreTableFeatures,
+  CoreTableFeatures,
+  createCardedTableFromReactTableWithRef,
+  ReactSelect,
+  getDialogPortalTarget,
+} from '@hasura/shared/ui';
+import { LogicalModel } from '@hasura/shared/types';
 import {
   AddLogicalModelField,
   AddLogicalModelFormData,
 } from '../validationSchema';
+import { createFilter } from 'react-select';
 
-const columnHelper = createColumnHelper<AddLogicalModelField>();
+const columnHelper = createColumnHelper<
+  CoreTableFeatures,
+  AddLogicalModelField
+>();
+
+const FieldsTableElement =
+  createCardedTableFromReactTableWithRef<AddLogicalModelField>();
 
 export const FieldsInput = ({
   name,
@@ -43,135 +50,136 @@ export const FieldsInput = ({
   const tableRef = React.useRef<HTMLDivElement>(null);
 
   const fieldsColumns = React.useMemo(
-    () => [
-      columnHelper.accessor('name', {
-        id: 'name',
-        cell: ({ row }) => (
-          <GraphQLSanitizedInputField
-            noErrorPlaceholder
-            hideTips
-            dataTestId={`${name}[${row.index}].name`}
-            placeholder="Field Name"
-            name={`fields.${row.index}.name`}
-            disabled={disabled}
-          />
-        ),
-        header: 'Name',
-      }),
-      columnHelper.accessor('type', {
-        id: 'type',
-        cell: ({ row }) => {
-          const thisField = watch(`fields.${row.index}`);
-          return (
-            <select
-              className={clsx(
-                'block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus-visible:outline-0 focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:border-yellow-400',
-                'text-black',
-                disabled
-                  ? 'cursor-not-allowed bg-gray-200 border-gray-200 hover:border-gray-200'
-                  : 'hover:border-gray-400'
-              )}
-              value={`${thisField.typeClass}:${thisField.type}`}
-              data-testid={`fields-input-type-${row.index}`}
-              onChange={e => {
-                const [typeClass, selectedValue] = e.target.value.split(':');
-
-                update(row.index, {
-                  ...thisField,
-                  type: selectedValue,
-                  typeClass: typeClass as any,
-                  array: thisField.array,
-                });
-              }}
-              disabled={disabled}
-            >
-              <option value="" data-default-selected hidden>
-                Select a type
-              </option>
-              <optgroup
-                label="Logical Models"
-                data-testid={`fields-input-type-${row.index}-logical-models`}
-              >
-                {logicalModels.map(l => (
-                  <option key={l.name} value={`logical_model:${l.name}`}>
-                    {l.name}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup
-                label="Types"
-                data-testid={`fields-input-type-${row.index}-scalars`}
-              >
-                {types.map(t => (
-                  <option key={t} value={`scalar:${t}`}>
-                    {t}
-                  </option>
-                ))}
-              </optgroup>
-            </select>
-          );
-        },
-        header: 'Type',
-      }),
-      columnHelper.accessor('nullable', {
-        id: 'nullable',
-        cell: ({ row }) => (
-          <BooleanInput
-            disabled={disabled}
-            name={`fields.${row.index}.nullable`}
-          />
-        ),
-        header: 'Nullable',
-      }),
-      columnHelper.accessor('array', {
-        id: 'array',
-        header: 'ARRAY',
-        cell: ({ row }) => {
-          return (
-            <BooleanInput
-              disabled={disabled}
-              name={`fields.${row.index}.array`}
-              dataTestId={`fields-input-array-${row.index}`}
+    () =>
+      columnHelper.columns([
+        columnHelper.accessor('name', {
+          id: 'name',
+          cell: ({ row }) => (
+            <GraphQLSanitizedInputField
+              noErrorPlaceholder
+              hideTips
+              dataTestId={`${name}[${row.index}].name`}
+              name={`fields.${row.index}.name`}
+              fieldProps={{ placeholder: 'Field Name', disabled }}
             />
-          );
-        },
-      }),
-      columnHelper.display({
-        id: 'action',
-        header: 'Actions',
-        cell: ({ row }) => (
-          <div className="flex flex-row gap-2">
-            <Button
+          ),
+          header: 'Name',
+        }),
+        columnHelper.accessor('type', {
+          id: 'type',
+          cell: ({ row }) => {
+            const thisField = watch(`fields.${row.index}`);
+            return (
+              <ReactSelect
+                value={{
+                  value: `${thisField.typeClass}:${thisField.type}`,
+                  label: thisField.type,
+                }}
+                data-testid={`fields-input-type-${row.index}`}
+                onChange={(option) => {
+                  if (!option) {
+                    return;
+                  }
+
+                  const [typeClass, selectedValue] = option?.value.split(':');
+
+                  update(row.index, {
+                    ...thisField,
+                    type: selectedValue,
+                    typeClass: typeClass as any,
+                    array: thisField.array,
+                  });
+                }}
+                isDisabled={disabled}
+                placeholder="Select a type"
+                isSearchable
+                filterOption={createFilter({
+                  ignoreCase: true,
+                  matchFrom: 'any',
+                })}
+                menuPortalTarget={getDialogPortalTarget()}
+                options={[
+                  {
+                    label: 'Logical Models',
+                    options: logicalModels.map((l) => ({
+                      label: l.name,
+                      value: `logical_model:${l.name}`,
+                    })),
+                  },
+                  {
+                    label: 'Types',
+                    options: types.map((t) => ({
+                      label: t,
+                      value: `scalar:${t}`,
+                    })),
+                  },
+                ]}
+              />
+            );
+          },
+          header: 'Type',
+        }),
+        columnHelper.accessor('nullable', {
+          id: 'nullable',
+          cell: ({ row }) => (
+            <SwitchField
               disabled={disabled}
-              mode="destructive"
-              onClick={() => remove(row.index)}
-            >
-              Remove
-            </Button>
-          </div>
-        ),
-      }),
-    ],
-    [disabled, logicalModels, name, remove, types, update, watch]
+              name={`fields.${row.index}.nullable`}
+              noErrorPlaceholder
+            />
+          ),
+          header: 'Nullable',
+        }),
+        columnHelper.accessor('array', {
+          id: 'array',
+          header: 'ARRAY',
+          cell: ({ row }) => {
+            return (
+              <SwitchField
+                disabled={disabled}
+                name={`fields.${row.index}.array`}
+                dataTestId={`fields-input-array-${row.index}`}
+                noErrorPlaceholder
+              />
+            );
+          },
+        }),
+        columnHelper.display({
+          id: 'action',
+          header: 'Actions',
+          cell: ({ row }) => (
+            <Flex direction="row" gap="2">
+              <Button
+                disabled={disabled}
+                mode="destructive"
+                size="1"
+                onClick={() => remove(row.index)}
+              >
+                Remove
+              </Button>
+            </Flex>
+          ),
+        }),
+      ]),
+    [disabled, logicalModels, name, remove, types, update, watch],
   );
 
-  const argumentsTable = useReactTable({
+  const argumentsTable = useTable({
+    features: coreTableFeatures,
     data: fields,
     columns: fieldsColumns,
-    getCoreRowModel: getCoreRowModel(),
   });
-
-  const FieldsTableElement =
-    useCardedTableFromReactTableWithRef<AddLogicalModelField>();
 
   return (
     <div>
-      <div className="flex flex-col gap-2 ">
-        <div className="flex justify-between items-center">
-          <div className={clsx(fieldLabelStyles, 'mb-0')}>Fields</div>
+      <Flex direction="column" gap="2">
+        <Flex justify="between" align="center">
+          <FieldLabel label="Fields" />
           <Button
-            icon={<FaPlusCircle />}
+            leftIcon={FaPlusCircle}
             disabled={disabled || !types || types.length === 0}
+            mode="default"
+            size="1"
             onClick={() => {
               append({
                 name: '',
@@ -184,13 +192,13 @@ export const FieldsInput = ({
           >
             Add Field
           </Button>
-        </div>
+        </Flex>
         <FieldsTableElement
           table={argumentsTable}
           ref={tableRef}
           noRowsMessage={'No fields added'}
         />
-      </div>
+      </Flex>
     </div>
   );
 };

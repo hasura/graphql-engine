@@ -13,13 +13,15 @@ import {
   getSampleQueriesUrl,
 } from './util';
 import { emitOnboardingEvent } from '../utils';
+import { Link } from '@hasura/shared/ui';
+import { Flex } from '@radix-ui/themes';
 
 /**
  * Parent container for the one click deployment wizard. Takes care of assembling and rendering all steps.
  */
 export function Root(props: {
   deployment: {
-    deploymentId: number;
+    deploymentId: string;
     gitRepoDetails: GitRepoDetails;
   };
   dismissOnboarding: VoidFunction;
@@ -50,12 +52,12 @@ export function Root(props: {
 
   const gitRepoName = React.useMemo(
     () => getGitRepoFromUrl(gitRepoDetails.url),
-    [gitRepoDetails.url]
+    [gitRepoDetails.url],
   );
 
   const gitRepoFullLink = React.useMemo(
     () => getGitRepoFullLinkFromDetails(gitRepoDetails),
-    [gitRepoDetails]
+    [gitRepoDetails],
   );
 
   const [stepperIndex, setStepperIndex] = React.useState<number>(1);
@@ -69,15 +71,18 @@ export function Root(props: {
           header="Setting up your project"
           showSubHeaderAboveHeader
           subHeader={
-            <a
+            <Link
+              color="gray"
               href={gitRepoFullLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-600 hover:text-gray-800 hover:no-underline cursor-pointer"
+              underline="none"
             >
-              <FaGithub className="mb-1" />
-              <span className="ml-xs">{gitRepoName}</span>
-            </a>
+              <Flex align="center" gap="1">
+                <FaGithub />
+                <span>{gitRepoName}</span>
+              </Flex>
+            </Link>
           }
         >
           <WorkflowProgress

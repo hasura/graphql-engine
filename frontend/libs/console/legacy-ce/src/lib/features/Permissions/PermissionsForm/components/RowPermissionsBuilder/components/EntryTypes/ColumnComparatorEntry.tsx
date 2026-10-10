@@ -49,9 +49,9 @@ function ColumnsSelect({ k, v, path }: { k: string; v: any; path: string[] }) {
     v.length === 1
       ? v[0]
       : v.length === 0
-      ? ''
-      : // Could be $ or undefined
-        v.find((v: any) => v === '$');
+        ? ''
+        : // Could be $ or undefined
+          v.find((v: any) => v === '$');
   const testId = `${path.join('.')}-column-comparator-entry`;
 
   return (
@@ -59,7 +59,7 @@ function ColumnsSelect({ k, v, path }: { k: string; v: any; path: string[] }) {
       data-testid={testId}
       className="border border-gray-200 rounded-md block"
       value={value}
-      onChange={e => {
+      onChange={(e) => {
         if (e.target.value === '$') {
           setValue(path, [e.target.value, '']);
         } else {
@@ -69,7 +69,7 @@ function ColumnsSelect({ k, v, path }: { k: string; v: any; path: string[] }) {
     >
       <option value="">-</option>
       <optgroup label="columns">
-        {columns.map(c => {
+        {columns.map((c) => {
           return (
             <option
               data-testid={`${testId}-${c.name}`}
@@ -108,14 +108,18 @@ function RootColumnsSelect({
       className="border border-gray-200 rounded-md block"
       data-testid={testId}
       value={value}
-      onChange={e => {
+      onChange={(e) => {
         setValue(path, ['$', e.target.value]);
       }}
     >
       <option value="">-</option>
-      {rootTable?.columns.map(c => {
+      {rootTable?.columns.map((c) => {
         return (
-          <option data-testid={`${testId}-${c.name}`} value={c.name}>
+          <option
+            key={c.name}
+            data-testid={`${testId}-${c.name}`}
+            value={c.name}
+          >
             {c.name}
           </option>
         );

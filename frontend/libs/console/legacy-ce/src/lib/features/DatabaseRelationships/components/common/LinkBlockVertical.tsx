@@ -8,7 +8,7 @@ export const LinkBlockVertical = ({ title }: { title: string }) => {
       style={{ marginTop: '0px' }}
     >
       <div
-        className="flex items-center justify-center border border-gray-300 bg-white mr-md"
+        className="flex items-center justify-center border border-gray-300 bg-white mr-4"
         style={{
           height: 32,
           width: 32,

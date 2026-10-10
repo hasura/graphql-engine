@@ -4,28 +4,41 @@
     "rootDir": ".",
     "sourceMap": true,
     "declaration": false,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "importHelpers": true,
-    "target": "es2015",
+    "target": "es2018",
     "module": "esnext",
-    "lib": ["es2019", "dom", "dom.iterable"],
+    "lib": ["ES2021", "dom", "dom.iterable"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "resolveJsonModule": true,
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
       "@hasura/console-legacy-ce": ["libs/console/legacy-ce/src/index.ts"],
-      "@hasura/console-legacy-ee": ["libs/console/legacy-ee/src/index.js"],
+      "@hasura/console-legacy-ee": ["libs/console/legacy-ee/src/index.ts"],
       "@hasura/internal-plugin": ["libs/nx/internal-plugin/src/index.ts"],
       "@hasura/open-api-to-graphql": ["libs/open-api-to-graphql/src/index.ts"],
       "storybook-addon-console-env": [
-        "libs/nx/storybook-addon-console-env/src/index.ts"
+        "libs/nx/storybook-addon-console-env/src/lib/index.ts"
       ],
       "unplugin-dynamic-asset-loader": [
         "libs/nx/unplugin-dynamic-asset-loader/src/index.ts"
-      ]
+      ],
+      "@hasura/metadata/helpers": ["./libs/metadata/helpers/src/index.ts"],
+      "@hasura/shared/utils": ["./libs/shared/utils/src/index.ts"],
+      "@hasura/shared/context": ["./libs/shared/context/src/index.ts"],
+      "@hasura/shared/types": ["./libs/shared/types/src/index.ts"],
+      "@hasura/shared/hooks": ["./libs/shared/hooks/src/index.ts"],
+      "@hasura/shared/analytics": ["./libs/shared/analytics/src/index.ts"],
+      "@hasura/shared/ui": ["./libs/shared/ui/src/index.ts"],
+      "@hasura/metadata/api": ["./libs/metadata/api/src/index.ts"],
+      "@hasura/metadata/data-source": [
+        "./libs/metadata/data-source/src/index.ts"
+      ],
+      "@hasura/shared/testing": ["./libs/shared/testing/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

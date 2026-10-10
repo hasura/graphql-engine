@@ -1,12 +1,12 @@
 {
   "presets": [
     [
-      "@nrwl/react/babel",
+      "@nx/react/babel",
       {
         "runtime": "automatic",
-        "useBuiltIns": "usage"
+        "useBuiltIns": false
       }
     ]
   ],
-  "plugins": ["@babel/plugin-proposal-export-default-from"]
+  "plugins": []
 }

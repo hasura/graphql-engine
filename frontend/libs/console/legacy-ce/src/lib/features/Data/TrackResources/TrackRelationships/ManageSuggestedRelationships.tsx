@@ -1,25 +1,32 @@
 import React from 'react';
-import { ManageDatabaseProps } from '../../ManageDatabase/ManageDatabase';
 import { TrackableResourceTabs } from '../../ManageDatabase/components';
 import { TabState } from '../../ManageDatabase/components/TrackableResourceTabs';
 import { TrackedSuggestedRelationships } from './components/TrackedRelationships';
 import { UntrackedRelationships } from './components/UntrackedRelationships';
-import { useSuggestedRelationships } from './hooks/useSuggestedRelationships';
 import { ReactQueryUIWrapper } from '../../components';
+import {
+  useInvalidateSuggestedRelationships,
+  useSuggestedRelationships,
+} from '@hasura/metadata/api';
+import { Source } from '@hasura/shared/types';
 
 export const ManageSuggestedRelationships = ({
-  dataSourceName,
+  source,
   schema,
-}: ManageDatabaseProps) => {
+}: {
+  source: Source;
+  schema?: string;
+}) => {
   const [tab, setTab] = React.useState<TabState>('untracked');
 
+  const invalidateQuery = useInvalidateSuggestedRelationships({
+    dataSourceName: source.name,
+  });
   const suggestedRelationshipsResult = useSuggestedRelationships({
-    dataSourceName,
+    dataSourceName: source.name,
     which: 'all',
     schema,
   });
-
-  const { invalidateQuery } = suggestedRelationshipsResult;
 
   return (
     <ReactQueryUIWrapper
@@ -35,7 +42,7 @@ export const ManageSuggestedRelationships = ({
               amount: tracked.length,
               content: (
                 <TrackedSuggestedRelationships
-                  dataSourceName={dataSourceName}
+                  dataSourceName={source.name}
                   trackedRelationships={tracked}
                   onChange={() => {
                     invalidateQuery();
@@ -48,7 +55,7 @@ export const ManageSuggestedRelationships = ({
               content: (
                 <UntrackedRelationships
                   untrackedRelationships={untracked}
-                  dataSourceName={dataSourceName}
+                  dataSourceName={source.name}
                   onTrack={() => {
                     invalidateQuery();
                   }}

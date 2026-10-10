@@ -12,10 +12,10 @@ export const DataSourceNameInput = ({
   disabled,
 }: DataSourceNameInputProps) => {
   return (
-    <div className="mb-xs">
+    <div className="mb-1">
       <label
         htmlFor={'datasource-name-input'}
-        className={'block pt-1 text-gray-600 mb-xs'}
+        className={'block pt-1 text-gray-600 mb-1'}
       >
         <span className={'flex items-center'}>
           <span className={'font-semibold'}>Database</span>
@@ -28,7 +28,7 @@ export const DataSourceNameInput = ({
           'block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus-visible:outline-0 focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:border-yellow-400 text-gray-500'
         }
         value={dataSourceName}
-        onChange={e => setDataSourceName(e.target.value)}
+        onChange={(e) => setDataSourceName(e.target.value)}
         disabled={disabled}
       >
         {dataSources.map((dataSource, index) => (

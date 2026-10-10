@@ -1,16 +1,17 @@
 import * as React from 'react';
 import { GraphQLError } from 'graphql';
 import { useMemo, useState, useCallback } from 'react';
-import { useQueryClient } from 'react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { FETCH_SLACK_STATE_QUERY_NAME } from '../constants';
 import globals from '../../../Globals';
-import { useIsUnmounted, generateRandomString } from '../utils';
 import {
   getPersistedSlackCallbackSearch,
   clearPersistedSlackCallbackSearch,
 } from '../utils';
 import { controlPlaneClient } from '../../ControlPlane';
 import { SLACK_TOKEN_EXCHANGE_QUERY } from '../queries';
+import { generateRandomString } from '@hasura/shared/utils';
+import { useIsUnmounted } from '@hasura/shared/hooks';
 
 export type ExchangeTokenResponse = {
   data?: {
@@ -49,7 +50,7 @@ export const useSlackOAuth = (oauthString?: string) => {
 
   const oauth2State = useMemo(
     () => oauthString || generateRandomString(),
-    [oauthString]
+    [oauthString],
   );
 
   /*
@@ -64,7 +65,7 @@ export const useSlackOAuth = (oauthString?: string) => {
         setStatus({
           status: 'error',
           error: new Error(
-            'Error authenticating with Slack. Please try again.'
+            'Error authenticating with Slack. Please try again.',
           ),
         });
         return;
@@ -108,7 +109,9 @@ export const useSlackOAuth = (oauthString?: string) => {
         }
 
         if (slackTokenExchangeResponse?.data) {
-          queryClient.invalidateQueries(FETCH_SLACK_STATE_QUERY_NAME);
+          queryClient.invalidateQueries({
+            queryKey: FETCH_SLACK_STATE_QUERY_NAME,
+          });
           setStatus({
             status: 'authenticated',
             channelName:
@@ -129,7 +132,7 @@ export const useSlackOAuth = (oauthString?: string) => {
         });
       }
     },
-    [oauth2State]
+    [oauth2State],
   );
 
   // function to start the oauth process
@@ -138,7 +141,7 @@ export const useSlackOAuth = (oauthString?: string) => {
 
     const searchParams = generateUrlSearchParams(
       globals.slackOAuthClientId ?? '',
-      oauth2State
+      oauth2State,
     );
 
     // open Slack auth page in a popup
@@ -148,7 +151,7 @@ export const useSlackOAuth = (oauthString?: string) => {
         globals.slackRootDomain
       }/oauth/v2/authorize?${searchParams.toString()}`,
       'slack-oauth2',
-      'menubar=no,toolbar=no,location=no,width=800,height=600'
+      'menubar=no,toolbar=no,location=no,width=800,height=600',
     );
 
     // Usually means that a popup blocker blocked the popup
@@ -156,7 +159,7 @@ export const useSlackOAuth = (oauthString?: string) => {
       setStatus({
         status: 'error',
         error: new Error(
-          'Could not open popup for logging in with Slack. Please disable your popup blocker and try again.'
+          'Could not open popup for logging in with Slack. Please disable your popup blocker and try again.',
         ),
       });
       return;
@@ -189,7 +192,7 @@ export const useSlackOAuth = (oauthString?: string) => {
           setStatus({
             status: 'error',
             error: new Error(
-              'Slack integration closed unexpectedly. Please try again.'
+              'Slack integration closed unexpectedly. Please try again.',
             ),
           });
           return;
@@ -225,7 +228,7 @@ export const useSlackOAuth = (oauthString?: string) => {
 
 function generateUrlSearchParams(
   slackOAuthClientId: string,
-  oauth2State: string
+  oauth2State: string,
 ) {
   const searchParams = new URLSearchParams();
 

@@ -1,8 +1,8 @@
-import { Driver } from '../../../dataSources';
 import {
   FetchOneClickDeploymentStateLogSubscriptionSubscription,
   One_Click_Deployment_States_Enum as OneClickDeploymentState,
 } from '../../ControlPlane';
+import { SupportedDriver } from '@hasura/shared/types';
 
 export type OneClickDeployment = NonNullable<
   FetchOneClickDeploymentStateLogSubscriptionSubscription['one_click_deployment_by_pk']
@@ -17,9 +17,7 @@ export type UserFacingStep = Exclude<
 >;
 
 type RequiredEnvVarKind =
-  | 'ENV_TYPE_STATIC'
-  | 'ENV_TYPE_DYNAMIC'
-  | 'ENV_TYPE_DATABASE';
+  'ENV_TYPE_STATIC' | 'ENV_TYPE_DYNAMIC' | 'ENV_TYPE_DATABASE';
 
 type RequiredEnvVarValueType = 'STRING_ARRAY' | 'NUMBER' | 'JSON' | 'TEXT';
 
@@ -27,7 +25,7 @@ export type RequiredEnvVar = {
   Kind: RequiredEnvVarKind;
   Name: string;
   Default?: string;
-  SubKind?: Driver;
+  SubKind?: SupportedDriver;
   Mandatory?: boolean;
   Description?: string;
   Position?: number;
@@ -62,7 +60,7 @@ export type ProgressStateStatus =
   | {
       kind: 'error';
       error: Record<string, any>;
-      logId: number;
+      logId: string;
     }
   | {
       kind: 'awaiting';

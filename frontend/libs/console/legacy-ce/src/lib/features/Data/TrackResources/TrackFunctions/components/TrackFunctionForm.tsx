@@ -1,19 +1,21 @@
 import { z } from 'zod';
-import { Dialog } from '../../../../../new-components/Dialog';
-import { Select, useConsoleForm } from '../../../../../new-components/Form';
-import { AllowedFunctionTypes } from './UntrackedFunctions';
-import { useUntrackedFunctions } from '../hooks/useUntrackedFunctions';
-import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
-import { adaptFunctionName } from '../utils';
 import {
-  MetadataSelectors,
-  useMetadata,
-} from '../../../../hasura-metadata-api';
-
-import { DisplayToastErrorMessage } from '../../../components/DisplayErrorMessage';
-import { hasuraToast } from '../../../../../new-components/Toasts';
-import { useTrackFunction } from '../../../hooks/useTrackFunction';
+  Dialog,
+  useConsoleForm,
+  IndicatorCard,
+  hasuraToast,
+  DisplayToastErrorMessage,
+  SelectField,
+  DialogFooter,
+} from '@hasura/shared/ui';
+import { AllowedFunctionTypes } from './UntrackedFunctions';
+import { useMetadata, useTrackFunctions } from '@hasura/metadata/api';
 import { getQualifiedTable } from '../../../ManageTable/utils';
+import {
+  functionDisplayName,
+  MetadataSelectors,
+} from '@hasura/metadata/helpers';
+import { useTrackedAndUntrackedFunctions } from '@hasura/metadata/data-source';
 
 const validationSchema = z.object({
   qualifiedFunction: z.any(),
@@ -46,34 +48,16 @@ export const TrackFunctionForm = ({
   onClose,
   defaultValues,
 }: TrackFunctionFormProps) => {
-  const { data: untrackedFunctions = [] } =
-    useUntrackedFunctions(dataSourceName);
-
-  const { trackFunction, isLoading: isTrackingInProgress } = useTrackFunction({
-    dataSourceName: dataSourceName,
-    onSuccess: () => {
-      onClose();
-      hasuraToast({
-        type: 'success',
-        title: 'Success',
-        message: `Tracked object successfully`,
-      });
-    },
-    onError: err => {
-      hasuraToast({
-        type: 'error',
-        title: err.name,
-        children: <DisplayToastErrorMessage message={err.message} />,
-      });
-    },
+  const { untrackedFunctions = [] } = useTrackedAndUntrackedFunctions({
+    dataSourceName,
   });
+
+  const { trackFunctions, isPending: isTrackingInProgress } =
+    useTrackFunctions();
 
   const {
     Form,
-    methods: {
-      handleSubmit,
-      formState: { errors },
-    },
+    methods: { handleSubmit },
   } = useConsoleForm({
     schema: validationSchema,
     options: {
@@ -81,17 +65,18 @@ export const TrackFunctionForm = ({
     },
   });
 
-  const { data: tableOptions = [] } = useMetadata(m =>
-    MetadataSelectors.findSource(dataSourceName)(m)?.tables.map(t => ({
+  const { data: tableOptions = [] } = useMetadata((m) =>
+    MetadataSelectors.findSource(dataSourceName)(m)?.tables.map((t) => ({
       label: getQualifiedTable(t.table).join(' / '),
       value: JSON.stringify(t.table),
-    }))
+    })),
   );
 
   const onHandleSubmit = (data: TrackFunctionFormSchema) => {
-    trackFunction({
-      functionsToBeTracked: [
+    trackFunctions(
+      [
         {
+          source: dataSourceName,
           function: JSON.parse(data.qualifiedFunction),
           configuration: {
             ...(data.type !== 'root_field' ? { exposed_as: data.type } : {}),
@@ -102,18 +87,33 @@ export const TrackFunctionForm = ({
           },
         },
       ],
-    });
+      {
+        onSuccess: () => {
+          onClose();
+          onSuccess();
+          hasuraToast({
+            type: 'success',
+            title: 'Success',
+            message: `Tracked object successfully`,
+          });
+        },
+        onError: (err) => {
+          hasuraToast({
+            type: 'error',
+            title: err.name,
+            children: <DisplayToastErrorMessage message={err.message} />,
+          });
+        },
+      },
+    );
   };
-
-  console.log(errors);
 
   return (
     <Dialog
-      hasBackdrop
       title="Track Function"
       onClose={onClose}
       footer={
-        <Dialog.Footer
+        <DialogFooter
           onSubmit={() => {
             handleSubmit(onHandleSubmit)();
           }}
@@ -128,33 +128,35 @@ export const TrackFunctionForm = ({
     >
       <div className="p-4">
         <Form
-          onSubmit={data => {
+          onSubmit={(data) => {
             console.log('>>>', data);
           }}
         >
-          <Select
+          <SelectField
             label="Track Function"
             name="qualifiedFunction"
             placeholder="Select a function"
-            options={untrackedFunctions.map(f => ({
-              value: JSON.stringify(f.qualifiedFunction),
-              label: adaptFunctionName(f.qualifiedFunction).join(' / '),
+            options={untrackedFunctions.map((f) => ({
+              value: JSON.stringify(f.function),
+              label: functionDisplayName({
+                qualifiedFunction: f.function,
+              }),
             }))}
             disabled
           />
 
-          <Select
+          <SelectField
             label="Tracked as"
             name="type"
             placeholder="Select type"
-            options={allowedFunctionTypes.map(type => ({
+            options={allowedFunctionTypes.map((type) => ({
               value: type,
               label: type,
             }))}
             disabled
           />
 
-          <Select
+          <SelectField
             label="Select a return type"
             placeholder="Return type must be one of the tables tracked"
             name="table"

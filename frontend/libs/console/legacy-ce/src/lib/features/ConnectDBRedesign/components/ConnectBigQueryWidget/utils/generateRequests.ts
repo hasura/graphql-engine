@@ -29,7 +29,7 @@ export const generateBigQueryRequestPayload = ({
             : values.configuration.datasets.value.split(','),
       },
       customization: generateGraphQLCustomizationInfo(
-        values.customization ?? {}
+        values.customization ?? {},
       ),
     },
   };

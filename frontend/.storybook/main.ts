@@ -1,11 +1,15 @@
-import * as webpack from 'webpack';
+import { StorybookConfig } from '@storybook/react-webpack5';
+import { createRequire } from 'node:module';
+import webpack from 'webpack';
 import { merge } from 'webpack-merge';
-export default {
+
+const require = createRequire(import.meta.url);
+
+const config: StorybookConfig = {
   addons: [
     '@storybook/addon-links',
-    '@storybook/addon-interactions',
     '@storybook/addon-a11y',
-    '@storybook/addon-mdx-gfm',
+    '@storybook/addon-docs',
   ],
   webpackFinal: async (config: any) => {
     const finalConfig = merge(config, {
@@ -58,13 +62,7 @@ export default {
     name: '@storybook/react-webpack5',
     options: {},
   },
-  docs: {
-    autodocs: true,
-  },
-  parameters: {
-    chromatic: {
-      // Default value is 0.063
-      diffThreshold: 0.4,
-    },
-  },
+  stories: [],
 };
+
+export default config;

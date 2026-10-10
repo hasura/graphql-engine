@@ -1,9 +1,9 @@
-import { renderHook } from '@testing-library/react-hooks';
-import { rest } from 'msw';
+import { renderHook, waitFor } from '@testing-library/react';
+import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
-import { wrapper } from '../../../hooks/__tests__/common/decorator';
+import { testWrapper as wrapper } from '@hasura/shared/testing';
 import { useListAvailableAgentsFromMetadata } from '../hooks';
-import { Metadata } from '../../hasura-metadata-types';
+import { Metadata } from '@hasura/shared/types';
 import { DcAgent } from '../types';
 
 const metadata: Metadata = {
@@ -25,9 +25,9 @@ const metadata: Metadata = {
 };
 
 const server = setupServer(
-  rest.post('http://localhost/v1/metadata', (req, res, ctx) => {
-    return res(ctx.status(200), ctx.json(metadata));
-  })
+  http.post('http://localhost/v1/metadata', () => {
+    return HttpResponse.json(metadata, { status: 200 });
+  }),
 );
 
 describe('useListAvailableAgentsFromMetadata tests: ', () => {
@@ -39,17 +39,16 @@ describe('useListAvailableAgentsFromMetadata tests: ', () => {
   });
 
   it('lists all the dc agents from metadata', async () => {
-    const { result, waitFor } = renderHook(
-      () => useListAvailableAgentsFromMetadata(),
-      { wrapper }
-    );
+    const { result } = renderHook(() => useListAvailableAgentsFromMetadata(), {
+      wrapper,
+    });
 
     const expectedResult: DcAgent[] = [
       { name: 'csv', uri: 'http://host.docker.internal:8101' },
       { name: 'sqlite', uri: 'http://host.docker.internal:8100' },
     ];
 
-    await waitFor(() => result.current.isSuccess);
+    await waitFor(() => expect(result.current.isSuccess).toBeTruthy());
 
     expect(result.current.data).toEqual(expectedResult);
   });

@@ -4,7 +4,7 @@ import { MssqlConnectionSchema } from '../schema';
 import { cleanEmpty } from '../../ConnectPostgresWidget/utils/helpers';
 
 export const generateConnectionInfo = (
-  values: MssqlConnectionSchema['configuration']['connectionInfo']
+  values: MssqlConnectionSchema['configuration']['connectionInfo'],
 ) => {
   return {
     connection_string:
@@ -31,14 +31,14 @@ export const generateMssqlRequestPayload = ({
       name: values.name,
       configuration: {
         connection_info: generateConnectionInfo(
-          values.configuration.connectionInfo
+          values.configuration.connectionInfo,
         ),
-        read_replicas: values.configuration.readReplicas?.map(readReplica =>
-          generateConnectionInfo(readReplica)
+        read_replicas: values.configuration.readReplicas?.map((readReplica) =>
+          generateConnectionInfo(readReplica),
         ),
       },
       customization: generateGraphQLCustomizationInfo(
-        values.customization ?? {}
+        values.customization ?? {},
       ),
     },
   };

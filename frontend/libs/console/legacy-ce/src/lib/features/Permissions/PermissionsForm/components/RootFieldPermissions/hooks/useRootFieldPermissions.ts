@@ -1,58 +1,39 @@
-import { useServerConfig } from '../../../../../../hooks';
+import { useDriverCapabilities } from '@hasura/metadata/data-source';
 import {
   RootKeyValues,
   SUBSCRIPTION_ROOT_VALUES,
   QUERY_ROOT_VALUES,
-  subscriptionRootPermissionFields,
-  queryRootPermissionFields,
 } from '../RootFieldPermissions';
+import { SubscriptionRootPermissionTypes, PermissionRootTypes } from '../types';
 import {
-  PermissionRootType,
-  RootFieldPermissionsType,
-  SubscriptionRootPermissionTypes,
-  PermissionRootTypes,
-  CombinedPermissionRootTypes,
-} from '../types';
+  QualifiedDataSource,
+  queryRootPermissionFields,
+  subscriptionRootPermissionFields,
+} from '@hasura/shared/types';
 
-type Props = RootFieldPermissionsType;
+export type RootFieldPermissionsType = {
+  source: QualifiedDataSource;
+  hasEnabledAggregations: boolean;
+  hasSelectedPrimaryKeys: boolean;
+  customRootFieldEnabled: boolean;
+  updateFormValues: (key: RootKeyValues, value: PermissionRootTypes) => void;
+};
 
 export const useRootFieldPermissions = ({
-  queryRootFields,
-  subscriptionRootFields,
+  source,
   hasEnabledAggregations,
   hasSelectedPrimaryKeys,
   updateFormValues,
-}: Props) => {
-  const { data: configData } = useServerConfig();
-  const isSubscriptionStreamingEnabled =
-    !!configData?.experimental_features.includes('streaming_subscriptions');
+}: RootFieldPermissionsType) => {
+  const { data: capabilities } = useDriverCapabilities({
+    source,
+  });
 
-  const isRootPermissionsSwitchedOn =
-    queryRootFields !== null && subscriptionRootFields !== null;
-
-  const onUpdatePermission = (
-    key: RootKeyValues,
-    permission: PermissionRootType,
-    currentPermissionArray: CombinedPermissionRootTypes
-  ) => {
-    const containsString = currentPermissionArray?.includes(permission);
-    if (containsString || !currentPermissionArray) {
-      const newPermissionArray = currentPermissionArray?.filter(
-        (queryPermission: string) => queryPermission !== permission
-      );
-      if (newPermissionArray) updateFormValues(key, newPermissionArray);
-      return;
-    }
-
-    updateFormValues(
-      key,
-      [...currentPermissionArray, permission].filter(Boolean)
-    );
-  };
+  const isSubscriptionEnabled = Boolean(capabilities?.subscriptions);
 
   const onEnableSection = (
     key: RootKeyValues,
-    permissionTypeFields: PermissionRootTypes
+    permissionTypeFields: PermissionRootTypes,
   ) => {
     if (permissionTypeFields === null) return;
 
@@ -60,19 +41,19 @@ export const useRootFieldPermissions = ({
 
     if (!hasEnabledAggregations) {
       newState = newState.filter(
-        (permission: string) => permission !== 'select_aggregate'
+        (permission: string) => permission !== 'select_aggregate',
       );
     }
 
     if (!hasSelectedPrimaryKeys) {
       newState = newState.filter(
-        (permission: string) => permission !== 'select_by_pk'
+        (permission: string) => permission !== 'select_by_pk',
       );
     }
 
-    if (key === SUBSCRIPTION_ROOT_VALUES && !isSubscriptionStreamingEnabled) {
+    if (!isSubscriptionEnabled) {
       newState = newState.filter(
-        (permission: string) => permission !== 'select_stream'
+        (permission: string) => permission !== 'select_stream',
       );
     }
 
@@ -81,13 +62,13 @@ export const useRootFieldPermissions = ({
 
   const onToggleAll = (
     key: RootKeyValues,
-    currentPermissionArray: PermissionRootTypes
+    currentPermissionArray: PermissionRootTypes,
   ) => {
     if (currentPermissionArray && currentPermissionArray?.length > 0) {
       return updateFormValues(key, []);
     }
     const toToggle: SubscriptionRootPermissionTypes = ['select'];
-    if (key === SUBSCRIPTION_ROOT_VALUES && isSubscriptionStreamingEnabled) {
+    if (key === SUBSCRIPTION_ROOT_VALUES && isSubscriptionEnabled) {
       toToggle.push('select_stream');
     }
     if (hasEnabledAggregations) toToggle.push('select_aggregate');
@@ -96,22 +77,22 @@ export const useRootFieldPermissions = ({
     updateFormValues(key, toToggle);
   };
 
-  const onEnableSectionSwitchChange = () => {
-    if (isRootPermissionsSwitchedOn) {
-      updateFormValues(SUBSCRIPTION_ROOT_VALUES, null);
-      updateFormValues(QUERY_ROOT_VALUES, null);
+  const onEnableSectionSwitchChange = (enabled: boolean) => {
+    if (!enabled) {
+      updateFormValues(SUBSCRIPTION_ROOT_VALUES, []);
+      updateFormValues(QUERY_ROOT_VALUES, []);
       return;
     }
 
-    onEnableSection(SUBSCRIPTION_ROOT_VALUES, subscriptionRootPermissionFields);
-    onEnableSection(QUERY_ROOT_VALUES, queryRootPermissionFields);
+    onEnableSection(SUBSCRIPTION_ROOT_VALUES, [
+      ...subscriptionRootPermissionFields,
+    ]);
+    onEnableSection(QUERY_ROOT_VALUES, [...queryRootPermissionFields]);
   };
 
   return {
-    isSubscriptionStreamingEnabled,
+    isSubscriptionEnabled,
     onEnableSectionSwitchChange,
     onToggleAll,
-    onUpdatePermission,
-    isRootPermissionsSwitchedOn,
   };
 };

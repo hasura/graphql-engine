@@ -1,37 +1,25 @@
 import * as z from 'zod';
-import { inputValidationSchema } from '../../../components/Services/Data/TablePermissions/InputValidation/InputValidation';
+import { inputValidationSchema } from '../PermissionsForm/components/InputValidation/InputValidation';
+import {
+  permissionQueryRootFieldSchema,
+  permissionSubscriptionRootFieldSchema,
+} from '@hasura/shared/types';
 
-const columns = z.record(z.optional(z.boolean()));
-const computed_fields = z.record(z.optional(z.boolean()));
+const columns = z.record(z.string(), z.optional(z.boolean()));
+const computed_fields = z.array(z.string());
 const presets = z.optional(
   z.array(
     z.object({
       columnName: z.string(),
       presetType: z.optional(z.string()),
       columnValue: z.optional(z.union([z.string(), z.number()])),
-    })
-  )
+    }),
+  ),
 );
 
 export type Presets = z.infer<typeof presets>;
 
 export type PermissionsSchema = z.infer<typeof schema>;
-
-const queryType = z.union([
-  z.literal(''),
-  z.literal('insert'),
-  z.literal('select'),
-  z.literal('update'),
-  z.literal('delete'),
-]);
-
-export type Permission = z.infer<typeof permission>;
-
-const permission = z.object({
-  tableName: z.string(),
-  queryType,
-  roleName: z.string(),
-});
 
 export const schema = z.discriminatedUnion('queryType', [
   z.object({
@@ -45,7 +33,6 @@ export const schema = z.discriminatedUnion('queryType', [
     presets,
     backendOnly: z.boolean().optional(),
     supportedOperators: z.array(z.any()),
-    clonePermissions: z.array(permission).optional(),
     validateInput: inputValidationSchema.optional(),
   }),
   z.object({
@@ -56,11 +43,18 @@ export const schema = z.discriminatedUnion('queryType', [
     columns,
     computed_fields,
     presets,
-    rowCount: z.string().optional(),
-    aggregationEnabled: z.boolean().optional(),
-    clonePermissions: z.array(permission).optional(),
-    query_root_fields: z.array(z.string()).nullable().optional(),
-    subscription_root_fields: z.array(z.string()).nullable().optional(),
+    rowCount: z
+      .string()
+      .regex(/^[0-9]*$/, {
+        error: 'Limit must be a negative integer',
+      })
+      .optional(),
+    aggregationEnabled: z.boolean().default(false),
+    customRootFieldEnabled: z.boolean().default(false),
+    query_root_fields: z.array(permissionQueryRootFieldSchema).default([]),
+    subscription_root_fields: z
+      .array(permissionSubscriptionRootFieldSchema)
+      .default([]),
     supportedOperators: z.array(z.any()),
     validateInput: inputValidationSchema.optional(),
   }),
@@ -76,7 +70,6 @@ export const schema = z.discriminatedUnion('queryType', [
     presets,
     backendOnly: z.boolean().optional(),
     supportedOperators: z.array(z.any()),
-    clonePermissions: z.array(permission).optional(),
     validateInput: inputValidationSchema.optional(),
   }),
   z.object({
@@ -86,7 +79,6 @@ export const schema = z.discriminatedUnion('queryType', [
     filter: z.any(),
     backendOnly: z.boolean().optional(),
     supportedOperators: z.array(z.any()),
-    clonePermissions: z.array(permission).optional(),
     validateInput: inputValidationSchema.optional(),
   }),
 ]);

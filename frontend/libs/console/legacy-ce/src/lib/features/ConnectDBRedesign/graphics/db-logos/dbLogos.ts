@@ -23,7 +23,6 @@ export const dbLogos: Record<string, string> = {
   bigquery: googleLogo,
   snowflake: snowflakeLogo,
   athena: amazonLogo,
-  mysql8: mysqlLogo,
   mysql: mysqlLogo,
   sqlite: sqliteLogo,
   mariadb: mariadbLogo,

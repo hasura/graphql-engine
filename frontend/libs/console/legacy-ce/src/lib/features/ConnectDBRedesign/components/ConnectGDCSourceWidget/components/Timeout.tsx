@@ -1,11 +1,14 @@
-import { NumberInputField } from '../../ConnectPostgresWidget/parts/NumberInput';
+import { InputField } from '@hasura/shared/ui';
 
 export const Timeout = ({ name }: { name: string }) => {
   return (
-    <NumberInputField
+    <InputField
       name={name}
       label="Timeout (in seconds)"
-      placeholder="In Seconds"
+      fieldProps={{
+        type: 'number',
+        placeholder: 'In Seconds',
+      }}
     />
   );
 };

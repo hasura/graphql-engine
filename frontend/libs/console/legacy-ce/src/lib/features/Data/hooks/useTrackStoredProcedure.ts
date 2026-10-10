@@ -1,35 +1,47 @@
-import { transformErrorResponse } from '../../ConnectDBRedesign/utils';
-import { useMetadataMigration } from '../../MetadataAPI';
-import { MetadataMigrationOptions } from '../../MetadataAPI/hooks/useMetadataMigration';
-import { useMetadata } from '../../hasura-metadata-api';
+import {
+  useMetadataMigration,
+  MetadataMigrationOptions,
+  useMetadataHelpers,
+} from '@hasura/metadata/api';
 import {
   QualifiedStoredProcedure,
   StoredProcedure,
-} from '../../hasura-metadata-types';
-import { getSourceDriver } from './utils';
+} from '@hasura/shared/types';
+import { hasuraToast } from '@hasura/shared/ui';
 
 export type TrackStoredProcedure = {
   dataSourceName: string;
 } & StoredProcedure;
 
 export const useTrackStoredProcedure = (
-  globalMutateOptions?: MetadataMigrationOptions
+  globalMutateOptions?: MetadataMigrationOptions,
 ) => {
-  /**
-   * Get the required metadata variables - sources & resource_version
-   */
-  const { data: { sources = [], resource_version } = {} } = useMetadata(m => ({
-    sources: m.metadata.sources,
-    resource_version: m.resource_version,
-  }));
-
+  const { fetchSource } = useMetadataHelpers();
   const { mutate, ...rest } = useMetadataMigration({
     ...globalMutateOptions,
-    errorTransform: transformErrorResponse,
-    onSuccess: (data, variable, ctx) => {
-      globalMutateOptions?.onSuccess?.(data, variable, ctx);
+    onSuccess: (data, variable, onMutateResult, context) => {
+      globalMutateOptions?.onSuccess?.(data, variable, onMutateResult, context);
     },
   });
+
+  const checkDriver = async (
+    dataSourceName: string,
+    action: 'Tracking' | 'Untracking',
+  ): Promise<number | null> => {
+    const { source, resource_version } = await fetchSource(dataSourceName);
+
+    const driver = source.kind;
+    if (driver !== 'mssql') {
+      hasuraToast({
+        type: 'error',
+        title: `${action} store procedure failed`,
+        message: 'Only MSSQL server supports store procedure',
+      });
+      return null;
+    }
+
+    return resource_version;
+  };
 
   const trackStoredProcedure = async ({
     data: { dataSourceName, ...otherArgs },
@@ -37,21 +49,23 @@ export const useTrackStoredProcedure = (
   }: {
     data: TrackStoredProcedure;
   } & MetadataMigrationOptions) => {
-    mutate(
+    const resourceVersion = await checkDriver(dataSourceName, 'Tracking');
+    if (!resourceVersion) {
+      return null;
+    }
+
+    return mutate(
       {
         query: {
-          resource_version,
-          type: `${getSourceDriver(
-            sources,
-            dataSourceName
-          )}_track_stored_procedure`,
+          resource_version: resourceVersion,
+          type: 'mssql_track_stored_procedure',
           args: {
             source: dataSourceName,
             ...otherArgs,
           },
         },
       },
-      options
+      options,
     );
   };
 
@@ -64,21 +78,23 @@ export const useTrackStoredProcedure = (
       stored_procedure: QualifiedStoredProcedure;
     };
   } & MetadataMigrationOptions) => {
-    mutate(
+    const resourceVersion = await checkDriver(dataSourceName, 'Tracking');
+    if (!resourceVersion) {
+      return null;
+    }
+
+    return mutate(
       {
         query: {
-          resource_version,
-          type: `${getSourceDriver(
-            sources,
-            dataSourceName
-          )}_untrack_stored_procedure`,
+          resource_version: resourceVersion,
+          type: 'mssql_untrack_stored_procedure',
           args: {
             source: dataSourceName,
             stored_procedure,
           },
         },
       },
-      options
+      options,
     );
   };
 

@@ -1,14 +1,13 @@
 import { ReactNode } from 'react';
 import { FaPlug, FaTable } from 'react-icons/fa';
-import { Table } from '../../../../hasura-metadata-types';
-import { MultiSelectItem } from '../../../../../new-components/Form';
-import { getTableDisplayName } from '../../../utils/helpers';
-import { SourceSelectorItem } from './SourcePicker.types';
+import { Table } from '@hasura/shared/types';
 import {
   isSchemaTable,
   isDatasetTable,
+  getTableDisplayName,
   isGDCTable,
-} from '../../../../DataSource/utils';
+} from '@hasura/shared/utils';
+import { SourceSelectorItem } from './SourcePicker.types';
 
 type SourcePickerLabelProps = {
   prefix: ReactNode;
@@ -47,7 +46,7 @@ export type TableAttributes = {
 export const getTableLabel = ({
   sourceName,
   table,
-}: TableAttributes): MultiSelectItem['label'] => {
+}: TableAttributes): ReactNode => {
   if (isSchemaTable(table)) {
     return (
       <SourcePickerLabel
@@ -79,12 +78,12 @@ export const getTableLabel = ({
 };
 
 export const mapItemsToSourceOptions = (
-  items: SourceSelectorItem[]
-): MultiSelectItem[] => {
-  return items.map(item => {
+  items: SourceSelectorItem[],
+): { label: ReactNode; value: any }[] => {
+  return items.map((item) => {
     const value = item.value;
 
-    let label: MultiSelectItem['label'] = '';
+    let label: ReactNode = '';
     if (item.type === 'table') {
       label = getTableLabel({
         sourceName: item.value.dataSourceName,

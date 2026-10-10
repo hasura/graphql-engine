@@ -1,14 +1,19 @@
 import { useFieldArray, useFormContext } from 'react-hook-form';
-import { Button } from '../../../../../new-components/Button';
-import { CardedTable } from '../../../../../new-components/CardedTable';
+import {
+  Button,
+  CardedTable,
+  IndicatorCard,
+  Dialog,
+  Collapsible,
+  Text,
+  IconButton,
+} from '@hasura/shared/ui';
 import { ConnectionString } from './ConnectionString';
 import { useState } from 'react';
 import { ConnectionInfoSchema } from '../schema';
 import { FaEdit, FaPlus, FaTrash } from 'react-icons/fa';
-import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
-import { Dialog } from '../../../../../new-components/Dialog';
-import { Collapsible } from '../../../../../new-components/Collapsible';
 import { PoolSettings } from './PoolSettings';
+import { Flex } from '@radix-ui/themes';
 
 // export const ReadReplicas = ({ name }: { name: string }) => {
 //   const { fields, append } = useFieldArray<
@@ -105,7 +110,7 @@ export const ReadReplicas = ({ name }: { name: string }) => {
   const [activeRow, setActiveRow] = useState<number>();
 
   return (
-    <div className="my-2">
+    <div>
       {!fields?.length ? (
         <IndicatorCard status="info">No read replicas added.</IndicatorCard>
       ) : (
@@ -113,56 +118,60 @@ export const ReadReplicas = ({ name }: { name: string }) => {
           columns={['No', 'Read Replica', null]}
           data={(readReplicas ?? []).map((field, i) => [
             i + 1,
-            <div>
+            <div key={`url-${i}`}>
               {field.connectionString.connectionType === 'databaseUrl'
                 ? field.connectionString.url
                 : field.connectionString.envVar}
             </div>,
-            <div className="flex gap-3 justify-end">
-              <Button
-                size="sm"
-                icon={<FaEdit />}
+            <Flex gap="3" align="center" justify="end" key={`actions-${i}`}>
+              <IconButton
+                variant="ghost"
                 onClick={() => {
                   setActiveRow(i);
                   setMode('edit');
                 }}
-              />
-              <Button
-                size="sm"
-                icon={<FaTrash />}
+              >
+                <FaEdit />
+              </IconButton>
+              <IconButton
+                color="red"
+                variant="ghost"
                 onClick={() => {
                   setValue(
                     name,
-                    readReplicas.filter((_, index) => index !== i)
+                    readReplicas.filter((_, index) => index !== i),
                   );
                 }}
-              />
-            </div>,
+              >
+                <FaTrash />
+              </IconButton>
+            </Flex>,
           ])}
-          showActionCell
         />
       )}
 
       {mode === 'idle' && (
-        <Button
-          type="button"
-          onClick={() => {
-            setMode('add');
-            append({
-              connectionString: { connectionType: 'databaseUrl', url: '' },
-            });
-            setActiveRow(readReplicas?.length ?? 0);
-          }}
-          mode="primary"
-          icon={<FaPlus />}
-        >
-          Add New Read Replica
-        </Button>
+        <div className="mt-2">
+          <Button
+            type="button"
+            mode="default"
+            size="1"
+            onClick={() => {
+              setMode('add');
+              append({
+                connectionString: { connectionType: 'databaseUrl', url: '' },
+              });
+              setActiveRow(readReplicas?.length ?? 0);
+            }}
+            leftIcon={FaPlus}
+          >
+            Add New Read Replica
+          </Button>
+        </div>
       )}
 
       {(mode === 'add' || mode === 'edit') && (
         <Dialog
-          hasBackdrop
           title={mode === 'edit' ? 'Edit Read Replica' : 'Add Read Replica'}
           onClose={() => {
             setMode('idle');
@@ -170,20 +179,12 @@ export const ReadReplicas = ({ name }: { name: string }) => {
           titleTooltip="Optional list of read replica configuration"
           size="xxxl"
         >
-          <div className="p-4">
-            <div className="bg-white border border-hasGray-300 rounded-md shadow-sm overflow-hidden p-4">
-              <ConnectionString
-                name={`${name}.${activeRow}.connectionString`}
-              />
-            </div>
+          <div>
+            <ConnectionString name={`${name}.${activeRow}.connectionString`} />
 
-            <div className="bg-white border border-hasGray-300 rounded-md shadow-sm overflow-hidden p-4 mt-sm">
+            <div className="my-4">
               <Collapsible
-                triggerChildren={
-                  <div className="font-semibold text-muted">
-                    Advanced Settings
-                  </div>
-                }
+                triggerChildren={<Text weight="bold">Advanced Settings</Text>}
               >
                 <PoolSettings name={`${name}.${activeRow}.poolSettings`} />
               </Collapsible>

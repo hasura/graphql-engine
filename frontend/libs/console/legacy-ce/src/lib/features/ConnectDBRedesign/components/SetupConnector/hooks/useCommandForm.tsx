@@ -1,9 +1,6 @@
 import React from 'react';
 import { z } from 'zod';
-import {
-  CopyableInputField,
-  useConsoleForm,
-} from '../../../../../new-components/Form';
+import { CopyableInputField, useConsoleForm } from '@hasura/shared/ui';
 import { buildAgentPath, buildDockerCommand } from '../utils';
 import { AgentFormValues } from './useAgentForm';
 
@@ -34,14 +31,17 @@ export const useDockerCommandForm = ({
   }, [path, port, protocol]);
 
   const DockerCommandForm = () => (
-    <Form onSubmit={data => {}}>
+    <Form onSubmit={(data) => {}}>
       <CopyableInputField
-        inputClassName="text-xs"
         label="Install Command"
         tooltip="Use this Docker command to install the Hasura Data Connector Agent"
-        disabled
         learnMoreLink="https://hasura.io/blog/hasura-graphql-data-connectors/"
         name="command"
+        noErrorPlaceholder
+        fieldProps={{
+          className: 'text-xs',
+          disabled: true,
+        }}
       />
     </Form>
   );

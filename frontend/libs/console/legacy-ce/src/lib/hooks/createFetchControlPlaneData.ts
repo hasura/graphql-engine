@@ -1,5 +1,5 @@
+import { requestJson } from '@hasura/shared/utils';
 import Endpoints from '../Endpoints';
-import { Api } from './apiUtils';
 import { GraphQLError } from 'graphql';
 
 /**
@@ -10,24 +10,23 @@ import { GraphQLError } from 'graphql';
  */
 export function controlPlaneDataApiClient<
   ResponseData,
-  TransformedData = ResponseData
+  TransformedData = ResponseData,
 >(
   query: string,
   variables: Record<string, string>,
   headers: Record<string, string>,
-  transformFn?: (data: ResponseData) => TransformedData
+  transformFn?: (data: ResponseData) => TransformedData,
 ): Promise<TransformedData> {
-  return Api.post<ResponseData, TransformedData>(
-    {
-      url: Endpoints.luxDataGraphql,
-      headers,
-      body: {
-        query,
-        variables: variables || {},
-      },
-      credentials: 'include',
-    },
-    transformFn
+  return requestJson<ResponseData>(Endpoints.luxDataGraphql, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      query,
+      variables: variables || {},
+    }),
+    credentials: 'include',
+  }).then((data) =>
+    transformFn ? transformFn(data) : (data as unknown as TransformedData),
   );
 }
 type ErrorMessage = string;
@@ -49,7 +48,7 @@ export function createFetchControlPlaneData<RESPONSE_DATA>(opts: {
       >(
         query,
         { ...variables, ...overrides?.variables },
-        { 'content-type': 'application/json' }
+        { 'content-type': 'application/json' },
       );
 
       if (response && typeof response === 'object' && 'errors' in response) {
@@ -58,7 +57,7 @@ export function createFetchControlPlaneData<RESPONSE_DATA>(opts: {
         return errorMessage;
       }
 
-      return response;
+      return response as RESPONSE_DATA;
     } catch (error) {
       console.error(error);
       return 'unexpected network error';

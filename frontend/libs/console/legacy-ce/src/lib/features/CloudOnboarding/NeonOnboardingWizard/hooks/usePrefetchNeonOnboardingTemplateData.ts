@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useQueryClient } from 'react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   getMetadataUrl,
   getMigrationUrl,
@@ -14,30 +14,34 @@ import { fetchTemplateDataQueryFn } from '../utils';
  * DB is being created.
  */
 export const usePrefetchNeonOnboardingTemplateData = (
-  templateBaseUrl: string
+  templateBaseUrl: string,
 ) => {
   const queryClient = useQueryClient();
 
   useEffect(() => {
     const metadataUrl = getMetadataUrl(templateBaseUrl);
-    queryClient.prefetchQuery(metadataUrl, () =>
-      fetchTemplateDataQueryFn(metadataUrl, {})
-    );
+    queryClient.prefetchQuery({
+      queryKey: [metadataUrl],
+      queryFn: () => fetchTemplateDataQueryFn(metadataUrl, {}),
+    });
 
     const migrationUrl = getMigrationUrl(templateBaseUrl);
-    queryClient.prefetchQuery(migrationUrl, () =>
-      fetchTemplateDataQueryFn(migrationUrl, {})
-    );
+    queryClient.prefetchQuery({
+      queryKey: [migrationUrl],
+      queryFn: () => fetchTemplateDataQueryFn(migrationUrl, {}),
+    });
 
     const sampleQueriesUrl = getSampleQueriesUrl(templateBaseUrl);
-    queryClient.prefetchQuery(sampleQueriesUrl, () =>
-      fetchTemplateDataQueryFn(sampleQueriesUrl, {})
-    );
+    queryClient.prefetchQuery({
+      queryKey: [sampleQueriesUrl],
+      queryFn: () => fetchTemplateDataQueryFn(sampleQueriesUrl, {}),
+    });
 
     const schemaImageUrl = getSchemaImageUrl(templateBaseUrl);
-    queryClient.prefetchQuery(schemaImageUrl, () =>
-      fetchTemplateDataQueryFn(schemaImageUrl, {})
-    );
+    queryClient.prefetchQuery({
+      queryKey: [schemaImageUrl],
+      queryFn: () => fetchTemplateDataQueryFn(schemaImageUrl, {}),
+    });
     // empty deps as it should only run once the component mounts
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

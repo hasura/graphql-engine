@@ -664,9 +664,9 @@ describe('getSampleQueryUrl', () => {
         url: 'https://github.com/hasura/lux',
         branch: '2080-add-tests',
         hasuraDirectory: 'services',
-      })
+      }),
     ).toEqual(
-      'https://raw.githubusercontent.com/hasura/lux/2080-add-tests/services/sample-requests.graphql'
+      'https://raw.githubusercontent.com/hasura/lux/2080-add-tests/services/sample-requests.graphql',
     );
   });
 
@@ -676,7 +676,7 @@ describe('getSampleQueryUrl', () => {
         url: 'non-url',
         branch: 'branch',
         hasuraDirectory: 'services',
-      })
+      }),
     ).toEqual('');
   });
 });

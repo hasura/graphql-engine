@@ -26,8 +26,6 @@ import {
 
 // Imports:
 import * as Oas3Tools from './oas_3_tools';
-import deepEqual from 'deep-equal';
-import debug from 'debug';
 import {
   handleWarning,
   getCommonPropertyNames,
@@ -35,9 +33,10 @@ import {
 } from './utils';
 import { GraphQLOperationType } from './types/graphql';
 import { methodToHttpMethod } from './oas_3_tools';
-import OpenAPIParser from '@readme/openapi-parser';
+import { compileErrors, validate } from '@readme/openapi-parser';
+import isEqual from 'lodash/isEqual';
 
-const preprocessingLog = debug('preprocessing');
+const preprocessingLog = console.log;
 
 /**
  * Given an operation object from the OAS, create an Operation, which contains
@@ -62,7 +61,7 @@ function processOperation<TSource, TContext, TArgs>(
   pathItem: PathItemObject,
   oas: Oas3,
   data: PreprocessingData<TSource, TContext, TArgs>,
-  options: InternalOptions<TSource, TContext, TArgs>
+  options: InternalOptions<TSource, TContext, TArgs>,
 ): Operation {
   // Response schema
   const {
@@ -76,7 +75,7 @@ function processOperation<TSource, TContext, TArgs>(
     operation,
     oas,
     data,
-    options
+    options,
   );
 
   /**
@@ -127,7 +126,7 @@ function processOperation<TSource, TContext, TArgs>(
             payloadSchema as SchemaObject,
             true,
             data,
-            oas
+            oas,
           )
         : undefined;
 
@@ -141,7 +140,7 @@ function processOperation<TSource, TContext, TArgs>(
       false,
       data,
       oas,
-      links
+      links,
     );
 
     // Parameters
@@ -150,7 +149,7 @@ function processOperation<TSource, TContext, TArgs>(
       method,
       operation,
       pathItem,
-      oas
+      oas,
     );
 
     // Security protocols
@@ -205,7 +204,7 @@ function processOperation<TSource, TContext, TArgs>(
  */
 export async function preprocessOas<TSource, TContext, TArgs>(
   oass: Oas3[],
-  options: InternalOptions<TSource, TContext, TArgs>
+  options: InternalOptions<TSource, TContext, TArgs>,
 ): Promise<PreprocessingData<TSource, TContext, TArgs>> {
   const data: PreprocessingData<TSource, TContext, TArgs> = {
     operations: {},
@@ -223,13 +222,17 @@ export async function preprocessOas<TSource, TContext, TArgs>(
   };
 
   await Promise.all(
-    oass.map(async oas => {
+    oass.map(async (oas) => {
       // Store stats on OAS:
       try {
-        await OpenAPIParser.validate(
+        const result = await validate(
           JSON.parse(JSON.stringify(oas)),
-          options.oasValidatorOptions
+          options.oasValidatorOptions,
         );
+        // `validate` returns invalid results instead of throwing on them
+        if (!result.valid) {
+          throw new Error(compileErrors(result));
+        }
       } catch (e) {
         data.options.report.validationErrors = (
           data.options.report.validationErrors || []
@@ -250,9 +253,9 @@ export async function preprocessOas<TSource, TContext, TArgs>(
       const currentSecurity = getProcessedSecuritySchemes(oas, data);
       const commonSecurityPropertyName = getCommonPropertyNames(
         data.security,
-        currentSecurity
+        currentSecurity,
       );
-      commonSecurityPropertyName.forEach(propertyName => {
+      commonSecurityPropertyName.forEach((propertyName) => {
         handleWarning({
           mitigationType: MitigationTypes.DUPLICATE_SECURITY_SCHEME,
           message: `Multiple OASs share security schemes with the same name '${propertyName}'`,
@@ -273,12 +276,12 @@ export async function preprocessOas<TSource, TContext, TArgs>(
           typeof oas.paths[path].$ref === 'string'
             ? (Oas3Tools.resolveRef(
                 oas.paths[path].$ref,
-                oas
+                oas,
               ) as PathItemObject)
             : oas.paths[path];
 
         Object.keys(pathItem)
-          .filter(pathFields => {
+          .filter((pathFields) => {
             /**
              * Get only method fields that contain operation objects (e.g. "get",
              * "put", "post", "delete", etc.)
@@ -287,14 +290,14 @@ export async function preprocessOas<TSource, TContext, TArgs>(
              */
             return Oas3Tools.isHttpMethod(pathFields);
           })
-          .forEach(rawMethod => {
+          .forEach((rawMethod) => {
             const operationString =
               oass.length === 1
                 ? Oas3Tools.formatOperationString(rawMethod, path)
                 : Oas3Tools.formatOperationString(
                     rawMethod,
                     path,
-                    oas.info.title
+                    oas.info.title,
                   );
 
             let httpMethod: Oas3Tools.HTTP_METHODS;
@@ -342,7 +345,7 @@ export async function preprocessOas<TSource, TContext, TArgs>(
               pathItem,
               oas,
               data,
-              options
+              options,
             );
 
             if (typeof operationData === 'object') {
@@ -380,7 +383,7 @@ export async function preprocessOas<TSource, TContext, TArgs>(
                   ) {
                     callback = Oas3Tools.resolveRef(
                       callbackObjectOrRef.$ref,
-                      oas
+                      oas,
                     );
                   } else {
                     callback = callbackObjectOrRef as CallbackObject;
@@ -395,8 +398,8 @@ export async function preprocessOas<TSource, TContext, TArgs>(
                         : Oas3Tools.resolveRef(callbackPathItem.$ref, oas);
 
                       const callbackOperationObjectMethods = Object.keys(
-                        resolvedCallbackPathItem
-                      ).filter(objectKey => {
+                        resolvedCallbackPathItem,
+                      ).filter((objectKey) => {
                         /**
                          * Get only fields that contain operation objects
                          *
@@ -425,12 +428,12 @@ export async function preprocessOas<TSource, TContext, TArgs>(
                           oass.length === 1
                             ? Oas3Tools.formatOperationString(
                                 httpMethod,
-                                callbackName
+                                callbackName,
                               )
                             : Oas3Tools.formatOperationString(
                                 httpMethod,
                                 callbackName,
-                                oas.info.title
+                                oas.info.title,
                               );
 
                         let callbackHttpMethod: Oas3Tools.HTTP_METHODS;
@@ -458,7 +461,7 @@ export async function preprocessOas<TSource, TContext, TArgs>(
                           callbackPathItem,
                           oas,
                           data,
-                          options
+                          options,
                         );
 
                         if (callbackOperation) {
@@ -488,14 +491,14 @@ export async function preprocessOas<TSource, TContext, TArgs>(
                           }
                         }
                       }
-                    }
+                    },
                   );
-                }
+                },
               );
             }
           });
       }
-    })
+    }),
   );
 
   return data;
@@ -541,7 +544,7 @@ export async function preprocessOas<TSource, TContext, TArgs>(
  */
 function getProcessedSecuritySchemes<TSource, TContext, TArgs>(
   oas: Oas3,
-  data: PreprocessingData<TSource, TContext, TArgs>
+  data: PreprocessingData<TSource, TContext, TArgs>,
 ): { [key: string]: ProcessedSecurityScheme } {
   const result = {};
   const security = Oas3Tools.getSecuritySchemes(oas);
@@ -564,7 +567,7 @@ function getProcessedSecuritySchemes<TSource, TContext, TArgs>(
         parameters = {
           apiKey: Oas3Tools.sanitize(
             `${schemeKey}_apiKey`,
-            Oas3Tools.CaseStyle.camelCase
+            Oas3Tools.CaseStyle.camelCase,
           ),
         };
 
@@ -592,11 +595,11 @@ function getProcessedSecuritySchemes<TSource, TContext, TArgs>(
             parameters = {
               username: Oas3Tools.sanitize(
                 `${schemeKey}_username`,
-                Oas3Tools.CaseStyle.camelCase
+                Oas3Tools.CaseStyle.camelCase,
               ),
               password: Oas3Tools.sanitize(
                 `${schemeKey}_password`,
-                Oas3Tools.CaseStyle.camelCase
+                Oas3Tools.CaseStyle.camelCase,
               ),
             };
 
@@ -620,7 +623,7 @@ function getProcessedSecuritySchemes<TSource, TContext, TArgs>(
             parameters = {
               token: Oas3Tools.sanitize(
                 `${schemeKey}_token`,
-                Oas3Tools.CaseStyle.camelCase
+                Oas3Tools.CaseStyle.camelCase,
               ),
             };
 
@@ -705,7 +708,7 @@ export function createDataDef<TSource, TContext, TArgs>(
   isInputObjectType: boolean,
   data: PreprocessingData<TSource, TContext, TArgs>,
   oas: Oas3,
-  links?: { [key: string]: LinkObject }
+  links?: { [key: string]: LinkObject },
 ): DataDefinition {
   const preferredName = getPreferredName(names);
 
@@ -716,7 +719,7 @@ export function createDataDef<TSource, TContext, TArgs>(
       message:
         `Could not create data definition for schema with ` +
         `preferred name '${preferredName}' and schema '${JSON.stringify(
-          schemaOrRef
+          schemaOrRef,
         )}'`,
       data,
       log: preprocessingLog,
@@ -758,7 +761,7 @@ export function createDataDef<TSource, TContext, TArgs>(
       existingDataDef.targetGraphQLType === TargetGraphQLType.oneOfUnion &&
       Array.isArray(existingDataDef.subDefinitions)
     ) {
-      existingDataDef.subDefinitions.forEach(def => {
+      existingDataDef.subDefinitions.forEach((def) => {
         collapseLinksIntoDataDefinition({
           additionalLinks: saneLinks,
           existingDataDef: def,
@@ -791,7 +794,7 @@ export function createDataDef<TSource, TContext, TArgs>(
     saneName = !data.options.simpleNames
       ? Oas3Tools.sanitize(name, Oas3Tools.CaseStyle.PascalCase)
       : Oas3Tools.capitalize(
-          Oas3Tools.sanitize(name, Oas3Tools.CaseStyle.simple)
+          Oas3Tools.sanitize(name, Oas3Tools.CaseStyle.simple),
         );
     saneInputName = Oas3Tools.capitalize(saneName + 'Input');
   }
@@ -808,13 +811,13 @@ export function createDataDef<TSource, TContext, TArgs>(
     collapsedSchema,
     {},
     data,
-    oas
+    oas,
   ) as SchemaObject;
 
   const targetGraphQLType = Oas3Tools.getSchemaTargetGraphQLType(
     collapsedSchema,
     data,
-    oas
+    oas,
   );
 
   const def: DataDefinition = {
@@ -864,7 +867,7 @@ export function createDataDef<TSource, TContext, TArgs>(
           def.required,
           isInputObjectType,
           data,
-          oas
+          oas,
         );
       } else {
         handleWarning({
@@ -905,7 +908,7 @@ export function createDataDef<TSource, TContext, TArgs>(
           itemsSchema as SchemaObject,
           isInputObjectType,
           data,
-          oas
+          oas,
         );
 
         // Add list item reference
@@ -929,13 +932,13 @@ export function createDataDef<TSource, TContext, TArgs>(
           isInputObjectType,
           def,
           data,
-          oas
+          oas,
         );
       } else {
         throw new Error(
           `OpenAPI-to-GraphQL error: Cannot create object ` +
             `from anyOf because there is no anyOf in ` +
-            `schema '${JSON.stringify(schemaOrRef, null, 2)}'`
+            `schema '${JSON.stringify(schemaOrRef, null, 2)}'`,
         );
       }
       break;
@@ -955,13 +958,13 @@ export function createDataDef<TSource, TContext, TArgs>(
           isInputObjectType,
           def,
           data,
-          oas
+          oas,
         );
       } else {
         throw new Error(
           `OpenAPI-to-GraphQL error: Cannot create union ` +
             `from oneOf because there is no oneOf in ` +
-            `schema '${JSON.stringify(schemaOrRef, null, 2)}'`
+            `schema '${JSON.stringify(schemaOrRef, null, 2)}'`,
         );
       }
       break;
@@ -975,7 +978,7 @@ export function createDataDef<TSource, TContext, TArgs>(
       handleWarning({
         mitigationType: MitigationTypes.UNKNOWN_TARGET_TYPE,
         message: `No GraphQL target type could be identified for schema '${JSON.stringify(
-          schema
+          schema,
         )}'.`,
         data,
         log: preprocessingLog,
@@ -996,7 +999,7 @@ export function createDataDef<TSource, TContext, TArgs>(
 function getSchemaIndex(
   preferredName: string,
   schema: SchemaObject,
-  dataDefs: DataDefinition[]
+  dataDefs: DataDefinition[],
 ): number {
   /**
    * TODO: instead of iterating through the whole list every time, create a
@@ -1009,7 +1012,7 @@ function getSchemaIndex(
      * However, deepEquals should work for vast majority of cases.
      */
 
-    if (preferredName === def.preferredName && deepEqual(schema, def.schema)) {
+    if (preferredName === def.preferredName && isEqual(schema, def.schema)) {
       return index;
     }
   }
@@ -1046,12 +1049,12 @@ function getPreferredName(names: Oas3Tools.SchemaNames): string {
  */
 function getSchemaName(
   names: Oas3Tools.SchemaNames,
-  usedNames: string[]
+  usedNames: string[],
 ): string {
   if (Object.keys(names).length === 1 && typeof names.preferred === 'string') {
     throw new Error(
       `Cannot create data definition without name(s), excluding the ` +
-        `preferred name.`
+        `preferred name.`,
     );
   }
 
@@ -1065,7 +1068,7 @@ function getSchemaName(
         `Cannot create type with name "${extensionTypeName}".\nYou ` +
           `provided "${extensionTypeName}" in ` +
           `${Oas3Tools.OAS_GRAPHQL_EXTENSIONS.TypeName}, but it is not ` +
-          `GraphQL-safe."`
+          `GraphQL-safe."`,
       );
     }
 
@@ -1074,7 +1077,7 @@ function getSchemaName(
         `Cannot create type with name "${extensionTypeName}".\nYou provided ` +
           `"${names.fromExtension}" in ` +
           `${Oas3Tools.OAS_GRAPHQL_EXTENSIONS.TypeName}, but it conflicts ` +
-          `with another type named "${extensionTypeName}".`
+          `with another type named "${extensionTypeName}".`,
       );
     }
 
@@ -1087,7 +1090,7 @@ function getSchemaName(
   if (!schemaName && typeof names.fromRef === 'string') {
     const saneName = Oas3Tools.sanitize(
       names.fromRef,
-      Oas3Tools.CaseStyle.PascalCase
+      Oas3Tools.CaseStyle.PascalCase,
     );
     if (!usedNames.includes(saneName)) {
       schemaName = names.fromRef;
@@ -1098,7 +1101,7 @@ function getSchemaName(
   if (!schemaName && typeof names.fromSchema === 'string') {
     const saneName = Oas3Tools.sanitize(
       names.fromSchema,
-      Oas3Tools.CaseStyle.PascalCase
+      Oas3Tools.CaseStyle.PascalCase,
     );
     if (!usedNames.includes(saneName)) {
       schemaName = names.fromSchema;
@@ -1109,7 +1112,7 @@ function getSchemaName(
   if (!schemaName && typeof names.fromPath === 'string') {
     const saneName = Oas3Tools.sanitize(
       names.fromPath,
-      Oas3Tools.CaseStyle.PascalCase
+      Oas3Tools.CaseStyle.PascalCase,
     );
     if (!usedNames.includes(saneName)) {
       schemaName = names.fromPath;
@@ -1122,13 +1125,13 @@ function getSchemaName(
       typeof names.fromExtension === 'string'
         ? names.fromExtension
         : typeof names.fromRef === 'string'
-        ? names.fromRef
-        : typeof names.fromSchema === 'string'
-        ? names.fromSchema
-        : typeof names.fromPath === 'string'
-        ? names.fromPath
-        : 'PlaceholderName',
-      Oas3Tools.CaseStyle.PascalCase
+          ? names.fromRef
+          : typeof names.fromSchema === 'string'
+            ? names.fromSchema
+            : typeof names.fromPath === 'string'
+              ? names.fromPath
+              : 'PlaceholderName',
+      Oas3Tools.CaseStyle.PascalCase,
     );
   }
 
@@ -1161,7 +1164,7 @@ function sanitizeLinks<TSource, TContext, TArgs>({
 }): { [key: string]: LinkObject } {
   const saneLinks: { [key: string]: LinkObject } = {};
   if (typeof links === 'object') {
-    Object.keys(links).forEach(linkKey => {
+    Object.keys(links).forEach((linkKey) => {
       const link = links[linkKey];
 
       const extensionFieldName =
@@ -1172,7 +1175,7 @@ function sanitizeLinks<TSource, TContext, TArgs>({
           `Cannot create link field with name ` +
             `"${extensionFieldName}".\nYou provided "${extensionFieldName}" in ` +
             `${Oas3Tools.OAS_GRAPHQL_EXTENSIONS.FieldName}, but it is not ` +
-            `GraphQL-safe."`
+            `GraphQL-safe."`,
         );
       }
 
@@ -1182,7 +1185,7 @@ function sanitizeLinks<TSource, TContext, TArgs>({
             `"${extensionFieldName}".\nYou provided ` +
             `"${extensionFieldName}" in ` +
             `${Oas3Tools.OAS_GRAPHQL_EXTENSIONS.FieldName}, but it ` +
-            `conflicts with another field named "${extensionFieldName}".`
+            `conflicts with another field named "${extensionFieldName}".`,
         );
       }
 
@@ -1190,7 +1193,7 @@ function sanitizeLinks<TSource, TContext, TArgs>({
         extensionFieldName || linkKey,
         !data.options.simpleNames
           ? Oas3Tools.CaseStyle.camelCase
-          : Oas3Tools.CaseStyle.simple
+          : Oas3Tools.CaseStyle.simple,
       );
 
       saneLinks[linkFieldName] = link;
@@ -1219,11 +1222,11 @@ function collapseLinksIntoDataDefinition<TSource, TContext, TArgs>({
    */
   if (typeof existingDataDef.links === 'object') {
     // Check if there are any overlapping links
-    Object.keys(existingDataDef.links).forEach(saneLinkKey => {
+    Object.keys(existingDataDef.links).forEach((saneLinkKey) => {
       if (
-        !deepEqual(
+        !isEqual(
           existingDataDef.links[saneLinkKey],
-          additionalLinks[saneLinkKey]
+          additionalLinks[saneLinkKey],
         )
       ) {
         handleWarning({
@@ -1262,7 +1265,7 @@ function addObjectPropertiesToDataDef<TSource, TContext, TArgs>(
   required: string[],
   isInputObjectType: boolean,
   data: PreprocessingData<TSource, TContext, TArgs>,
-  oas: Oas3
+  oas: Oas3,
 ) {
   /**
    * Resolve all required properties
@@ -1270,7 +1273,7 @@ function addObjectPropertiesToDataDef<TSource, TContext, TArgs>(
    * TODO: required may contain duplicates, which is not necessarily a problem
    */
   if (Array.isArray(schema.required)) {
-    schema.required.forEach(requiredProperty => {
+    schema.required.forEach((requiredProperty) => {
       required.push(requiredProperty);
     });
   }
@@ -1304,7 +1307,7 @@ function addObjectPropertiesToDataDef<TSource, TContext, TArgs>(
         propSchema,
         isInputObjectType,
         data,
-        oas
+        oas,
       );
 
       // Add field type references
@@ -1316,7 +1319,7 @@ function addObjectPropertiesToDataDef<TSource, TContext, TArgs>(
           `By way of resolving 'allOf', multiple schemas contain ` +
           `properties with the same name, preventing consolidation. Cannot ` +
           `add property '${propertyKey}' from schema '${JSON.stringify(
-            schema
+            schema,
           )}' ` +
           `to dataDefinition '${JSON.stringify(def)}'`,
         data,
@@ -1339,7 +1342,7 @@ type MemberSchemaData = {
 function getMemberSchemaData<TSource, TContext, TArgs>(
   schemas: (SchemaObject | ReferenceObject)[],
   data: PreprocessingData<TSource, TContext, TArgs>,
-  oas: Oas3
+  oas: Oas3,
 ): MemberSchemaData {
   const result: MemberSchemaData = {
     allTargetGraphQLTypes: [], // Contains the target GraphQL types of all the member schemas
@@ -1347,7 +1350,7 @@ function getMemberSchemaData<TSource, TContext, TArgs>(
     allRequired: [], // Contains the required of all the member schemas
   };
 
-  schemas.forEach(schemaOrRef => {
+  schemas.forEach((schemaOrRef) => {
     // Dereference schemas
     let schema: SchemaObject;
     if ('$ref' in schemaOrRef && typeof schemaOrRef.$ref === 'string') {
@@ -1360,7 +1363,7 @@ function getMemberSchemaData<TSource, TContext, TArgs>(
     const memberTargetGraphQLType = Oas3Tools.getSchemaTargetGraphQLType(
       schema,
       data,
-      oas
+      oas,
     );
 
     if (memberTargetGraphQLType) {
@@ -1388,7 +1391,7 @@ function createAnyOfObject<TSource, TContext, TArgs>(
   isInputObjectType: boolean,
   def: DataDefinition,
   data: PreprocessingData<TSource, TContext, TArgs>,
-  oas: Oas3
+  oas: Oas3,
 ) {
   /**
    * Used to find incompatible properties
@@ -1421,7 +1424,7 @@ function createAnyOfObject<TSource, TContext, TArgs>(
         }
 
         allProperties[propertyName] = property;
-      }
+      },
     );
   }
 
@@ -1433,7 +1436,7 @@ function createAnyOfObject<TSource, TContext, TArgs>(
     [propertyName: string]: SchemaObject;
   }[] = [];
 
-  collapsedSchema.anyOf.forEach(memberSchemaOrRef => {
+  collapsedSchema.anyOf.forEach((memberSchemaOrRef) => {
     // Collapsed schema should already be recursively resolved
     let memberSchema: SchemaObject;
     if (
@@ -1464,7 +1467,7 @@ function createAnyOfObject<TSource, TContext, TArgs>(
           }
 
           properties[propertyName] = property;
-        }
+        },
       );
 
       memberProperties.push(properties);
@@ -1482,12 +1485,12 @@ function createAnyOfObject<TSource, TContext, TArgs>(
    * for incompatible properties (conflicting properties between member
    * schemas and other member schemas or the base schema)
    */
-  memberProperties.forEach(properties => {
-    Object.keys(properties).forEach(propertyName => {
+  memberProperties.forEach((properties) => {
+    Object.keys(properties).forEach((propertyName) => {
       if (
         !incompatibleProperties.has(propertyName) && // Has not been already identified as a problematic property
         typeof allProperties[propertyName] === 'object' &&
-        !deepEqual(properties[propertyName], allProperties[propertyName])
+        !isEqual(properties[propertyName], allProperties[propertyName])
       ) {
         incompatibleProperties.add(propertyName);
       }
@@ -1518,12 +1521,12 @@ function createAnyOfObject<TSource, TContext, TArgs>(
       def.required,
       isInputObjectType,
       data,
-      oas
+      oas,
     );
   }
 
-  memberProperties.forEach(properties => {
-    Object.keys(properties).forEach(propertyName => {
+  memberProperties.forEach((properties) => {
+    Object.keys(properties).forEach((propertyName) => {
       if (!incompatibleProperties.has(propertyName)) {
         // Dereferenced by processing anyOfData
         const propertySchema = properties[propertyName] as SchemaObject;
@@ -1540,7 +1543,7 @@ function createAnyOfObject<TSource, TContext, TArgs>(
           propertySchema,
           isInputObjectType,
           data,
-          oas
+          oas,
         );
 
         /**
@@ -1553,7 +1556,7 @@ function createAnyOfObject<TSource, TContext, TArgs>(
   });
 
   // Add in incompatible properties
-  incompatibleProperties.forEach(propertyName => {
+  incompatibleProperties.forEach((propertyName) => {
     // TODO: add description
     def.subDefinitions[propertyName] = {
       targetGraphQLType: TargetGraphQLType.json,
@@ -1577,7 +1580,7 @@ function createOneOfUnion<TSource, TContext, TArgs>(
   isInputObjectType: boolean,
   def: DataDefinition,
   data: PreprocessingData<TSource, TContext, TArgs>,
-  oas: Oas3
+  oas: Oas3,
 ) {
   if (isInputObjectType) {
     handleWarning({
@@ -1593,7 +1596,7 @@ function createOneOfUnion<TSource, TContext, TArgs>(
 
   def.subDefinitions = [];
 
-  collapsedSchema.oneOf.forEach(memberSchemaOrRef => {
+  collapsedSchema.oneOf.forEach((memberSchemaOrRef) => {
     // Collapsed schema should already be recursively resolved
     let fromRef: string;
     let memberSchema: SchemaObject;
@@ -1621,7 +1624,7 @@ function createOneOfUnion<TSource, TContext, TArgs>(
       isInputObjectType,
       data,
       oas,
-      def.links
+      def.links,
     );
     (def.subDefinitions as DataDefinition[]).push(subDefinition);
   });
@@ -1629,7 +1632,7 @@ function createOneOfUnion<TSource, TContext, TArgs>(
   // Not all member schemas may have been turned into GraphQL member types
   if (
     def.subDefinitions.length > 0 &&
-    def.subDefinitions.every(subDefinition => {
+    def.subDefinitions.every((subDefinition) => {
       return subDefinition.targetGraphQLType === TargetGraphQLType.object;
     })
   ) {

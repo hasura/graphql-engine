@@ -1,9 +1,10 @@
 import * as React from 'react';
-import { Button } from '../../../new-components/Button';
+import { Button } from '@hasura/shared/ui';
 import { GraphQLError } from 'graphql';
-import { hasuraToast } from '../../../new-components/Toasts';
+import { hasuraToast } from '@hasura/shared/ui';
 import { useSubmitSchemaRegistryFeatureRequest } from '../hooks/useSubmitSchemaRegistryFeatureRequest';
 import { SCHEMA_REGISTRY_REF_URL } from '../constants';
+import { Flex } from '@radix-ui/themes';
 
 export const FeatureRequest = () => {
   const onSuccess = () => {
@@ -33,7 +34,7 @@ export const FeatureRequest = () => {
 
   const { onSubmit, loading } = useSubmitSchemaRegistryFeatureRequest(
     onSuccess,
-    onError
+    onError,
   );
 
   const onRequest = () => {
@@ -42,7 +43,7 @@ export const FeatureRequest = () => {
 
   return (
     <div className="bg-white w-[50%] p-4 border-neutral-200 semi-rounded">
-      <span className="mb-sm text-muted">
+      <span className="mb-2 text-muted">
         The Hasura Schema Registry work is aimed to make your Hasura GraphQL
         schema changes more reliable, prevent breaking changes in your schema
         and make collaboration across large teams, micro services and roles much
@@ -56,16 +57,16 @@ export const FeatureRequest = () => {
           Read more.
         </a>
       </span>
-      <div className="mb-sm">
+      <div className="mb-2">
         <img
           src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/cloud-console/assets/common/img/schema-registry-preview-screenshot.png"
           alt="Schema Registry Preview Image"
         />
       </div>
-      <div className="flex justify-start w-full items-center">
+      <Flex justify="start" align="center" className="w-full">
         <Button
           mode="primary"
-          className={`mr-sm ${loading ? 'cursor-not-allowed' : ''}`}
+          className={`mr-2 ${loading ? 'cursor-not-allowed' : ''}`}
           disabled={loading}
           onClick={onRequest}
         >
@@ -74,7 +75,7 @@ export const FeatureRequest = () => {
         <h4 className="font-italics text-muted">
           This feature is currently in closed alpha.
         </h4>
-      </div>
+      </Flex>
     </div>
   );
 };

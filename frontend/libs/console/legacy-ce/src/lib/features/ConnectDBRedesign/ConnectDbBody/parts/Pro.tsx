@@ -1,7 +1,8 @@
-import { DriverInfo } from '../../../DataSource';
+import { DriverInfo } from '@hasura/metadata/data-source';
 import { SetupConnector } from '../../components';
 import { ConnectButton } from '../../components/ConnectButton';
-import { usePushRoute } from '../../hooks';
+import { useNavigate } from 'react-router';
+import { dataRoutes } from '@hasura/shared/utils';
 
 export const Pro = ({
   selectedDriver,
@@ -10,7 +11,7 @@ export const Pro = ({
   selectedDriver: DriverInfo;
   isDriverAvailable: boolean;
 }) => {
-  const pushRoute = usePushRoute();
+  const navigate = useNavigate();
   return isDriverAvailable ? (
     <ConnectButton selectedDriver={selectedDriver} />
   ) : (
@@ -18,9 +19,7 @@ export const Pro = ({
       <SetupConnector
         selectedDriver={selectedDriver}
         onSetupSuccess={() => {
-          pushRoute(
-            `/data/v2/manage/database/add?driver=${selectedDriver?.name}`
-          );
+          navigate(dataRoutes.connectDatabase(selectedDriver?.name));
         }}
       />
     </div>

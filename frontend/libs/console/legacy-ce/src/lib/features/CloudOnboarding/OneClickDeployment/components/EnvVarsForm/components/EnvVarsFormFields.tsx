@@ -1,6 +1,6 @@
 import React from 'react';
-import { InputField } from '../../../../../../new-components/Form';
-import { Collapsible } from '../../../../../../new-components/Collapsible';
+import { Flex, Link } from '@radix-ui/themes';
+import { InputField, Collapsible, Text } from '@hasura/shared/ui';
 import { RequiredEnvVar } from '../../../types';
 import { NeonIcon } from './PgDatabaseField';
 import { getEnvVarFormSegments } from '../utils';
@@ -26,31 +26,30 @@ export function EnvVarsFormFields(props: EnvVarsFormFieldsProps) {
         <Collapsible
           defaultOpen
           triggerChildren={
-            <div className="flex w-full">
-              <span className="font-bold capitalize text-gray-600">
+            <Flex className="w-full" align="center" gap="2">
+              <Text weight="bold" className="capitalize">
                 Database Connections
-              </span>
+              </Text>
               {isPGDatabaseEnvVarPresent && (
                 <>
-                  <div className="flex w-[325px]" />
-                  <a
+                  <Flex className="w-[325px]" />
+                  <Link
                     href="https://neon.tech/"
-                    onClick={e => {
+                    onClick={(e) => {
                       e.stopPropagation();
                     }}
                     rel="noreferrer noopener"
                     target="_blank"
+                    color="gray"
                   >
-                    <div className="flex text-gray-600">
-                      Database creation powered by{' '}
-                      <div className="ml-2">
-                        <NeonIcon />
-                      </div>
-                    </div>
-                  </a>
+                    <Flex align="center" gap="2">
+                      <Text>Database creation powered by</Text>
+                      <NeonIcon />
+                    </Flex>
+                  </Link>
                 </>
               )}
-            </div>
+            </Flex>
           }
         >
           {databaseEnvVars.map((envVar, index) => (
@@ -65,9 +64,9 @@ export function EnvVarsFormFields(props: EnvVarsFormFieldsProps) {
         <Collapsible
           defaultOpen
           triggerChildren={
-            <span className="font-bold capitalize text-gray-600">
+            <Text weight="bold" className="capitalize">
               Variables
-            </span>
+            </Text>
           }
         >
           {dynamicEnvVars.map((envVar, index) => (
@@ -75,8 +74,11 @@ export function EnvVarsFormFields(props: EnvVarsFormFieldsProps) {
               <InputField
                 name={envVar.Name}
                 label={envVar.Mandatory ? `${envVar.Name} *` : envVar.Name}
-                placeholder={envVar.Name}
                 description={envVar.Description}
+                fieldProps={{
+                  placeholder: envVar.Name,
+                }}
+                noErrorPlaceholder
               />
             </div>
           ))}
@@ -86,9 +88,9 @@ export function EnvVarsFormFields(props: EnvVarsFormFieldsProps) {
       {staticEnvVars.length > 0 ? (
         <Collapsible
           triggerChildren={
-            <span className="font-bold capitalize text-gray-600">
+            <Text weight="bold" className="capitalize">
               Preset Variables
-            </span>
+            </Text>
           }
         >
           {staticEnvVars.map((envVar, index) => (
@@ -96,9 +98,12 @@ export function EnvVarsFormFields(props: EnvVarsFormFieldsProps) {
               <InputField
                 name={envVar.Name}
                 label={envVar.Mandatory ? `${envVar.Name} *` : envVar.Name}
-                placeholder={envVar.Name}
                 description={envVar.Description}
-                disabled
+                noErrorPlaceholder
+                fieldProps={{
+                  placeholder: envVar.Name,
+                  disabled: true,
+                }}
               />
             </div>
           ))}

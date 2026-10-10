@@ -1,4 +1,4 @@
-import { isLogicalModelType } from '../../../hasura-metadata-types';
+import { isLogicalModelType } from '@hasura/shared/types';
 import { getQualifiedTable } from '../../ManageTable/utils';
 import { findReferencedEntities } from './utils/findReferencedEntities';
 
@@ -12,8 +12,8 @@ export const DisplayReferencedLogicalModelEntities = ({
       {tables.length > 0 && (
         <div className="mt-2">
           <strong className="mb-2">Tables:</strong>
-          {tables.map(t => (
-            <pre className="ml-2">
+          {tables.map((t) => (
+            <pre key={getQualifiedTable(t.table).join(' / ')} className="ml-2">
               - {getQualifiedTable(t.table).join(' / ')}
             </pre>
           ))}
@@ -22,16 +22,22 @@ export const DisplayReferencedLogicalModelEntities = ({
       {native_queries.length > 0 && (
         <div className="mt-2">
           <strong className="mb-2">Native Queries:</strong>
-          {native_queries.map(q => (
-            <pre className="ml-2"> - {q.root_field_name}</pre>
+          {native_queries.map((q) => (
+            <pre key={q.root_field_name} className="ml-2">
+              {' '}
+              - {q.root_field_name}
+            </pre>
           ))}
         </div>
       )}
       {stored_procedures.length > 0 && (
         <div className="mt-2">
           <strong className="mb-2">Stored Procedures:</strong>
-          {stored_procedures.map(q => (
-            <pre className="ml-2 whitespace-nowrap">
+          {stored_procedures.map((q) => (
+            <pre
+              key={JSON.stringify(q.stored_procedure)}
+              className="ml-2 whitespace-nowrap"
+            >
               {/* since the 'stored_procedure' property is type `unknown` going to do this to be safe so we don't throw errors until the type is more specific: */}
               - {JSON.stringify(q.stored_procedure, null, 2)}
             </pre>
@@ -41,14 +47,14 @@ export const DisplayReferencedLogicalModelEntities = ({
       {logical_models.length > 0 && (
         <div className="mt-2">
           <strong className="mb-2">Logical Models:</strong>
-          {logical_models.map(m => (
-            <pre className="ml-2">
+          {logical_models.map((m) => (
+            <pre key={m.logicalModel.name} className="ml-2">
               {` - `}
               {m.logicalModel.name} (
               {m.matchingFields
-                .map(f =>
+                .map((f) =>
                   // it's either an array type or not, so if it's an array, add the `[]` string to show the difference.
-                  isLogicalModelType(f.type) ? f.name : f.name + '[]'
+                  isLogicalModelType(f.type) ? f.name : f.name + '[]',
                 )
                 .join(', ')}
               )

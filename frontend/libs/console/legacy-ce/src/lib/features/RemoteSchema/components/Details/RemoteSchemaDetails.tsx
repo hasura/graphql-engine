@@ -1,129 +1,105 @@
-import React from 'react';
-import { useReadOnlyMode } from '../../../../hooks';
-import {
-  MetadataSelector,
-  useMetadata,
-  useMetadataMigration,
-  useInconsistentObject,
-} from '../../../MetadataAPI';
-import { Button } from '../../../../new-components/Button';
-import { useFireNotification } from '../../../../new-components/Notifications';
-import { Analytics, REDACT_EVERYTHING } from '../../../Analytics';
-import { InconsistentBadge } from '../../../../components/Services/RemoteSchema/Common/GraphQLCustomization/InconsistentBadge';
-
+import { useState } from 'react';
+import { Button, Card, Input, Text } from '@hasura/shared/ui';
+import { Analytics, REDACT_EVERYTHING } from '@hasura/shared/analytics';
+import { InconsistentBadge } from '../InconsistentBadge';
 import { RemoteSchemaDetailsHeaders } from './RemoteSchemaDetailsHeaders';
 import { RemoteSchemaDetailsNavigation } from './RemoteSchemaDetailsNavigation';
 import { SchemaPreview } from './SchemaPreview';
+import {
+  useInconsistentMetadata,
+  useReloadRemoteSchema,
+} from '@hasura/metadata/api';
+import { useCurrentRemoteSchemaContext } from '../../context';
+import { findInconsistentRemoteSchema } from '@hasura/metadata/helpers';
+import { useAppContext } from '@hasura/shared/context';
+import { Flex } from '@radix-ui/themes';
 
-interface RemoteSchemaDetailsProps {
-  params: {
-    remoteSchemaName: string;
-  };
-}
+const RemoteSchemaDetails = () => {
+  const { readOnlyMode } = useAppContext();
+  const { data: inconsistentMetadata } = useInconsistentMetadata();
+  const { currentRemoteSchema } = useCurrentRemoteSchemaContext();
 
-export const RemoteSchemaDetails = (props: RemoteSchemaDetailsProps) => {
-  const { remoteSchemaName } = props.params;
+  const [reloading, setReloading] = useState(false);
+  const reloadRemoteSchema = useReloadRemoteSchema();
 
-  const remoteSchema = useMetadata(
-    MetadataSelector.getRemoteSchema(remoteSchemaName)
-  );
-
-  const readOnlyModeResponse = useReadOnlyMode();
-
-  const inconsistentObjects = useInconsistentObject();
-
-  const { fireNotification } = useFireNotification();
-
-  const { mutate, isLoading: isReloadLoading } = useMetadataMigration();
-
-  const reload = React.useCallback(() => {
-    mutate(
-      {
-        query: {
-          type: 'reload_remote_schema',
-          args: {
-            name: remoteSchemaName,
-          },
-        },
-      },
-      {
-        onSuccess: () => {
-          fireNotification({
-            type: 'success',
-            title: 'Remote schema cache reloaded',
-            message: `Remote schema cache for ${remoteSchemaName} has been reloaded`,
-          });
-        },
-        onError: e => {
-          fireNotification({
-            type: 'error',
-            title: 'Error reloading remote schema cache',
-            message: `Error reloading remote schema cache for ${remoteSchemaName}: ${e.message}`,
-          });
-        },
-      }
-    );
-  }, [mutate, remoteSchemaName, fireNotification]);
-
-  if (!remoteSchema) {
-    return null;
-  }
-
-  const manualUrl = remoteSchema.data?.definition.url;
-  const envName = remoteSchema.data?.definition.url_from_env;
-  const headers = remoteSchema.data?.definition.headers;
+  const manualUrl =
+    currentRemoteSchema.definition && 'url' in currentRemoteSchema.definition
+      ? currentRemoteSchema.definition.url
+      : undefined;
+  const envName =
+    currentRemoteSchema.definition &&
+    'url_from_env' in currentRemoteSchema.definition
+      ? currentRemoteSchema.definition.url_from_env
+      : undefined;
+  const headers = currentRemoteSchema.definition.headers;
   const introspectionHeaders =
-    remoteSchema.data?.definition.introspection_headers;
+    currentRemoteSchema.definition.introspection_headers;
+  // Distinguish inherited (property absent) from an explicit empty list.
   const hasIntrospectionHeaders = Array.isArray(introspectionHeaders);
-  const readOnlyMode = readOnlyModeResponse.data || true;
 
-  const inconsistencyDetails = inconsistentObjects.find(
-    inconObj =>
-      inconObj.type === 'remote_schema' &&
-      inconObj?.name === `remote_schema ${remoteSchemaName}`
+  const inconsistencyDetails = findInconsistentRemoteSchema(
+    inconsistentMetadata?.inconsistent_objects,
+    currentRemoteSchema.name,
   );
+
+  const reload = () => {
+    setReloading(true);
+    reloadRemoteSchema(currentRemoteSchema.name).finally(() => {
+      setReloading(false);
+    });
+  };
 
   return (
     <Analytics name="RemoteSchemaDetails" {...REDACT_EVERYTHING}>
-      <div>
-        <RemoteSchemaDetailsNavigation remoteSchemaName={remoteSchemaName} />
+      <div className="px-6">
+        <RemoteSchemaDetailsNavigation
+          remoteSchemaName={currentRemoteSchema.name}
+        />
         {inconsistencyDetails && (
           <InconsistentBadge inconsistencyDetails={inconsistencyDetails} />
         )}
-        <div className="w-full sm:w-9/12 ">
-          <div className="mb-md">
-            <div className="w-full bg-white shadow-sm rounded p-md border border-gray-300 shadow show">
-              <div className="mb-md">
-                <label className="block mb-xs font-semibold text-muted">
-                  Server GraphQL URL
-                </label>
-                <div className="flex items-center">
-                  <input
+        <div className="w-full sm:w-9/12">
+          <div className="mb-4">
+            <Card className="w-full show">
+              <div className="mb-4">
+                <Text weight="bold">Server GraphQL URL</Text>
+                <Flex align="center" className="mt-2">
+                  <Input
                     type="text"
-                    className="block w-full mr-2 h-input cursor-not-allowed rounded border bg-gray-200 border-gray-200"
                     placeholder={manualUrl || `<${envName}>`}
+                    full
                     disabled
+                    rightButton={
+                      !readOnlyMode ? (
+                        <Button
+                          mode="default"
+                          onClick={reload}
+                          loading={reloading}
+                        >
+                          Reload
+                        </Button>
+                      ) : undefined
+                    }
                   />
-                  {readOnlyMode && (
-                    <Button onClick={reload} isLoading={isReloadLoading}>
-                      Reload
-                    </Button>
-                  )}
-                </div>
+                </Flex>
               </div>
+              <RemoteSchemaDetailsHeaders
+                headers={headers}
+                title="Request headers"
+              />
               {!hasIntrospectionHeaders ? (
-                <div className="mb-md">
-                  <label className="block mb-xs font-semibold text-muted">
+                <div className="mb-4">
+                  <Text weight="bold" as="p">
                     Introspection headers
-                  </label>
-                  <span>Inherited from additional headers</span>
+                  </Text>
+                  <Text>Inherited from request headers</Text>
                 </div>
               ) : introspectionHeaders?.length === 0 ? (
-                <div className="mb-md">
-                  <label className="block mb-xs font-semibold text-muted">
+                <div className="mb-4">
+                  <Text weight="bold" as="p">
                     Introspection headers
-                  </label>
-                  <span>None</span>
+                  </Text>
+                  <Text>None</Text>
                 </div>
               ) : (
                 <RemoteSchemaDetailsHeaders
@@ -131,20 +107,18 @@ export const RemoteSchemaDetails = (props: RemoteSchemaDetailsProps) => {
                   title="Introspection headers"
                 />
               )}
-              <RemoteSchemaDetailsHeaders
-                headers={headers}
-                title="Request headers"
-              />
-              <label className="block mb-xs text-muted font-semibold">
+              <Text weight="bold" as="p">
                 Remote Schema Preview
-              </label>
-              <div className="rounded bg-gray-50 border border-gray-300 px-md py-sm">
-                <SchemaPreview name={remoteSchemaName} />
-              </div>
-            </div>
+              </Text>
+              <Card className="mt-2">
+                <SchemaPreview name={currentRemoteSchema.name} />
+              </Card>
+            </Card>
           </div>
         </div>
       </div>
     </Analytics>
   );
 };
+
+export default RemoteSchemaDetails;

@@ -1,18 +1,13 @@
-import { useQueryClient } from 'react-query';
-import { useMetadataMigration } from '../../../../MetadataAPI';
-import { exportMetadata } from '../../../../DataSource';
-import { useHttpClient } from '../../../../Network';
-import { QueryType } from '../../../types';
+import { useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api';
 import { permissionsTableKey } from '../../../PermissionsTable/hooks';
-import { permissionsFormKey } from '../dataFetchingHooks';
-import { transformErrorResponse } from '../../../../Data/errorUtils';
-import { hasuraToast } from '../../../../../new-components/Toasts';
-import { DisplayToastErrorMessage } from '../../../../Data/components/DisplayErrorMessage';
+import { DisplayToastErrorMessage, hasuraToast } from '@hasura/shared/ui';
+import { useMetadataHelpers, useMetadataMigration } from '@hasura/metadata/api';
+import type { DataQueryType, Table } from '@hasura/shared/types';
 
 export interface UseDeletePermissionArgs {
   dataSourceName: string;
-  table: unknown;
+  table: Table;
   roleName: string;
 }
 
@@ -21,37 +16,25 @@ export const useDeletePermission = ({
   table,
   roleName,
 }: UseDeletePermissionArgs) => {
-  const mutate = useMetadataMigration({
-    errorTransform: transformErrorResponse,
-  });
-  const httpClient = useHttpClient();
+  const mutate = useMetadataMigration();
   const queryClient = useQueryClient();
+  const { fetchSource } = useMetadataHelpers();
 
-  const submit = async (queries: QueryType[]) => {
-    const { resource_version: resourceVersion, metadata } =
-      await exportMetadata({
-        httpClient,
-      });
+  const submit = async (queries: DataQueryType[]) => {
+    const { source, resource_version } = await fetchSource(dataSourceName);
 
-    if (!resourceVersion) {
-      console.error('No resource version');
-      return;
-    }
-
-    const driver = metadata.sources.find(s => s.name === dataSourceName)?.kind;
-
-    if (!driver) throw Error('Unable to find driver in metadata');
+    const driver = source.kind;
 
     const body = api.createDeleteBody({
       driver,
       dataSourceName,
       table,
       role: roleName,
-      resourceVersion,
+      resourceVersion: resource_version,
       queries,
     });
 
-    await mutate.mutateAsync(
+    await mutate.mutate(
       {
         query: body,
       },
@@ -63,7 +46,7 @@ export const useDeletePermission = ({
             message: 'Permissions successfully deleted',
           });
         },
-        onError: err => {
+        onError: (err) => {
           hasuraToast({
             type: 'error',
             title: 'Error!',
@@ -71,25 +54,18 @@ export const useDeletePermission = ({
           });
         },
         onSettled: async () => {
-          await queryClient.invalidateQueries(
-            permissionsFormKey({
+          await queryClient.invalidateQueries({
+            queryKey: permissionsTableKey({
               dataSourceName,
               table,
-            })
-          );
-
-          await queryClient.invalidateQueries(
-            permissionsTableKey({
-              dataSourceName,
-              table,
-            })
-          );
+            }),
+          });
         },
-      }
+      },
     );
   };
 
-  const isLoading = mutate.isLoading;
+  const isLoading = mutate.isPending;
   const isError = mutate.isError;
 
   return {

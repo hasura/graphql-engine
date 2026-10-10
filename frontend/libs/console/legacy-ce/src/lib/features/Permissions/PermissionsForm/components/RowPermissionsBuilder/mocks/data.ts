@@ -8777,5 +8777,5 @@ export const results = {
 };
 
 export const schema = buildClientSchema(
-  results.data as unknown as IntrospectionQuery
+  results.data as unknown as IntrospectionQuery,
 );

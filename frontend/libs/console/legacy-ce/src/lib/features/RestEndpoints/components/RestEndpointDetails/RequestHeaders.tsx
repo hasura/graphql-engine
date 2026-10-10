@@ -1,13 +1,11 @@
 import { FaPlus } from 'react-icons/fa';
-import { Button } from '../../../../new-components/Button';
-import { Collapsible } from '../../../../new-components/Collapsible';
-import { Header } from './RestEndpointDetails';
-import { CardedTable } from '../../../../new-components/CardedTable';
-import { Checkbox } from '../../../../new-components/Form';
+import { Button, Collapsible, CardedTable, Checkbox } from '@hasura/shared/ui';
+
+import { DataHeader } from '@hasura/shared/types';
 
 type RequestHeadersProps = {
-  headers: Header[];
-  setHeaders: (headers: Header[]) => void;
+  headers: DataHeader[];
+  setHeaders: (headers: DataHeader[]) => void;
 };
 
 export const RequestHeaders = (props: RequestHeadersProps) => {
@@ -15,7 +13,7 @@ export const RequestHeaders = (props: RequestHeadersProps) => {
 
   const showRemove = !!(
     headers.length > 1 ||
-    headers?.[0]?.name ||
+    headers?.[0]?.key ||
     headers?.[0]?.value
   );
   return (
@@ -28,10 +26,13 @@ export const RequestHeaders = (props: RequestHeadersProps) => {
       <div className="relative">
         <div className="absolute top-0 right-0">
           <Button
-            icon={<FaPlus />}
+            leftIcon={FaPlus}
             size="sm"
             onClick={() => {
-              setHeaders([...headers, { name: '', value: '', selected: true }]);
+              setHeaders([
+                ...headers,
+                { key: '', value: '', isDisabled: true, selected: true },
+              ]);
             }}
           >
             Add Header
@@ -39,16 +40,16 @@ export const RequestHeaders = (props: RequestHeadersProps) => {
         </div>
         <div className="font-semibold text-muted mb-4">Headers List</div>
         <CardedTable
-          showActionCell={showRemove}
           columns={[
             <Checkbox
-              checked={headers.every(header => header.selected)}
-              onCheckedChange={checked =>
+              key="select-all"
+              value={headers.every((header) => header.isDisabled)}
+              onChange={(checked) =>
                 setHeaders(
-                  headers.map(header => ({
+                  headers.map((header) => ({
                     ...header,
                     selected: !!checked,
-                  }))
+                  })),
                 )
               }
             />,
@@ -58,44 +59,47 @@ export const RequestHeaders = (props: RequestHeadersProps) => {
           data={headers.map((header, i) =>
             [
               <Checkbox
-                checked={header.selected}
-                onCheckedChange={checked =>
+                key={`checkbox-${i}`}
+                value={header.isDisabled}
+                onChange={(checked) =>
                   setHeaders(
-                    headers.map(h => ({
+                    headers.map((h) => ({
                       ...h,
-                      selected: h.name === header.name ? !!checked : h.selected,
-                    }))
+                      selected: h.key === header.key ? !!checked : h.isDisabled,
+                    })),
                   )
                 }
               />,
               <input
+                key={`name-${i}`}
                 data-testid={`header-name-${i}`}
                 placeholder="Enter name..."
                 className="w-full"
-                value={header.name}
-                onChange={e =>
+                value={header.key}
+                onChange={(e) =>
                   setHeaders(
-                    headers.map(h => ({
+                    headers.map((h) => ({
                       ...h,
-                      name: h.name === header.name ? e.target.value : h.name,
-                    }))
+                      name: h.key === header.key ? e.target.value : h.key,
+                    })),
                   )
                 }
               />,
               <input
+                key={`value-${i}`}
                 data-testid={`header-value-${i}`}
                 placeholder="Enter value..."
                 className="w-full border-0"
                 type={
-                  header.name === 'x-hasura-admin-secret' ? 'password' : 'text'
+                  header.key === 'x-hasura-admin-secret' ? 'password' : 'text'
                 }
                 value={header.value}
-                onChange={e =>
+                onChange={(e) =>
                   setHeaders(
-                    headers.map(h => ({
+                    headers.map((h) => ({
                       ...h,
-                      value: h.name === header.name ? e.target.value : h.value,
-                    }))
+                      value: h.key === header.key ? e.target.value : h.value,
+                    })),
                   )
                 }
               />,
@@ -110,9 +114,10 @@ export const RequestHeaders = (props: RequestHeadersProps) => {
 
                     if (newHeaders.length === 0) {
                       newHeaders.push({
-                        name: '',
+                        key: '',
                         value: '',
-                        selected: true,
+                        isDisabled: true,
+                        selected: false,
                       });
                     }
                     setHeaders(newHeaders);
@@ -121,7 +126,7 @@ export const RequestHeaders = (props: RequestHeadersProps) => {
                   Remove
                 </Button>
               ),
-            ].filter(Boolean)
+            ].filter(Boolean),
           )}
         />
       </div>

@@ -1,7 +1,6 @@
 import { useForm, useFormContext } from 'react-hook-form';
 import { LogicalModelPermissionsState } from '../LogicalModelPermissions';
 import {
-  AccessType,
   Action,
   LogicalModelWithPermissions,
   Permission,
@@ -9,14 +8,15 @@ import {
 } from '../components/types';
 import isEmpty from 'lodash/isEmpty';
 import { permissionColumnAccess, permissionRowAccess } from '../utils';
+import { AccessType } from '@hasura/shared/types';
 
 export function useLogicalModelPermissionsForm(
   logicalModel: LogicalModelWithPermissions | undefined,
-  allRoles: string[]
+  allRoles: string[],
 ) {
-  const defaultPermissions: Permission[] = allRoles.map(role => {
+  const defaultPermissions: Permission[] = allRoles.map((role) => {
     const savedPermissionForRole = logicalModel?.select_permissions?.find(
-      select_perm => select_perm.role === role
+      (select_perm) => select_perm.role === role,
     );
 
     if (!savedPermissionForRole)
@@ -57,7 +57,7 @@ export function useLogicalModelPermissionsForm(
           source: logicalModel?.source.name || '',
         },
       ],
-      columns: logicalModel?.fields?.map(field => field.name) ?? [],
+      columns: logicalModel?.fields?.map((field) => field.name) ?? [],
     },
   });
   return methods;
@@ -71,7 +71,7 @@ export function usePermissionsFormContext() {
       const permissions = watch('permissions');
       setValue(
         'permissions',
-        permissions.map(permission => {
+        permissions.map((permission) => {
           if (permission.roleName === roleName) {
             return {
               ...permission,
@@ -79,39 +79,37 @@ export function usePermissionsFormContext() {
             };
           }
           return permission;
-        })
+        }),
       );
     },
     rowSelectPermissions: watch('rowSelectPermissions'),
     setRowSelectPermissions: (rowSelectPermissions: RowSelectPermissionsType) =>
       setValue('rowSelectPermissions', rowSelectPermissions),
     columns: watch('columns'),
-    toggleColumn: (permission: Permission, column: string) => {
+    toggleColumn: (permission: Permission, columns: string[]) => {
       const permissions = watch('permissions');
       setValue(
         'permissions',
-        permissions.map(p => {
+        permissions.map((p) => {
           if (
             p.roleName === permission.roleName &&
             p.source === permission.source
           ) {
-            const columns = p.columns.includes(column)
-              ? p.columns.filter(c => c !== column)
-              : [...p.columns, column];
             return {
               ...p,
               columns,
             };
           }
+
           return p;
-        })
+        }),
       );
     },
     toggleAllColumns: (permission: Permission) => {
       const permissions = watch('permissions');
       setValue(
         'permissions',
-        permissions.map(p => {
+        permissions.map((p) => {
           if (
             p.roleName === permission.roleName &&
             p.source === permission.source
@@ -126,11 +124,11 @@ export function usePermissionsFormContext() {
             };
           }
           return p;
-        })
+        }),
       );
     },
     columnPermissionsStatus: (
-      permission: Permission
+      permission: Permission,
     ): '' | 'No columns' | 'All columns' | 'Partial columns' => {
       if (!permission) {
         return '';
@@ -159,7 +157,7 @@ export function usePermissionsFormContext() {
       const permissions = watch('permissions');
       setValue(
         'permissions',
-        permissions.map(permission => {
+        permissions.map((permission) => {
           if (permission.isNew) {
             return {
               ...permission,
@@ -167,7 +165,7 @@ export function usePermissionsFormContext() {
             };
           }
           return permission;
-        })
+        }),
       );
     },
     /**
@@ -175,7 +173,7 @@ export function usePermissionsFormContext() {
      */
     permissionAccess: (
       action: Action | undefined,
-      permission: Permission
+      permission: Permission,
     ): AccessType => {
       if (action !== 'select') {
         return 'noAccess';

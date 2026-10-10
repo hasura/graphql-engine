@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { FETCH_ALERT_CONFIG } from '../queries';
 import { GetAlertConfigResponseWithError, AlertType } from '../types';
 import { FETCH_ALERT_CONFIG_QUERY_NAME } from '../constants';
@@ -20,7 +20,7 @@ type FetchAlertResponse =
 
 export const useGetAlertConfig = (
   projectId: string,
-  type: AlertType
+  type: AlertType,
 ): FetchAlertResponse => {
   const fetchAlertConfigQueryFn = (projectId: string) => {
     return controlPlaneClient.query<

@@ -7,7 +7,7 @@ describe('transformEntitlementToAccess', () => {
       transformEntitlementToAccess({
         status: 'none',
         type: 'trial',
-      })
+      }),
     ).toEqual({
       access: 'eligible',
     });

@@ -1,7 +1,7 @@
-import { RequestTransformMethod } from '../../../../metadata/types';
 import { createGraphQLSchema } from '@hasura/open-api-to-graphql';
 import z from 'zod';
 import { formSchema } from './OASGeneratorPage';
+import { RequestTransformMethod } from '@hasura/shared/types';
 
 export type SchemaType = z.infer<typeof formSchema>;
 

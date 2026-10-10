@@ -11,7 +11,7 @@ describe('getMapQueryTypePermissions should', () => {
     const result = getNonSelectedQueryTypePermissions(
       partiallyAppliedPermissionsData,
       'insert',
-      'user'
+      'user',
     );
     expect(result).toEqual([
       {
@@ -37,7 +37,7 @@ describe('getMapQueryTypePermissions should', () => {
     const result = getNonSelectedQueryTypePermissions(
       fullyAppliedPermissionsData,
       'insert',
-      'user'
+      'user',
     );
     expect(result).toEqual([
       {
@@ -72,7 +72,7 @@ describe('getMapQueryTypePermissions should', () => {
     const result = getNonSelectedQueryTypePermissions(
       noAppliedPermissionsData,
       'insert',
-      'user'
+      'user',
     );
 
     expect(result).toEqual([]);
@@ -82,7 +82,7 @@ describe('getMapQueryTypePermissions should', () => {
     const result = getNonSelectedQueryTypePermissions(
       alreadyExistingInsertPermissions,
       'select',
-      'user'
+      'user',
     );
 
     expect(result).toEqual([

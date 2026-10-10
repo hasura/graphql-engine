@@ -1,57 +1,35 @@
-import { useCallback, useMemo } from 'react';
-import { Driver } from '../../../dataSources';
-import { exportMetadata } from '../../../metadata/actions';
-import { useAppDispatch } from '../../../storeHooks';
-import { useMetadataMigration } from '../../MetadataAPI';
-import { useHttpClient } from '../../Network';
-import { useMetadata } from '../../hasura-metadata-api';
-import { DatabaseConnection } from '../types';
-import {
-  sendConnectDatabaseTelemetryEvent,
-  transformErrorResponse,
-} from '../utils';
-import { usePushRoute } from './usePushRoute';
-import { default as handleAsyncError } from 'await-to-js';
+import { useCallback } from 'react';
+import { useMetadataMigration, useMetadata } from '@hasura/metadata/api';
+import type { DatabaseConnection } from '../types';
+import { sendConnectDatabaseTelemetryEvent } from '../utils';
+import { useAuthFetchJson } from '@hasura/shared/hooks';
+import { SupportedDriver } from '@hasura/shared/types';
+import { useAppContext } from '@hasura/shared/context';
+import { getDriverPrefix } from '@hasura/metadata/helpers';
+import { hasuraToast } from '@hasura/shared/ui';
+import { getErrorMessage } from '@hasura/shared/utils';
 
 export const useManageDatabaseConnection = ({
   onSuccess,
   onError,
 }: {
-  onSuccess: () => void;
-  onError: (err: Error) => void;
+  onSuccess?: () => void;
+  onError?: (err: Error) => void;
 }) => {
-  const { mutateAsync, ...rest } = useMetadataMigration({
-    errorTransform: transformErrorResponse,
-  });
-  const { data: resource_version } = useMetadata(m => m.resource_version);
-  const push = usePushRoute();
-  const dispatch = useAppDispatch();
-  const httpClient = useHttpClient();
-
-  const mutationOptions = useMemo(
-    () => ({
-      onSuccess: () => {
-        onSuccess();
-
-        // this code is only for the demo
-        push('/data/manage');
-        dispatch(exportMetadata());
-      },
-      onError: (err: Error) => {
-        console.log('~', err);
-        onError(err);
-      },
-    }),
-    [dispatch, onError, onSuccess, push]
+  const { endpoints } = useAppContext();
+  const { mutate, ...rest } = useMetadataMigration({});
+  const { data: resource_version, refetch: refetchMetadata } = useMetadata(
+    (m) => m.resource_version,
   );
+  const fetchJson = useAuthFetchJson();
 
   const createConnection = useCallback(
     async (databaseConnection: DatabaseConnection) => {
-      const [mutationError] = await handleAsyncError(
-        mutateAsync(
+      try {
+        await mutate(
           {
             query: {
-              type: `${databaseConnection.driver}_add_source`,
+              type: `${getDriverPrefix(databaseConnection.driver)}_add_source` as const,
               args: {
                 name: databaseConnection.details.name,
                 configuration: databaseConnection.details.configuration,
@@ -59,37 +37,45 @@ export const useManageDatabaseConnection = ({
               },
             },
           },
-          mutationOptions
-        )
-      );
-
-      if (mutationError) {
+          {
+            onSuccess: () => {
+              onSuccess?.();
+              refetchMetadata();
+            },
+            onError: (err: Error) => {
+              hasuraToast({
+                type: 'error',
+                title: 'Failed to connect database',
+                message: getErrorMessage(err),
+              });
+              onError?.(err);
+            },
+          },
+        );
+      } catch {
         //console.log('Error in create connection mutation: ', mutationError);
         // if there's an error with the connection mutation, return and don't send telemetry request
         return;
       }
 
-      const [telemetryError] = await handleAsyncError(
-        sendConnectDatabaseTelemetryEvent({
-          httpClient,
-          driver: databaseConnection.driver as Driver,
-          dataSourceName: databaseConnection.details.name,
-        })
-      );
-
-      if (telemetryError) {
+      await sendConnectDatabaseTelemetryEvent({
+        fetchJson,
+        endpoints,
+        driver: databaseConnection.driver as SupportedDriver,
+        dataSourceName: databaseConnection.details.name,
+      }).catch(() => {
         //console.log('Error in create connection telemetry: ', telemetryError);
-      }
+      });
     },
-    [httpClient, mutateAsync, mutationOptions, onError]
+    [fetchJson, mutate, onError],
   );
 
   const editConnection = useCallback(
     async (
-      databaseConnection: DatabaseConnection & { originalName: string }
+      databaseConnection: DatabaseConnection & { originalName: string },
     ) => {
       const renameConnectionPayload = {
-        type: 'rename_source',
+        type: 'rename_source' as const,
         args: {
           name: databaseConnection.originalName,
           new_name: databaseConnection.details.name,
@@ -97,7 +83,7 @@ export const useManageDatabaseConnection = ({
       };
 
       const updateConfigurationPayload = {
-        type: `${databaseConnection.driver}_add_source`,
+        type: `${getDriverPrefix(databaseConnection.driver)}_add_source` as const,
         args: {
           name: databaseConnection.details.name,
           configuration: databaseConnection.details.configuration,
@@ -106,29 +92,35 @@ export const useManageDatabaseConnection = ({
         },
       };
 
-      const [mutationError] = await handleAsyncError(
-        mutateAsync(
-          {
-            query: {
-              type: 'bulk',
-              source: databaseConnection.originalName,
-              resource_version,
-              args:
-                databaseConnection.details.name ===
-                databaseConnection.originalName
-                  ? [updateConfigurationPayload]
-                  : [renameConnectionPayload, updateConfigurationPayload],
-            },
+      await mutate(
+        {
+          query: {
+            type: 'bulk',
+            resource_version,
+            args:
+              databaseConnection.details.name ===
+              databaseConnection.originalName
+                ? [updateConfigurationPayload]
+                : [renameConnectionPayload, updateConfigurationPayload],
           },
-          mutationOptions
-        )
+        },
+        {
+          onSuccess: () => {
+            onSuccess?.();
+            refetchMetadata();
+          },
+          onError: (err: Error) => {
+            hasuraToast({
+              type: 'error',
+              title: 'Failed to edit database connection',
+              message: getErrorMessage(err),
+            });
+            onError?.(err);
+          },
+        },
       );
-
-      if (mutationError) {
-        //console.log('Error in create connection mutation: ', mutationError);
-      }
     },
-    [mutateAsync, mutationOptions, resource_version]
+    [mutate, resource_version],
   );
 
   return { createConnection, editConnection, ...rest };

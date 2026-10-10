@@ -1,8 +1,8 @@
 import React from 'react';
-import { StoryObj, Meta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
 
 import { SuccessScreen } from './SuccessScreen';
-import { Dialog } from '../../../../../new-components/Dialog';
+import { Dialog } from '@hasura/shared/ui';
 
 export default {
   title: 'features / EETrial / Activate EE Form / Success Screen 🧬️',
@@ -12,7 +12,7 @@ export default {
 export const Demo: StoryObj<typeof SuccessScreen> = {
   render: () => {
     return (
-      <Dialog size="sm" onClose={() => {}} hasBackdrop>
+      <Dialog size="sm" onClose={() => {}}>
         <SuccessScreen />
       </Dialog>
     );

@@ -1,8 +1,8 @@
-import { NeonConnect } from '../../../../components/Services/Data/DataSources/CreateDataSource/Neon';
-import { IndicatorCard } from '../../../../new-components/IndicatorCard';
-import { useAppDispatch } from '../../../../storeHooks';
-import { DriverInfo } from '../../../DataSource';
+import { NeonConnect } from '../../../CloudOnboarding/NeonOnboardingWizard/components/NeonConnect';
+import { IndicatorCard } from '@hasura/shared/ui';
+import { DriverInfo } from '@hasura/metadata/data-source';
 import { ConnectButton } from '../../components/ConnectButton';
+import { dataRoutes } from '@hasura/shared/utils';
 
 export const Cloud = ({
   selectedDriver,
@@ -11,16 +11,11 @@ export const Cloud = ({
   selectedDriver: DriverInfo;
   isDriverAvailable: boolean;
 }) => {
-  const dispatch = useAppDispatch();
-
   return (
     <>
       {selectedDriver?.name === 'postgres' && (
         <div className="mt-3" data-testid="neon-connect">
-          <NeonConnect
-            dispatch={dispatch}
-            connectDbUrl={'/data/v2/manage/connect'}
-          />
+          <NeonConnect connectDbUrl={dataRoutes.connectDatabase()} />
         </div>
       )}
 

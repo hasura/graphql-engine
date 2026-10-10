@@ -35,8 +35,8 @@ describe('convertSuggestedRelationShipToLocalRelationship', () => {
     expect(
       convertSuggestedRelationShipToLocalRelationship(
         dataSourceName,
-        suggestedRelationship
-      )
+        suggestedRelationship,
+      ),
     ).toEqual(expected);
   });
 });

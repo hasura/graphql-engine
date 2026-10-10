@@ -1,8 +1,8 @@
-import { Select } from '../../../../../new-components/Form';
+import { SelectField } from '@hasura/shared/ui';
 
 export const IsolationLevel = ({ name }: { name: string }) => {
   return (
-    <Select
+    <SelectField
       options={[
         {
           value: 'read-committed',
@@ -18,6 +18,7 @@ export const IsolationLevel = ({ name }: { name: string }) => {
         },
       ]}
       name={name}
+      placeholder="-- Select --"
       label="Isolation Level"
       tooltip="The transaction isolation level in which the queries made to the source will be run"
     />

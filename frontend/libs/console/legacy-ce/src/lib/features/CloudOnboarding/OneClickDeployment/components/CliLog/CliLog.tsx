@@ -1,5 +1,4 @@
 import * as React from 'react';
-import ProgressBar from 'react-progress-bar-plus';
 import { FaChevronRight } from 'react-icons/fa';
 import {
   OneClickDeploymentState,
@@ -10,6 +9,8 @@ import {
 import { StatusIcon } from './components/StatusIcon';
 import { getStepText } from './utils';
 import { ErrorBox } from './components/ErrorBox';
+import { Flex, Progress } from '@radix-ui/themes';
+import { Text } from '@hasura/shared/ui';
 
 type Props = {
   step: UserFacingStep;
@@ -18,21 +19,13 @@ type Props = {
   fallbackApps: FallbackApp[];
 };
 
-export const CliLog: React.VFC<Props> = props => {
+export const CliLog: React.FC<Props> = (props) => {
   const { step, status, retryAction, fallbackApps } = props;
 
-  const [progressBarPercent, setProgressBarPercent] =
-    React.useState<number>(-1);
-
-  React.useEffect(() => {
-    if (step === OneClickDeploymentState.ApplyingMetadataMigrationsSeeds) {
-      if (status.kind === 'success' || status.kind === 'error') {
-        setProgressBarPercent(100);
-      } else {
-        setProgressBarPercent(10);
-      }
-    }
-  }, [step, status.kind]);
+  const showProgressBar =
+    step === OneClickDeploymentState.ApplyingMetadataMigrationsSeeds &&
+    status.kind !== 'success' &&
+    status.kind !== 'error';
 
   // only show steps that are relevent to the users
   // i.e. hide internal util steps
@@ -47,28 +40,28 @@ export const CliLog: React.VFC<Props> = props => {
       return null;
     default:
       const log = (
-        <>
-          <ProgressBar
-            percent={progressBarPercent}
-            autoIncrement
-            spinner={false}
-          />
-          <div className="flex items-center" key={step}>
-            <FaChevronRight className="mr-xs mt-xs text-slate-400" />
-            <div className="mt-xs mr-xs">
-              <StatusIcon step={step} status={status} />
-            </div>
-            <div className="mt-xs text-slate-50 tracking-widest">
-              {getStepText(step, status)}
-            </div>
-          </div>
-        </>
+        <div className="mt-4">
+          {showProgressBar ? (
+            <Progress
+              aria-label="Applying metadata, migrations and seeds"
+              color="tomato"
+              radius="none"
+              size="1"
+              className="fixed! top-0 left-0 z-[9999] h-0.5! w-full"
+            />
+          ) : null}
+          <Flex align="center" key={step} className="mt-2">
+            <FaChevronRight />
+            <StatusIcon step={step} status={status} />
+            <Text className="tracking-widest">{getStepText(step, status)}</Text>
+          </Flex>
+        </div>
       );
       if (status.kind === 'error') {
         return (
-          <div className="flex w-full flex-col">
+          <Flex direction="column" className="w-full mt-4">
             {log}
-            <div className="w-full mt-xs">
+            <div className="w-full mt-2">
               <ErrorBox
                 step={step}
                 error={status.error}
@@ -77,7 +70,7 @@ export const CliLog: React.VFC<Props> = props => {
                 fallbackApps={fallbackApps}
               />
             </div>
-          </div>
+          </Flex>
         );
       }
       return log;

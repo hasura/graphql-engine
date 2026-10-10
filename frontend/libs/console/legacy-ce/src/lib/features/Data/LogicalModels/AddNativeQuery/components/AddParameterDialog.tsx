@@ -1,17 +1,14 @@
-import { Controller } from 'react-hook-form';
 import { z } from 'zod';
-import { Dialog } from '../../../../../new-components/Dialog';
 import {
-  FieldWrapper,
+  Dialog,
   GraphQLSanitizedInputField,
   InputField,
-  Select,
   useConsoleForm,
-} from '../../../../../new-components/Form';
-import { Switch } from '../../../../../new-components/Switch';
-import { implement } from '../../../../../utils/zodUtils';
-
-import { FormDebug } from '../../../../../new-components/Form/dev-components/FormDebug';
+  FormDebug,
+  SelectField,
+  SwitchField,
+} from '@hasura/shared/ui';
+import { Flex } from '@radix-ui/themes';
 import { NativeQueryArgumentNormalized } from '../types';
 
 /**
@@ -27,8 +24,8 @@ export const AddParameterDialog = ({
   onCancel: () => void;
   onAdd: (argument: NativeQueryArgumentNormalized) => void;
 }) => {
-  const { Form, methods } = useConsoleForm({
-    schema: implement<NativeQueryArgumentNormalized>().with({
+  const { Form } = useConsoleForm({
+    schema: z.object({
       name: z.string().min(1),
       type: z.string().min(1),
       default_value: z.string().optional(),
@@ -39,12 +36,11 @@ export const AddParameterDialog = ({
 
   return (
     <Form
-      onSubmit={values => {
+      onSubmit={(values) => {
         onAdd(values);
       }}
     >
       <Dialog
-        hasBackdrop
         title={'Add Query Parameter'}
         footer={{
           callToAction: 'Add',
@@ -56,13 +52,13 @@ export const AddParameterDialog = ({
       >
         <div className="p-4">
           <FormDebug />
-          <div className="flex flex-col">
+          <Flex direction="column">
             <GraphQLSanitizedInputField
               hideTips
               label="Parameter Name"
               name="name"
             />
-            <Select
+            <SelectField
               name="type"
               label="Type"
               options={[
@@ -71,19 +67,8 @@ export const AddParameterDialog = ({
               ]}
             />
             <InputField label="Default Value" name="default_value" />
-            <Controller
-              name="required"
-              control={methods.control}
-              render={({ field, fieldState, formState }) => (
-                <FieldWrapper label="Required" error={fieldState.error}>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FieldWrapper>
-              )}
-            />
-          </div>
+            <SwitchField name="required">Required</SwitchField>
+          </Flex>
         </div>
       </Dialog>
     </Form>

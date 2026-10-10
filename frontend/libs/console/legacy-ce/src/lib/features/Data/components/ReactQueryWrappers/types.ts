@@ -1,12 +1,9 @@
-import { SkeletonProps } from 'react-loading-skeleton';
-import { APIError } from '../../../../hooks/error';
-import { PartialBy } from '../../../../components/Common/utils/tsUtils';
+import { SkeletonListProps } from '@hasura/shared/ui';
 
-// make the name property optional for easier use
-export type ErrorType = PartialBy<APIError, 'name'> | null;
+import type { JSX } from 'react';
 
 export type CommonProps<TData = unknown> = {
-  renderError?: (params: { error: ErrorType }) => JSX.Element;
+  renderError?: (params: { error: Error }) => JSX.Element;
   renderIdle?: () => JSX.Element;
   fallbackData?: TData;
 } & LoadingProps<TData> &
@@ -23,7 +20,7 @@ type LoadingProps<TData = unknown> =
       //loadingStyle is optional for 'instead-of-content' as this is the default loadingStyle
       loadingStyle?: 'instead-of-content';
       loader: 'skeleton';
-      skeletonProps: SkeletonProps;
+      skeletonProps: SkeletonListProps;
     }
   | {
       loadingStyle?: 'instead-of-content';
@@ -37,21 +34,21 @@ type LoadingProps<TData = unknown> =
     }
   | {
       loadingStyle: 'overlay';
-      fallbackData: TData;
+      fallbackData?: TData;
       loader: 'spinner';
       miniSpinnerBackdrop?: boolean;
     }
   | {
       loadingStyle: 'overlay';
-      fallbackData: TData;
+      fallbackData?: TData;
       loader: 'skeleton';
-      skeletonCount: number;
+      skeletonProps: SkeletonListProps;
     }
   | {
       loadingStyle: 'overlay';
       loader?: never;
       renderLoading: () => JSX.Element;
-      fallbackData: TData;
+      fallbackData?: TData;
     };
 
 type ErrorProps<TData = unknown> =

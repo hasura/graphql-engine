@@ -1,33 +1,37 @@
-import { renderHook } from '@testing-library/react-hooks';
-import { rest } from 'msw';
+import { renderHook, waitFor } from '@testing-library/react';
+import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
-import { wrapper } from '../../../hooks/__tests__/common/decorator';
+import { vi } from 'vitest';
 import { useRemoveAgent } from '../hooks';
+import { testWrapper } from '@hasura/shared/testing';
 
 const server = setupServer(
-  rest.post('http://localhost/v1/metadata', (req, res, ctx) => {
-    if ((req.body as Record<string, any>).args.name === 'wrong_payload')
-      return res(ctx.status(400), ctx.json({ message: 'Bad request' }));
-    return res(ctx.status(200), ctx.json({ message: 'success' }));
-  })
+  http.post('http://localhost/v1/metadata', async ({ request }) => {
+    const body = (await request.json()) as Record<string, any>;
+    if (body.args.name === 'wrong_payload')
+      return HttpResponse.json({ message: 'Bad request' }, { status: 400 });
+    return HttpResponse.json({ message: 'success' }, { status: 200 });
+  }),
 );
 
 describe('useRemoveAgent tests: ', () => {
   beforeAll(() => {
     server.listen();
-    jest.spyOn(console, 'error').mockImplementation(() => null);
+    vi.spyOn(console, 'error').mockImplementation(() => null);
   });
   afterAll(() => {
     server.close();
-    jest.spyOn(console, 'error').mockRestore();
+    vi.spyOn(console, 'error').mockRestore();
   });
 
   it('calls the custom success callback after adding a DC agent', async () => {
-    const { result, waitFor } = renderHook(() => useRemoveAgent(), { wrapper });
+    const { result } = renderHook(() => useRemoveAgent(), {
+      wrapper: testWrapper,
+    });
 
     const { removeAgent } = result.current;
 
-    const mockCallback = jest.fn(() => {
+    const mockCallback = vi.fn(() => {
       console.log('success');
     });
 
@@ -38,7 +42,7 @@ describe('useRemoveAgent tests: ', () => {
       },
     });
 
-    await waitFor(() => result.current.isSuccess);
+    await waitFor(() => expect(result.current.isSuccess).toBeTruthy());
 
     await waitFor(() => {
       expect(mockCallback).toHaveBeenCalledTimes(1);
@@ -46,11 +50,13 @@ describe('useRemoveAgent tests: ', () => {
   });
 
   it('calls the custom error callback after failing to add a DC agent', async () => {
-    const { result, waitFor } = renderHook(() => useRemoveAgent(), { wrapper });
+    const { result } = renderHook(() => useRemoveAgent(), {
+      wrapper: testWrapper,
+    });
 
     const { removeAgent } = result.current;
 
-    const mockCallback = jest.fn(() => {
+    const mockCallback = vi.fn(() => {
       console.log('error');
     });
 
@@ -61,7 +67,7 @@ describe('useRemoveAgent tests: ', () => {
       },
     });
 
-    await waitFor(() => result.current.isError);
+    await waitFor(() => expect(result.current.isError).toBeTruthy());
 
     await waitFor(() => {
       expect(mockCallback).toHaveBeenCalledTimes(1);

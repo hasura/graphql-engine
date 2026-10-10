@@ -1,4 +1,4 @@
-import { Metadata } from '../../../../hasura-metadata-types';
+import { Metadata } from '@hasura/shared/types';
 
 export const mockMetadata: Metadata = {
   resource_version: 24,

@@ -1,21 +1,22 @@
-import { Button } from '../../../../../../new-components/Button';
-import { Analytics } from '../../../../../Analytics';
+import { Button } from '@hasura/shared/ui';
+import { Analytics } from '@hasura/shared/analytics';
+import { Flex } from '@radix-ui/themes';
 import React from 'react';
 import {
   FaExclamationCircle,
   FaExternalLinkAlt,
   FaSyncAlt,
 } from 'react-icons/fa';
-import { capitalize } from '../../../../../../components/Common/utils/jsUtils';
 import { UserFacingStep, FallbackApp } from '../../../types';
 import { getErrorText, getProjectEnvVarPageLink } from '../utils';
 import { LinkButton } from './LinkButton';
 import { transformFallbackAppToLinkButtonProps } from '../fallbackAppUtil';
+import { capitalize } from 'inflection';
 
 type Props = {
   step: UserFacingStep;
   error: Record<string, any>;
-  logId: number;
+  logId: string;
   retryAction: VoidFunction;
   fallbackApps: FallbackApp[];
 };
@@ -38,7 +39,7 @@ export function ErrorBox(props: Props) {
   };
 
   const getErrorMessage = () => {
-    let errorMsg: string | React.ReactElement = '';
+    let errorMsg: string | React.ReactElement<any> = '';
 
     if (error?.error?.message) {
       errorMsg = capitalize(error.error.message);
@@ -72,31 +73,29 @@ export function ErrorBox(props: Props) {
   };
 
   return (
-    <div className="font-sans bg-red-500/20 p-md border-l-red-500 border-l">
+    <div className="font-sans bg-red-500/20 p-4 border-l-red-500 border-l">
       <p className="font-bold text-white flex items-center">
-        <FaExclamationCircle className="mr-xs" />
+        <FaExclamationCircle className="mr-1" />
         {getErrorText(step)}
       </p>
-      <p className="mb-sm text-white">{getErrorMessage()}</p>
+      <p className="mt-2 mb-4 text-white">{getErrorMessage()}</p>
 
-      <div className="flex items-center">
+      <Flex align="center" gap="2">
         <Analytics
           name="one-click-deployment-error-retry"
           passHtmlAttributesToChildren
         >
           <Button
-            mode="default"
+            mode="destructive"
             id="one-click-deployment-error-retry"
             data-testid="one-click-deployment-error-retry"
-            isLoading={isRetrying}
+            loading={isRetrying}
             loadingText="Retrying"
             disabled={isRetrying}
-            className="mr-sm bg-none bg-red-600 border-red-800 disabled:text-slate-50"
-            icon={<FaSyncAlt className="text-white" />}
-            iconPosition="start"
+            leftIcon={FaSyncAlt}
             onClick={onRetryClick}
           >
-            <span className="text-white font-semibold text-md">Retry</span>
+            Retry
           </Button>
         </Analytics>
         <Analytics
@@ -107,22 +106,25 @@ export function ErrorBox(props: Props) {
             id="one-click-deployment-error-trouble-shooting-button"
             url="https://hasura.io/docs/latest/hasura-cloud/one-click-deploy/index/#troubleshooting"
             buttonText="Troubleshooting Docs"
-            icon={<FaExternalLinkAlt className="text-white" />}
+            icon={FaExternalLinkAlt}
             iconPosition="end"
           />
         </Analytics>
-      </div>
+      </Flex>
       {fallbackApps.length ? (
         <>
-          <div className="text-white mb-xs mt-md">
-            Having trouble loading your project? Try one of our pre-made sample
-            projects below:
+          <div className="mb-2 mt-4">
+            <span className="text-white">
+              Having trouble loading your project? Try one of our pre-made
+              sample projects below:
+            </span>
           </div>
-          <div className="flex items-center">
+          <Flex align="center" gap="2">
             {fallbackApps
               .map(transformFallbackAppToLinkButtonProps)
-              .map(app => (
+              .map((app) => (
                 <Analytics
+                  key={app.buttonText}
                   name={`one-click-deployment-fallback-app-${app.buttonText}`}
                   passHtmlAttributesToChildren
                 >
@@ -132,7 +134,7 @@ export function ErrorBox(props: Props) {
                   />
                 </Analytics>
               ))}
-          </div>
+          </Flex>
         </>
       ) : null}
     </div>

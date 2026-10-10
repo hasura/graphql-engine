@@ -1,12 +1,12 @@
-import { useMutation, useQuery } from 'react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   controlPlaneClient,
   fetchDatabaseLatencyJobId,
   fetchInfoFromJobId,
   insertInfoIntoDBLatencyQuery,
 } from '../../ControlPlane';
-import globals from '../../../Globals';
-import { getProjectId } from '../../../utils/cloudConsole';
+import { getProjectId } from '@hasura/shared/utils';
+import { useAppContext } from '@hasura/shared/context';
 
 type LatencyActionResponse = {
   data: {
@@ -61,10 +61,12 @@ export type CheckDatabaseLatencyResponse = {
 };
 
 const useCheckDatabaseLatencyRequest = (isEnabled: boolean) => {
+  const { envVars } = useAppContext();
+
   return useQuery({
     queryKey: ['latencyCheckJobSetup'],
     queryFn: async () => {
-      const projectId = getProjectId(globals);
+      const projectId = getProjectId(envVars);
 
       if (!projectId) {
         return undefined;
@@ -74,7 +76,7 @@ const useCheckDatabaseLatencyRequest = (isEnabled: boolean) => {
         fetchDatabaseLatencyJobId,
         {
           project_id: projectId,
-        }
+        },
       );
     },
     enabled: isEnabled,
@@ -90,7 +92,7 @@ type DbLatencyMutationProps = {
 const useInsertIntoDBLatencyTable = () => {
   return useMutation({
     mutationFn: async (
-      props: DbLatencyMutationProps
+      props: DbLatencyMutationProps,
     ): Promise<CheckDatabaseLatencyResponse['insertDbLatencyData']> => {
       return controlPlaneClient.query<
         CheckDatabaseLatencyResponse['insertDbLatencyData']
@@ -106,9 +108,10 @@ const useInsertIntoDBLatencyTable = () => {
 };
 
 export const useCheckDatabaseLatency = (isEnabled: boolean) => {
+  const { envVars } = useAppContext();
   const { data: jobIdResponse, isSuccess } =
     useCheckDatabaseLatencyRequest(isEnabled);
-  const projectId = getProjectId(globals);
+  const projectId = getProjectId(envVars);
   const insertDbLatencyMutation = useInsertIntoDBLatencyTable();
 
   return useQuery({
@@ -139,18 +142,18 @@ export const useCheckDatabaseLatency = (isEnabled: boolean) => {
       if (jobStatusResponse.data.jobs_by_pk.status === 'failed') {
         const failedTaskEvent =
           jobStatusResponse?.data?.jobs_by_pk?.tasks?.[0]?.task_events?.find(
-            taskEvent => taskEvent.event_type === 'failure'
+            (taskEvent) => taskEvent.event_type === 'failure',
           );
         return failedTaskEvent?.error;
       } else if (jobStatusResponse.data.jobs_by_pk.status === 'running') {
         throw Error(
-          `the job(${jobId}) is still running, will refetch to get the latest latency data`
+          `the job(${jobId}) is still running, will refetch to get the latest latency data`,
         );
       }
 
       const successTaskEvent =
         jobStatusResponse?.data?.jobs_by_pk?.tasks?.[0]?.task_events?.find(
-          taskEvent => taskEvent.event_type === 'success'
+          (taskEvent) => taskEvent.event_type === 'success',
         );
 
       if (!successTaskEvent) {

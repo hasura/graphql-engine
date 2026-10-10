@@ -1,4 +1,4 @@
-import React from 'react';
+import { Separator, Text } from '@hasura/shared/ui';
 
 type Props = {
   label: string;
@@ -7,8 +7,11 @@ type Props = {
 export function ListHeader(props: Props) {
   const { label } = props;
   return (
-    <div className="px-xs border-b pb-xs text-muted text-sm font-semibold">
-      {label}
-    </div>
+    <>
+      <Text as="p" weight="bold">
+        {label}
+      </Text>
+      <Separator size="4" />
+    </>
   );
 }

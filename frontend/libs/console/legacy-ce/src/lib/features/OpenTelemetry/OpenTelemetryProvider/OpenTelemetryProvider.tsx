@@ -11,7 +11,7 @@ export function OpenTelemetryProvider() {
   const { isLoadingMetadata, metadataFormValues, isFirstTimeSetup } =
     useOpenTelemetry();
 
-  const { setOpenTelemetry, isLoading } = useSetOpenTelemetry();
+  const { setOpenTelemetry, isPending } = useSetOpenTelemetry();
 
   return (
     <OpenTelemetry
@@ -19,7 +19,7 @@ export function OpenTelemetryProvider() {
       skeletonMode={isLoadingMetadata}
       metadataFormValues={metadataFormValues}
       setOpenTelemetry={setOpenTelemetry}
-      loading={isLoading}
+      loading={isPending}
     />
   );
 }

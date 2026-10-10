@@ -1,23 +1,25 @@
 import React from 'react';
-import Skeleton from 'react-loading-skeleton';
-
-import { Button } from '../../../../new-components/Button';
-import { CardedTable } from '../../../../new-components/CardedTable';
-import { QueryCollection } from '../../../../metadata/types';
-import { getConfirmation } from '../../../../components/Common/utils/jsUtils';
-import { IndicatorCard } from '../../../../new-components/IndicatorCard';
-import { useFireNotification } from '../../../../new-components/Notifications';
-
-import { useOperationsFromQueryCollection } from '../../hooks/useOperationsFromQueryCollection';
-import { useRemoveOperationsFromQueryCollection } from '../../hooks';
-
+import {
+  Button,
+  CardedTable,
+  IndicatorCard,
+  Text,
+  Tooltip,
+  hasuraToast,
+} from '@hasura/shared/ui';
+import { getConfirmation } from '@hasura/shared/utils';
 import { QueryCollectionsOperationsHeader } from './QueryCollectionOperationsHeader';
 import { QueryCollectionOperationsEmptyState } from './QueryCollectionOperationsEmptyState';
 import { QueryCollectionOperationEdit } from '../QueryCollectionOperationDialog/QueryCollectionOperationEdit';
-import { useMetadata } from '../../../MetadataAPI';
-import ToolTip from '../../../../components/Common/Tooltip/Tooltip';
+import {
+  useMetadata,
+  useRemoveOperationsFromQueryCollection,
+} from '@hasura/metadata/api';
+import { QueryCollectionQuery } from '@hasura/shared/types';
+import { Flex, Skeleton } from '@radix-ui/themes';
+import { MetadataSelectors } from '@hasura/metadata/helpers';
 
-const Check: React.FC<React.ComponentProps<'input'>> = props => (
+const Check: React.FC<React.ComponentProps<'input'>> = (props) => (
   <input
     type="checkbox"
     className="cursor-pointer rounded border shadow-sm border-gray-400 hover:border-gray-500 focus:ring-yellow-400"
@@ -31,34 +33,30 @@ interface QueryCollectionsOperationsProps {
 
 export const QueryCollectionsOperations: React.FC<
   QueryCollectionsOperationsProps
-> = props => {
+> = (props) => {
   const { collectionName } = props;
-  const { data: metadata } = useMetadata();
+  const { data: metadata, isFetching: isLoading, isError } = useMetadata();
+  const operations =
+    MetadataSelectors.getOperationsFromQueryCollection(collectionName)(
+      metadata,
+    );
 
-  const {
-    data: operations,
-    isLoading,
-    isError,
-  } = useOperationsFromQueryCollection(collectionName);
-
-  const { removeOperationsFromQueryCollection, isLoading: deleteLoading } =
+  const { removeOperationsFromQueryCollection, isPending: deleteLoading } =
     useRemoveOperationsFromQueryCollection();
-
-  const { fireNotification } = useFireNotification();
 
   const [search, setSearch] = React.useState('');
 
   const [editingOperation, setEditingOperation] =
-    React.useState<QueryCollection | null>(null);
+    React.useState<QueryCollectionQuery | null>(null);
 
   const [selectedOperations, setSelectedOperations] = React.useState<
-    QueryCollection[]
+    QueryCollectionQuery[]
   >([]);
 
   if (isLoading) {
     return (
       <div data-testid="query-collection-operations-loading">
-        <Skeleton height={200} />
+        <Skeleton height="200px" />
       </div>
     );
   }
@@ -73,45 +71,49 @@ export const QueryCollectionsOperations: React.FC<
     return <QueryCollectionOperationsEmptyState />;
   }
 
-  const filteredOperations = (operations || []).filter(operation =>
-    operation.name?.toLowerCase().includes(search?.toLowerCase())
-  );
+  const lowerSearch = search ? search.toLowerCase() : search;
+  const filteredOperations =
+    (search
+      ? operations.filter((operation) =>
+          operation.name.toLowerCase().includes(lowerSearch),
+        )
+      : operations) ?? [];
 
-  const data = filteredOperations?.map(operation => [
+  const data = filteredOperations.map((operation) => [
     <Check
+      key={`check-${operation.name}`}
       data-testid={`operation-${operation.name}`}
       checked={selectedOperations.includes(operation)}
       onChange={() => {
         setSelectedOperations(
           selectedOperations.includes(operation)
-            ? selectedOperations.filter(o => o !== operation)
-            : [...selectedOperations, operation]
+            ? selectedOperations.filter((o) => o !== operation)
+            : [...selectedOperations, operation],
         );
       }}
     />,
     operation.name,
     operation.query.toLowerCase().startsWith('mutation') ? 'Mutation' : 'Query',
-
-    <div className="flex justify-end">
+    <Flex key={`actions-${operation.name}`} justify="end" gap="2">
       {metadata?.metadata?.rest_endpoints?.some(
-        e =>
+        (e) =>
           e.name === operation.name &&
-          e.definition.query.collection_name === collectionName
+          e.definition.query.collection_name === collectionName,
       ) ? (
-        <ToolTip message="This operation has a restified endpoint. You can edit it from restified endpoint list">
+        <Tooltip content="This operation has a restified endpoint. You can edit it from restified endpoint list">
           <Button
-            className="mr-1.5"
-            size="sm"
+            mode="default"
+            size="1"
             onClick={() => setEditingOperation(operation)}
             disabled
           >
             Edit
           </Button>
-        </ToolTip>
+        </Tooltip>
       ) : (
         <Button
-          className="mr-1.5"
-          size="sm"
+          size="1"
+          mode="default"
           onClick={() => setEditingOperation(operation)}
         >
           Edit
@@ -125,14 +127,14 @@ export const QueryCollectionsOperations: React.FC<
           if (isOk) {
             removeOperationsFromQueryCollection(collectionName, [operation], {
               onSuccess: () => {
-                fireNotification({
+                hasuraToast({
                   type: 'success',
                   title: 'Operation deleted',
                   message: `Operation "${operation.name}" was deleted successfully`,
                 });
               },
-              onError: e => {
-                fireNotification({
+              onError: (e) => {
+                hasuraToast({
                   type: 'error',
                   title: 'Failed to delete operation',
                   message: `Failed to delete operation "${operation.name}": ${e.message}`,
@@ -141,14 +143,13 @@ export const QueryCollectionsOperations: React.FC<
             });
           }
         }}
-        className="mr-1.5"
-        size="sm"
+        size="1"
         mode="destructive"
-        isLoading={deleteLoading}
+        loading={deleteLoading}
       >
         Delete
       </Button>
-    </div>,
+    </Flex>,
   ]);
 
   return (
@@ -171,18 +172,21 @@ export const QueryCollectionsOperations: React.FC<
       />
       <div>
         {search && filteredOperations.length === 0 ? (
-          <div className="text-center text-gray-500">No operations found</div>
+          <Text as="p" align="center">
+            No operations found
+          </Text>
         ) : (
           <CardedTable
             columns={[
               <Check
+                key="select-all"
                 data-testid="query-collections-select-all"
-                checked={filteredOperations.every(operation =>
-                  selectedOperations.includes(operation)
+                checked={filteredOperations.every((operation) =>
+                  selectedOperations.includes(operation),
                 )}
                 onClick={() =>
                   setSelectedOperations(
-                    selectedOperations.length === 0 ? filteredOperations : []
+                    selectedOperations.length === 0 ? filteredOperations : [],
                   )
                 }
               />,

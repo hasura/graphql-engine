@@ -1,8 +1,7 @@
-import React, { ReactNode } from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from 'react-query';
-import { Provider as ReduxProvider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { Theme } from '@radix-ui/themes';
+import { testRenderWithClient } from '@hasura/shared/testing';
 import z from 'zod';
 
 import { ConnectPostgresModal } from './ConnectPostgresModal';
@@ -37,75 +36,142 @@ const validDefaultValues: z.infer<typeof schema> = {
   },
 };
 
-// The modal renders a redux- and react-query-connected WarningCard, so the
-// component render needs those providers (see NeonOnboardingWizard tests).
-const store = configureStore({
-  reducer: {
-    tables: () => ({ currentDataSource: 'postgres', dataHeaders: {} }),
-  },
-});
-
-const queryClient = new QueryClient();
-queryClient.setDefaultOptions({ queries: { retry: false } });
-
-const wrapper = ({ children }: { children?: ReactNode }) => (
-  <ReduxProvider store={store} key="provider">
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  </ReduxProvider>
-);
-
 describe('ConnectPostgresModal (Dynamic DB Routing) field binding', () => {
-  // The Radix Switch used by "Use Prepared Statements" relies on
-  // ResizeObserver, which jsdom does not implement.
+  const originalEnv = window.__env;
+  // The modal renders the AppContext-connected WarningCard, which reads
+  // `envVars.consoleMode` / the derived console type to pick a docs link, so the
+  // render needs a populated env (testRenderWithClient seeds AppContext from
+  // `window.__env`).
   beforeAll(() => {
-    global.ResizeObserver = jest.fn().mockImplementation(() => ({
-      observe: jest.fn(),
-      unobserve: jest.fn(),
-      disconnect: jest.fn(),
-    })) as unknown as typeof ResizeObserver;
+    window.__env = {
+      consoleMode: 'server',
+      consoleType: 'oss',
+    } as typeof window.__env;
+    // The Radix Switch used by "Use Prepared Statements" relies on
+    // ResizeObserver, which jsdom does not implement. It is instantiated with
+    // `new`, so the stub must be constructable (a class, not an arrow fn).
+    global.ResizeObserver = class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    } as unknown as typeof ResizeObserver;
+
+    // The Radix UI Select opens its listbox using the Pointer Capture /
+    // scrollIntoView DOM APIs, which jsdom does not implement; stub them so the
+    // Select can be driven (otherwise clicking the trigger throws).
+    if (!Element.prototype.hasPointerCapture) {
+      Element.prototype.hasPointerCapture = () => false;
+    }
+    if (!Element.prototype.setPointerCapture) {
+      Element.prototype.setPointerCapture = () => undefined;
+    }
+    if (!Element.prototype.releasePointerCapture) {
+      Element.prototype.releasePointerCapture = () => undefined;
+    }
+    if (!Element.prototype.scrollIntoView) {
+      Element.prototype.scrollIntoView = () => undefined;
+    }
+  });
+  afterAll(() => {
+    window.__env = originalEnv;
   });
 
   it('binds Isolation Level and Use Prepared Statements to the connectionInfo leaf fields, not the object path', async () => {
-    render(
-      <ConnectPostgresModal
-        onClose={jest.fn()}
-        onSubmit={jest.fn()}
-        defaultValues={validDefaultValues}
-      />,
-      { wrapper }
+    testRenderWithClient(
+      <Theme>
+        <ConnectPostgresModal
+          onClose={vi.fn()}
+          onSubmit={vi.fn()}
+          defaultValues={validDefaultValues}
+        />
+      </Theme>,
     );
 
     // Isolation Level / Use Prepared Statements live inside the collapsed
     // "Advanced Settings" section, so expand it first.
     fireEvent.click(screen.getByRole('button', { name: /advanced settings/i }));
 
-    // Isolation Level is a <select> whose form field name is the connectionInfo
-    // leaf field. If it were re-bound to the `configuration.connectionInfo`
-    // object path (the original bug), these attribute assertions would fail.
-    const isolationLevel = await screen.findByRole('combobox', {
-      name: /isolation level/i,
-    });
-    expect(isolationLevel.tagName).toBe('SELECT');
-    expect(isolationLevel).toHaveAttribute(
-      'name',
-      'configuration.connectionInfo.isolationLevel'
+    // Isolation Level's field label is wired (htmlFor) to the connectionInfo
+    // LEAF field. If it were re-bound to the `configuration.connectionInfo`
+    // object path (the original bug), this would point at the object path and
+    // fail. (The control itself is a Radix Select combobox, not a native
+    // <select>, so we assert the field binding via the label's htmlFor.)
+    const isolationLabel = (await screen.findByText('Isolation Level')).closest(
+      'label',
     );
-    expect(isolationLevel).toHaveAttribute(
-      'id',
-      'configuration.connectionInfo.isolationLevel'
+    expect(isolationLabel).toHaveAttribute(
+      'for',
+      'configuration.connectionInfo.isolationLevel',
     );
 
-    // Use Prepared Statements' label is wired (htmlFor) to the connectionInfo
+    // Use Prepared Statements' label and switch are wired to the connectionInfo
     // leaf field as well.
-    const usePreparedStatements = screen.getByText(
-      (_content, element) =>
-        element?.tagName.toLowerCase() === 'label' &&
-        /use prepared statements/i.test(element.textContent ?? '')
-    );
-    expect(usePreparedStatements).toHaveAttribute(
+    const usePreparedStatementsLabel = screen
+      .getByText('Use Prepared Statements')
+      .closest('label');
+    expect(usePreparedStatementsLabel).toHaveAttribute(
       'for',
-      'configuration.connectionInfo.usePreparedStatements'
+      'configuration.connectionInfo.usePreparedStatements',
     );
+    expect(
+      screen.getByTestId('configuration.connectionInfo.usePreparedStatements'),
+    ).toHaveAttribute('role', 'switch');
+  });
+
+  it('drives the Isolation Level select and Use Prepared Statements switch and submits the mapped leaf-field values (controller wiring)', async () => {
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    const onSubmit = vi.fn();
+    testRenderWithClient(
+      <Theme>
+        <ConnectPostgresModal
+          onClose={vi.fn()}
+          onSubmit={onSubmit}
+          defaultValues={validDefaultValues}
+        />
+      </Theme>,
+    );
+
+    await user.click(
+      screen.getByRole('button', { name: /advanced settings/i }),
+    );
+
+    // Flip Use Prepared Statements false -> true via the real Radix Switch.
+    const preparedStatements = await screen.findByRole('switch');
+    expect(preparedStatements).not.toBeChecked();
+    await user.click(preparedStatements);
+    expect(preparedStatements).toBeChecked();
+
+    // Change Isolation Level via the real Radix Select (open trigger, pick option
+    // from the portaled listbox).
+    await user.click(screen.getByRole('combobox'));
+    await user.click(
+      await screen.findByRole('option', { name: 'serializable' }),
+    );
+    expect(screen.getByRole('combobox')).toHaveTextContent('serializable');
+
+    await user.click(
+      screen.getByRole('button', { name: /update connection/i }),
+    );
+
+    // The controller must map the controls onto the connectionInfo LEAF fields
+    // (not the `configuration.connectionInfo` object path — the original bug),
+    // and the modal must actually submit (the footer button lives inside the
+    // form). Assert on the real onSubmit payload.
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    const submitted = onSubmit.mock.calls[0][0];
+    expect(submitted.configuration.connectionInfo.usePreparedStatements).toBe(
+      true,
+    );
+    expect(submitted.configuration.connectionInfo.isolationLevel).toBe(
+      'serializable',
+    );
+    // Sibling leaf fields are untouched.
+    expect(submitted.configuration.connectionInfo.databaseUrl.url).toBe(
+      'postgresql://user:password@localhost:5432/chinook',
+    );
+    expect(
+      screen.queryByText(/expected object, received string/i),
+    ).not.toBeInTheDocument();
   });
 });
 
@@ -125,8 +191,10 @@ describe('ConnectPostgresModal (Dynamic DB Routing) schema + payload round-trip'
     expect(result.success).toBe(false);
     const messages = result.success
       ? []
-      : result.error.issues.map(issue => issue.message);
-    expect(messages).toContain('Expected object, received string');
+      : result.error.issues.map((issue) => issue.message);
+    expect(messages).toContain(
+      'Invalid input: expected object, received string',
+    );
   });
 
   it('accepts the isolation level / use prepared statements leaf fields', () => {

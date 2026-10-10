@@ -1,6 +1,6 @@
-import { CardedTable } from '../../../../new-components/CardedTable';
-import { Switch } from '../../../../new-components/Switch';
-import { Analytics, REDACT_EVERYTHING } from '../../../Analytics';
+import { CardedTable, Switch } from '@hasura/shared/ui';
+
+import { Analytics, REDACT_EVERYTHING } from '@hasura/shared/analytics';
 import React from 'react';
 import { useFeatureFlags } from '../../hooks/useFeatureFlags';
 import { useSetFeatureFlagEnabled } from '../../hooks/useSetFeatureFlagEnabled';
@@ -25,16 +25,21 @@ const columns = [null, 'Feature', 'section', 'status'];
 
 const formatData = (
   data: Array<FeatureFlagType>,
-  mutation: ReturnType<typeof useSetFeatureFlagEnabled>
+  mutation: ReturnType<typeof useSetFeatureFlagEnabled>,
 ): React.ReactNode[][] =>
-  data.map(item => [
+  data.map((item) => [
     <Switch
-      checked={item.state.enabled}
-      onCheckedChange={() =>
-        mutation.mutate({ flagId: item.id, newState: !item.state.enabled })
+      key={`switch-${item.id}`}
+      value={item.state.enabled}
+      onChange={(checked) =>
+        mutation.mutate({ flagId: item.id, newState: checked })
       }
     />,
-    <FeatureCell title={item.title} description={item.description} />,
+    <FeatureCell
+      key={`cell-${item.id}`}
+      title={item.title}
+      description={item.description}
+    />,
     item.section,
     item.status,
   ]);

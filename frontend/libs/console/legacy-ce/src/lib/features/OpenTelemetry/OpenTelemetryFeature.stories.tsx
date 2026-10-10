@@ -1,37 +1,36 @@
 import React from 'react';
-import { StoryObj, Meta } from '@storybook/react';
-import { rest, DelayMode } from 'msw';
-import { QueryClient, QueryClientProvider } from 'react-query';
-import { ReactQueryDevtools } from 'react-query/devtools';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
+import { http, HttpResponse, delay, DelayMode } from 'msw';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 import { OpenTelemetryFeature } from './OpenTelemetryFeature';
 import { eeLicenseInfo } from '../EETrial/mocks/http';
 import { registerEETrialLicenseActiveMutation } from '../EETrial/mocks/registration.mock';
-import { HasuraMetadataV3 } from '../../metadata/types';
-import { ConsoleTypeDecorator } from '../../storybook/decorators';
+import { ConsoleTypeDecorator } from '@hasura/shared/testing';
+import { HasuraMetadataV3 } from '@hasura/shared/types';
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: false,
-      cacheTime: 0,
+      gcTime: 0,
     },
   },
 });
 const baseUrl = 'http://localhost:8080';
-// eslint-disable-next-line no-underscore-dangle
+
 window.__env = {
-  // eslint-disable-next-line no-underscore-dangle
   ...window.__env,
   dataApiUrl: baseUrl,
 };
 
 const mockMetadataHandler = (
   openTelemetryEnabled: boolean,
-  delay: number | DelayMode,
-  status = 200
+  delayOpt: number | DelayMode,
+  status = 200,
 ) => {
-  return rest.post(`${baseUrl}/v1/metadata`, (req, res, ctx) => {
+  return http.post(`${baseUrl}/v1/metadata`, async () => {
     let result: HasuraMetadataV3 = {
       version: 3,
       sources: [],
@@ -74,11 +73,8 @@ const mockMetadataHandler = (
         },
       };
     }
-    return res(
-      ctx.status(status),
-      ctx.delay(delay),
-      ctx.json({ metadata: result })
-    );
+    await delay(delayOpt);
+    return HttpResponse.json({ metadata: result }, { status });
   });
 };
 

@@ -12,12 +12,12 @@ const getFileFromHtml = (html: string): string => {
   assets = {
     ...assets,
     // Filter out webpack styles js file
-    js: assets.js.filter(asset => asset.url !== 'styles.js'),
+    js: assets.js.filter((asset) => asset.url !== 'styles.js'),
   };
   return generateAssetLoaderFile(assets);
 };
 
-const unplugin = createUnplugin(label => ({
+const unplugin = createUnplugin((label) => ({
   name: pluginName,
   // webpack's id filter is outside of loader logic,
   // an additional hook is needed for better perf on webpack
@@ -42,7 +42,7 @@ const unplugin = createUnplugin(label => ({
   webpack(compiler) {
     // Since the html is comming from a plugin and not in the normal flow of assets
     // We need to tap webpack directly
-    compiler.hooks.thisCompilation.tap(pluginName, compilation => {
+    compiler.hooks.thisCompilation.tap(pluginName, (compilation) => {
       compilation.hooks.processAssets.tap(
         {
           name: pluginName,
@@ -51,7 +51,7 @@ const unplugin = createUnplugin(label => ({
           // that all assets were already added to the compilation by other plugins.
           stage: Compilation.PROCESS_ASSETS_STAGE_SUMMARIZE,
         },
-        assets => {
+        (assets) => {
           // console.log('HOOK START');
 
           const indexHtmlSource = compilation
@@ -59,7 +59,7 @@ const unplugin = createUnplugin(label => ({
             ?.source?.source();
 
           const finalString = getFileFromHtml(
-            (indexHtmlSource as string) ?? ''
+            (indexHtmlSource as string) ?? '',
           );
 
           // console.log(indexHtmlSource);
@@ -68,7 +68,7 @@ const unplugin = createUnplugin(label => ({
           compilation.emitAsset('assetLoader.js', new RawSource(finalString));
           // console.log(Object.keys(assets));
           // console.log('HOOK END');
-        }
+        },
       );
     });
   },

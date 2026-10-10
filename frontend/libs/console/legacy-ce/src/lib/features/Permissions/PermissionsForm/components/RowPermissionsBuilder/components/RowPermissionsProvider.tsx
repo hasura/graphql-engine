@@ -48,7 +48,7 @@ export const RowPermissionsProvider = ({
       setPermissionsState(newPermissions);
       onPermissionsChange?.(newPermissions.permissions);
     },
-    [permissionsState, setPermissionsState, onPermissionsChange]
+    [permissionsState, setPermissionsState, onPermissionsChange],
   );
   const setKey = useCallback<RowPermissionsState['setKey']>(
     ({ key, path, type }) => {
@@ -61,16 +61,16 @@ export const RowPermissionsProvider = ({
       setPermissionsState(newPermissions);
       onPermissionsChange?.(newPermissions.permissions);
     },
-    [permissionsState, setPermissionsState, onPermissionsChange]
+    [permissionsState, setPermissionsState, onPermissionsChange],
   );
 
   const setPermissions = useCallback<RowPermissionsState['setPermissions']>(
-    permissions => {
+    (permissions) => {
       setPermissionsState({ ...permissionsState, permissions });
       // Set outside permissions when internals change
       onPermissionsChange?.(permissions);
     },
-    [permissionsState, setPermissionsState, onPermissionsChange]
+    [permissionsState, setPermissionsState, onPermissionsChange],
   );
 
   // Set internal state when outside permissions change

@@ -1,6 +1,6 @@
 import React from 'react';
-import { StoryFn, Meta } from '@storybook/react';
-import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
+import { StoryFn, Meta } from '@storybook/react-webpack5';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
 import { CliLog } from './CliLog';
 import { OneClickDeploymentState } from '../../types';
 
@@ -30,7 +30,7 @@ const fallbackApps = [
 
 const StoryWrapper: React.FC = ({ children }) => {
   return (
-    <div className="p-md w-auto bg-black rounded items-center">{children}</div>
+    <div className="p-4 w-auto bg-black rounded items-center">{children}</div>
   );
 };
 

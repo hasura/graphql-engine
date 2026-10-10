@@ -1,9 +1,7 @@
-import type { SchemaResponse } from '@hasura/console-legacy-ce';
-
 /**
  * At the time of writing, the response that come from the server does not respect the SchemaResponse type...
  */
-export const graphql: SchemaResponse = {
+export const graphql = {
   data: {
     __schema: {
       queryType: { kind: 'OBJECT', name: 'query_root' },

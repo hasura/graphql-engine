@@ -3,9 +3,10 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/nx/internal-plugin/src",
   "projectType": "library",
+  "tags": ["scope:nx-plugins", "type:feature"],
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/libs/nx/internal-plugin",
@@ -37,7 +38,7 @@
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [
@@ -47,13 +48,11 @@
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/libs/nx/internal-plugin"],
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "jestConfig": "libs/nx/internal-plugin/jest.config.ts",
-        "passWithNoTests": true
+        "reportsDirectory": "coverage/libs/nx/internal-plugin"
       }
     }
-  },
-  "tags": ["scope:nx-plugins", "type:feature"]
+  }
 }

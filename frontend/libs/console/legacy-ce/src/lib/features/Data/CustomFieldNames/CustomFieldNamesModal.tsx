@@ -1,5 +1,5 @@
-import { MetadataTableConfig } from '../../hasura-metadata-types';
-import { Dialog } from '../../../new-components/Dialog';
+import { MetadataTableConfig } from '@hasura/shared/types';
+import { Dialog } from '@hasura/shared/ui';
 import React from 'react';
 import { CustomFieldNamesForm } from './CustomFieldNamesForm';
 import { CustomFieldNamesFormVals } from './types';
@@ -8,7 +8,7 @@ export type CustomFieldNamesModalProps = {
   tableName: string;
   onSubmit: (
     data: CustomFieldNamesFormVals,
-    configuration: MetadataTableConfig
+    configuration: MetadataTableConfig,
   ) => void;
   onClose: () => void;
   isLoading: boolean;
@@ -32,7 +32,6 @@ export const CustomFieldNamesModal: React.FC<CustomFieldNamesModalProps> = ({
 
   return (
     <Dialog
-      hasBackdrop
       title={tableName}
       description={dialogDescription}
       onClose={onClose}

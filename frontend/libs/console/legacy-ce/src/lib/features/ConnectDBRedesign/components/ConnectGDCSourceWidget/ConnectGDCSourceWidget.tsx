@@ -1,21 +1,23 @@
-import { AxiosError } from 'axios';
 import get from 'lodash/get';
 import { useEffect, useState } from 'react';
 import { FaExclamationTriangle } from 'react-icons/fa';
-import Skeleton from 'react-loading-skeleton';
-import { ZodSchema, z } from 'zod';
-import { Button } from '../../../../new-components/Button';
-import { Collapsible } from '../../../../new-components/Collapsible';
-import { InputField, useConsoleForm } from '../../../../new-components/Form';
-import { IndicatorCard } from '../../../../new-components/IndicatorCard';
-import { Tabs } from '../../../../new-components/Tabs';
-import { hasuraToast } from '../../../../new-components/Toasts';
-import { useAvailableDrivers } from '../../../ConnectDB/hooks';
-import { OpenApi3Form } from '../../../OpenApi3Form';
-import { useMetadata } from '../../../hasura-metadata-api';
-import { Source } from '../../../hasura-metadata-types';
+import { ZodType, z } from 'zod';
+import {
+  Button,
+  Collapsible,
+  InputField,
+  useConsoleForm,
+  hasuraToast,
+  IndicatorCard,
+  Tabs,
+  OpenApi3Form,
+  DisplayToastErrorMessage,
+  SkeletonList,
+} from '@hasura/shared/ui';
+import { useAvailableDrivers } from '@hasura/metadata/data-source';
+import { useMetadata } from '@hasura/metadata/api';
+import { Source } from '@hasura/shared/types';
 import { useManageDatabaseConnection } from '../../hooks/useManageDatabaseConnection';
-import { DisplayToastErrorMessage } from '../Common/DisplayToastErrorMessage';
 import { cleanEmpty } from '../ConnectPostgresWidget/utils/helpers';
 import { GraphQLCustomization } from '../GraphQLCustomization/GraphQLCustomization';
 import { adaptGraphQLCustomization } from '../GraphQLCustomization/utils/adaptResponse';
@@ -27,6 +29,8 @@ import {
   useFormValidationSchema,
 } from './useFormValidationSchema';
 import { generateGDCRequestPayload } from './utils/generateRequest';
+import { getErrorMessage } from '@hasura/shared/utils';
+import { Flex } from '@radix-ui/themes';
 
 interface ConnectGDCSourceWidgetProps {
   driver: string;
@@ -43,7 +47,7 @@ function getExistingConnectionDetailsFromMetadata(source: Source) {
   const templateVariableArray = Object.entries(templateVariableMap).map(
     ([key, values]) => {
       return { name: key, ...values };
-    }
+    },
   );
   return {
     name: source.name,
@@ -77,21 +81,21 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
     error: availableDriversError,
   } = useAvailableDrivers();
   const driverDisplayName =
-    drivers?.find(d => d.name === driver)?.displayName ?? driver;
+    drivers?.find((d) => d.name === driver)?.displayName ?? driver;
 
   const {
     data: metadataSource,
     isLoading: isLoadingMetadata,
     isError: isMetadataError,
     error: metadataError,
-  } = useMetadata(m =>
-    m.metadata.sources.find(source => source.name === dataSourceName)
+  } = useMetadata((m) =>
+    m.metadata.sources.find((source) => source.name === dataSourceName),
   );
   const isEditMode = !!dataSourceName;
   const {
     createConnection,
     editConnection,
-    isLoading: isLoadingCreateConnection,
+    isPending: isLoadingCreateConnection,
   } = useManageDatabaseConnection({
     onSuccess: () => {
       hasuraToast({
@@ -101,7 +105,7 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
           : 'Database added successfully!',
       });
     },
-    onError: err => {
+    onError: (err) => {
       hasuraToast({
         type: 'error',
         title: err.name,
@@ -122,7 +126,9 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
     (isLoadingValidationSchema && !isValidationSchemaError) ||
     (isLoadingAvailableDrivers && !isAvailableDriversError);
 
-  const [schema, setSchema] = useState<ZodSchema>(z.any());
+  const [schema, setSchema] = useState<
+    ZodType<Record<string, unknown>, Record<string, unknown>>
+  >(z.any());
 
   const {
     Form,
@@ -149,40 +155,32 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
   if (isLoading) {
     return (
       <div>
-        <Skeleton count={10} height={30} />
+        <SkeletonList count={50} />
       </div>
     );
   }
 
   if (validationSchemaError) {
-    const err = validationSchemaError as AxiosError<{ error?: string }>;
-    return (
-      <IndicatorCard status="negative">
-        {err?.response?.data?.error ||
-          err.toString() ||
-          'An error occurred loading the connection configuration.'}
-      </IndicatorCard>
+    const errorMsg = getErrorMessage(
+      validationSchemaError,
+      'An error occurred loading the connection configuration.',
     );
+    return <IndicatorCard status="negative">{errorMsg}</IndicatorCard>;
   }
   if (metadataError) {
-    const err = metadataError as AxiosError<{ error?: string }>;
-    return (
-      <IndicatorCard status="negative">
-        {err?.response?.data?.error ||
-          err.toString() ||
-          'An error occurred loading metadata.'}
-      </IndicatorCard>
+    const errorMsg = getErrorMessage(
+      metadataError,
+      'An error occurred loading metadata.',
     );
+
+    return <IndicatorCard status="negative">{errorMsg}</IndicatorCard>;
   }
   if (availableDriversError) {
-    const err = availableDriversError as AxiosError<{ error?: string }>;
-    return (
-      <IndicatorCard status="negative">
-        {err?.response?.data?.error ||
-          err.toString() ||
-          'An error occurred loading the available drivers.'}
-      </IndicatorCard>
+    const errorMsg = getErrorMessage(
+      availableDriversError,
+      'An error occurred loading the available drivers.',
     );
+    return <IndicatorCard status="negative">{errorMsg}</IndicatorCard>;
   }
 
   if (!data?.configSchemas) {
@@ -224,7 +222,7 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
       <Form onSubmit={handleSubmit}>
         <Tabs
           value={tab}
-          onValueChange={value => setTab(value)}
+          onValueChange={(value) => setTab(value)}
           items={[
             {
               value: 'connection_details',
@@ -233,11 +231,13 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
                 <FaExclamationTriangle className="text-red-800" />
               ) : undefined,
               content: (
-                <div className="mt-sm">
+                <div className="mt-2">
                   <InputField
                     name="name"
                     label="Database Name"
-                    placeholder="Database name"
+                    fieldProps={{
+                      placeholder: 'Database name',
+                    }}
                   />
                   <OpenApi3Form
                     name="configuration"
@@ -245,7 +245,7 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
                     references={data?.configSchemas.otherSchemas}
                   />
 
-                  <div className="mt-sm">
+                  <div className="mt-2">
                     <Collapsible
                       defaultOpen={openAdvanced}
                       triggerChildren={
@@ -260,7 +260,7 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
                     </Collapsible>
                   </div>
 
-                  <div className="mt-sm">
+                  <div className="mt-2">
                     <Collapsible
                       triggerChildren={
                         <div className="font-semibold text-muted">
@@ -276,16 +276,16 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
             },
           ]}
         />
-        <div className="flex justify-end">
+        <Flex justify="end">
           <Button
             type="submit"
             mode="primary"
-            isLoading={isLoadingCreateConnection}
+            loading={isLoadingCreateConnection}
             loadingText="Saving"
           >
             {isEditMode ? 'Update Connection' : 'Connect Database'}
           </Button>
-        </div>
+        </Flex>
       </Form>
     </div>
   );

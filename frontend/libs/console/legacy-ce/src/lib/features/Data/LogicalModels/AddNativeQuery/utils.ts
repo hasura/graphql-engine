@@ -1,11 +1,11 @@
 import {
   NativeQueryArgument,
   NativeQuery as NativeQueryMetadataType,
-} from '../../../hasura-metadata-types';
+} from '@hasura/shared/types';
 import { NativeQueryArgumentNormalized, NativeQueryForm } from './types';
 
 export const transformFormOutputToMetadata = (
-  formValues: NativeQueryForm
+  formValues: NativeQueryForm,
 ): NativeQueryMetadataType => {
   //transform array of arguments to the record approach used in metadata
   const queryArgsForMetadata = formValues.arguments.reduce<
@@ -41,7 +41,7 @@ export const transformFormOutputToMetadata = (
 };
 
 export const normalizeArguments = (
-  args: Record<string, NativeQueryArgument>
+  args: Record<string, NativeQueryArgument>,
 ): NativeQueryArgumentNormalized[] =>
   Object.entries(args).map(([name, argument]) => ({
     name,

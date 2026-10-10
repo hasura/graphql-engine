@@ -1,8 +1,16 @@
 import React, { useMemo, useState } from 'react';
 import LZString from 'lz-string';
 import { useGetSchema } from '../hooks/useGetSchema';
-import { Tabs } from '../../../new-components/Tabs';
-import { IconTooltip } from '../../../new-components/Tooltip';
+import {
+  Tabs,
+  IconTooltip,
+  Input,
+  DropdownButton,
+  DropdownMenu,
+  AceEditor,
+} from '@hasura/shared/ui';
+import { Flex } from '@radix-ui/themes';
+
 import { SchemaRow } from './SchemaRow';
 import {
   findIfSubStringExists,
@@ -11,18 +19,15 @@ import {
 } from '../utils';
 import { RoleBasedSchema, Schema } from '../types';
 import { FaSearch, FaShareAlt } from 'react-icons/fa';
-import { Input } from '../../../new-components/Form';
-import AceEditor from 'react-ace';
-import { SearchableSelect } from '../../../components/Common';
-import { Analytics } from '../../Analytics';
+import { Analytics } from '@hasura/shared/analytics';
 
 interface SchemaChangeDetailsProps {
   schemaId: string;
 }
 
-export const SchemaChangeDetails: React.FC<
-  SchemaChangeDetailsProps
-> = props => {
+export const SchemaChangeDetails: React.FC<SchemaChangeDetailsProps> = (
+  props,
+) => {
   const { schemaId } = props;
   const fetchSchemaResponse = useGetSchema(schemaId);
   const { kind } = fetchSchemaResponse;
@@ -34,18 +39,22 @@ export const SchemaChangeDetails: React.FC<
       return <p>Error: {fetchSchemaResponse.message}</p>;
     case 'success': {
       const transformedData = schemaTransformFn(fetchSchemaResponse.response);
-      return (
-        <div className="w-full">
-          <SchemasDetails schema={transformedData} />
-        </div>
-      );
+      if (transformedData) {
+        return (
+          <div className="w-full">
+            <SchemasDetails schema={transformedData} />
+          </div>
+        );
+      }
+
+      return <p>Schema registry not found</p>;
     }
   }
 };
 
-const SchemasDetails: React.VFC<{
+const SchemasDetails: React.FC<{
   schema: Schema;
-}> = props => {
+}> = (props) => {
   const { schema } = props;
 
   const [tabState, setTabState] = React.useState('changes');
@@ -69,45 +78,48 @@ const SchemasDetails: React.VFC<{
   };
 
   return (
-    <div className="flex flex-col border-neutral-200 bg-white border rounded-md">
-      <div className="flex bg-gray-100 px-4 py-2 w-full">
-        <div className="flex text-base justify-between w-[15%]">
+    <Flex
+      direction="column"
+      className="border-neutral-200 bg-white border rounded-md"
+    >
+      <Flex className="bg-gray-100 px-4 py-2 w-full">
+        <Flex justify="between" className="text-base w-[15%]">
           <span className="text-sm font-bold">ROLE</span>
-        </div>
-        <div className="flex text-base justify-around w-[30%]">
+        </Flex>
+        <Flex className="text-base justify-around w-[30%]">
           <span className="text-sm font-bold mx-2">BREAKING</span>
           <span className="text-sm font-bold mx-2">DANGEROUS</span>
           <span className="text-sm font-bold mr-4">SAFE</span>
-        </div>
-        <div className="flex text-base items-center justify-around w-[55%]">
+        </Flex>
+        <Flex align="center" className="text-base justify-around w-[55%]">
           <span className="text-sm font-bold mx-2">TOTAL</span>
-        </div>
-      </div>
+        </Flex>
+      </Flex>
       <SchemaRow
         role={roleBasedSchema.role || ''}
         changes={roleBasedSchema.changes}
       />
       <div className="px-4 mb-2">
-        <div className="flex mt-4">
-          <div className="flex items-center ">
+        <Flex className="mt-4">
+          <Flex align="center">
             <p className="font-bold text-gray-500 py-2">Published: </p>
 
-            <div className="flex items-center ml-2 font-semibold text-gray-600">
+            <Flex align="center" className="ml-2 font-semibold text-gray-600">
               <span>{getPublishTime(schema.created_at)}</span>
               <IconTooltip message="The time at which this GraphQL schema was generated" />
-            </div>
-          </div>
-          <div className="flex items-center justify-around ml-auto w-1/2">
+            </Flex>
+          </Flex>
+          <Flex align="center" justify="center" className="ml-auto w-1/2">
             <div className="flex-col">
-              <div className="flex items-center mt-4">
+              <Flex align="center" className="mt-4">
                 <p className="font-bold text-gray-500 py-2">Hash</p>
                 <IconTooltip message="Hash of the GraphQL Schema SDL. Hash for two identical schema is identical." />
-              </div>
+              </Flex>
               <span className="font-bold bg-gray-100 px-1 rounded text-sm">
                 {roleBasedSchema.hash}
               </span>
             </div>
-            <div className="flex flex-col items-center">
+            <Flex direction="column" align="center">
               <Analytics name="schema-registry-share-btn">
                 <button
                   className="flex items-center mx-auto  rounded-lg transition-colors duration-300"
@@ -127,16 +139,15 @@ const SchemasDetails: React.VFC<{
                 </button>
               </Analytics>
               {isCopied ? <p className="ml-2 text-gray-500">Copied!</p> : ''}
-            </div>
-          </div>
-        </div>
+            </Flex>
+          </Flex>
+        </Flex>
       </div>
 
       <div className="h-full px-4">
         <Tabs
           value={tabState}
-          onValueChange={state => setTabState(state)}
-          headerTabBackgroundColor="white"
+          onValueChange={(state) => setTabState(state)}
           items={[
             {
               value: 'changes',
@@ -156,15 +167,15 @@ const SchemasDetails: React.VFC<{
           ]}
         />
       </div>
-    </div>
+    </Flex>
   );
 };
 
-export const SchemaView: React.VFC<{ schema: string }> = props => {
+export const SchemaView: React.FC<{ schema: string }> = (props) => {
   const { schema } = props;
   const decompressedSchema = LZString.decompressFromBase64(schema);
   return (
-    <div className="w-full p-sm">
+    <div className="w-full p-2">
       <AceEditor
         mode="graphqlschema"
         fontSize={14}
@@ -178,23 +189,16 @@ export const SchemaView: React.VFC<{ schema: string }> = props => {
     </div>
   );
 };
-type Option = {
-  value: string;
-  label: string;
-  description?: string;
-  key?: number;
-  colIdentifier?: number;
-};
 
-export const ChangesView: React.VFC<{
+export const ChangesView: React.FC<{
   changes: RoleBasedSchema['changes'];
   role: string;
-}> = props => {
+}> = (props) => {
   const { changes, role } = props;
 
   const [searchText, setSearchText] = React.useState('');
   const [selectedChangeLevel, setSelectedChangeLevel] = useState<string | null>(
-    null
+    null,
   );
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) =>
     setSearchText(e.target.value);
@@ -202,8 +206,8 @@ export const ChangesView: React.VFC<{
   const changesList = useMemo(() => {
     if (!searchText) return changes;
 
-    return changes?.filter(change =>
-      findIfSubStringExists(change.message, searchText)
+    return changes?.filter((change) =>
+      findIfSubStringExists(change.message, searchText),
     );
   }, [searchText, changes]);
 
@@ -232,12 +236,14 @@ export const ChangesView: React.VFC<{
   }
 
   const breakingChanges =
-    changesList && changesList.filter(c => c.criticality.level === 'BREAKING');
+    changesList &&
+    changesList.filter((c) => c.criticality.level === 'BREAKING');
   const dangerousChanges =
-    changesList && changesList.filter(c => c.criticality.level === 'DANGEROUS');
+    changesList &&
+    changesList.filter((c) => c.criticality.level === 'DANGEROUS');
   const safeChanges =
     changesList &&
-    changesList.filter(c => c.criticality.level === 'NON_BREAKING');
+    changesList.filter((c) => c.criticality.level === 'NON_BREAKING');
 
   const showBreakingChanges =
     (!selectedChangeLevel || selectedChangeLevel === 'breaking') &&
@@ -249,38 +255,39 @@ export const ChangesView: React.VFC<{
     (!selectedChangeLevel || selectedChangeLevel === 'safe') &&
     !!safeChanges?.length;
 
-  const onFilterChange = (op: Option) => {
-    setSelectedChangeLevel(op.value);
-  };
+  const options = [
+    {
+      value: 'breaking',
+      label: 'Breaking',
+    },
+    {
+      value: 'dangerous',
+      label: 'Dangerous',
+    },
+    {
+      value: 'safe',
+      label: 'Safe',
+    },
+  ];
+
   return (
     <div className="flex-col">
-      <div className="flex w-full mt-4 mb-4 justify-between items-center">
-        <div className="flex font-semibold text-lg text-gray-500">Changes</div>
-        <div className="flex w-[50%]">
-          <div className="flex  w-full">
+      <Flex align="center" justify="between" className="w-full mt-4 mb-4">
+        <Flex className="font-semibold text-lg text-gray-500">Changes</Flex>
+        <Flex className="w-[50%]">
+          <Flex className="w-full">
             <div className="px-2 w-1/2">
               <Analytics name="schema-registry-schema-change-details-filter">
-                <SearchableSelect
-                  options={[
-                    {
-                      value: 'breaking',
-                      label: 'Breaking',
-                    },
-                    {
-                      value: 'dangerous',
-                      label: 'Dangerous',
-                    },
-                    {
-                      value: 'safe',
-                      label: 'Safe',
-                    },
-                  ]}
-                  onChange={op => {
-                    onFilterChange(op as Option);
-                  }}
-                  filterOption="prefix"
-                  placeholder="Filter"
-                  isClearable={true}
+                <DropdownButton
+                  mode="default"
+                  items={options.map((opt) => (
+                    <DropdownMenu.Item
+                      key={opt.value}
+                      onSelect={() => setSelectedChangeLevel(opt.value)}
+                    >
+                      {opt.label}
+                    </DropdownMenu.Item>
+                  ))}
                 />
               </Analytics>
             </div>
@@ -292,41 +299,50 @@ export const ChangesView: React.VFC<{
                     type="text"
                     placeholder="Search"
                     name="search"
-                    icon={<FaSearch />}
+                    icon={FaSearch}
                     iconPosition="start"
                     onChange={handleSearch}
                   />
                 </label>
               </Analytics>
             </div>
-          </div>
-        </div>
-      </div>
+          </Flex>
+        </Flex>
+      </Flex>
 
       {showBreakingChanges && (
         <div>
-          <div className="flex items-center font-semibold text-md text-gray-500 mt-4">
+          <Flex
+            align="center"
+            className="font-semibold text-md text-gray-500 mt-4"
+          >
             Breaking
             <IconTooltip message="Breaking changes due the schema change" />
-          </div>
+          </Flex>
           <ChangesTable changes={breakingChanges} level="breaking" />
         </div>
       )}
       {showDangerousChanges && dangerousChanges && (
         <div>
-          <div className="flex items-center font-semibold text-md text-gray-500 mt-4">
+          <Flex
+            align="center"
+            className="font-semibold text-md text-gray-500 mt-4"
+          >
             Dangerous
             <IconTooltip message="Dangerous changes due the schema change" />
-          </div>
+          </Flex>
           <ChangesTable changes={dangerousChanges} level="dangerous" />
         </div>
       )}
       {showSafeChanges && safeChanges && (
         <div>
-          <div className="flex items-center font-semibold text-md text-gray-500 mt-4">
+          <Flex
+            align="center"
+            className="font-semibold text-md text-gray-500 mt-4"
+          >
             Safe
             <IconTooltip message="Safe changes due the schema change" />
-          </div>
+          </Flex>
           <ChangesTable changes={safeChanges} level="safe" />
         </div>
       )}
@@ -345,7 +361,7 @@ const ChangesTable: React.FC<ChangesTableProps> = ({ changes, level }) => {
     safe: 'text-green-600',
   };
   return (
-    <div className="flex flex-col rounded border-neutral-200 border my-2">
+    <Flex direction="column" className="rounded border-neutral-200 border my-2">
       <table className="w-full border-neutral-200 rounded">
         <thead>
           <tr style={{ textAlign: 'left' }}>
@@ -368,6 +384,6 @@ const ChangesTable: React.FC<ChangesTableProps> = ({ changes, level }) => {
             ))}
         </tbody>
       </table>
-    </div>
+    </Flex>
   );
 };

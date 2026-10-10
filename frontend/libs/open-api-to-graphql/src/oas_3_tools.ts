@@ -32,14 +32,16 @@ import {
   ProcessedSecurityScheme,
 } from './types/preprocessing_data';
 import { InternalOptions } from './types/options';
-import OpenAPIParser from '@readme/openapi-parser';
+import {
+  compileErrors,
+  validate,
+  type ParserOptions,
+} from '@readme/openapi-parser';
 
 // Imports:
 import * as Swagger2OpenAPI from 'swagger2openapi';
-import * as OASValidator from 'oas-validator';
-import debug from 'debug';
 import { handleWarning, MitigationTypes } from './utils';
-import * as jsonptr from 'json-ptr';
+import * as JsonPointer from '@hyperjump/json-pointer';
 import * as pluralize from 'pluralize';
 
 // Type definitions & exports:
@@ -71,20 +73,15 @@ export type ResponseSchemaAndNames = {
   statusCode?: string;
 };
 
-const httpLog = debug('http');
-const preprocessingLog = debug('preprocessing');
-
-const translationLog = debug('translation');
-
 // OAS constants
 export enum HTTP_METHODS {
-  'get' = 'get',
-  'put' = 'put',
-  'post' = 'post',
-  'patch' = 'patch',
-  'delete' = 'delete',
-  'options' = 'options',
-  'head' = 'head',
+  get = 'get',
+  put = 'put',
+  post = 'post',
+  patch = 'patch',
+  delete = 'delete',
+  options = 'options',
+  head = 'head',
 }
 
 export const SUCCESS_STATUS_RX = /2[0-9]{2}|2XX/;
@@ -149,34 +146,38 @@ export function isOas3(spec: any): spec is Oas3 {
  */
 export async function getValidOAS3(
   spec: Oas2 | Oas3,
-  oasValidatorOptions: OpenAPIParser.Options,
+  oasValidatorOptions: ParserOptions,
   swagger2OpenAPIOptions: object,
-  softValidate: boolean = false
+  softValidate: boolean = false,
 ): Promise<Oas3> {
   // CASE: translate
   if (isOas2(spec)) {
-    preprocessingLog(
-      `Received Swagger - going to translate to OpenAPI Specification...`
+    console.log(
+      `Received Swagger - going to translate to OpenAPI Specification...`,
     );
     try {
       const { openapi } = await Swagger2OpenAPI.convertObj(
         spec,
-        swagger2OpenAPIOptions
+        swagger2OpenAPIOptions,
       );
       return openapi;
     } catch (error) {
       throw new Error(
-        `Could not convert Swagger '${spec.info.title}' to OpenAPI Specification. ${error.message}`
+        `Could not convert Swagger '${spec.info.title}' to OpenAPI Specification. ${error.message}`,
       );
     }
     // CASE: validate
   } else if (isOas3(spec)) {
-    preprocessingLog(`Received OpenAPI Specification - going to validate...`);
+    console.log(`Received OpenAPI Specification - going to validate...`);
     if (!softValidate) {
-      await OpenAPIParser.validate(
+      const result = await validate(
         JSON.parse(JSON.stringify(spec)),
-        oasValidatorOptions
+        oasValidatorOptions,
       );
+      // `validate` returns invalid results instead of throwing on them
+      if (!result.valid) {
+        throw new Error(compileErrors(result));
+      }
     }
   } else {
     throw new Error(`Invalid specification provided`);
@@ -280,18 +281,29 @@ export function countOperationsWithPayload(oas: Oas3): number {
 
 /**
  * Resolves the given reference in the given object.
+ *
+ * A `$ref` value may be a plain JSON Pointer (e.g. `/components/schemas/Foo`)
+ * or a URI fragment identifier (e.g. `#/components/schemas/Foo`), which is
+ * the typical form used in OpenAPI documents. The `@hyperjump/json-pointer`
+ * library only accepts plain JSON Pointers, so the leading `#` must be
+ * stripped and the remainder percent-decoded (URI fragments may contain
+ * percent-encoded characters, e.g. `%7B` for `{`) before being passed along.
  */
 export function resolveRef<T = any>(ref: string, oas: Oas3): T {
-  return jsonptr.JsonPointer.get(oas, ref) as T;
+  const pointer = ref.startsWith('#') ? ref.slice(1) : ref;
+  return JsonPointer.get(
+    decodeURIComponent(pointer),
+    oas as JsonPointer.Json,
+  ) as T;
 }
 
 export const resolveAnyOf = (
-  schema: SchemaObject | ReferenceObject
+  schema: SchemaObject | ReferenceObject,
 ): SchemaObject | ReferenceObject => {
   const collapsedSchema: SchemaObject = JSON.parse(JSON.stringify(schema));
 
   if ('anyOf' in collapsedSchema) {
-    const types = collapsedSchema.anyOf.map(type => {
+    const types = collapsedSchema.anyOf.map((type) => {
       if ('$ref' in type) {
         return 'object';
       }
@@ -316,7 +328,7 @@ export function resolveAllOf<TSource, TContext, TArgs>(
   schema: SchemaObject | ReferenceObject,
   references: { [reference: string]: SchemaObject },
   data: PreprocessingData<TSource, TContext, TArgs>,
-  oas: Oas3
+  oas: Oas3,
 ): SchemaObject {
   // Dereference schema
   if ('$ref' in schema && typeof schema.$ref === 'string') {
@@ -339,12 +351,12 @@ export function resolveAllOf<TSource, TContext, TArgs>(
 
   // Resolve allOf
   if (Array.isArray(collapsedSchema.allOf)) {
-    collapsedSchema.allOf.forEach(memberSchema => {
+    collapsedSchema.allOf.forEach((memberSchema) => {
       const collapsedMemberSchema = resolveAllOf(
         memberSchema,
         references,
         data,
-        oas
+        oas,
       );
 
       // Collapse type if applicable
@@ -358,10 +370,9 @@ export function resolveAllOf<TSource, TContext, TArgs>(
             mitigationType: MitigationTypes.UNRESOLVABLE_SCHEMA,
             message:
               `Resolving 'allOf' field in schema '${JSON.stringify(
-                collapsedSchema
+                collapsedSchema,
               )}' ` + `results in incompatible schema type.`,
             data,
-            log: preprocessingLog,
           });
         }
       }
@@ -383,14 +394,13 @@ export function resolveAllOf<TSource, TContext, TArgs>(
                 mitigationType: MitigationTypes.UNRESOLVABLE_SCHEMA,
                 message:
                   `Resolving 'allOf' field in schema '${JSON.stringify(
-                    collapsedSchema
+                    collapsedSchema,
                   )}' ` +
                   `results in incompatible property field '${propertyName}'.`,
                 data,
-                log: preprocessingLog,
               });
             }
-          }
+          },
         );
       }
 
@@ -400,7 +410,7 @@ export function resolveAllOf<TSource, TContext, TArgs>(
           collapsedSchema.oneOf = [];
         }
 
-        collapsedMemberSchema.oneOf.forEach(oneOfProperty => {
+        collapsedMemberSchema.oneOf.forEach((oneOfProperty) => {
           collapsedSchema.oneOf.push(oneOfProperty);
         });
       }
@@ -411,7 +421,7 @@ export function resolveAllOf<TSource, TContext, TArgs>(
           collapsedSchema.anyOf = [];
         }
 
-        collapsedMemberSchema.anyOf.forEach(anyOfProperty => {
+        collapsedMemberSchema.anyOf.forEach((anyOfProperty) => {
           collapsedSchema.anyOf.push(anyOfProperty);
         });
       }
@@ -422,7 +432,7 @@ export function resolveAllOf<TSource, TContext, TArgs>(
           collapsedSchema.required = [];
         }
 
-        collapsedMemberSchema.required.forEach(requiredProperty => {
+        collapsedMemberSchema.required.forEach((requiredProperty) => {
           if (!collapsedSchema.required.includes(requiredProperty)) {
             collapsedSchema.required.push(requiredProperty);
           }
@@ -441,7 +451,7 @@ export function getBaseUrl(operation: Operation): string {
   // Check for servers:
   if (!Array.isArray(operation.servers) || operation.servers.length === 0) {
     throw new Error(
-      `No servers defined for operation '${operation.operationString}'`
+      `No servers defined for operation '${operation.operationString}'`,
     );
   }
 
@@ -450,7 +460,7 @@ export function getBaseUrl(operation: Operation): string {
     const url = buildUrl(operation.servers[0]);
 
     if (Array.isArray(operation.servers) && operation.servers.length > 1) {
-      httpLog(`Warning: Randomly selected first server '${url}'`);
+      console.log(`Warning: Randomly selected first server '${url}'`);
     }
 
     return url.replace(/\/$/, '');
@@ -462,7 +472,7 @@ export function getBaseUrl(operation: Operation): string {
     const url = buildUrl(oas.servers[0]);
 
     if (Array.isArray(oas.servers) && oas.servers.length > 1) {
-      httpLog(`Warning: Randomly selected first server '${url}'`);
+      console.log(`Warning: Randomly selected first server '${url}'`);
     }
 
     return url.replace(/\/$/, '');
@@ -486,7 +496,7 @@ function buildUrl(server: ServerObject): string {
       // TODO: check for default? Would be invalid OAS
       url = url.replace(
         `{${variableKey}}`,
-        server.variables[variableKey].default.toString()
+        server.variables[variableKey].default.toString(),
       );
     }
   }
@@ -500,7 +510,7 @@ function buildUrl(server: ServerObject): string {
  */
 export function sanitizeObjectKeys(
   obj: any, // obj does not necessarily need to be an object
-  caseStyle: CaseStyle = CaseStyle.camelCase
+  caseStyle: CaseStyle = CaseStyle.camelCase,
 ): any {
   const cleanKeys = (obj: any): any => {
     // Case: no (response) data
@@ -540,9 +550,9 @@ export function sanitizeObjectKeys(
  */
 export function desanitizeObjectKeys(
   obj: object | Array<any>,
-  mapping: object = {}
+  mapping: object = {},
 ): object | Array<any> {
-  const replaceKeys = obj => {
+  const replaceKeys = (obj) => {
     if (obj === null) {
       return null;
     } else if (Array.isArray(obj)) {
@@ -573,7 +583,7 @@ export function desanitizeObjectKeys(
 export function getSchemaTargetGraphQLType<TSource, TContext, TArgs>(
   schemaOrRef: SchemaObject | ReferenceObject,
   data: PreprocessingData<TSource, TContext, TArgs>,
-  oas: Oas3
+  oas: Oas3,
 ): TargetGraphQLType | null {
   let schema: SchemaObject;
   if ('$ref' in schemaOrRef && typeof schemaOrRef.$ref === 'string') {
@@ -599,7 +609,6 @@ export function getSchemaTargetGraphQLType<TSource, TContext, TArgs>(
         `is currently not supported.`,
       mitigationAddendum: `Use arbitrary JSON type instead.`,
       data,
-      log: preprocessingLog,
     });
 
     return TargetGraphQLType.json;
@@ -684,7 +693,7 @@ function hasNestedOneOfUsage(schema: SchemaObject, oas: Oas3): boolean {
   // TODO: Should also consider if the member schema contains type data
   return (
     Array.isArray(schema.oneOf) &&
-    schema.oneOf.some(memberSchemaOrRef => {
+    schema.oneOf.some((memberSchemaOrRef) => {
       let memberSchema: SchemaObject;
       if (
         '$ref' in memberSchemaOrRef &&
@@ -717,7 +726,7 @@ function hasNestedAnyOfUsage(schema: SchemaObject, oas: Oas3): boolean {
   // TODO: Should also consider if the member schema contains type data
   return (
     Array.isArray(schema.anyOf) &&
-    schema.anyOf.some(memberSchemaOrRef => {
+    schema.anyOf.some((memberSchemaOrRef) => {
       let memberSchema: SchemaObject;
 
       if (
@@ -740,7 +749,7 @@ function hasNestedAnyOfUsage(schema: SchemaObject, oas: Oas3): boolean {
 function GetAnyOfTargetGraphQLType<TSource, TContext, TArgs>(
   schema: SchemaObject,
   data: PreprocessingData<TSource, TContext, TArgs>,
-  oas: Oas3
+  oas: Oas3,
 ): TargetGraphQLType {
   // Identify the type of the base schema, meaning ignoring the anyOf
   const schemaWithNoAnyOf = { ...schema };
@@ -748,16 +757,16 @@ function GetAnyOfTargetGraphQLType<TSource, TContext, TArgs>(
   const baseTargetType = getSchemaTargetGraphQLType(
     schemaWithNoAnyOf,
     data,
-    oas
+    oas,
   );
 
   // Target GraphQL types of all the member schemas
   const memberTargetTypes: TargetGraphQLType[] = [];
-  schema.anyOf.forEach(memberSchema => {
+  schema.anyOf.forEach((memberSchema) => {
     const memberTargetType = getSchemaTargetGraphQLType(
       memberSchema,
       data,
-      oas
+      oas,
     );
 
     if (memberTargetType !== null) {
@@ -767,9 +776,11 @@ function GetAnyOfTargetGraphQLType<TSource, TContext, TArgs>(
 
   if (memberTargetTypes.length > 0) {
     const firstMemberTargetType = memberTargetTypes[0];
-    const consistentMemberTargetTypes = memberTargetTypes.every(targetType => {
-      return targetType === firstMemberTargetType;
-    });
+    const consistentMemberTargetTypes = memberTargetTypes.every(
+      (targetType) => {
+        return targetType === firstMemberTargetType;
+      },
+    );
 
     if (consistentMemberTargetTypes) {
       if (baseTargetType !== null) {
@@ -805,7 +816,7 @@ function GetAnyOfTargetGraphQLType<TSource, TContext, TArgs>(
 function GetOneOfTargetGraphQLType<TSource, TContext, TArgs>(
   schema: SchemaObject,
   data: PreprocessingData<TSource, TContext, TArgs>,
-  oas: Oas3
+  oas: Oas3,
 ): TargetGraphQLType {
   // Identify the type of the base schema, meaning ignoring the oneOf
   const schemaWithNoOneOf = { ...schema };
@@ -813,17 +824,17 @@ function GetOneOfTargetGraphQLType<TSource, TContext, TArgs>(
   const baseTargetType = getSchemaTargetGraphQLType(
     schemaWithNoOneOf,
     data,
-    oas
+    oas,
   );
 
   // Target GraphQL types of all the member schemas
   const memberTargetTypes: TargetGraphQLType[] = [];
-  schema.oneOf.forEach(memberSchema => {
+  schema.oneOf.forEach((memberSchema) => {
     const collapsedMemberSchema = resolveAllOf(memberSchema, {}, data, oas);
     const memberTargetType = getSchemaTargetGraphQLType(
       collapsedMemberSchema,
       data,
-      oas
+      oas,
     );
 
     if (memberTargetType !== null) {
@@ -833,9 +844,11 @@ function GetOneOfTargetGraphQLType<TSource, TContext, TArgs>(
 
   if (memberTargetTypes.length > 0) {
     const firstMemberTargetType = memberTargetTypes[0];
-    const consistentMemberTargetTypes = memberTargetTypes.every(targetType => {
-      return targetType === firstMemberTargetType;
-    });
+    const consistentMemberTargetTypes = memberTargetTypes.every(
+      (targetType) => {
+        return targetType === firstMemberTargetType;
+      },
+    );
 
     if (consistentMemberTargetTypes) {
       if (baseTargetType !== null) {
@@ -902,8 +915,8 @@ function extractBasePath(paths: string[]): {
     }
   }
 
-  const updatedPaths = paths.map(path =>
-    path.split('/').slice(basePathComponents.length).join('/')
+  const updatedPaths = paths.map((path) =>
+    path.split('/').slice(basePathComponents.length).join('/'),
   );
 
   let basePath =
@@ -960,7 +973,7 @@ export function getRequestSchemaAndNames(
   path: string,
   method: HTTP_METHODS,
   operation: OperationObject,
-  oas: Oas3
+  oas: Oas3,
 ): RequestSchemaAndNames {
   let payloadContentType: string; // randomly selected content-type, prioritizing application/json
   let requestBodyObject: RequestBodyObject; // request object
@@ -1055,7 +1068,7 @@ export function getRequestSchemaAndNames(
           const saneContentTypeName = uncapitalize(
             payloadContentType.split('/').reduce((name, term) => {
               return name + capitalize(term);
-            })
+            }),
           );
 
           let description = `String represents payload of content type '${payloadContentType}'`;
@@ -1098,7 +1111,7 @@ export function getResponseSchemaAndNames<TSource, TContext, TArgs>(
   operation: OperationObject,
   oas: Oas3,
   data: PreprocessingData<TSource, TContext, TArgs>,
-  options: InternalOptions<TSource, TContext, TArgs>
+  options: InternalOptions<TSource, TContext, TArgs>,
 ): ResponseSchemaAndNames {
   let responseContentType: string; // randomly selected content-type, prioritizing application/json
   let responseObject: ResponseObject; // response object
@@ -1226,11 +1239,11 @@ export function getResponseStatusCode<TSource, TContext, TArgs>(
   method: string,
   operation: OperationObject,
   oas: Oas3,
-  data: PreprocessingData<TSource, TContext, TArgs>
+  data: PreprocessingData<TSource, TContext, TArgs>,
 ): string {
   if (typeof operation.responses === 'object' && operation.responses !== null) {
     const codes = Object.keys(operation.responses);
-    const successCodes = codes.filter(code => {
+    const successCodes = codes.filter((code) => {
       return SUCCESS_STATUS_RX.test(code);
     });
 
@@ -1244,7 +1257,7 @@ export function getResponseStatusCode<TSource, TContext, TArgs>(
           `Operation '${formatOperationString(
             method,
             path,
-            oas.info.title
+            oas.info.title,
           )}' ` +
           `contains multiple possible successful response object ` +
           `(HTTP code 200-299 or 2XX). Only one can be chosen.`,
@@ -1252,7 +1265,6 @@ export function getResponseStatusCode<TSource, TContext, TArgs>(
           `The response object with the HTTP code ` +
           `${successCodes[0]} will be selected`,
         data,
-        log: translationLog,
       });
 
       return successCodes[0];
@@ -1268,7 +1280,7 @@ export function getLinks<TSource, TContext, TArgs>(
   method: HTTP_METHODS,
   operation: OperationObject,
   oas: Oas3,
-  data: PreprocessingData<TSource, TContext, TArgs>
+  data: PreprocessingData<TSource, TContext, TArgs>,
 ): { [key: string]: LinkObject } {
   const links = {};
   const statusCode = getResponseStatusCode(path, method, operation, oas, data);
@@ -1322,14 +1334,14 @@ export function getParameters(
   method: HTTP_METHODS,
   operation: OperationObject,
   pathItem: PathItemObject,
-  oas: Oas3
+  oas: Oas3,
 ): ParameterObject[] {
   let parameters = [];
 
   if (!isHttpMethod(method)) {
-    translationLog(
+    console.warn(
       `Warning: attempted to get parameters for ${method} ${path}, ` +
-        `which is not an operation.`
+        `which is not an operation.`,
     );
     return parameters;
   }
@@ -1337,7 +1349,7 @@ export function getParameters(
   // First, consider parameters in Path Item Object:
   const pathParams = pathItem.parameters;
   if (Array.isArray(pathParams)) {
-    const pathItemParameters: ParameterObject[] = pathParams.map(p => {
+    const pathItemParameters: ParameterObject[] = pathParams.map((p) => {
       if ('$ref' in p && typeof p.$ref === 'string') {
         // Here we know we have a parameter object:
         return resolveRef(p.$ref, oas) as ParameterObject;
@@ -1352,15 +1364,17 @@ export function getParameters(
   // Second, consider parameters in Operation Object:
   const opObjectParameters = operation.parameters;
   if (Array.isArray(opObjectParameters)) {
-    const operationParameters: ParameterObject[] = opObjectParameters.map(p => {
-      if ('$ref' in p && typeof p.$ref === 'string') {
-        // Here we know we have a parameter object:
-        return resolveRef(p.$ref, oas);
-      } else {
-        // Here we know we have a parameter object:
-        return p as ParameterObject;
-      }
-    });
+    const operationParameters: ParameterObject[] = opObjectParameters.map(
+      (p) => {
+        if ('$ref' in p && typeof p.$ref === 'string') {
+          // Here we know we have a parameter object:
+          return resolveRef(p.$ref, oas);
+        } else {
+          // Here we know we have a parameter object:
+          return p as ParameterObject;
+        }
+      },
+    );
     parameters = parameters.concat(operationParameters);
   }
 
@@ -1376,7 +1390,7 @@ export function getParameters(
 export function getServers(
   operation: OperationObject,
   pathItem: PathItemObject,
-  oas: Oas3
+  oas: Oas3,
 ): ServerObject[] {
   let servers = [];
   // Global server definitions:
@@ -1445,7 +1459,7 @@ export function getSecuritySchemes(oas: Oas3): {
 export function getSecurityRequirements(
   operation: OperationObject,
   securitySchemes: { [key: string]: ProcessedSecurityScheme },
-  oas: Oas3
+  oas: Oas3,
 ): string[] {
   const results: string[] = [];
 
@@ -1564,13 +1578,13 @@ export function sanitize(str: string, caseStyle: CaseStyle): string {
 export function storeSaneName(
   saneStr: string,
   str: string,
-  mapping: { [key: string]: string }
+  mapping: { [key: string]: string },
 ): string {
   if (saneStr in mapping && str !== mapping[saneStr]) {
     // TODO: Follow warning model
-    translationLog(
+    console.warn(
       `Warning: '${str}' and '${mapping[saneStr]}' both sanitize ` +
-        `to '${saneStr}' - collision possible. Desanitize to '${str}'.`
+        `to '${saneStr}' - collision possible. Desanitize to '${str}'.`,
     );
   }
   mapping[saneStr] = str;
@@ -1610,7 +1624,7 @@ export function isHttpMethod(method: string): boolean {
 export function formatOperationString(
   method: string,
   path: string,
-  title?: string
+  title?: string,
 ): string {
   if (title) {
     return `${title} ${method.toUpperCase()} ${path}`;
@@ -1638,7 +1652,7 @@ export function uncapitalize(str: string): string {
  */
 export function generateOperationId(
   method: HTTP_METHODS,
-  path: string
+  path: string,
 ): string {
   return sanitize(`${method} ${path}`, CaseStyle.camelCase);
 }

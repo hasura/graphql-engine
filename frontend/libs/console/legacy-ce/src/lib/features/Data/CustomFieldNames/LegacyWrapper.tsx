@@ -1,21 +1,5 @@
-import {
-  getTableBrowseRoute,
-  getTableModifyRoute,
-} from '../../../components/Common/utils/routesUtils';
-import { Driver } from '../../../dataSources';
-import { allowedMetadataTypes, useMetadataMigration } from '../../MetadataAPI';
-import { useFireNotification } from '../../../new-components/Notifications';
-import { ReduxState } from '../../../types';
-import React from 'react';
-import { useDispatch } from 'react-redux';
-import { AnyAction } from 'redux';
-import { ThunkDispatch } from 'redux-thunk';
-import {
-  REQUEST_SUCCESS,
-  updateSchemaInfo,
-} from '../../../components/Services/Data/DataActions';
-import { setSidebarLoading } from '../../../components/Services/Data/DataSubSidebar';
-import _push from '../../../components/Services/Data/push';
+import { dataRoutes } from '@hasura/shared/utils';
+import { useMetadataMigration } from '@hasura/metadata/api';
 import {
   CustomFieldNamesModal,
   CustomFieldNamesModalProps,
@@ -26,37 +10,40 @@ import {
   getQualifiedTableForCustomFieldNames,
   getTrackTableType,
 } from './utils';
+import { hasuraToast } from '@hasura/shared/ui';
+import { useNavigate } from 'react-router';
+import { SupportedDriver } from '@hasura/shared/types';
 
-type LegacyWrapperProps = Omit<CustomFieldNamesModalProps, 'onSubmit'> & {
+type LegacyWrapperProps = Omit<
+  CustomFieldNamesModalProps,
+  'onSubmit' | 'source' | 'isLoading'
+> & {
   dataSource: string;
-  driver: Driver;
+  driver: SupportedDriver;
   schema: string;
 };
 
-export const LegacyWrapper: React.FC<LegacyWrapperProps> = props => {
+export const LegacyWrapper: React.FC<LegacyWrapperProps> = (props) => {
   const { tableName, schema, dataSource, driver, onClose } = props;
-  const { fireNotification } = useFireNotification();
-  const dispatch: ThunkDispatch<ReduxState, unknown, AnyAction> = useDispatch();
+  const navigate = useNavigate();
+
   const mutation = useMetadataMigration({
     onSuccess: () => {
-      dispatch({ type: REQUEST_SUCCESS });
-      dispatch(updateSchemaInfo()).then(() => {
-        const nextRoute =
-          driver !== 'bigquery'
-            ? getTableModifyRoute(schema, dataSource, tableName, true)
-            : getTableBrowseRoute(schema, dataSource, tableName, true);
-        dispatch(_push(nextRoute));
-        dispatch(setSidebarLoading(false));
-        fireNotification({
-          title: 'Success!',
-          message: 'Existing table/view added',
-          type: 'success',
-        });
-        if (onClose) onClose();
+      hasuraToast({
+        title: 'Success!',
+        message: 'Existing table/view added',
+        type: 'success',
       });
+      if (onClose) onClose();
+      const nextRoute =
+        driver !== 'bigquery'
+          ? dataRoutes.getTableModifyRoute(schema, dataSource, tableName, true)
+          : dataRoutes.getTableBrowseRoute(schema, dataSource, tableName, true);
+      navigate(nextRoute);
+      // dispatch(setSidebarLoading(false));
     },
     onError: (error: Error) => {
-      fireNotification({
+      hasuraToast({
         title: 'Error',
         message: error?.message ?? 'Error while adding table/view',
         type: 'error',
@@ -66,7 +53,7 @@ export const LegacyWrapper: React.FC<LegacyWrapperProps> = props => {
 
   const onCustomizationFormSubmit = (values: CustomFieldNamesFormVals) => {
     const requestBody = {
-      type: getTrackTableType(driver) as allowedMetadataTypes,
+      type: getTrackTableType(driver),
       args: {
         source: dataSource,
         table: getQualifiedTableForCustomFieldNames({
@@ -101,7 +88,7 @@ export const LegacyWrapper: React.FC<LegacyWrapperProps> = props => {
     <CustomFieldNamesModal
       {...props}
       onSubmit={onCustomizationFormSubmit}
-      isLoading={mutation.isLoading}
+      isLoading={mutation.isPending}
       source={dataSource}
     />
   );

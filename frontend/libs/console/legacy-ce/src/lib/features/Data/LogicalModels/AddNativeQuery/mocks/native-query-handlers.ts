@@ -1,12 +1,10 @@
-import { DefaultBodyType, PathParams, RestRequest, rest } from 'msw';
+import { delay, http, HttpResponse } from 'msw';
 import { MockMetadataOptions, buildMetadata } from '../../mocks/metadata';
 
 type ResultBase = 'success' | 'native_queries_disabled';
 
 type TrackNativeQueryResult =
-  | ResultBase
-  | 'already_exists'
-  | 'validation_failed';
+  ResultBase | 'already_exists' | 'validation_failed';
 
 type UntrackNativeQueryResult = ResultBase | 'not_found';
 
@@ -42,12 +40,12 @@ type ExtractReturn<ArgType> = {
 // this function extracts a "type" argument
 // bc bulk_atomic has multiple "type"'s within it's payload, we get the last one as an approximation
 export const extractTypeAndArgs = async <ArgType = unknown>(
-  req: RestRequest<DefaultBodyType, PathParams<string>>
+  req: Request,
 ): Promise<ExtractReturn<ArgType>> => {
-  const body = await req.json<{
+  const body = (await req.json()) as {
     type: string;
     args: BulkArgsType<ArgType>[];
-  }>();
+  };
 
   if (body.type !== 'bulk_atomic') {
     return {
@@ -73,13 +71,17 @@ export const nativeQueryHandlers = ({
   untrackLogicalModelResult = 'success',
   enabledFeatureFlag = true,
 }: HandlersOptions) => [
-  rest.post('http://localhost:8080/v1/metadata', async (req, res, ctx) => {
-    const { type, args } = await extractTypeAndArgs<NativeQueryPayloadArg>(req);
+  http.post('http://localhost:8080/v1/metadata', async ({ request }) => {
+    const { type, args } =
+      await extractTypeAndArgs<NativeQueryPayloadArg>(request);
 
-    const response = (
+    const response = async (
       json: Record<string, any>,
-      status: 200 | 400 | 500 = 200
-    ) => res(ctx.status(status), ctx.delay(100), ctx.json(json));
+      status: 200 | 400 | 500 = 200,
+    ) => {
+      await delay(100);
+      return HttpResponse.json(json, { status });
+    };
 
     if (type === 'export_metadata') {
       return response(buildMetadata(metadataOptions));
@@ -96,7 +98,7 @@ export const nativeQueryHandlers = ({
               error: `Native query '${args.root_field_name}' is already tracked.`,
               path: '$.args',
             },
-            400
+            400,
           );
         case 'validation_failed':
           return response(
@@ -118,7 +120,7 @@ export const nativeQueryHandlers = ({
               },
               path: '$.args',
             },
-            400
+            400,
           );
 
         case 'native_queries_disabled':
@@ -128,7 +130,7 @@ export const nativeQueryHandlers = ({
               error: 'NativeQueries is disabled!',
               path: '$.args',
             },
-            500
+            500,
           );
       }
     }
@@ -143,7 +145,7 @@ export const nativeQueryHandlers = ({
               error: `Native query "${args.root_field_name}" not found in source "${args.source}".`,
               path: '$.args',
             },
-            400
+            400,
           );
         case 'native_queries_disabled':
           return response(
@@ -152,7 +154,7 @@ export const nativeQueryHandlers = ({
               error: 'NativeQueries is disabled!',
               path: '$.args',
             },
-            500
+            500,
           );
       }
     }
@@ -168,7 +170,7 @@ export const nativeQueryHandlers = ({
               error: `Logical model '${args.name}' is already tracked.`,
               path: '$.args',
             },
-            400
+            400,
           );
         case 'native_queries_disabled':
           return response(
@@ -177,7 +179,7 @@ export const nativeQueryHandlers = ({
               error: 'NativeQueries is disabled!',
               path: '$.args',
             },
-            500
+            500,
           );
       }
     }
@@ -192,7 +194,7 @@ export const nativeQueryHandlers = ({
               error: `Logical model "${args.name}" not found in source "${args.source}".`,
               path: '$.args',
             },
-            400
+            400,
           );
         case 'still_being_used':
           return response(
@@ -201,7 +203,7 @@ export const nativeQueryHandlers = ({
               error: `Custom type "${args.name}" still being used by native query "hello_mssql_function".`,
               path: '$.args',
             },
-            400
+            400,
           );
         case 'native_queries_disabled':
           return response(
@@ -210,25 +212,25 @@ export const nativeQueryHandlers = ({
               error: 'NativeQueries is disabled!',
               path: '$.args',
             },
-            500
+            500,
           );
       }
     }
   }),
-  rest.get('http://localhost:8080/v1/entitlement', async (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({
+  http.get('http://localhost:8080/v1/entitlement', async () => {
+    return HttpResponse.json(
+      {
         metadata_db_id: '58a9e616-5fe9-4277-95fa-e27f9d45e177',
         status: 'none',
-      })
+      },
+      { status: 200 },
     );
   }),
-  rest.get('http://localhost:8080/v1alpha1/config', async (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.delay(),
-      ctx.json({
+  http.get('http://localhost:8080/v1alpha1/config', async () => {
+    await delay();
+
+    return HttpResponse.json(
+      {
         version: '12345',
         is_function_permissions_inferred: true,
         is_remote_schema_permissions_enabled: false,
@@ -267,7 +269,8 @@ export const nativeQueryHandlers = ({
             enabled: false,
           },
         ],
-      })
+      },
+      { status: 200 },
     );
   }),
 ];

@@ -1,4 +1,4 @@
-import { AllowedRESTMethods } from '../../../../metadata/types';
+import { AllowedRestMethods } from '@hasura/shared/types';
 
 const positionsMap = {
   GET: 1,
@@ -8,12 +8,12 @@ const positionsMap = {
   DELETE: 5,
 };
 
-const modifyMethodsList = (methods: AllowedRESTMethods[]) =>
-  methods.map(method => ({ name: method, position: positionsMap[method] }));
+const modifyMethodsList = (methods: AllowedRestMethods[]) =>
+  methods.map((method) => ({ name: method, position: positionsMap[method] }));
 
-export const badgeSort = (methods: AllowedRESTMethods[]) => {
+export const badgeSort = (methods: AllowedRestMethods[]) => {
   const modifiedMethods = modifyMethodsList(methods);
   return modifiedMethods
     .sort((a, b) => a.position - b.position)
-    .map(method => method.name);
+    .map((method) => method.name);
 };

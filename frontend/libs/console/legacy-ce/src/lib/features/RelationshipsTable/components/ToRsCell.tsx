@@ -1,14 +1,12 @@
-import React, { ReactText } from 'react';
+import React from 'react';
 import { FaPlug, FaFont } from 'react-icons/fa';
+import { Flex } from '@radix-ui/themes';
 
-const RsLeafCell = ({ leafName }: { leafName: ReactText }) => (
-  <>
-    <FaFont
-      className="fill-current text-sm text-muted mr-1 p-0"
-      title="Field"
-    />
-    <span className="mr-2">{leafName}</span>
-  </>
+const RsLeafCell = ({ leafName }: { leafName: React.ReactNode }) => (
+  <Flex className="mr-2" align="center" gap="1">
+    <FaFont title="Field" />
+    <span>{leafName}</span>
+  </Flex>
 );
 
 // the design mockup was using FA v5, instead of fa-project-diagram, I've used  fa-code-fork from FA v4 for the time being
@@ -19,20 +17,17 @@ const ToRsCell = ({
   rsName,
   leafs,
 }: {
-  rsName: ReactText;
-  leafs: ReactText[];
+  rsName: React.ReactNode;
+  leafs: React.ReactNode[];
 }) => (
-  <div className="flex items-center">
-    <FaPlug
-      className="fill-current text-sm text-muted mr-1 p-0"
-      title="Remote schema"
-    />
+  <Flex align="center" gap="1">
+    <FaPlug title="Remote schema" />
     {rsName}
-    <span className="px-2">/</span>
-    {leafs.map(i => (
-      <RsLeafCell leafName={i} />
+    <span>/</span>
+    {leafs.map((i, index) => (
+      <RsLeafCell key={index} leafName={i} />
     ))}
-  </div>
+  </Flex>
 );
 
 export default ToRsCell;

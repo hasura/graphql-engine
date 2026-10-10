@@ -1,23 +1,24 @@
-import { QualifiedStoredProcedure } from '../../../../hasura-metadata-types';
+import { QualifiedStoredProcedure } from '@hasura/shared/types';
 import { getQualifiedTable } from '../../../ManageTable/utils';
-import { Link } from '../../../TrackResources/components/parts/Link';
 import { TbFileSettings } from 'react-icons/tb';
+import { To } from 'react-router';
+import { RelativeLink } from '@hasura/shared/ui';
 
 export const StoredProcedureDisplayName = ({
   dataSourceName,
   qualifiedStoredProcedure,
-  onClick,
+  to,
 }: {
-  onClick?: () => void;
+  to?: To;
   dataSourceName?: string;
   qualifiedStoredProcedure: QualifiedStoredProcedure;
 }) => {
   const qualifiedStoredProcedureName = getQualifiedTable(
-    qualifiedStoredProcedure
+    qualifiedStoredProcedure,
   );
   const content = () => (
     <span className="flex items-center">
-      <TbFileSettings className="text-2xl text-muted mr-xs" />
+      <TbFileSettings className="text-2xl text-muted mr-1" />
       {dataSourceName ? (
         <>
           {dataSourceName} / {qualifiedStoredProcedureName.join(' / ')}
@@ -28,8 +29,8 @@ export const StoredProcedureDisplayName = ({
     </span>
   );
 
-  return onClick ? (
-    <Link onClick={onClick}>{content()}</Link>
+  return to ? (
+    <RelativeLink to={to}>{content()}</RelativeLink>
   ) : (
     <div>{content()}</div>
   );

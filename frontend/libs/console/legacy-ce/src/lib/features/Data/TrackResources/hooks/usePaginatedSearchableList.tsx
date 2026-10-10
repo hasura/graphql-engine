@@ -20,12 +20,12 @@ export function usePaginatedSearchableList<TData extends { id: string }>({
 
   const filteredData = React.useMemo(
     () => search<TData>({ data, searchText, filterFn }),
-    [data, filterFn, searchText]
+    [data, filterFn, searchText],
   );
 
   const { data: paginatedData, totalPages } = React.useMemo(
     () => paginate<TData>({ data: filteredData, pageNumber, pageSize }),
-    [filteredData, pageNumber, pageSize]
+    [filteredData, pageNumber, pageSize],
   );
 
   const rowsToBeChecked = searchIsActive ? filteredData : paginatedData;
@@ -33,8 +33,8 @@ export function usePaginatedSearchableList<TData extends { id: string }>({
   const checkData = useCheckRows(rowsToBeChecked, filteredData, data);
 
   const getCheckedItems = React.useCallback(
-    () => data.filter(d => checkData.checkedIds.includes(d.id)),
-    [checkData.checkedIds, data]
+    () => data.filter((d) => checkData.checkedIds.includes(d.id)),
+    [checkData.checkedIds, data],
   );
 
   const handleSearch = React.useCallback((searchQuery: string) => {
@@ -43,14 +43,14 @@ export function usePaginatedSearchableList<TData extends { id: string }>({
   }, []);
 
   const incrementPage = React.useCallback(() => {
-    setPageNumber(currentPage =>
-      currentPage >= data.length / pageSize ? currentPage : currentPage + 1
+    setPageNumber((currentPage) =>
+      currentPage >= data.length / pageSize ? currentPage : currentPage + 1,
     );
   }, [data.length, pageSize]);
 
   const decrementPage = React.useCallback(() => {
-    setPageNumber(currentPage =>
-      currentPage === 1 ? currentPage : currentPage - 1
+    setPageNumber((currentPage) =>
+      currentPage === 1 ? currentPage : currentPage - 1,
     );
   }, []);
 

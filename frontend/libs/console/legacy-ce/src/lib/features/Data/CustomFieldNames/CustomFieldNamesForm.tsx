@@ -1,28 +1,33 @@
-import { Analytics } from '../../Analytics';
-import { MetadataTableConfig } from '../../hasura-metadata-types';
-import { Button } from '../../../new-components/Button';
-import { Collapse } from '../../../new-components/deprecated';
-import { Dialog } from '../../../new-components/Dialog';
+import { Analytics } from '@hasura/shared/analytics';
+import { MetadataTableConfig } from '@hasura/shared/types';
+import { Flex } from '@radix-ui/themes';
 import {
+  Button,
+  Collapsible,
+  CollapsibleHeader,
   GraphQLSanitizedInputField,
-  Select,
-} from '../../../new-components/Form';
-import { SanitizeTips } from '../../../utils/sanitizeGraphQLFieldNames';
+  IndicatorCard,
+  SanitizeTips,
+  SelectField,
+  DialogFooter,
+} from '@hasura/shared/ui';
 import React from 'react';
-import { FaExclamationCircle } from 'react-icons/fa';
 import { useCustomFieldNamesForm } from './hooks';
 import { CustomFieldNamesFormVals } from './types';
 import { mutation_field_props, query_field_props } from './utils';
-import { MetadataUtils, useMetadata } from '../../hasura-metadata-api';
-import { useDriverCapabilities } from '../hooks/useDriverCapabilities';
-import { supportsSchemaLessTables } from '../LogicalModels/LogicalModelWidget/utils';
+import { useMetadata } from '@hasura/metadata/api';
+import { MetadataSelectors } from '@hasura/metadata/helpers';
+import {
+  useDriverCapabilities,
+  supportsSchemaLessTables,
+} from '@hasura/metadata/data-source';
 
 export type CustomFieldNamesFormProps = {
   initialTableName: string;
   currentConfiguration?: MetadataTableConfig;
   onSubmit: (
     data: CustomFieldNamesFormVals,
-    configuration: MetadataTableConfig
+    configuration: MetadataTableConfig,
   ) => void;
   onClose: () => void;
   callToAction?: string;
@@ -32,9 +37,9 @@ export type CustomFieldNamesFormProps = {
   source: string;
 };
 
-export const CustomFieldNamesForm: React.VFC<
-  CustomFieldNamesFormProps
-> = props => {
+export const CustomFieldNamesForm: React.FC<CustomFieldNamesFormProps> = (
+  props,
+) => {
   const {
     isLoading,
     onClose,
@@ -53,41 +58,44 @@ export const CustomFieldNamesForm: React.VFC<
     placeholders,
     reset,
   } = useCustomFieldNamesForm(props);
-  const { data: capabilities } = useDriverCapabilities({
-    dataSourceName: props.source,
-  });
-  const { data: logicalModels } = useMetadata(
-    m => MetadataUtils.findMetadataSource(props.source, m)?.logical_models
+  const { data: source } = useMetadata(
+    MetadataSelectors.findSource(props.source),
   );
+  const { data: capabilities } = useDriverCapabilities({
+    source,
+  });
+  const logicalModels = source?.logical_models;
 
   return (
     <Form onSubmit={handleSubmit}>
       <div>
-        <div className="px-4 pb-sm">
+        <div>
           <SanitizeTips />
-          <div className="mb-4 flex justify-end">
+          <Flex justify="end" className="mb-4">
             <Button disabled={!hasValues} size="sm" onClick={reset}>
               Clear All Fields
             </Button>
-          </div>
+          </Flex>
 
           <div>
             <Analytics name="custom_name" htmlAttributesToRedact="value">
               <GraphQLSanitizedInputField
                 hideTips
-                clearButton
                 name="custom_name"
                 label="Custom Table Name"
-                placeholder={placeholders.custom_name}
+                fieldProps={{
+                  clearable: true,
+                  placeholder: placeholders.custom_name,
+                }}
               />
             </Analytics>
             {supportsSchemaLessTables(capabilities) && (
               <Analytics name="logical_model" htmlAttributesToRedact="value">
-                <Select
+                <SelectField
                   name="logical_model"
                   placeholder={placeholders.logical_model}
                   options={
-                    logicalModels?.map(model => ({
+                    logicalModels?.map((model) => ({
                       label: model.name,
                       value: model.name,
                     })) ?? []
@@ -98,84 +106,79 @@ export const CustomFieldNamesForm: React.VFC<
           </div>
           {errors.custom_name?.type === 'required' && (
             <div className="grid grid-cols-12 gap-3">
-              <div className="col-span-4 flex items-center" />
+              <div />
               <div className="col-span-8">
-                <div
+                <IndicatorCard
+                  showIcon
                   role="alert"
                   aria-label="custom table name is a required field!"
-                  className="text-red-600 flex items-center text-sm pt-1"
                 >
-                  <span className="flex items-center">
-                    <FaExclamationCircle className="mr-1" />
-                    This field is required!
-                  </span>
-                </div>
+                  This field is required!
+                </IndicatorCard>
               </div>
             </div>
           )}
 
-          <div className="mb-sm">
-            <div className="flex items-center">
-              <Collapse
+          <div className="mb-2">
+            <Flex align="center">
+              <Collapsible
                 defaultOpen={isQueryOpen}
-                title="Query and Subscription"
-                rootClassName="w-full"
+                className="w-full"
+                triggerChildren={
+                  <CollapsibleHeader title="Query and Subscription" />
+                }
               >
-                <Collapse.Content>
-                  <div className="pl-sm py-xs ml-[0.47rem]">
-                    <div className="space-y-sm">
-                      {query_field_props.map(name => (
-                        <Analytics
-                          key={`query-and-subscription-${name}`}
-                          name={name}
-                          htmlAttributesToRedact="value"
-                        >
-                          <GraphQLSanitizedInputField
-                            clearButton
-                            hideTips
-                            name={name}
-                            label={name}
-                            placeholder={placeholders[name]}
-                          />
-                        </Analytics>
-                      ))}
-                    </div>
-                  </div>
-                </Collapse.Content>
-              </Collapse>
-            </div>
+                <div className="space-y-2 w-full">
+                  {query_field_props.map((name) => (
+                    <Analytics
+                      key={`query-and-subscription-${name}`}
+                      name={name}
+                      htmlAttributesToRedact="value"
+                    >
+                      <GraphQLSanitizedInputField
+                        hideTips
+                        name={name}
+                        label={name}
+                        fieldProps={{
+                          clearable: true,
+                          placeholder: placeholders[name],
+                        }}
+                      />
+                    </Analytics>
+                  ))}
+                </div>
+              </Collapsible>
+            </Flex>
           </div>
 
           <div>
-            <div className="flex items-center">
-              <Collapse
+            <Flex align="center">
+              <Collapsible
                 defaultOpen={isMutateOpen}
-                title="Mutation"
-                rootClassName="w-full"
+                className="w-full"
+                triggerChildren={<CollapsibleHeader title="Mutation" />}
               >
-                <Collapse.Content>
-                  <div className="pl-sm py-xs ml-[0.47rem]">
-                    <div className="space-y-sm">
-                      {mutation_field_props.map(name => (
-                        <Analytics
-                          key={`mutation-${name}`}
-                          name={name}
-                          htmlAttributesToRedact="value"
-                        >
-                          <GraphQLSanitizedInputField
-                            clearButton
-                            hideTips
-                            label={name}
-                            name={name}
-                            placeholder={placeholders[name]}
-                          />
-                        </Analytics>
-                      ))}
-                    </div>
-                  </div>
-                </Collapse.Content>
-              </Collapse>
-            </div>
+                <div className="space-y-2">
+                  {mutation_field_props.map((name) => (
+                    <Analytics
+                      key={`mutation-${name}`}
+                      name={name}
+                      htmlAttributesToRedact="value"
+                    >
+                      <GraphQLSanitizedInputField
+                        hideTips
+                        label={name}
+                        name={name}
+                        fieldProps={{
+                          clearable: true,
+                          placeholder: placeholders[name],
+                        }}
+                      />
+                    </Analytics>
+                  ))}
+                </div>
+              </Collapsible>
+            </Flex>
           </div>
         </div>
         {/*
@@ -185,10 +188,12 @@ export const CustomFieldNamesForm: React.VFC<
               However, if this is done, the form stays rendered in memory when the dialog is opened and closed and must be manually reset and reinit'd each time it happens
               This ended up being the simplest approach.
             */}
-        <Dialog.Footer
+        <DialogFooter
           callToAction={callToAction}
           isLoading={isLoading}
-          callToActionLoadingText={callToActionLoadingText}
+          callToActionProps={{
+            loadingText: callToActionLoadingText,
+          }}
           callToDeny={callToDeny}
           onClose={onClose}
           className="sticky w-full bottom-0 left-0"
