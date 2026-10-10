@@ -1,5 +1,5 @@
-import { Metadata } from '../../hasura-metadata-types';
-import { rest } from 'msw';
+import { Metadata } from '@hasura/shared/types';
+import { http, HttpResponse } from 'msw';
 import { mocksTrackedArrayRelationship } from './mocks';
 
 const mockMetadata: Metadata = {
@@ -99,7 +99,7 @@ const mockMetadata: Metadata = {
               'DRIVER={ODBC Driver 17 for SQL Server};SERVER=host.docker.internal;DATABASE=bikes;Uid=SA;Pwd=reallyStrongPwd123',
             pool_settings: {
               idle_timeout: 5,
-              max_connections: 50,
+              total_max_connections: 50,
             },
           },
         },
@@ -2145,43 +2145,42 @@ const mockRemoteSchemaIntrospectionResponse = {
 };
 
 export const handlers = () => [
-  rest.post(`http://localhost:8080/v1/metadata`, (req, res, ctx) => {
-    const requestBody = req.body as Record<string, any>;
+  http.post(`http://localhost:8080/v1/metadata`, async ({ request }) => {
+    const requestBody = (await request.json()) as Record<string, any>;
 
     if (requestBody.type === 'export_metadata')
-      return res(ctx.json(mockMetadata));
+      return HttpResponse.json(mockMetadata);
 
     if (requestBody.type === 'introspect_remote_schema')
-      return res(ctx.json(mockRemoteSchemaIntrospectionResponse));
+      return HttpResponse.json(mockRemoteSchemaIntrospectionResponse);
 
-    return res(ctx.json({}));
+    return HttpResponse.json({});
   }),
-  rest.post(`http://localhost:8080/v2/query`, (req, res, ctx) => {
-    return res(ctx.json(mockQueryResponse));
+  http.post(`http://localhost:8080/v2/query`, () => {
+    return HttpResponse.json(mockQueryResponse);
   }),
 ];
 
 export const trackedArrayRelationshipsHandlers = () => [
-  rest.post(`http://localhost:8080/v1/metadata`, async (req, res, ctx) => {
-    const reqBody = (await req.json()) as Record<string, any>;
+  http.post(`http://localhost:8080/v1/metadata`, async ({ request }) => {
+    const reqBody = (await request.json()) as Record<string, any>;
 
     if (reqBody.type === 'export_metadata') {
-      return res(
-        ctx.status(200),
-        ctx.json(mocksTrackedArrayRelationship.metadata)
-      );
+      return HttpResponse.json(mocksTrackedArrayRelationship.metadata, {
+        status: 200,
+      });
     }
 
     if (reqBody.type === 'list_source_kinds') {
-      return res(ctx.json(mocksTrackedArrayRelationship.listSourceKinds));
+      return HttpResponse.json(mocksTrackedArrayRelationship.listSourceKinds);
     }
 
     if (
       reqBody.type === 'pg_suggest_relationships' &&
       reqBody.args.omit_tracked === false
     ) {
-      return res(
-        ctx.json(mocksTrackedArrayRelationship.suggestedRelationships)
+      return HttpResponse.json(
+        mocksTrackedArrayRelationship.suggestedRelationships,
       );
     }
 
@@ -2189,11 +2188,11 @@ export const trackedArrayRelationshipsHandlers = () => [
       reqBody.type === 'pg_suggest_relationships' &&
       reqBody.args.omit_tracked === true
     ) {
-      return res(
-        ctx.json(
-          mocksTrackedArrayRelationship.suggestedRelationshipsOmitTracked
-        )
+      return HttpResponse.json(
+        mocksTrackedArrayRelationship.suggestedRelationshipsOmitTracked,
       );
     }
+
+    return undefined;
   }),
 ];

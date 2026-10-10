@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Dialog } from '../../../../new-components/Dialog';
+import { Dialog } from '@hasura/shared/ui';
 import { BenefitsView } from '../BenefitsView';
 import { Form } from './Form';
 import { SuccessScreen } from './SuccessScreen/SuccessScreen';
-import { reactQueryClient } from '../../../../lib/reactQuery';
 import { EE_LICENSE_INFO_QUERY_NAME } from '../../constants';
+import { useQueryClient } from '@tanstack/react-query';
 
 type Props = {
   /**
@@ -20,14 +20,14 @@ type Props = {
 export function FormWrapper(props: Props) {
   const { onFormClose } = props;
   return (
-    <Dialog size="md" onClose={onFormClose} hasBackdrop>
+    <Dialog size="md" onClose={onFormClose}>
       <FormStateMachine {...props} />
     </Dialog>
   );
 }
 
-function FormStateMachine(props: Props) {
-  const { onFormClose, showBenefitsView = false } = props;
+function FormStateMachine({ onFormClose, showBenefitsView = false }: Props) {
+  const queryCLient = useQueryClient();
 
   const [formState, setFormState] = useState<
     'default' | 'successScreen' | 'benefitsScreen'
@@ -40,7 +40,9 @@ function FormStateMachine(props: Props) {
           setFormState('successScreen');
           // on success, invalidate the license status stored in react query cache,
           // overriding the stale time
-          reactQueryClient.invalidateQueries(EE_LICENSE_INFO_QUERY_NAME);
+          queryCLient.invalidateQueries({
+            queryKey: EE_LICENSE_INFO_QUERY_NAME,
+          });
         }}
       />
     );

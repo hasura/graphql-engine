@@ -1,4 +1,4 @@
-import { useMutation } from 'react-query';
+import { useMutation } from '@tanstack/react-query';
 import {
   controlPlaneClient,
   updateUserClickedChangeProjectRegion,
@@ -17,9 +17,7 @@ export const useUpdateProjectRegionChangeStat = () => {
   return useMutation({
     mutationFn: async (
       checkDatabaseLatencyResponse:
-        | CheckDatabaseLatencyResponse
-        | string
-        | undefined
+        CheckDatabaseLatencyResponse | string | undefined,
     ) => {
       if (
         !checkDatabaseLatencyResponse ||
@@ -36,7 +34,7 @@ export const useUpdateProjectRegionChangeStat = () => {
             checkDatabaseLatencyResponse.insertDbLatencyData.data
               .insert_db_latency_one.id,
           isChangeRegionClicked: true,
-        }
+        },
       );
     },
   });

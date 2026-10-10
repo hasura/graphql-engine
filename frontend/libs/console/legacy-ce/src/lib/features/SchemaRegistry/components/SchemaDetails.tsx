@@ -1,8 +1,15 @@
 import React, { useMemo } from 'react';
 import LZString from 'lz-string';
 import { useGetSchema } from '../hooks/useGetSchema';
-import { Tabs } from '../../../new-components/Tabs';
-import { IconTooltip } from '../../../new-components/Tooltip';
+import {
+  Tabs,
+  IconTooltip,
+  Input,
+  RelativeLink,
+  CodeEditorField,
+  Text,
+} from '@hasura/shared/ui';
+
 import { SchemaRow } from './SchemaRow';
 import { ChangeSummary } from './ChangeSummary';
 import {
@@ -10,27 +17,27 @@ import {
   schemaTransformFn,
   getPublishTime,
 } from '../utils';
-import { Link } from 'react-router';
 import { RoleBasedSchema, Schema } from '../types';
 import { FaHome, FaAngleRight, FaFileImport, FaSearch } from 'react-icons/fa';
-import { Input } from '../../../new-components/Form';
-import AceEditor from 'react-ace';
+import { Flex } from '@radix-ui/themes';
 
 export const Breadcrumbs = () => (
-  <div className="flex items-center space-x-xs mb-4">
-    <Link
+  <Flex align="center" className="space-x-xs mb-4">
+    <RelativeLink
       to="/api/schema-registry"
-      className="cursor-pointer flex items-center text-muted hover:text-gray-900"
+      className="cursor-pointer flex items-center"
     >
       <FaHome className="mr-1.5" />
-      <span className="text-sm">Schema</span>
-    </Link>
+      <Text size="1">Schema</Text>
+    </RelativeLink>
     <FaAngleRight className="text-muted" />
-    <div className="cursor-pointer flex items-center text-yellow-500">
-      <FaFileImport className="mr-1.5" />
-      <span className="text-sm">Roles</span>
-    </div>
-  </div>
+    <Text size="1" asChild color="indigo">
+      <Flex align="center" className="cursor-pointer" gap="1">
+        <FaFileImport className="mr-1.5" />
+        Roles
+      </Flex>
+    </Text>
+  </Flex>
 );
 
 type SchemaDetailsViewProps = {
@@ -51,14 +58,18 @@ export const SchemaDetailsView = (props: SchemaDetailsViewProps) => {
       return <p>Error: {fetchSchemaResponse.message}</p>;
     case 'success': {
       const transformedData = schemaTransformFn(fetchSchemaResponse.response);
-      return <SchemasDetails schema={transformedData} />;
+      if (transformedData) {
+        return <SchemasDetails schema={transformedData} />;
+      }
+
+      return <p>Schema registry not found</p>;
     }
   }
 };
 
-const SchemasDetails: React.VFC<{
+const SchemasDetails: React.FC<{
   schema: Schema;
-}> = props => {
+}> = (props) => {
   const { schema } = props;
 
   const [tabState, setTabState] = React.useState('graphql');
@@ -69,22 +80,22 @@ const SchemasDetails: React.VFC<{
   return (
     <div className="mx-4 mt-4">
       <Breadcrumbs />
-      <div className="flex mb-sm">
+      <Flex className="mb-2">
         <span className="font-bold text-xl text-black mr-4">
           {roleBasedSchema.role}:{schema.entry_hash}
         </span>
-      </div>
+      </Flex>
       <div className="border-neutral-200 bg-white border ">
-        <div className="w-full flex bg-gray-100 px-4 py-2">
-          <div className="flex text-base w-[69%] justify-start">
+        <Flex className="w-full bg-gray-100 px-4 py-2">
+          <Flex className="text-base w-[69%]" justify="start">
             <span className="text-sm font-bold">SCHEMA</span>
-          </div>
-          <div className="flex text-base w-[28%] justify-between">
+          </Flex>
+          <Flex className="text-base w-[28%]" justify="between">
             <span className="text-sm font-bold">BREAKING</span>
             <span className="text-sm font-bold">DANGEROUS</span>
             <span className="text-sm font-bold">SAFE</span>
-          </div>
-        </div>
+          </Flex>
+        </Flex>
 
         <div className="ml-4 mb-2 ">
           <SchemaRow
@@ -92,31 +103,30 @@ const SchemasDetails: React.VFC<{
             changes={roleBasedSchema.changes}
           />
 
-          <div className="flex mt-4">
+          <Flex className="mt-4">
             <div className="flex-col w-1/2">
-              <div className="flex items-center">
+              <Flex align="center">
                 <p className="font-bold text-gray-500">Published</p>
                 <IconTooltip message="The time at which this GraphQL schema was generated" />
-              </div>
+              </Flex>
               <span>{getPublishTime(schema.created_at)}</span>
             </div>
             <div className="flex-col w-1/2">
-              <div className="flex items-center">
+              <Flex align="center">
                 <p className="font-bold text-gray-500">Schema Hash</p>
                 <IconTooltip message="Hash of the GraphQL Schema SDL. Hash for two identical schema is identical." />
-              </div>
+              </Flex>
               <span className="font-bold bg-gray-100 px-1 rounded text-sm">
                 {roleBasedSchema.hash}
               </span>
             </div>
-          </div>
+          </Flex>
         </div>
 
         <div className="w-full h-full">
           <Tabs
             value={tabState}
-            onValueChange={state => setTabState(state)}
-            headerTabBackgroundColor="white"
+            onValueChange={(state) => setTabState(state)}
             items={[
               {
                 value: 'graphql',
@@ -141,29 +151,28 @@ const SchemasDetails: React.VFC<{
   );
 };
 
-export const SchemaView: React.VFC<{ schema: string }> = props => {
+export const SchemaView: React.FC<{ schema: string }> = (props) => {
   const { schema } = props;
   const decompressedSchema = LZString.decompressFromBase64(schema);
+
   return (
-    <div className="w-full p-sm">
-      <AceEditor
-        mode="graphqlschema"
-        fontSize={14}
-        width="100%"
-        theme="chrome"
-        name={`schema-registry-schema-modal-view-schema`}
-        value={decompressedSchema}
-        editorProps={{ $blockScrolling: true }}
-        setOptions={{ useWorker: false }}
+    <div className="w-full p-2">
+      <CodeEditorField
+        name="schema-registry-schema-modal-view-schema"
+        editorProps={{
+          mode: 'graphqlschema',
+          width: '100%',
+          defaultValue: decompressedSchema,
+        }}
       />
     </div>
   );
 };
 
-export const ChangesView: React.VFC<{
+export const ChangesView: React.FC<{
   changes: RoleBasedSchema['changes'];
   role: string;
-}> = props => {
+}> = (props) => {
   const { changes, role } = props;
 
   const [searchText, setSearchText] = React.useState('');
@@ -173,8 +182,8 @@ export const ChangesView: React.VFC<{
   const changesList = useMemo(() => {
     if (!searchText) return changes;
 
-    return changes?.filter(change =>
-      findIfSubStringExists(change.message, searchText)
+    return changes?.filter((change) =>
+      findIfSubStringExists(change.message, searchText),
     );
   }, [searchText, changes]);
 
@@ -203,12 +212,14 @@ export const ChangesView: React.VFC<{
   }
 
   const breakingChanges =
-    changesList && changesList.filter(c => c.criticality.level === 'BREAKING');
+    changesList &&
+    changesList.filter((c) => c.criticality.level === 'BREAKING');
   const dangerousChanges =
-    changesList && changesList.filter(c => c.criticality.level === 'DANGEROUS');
+    changesList &&
+    changesList.filter((c) => c.criticality.level === 'DANGEROUS');
   const safeChanges =
     changesList &&
-    changesList.filter(c => c.criticality.level === 'NON_BREAKING');
+    changesList.filter((c) => c.criticality.level === 'NON_BREAKING');
 
   return (
     <div className="flex-col m-8">
@@ -224,53 +235,62 @@ export const ChangesView: React.VFC<{
         </div>
         <ChangeSummary changes={changes} />
       </div>
-      <div className="flex w-full border-b border-gray-300 my-8" />
-      <div className="flex w-full mb-4 justify-between">
-        <div className="flex font-bold text-gray-600">Changes</div>
+      <Flex className="w-full border-b border-gray-300 my-8" />
+      <Flex className="w-full mb-4" justify="between">
+        <Flex className="font-bold text-gray-600">Changes</Flex>
 
         <label className="block">
           <Input
             type="text"
             placeholder="Search"
             name="search"
-            icon={<FaSearch />}
+            icon={FaSearch}
             iconPosition="start"
             onChange={handleSearch}
           />
         </label>
-      </div>
+      </Flex>
       {breakingChanges && breakingChanges.length > 0 && (
-        <div className="flex flex-col">
-          {breakingChanges.map(c => {
+        <Flex direction="column">
+          {breakingChanges.map((c, index) => {
             return (
-              <div className="text-red-600 border border-gray-400 p-2">
+              <div
+                key={index}
+                className="text-red-600 border border-gray-400 p-2"
+              >
                 {c.message}
               </div>
             );
           })}
-        </div>
+        </Flex>
       )}
       {dangerousChanges && dangerousChanges.length > 0 && (
-        <div className="flex flex-col">
-          {dangerousChanges.map(c => {
+        <Flex direction="column">
+          {dangerousChanges.map((c, index) => {
             return (
-              <div className="text-red-800 border border-gray-400 p-2">
+              <div
+                key={index}
+                className="text-red-800 border border-gray-400 p-2"
+              >
                 {c.message}
               </div>
             );
           })}
-        </div>
+        </Flex>
       )}
       {safeChanges && safeChanges.length > 0 && (
-        <div className="flex flex-col">
-          {safeChanges.map(c => {
+        <Flex direction="column">
+          {safeChanges.map((c, index) => {
             return (
-              <div className="text-green-600 border border-gray-400 p-2">
+              <div
+                key={index}
+                className="text-green-600 border border-gray-400 p-2"
+              >
                 {c.message}
               </div>
             );
           })}
-        </div>
+        </Flex>
       )}
     </div>
   );

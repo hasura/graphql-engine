@@ -1,2 +1,2 @@
-export { Breadcrumbs } from './Breadcrumbs';
+export { TableBreadcrumbs } from './Breadcrumbs';
 export { TableName } from './TableName';

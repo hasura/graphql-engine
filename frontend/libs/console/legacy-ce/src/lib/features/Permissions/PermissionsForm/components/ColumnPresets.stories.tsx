@@ -1,7 +1,7 @@
 import React from 'react';
-import { StoryObj, Meta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
 import { z } from 'zod';
-import { SimpleForm } from '../../../../new-components/Form';
+import { SimpleForm } from '@hasura/shared/ui';
 
 import {
   ColumnPresetsSection,
@@ -33,7 +33,7 @@ export default {
 const columns = ['id', 'name', 'description'];
 
 export const Insert: StoryObj<ColumnPresetsSectionProps> = {
-  render: args => <ColumnPresetsSection {...args} />,
+  render: (args) => <ColumnPresetsSection {...args} />,
   args: {
     queryType: 'insert',
     columns,
@@ -41,7 +41,7 @@ export const Insert: StoryObj<ColumnPresetsSectionProps> = {
 };
 
 export const Update: StoryObj<ColumnPresetsSectionProps> = {
-  render: args => <ColumnPresetsSection {...args} />,
+  render: (args) => <ColumnPresetsSection {...args} />,
   args: {
     ...Insert.args,
     queryType: 'update',
@@ -49,7 +49,7 @@ export const Update: StoryObj<ColumnPresetsSectionProps> = {
 };
 
 export const WithPartialPresets: StoryObj<ColumnPresetsSectionProps> = {
-  render: args => <ColumnPresetsSection {...args} />,
+  render: (args) => <ColumnPresetsSection {...args} />,
   args: {
     ...Insert.args,
   },
@@ -84,7 +84,7 @@ export const WithPartialPresets: StoryObj<ColumnPresetsSectionProps> = {
 };
 
 export const WithAllPresets: StoryObj<ColumnPresetsSectionProps> = {
-  render: args => <ColumnPresetsSection {...args} />,
+  render: (args) => <ColumnPresetsSection {...args} />,
   args: {
     ...Insert.args,
   },
@@ -99,7 +99,7 @@ export const WithAllPresets: StoryObj<ColumnPresetsSectionProps> = {
               columnName: z.string(),
               presetType: z.string(),
               columnValue: z.union([z.string(), z.number()]),
-            })
+            }),
           ),
           rowPermissionsCheckType: z.string(),
         })}
@@ -145,7 +145,7 @@ type ShowcaseProps = {
 };
 
 export const Showcase: StoryObj<ShowcaseProps> = {
-  render: args => (
+  render: (args) => (
     <>
       {Object.entries(args).map(([, value]) => (
         <ColumnPresetsSection {...value} />

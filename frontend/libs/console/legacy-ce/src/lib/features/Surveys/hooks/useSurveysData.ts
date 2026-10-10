@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from 'react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { APIError } from '../../../hooks/error';
 import { SurveyResponseV2 } from '../../ControlPlane';
 import {
@@ -12,7 +12,7 @@ import {
   addSurveyAnswerMutationFn,
   fetchAllSurveysDataQueryFn,
 } from '../utils';
-import globals from '../../../Globals';
+import { useAppContext } from '@hasura/shared/context';
 
 type UseSurveysDataResponse = {
   // Boolean variable which decides whether to show/hide survey.
@@ -30,24 +30,25 @@ type UseSurveysDataProps = {
 };
 
 export function useSurveysData(
-  props: UseSurveysDataProps
+  props: UseSurveysDataProps,
 ): UseSurveysDataResponse {
   const { surveyName } = props;
+  const { envVars } = useAppContext();
   const [show, setShow] = useState(true);
 
-  const { isLoading, isError, data } = useQuery<SurveysResponseData, APIError>(
-    SurveyQueryKey.fetchAllSurveyData,
-    fetchAllSurveysDataQueryFn,
-    {
-      refetchOnWindowFocus: false,
-    }
-  );
+  const { isLoading, isError, data } = useQuery<SurveysResponseData, APIError>({
+    queryKey: [SurveyQueryKey.fetchAllSurveyData],
+    queryFn: fetchAllSurveysDataQueryFn,
+    refetchOnWindowFocus: false,
+  });
 
   const queryClient = useQueryClient();
-  const mutation = useMutation(addSurveyAnswerMutationFn, {
+  const mutation = useMutation({
+    mutationFn: addSurveyAnswerMutationFn,
     onSuccess: () => {
-      queryClient.refetchQueries(SurveyQueryKey.fetchAllSurveyData, {
-        active: true,
+      queryClient.refetchQueries({
+        queryKey: [SurveyQueryKey.fetchAllSurveyData],
+        type: 'active',
       });
     },
   });
@@ -56,7 +57,7 @@ export function useSurveysData(
     if (show) {
       setShow(show);
     } else {
-      setShow(s => !s);
+      setShow((s) => !s);
     }
   };
 
@@ -67,7 +68,7 @@ export function useSurveysData(
   const onSubmit = (responses: SurveyResponseV2[]) => {
     mutation.mutate({
       surveyName,
-      projectID: globals.hasuraCloudProjectId,
+      projectID: envVars.projectID,
       responses,
     });
     setShow(false);
@@ -86,7 +87,7 @@ export function useSurveysData(
   }
 
   const surveyData = data?.data?.survey_v2?.find(
-    surveyInfo => surveyInfo.survey_name === surveyName
+    (surveyInfo) => surveyInfo.survey_name === surveyName,
   );
 
   if (!surveyData) {

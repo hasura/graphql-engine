@@ -1,10 +1,9 @@
-import { MetadataTable } from '../../../../../hasura-metadata-types';
+import { MetadataTable } from '@hasura/shared/types';
 import {
   GraphQLFieldMap,
   GraphQLInputFieldMap,
-  GraphQLInputType,
-  GraphQLOutputType,
   GraphQLSchema,
+  GraphQLType,
   isInputObjectType,
   isListType,
   isNonNullType,
@@ -18,9 +17,7 @@ export type GetTypeResult = {
   isObject?: boolean;
 };
 
-const getType = (
-  type: GraphQLOutputType | GraphQLInputType
-): GetTypeResult | null => {
+const getType = (type: GraphQLType): GetTypeResult | null => {
   if (isScalarType(type)) {
     return { type: type.name };
   }
@@ -60,9 +57,9 @@ export const getFields = (tableName: string, schema: GraphQLSchema) => {
 };
 
 const createFieldObject = (
-  fields: GraphQLFieldMap<any, any> | GraphQLInputFieldMap
+  fields: GraphQLFieldMap<any, any> | GraphQLInputFieldMap,
 ) => {
-  return Object.values(fields).map(field => {
+  return Object.values(fields).map((field) => {
     const type = getType(field.type);
 
     return { name: field.name, field, type };
@@ -103,37 +100,21 @@ export const getColumnOperators = ({
 };
 
 export const getColumns = (
-  fields:
-    | GraphQLInputFieldMap
-    | GraphQLFieldMap<
-        any,
-        any,
-        {
-          [key: string]: any;
-        }
-      >
+  fields: GraphQLInputFieldMap | GraphQLFieldMap<any, any>,
 ) => {
   const fieldsObject = createFieldObject(fields);
 
   return fieldsObject.filter(
-    field => field.type && !field.type.isList && !field.type.isObject
+    (field) => field.type && !field.type.isList && !field.type.isObject,
   );
 };
 
 export const getRelationships = (
-  fields:
-    | GraphQLInputFieldMap
-    | GraphQLFieldMap<
-        any,
-        any,
-        {
-          [key: string]: any;
-        }
-      >
+  fields: GraphQLInputFieldMap | GraphQLFieldMap<any, any>,
 ) => {
   const fieldsObject = createFieldObject(fields);
   return fieldsObject.filter(
-    field => field.type && (field.type.isList || field.type.isObject)
+    (field) => field.type && (field.type.isList || field.type.isObject),
   );
 };
 
@@ -153,11 +134,11 @@ interface Args {
 
 const getOriginalTableNameFromCustomName = (
   tableConfig: MetadataTable['configuration'],
-  columnName: string
+  columnName: string,
 ) => {
   const columnConfig = tableConfig?.column_config;
 
-  const matchingEntry = Object.entries(columnConfig ?? {}).find(value => {
+  const matchingEntry = Object.entries(columnConfig ?? {}).find((value) => {
     return value?.[1]?.custom_name === columnName;
   });
 
@@ -179,22 +160,22 @@ export const getAllColumnsAndOperators = ({
   const columns = getColumns(fields);
   const relationships = getRelationships(fields);
 
-  const boolMap = boolOperators.map(boolOperator => ({
+  const boolMap = boolOperators.map((boolOperator) => ({
     name: boolOperator,
     kind: 'boolOperator',
     meta: null,
   }));
-  const existMap = existOperators.map(existOperator => ({
+  const existMap = existOperators.map((existOperator) => ({
     name: existOperator,
     kind: 'existOperator',
     meta: null,
   }));
-  const colMap = columns.map(column => ({
+  const colMap = columns.map((column) => ({
     name: getOriginalTableNameFromCustomName(tableConfig, column.name),
     kind: 'column',
     meta: column,
   }));
-  const relMap = relationships.map(relationship => ({
+  const relMap = relationships.map((relationship) => ({
     name: relationship.name,
     kind: 'relationship',
     meta: relationship,

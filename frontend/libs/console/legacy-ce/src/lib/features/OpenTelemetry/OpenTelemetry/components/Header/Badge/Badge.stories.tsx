@@ -1,4 +1,4 @@
-import type { StoryFn } from '@storybook/react';
+import type { StoryFn } from '@storybook/react-webpack5';
 
 import * as React from 'react';
 import { BadgeEnabled as BadgeEnabledComponent } from './BadgeEnabled';

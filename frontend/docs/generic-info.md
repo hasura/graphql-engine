@@ -61,32 +61,33 @@ In server mode, **migrations** will be disabled and the corresponding functional
 Environment variables accepted in `server` mode:
 
 - `NODE_ENV`: Console build environment (`development`/`production`)
-- `NX_CDN_ASSETS`: Should assets be loaded from CDN (`true`/`false`)
-- `NX_ASSETS_PATH`: Path to console assets
-- `NX_ASSETS_VERSION`: Version of console assets being served
-- `NX_ENABLE_TELEMETRY`: Whether to enable telemetry (`true`/`false`)
-- `NX_URL_PREFIX`: Path at which the console is running
-- `NX_DATA_API_URL`: The Hasura GraphQL engine url. (If you are running it on Heroku, it will look like https://<app-name\>.herokuapp.com, if you are running locally, it will look like http://localhost:<port\>)
-- `NX_SERVER_VERSION`: Hasura GraphQL Engine server version
-- `NX_CONSOLE_MODE`: In server mode, it should be `server`
-- `NX_IS_ADMIN_SECRET_SET`: Is GraphQl engine configured with an admin secret (`true`/`false`)
-- `NX_HASURA_CONSOLE_TYPE`: The environment where the console is running, this could be `oss`, `pro` or `cloud`
+- `NX_PUBLIC_CDN_ASSETS`: Should assets be loaded from CDN (`true`/`false`)
+- `NX_PUBLIC_ASSETS_PATH`: Path to console assets
+- `NX_PUBLIC_ASSETS_VERSION`: Version of console assets being served
+- `NX_PUBLIC_ENABLE_TELEMETRY`: Whether to enable telemetry (`true`/`false`)
+- `NX_PUBLIC_URL_PREFIX`: Path at which the console is running
+- `NX_PUBLIC_DATA_API_URL`: The Hasura GraphQL engine url. (If you are running it on Heroku, it will look like https://<app-name\>.herokuapp.com, if you are running locally, it will look like http://localhost:<port\>)
+- `NX_PUBLIC_SERVER_VERSION`: Hasura GraphQL Engine server version
+- `NX_PUBLIC_CONSOLE_MODE`: In server mode, it should be `server`
+- `NX_PUBLIC_IS_ADMIN_SECRET_SET`: Is GraphQl engine configured with an admin secret (`true`/`false`)
+- `NX_PUBLIC_HASURA_CONSOLE_TYPE`: The environment where the console is running, this could be `oss`, `pro` or `cloud`
 
 Here's an example `.env` file for `server` mode:
 
 ```
 NODE_ENV=development
-NX_CDN_ASSETS=true
-NX_ASSETS_PATH=https://graphql-engine-cdn.hasura.io/console/assets
-NX_ASSETS_VERSION=channel/stable/v1.0
-NX_ENABLE_TELEMETRY=true
-NX_URL_PREFIX=/
-NX_DATA_API_URL=http://localhost:8080
-NX_SERVER_VERSION=v1.0.0
-NX_CONSOLE_MODE=server
-NX_HASURA_CONSOLE_TYPE=oss
-NX_IS_ADMIN_SECRET_SET=true
+NX_PUBLIC_CDN_ASSETS=true
+NX_PUBLIC_ASSETS_PATH=https://graphql-engine-cdn.hasura.io/console/assets
+NX_PUBLIC_ASSETS_VERSION=channel/stable/v1.0
+NX_PUBLIC_ENABLE_TELEMETRY=true
+NX_PUBLIC_URL_PREFIX=/
+NX_PUBLIC_DATA_API_URL=http://localhost:8080
+NX_PUBLIC_SERVER_VERSION=v1.0.0
+NX_PUBLIC_CONSOLE_MODE=server
+NX_PUBLIC_HASURA_CONSOLE_TYPE=oss
+NX_PUBLIC_IS_ADMIN_SECRET_SET=true
 ```
+
 
 The `.env` file can be placed both at the root of the `/frontend` directory or on a per-app basis. If you put the `.env` files on a per-app-basis, please remember that also the E2E tests apps (`console-ce-e2e`, for instance) need a dedicated `.env` file because they internally launch the web server of the frontend application before launching Cypress. FYI: [here is the order Nx follows](https://nx.dev/recipes/environment-variables/define-environment-variables#setting-environment-variables) to read the `.env` files.
 
@@ -116,35 +117,35 @@ npx nx run console-ce:serve
 Environment variables accepted in `cli` mode:
 
 - `NODE_ENV`: Console build environment (`development`/`production`)
-- `NX_API_HOST`: Hasura CLI host. Hasura CLI runs on `http://localhost` by default.
-- `NX_API_PORT`: Hasura CLI port. Hasura CLI exposes the API at `9693` by default
-- `NX_CDN_ASSETS`: Should assets be loaded from CDN (`true`/`false`)
-- `NX_ASSETS_PATH`: Path to console assets
-- `NX_ASSETS_VERSION`: Version of console assets being served
-- `NX_ENABLE_TELEMETRY`: Whether to enable telemetry (`true`/`false`)
-- `NX_URL_PREFIX`: Path at which the console is running
-- `NX_DATA_API_URL`: The Hasura GraphQL engine url. (If you are running it on Heroku, it will look like <app-name\>.herokuapp.com, if you are running locally, it will look like http://localhost:<port\>)
-- `NX_SERVER_VERSION`: Hasura GraphQL Engine server version
-- `NX_CONSOLE_MODE`: In cli mode, it should be `cli`
-- `NX_ADMIN_SECRET`: the admin secret passed via the CLI
-- `NX_HASURA_CLOUD_ROOT_DOMAIN`: cloud root domain, used to simulate and test Hasura Pro CLI with PAT mode Eg. lux-dev.hasura.me for local lux setup
+- `NX_PUBLIC_API_HOST`: Hasura CLI host. Hasura CLI runs on `http://localhost` by default.
+- `NX_PUBLIC_API_PORT`: Hasura CLI port. Hasura CLI exposes the API at `9693` by default
+- `NX_PUBLIC_CDN_ASSETS`: Should assets be loaded from CDN (`true`/`false`)
+- `NX_PUBLIC_ASSETS_PATH`: Path to console assets
+- `NX_PUBLIC_ASSETS_VERSION`: Version of console assets being served
+- `NX_PUBLIC_ENABLE_TELEMETRY`: Whether to enable telemetry (`true`/`false`)
+- `NX_PUBLIC_URL_PREFIX`: Path at which the console is running
+- `NX_PUBLIC_DATA_API_URL`: The Hasura GraphQL engine url. (If you are running it on Heroku, it will look like <app-name\>.herokuapp.com, if you are running locally, it will look like http://localhost:<port\>)
+- `NX_PUBLIC_SERVER_VERSION`: Hasura GraphQL Engine server version
+- `NX_PUBLIC_CONSOLE_MODE`: In cli mode, it should be `cli`
+- `NX_PUBLIC_ADMIN_SECRET`: the admin secret passed via the CLI
+- `NX_PUBLIC_HASURA_CLOUD_ROOT_DOMAIN`: cloud root domain, used to simulate and test Hasura Pro CLI with PAT mode Eg. lux-dev.hasura.me for local lux setup
 
 Here's an example `.env` file for `cli` mode:
 
 ```bash
 NODE_ENV=development
 PORT=3000
-NX_API_HOST=http://localhost
-NX_API_PORT=9693
-NX_CDN_ASSETS=true
-NX_ASSETS_PATH=https://graphql-engine-cdn.hasura.io/console/assets
-NX_ASSETS_VERSION=channel/stable/v1.0
-NX_ENABLE_TELEMETRY=true
-NX_URL_PREFIX=/
-NX_DATA_API_URL=http://localhost:8080
-NX_SERVER_VERSION=v1.0.0
-NX_CONSOLE_MODE=cli
-NX_ADMIN_SECRET=my-admin-secret
+NX_PUBLIC_API_HOST=http://localhost
+NX_PUBLIC_API_PORT=9693
+NX_PUBLIC_CDN_ASSETS=true
+NX_PUBLIC_ASSETS_PATH=https://graphql-engine-cdn.hasura.io/console/assets
+NX_PUBLIC_ASSETS_VERSION=channel/stable/v1.0
+NX_PUBLIC_ENABLE_TELEMETRY=true
+NX_PUBLIC_URL_PREFIX=/
+NX_PUBLIC_DATA_API_URL=http://localhost:8080
+NX_PUBLIC_PUBLIC_SERVER_VERSION=v1.0.0
+NX_PUBLIC_CONSOLE_MODE=cli
+NX_PUBLIC_ADMIN_SECRET=my-admin-secret
 ```
 
 ##### Run console development server:

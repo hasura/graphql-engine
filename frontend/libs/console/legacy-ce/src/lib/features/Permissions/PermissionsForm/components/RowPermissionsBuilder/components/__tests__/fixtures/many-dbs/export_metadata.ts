@@ -5,7 +5,7 @@ export default {
     sources: [
       {
         name: 'OhMy',
-        kind: 'mysql8',
+        kind: 'mysql',
         tables: [
           {
             table: ['Chinook', 'Album'],
@@ -165,7 +165,7 @@ export default {
         mariadb: {
           uri: 'http://host.docker.internal:8081/api/v1/mariadb',
         },
-        mysql8: {
+        mysql: {
           uri: 'http://host.docker.internal:8081/api/v1/mysql',
         },
         oracle: {

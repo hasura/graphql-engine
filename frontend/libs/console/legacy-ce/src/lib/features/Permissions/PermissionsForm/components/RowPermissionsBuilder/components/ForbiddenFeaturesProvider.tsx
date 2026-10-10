@@ -27,7 +27,7 @@ export function ForbiddenFeaturesProvider({
     function hasFeature(feature: Feature) {
       return !forbidden.includes(feature);
     },
-    [forbidden]
+    [forbidden],
   );
   return (
     <forbiddenFeaturesContext.Provider

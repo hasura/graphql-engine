@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { FaAngleDown, FaAngleUp, FaExclamationTriangle } from 'react-icons/fa';
-import { InconsistentObject } from '../../../../hasura-metadata-api';
-import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
+import { IndicatorCard } from '@hasura/shared/ui';
+import { InconsistentObject } from '@hasura/shared/types';
+import { Flex } from '@radix-ui/themes';
 
 export const InconsistentSourceDetails = ({
   inconsistentSource,
@@ -11,13 +12,13 @@ export const InconsistentSourceDetails = ({
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="flex justify-between">
+    <Flex justify="between">
       <div className="max-w-xl">
         {!isExpanded ? (
-          <div className="flex gap-2 items-center">
+          <Flex gap="2" align="center">
             <FaExclamationTriangle className="text-red-500" />
             Source is inconsistent
-          </div>
+          </Flex>
         ) : (
           <div>
             <IndicatorCard
@@ -25,16 +26,22 @@ export const InconsistentSourceDetails = ({
               headline={inconsistentSource.reason}
             >
               <pre className="whitespace-pre-line">
-                {JSON.stringify(inconsistentSource.message)}
+                {'message' in inconsistentSource
+                  ? typeof inconsistentSource.message === 'string'
+                    ? inconsistentSource.message
+                    : JSON.stringify(inconsistentSource.message)
+                  : ''}
               </pre>
             </IndicatorCard>
           </div>
         )}
       </div>
 
-      <div
+      <Flex
         onClick={() => setIsExpanded(!isExpanded)}
-        className="cursor-pointer font-semibold flex items-center gap-2"
+        align="center"
+        gap="2"
+        className="cursor-pointer font-semibold"
       >
         {isExpanded ? (
           <>
@@ -47,7 +54,7 @@ export const InconsistentSourceDetails = ({
             More
           </>
         )}
-      </div>
-    </div>
+      </Flex>
+    </Flex>
   );
 };

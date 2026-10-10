@@ -1,6 +1,6 @@
-import globals from '../../../../Globals';
-import { isProConsole } from '../../../../utils';
+import { isProConsole } from '@hasura/shared/utils';
 import { EETrialCard, useEELiteAccess } from '../../../EETrial';
+import { useAppContext } from '@hasura/shared/context';
 
 export const LimitedFeatureWrapper = ({
   children,
@@ -16,7 +16,8 @@ export const LimitedFeatureWrapper = ({
   children?: React.ReactNode;
   override?: boolean;
 }) => {
-  const { access: eeLiteAccess } = useEELiteAccess(globals);
+  const { envVars } = useAppContext();
+  const { access: eeLiteAccess } = useEELiteAccess();
 
   /**
    * This boolean will override any checks
@@ -34,7 +35,7 @@ export const LimitedFeatureWrapper = ({
    */
 
   // this will tell us if console is pro or cloud
-  const isPro = isProConsole(window.__env);
+  const isPro = isProConsole(envVars);
 
   if (eeLiteAccess === 'active' || isPro) return <div>{children}</div>;
 

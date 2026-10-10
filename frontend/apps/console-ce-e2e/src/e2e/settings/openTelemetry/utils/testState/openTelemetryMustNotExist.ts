@@ -7,7 +7,7 @@ import { deleteOpenTelemetry } from '../services/deleteOpenTelemetry';
 export function openTelemetryMustNotExist() {
   Cypress.log({ message: '**--- OpenTelemetry check: start**' });
 
-  readMetadata().then(response => {
+  readMetadata().then((response) => {
     const openTelemetryExists = !!response.body.opentelemetry;
 
     if (openTelemetryExists) {

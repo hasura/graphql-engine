@@ -15,7 +15,7 @@ type GetPermissionValuesOutputType = {
 };
 
 export const getPermissionValues = (
-  obj: GetPermissionValuesInputType
+  obj: GetPermissionValuesInputType,
 ): GetPermissionValuesOutputType => {
   const { filter, check, columns } = obj;
   const result: GetPermissionValuesOutputType = {};

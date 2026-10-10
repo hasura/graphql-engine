@@ -1,10 +1,11 @@
-import { Collapsible } from '../../../../../new-components/Collapsible';
-import { isProConsole } from '../../../../../utils';
+import { Card, Collapsible, Link, Text } from '@hasura/shared/ui';
+import { isProConsole } from '@hasura/shared/utils';
 import { DatabaseUrl } from './DatabaseUrl';
 import { IsolationLevel } from './IsolationLevel';
 import { PoolSettings } from './PoolSettings';
 import { SslSettings } from './SslSettings';
 import { UsePreparedStatements } from './UsePreparedStatements';
+import { Strong } from '@radix-ui/themes';
 
 export const ConnectionInfo = ({
   name,
@@ -14,7 +15,7 @@ export const ConnectionInfo = ({
   hideOptions: string[];
 }) => {
   return (
-    <div className="bg-white border border-hasGray-300 rounded-md shadow-sm overflow-hidden p-4">
+    <Card>
       <DatabaseUrl name={`${name}.databaseUrl`} hideOptions={hideOptions} />
 
       <PoolSettings name={`${name}.poolSettings`} />
@@ -23,25 +24,25 @@ export const ConnectionInfo = ({
       {isProConsole(window.__env) && (
         <Collapsible
           triggerChildren={
-            <div className="font-semibold text-muted">
-              SSL Certificates Settings
-              <span className="px-1.5 italic font-light">
+            <Text>
+              <Strong>SSL Certificates Settings</Strong>
+              <Text className="italic">
                 (Certificates will be loaded from{' '}
-                <a
+                <Link
                   href="https://hasura.io/docs/2.0/databases/postgres/gcp/#step-72-add-env-vars"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   environment variables
-                </a>
+                </Link>
                 )
-              </span>
-            </div>
+              </Text>
+            </Text>
           }
         >
           <SslSettings name={`${name}.sslSettings`} />
         </Collapsible>
       )}
-    </div>
+    </Card>
   );
 };

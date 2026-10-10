@@ -1,26 +1,30 @@
 import clsx from 'clsx';
-import React from 'react';
 import { FaQuestionCircle } from 'react-icons/fa';
-import { Link } from 'react-router';
 import {
   activeLinkStyle,
   itemContainerStyle,
   linkStyle,
-} from '../HeaderNavItem';
+} from './HeaderNavItem';
+import { Text } from '@hasura/shared/ui';
+import { Flex } from '@radix-ui/themes';
 
-export const Help = ({ isSelected }: { isSelected: boolean }) => {
+export const Help = ({ isSelected }: { isSelected?: boolean }) => {
   return (
     <div className={itemContainerStyle}>
-      <Link
+      <a
         id="help"
         className={clsx(linkStyle, isSelected && activeLinkStyle)}
-        to="/support/forums/"
+        href="https://hasura.io/help"
+        target="_blank"
+        rel="noopener noreferrer"
       >
-        <span className="text-sm">
-          <FaQuestionCircle />
-        </span>
-        <span className="uppercase">HELP</span>
-      </Link>
+        <Flex align="center" gap="2">
+          <FaQuestionCircle className="w-3 h-3" />
+          <Text size="1" className="uppercase">
+            HELP
+          </Text>
+        </Flex>
+      </a>
     </div>
   );
 };

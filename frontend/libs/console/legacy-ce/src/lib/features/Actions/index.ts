@@ -1,1 +1,1 @@
-export * from './components/OASGenerator';
+export { default as getActionRoutes } from './routes';

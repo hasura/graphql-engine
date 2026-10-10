@@ -1,12 +1,18 @@
 import isEmpty from 'lodash/isEmpty';
-import { useContext } from 'react';
+import { useContext, useMemo } from 'react';
+import { GroupBase } from 'react-select';
+import { ReactSelect, ReactSelectOptionType } from '@hasura/shared/ui';
 import { rowPermissionsContext } from './RowPermissionsProvider';
 import { tableContext } from './TableProvider';
 import { PermissionType } from './types';
 import { logicalModelContext } from './RootLogicalModelProvider';
 import { useForbiddenFeatures } from './ForbiddenFeaturesProvider';
 import { rootTableContext } from './RootTableProvider';
-import { areTablesEqual } from '../../../../../hasura-metadata-api';
+import { areTablesEqual } from '@hasura/metadata/helpers';
+
+type OperatorOption = ReactSelectOptionType<string> & {
+  type: PermissionType;
+};
 
 export const Operator = ({
   operator,
@@ -18,110 +24,143 @@ export const Operator = ({
   v: any;
 }) => {
   const { operators, setKey, loadRelationships, isLoading } = useContext(
-    rowPermissionsContext
+    rowPermissionsContext,
   );
   const { tables } = useContext(rootTableContext);
   const { columns, table, relationships, computedFields } =
     useContext(tableContext);
   const { rootLogicalModel } = useContext(logicalModelContext);
+
   const parent = path[path.length - 1];
   const operatorLevelId =
     path.length === 0
       ? 'root-operator'
       : `${path?.join('.')}-operator${operator ? `-root` : ''}`;
   const { hasFeature } = useForbiddenFeatures();
+
+  const optionGroups = useMemo(() => {
+    const groups: GroupBase<OperatorOption>[] = [];
+
+    if (operators.boolean?.items.length) {
+      groups.push({
+        label: 'Bool operators',
+        options: operators.boolean.items.map((item) => ({
+          type: 'comparator',
+          value: item.value,
+          label: item.name,
+        })),
+      });
+    }
+
+    if (columns.length) {
+      groups.push({
+        label: 'Columns',
+        options: columns.map((column) => ({
+          type: column.dataType === 'object' ? 'object' : 'column',
+          value: column.name,
+          label: column.name,
+        })),
+      });
+    }
+
+    if (computedFields.length) {
+      groups.push({
+        label: 'Computed fields',
+        options: computedFields.map((field) => ({
+          type: 'computedField',
+          value: field.name,
+          label: field.name,
+        })),
+      });
+    }
+
+    if (rootLogicalModel?.fields.length) {
+      groups.push({
+        label: 'Columns',
+        options: rootLogicalModel.fields.map((field) => ({
+          type: 'column',
+          value: field.name,
+          label: field.name,
+        })),
+      });
+    }
+
+    if (hasFeature('exists') && operators.exist?.items.length) {
+      groups.push({
+        label: 'Exist operators',
+        options: operators.exist.items.map((item) => ({
+          type: 'exist',
+          value: item.value,
+          label: item.name,
+        })),
+      });
+    }
+
+    if (relationships.length) {
+      groups.push({
+        label: 'Relationships',
+        options: relationships.map((item) => ({
+          type: 'relationship',
+          value: item.name,
+          label: item.name,
+        })),
+      });
+    }
+
+    return groups;
+  }, [
+    operators.boolean,
+    operators.exist,
+    columns,
+    computedFields,
+    rootLogicalModel,
+    relationships,
+    hasFeature,
+  ]);
+
+  const selectedOption = useMemo(
+    () =>
+      optionGroups
+        .flatMap((group) => group.options)
+        .find((option) => option.value === operator) ?? null,
+    [optionGroups, operator],
+  );
+
   return (
-    <select
-      data-testid={operatorLevelId}
-      className="border border-gray-200 rounded-md p-2 pr-4"
-      value={operator}
-      disabled={isLoading || (parent === '_where' && isEmpty(table))}
-      onChange={e => {
-        const type = e.target.selectedOptions[0].dataset.type as PermissionType;
-        if (type === 'relationship') {
-          const foundTable = tables.find(t => areTablesEqual(t.table, table));
-          if (foundTable) {
-            loadRelationships?.(foundTable.relationships);
+    <div className="max-w-80">
+      <ReactSelect<OperatorOption>
+        inputId={`${operatorLevelId}-select-value`}
+        aria-label={operatorLevelId}
+        data-testid={operatorLevelId}
+        isSearchable
+        isDisabled={isLoading || (parent === '_where' && isEmpty(table))}
+        value={selectedOption}
+        options={optionGroups}
+        filterOption={(option, inputValue) => {
+          if (!inputValue) {
+            return true;
           }
-        }
-        setKey({ path, key: e.target.value, type });
-      }}
-    >
-      <option value="">-</option>
-      {operators.boolean?.items.length ? (
-        <optgroup label="Bool operators">
-          {operators.boolean.items.map((item, index) => (
-            <option
-              data-type="boolean"
-              key={'boolean' + index}
-              value={item.value}
-            >
-              {item.name}
-            </option>
-          ))}
-        </optgroup>
-      ) : null}
-      {columns.length ? (
-        <optgroup label="Columns">
-          {columns.map((column, index) => (
-            <option
-              data-type={column.dataType === 'object' ? 'object' : 'column'}
-              key={'column' + index}
-              value={column.name}
-            >
-              {column.name}
-            </option>
-          ))}
-        </optgroup>
-      ) : null}
-      {computedFields.length ? (
-        <optgroup label="Computed fields">
-          {computedFields.map((field, index) => (
-            <option
-              data-type="computedField"
-              key={'computedField' + index}
-              value={field.name}
-            >
-              {field.name}
-            </option>
-          ))}
-        </optgroup>
-      ) : null}
-      {rootLogicalModel?.fields.length ? (
-        <optgroup label="Columns">
-          {rootLogicalModel?.fields.map((field, index) => (
-            <option
-              data-type="column"
-              key={'column' + index}
-              value={field.name}
-            >
-              {field.name}
-            </option>
-          ))}
-        </optgroup>
-      ) : null}
-      {hasFeature('exists') && operators.exist?.items.length ? (
-        <optgroup label="Exist operators">
-          {operators.exist.items.map((item, index) => (
-            <option data-type="exist" key={'exist' + index} value={item.value}>
-              {item.name}
-            </option>
-          ))}
-        </optgroup>
-      ) : null}
-      {relationships.length ? (
-        <optgroup label="Relationships">
-          {relationships.map((item, index) => (
-            <option
-              data-type="relationship"
-              key={'relationship' + index}
-              value={item.name}
-            >
-              {item.name}
-            </option>
-          ))}
-        </optgroup>
-      ) : null}
-    </select>
+
+          return option.value.toLowerCase().includes(inputValue.toLowerCase());
+        }}
+        placeholder="-"
+        onChange={(option) => {
+          if (!option) {
+            return;
+          }
+
+          const type = option.type;
+          if (type === 'relationship') {
+            const foundTable = tables.find((t) =>
+              areTablesEqual(t.table, table),
+            );
+            if (foundTable) {
+              loadRelationships?.(foundTable.relationships);
+            }
+          }
+          setKey({ path, key: option?.value ?? '', type });
+        }}
+      />
+    </div>
   );
 };

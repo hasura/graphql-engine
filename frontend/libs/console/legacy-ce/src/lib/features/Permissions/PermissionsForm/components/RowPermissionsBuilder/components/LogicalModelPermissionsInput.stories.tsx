@@ -1,10 +1,10 @@
-import { Meta, StoryObj } from '@storybook/react';
-import { action } from '@storybook/addon-actions';
+import { Meta, StoryObj } from '@storybook/react-webpack5';
+import { action } from 'storybook/actions';
 
 import { RowPermissionsInput } from './RowPermissionsInput';
 import { comparators } from './__tests__/fixtures/comparators';
 import { handlers } from './__tests__/fixtures/jsonb/handlers';
-import { ReactQueryDecorator } from '../../../../../../storybook/decorators/react-query';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
 
 export default {
   component: RowPermissionsInput,

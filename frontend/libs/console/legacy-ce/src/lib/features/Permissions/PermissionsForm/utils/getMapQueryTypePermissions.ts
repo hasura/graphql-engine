@@ -1,4 +1,5 @@
-import { MetadataTable } from '../../../hasura-metadata-types/source/table';
+import { UpdatePermissionDefinition } from '@hasura/shared/types';
+import { MetadataTable } from '@hasura/shared/types';
 
 const formatColumns = (columns: string[] | Record<string, boolean>) => {
   if (!Array.isArray(columns)) return columns || {};
@@ -26,25 +27,25 @@ const getPermissionsMappedByRole = ({
   currentQueryType: string;
   queryType: string;
 }) => {
-  const permissions =
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    tableData?.[key]?.find(
-      (data: { role: string }) => data.role === currentRole
-    )?.permission;
+  const permissions = tableData?.[key]?.find(
+    (data: { role: string }) => data.role === currentRole,
+  )?.permission;
   if (!permissions) return null;
+
+  const perms = permissions as UpdatePermissionDefinition;
   if (currentQueryType === 'pre_update') {
-    if (!permissions.check) permissions.check = permissions?.filter;
+    if (!perms.check) perms.check = perms?.filter;
   }
   if (currentQueryType === 'post_update') {
-    if (!permissions.filter) permissions.filter = permissions?.check;
+    if (!perms.filter) perms.filter = perms?.check;
   }
   if (currentQueryType === 'insert') {
-    if (!permissions.check) permissions.check = permissions?.filter;
+    if (!perms.check) perms.check = perms?.filter;
   } else if (currentQueryType === 'select' || currentQueryType === 'delete') {
-    if (!permissions.filter) permissions.filter = permissions?.check;
+    if (!perms.filter) perms.filter = perms?.check;
   }
-  permissions.columns = formatColumns(permissions.columns);
+
+  perms.columns = formatColumns(perms.columns! as string[]) as any;
 
   return {
     queryType,
@@ -55,18 +56,18 @@ const getPermissionsMappedByRole = ({
 export const getNonSelectedQueryTypePermissions = (
   tableData: MetadataTable | undefined,
   currentQueryType: string,
-  currentRole: string
+  currentRole: string,
 ) => {
   if (!tableData) return [];
   const metadataKeys = Object.keys(tableData);
 
   const existingPermissions = metadataKeys
     ?.filter(
-      key =>
+      (key) =>
         key === 'update_permissions' ||
         key === 'select_permissions' ||
         key === 'delete_permissions' ||
-        key === 'insert_permissions'
+        key === 'insert_permissions',
     )
     ?.reduce((tally: any[], key: string) => {
       if (key === 'select_permissions' && currentQueryType !== 'select') {

@@ -1,7 +1,7 @@
 import React from 'react';
-import { StoryObj, Meta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
 import { z } from 'zod';
-import { SimpleForm } from '../../../../new-components/Form';
+import { SimpleForm } from '@hasura/shared/ui';
 
 import { BackendOnlySection, BackEndOnlySectionProps } from './BackendOnly';
 

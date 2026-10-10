@@ -1,33 +1,35 @@
-import AceEditor from 'react-ace';
 import beautify from 'ace-builds/src-noconflict/ext-beautify';
 import { useRef } from 'react';
 import { FaMagic } from 'react-icons/fa';
-import { Button } from '../../../../new-components/Button';
-import ReactAce from 'react-ace/lib/ace';
+import { AceEditor, AceEditorRef, IconButton } from '@hasura/shared/ui';
 
 export type JsonSchemaInputProps = {
   value: string | undefined;
   onChange: (value: string) => void;
 };
 
-export const JsonSchemaInput: React.VFC<JsonSchemaInputProps> = props => {
+export const JsonSchemaInput: React.FC<JsonSchemaInputProps> = (props) => {
   const { value, onChange } = props;
-  const editorRef = useRef<ReactAce | null>(null);
+  const editorRef = useRef<AceEditorRef | null>(null);
 
   return (
     <div className="relative">
-      <Button
-        icon={<FaMagic />}
+      <IconButton
+        mode="default"
         style={{
           position: 'absolute',
           top: 10,
-          right: 25,
+          right: 20,
           zIndex: 1,
         }}
         onClick={() => {
-          beautify.beautify(editorRef.current?.editor.session);
+          if (editorRef.current?.editor.session) {
+            beautify.beautify(editorRef.current?.editor.session);
+          }
         }}
-      />
+      >
+        <FaMagic />
+      </IconButton>
       <AceEditor
         ref={editorRef}
         value={value}
@@ -35,10 +37,8 @@ export const JsonSchemaInput: React.VFC<JsonSchemaInputProps> = props => {
         width="100%"
         height="300px"
         mode="json"
-        theme="eclipse"
         showGutter
         tabSize={2}
-        commands={beautify.commands}
         setOptions={{
           enableBasicAutocompletion: true,
           enableLiveAutocompletion: true,

@@ -1,5 +1,1 @@
-export {
-  metadataHandlers,
-  restEndpointsInitialData,
-} from './mocks/metadata.mock';
-export * from './components';
+export { default as getRestRoutes } from './routes';

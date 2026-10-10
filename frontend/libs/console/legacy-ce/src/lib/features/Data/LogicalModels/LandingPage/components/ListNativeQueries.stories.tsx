@@ -1,8 +1,7 @@
-import { StoryObj, Meta } from '@storybook/react';
-
+import { StoryObj, Meta } from '@storybook/react-webpack5';
 import { ListNativeQueries } from './ListNativeQueries';
 import { buildMetadata } from '../../mocks/metadata';
-import { extractModelsAndQueriesFromMetadata } from '../../../../hasura-metadata-api/selectors';
+import { MetadataSelectors } from '@hasura/metadata/helpers';
 
 export default {
   component: ListNativeQueries,
@@ -13,15 +12,15 @@ export default {
   },
 } as Meta<typeof ListNativeQueries>;
 
-const data = extractModelsAndQueriesFromMetadata(
+const data = MetadataSelectors.extractModelsAndQueriesFromMetadata(
   buildMetadata({
     postgres: { models: true, queries: true },
     mssql: { models: true, queries: true },
-  })
+  }),
 );
 
 export const Basic: StoryObj<typeof ListNativeQueries> = {
-  render: args => {
+  render: (args) => {
     return <ListNativeQueries {...args} nativeQueries={data.queries} />;
   },
 };

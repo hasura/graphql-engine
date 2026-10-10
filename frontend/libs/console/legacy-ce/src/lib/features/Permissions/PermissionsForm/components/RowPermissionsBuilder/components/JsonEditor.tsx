@@ -1,18 +1,19 @@
-import AceEditor from 'react-ace';
+import { getTableDisplayName } from '@hasura/shared/utils';
 import { useContext } from 'react';
-
-import { getTableDisplayName } from '../../../../../DatabaseRelationships';
 import { rowPermissionsContext } from './RowPermissionsProvider';
 import { rootTableContext } from './RootTableProvider';
+import { Card } from '@radix-ui/themes';
+import { AceEditor } from '@hasura/shared/ui';
 
 export const JsonEditor = () => {
   const { permissions, setPermissions } = useContext(rowPermissionsContext);
   const { table } = useContext(rootTableContext);
+
   return (
-    <div className="p-6 rounded-lg bg-white border border-gray-200 min-h-32 w-full">
+    <Card size="1" className="w-full">
       <AceEditor
         mode="json"
-        onChange={value => {
+        onChange={(value) => {
           try {
             // Only set new permissions on valid JSON
             setPermissions(JSON.parse(value));
@@ -21,15 +22,14 @@ export const JsonEditor = () => {
           }
         }}
         minLines={1}
-        fontSize={14}
+        fontSize={12}
         height="18px"
         width="100%"
-        theme="github"
         name={`${getTableDisplayName(table)}-json-editor`}
         value={JSON.stringify(permissions)}
         editorProps={{ $blockScrolling: true }}
         setOptions={{ useWorker: false }}
       />
-    </div>
+    </Card>
   );
 };

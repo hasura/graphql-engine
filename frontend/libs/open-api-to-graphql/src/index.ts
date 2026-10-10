@@ -38,6 +38,7 @@ import {
   ConnectOptions,
   RequestOptions,
   FileUploadOptions,
+  Fetch,
 } from './types/options';
 import { Oas3 } from './types/oas3';
 import { Oas2 } from './types/oas2';
@@ -68,11 +69,10 @@ import * as Oas3Tools from './oas_3_tools';
 import { createAndLoadViewer } from './auth_builder';
 import { GraphQLSchemaConfig } from 'graphql/type/schema';
 import { sortObject, handleWarning, MitigationTypes } from './utils';
-import crossFetch from 'cross-fetch';
-import debug from 'debug';
-const translationLog = debug('translation');
 
-export { Oas2, Oas3, Options };
+const translationLog = console.log;
+
+export type { Oas2, Oas3, Options };
 
 type Result<TSource, TContext, TArgs> = {
   schema: GraphQLSchema;
@@ -127,7 +127,7 @@ const DEFAULT_OPTIONS: InternalOptions<any, any, any> = {
   provideErrorExtensions: true,
   equivalentToMessages: true,
 
-  fetch: crossFetch,
+  fetch: (input, init) => fetch(input, init),
 };
 
 /**
@@ -136,10 +136,10 @@ const DEFAULT_OPTIONS: InternalOptions<any, any, any> = {
 export async function createGraphQLSchema<
   TSource,
   TContext,
-  TArgs extends object
+  TArgs extends object,
 >(
   spec: Oas3 | Oas2 | (Oas3 | Oas2)[],
-  options?: Options<TSource, TContext, TArgs>
+  options?: Options<TSource, TContext, TArgs>,
 ): Promise<Result<TSource, TContext, TArgs>> {
   // Setting default options
   const internalOptions: InternalOptions<TSource, TContext, TArgs> = {
@@ -150,14 +150,14 @@ export async function createGraphQLSchema<
   if (Array.isArray(spec)) {
     // Convert all non-OAS 3 into OAS 3
     const oass = await Promise.all(
-      spec.map(ele =>
+      spec.map((ele) =>
         Oas3Tools.getValidOAS3(
           ele,
           internalOptions.oasValidatorOptions,
           internalOptions.swagger2OpenAPIOptions,
-          internalOptions.softValidation
-        )
-      )
+          internalOptions.softValidation,
+        ),
+      ),
     );
     return translateOpenAPIToGraphQL(oass, internalOptions);
   } else {
@@ -170,7 +170,7 @@ export async function createGraphQLSchema<
       spec,
       internalOptions.oasValidatorOptions,
       internalOptions.swagger2OpenAPIOptions,
-      internalOptions.softValidation
+      internalOptions.softValidation,
     );
     return translateOpenAPIToGraphQL([oas], internalOptions);
   }
@@ -182,7 +182,7 @@ export async function createGraphQLSchema<
 export async function translateOpenAPIToGraphQL<
   TSource,
   TContext,
-  TArgs extends object
+  TArgs extends object,
 >(
   oass: Oas3[],
   {
@@ -225,7 +225,7 @@ export async function translateOpenAPIToGraphQL<
     equivalentToMessages,
 
     fetch,
-  }: InternalOptions<TSource, TContext, TArgs>
+  }: InternalOptions<TSource, TContext, TArgs>,
 ): Promise<Result<TSource, TContext, TArgs>> {
   const options = {
     strict,
@@ -276,7 +276,7 @@ export async function translateOpenAPIToGraphQL<
    */
   const data: PreprocessingData<TSource, TContext, TArgs> = await preprocessOas(
     oass,
-    options
+    options,
   );
 
   preliminaryChecks(options, data);
@@ -344,7 +344,7 @@ export async function translateOpenAPIToGraphQL<
         options,
         data,
       });
-    }
+    },
   );
 
   // Sorting fields
@@ -352,15 +352,15 @@ export async function translateOpenAPIToGraphQL<
   mutationFields = sortObject(mutationFields);
   subscriptionFields = sortObject(subscriptionFields);
   authQueryFields = sortObject(authQueryFields);
-  Object.keys(authQueryFields).forEach(key => {
+  Object.keys(authQueryFields).forEach((key) => {
     authQueryFields[key] = sortObject(authQueryFields[key]);
   });
   authMutationFields = sortObject(authMutationFields);
-  Object.keys(authMutationFields).forEach(key => {
+  Object.keys(authMutationFields).forEach((key) => {
     authMutationFields[key] = sortObject(authMutationFields[key]);
   });
   authSubscriptionFields = sortObject(authSubscriptionFields);
-  Object.keys(authSubscriptionFields).forEach(key => {
+  Object.keys(authSubscriptionFields).forEach((key) => {
     authSubscriptionFields[key] = sortObject(authSubscriptionFields[key]);
   });
 
@@ -394,8 +394,8 @@ export async function translateOpenAPIToGraphQL<
         authQueryFields,
         GraphQLOperationType.Query,
         data,
-        fetch
-      )
+        fetch,
+      ),
     );
   }
 
@@ -406,8 +406,8 @@ export async function translateOpenAPIToGraphQL<
         authMutationFields,
         GraphQLOperationType.Mutation,
         data,
-        fetch
-      )
+        fetch,
+      ),
     );
   }
 
@@ -418,8 +418,8 @@ export async function translateOpenAPIToGraphQL<
         authSubscriptionFields,
         GraphQLOperationType.Subscription,
         data,
-        fetch
-      )
+        fetch,
+      ),
     );
   }
 
@@ -458,7 +458,7 @@ export async function translateOpenAPIToGraphQL<
     if (typeof operation.responseDefinition.graphQLType === 'undefined') {
       operation.responseDefinition.graphQLType =
         GraphQLTools.getEmptyObjectType(
-          operation.responseDefinition.graphQLTypeName
+          operation.responseDefinition.graphQLTypeName,
         );
     }
   });
@@ -504,12 +504,12 @@ function addQueryFields<TSource, TContext, TArgs extends object>({
     requestOptions,
     fileUploadOptions,
     connectOptions,
-    fetch
+    fetch,
   );
 
   const saneOperationId = Oas3Tools.sanitize(
     operationId,
-    Oas3Tools.CaseStyle.camelCase
+    Oas3Tools.CaseStyle.camelCase,
   );
 
   // Field name provided by x-graphql-field-name OAS extension
@@ -521,22 +521,22 @@ function addQueryFields<TSource, TContext, TArgs extends object>({
       `Cannot create query field with name "${extensionFieldName}".\nYou ` +
         `provided "${extensionFieldName}" in ` +
         `${Oas3Tools.OAS_GRAPHQL_EXTENSIONS.FieldName}, but it is not ` +
-        `GraphQL-safe."`
+        `GraphQL-safe."`,
     );
   }
 
   const generatedFieldName = operationIdFieldNames
     ? saneOperationId // Sanitized (generated) operationId
     : singularNames
-    ? Oas3Tools.sanitize(
-        // Generated singular name
-        Oas3Tools.inferResourceNameFromPath(operation.path),
-        Oas3Tools.CaseStyle.camelCase
-      )
-    : Oas3Tools.uncapitalize(
-        // Generated type name (to be used as a field name)
-        operation.responseDefinition.graphQLTypeName
-      );
+      ? Oas3Tools.sanitize(
+          // Generated singular name
+          Oas3Tools.inferResourceNameFromPath(operation.path),
+          Oas3Tools.CaseStyle.camelCase,
+        )
+      : Oas3Tools.uncapitalize(
+          // Generated type name (to be used as a field name)
+          operation.responseDefinition.graphQLTypeName,
+        );
 
   /**
    * The name of the field
@@ -571,7 +571,7 @@ function addQueryFields<TSource, TContext, TArgs extends object>({
           `Cannot create query field with name "${extensionFieldName}".\nYou ` +
             ` provided "${extensionFieldName}" in ` +
             `${Oas3Tools.OAS_GRAPHQL_EXTENSIONS.FieldName}, but it conflicts ` +
-            `with another field named "${extensionFieldName}".`
+            `with another field named "${extensionFieldName}".`,
         );
       }
 
@@ -612,7 +612,7 @@ function addQueryFields<TSource, TContext, TArgs extends object>({
         `Cannot create query field with name "${extensionFieldName}".\nYou ` +
           `provided "${extensionFieldName}" in ` +
           `${Oas3Tools.OAS_GRAPHQL_EXTENSIONS.FieldName}, but it conflicts ` +
-          `with another field named "${extensionFieldName}".`
+          `with another field named "${extensionFieldName}".`,
       );
     }
 
@@ -683,12 +683,12 @@ function addMutationFields<TSource, TContext, TArgs extends object>({
     requestOptions,
     fileUploadOptions,
     connectOptions,
-    fetch
+    fetch,
   );
 
   const saneOperationId = Oas3Tools.sanitize(
     operationId,
-    Oas3Tools.CaseStyle.camelCase
+    Oas3Tools.CaseStyle.camelCase,
   );
 
   // Field name provided by x-graphql-field-name OAS extension
@@ -700,7 +700,7 @@ function addMutationFields<TSource, TContext, TArgs extends object>({
       `Cannot create mutation field with name "${extensionFieldName}".\nYou ` +
         `provided "${extensionFieldName}" in ` +
         `${Oas3Tools.OAS_GRAPHQL_EXTENSIONS.FieldName}, but it is not ` +
-        `GraphQL-safe."`
+        `GraphQL-safe."`,
     );
   }
 
@@ -708,9 +708,9 @@ function addMutationFields<TSource, TContext, TArgs extends object>({
     ? Oas3Tools.sanitize(
         // Generated singular name with HTTP method
         `${operation.method}${Oas3Tools.inferResourceNameFromPath(
-          operation.path
+          operation.path,
         )}`,
-        Oas3Tools.CaseStyle.camelCase
+        Oas3Tools.CaseStyle.camelCase,
       )
     : saneOperationId; // (Generated) operationId (for mutations, operationId is guaranteed unique)
 
@@ -744,7 +744,7 @@ function addMutationFields<TSource, TContext, TArgs extends object>({
           `Cannot create mutation field with name ` +
             `"${extensionFieldName}".\nYou provided "${extensionFieldName}" ` +
             `in ${Oas3Tools.OAS_GRAPHQL_EXTENSIONS.FieldName}, but it ` +
-            `conflicts with another field named "${extensionFieldName}".`
+            `conflicts with another field named "${extensionFieldName}".`,
         );
       }
 
@@ -777,7 +777,7 @@ function addMutationFields<TSource, TContext, TArgs extends object>({
         `Cannot create mutation field with name ` +
           `"${extensionFieldName}".\nYou provided "${extensionFieldName}" ` +
           `in ${Oas3Tools.OAS_GRAPHQL_EXTENSIONS.FieldName}, but it ` +
-          `conflicts with another field named "${extensionFieldName}".`
+          `conflicts with another field named "${extensionFieldName}".`,
       );
     }
 
@@ -831,12 +831,12 @@ function addSubscriptionFields<TSource, TContext, TArgs extends object>({
     requestOptions,
     fileUploadOptions,
     connectOptions,
-    fetch
+    fetch,
   );
 
   const saneOperationId = Oas3Tools.sanitize(
     operationId,
-    Oas3Tools.CaseStyle.camelCase
+    Oas3Tools.CaseStyle.camelCase,
   );
 
   const extensionFieldName =
@@ -847,7 +847,7 @@ function addSubscriptionFields<TSource, TContext, TArgs extends object>({
       `Cannot create subscription field with name ` +
         `"${extensionFieldName}".\nYou provided "${extensionFieldName}" in ` +
         `${Oas3Tools.OAS_GRAPHQL_EXTENSIONS.FieldName}, but it is not ` +
-        `GraphQL-safe."`
+        `GraphQL-safe."`,
     );
   }
 
@@ -868,7 +868,7 @@ function addSubscriptionFields<TSource, TContext, TArgs extends object>({
           `Cannot create subscription field with name ` +
             `"${extensionFieldName}".\nYou provided "${extensionFieldName}" ` +
             `in ${Oas3Tools.OAS_GRAPHQL_EXTENSIONS.FieldName}, but it ` +
-            `conflicts with another field named "${extensionFieldName}".`
+            `conflicts with another field named "${extensionFieldName}".`,
         );
       }
 
@@ -900,7 +900,7 @@ function addSubscriptionFields<TSource, TContext, TArgs extends object>({
         `Cannot create subscription field with name ` +
           `"${extensionFieldName}".\nYou provided "${extensionFieldName}" ` +
           `in ${Oas3Tools.OAS_GRAPHQL_EXTENSIONS.FieldName}, but it ` +
-          `conflicts with another field named "${extensionFieldName}".`
+          `conflicts with another field named "${extensionFieldName}".`,
       );
     }
 
@@ -935,7 +935,7 @@ function getFieldForOperation<TSource, TContext, TArgs extends object>(
   requestOptions: Partial<RequestOptions<TSource, TContext, TArgs>>,
   fileUploadOptions: FileUploadOptions,
   connectOptions: ConnectOptions,
-  fetch: typeof crossFetch
+  fetch: Fetch,
 ): GraphQLFieldConfig<TSource, TContext | SubscriptionContext, TArgs> {
   // Create GraphQL Type for response:
   const type = getGraphQLType({
@@ -1020,18 +1020,18 @@ function getFieldForOperation<TSource, TContext, TArgs extends object>(
  */
 function checkCustomResolversStructure<TSource, TContext, TArgs>(
   customResolvers: any,
-  data: PreprocessingData<TSource, TContext, TArgs>
+  data: PreprocessingData<TSource, TContext, TArgs>,
 ) {
   if (typeof customResolvers === 'object') {
     // Check that all OASs that are referenced in the customResolvers are provided
     Object.keys(customResolvers)
-      .filter(title => {
+      .filter((title) => {
         // If no OAS contains this title
-        return !data.oass.some(oas => {
+        return !data.oass.some((oas) => {
           return title === oas.info.title;
         });
       })
-      .forEach(title => {
+      .forEach((title) => {
         handleWarning({
           mitigationType: MitigationTypes.CUSTOM_RESOLVER_UNKNOWN_OAS,
           message:
@@ -1043,16 +1043,16 @@ function checkCustomResolversStructure<TSource, TContext, TArgs>(
       });
 
     // TODO: Only run the following test on OASs that exist. See previous check.
-    Object.keys(customResolvers).forEach(title => {
+    Object.keys(customResolvers).forEach((title) => {
       // Get all operations from a particular OAS
-      const operations = Object.values(data.operations).filter(operation => {
+      const operations = Object.values(data.operations).filter((operation) => {
         return title === operation.oas.info.title;
       });
 
-      Object.keys(customResolvers[title]).forEach(path => {
-        Object.keys(customResolvers[title][path]).forEach(method => {
+      Object.keys(customResolvers[title]).forEach((path) => {
+        Object.keys(customResolvers[title][path]).forEach((method) => {
           if (
-            !operations.some(operation => {
+            !operations.some((operation) => {
               return path === operation.path && method === operation.method;
             })
           ) {
@@ -1078,10 +1078,10 @@ function checkCustomResolversStructure<TSource, TContext, TArgs>(
  */
 function preliminaryChecks<TSource, TContext, TArgs>(
   options: InternalOptions<TSource, TContext, TArgs>,
-  data: PreprocessingData<TSource, TContext, TArgs>
+  data: PreprocessingData<TSource, TContext, TArgs>,
 ): void {
   // Check if OASs have unique titles
-  const titles = data.oass.map(oas => {
+  const titles = data.oass.map((oas) => {
     return oas.info.title;
   });
 
@@ -1089,8 +1089,8 @@ function preliminaryChecks<TSource, TContext, TArgs>(
   new Set(
     titles.filter((title, index) => {
       return titles.indexOf(title) !== index;
-    })
-  ).forEach(title => {
+    }),
+  ).forEach((title) => {
     handleWarning({
       mitigationType: MitigationTypes.MULTIPLE_OAS_SAME_TITLE,
       message: `Multiple OAS share the same title '${title}'`,

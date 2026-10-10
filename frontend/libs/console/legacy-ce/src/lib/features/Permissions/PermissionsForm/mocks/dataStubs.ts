@@ -1,4 +1,4 @@
-import { Metadata } from '../../../hasura-metadata-types';
+import { Metadata } from '@hasura/shared/types';
 
 export const metadata: Metadata = {
   resource_version: 18,

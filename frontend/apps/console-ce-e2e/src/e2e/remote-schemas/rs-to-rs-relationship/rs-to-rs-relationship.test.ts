@@ -1,7 +1,7 @@
-import { replaceMetadata } from '../helpers/metadata';
+import { removeRemoteSchemas, replaceMetadata } from '../helpers/metadata';
 import { postgres } from '../../data/manage-database/postgres.spec';
-import { HasuraMetadataV3 } from '@hasura/console-legacy-ce';
 import { readMetadata } from '../../actions/withTransform/utils/services/readMetadata';
+import { HasuraMetadataV3 } from '@hasura/shared/types';
 
 describe('check if remote schema to remote schema relationships are created properly', () => {
   before(() => {
@@ -62,6 +62,8 @@ describe('check if remote schema to remote schema relationships are created prop
   });
 
   after(() => {
+    removeRemoteSchemas(['source_rs', 'ref_rs']);
+
     // delete the table
     postgres.helpers.deleteTable('destination_table');
   });
@@ -69,7 +71,9 @@ describe('check if remote schema to remote schema relationships are created prop
   it('verify creating a new rs-to-db relationship', () => {
     cy.visit('/remote-schemas/manage/source_rs/relationships');
     cy.findByText('Add a new relationship').click();
-    cy.findByText('Remote Schema').click();
+    // Radix RadioCards give the card's content `pointer-events: none`; the
+    // clickable element is the card itself (role=radio).
+    cy.findByRole('radio', { name: /^Remote Schema/ }).click();
     cy.get('[name=name]').type('RelationshipName');
     cy.get('[aria-labelledby=rsSourceType]')
       .focus() // workaround for selecting things with react-select
@@ -89,12 +93,12 @@ describe('check if remote schema to remote schema relationships are created prop
       .should('have.length', 2);
     cy.get('[data-test=remote-schema-relationships-table').contains(
       'td',
-      'RelationshipName'
+      'RelationshipName',
     );
     readMetadata().then((md: { body: HasuraMetadataV3 }) => {
       cy.wrap(
-        md.body?.remote_schemas?.find(rs => rs?.name === 'source_rs')
-          ?.remote_relationships
+        md.body?.remote_schemas?.find((rs) => rs?.name === 'source_rs')
+          ?.remote_relationships,
       ).toMatchSnapshot({ name: 'rs-to-rs-relationship' });
     });
 
@@ -114,7 +118,7 @@ describe('check if remote schema to remote schema relationships are created prop
         cy.stub(win, 'prompt').returns('source_rs');
       },
     });
-    cy.get('[data-test=remote-schema-edit-delete-btn]').click();
+    cy.findByRole('button', { name: 'Delete' }).click();
     cy.visit('/remote-schemas/manage/ref_rs/modify', {
       timeout: 10000,
       onBeforeLoad(win) {

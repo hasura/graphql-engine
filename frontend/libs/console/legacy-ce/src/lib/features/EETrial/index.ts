@@ -1,5 +1,3 @@
-export { fetchEELicenseInfo, prefetchEELicenseInfo } from './utils';
-
 export {
   EE_LICENSE_INFO_QUERY_NAME,
   EE_TRIAL_CONTACT_US_URL,

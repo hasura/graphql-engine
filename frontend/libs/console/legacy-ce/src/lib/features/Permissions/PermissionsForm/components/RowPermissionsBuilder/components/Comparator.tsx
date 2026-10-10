@@ -1,9 +1,7 @@
 import { useContext } from 'react';
 import { rowPermissionsContext } from './RowPermissionsProvider';
 import { useOperators } from './utils/comparatorsFromSchema';
-import Select, { components } from 'react-select';
-import { FiChevronDown } from 'react-icons/fi';
-import clsx from 'clsx';
+import { ReactSelect } from '@hasura/shared/ui';
 
 export const Comparator = ({
   comparator,
@@ -19,30 +17,16 @@ export const Comparator = ({
   const operators = useOperators({ path });
 
   return (
-    <Select
+    <ReactSelect
       isDisabled={isLoading}
       inputId={`${comparatorLevelId}-select-value`}
       isSearchable
       aria-label={comparatorLevelId}
-      components={{
-        DropdownIndicator: props => {
-          const { className } = props;
-          return (
-            <components.DropdownIndicator
-              {...props}
-              className={clsx(className, '!text-gray-500 hover:!text-gray-500')}
-            >
-              <FiChevronDown className="w-5 h-5" />
-            </components.DropdownIndicator>
-          );
-        },
-        IndicatorSeparator: () => null,
-      }}
-      options={operators.map(o => ({
+      options={operators.map((o) => ({
         value: o.name,
         label: o.name,
       }))}
-      onChange={option => {
+      onChange={(option) => {
         const { value } = option as { value: string };
         setKey({ path, key: value, type: 'comparator' });
       }}
@@ -55,13 +39,13 @@ export const Comparator = ({
         label: comparator,
       }}
       styles={{
-        control: base => ({
+        control: (base) => ({
           ...base,
           border: 0,
           minHeight: 'auto',
         }),
       }}
-      className="w-32 border border-gray-200 rounded-md"
+      className="w-32"
     />
   );
 };

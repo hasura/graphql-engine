@@ -225,7 +225,12 @@ annColExp rhsParser rootFieldInfoMap colInfoMap (ColExp fieldName colVal) = do
               )
     FIComputedField computedFieldInfo ->
       AVComputedField <$> buildComputedFieldBooleanExp (BoolExpResolver annBoolExp) rhsParser rootFieldInfoMap colInfoMap computedFieldInfo colVal
-    -- Using remote fields in the boolean expression is not supported.
+    -- Remote (to_source) relationships ARE supported in permission boolean
+    -- expressions, but only as a restricted predicate of the shape
+    -- @{ <rhs_col>: { _eq|_in|... : <session-var-or-literal> } }@ over a
+    -- single-column join (see 'RemoteRelRHSFetchWhereExp'). This is evaluated
+    -- at query time via 'getColVals' (Zendesk #15062). Note: remote SCHEMA
+    -- relationships and multi-column joins are rejected below.
     FIRemoteRelationship (RemoteFieldInfo {..}) -> do
       (lhsFieldName, lhsJoinField) <-
         case (Map.toList _rfiLHS) of

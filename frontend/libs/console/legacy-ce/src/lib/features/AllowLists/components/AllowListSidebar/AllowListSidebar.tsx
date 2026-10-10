@@ -1,14 +1,13 @@
-import debounce from 'lodash/debounce';
 import React from 'react';
-import { IndicatorCard } from '../../../../new-components/IndicatorCard';
-import { useServerConfig } from '../../../../hooks';
-import globals from '../../../../Globals';
-import { isProConsole } from '../../../../utils/proConsole';
+import { IndicatorCard, Input, LearnMoreLink, Text } from '@hasura/shared/ui';
+import { isProConsole } from '@hasura/shared/utils';
 import { useEELiteAccess } from '../../../../features/EETrial';
-import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 import { AllowListSidebarHeader } from './AllowListSidebarHeader';
 import { QueryCollectionList } from './QueryCollectionList';
-import { AllowListSidebarSearchForm } from './AllowListSidebarSearchForm';
+import { useServerConfig } from '@hasura/metadata/api';
+import { useAppContext } from '@hasura/shared/context';
+import { Code } from '@radix-ui/themes';
+import { FaSearch } from 'react-icons/fa';
 
 interface AllowListSidebarProps {
   selectedCollectionQuery: string;
@@ -17,19 +16,19 @@ interface AllowListSidebarProps {
   onQueryCollectionCreate: (name: string) => void;
 }
 
-export const AllowListSidebar: React.FC<AllowListSidebarProps> = props => {
+export const AllowListSidebar: React.FC<AllowListSidebarProps> = (props) => {
   const {
     selectedCollectionQuery,
     buildQueryCollectionHref,
     onQueryCollectionClick,
     onQueryCollectionCreate,
   } = props;
+  const { envVars } = useAppContext();
   const [search, setSearch] = React.useState('');
-  const debouncedSearch = React.useMemo(() => debounce(setSearch, 300), []);
 
-  const { access: eeLiteAccess } = useEELiteAccess(globals);
+  const { access: eeLiteAccess } = useEELiteAccess();
   const allowQueryCollectionsCreation =
-    isProConsole(globals) || eeLiteAccess === 'active';
+    isProConsole(envVars) || eeLiteAccess === 'active';
 
   const { data: configData, isLoading: isConfigLoading } = useServerConfig();
 
@@ -43,9 +42,16 @@ export const AllowListSidebar: React.FC<AllowListSidebarProps> = props => {
           allowQueryCollectionsCreation ? onQueryCollectionCreate : undefined
         }
       />
-      <AllowListSidebarSearchForm
-        setSearch={(searchString: string) => debouncedSearch(searchString)}
-      />
+      <div className="mb-4">
+        <Input
+          placeholder="Search Collections..."
+          icon={FaSearch}
+          value={search}
+          onChange={(ev) => {
+            setSearch(ev.target.value);
+          }}
+        />
+      </div>
       <QueryCollectionList
         buildHref={buildQueryCollectionHref}
         onClick={onQueryCollectionClick}
@@ -53,19 +59,16 @@ export const AllowListSidebar: React.FC<AllowListSidebarProps> = props => {
         search={search}
       />
       {renderInstructions && (
-        <IndicatorCard status="info">
-          <p>
+        <IndicatorCard status="info" size="1">
+          <Text>
             Want to enable your allow list? You can set{' '}
-            <span className="text-red-600 font-mono bg-red-50 rounded px-1.5 py-0.5 break-all">
+            <Code color="red" size="1">
               HASURA_GRAPHQL_ENABLE_ALLOWLIST
-            </span>{' '}
-            to{' '}
-            <span className="text-red-600 font-mono bg-red-50 rounded px-1.5 py-0.5">
-              true
-            </span>{' '}
-            so that your API will only allow accepted pre-selected operations.
+            </Code>{' '}
+            to <Code color="red">true</Code> so that your API will only allow
+            accepted pre-selected operations.{' '}
             <LearnMoreLink href="https://hasura.io/docs/latest/security/allow-list/#enable-allow-list" />
-          </p>
+          </Text>
         </IndicatorCard>
       )}
     </div>

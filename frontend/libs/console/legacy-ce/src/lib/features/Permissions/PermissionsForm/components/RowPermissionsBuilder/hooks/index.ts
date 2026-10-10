@@ -1,37 +1,9 @@
-import React from 'react';
-import { buildClientSchema, GraphQLSchema, IntrospectionQuery } from 'graphql';
-import { useHttpClient } from '../../../../../Network';
-import {
-  exportMetadata,
-  runIntrospectionQuery,
-} from '../../../../../DataSource';
-import { Table } from '../../../../../hasura-metadata-types';
-import { useQuery } from 'react-query';
+import { GraphQLSchema } from 'graphql';
+import { Table } from '@hasura/shared/types';
+import { useQuery } from '@tanstack/react-query';
 import { getAllColumnsAndOperators } from '../utils';
-import { areTablesEqual } from '../../../../../hasura-metadata-api';
-
-/**
- *
- * fetch the schema from the gql server
- */
-export const useIntrospectSchema = () => {
-  const httpClient = useHttpClient();
-
-  const [schema, setSchema] = React.useState<GraphQLSchema>();
-
-  const getSchema = React.useCallback(async () => {
-    const introspectionResult: { data: IntrospectionQuery } =
-      await runIntrospectionQuery({ httpClient });
-    const result = buildClientSchema(introspectionResult.data);
-    setSchema(result);
-  }, []);
-
-  React.useEffect(() => {
-    getSchema();
-  }, [getSchema]);
-
-  return { data: schema };
-};
+import { useMetadata } from '@hasura/metadata/api';
+import { areTablesEqual } from '@hasura/metadata/helpers';
 
 export const useTableConfiguration = ({
   dataSourceName,
@@ -40,17 +12,21 @@ export const useTableConfiguration = ({
   dataSourceName: string;
   table: Table;
 }) => {
-  const httpClient = useHttpClient();
+  const { refetch } = useMetadata();
   return useQuery({
     queryKey: ['export_metadata', dataSourceName, table, 'configuration'],
     queryFn: async () => {
-      const { metadata } = await exportMetadata({ httpClient });
-      const metadataTable = metadata.sources
-        .find(s => s.name === dataSourceName)
-        ?.tables.find(t => areTablesEqual(t.table, table));
-      if (!metadata) throw Error('Unable to find table in metadata');
+      const { data: metadata, error } = await refetch();
+      if (!metadata) {
+        throw error || new Error('failed to fetch metadata');
+      }
 
-      return metadataTable?.configuration ?? {};
+      const metadataTable = metadata.metadata.sources
+        .find((s) => s.name === dataSourceName)
+        ?.tables.find((t) => areTablesEqual(t.table, table));
+      if (!metadataTable) throw Error('Unable to find table in metadata');
+
+      return metadataTable.configuration ?? {};
     },
   });
 };

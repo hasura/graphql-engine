@@ -8951,6 +8951,19 @@
                         },
                         "type": "array"
                     },
+                    "introspection_headers": {
+                        "items": {
+                            "oneOf": [
+                                {
+                                    "$ref": "#/components/schemas/HeaderConfValue"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/HeaderConfFromEnv"
+                                }
+                            ]
+                        },
+                        "type": "array"
+                    },
                     "timeout_seconds": {
                         "maximum": 9223372036854775807,
                         "minimum": -9223372036854775808,

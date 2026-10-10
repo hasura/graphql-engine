@@ -1,9 +1,9 @@
-import { MssqlConfiguration, Source } from '../../../../hasura-metadata-types';
+import { MssqlConfiguration, Source } from '@hasura/shared/types';
 import { adaptGraphQLCustomization } from '../../GraphQLCustomization/utils/adaptResponse';
 import { MssqlConnectionInfoSchema, MssqlConnectionSchema } from '../schema';
 
 export const adaptMssqlConnectionInfo = (
-  connectionInfo: MssqlConfiguration['connection_info']
+  connectionInfo: MssqlConfiguration['connection_info'],
 ): MssqlConnectionInfoSchema => {
   return {
     connectionString:
@@ -25,7 +25,7 @@ export const adaptMssqlConnectionInfo = (
 };
 
 export const adaptMssqlConnection = (
-  metadataSource: Source
+  metadataSource: Source,
 ): MssqlConnectionSchema => {
   if (metadataSource.kind !== 'mssql') throw Error('Not a MSSQL connection');
 
@@ -36,12 +36,12 @@ export const adaptMssqlConnection = (
     name: metadataSource.name,
     configuration: {
       connectionInfo: adaptMssqlConnectionInfo(configuration.connection_info),
-      readReplicas: (configuration.read_replicas ?? []).map(read_replica =>
-        adaptMssqlConnectionInfo(read_replica)
+      readReplicas: (configuration.read_replicas ?? []).map((read_replica) =>
+        adaptMssqlConnectionInfo(read_replica),
       ),
     },
     customization: adaptGraphQLCustomization(
-      metadataSource.customization ?? {}
+      metadataSource.customization ?? {},
     ),
   };
 };

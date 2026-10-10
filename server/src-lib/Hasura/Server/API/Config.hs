@@ -105,20 +105,26 @@ isAdminSecretSet = \case
 
 isAuthHookSet :: AuthMode -> Bool
 isAuthHookSet = \case
+  AMHook _ -> True
   AMAdminSecretAndHook _ _ -> True
   _ -> False
 
 isJWTSet :: AuthMode -> Bool
 isJWTSet = \case
+  AMJWT {} -> True
   AMAdminSecretAndJWT {} -> True
   _ -> False
 
 getJWTInfo :: AuthMode -> [JWTInfo]
-getJWTInfo (AMAdminSecretAndJWT _ jwtCtxs _) =
+getJWTInfo (AMJWT jwtCtxs _) = getJWTInfo' jwtCtxs
+getJWTInfo (AMAdminSecretAndJWT _ jwtCtxs _) = getJWTInfo' jwtCtxs
+getJWTInfo _ = mempty
+
+getJWTInfo' :: [JWTCtx] -> [JWTInfo]
+getJWTInfo' jwtCtxs =
   let f jwtCtx = case jcxClaims jwtCtx of
         JCNamespace namespace claimsFormat ->
           JWTInfo namespace claimsFormat Nothing
         JCMap claimsMap ->
           JWTInfo (ClaimNs defaultClaimsNamespace) defaultClaimsFormat $ Just claimsMap
    in fmap f jwtCtxs
-getJWTInfo _ = mempty

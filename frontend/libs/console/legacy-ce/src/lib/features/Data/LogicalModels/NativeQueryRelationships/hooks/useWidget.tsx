@@ -1,12 +1,9 @@
 import { useCallback, useState } from 'react';
-import { useHasuraAlert } from '../../../../../new-components/Alert';
-import {
-  MetadataSelectors,
-  MetadataUtils,
-  useMetadata,
-} from '../../../../hasura-metadata-api';
+import { useHasuraAlert } from '@hasura/shared/ui';
+import { useMetadata } from '@hasura/metadata/api';
 import { NativeQueryRelationshipWidget } from '../components';
 import { NativeQueryRelationshipFormSchema } from '../schema';
+import { MetadataSelectors } from '@hasura/metadata/helpers';
 
 type WidgetMode = 'create' | 'edit';
 
@@ -37,20 +34,20 @@ export function useWidget({
     useState<NativeQueryRelationshipFormSchema>();
 
   const metadataSelector = useCallback(
-    m => {
-      const source = MetadataUtils.findMetadataSource(dataSourceName, m);
+    (m) => {
+      const source = MetadataSelectors.findMetadataSource(dataSourceName, m);
       if (!source) {
         throw new Error(
-          `Unable to find source ${dataSourceName} for Relationship Widget`
+          `Unable to find source ${dataSourceName} for Relationship Widget`,
         );
       }
       const otherNativeQueries = (source.native_queries ?? []).filter(
-        q => q.root_field_name !== nativeQueryName
+        (q) => q.root_field_name !== nativeQueryName,
       );
 
       const thisNativeQuery = MetadataSelectors.findNativeQuery(
         dataSourceName,
-        nativeQueryName
+        nativeQueryName,
       )(m);
 
       return {
@@ -61,7 +58,7 @@ export function useWidget({
         },
       };
     },
-    [dataSourceName, nativeQueryName]
+    [dataSourceName, nativeQueryName],
   );
 
   const { data: { otherNativeQueries, otherRelationships } = {} } =
@@ -105,7 +102,7 @@ export function useWidget({
       if (mode === 'edit') {
         if (!defaultValues?.name || !defaultValues.type) {
           throw new Error(
-            'Name or type of original relationship was not able to be determined.'
+            'Name or type of original relationship was not able to be determined.',
           );
         }
         onSubmit({
@@ -120,7 +117,7 @@ export function useWidget({
     };
 
     const hasSameName = otherRelationships?.[values.type]?.some(
-      r => r.name === values.name
+      (r) => r.name === values.name,
     );
 
     const isCreating = mode === 'create';

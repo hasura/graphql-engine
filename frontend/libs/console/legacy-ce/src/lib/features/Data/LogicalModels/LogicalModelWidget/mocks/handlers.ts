@@ -1,91 +1,89 @@
 import { metadata } from './metadata';
 import { mssqlStoredProceduresMockResponse } from './query';
 import { extractTypeAndArgs } from '../../AddNativeQuery/mocks/native-query-handlers';
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 
 export const handlers = {
   200: [
-    rest.post('http://localhost:8080/v1/metadata', async (req, res, ctx) => {
-      const { type, isBulkAtomic } = await extractTypeAndArgs(req);
+    http.post('http://localhost:8080/v1/metadata', async ({ request }) => {
+      const { type, isBulkAtomic } = await extractTypeAndArgs(request);
       if (
         (isBulkAtomic && type.endsWith('_track_logical_model')) ||
         type.endsWith('_track_stored_procedure')
       ) {
-        return res(
-          ctx.json({
-            message: 'success',
-          })
-        );
+        return HttpResponse.json({
+          message: 'success',
+        });
       }
       if (type === 'export_metadata') {
-        return res(ctx.json(metadata));
+        return HttpResponse.json(metadata);
       }
     }),
-    rest.post('http://localhost:8080/v2/query', async (req, res, ctx) => {
-      const body = await req.json();
+    http.post('http://localhost:8080/v2/query', async ({ request }) => {
+      const body = await request.json();
       if (body.type.endsWith('mssql_run_sql')) {
-        return res(ctx.json(mssqlStoredProceduresMockResponse));
+        return HttpResponse.json(mssqlStoredProceduresMockResponse);
       }
     }),
   ],
   400: [
-    rest.post('http://localhost:8080/v1/metadata', async (req, res, ctx) => {
+    http.post('http://localhost:8080/v1/metadata', async ({ request }) => {
       const { type, isBulkAtomic, args } = await extractTypeAndArgs<{
         name: string;
-      }>(req);
+      }>(request);
       if (
         isBulkAtomic &&
         (type.endsWith('_track_logical_model') ||
           type.endsWith('_track_stored_procedure'))
       ) {
-        return res(
-          ctx.status(400),
-          ctx.json({
+        return HttpResponse.json(
+          {
             code: 'already-tracked',
             error: `Logical model '${args.name}' is already tracked.`,
             path: '$.args',
-          })
+          },
+          { status: 400 },
         );
       }
       if (type === 'export_metadata') {
-        return res(ctx.json(metadata));
+        return HttpResponse.json(metadata);
       }
     }),
-    rest.post('http://localhost:8080/v2/query', async (req, res, ctx) => {
-      const body = await req.json();
+    http.post('http://localhost:8080/v2/query', async ({ request }) => {
+      const body = await request.json();
       if (body.type.endsWith('mssql_run_sql')) {
-        return res(ctx.json(mssqlStoredProceduresMockResponse));
+        return HttpResponse.json(mssqlStoredProceduresMockResponse);
       }
     }),
   ],
   500: [
-    rest.post('http://localhost:8080/v1/metadata', async (req, res, ctx) => {
-      const { type, isBulkAtomic } = await extractTypeAndArgs(req);
+    http.post('http://localhost:8080/v1/metadata', async ({ request }) => {
+      const { type, isBulkAtomic } = await extractTypeAndArgs(request);
 
       if (isBulkAtomic && type.endsWith('_track_logical_model')) {
-        return res(
-          ctx.status(500),
-          ctx.json({
+        return HttpResponse.json(
+          {
             code: 'unexpected',
             error: 'LogicalModels is disabled!',
             path: '$.args',
-          })
+          },
+          { status: 500 },
         );
       }
       if (type === 'export_metadata') {
-        return res(ctx.json(metadata));
+        return HttpResponse.json(metadata);
       }
     }),
-    rest.post('http://localhost:8080/v2/query', async (req, res, ctx) => {
-      const body = await req.json();
+    http.post('http://localhost:8080/v2/query', async ({ request }) => {
+      const body = await request.json();
       if (body.type.endsWith('mssql_run_sql')) {
-        return res(
-          ctx.status(500),
-          ctx.json({
+        return HttpResponse.json(
+          {
             code: 'unexpected',
             error: 'SQL SERVER ERROR!',
             path: '$.args',
-          })
+          },
+          { status: 500 },
         );
       }
     }),

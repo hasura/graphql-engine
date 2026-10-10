@@ -6,7 +6,7 @@ import {
 
 export const getStepText = (
   step: UserFacingStep,
-  status: ProgressStateStatus
+  status: ProgressStateStatus,
 ) => {
   switch (step) {
     case OneClickDeploymentState.Initialized:

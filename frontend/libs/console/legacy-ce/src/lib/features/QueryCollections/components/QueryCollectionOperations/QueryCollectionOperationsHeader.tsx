@@ -1,30 +1,27 @@
 import React from 'react';
 import { FaRegCopy, FaRegFolder, FaRegTrashAlt } from 'react-icons/fa';
-
-import { Button } from '../../../../new-components/Button';
-import { DropdownMenu } from '../../../../new-components/DropdownMenu';
-import { QueryCollection } from '../../../../metadata/types';
-import { getConfirmation } from '../../../../components/Common/utils/jsUtils';
-import { useFireNotification } from '../../../../new-components/Notifications';
-
+import { Button, DropdownMenu, hasuraToast, Text } from '@hasura/shared/ui';
+import { getConfirmation } from '@hasura/shared/utils';
 import { QueryCollectionsOperationsSearchForm } from './QueryCollectionOperationsSearchForm';
 import { useQueryCollections } from '../../hooks/useQueryCollections';
+import { QueryCollectionQuery } from '@hasura/shared/types';
+import { Flex } from '@radix-ui/themes';
 import {
   useAddOperationsToQueryCollection,
   useMoveOperationsToQueryCollection,
   useRemoveOperationsFromQueryCollection,
-} from '../../hooks';
+} from '@hasura/metadata/api';
 
 interface QueryCollectionsOperationsHeaderProps {
   collectionName: string;
-  selectedOperations: QueryCollection[];
-  setSelectedOperations: (operations: QueryCollection[]) => void;
+  selectedOperations: QueryCollectionQuery[];
+  setSelectedOperations: (operations: QueryCollectionQuery[]) => void;
   onSearch: (search: string) => void;
 }
 
 export const QueryCollectionsOperationsHeader: React.FC<
   QueryCollectionsOperationsHeaderProps
-> = props => {
+> = (props) => {
   const {
     collectionName,
     selectedOperations,
@@ -33,119 +30,106 @@ export const QueryCollectionsOperationsHeader: React.FC<
   } = props;
   const { data: queryCollections } = useQueryCollections();
 
-  const { addOperationToQueryCollection, isLoading: addLoading } =
+  const { addOperationToQueryCollection, isPending: addLoading } =
     useAddOperationsToQueryCollection();
-  const { moveOperationToQueryCollection, isLoading: moveLoading } =
+  const { moveOperationToQueryCollection, isPending: moveLoading } =
     useMoveOperationsToQueryCollection();
-  const { removeOperationsFromQueryCollection, isLoading: deleteLoading } =
+  const { removeOperationsFromQueryCollection, isPending: deleteLoading } =
     useRemoveOperationsFromQueryCollection();
 
-  const { fireNotification } = useFireNotification();
-
   const otherCollections = (queryCollections || []).filter(
-    c => c.name !== collectionName
+    (c) => c.name !== collectionName,
   );
 
   return (
-    <div className="flex items-center mb-xs">
-      <div className="flex items-center">
+    <Flex align="center" className="mb-1">
+      <Flex align="center">
         {selectedOperations.length > 0 && (
-          <div
-            className="flex items-center"
+          <Flex
+            align="center"
+            gap="2"
             data-testid="selected-operations-controls"
           >
-            <span className="text-sm text-muted mr-1.5">
-              {selectedOperations.length} Operations:
-            </span>
+            <Text>{selectedOperations.length} Operations:</Text>
             {otherCollections?.length > 0 && (
               <>
-                <DropdownMenu
-                  items={[
-                    otherCollections.map(collection => (
-                      <div
-                        className="py-xs"
-                        onClick={() =>
-                          moveOperationToQueryCollection(
-                            collectionName,
-                            collection.name,
-                            selectedOperations,
-                            {
-                              onError: e => {
-                                fireNotification({
-                                  type: 'error',
-                                  title: 'Failed to move operations',
-                                  message: `Failed to move operations to collection ${collection.name}: ${e.message}`,
-                                });
-                              },
-                              onSuccess: () => {
-                                fireNotification({
-                                  type: 'success',
-                                  title: 'Operations moved',
-                                  message: `Successfully moved ${selectedOperations.length} operations to ${collection.name}`,
-                                });
-                                setSelectedOperations([]);
-                              },
-                            }
-                          )
-                        }
-                      >
-                        {collection.name}
-                      </div>
-                    )),
-                  ]}
+                <DropdownMenu.Root
+                  items={otherCollections.map((collection) => (
+                    <DropdownMenu.Item
+                      key={collection.name}
+                      onSelect={() =>
+                        moveOperationToQueryCollection(
+                          collectionName,
+                          collection.name,
+                          selectedOperations,
+                          {
+                            onError: (e) => {
+                              hasuraToast({
+                                type: 'error',
+                                title: 'Failed to move operations',
+                                message: `Failed to move operations to collection ${collection.name}: ${e.message}`,
+                              });
+                            },
+                            onSuccess: () => {
+                              hasuraToast({
+                                type: 'success',
+                                title: 'Operations moved',
+                                message: `Successfully moved ${selectedOperations.length} operations to ${collection.name}`,
+                              });
+                              setSelectedOperations([]);
+                            },
+                          },
+                        )
+                      }
+                    >
+                      {collection.name}
+                    </DropdownMenu.Item>
+                  ))}
                 >
                   <Button
-                    className="mr-1.5"
-                    size="sm"
-                    icon={<FaRegFolder />}
-                    isLoading={moveLoading}
+                    size="1"
+                    leftIcon={FaRegFolder}
+                    loading={moveLoading}
+                    loadingText="Moving..."
                   >
                     Move
                   </Button>
-                </DropdownMenu>
-                <DropdownMenu
-                  items={[
-                    otherCollections.map(collection => (
-                      <div
-                        className="py-xs"
-                        data-testid={`add-to-${collection.name}`}
-                        onClick={() =>
-                          addOperationToQueryCollection(
-                            collection.name,
-                            selectedOperations,
-                            {
-                              onError: e => {
-                                fireNotification({
-                                  type: 'error',
-                                  title: 'Failed to add operations',
-                                  message: `Failed to add operations to collection ${collection.name}: ${e.message}`,
-                                });
-                              },
-                              onSuccess: () => {
-                                fireNotification({
-                                  type: 'success',
-                                  title: 'Operations added',
-                                  message: `Successfully added ${selectedOperations.length} operations to ${collection.name}`,
-                                });
-                              },
-                            }
-                          )
-                        }
-                      >
-                        {collection.name}
-                      </div>
-                    )),
-                  ]}
+                </DropdownMenu.Root>
+                <DropdownMenu.Root
+                  items={otherCollections.map((collection) => (
+                    <DropdownMenu.Item
+                      key={collection.name}
+                      onSelect={() =>
+                        addOperationToQueryCollection(
+                          collection.name,
+                          selectedOperations,
+                          {
+                            onError: (e) => {
+                              hasuraToast({
+                                type: 'error',
+                                title: 'Failed to add operations',
+                                message: `Failed to add operations to collection ${collection.name}: ${e.message}`,
+                              });
+                            },
+                            onSuccess: () => {
+                              hasuraToast({
+                                type: 'success',
+                                title: 'Operations added',
+                                message: `Successfully added ${selectedOperations.length} operations to ${collection.name}`,
+                              });
+                            },
+                          },
+                        )
+                      }
+                    >
+                      {collection.name}
+                    </DropdownMenu.Item>
+                  ))}
                 >
-                  <Button
-                    className="mr-1.5"
-                    size="md"
-                    icon={<FaRegCopy />}
-                    isLoading={addLoading}
-                  >
+                  <Button size="1" leftIcon={FaRegCopy} loading={addLoading}>
                     Copy
                   </Button>
-                </DropdownMenu>
+                </DropdownMenu.Root>
               </>
             )}
             <Button
@@ -157,44 +141,44 @@ export const QueryCollectionsOperationsHeader: React.FC<
                     collectionName,
                     selectedOperations,
                     {
-                      onError: e => {
-                        fireNotification({
+                      onError: (e) => {
+                        hasuraToast({
                           type: 'error',
                           title: 'Failed to delete operations',
                           message: `Failed to delete operations from collection ${collectionName}: ${e.message}`,
                         });
                       },
                       onSuccess: () => {
-                        fireNotification({
+                        hasuraToast({
                           type: 'success',
                           title: 'Operations deleted',
                           message: `Successfully deleted ${selectedOperations.length} operations from ${collectionName}`,
                         });
                         setSelectedOperations([]);
                       },
-                    }
+                    },
                   );
                 }
               }}
-              className="mr-1.5"
-              size="md"
+              size="1"
               mode="destructive"
-              icon={<FaRegTrashAlt />}
-              isLoading={deleteLoading}
+              leftIcon={FaRegTrashAlt}
+              loading={deleteLoading}
+              loadingText="Deleting..."
             >
               Delete
             </Button>
-          </div>
+          </Flex>
         )}
-      </div>
+      </Flex>
       <div className="ml-auto w-3/12 relative">
         <QueryCollectionsOperationsSearchForm
-          setSearch={searchString => {
+          setSearch={(searchString) => {
             onSearch(searchString);
             setSelectedOperations([]);
           }}
         />
       </div>
-    </div>
+    </Flex>
   );
 };

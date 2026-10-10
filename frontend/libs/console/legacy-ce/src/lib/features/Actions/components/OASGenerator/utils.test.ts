@@ -1,5 +1,4 @@
-import { Oas3 } from '@hasura/open-api-to-graphql';
-import { ParameterObject } from '@hasura/open-api-to-graphql';
+import { Oas3, ParameterObject } from '@hasura/open-api-to-graphql';
 import petStore from './fixtures/petstore.json';
 // test case from this issue https://github.com/hasura/graphql-engine/issues/9734
 import optimizer from './fixtures/optimizer.json';
@@ -56,15 +55,20 @@ describe('generateAction', () => {
   it('should return an action', async () => {
     const action = await generateAction(
       petStore as unknown as Oas3,
-      'findPets'
+      'findPets',
     );
     expect(action).toEqual({
       operationId: 'findPets',
       actionType: 'query',
-      action:
-        'type Query {\n  findPets(limit: Int, tags: [String]): [Pet]\n}\n',
+      // `action`/`types` are produced via `formatGraphQL` (graphql's own
+      // `print(parse(sdl))`), which never appends a trailing newline after
+      // the final definition and preserves the definition order that
+      // `printSchema` produced. These fixtures previously expected a
+      // trailing `\n` and a `scalar BigInt` / `type Pet` order that
+      // `graphql@16`'s printer does not produce.
+      action: 'type Query {\n  findPets(limit: Int, tags: [String]): [Pet]\n}',
       types:
-        'scalar BigInt\n\ntype Pet {\n  id: BigInt!\n  name: String!\n  tag: String\n}\n',
+        'type Pet {\n  id: BigInt!\n  name: String!\n  tag: String\n}\n\nscalar BigInt',
       description:
         'Returns all pets from the system that the user has access to\n' +
         'Nam sed condimentum est. Maecenas tempor sagittis sapien, nec rhoncus sem sagittis sit amet. Aenean at gravida augue, ac iaculis sem. Curabitur odio lorem, ornare eget elementum nec, cursus id lectus. Duis mi turpis, pulvinar ac eros ac, tincidunt varius justo. In hac habitasse platea dictumst. Integer at adipiscing ante, a sagittis ligula. Aenean pharetra tempor ante molestie imperdiet. Vivamus id aliquam diam. Cras quis velit non tortor eleifend sagittis. Praesent at enim pharetra urna volutpat venenatis eget eget mauris. In eleifend fermentum facilisis. Praesent enim enim, gravida ac sodales sed, placerat id erat. Suspendisse lacus dolor, consectetur non augue vel, vehicula interdum libero. Morbi euismod sagittis libero sed lacinia.\n' +
@@ -86,7 +90,7 @@ describe('generateAction', () => {
           },
         },
         null,
-        2
+        2,
       ),
       headers: [],
       queryParams:
@@ -96,7 +100,7 @@ describe('generateAction', () => {
 
   it('throws an error if the OAS is invalid', async () => {
     await expect(
-      generateAction({} as unknown as Oas3, 'findPets')
+      generateAction({} as unknown as Oas3, 'findPets'),
     ).rejects.toThrow();
   });
 });
@@ -111,14 +115,14 @@ describe('generateQueryParams', () => {
   it('should generate query params with one non-array param and one array param', async () => {
     const queryParams = await generateQueryParams([status, tags]);
     expect(queryParams).toBe(
-      '{{ concat (["status={{$body.input?.status}}&", {{ if empty($body.input?.tags) }} [] {{ else }} concat({{ range _, x := $body.input?.tags }} "tags={{x}}&" {{ end }}) {{ end }}]) }}'
+      '{{ concat (["status={{$body.input?.status}}&", {{ if empty($body.input?.tags) }} [] {{ else }} concat({{ range _, x := $body.input?.tags }} "tags={{x}}&" {{ end }}) {{ end }}]) }}',
     );
   });
   it('should generate query params with one non-array param and one array param (reversed)', async () => {
     const queryParams = await generateQueryParams([tags, status]);
     console.log(queryParams);
     expect(queryParams).toBe(
-      '{{ concat ([{{ if empty($body.input?.tags) }} [] {{ else }} concat({{ range _, x := $body.input?.tags }} "tags={{x}}&" {{ end }}) {{ end }}, "status={{$body.input?.status}}&"]) }}'
+      '{{ concat ([{{ if empty($body.input?.tags) }} [] {{ else }} concat({{ range _, x := $body.input?.tags }} "tags={{x}}&" {{ end }}) {{ end }}, "status={{$body.input?.status}}&"]) }}',
     );
   });
 });
@@ -127,7 +131,7 @@ describe('optimizer API', () => {
   it('should generate correctly', async () => {
     const action = await generateAction(
       optimizer as unknown as Oas3,
-      'optimise_optimise_post'
+      'optimise_optimise_post',
     );
     expect(action).toMatchSnapshot();
   });

@@ -49,6 +49,10 @@ The following details need to be specified for merging a Remote Schema:
     value. This environment variable needs to be present when you start the GraphQL Engine. When Hasura sends requests
     to your remote server, it will pick up the value from this environment variable.
 
+  - Optionally use a separate list of introspection headers. If enabled with an empty list, introspection sends no
+    configured headers. If disabled, introspection uses the additional headers above for backward compatibility. Runtime
+    operations always use the additional headers.
+
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 

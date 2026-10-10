@@ -1,7 +1,16 @@
 import React from 'react';
+import { Flex, Strong } from '@radix-ui/themes';
 import { TableMachine } from '../hooks';
-import { PermissionsIcon } from './PermissionsIcons';
-import { Checkbox } from '../../../../new-components/Form';
+import {
+  Checkbox,
+  IconButton,
+  IconButtonProps,
+  IconTooltip,
+  Input,
+  Table,
+  PermissionsIcon,
+} from '@hasura/shared/ui';
+import { AccessType } from '@hasura/shared/types';
 
 export interface InputCellProps extends React.ComponentProps<'input'> {
   roleName: string;
@@ -31,75 +40,78 @@ export const InputCell: React.FC<InputCellProps> = ({
 
   if (isNewRole) {
     return (
-      <td className="w-0 bg-gray-50 p-sm font-semibold text-muted">
-        <input
+      <Table.ColumnHeaderCell align="center">
+        <Input
           ref={inputRef}
-          className="block w-64 h-input px-md shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
           value={state.context.newRoleName}
           aria-label="create-new-role"
           placeholder="Create new role..."
-          onChange={e => {
+          onChange={(e) => {
             send({ type: 'NEW_ROLE_NAME', newRoleName: e.target.value });
           }}
         />
-      </td>
+      </Table.ColumnHeaderCell>
     );
   }
 
   return (
-    <td className="w-0 bg-gray-50 p-md">
-      <div className="flex items-center">
+    <Table.ColumnHeaderCell align="center">
+      <Flex align="center">
         <Checkbox
           id={roleName}
-          checked={isSelected}
-          onCheckedChange={() => {
+          value={isSelected}
+          onChange={() => {
             send({ type: 'BULK_OPEN', roleName });
           }}
           disabled={!isSelectable || !!disabled}
         >
-          <label className="font-semibold text-muted" htmlFor={roleName}>
-            {roleName}
-          </label>
+          <Strong>{roleName}</Strong>
         </Checkbox>
-      </div>
-    </td>
+      </Flex>
+    </Table.ColumnHeaderCell>
   );
 };
 
-export interface EditableCellProps extends React.ComponentProps<'button'> {
-  access: 'fullAccess' | 'partialAccess' | 'noAccess';
+export interface EditableCellProps extends IconButtonProps {
+  access: AccessType;
   isEditable: boolean;
   isCurrentEdit: boolean;
-  testId: string;
+  testId?: string;
+  tooltip?: React.ReactNode;
 }
 
-export const EditableCell: React.FC<EditableCellProps> = ({
+export const PermissionAccessCell: React.FC<EditableCellProps> = ({
   access,
   isEditable,
   isCurrentEdit,
   testId,
+  tooltip,
   ...rest
 }) => {
   if (!isEditable) {
     return (
-      <td className="p-md whitespace-nowrap text-center cursor-not-allowed opacity-30">
-        <PermissionsIcon type={access} selected={isCurrentEdit} />
-      </td>
+      <Table.Cell align="center" className="p-0">
+        <Flex align="center" justify="center" gap="1" className="h-full">
+          <PermissionsIcon type={access} />
+          {tooltip ? <IconTooltip message={tooltip} /> : null}
+        </Flex>
+      </Table.Cell>
     );
   }
 
   return (
-    <td>
-      <button
+    <Table.Cell className="p-0!">
+      <IconButton
+        className="w-full! h-full! flex! justify-center content-center m-0! p-0!"
+        variant={isCurrentEdit ? 'soft' : 'ghost'}
+        radius="none"
         data-testid={testId}
         type="submit"
-        className={`cursor-pointer h-20 border-none w-full whitespace-nowrap text-center ${
-          isCurrentEdit ? 'bg-blue-100' : 'hover:bg-gray-100'
-        }`}
+        color={'indigo'}
         {...rest}
       >
-        <PermissionsIcon type={access} selected={isCurrentEdit} />
-      </button>
-    </td>
+        <PermissionsIcon type={access} />
+      </IconButton>
+    </Table.Cell>
   );
 };

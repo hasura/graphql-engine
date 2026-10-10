@@ -1,10 +1,16 @@
 import React from 'react';
-import { Analytics, REDACT_EVERYTHING } from '../../../../Analytics';
-import { FaExclamationTriangle } from 'react-icons/fa';
-import { Button } from '../../../../../new-components/Button';
-import { Dialog } from '../../../../../new-components/Dialog';
-import { LS_KEYS, setLSItem } from '../../../../../utils/localStorage';
-import { Checkbox } from '../../../../../new-components/Form';
+import { Analytics, REDACT_EVERYTHING } from '@hasura/shared/analytics';
+import { Flex } from '@radix-ui/themes';
+import {
+  Button,
+  Dialog,
+  CheckboxField,
+  IndicatorCard,
+  Text,
+} from '@hasura/shared/ui';
+import { setLSItem } from '@hasura/shared/utils';
+
+import { LS_KEYS } from '@hasura/shared/types';
 
 type CustomDialogFooterProps = {
   onSubmit: () => void;
@@ -18,39 +24,41 @@ const CustomDialogFooter: React.FC<CustomDialogFooterProps> = ({
   const storeDoNotShowPermissionsDialogFlag = (enabled: string | boolean) => {
     setLSItem(
       LS_KEYS.permissionConfirmationModalStatus,
-      enabled ? 'disabled' : 'enabled'
+      enabled ? 'disabled' : 'enabled',
     );
   };
 
   return (
-    <div className="flex items-center border-t border-gray-300 bg-white p-sm">
-      <div className="flex-grow">
-        <Checkbox
+    <Flex align="center" justify="between" className="p-2">
+      <div className="grow">
+        <CheckboxField
           name="noPermissionsConfirmationDialog"
-          onCheckedChange={enabled => {
-            storeDoNotShowPermissionsDialogFlag(enabled);
+          fieldProps={{
+            onChange: (enabled) => {
+              storeDoNotShowPermissionsDialogFlag(enabled);
+            },
           }}
         >
           <div>Don&apos;t ask me again</div>
-        </Checkbox>
+        </CheckboxField>
       </div>
-      <div className="flex">
-        <Button onClick={onClose}>Cancel</Button>
-        <div className="ml-2">
-          <Button mode="primary" onClick={onSubmit}>
-            Disable
-          </Button>
-        </div>
-      </div>
-    </div>
+      <Flex align="center" gap="2">
+        <Button mode="default" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button mode="primary" onClick={onSubmit}>
+          Disable
+        </Button>
+      </Flex>
+    </Flex>
   );
 };
 
 export type Props = {
   onSubmit: () => void;
   onClose: () => void;
-  title: React.ReactElement;
-  description: React.ReactElement;
+  title: React.ReactElement<any>;
+  description: React.ReactElement<any>;
 };
 
 export const PermissionsConfirmationModal: React.FC<Props> = ({
@@ -61,22 +69,21 @@ export const PermissionsConfirmationModal: React.FC<Props> = ({
 }) => {
   return (
     <Dialog
-      title=""
-      hasBackdrop
       footer={<CustomDialogFooter onSubmit={onSubmit} onClose={onClose} />}
     >
       <Analytics name="PermissionsConfirmationModal" {...REDACT_EVERYTHING}>
-        <div className="flex items-top p-md">
-          <div className="text-yellow-500">
-            <FaExclamationTriangle className="w-9 h-9 mr-md fill-current" />
-          </div>
-          <div>
-            <p className="font-semibold">{title}</p>
-            <div className="overflow-y-auto max-h-[calc(100vh-14rem)]">
-              <p className="m-0">{description}</p>
+        <Flex className="items-top p-4">
+          <IndicatorCard status="warning" showIcon>
+            <div>
+              <Text as="div" weight="bold">
+                {title}
+              </Text>
+              <div className="overflow-y-auto max-h-[calc(100vh-14rem)]">
+                <Text>{description}</Text>
+              </div>
             </div>
-          </div>
-        </div>
+          </IndicatorCard>
+        </Flex>
       </Analytics>
     </Dialog>
   );

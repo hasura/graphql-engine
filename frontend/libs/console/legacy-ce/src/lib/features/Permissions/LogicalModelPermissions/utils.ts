@@ -1,5 +1,6 @@
 import isEmpty from 'lodash/isEmpty';
-import { AccessType, Permission } from './components/types';
+import { Permission } from './components/types';
+import { AccessType } from '@hasura/shared/types';
 
 export function permissionRowAccess(permission: Permission): AccessType {
   if (!permission.filter || isEmpty(permission.filter)) {
@@ -11,7 +12,7 @@ export function permissionRowAccess(permission: Permission): AccessType {
 
 export function permissionColumnAccess(
   permission: Permission,
-  selectedColumns: string[]
+  selectedColumns: string[],
 ): AccessType {
   if (permission.columns.length === 0) {
     return 'noAccess';

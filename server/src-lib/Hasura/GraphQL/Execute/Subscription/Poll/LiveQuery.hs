@@ -75,7 +75,7 @@ pushResultToCohort result !respHashM (SubscriptionMetadata dTime) cohortSnapshot
   where
     C.CohortSnapshot _ respRef curSinks newSinks = cohortSnapshot
 
-    response = result <&> (`SubscriptionResponse` dTime)
+    response = result <&> \payload -> SubscriptionResponse payload dTime Nothing
     pushResultToSubscribers =
       A.mapConcurrently_ $ \Subscriber {..} -> _sOnChangeCallback response
 

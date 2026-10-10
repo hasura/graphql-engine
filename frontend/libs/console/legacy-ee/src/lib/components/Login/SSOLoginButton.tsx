@@ -1,15 +1,20 @@
-import { getOAuthAuthorizeUrl, initiateGeneralOAuthRequest } from './utils';
-import { clearAdminSecretState } from '../AppState';
-
-import ssoIcon from './black-building.svg';
+import { clearConsoleAuthState } from '@hasura/console-legacy-ce';
+import {
+  getOAuthAuthorizeUrl,
+  getOAuthRedirectUrl,
+  initiateGeneralOAuthRequest,
+} from '../../shared/auth/utils';
+import { useLocation } from 'react-router';
+import { Button } from '@hasura/shared/ui';
+import { CgOrganisation } from 'react-icons/cg';
+import { useAppContext } from '@hasura/shared/context';
 
 type Props = {
   clientId: string;
   name: string;
   authorizationUrl: string;
   scope: string;
-  location: Location;
-  shouldRedirectBack: boolean;
+  shouldRedirectBack?: boolean;
 };
 
 const SSOLoginButton = ({
@@ -17,28 +22,34 @@ const SSOLoginButton = ({
   name,
   authorizationUrl,
   scope,
-  location,
-  shouldRedirectBack,
+  shouldRedirectBack = false,
 }: Props) => {
+  const { envVars } = useAppContext();
+  const location = useLocation();
+
   const onClick = () => {
-    clearAdminSecretState();
+    clearConsoleAuthState();
+    const redirectUri = getOAuthRedirectUrl(envVars.urlPrefix);
+
     initiateGeneralOAuthRequest(
-      getOAuthAuthorizeUrl(authorizationUrl, clientId, scope),
+      getOAuthAuthorizeUrl(authorizationUrl, clientId, scope, redirectUri),
       location,
-      shouldRedirectBack
+      shouldRedirectBack,
     );
   };
 
   return (
-    <div className="w-full max-w-md">
-      <button
+    <div className="w-full">
+      <Button
+        full
+        size="3"
         type="button"
+        mode="default"
         onClick={onClick}
-        className="w-full inline-flex space-x-1.5 items-center justify-center font-semibold bg-gradient-to-t border rounded shadow-sm focus:outline-none focus:bg-gradient-to-t focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400 disabled:opacity-60 h-btn px-sm from-primary to-primary-light border-primary-dark hover:border-primary-darker focus:from-primary focus:to-primary disabled:border-primary-dark"
+        leftIcon={CgOrganisation}
       >
-        <img alt={name} className="flex w-4 mr-1.5" src={ssoIcon} />
         {name}
-      </button>
+      </Button>
     </div>
   );
 };

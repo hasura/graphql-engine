@@ -6,7 +6,7 @@
 'use strict'
 
 import { graphql, GraphQLInputObjectType, GraphQLInputObjectTypeConfig, GraphQLObjectTypeConfig, GraphQLSchema, parse, validate, GraphQLType } from 'graphql'
-import { afterAll, beforeAll, expect, test } from '@jest/globals'
+import { afterAll, beforeAll, expect, test } from 'vitest'
 
 import * as openAPIToGraphQL from '../src/index'
 import { Options } from '../src/types/options'

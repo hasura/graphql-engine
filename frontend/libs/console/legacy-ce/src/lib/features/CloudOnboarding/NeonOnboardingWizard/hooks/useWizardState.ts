@@ -5,10 +5,10 @@ import { OnboardingResponseData } from '../../types';
 export type WizardState = 'landing-page' | 'template-summary' | 'hidden';
 
 export function useWizardState(
-  onboardingData: OnboardingResponseData | undefined
+  onboardingData: OnboardingResponseData | undefined,
 ) {
   const [state, setState] = useState<WizardState>(
-    getWizardState(onboardingData)
+    getWizardState(onboardingData),
   );
 
   useEffect(() => {

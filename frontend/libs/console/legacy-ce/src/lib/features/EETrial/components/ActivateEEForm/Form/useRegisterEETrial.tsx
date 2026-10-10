@@ -3,7 +3,7 @@ import { REGISTER_EE_TRIALS_MUTATION } from '../../../constants';
 import globals from '../../../../../Globals';
 import { EETrialRegistrationResponse } from '../../../types';
 import { GraphQLError } from 'graphql';
-import { useMutation } from 'react-query';
+import { useMutation } from '@tanstack/react-query';
 import { RegisterEEFormSchema } from './schema';
 import { eeTrialsControlPlaneClient } from '../../../utils';
 import { useClientCredentialsPost } from './useClientCredentialsPost';
@@ -48,11 +48,12 @@ export const useRegisterEETrial = (onSuccess?: VoidFunction) => {
 
   const { post: postClientCredentials } = useClientCredentialsPost(
     onSuccess,
-    msg => setErrorMessage('Error: ' + msg)
+    (msg) => setErrorMessage('Error: ' + msg),
   );
 
-  const { mutate, isLoading } = useMutation(registerEETrialMutationFn, {
-    onSuccess: data => {
+  const { mutate, isPending: isLoading } = useMutation({
+    mutationFn: registerEETrialMutationFn,
+    onSuccess: (data) => {
       if (data.data?.registerEETrial?.client_id) {
         setErrorMessage('');
         postClientCredentials({
@@ -66,7 +67,7 @@ export const useRegisterEETrial = (onSuccess?: VoidFunction) => {
         setErrorMessage('Error: ' + data.errors[0].message);
       } else {
         setErrorMessage(
-          'Something went wrong while activating your Enterprise Trial'
+          'Something went wrong while activating your Enterprise Trial',
         );
       }
     },

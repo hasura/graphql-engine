@@ -1,0 +1,339 @@
+@import 'graphiql/style.css';
+@import '@graphiql/plugin-explorer/style.css';
+@import '@graphiql/plugin-code-exporter/style.css';
+
+/* Hasura Analyse modal css */
+.wd25 {
+  width: 25%;
+  display: inline-block;
+}
+
+.wd75 {
+  width: 75%;
+  display: inline-block;
+}
+
+.wd40 {
+  width: 40%;
+  display: inline-block;
+}
+
+.wd60 {
+  width: 60%;
+  display: inline-block;
+}
+
+.modalWrapper {
+  position: absolute;
+  top: 40px;
+  left: 40px;
+  right: 40px;
+  bottom: 40px;
+  border: 1px solid rgb(204, 204, 204);
+  background: rgb(255, 255, 255);
+  border-radius: 4px;
+  outline: none;
+}
+
+.myOverlayClass {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  background-color: rgba(255, 255, 255, 0.75);
+  z-index: 100;
+}
+
+.modalHeader {
+  background-color: #43495a;
+  border-bottom: 1px solid #ccc;
+  padding: 10px 20px;
+  position: relative;
+  color: #ffc627;
+}
+
+.modalTitle {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.modalClose {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+}
+
+.modalClose button {
+  cursor: pointer;
+  border-radius: 5px;
+  border: 0;
+  background-color: transparent;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ccc;
+  padding: 0px;
+  height: auto;
+}
+
+.modalClose button:hover {
+  border: 0;
+  background-color: transparent;
+  color: #fff;
+}
+
+.modalClose button:focus {
+  outline: none;
+}
+
+.modalBody {
+  display: flex;
+  height: calc(100% - 46px);
+}
+
+.topLevelNodesWrapper {
+  border-right: 1px solid #ccc;
+  height: 100%;
+}
+
+.textCenter {
+  text-align: center;
+}
+
+.topLevelNodesWrapper .title {
+  padding: 15px 20px;
+  background-color: #fff3d5;
+  margin-bottom: 20px;
+  color: #767e93;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.analysisWrapper {
+  height: 100%;
+  position: relative;
+  width: 100%;
+}
+
+.topLevelNodesWrapper ul {
+  padding-inline-start: 0px;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.borderRight {
+  border-right: 1px solid #ccc;
+}
+
+.topLevelNodesWrapper ul li {
+  list-style-type: none;
+  padding: 10px 0;
+  padding-left: 20px;
+  cursor: pointer;
+}
+
+.topLevelNodesWrapper ul li i {
+  margin-right: 5px;
+  font-size: 12px;
+}
+
+.topLevelNodesWrapper ul li.active {
+  color: #fd9540;
+}
+
+.topLevelNodesWrapper ul li:hover {
+  color: #e2701a;
+}
+
+.plansWrapper {
+  height: 50%;
+  position: relative;
+  padding: 0px 20px;
+}
+
+.plansTitle {
+  padding: 10px 0px;
+  color: #767e93;
+  font-weight: 600;
+}
+
+/* Hasura custom toolbar buttons (History, Explorer, Cache, REST, Derive
+   action, Analyze) rendered inside GraphiQL.Toolbar's render prop. GraphiQL
+   v4's own `.graphiql-toolbar-button` class is reserved for its square icon
+   buttons, so these use a distinct Hasura-owned class name. */
+.graphiql-container .hasura-toolbar-button {
+  background: #fdfdfd;
+  background: linear-gradient(#f9f9f9, #ececec);
+  border-radius: 3px;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.2),
+    0 1px 0 rgba(255, 255, 255, 0.7),
+    inset 0 1px #fff;
+  color: #555;
+  cursor: pointer;
+  display: inline-block;
+  margin: 0 5px;
+  padding: 3px 11px 3px;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.graphiql-container .hasura-toolbar-button:active {
+  background: linear-gradient(#ececec, #d5d5d5);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.7),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.1),
+    inset 0 1px 1px 1px rgba(0, 0, 0, 0.12),
+    inset 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.graphiql-container .hasura-toolbar-button.error {
+  background: linear-gradient(#fdf3f3, #e6d6d7);
+  color: #b00;
+}
+
+.graphiql-container .hasura-toolbar-button.primary {
+  background: #f9c548;
+  border: 1px solid #d5ae52;
+  box-shadow: none;
+  color: #475569;
+  font-weight: 500;
+}
+
+.graphiql_footer {
+  display: flex;
+  align-items: center;
+  position: sticky;
+  bottom: 0;
+  width: 100%;
+  padding: 8px;
+  background: #eee;
+  z-index: 100;
+}
+
+.graphiql_footer_label {
+  font-size: 10px;
+  color: #777777;
+  font-weight: 600;
+  margin-right: 8px;
+  text-transform: uppercase;
+}
+
+.graphiql_footer_value {
+  margin-right: 16px;
+  font-size: 13px;
+}
+
+.graphiql_footer_icon {
+  color: #777;
+  margin-right: 8px;
+  margin-left: 0px;
+}
+
+.color_green {
+  color: #047857 !important;
+}
+
+/* ------------------------------------------------------------------ *
+ * Dark mode
+ * GraphiQL's own setTheme('dark') recolors the GraphiQL chrome + Monaco
+ * editors (wired via GraphiQLThemeSync). These rules cover the surfaces
+ * GraphiQL's theme does NOT own, all scoped under the `.dark` document class:
+ *  - our custom Hasura toolbar buttons (REST / Derive / Analyze / Cache …);
+ *  - the code-exporter's CodeMirror-5 panel, which keeps its own 'default'
+ *    (light) theme — recolored here instead of recreating the plugin;
+ *  - the Analyze modal (hardcoded light surfaces).
+ * ------------------------------------------------------------------ */
+.dark .graphiql-container .hasura-toolbar-button {
+  background: linear-gradient(#3a3a3f, #2a2a2e);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 1px 0 rgba(0, 0, 0, 0.3);
+  color: #cbd5e1;
+}
+
+.dark .graphiql-container .hasura-toolbar-button:active {
+  background: linear-gradient(#2a2a2e, #202024);
+}
+
+.dark .graphiql-container .hasura-toolbar-button.error {
+  background: linear-gradient(#3a2626, #2c1d1e);
+  color: #f1a1a1;
+}
+
+.dark .graphiql-container .hasura-toolbar-button.primary {
+  background: #b88a1f;
+  border: 1px solid #8a6a18;
+  color: #0f172a;
+}
+
+/* Code-exporter CodeMirror 5 panel (otherwise the light 'default' theme). */
+.dark .graphiql-container .CodeMirror {
+  background: #1e1e20;
+  color: #e4e4e7;
+}
+
+.dark .graphiql-container .CodeMirror-gutters {
+  background: #1a1a1c;
+  border-right-color: #333;
+}
+
+.dark .graphiql-container .CodeMirror-linenumber {
+  color: #6b7280;
+}
+
+.dark .graphiql-container .CodeMirror-cursor {
+  border-left-color: #e4e4e7;
+}
+
+.dark .graphiql-container .cm-s-default .cm-keyword {
+  color: #c586c0;
+}
+
+.dark .graphiql-container .cm-s-default .cm-string {
+  color: #ce9178;
+}
+
+.dark .graphiql-container .cm-s-default .cm-number {
+  color: #b5cea8;
+}
+
+.dark .graphiql-container .cm-s-default .cm-property,
+.dark .graphiql-container .cm-s-default .cm-variable,
+.dark .graphiql-container .cm-s-default .cm-def {
+  color: #9cdcfe;
+}
+
+.dark .graphiql-container .cm-s-default .cm-comment {
+  color: #6a9955;
+}
+
+.dark .graphiql-container .cm-s-default .cm-atom {
+  color: #569cd6;
+}
+
+/* Analyze modal (opened from the toolbar) — hardcoded light surfaces. */
+.dark .modalWrapper {
+  background: #1e1e20;
+  border-color: #333;
+  color: #e4e4e7;
+}
+
+.dark .myOverlayClass {
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+.dark .topLevelNodesWrapper .title {
+  background-color: #2a2a2e;
+  color: #cbd5e1;
+}
+
+.dark .topLevelNodesWrapper,
+.dark .borderRight {
+  border-right-color: #333;
+}
+
+.dark .plansTitle {
+  color: #cbd5e1;
+}

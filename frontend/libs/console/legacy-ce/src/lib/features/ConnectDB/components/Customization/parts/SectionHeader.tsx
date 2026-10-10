@@ -1,14 +1,15 @@
-import { IconTooltip } from '../../../../../new-components/Tooltip';
+import { IconTooltip, Text } from '@hasura/shared/ui';
+import { Flex } from '@radix-ui/themes';
 import React from 'react';
 
-export const SectionHeader: React.VFC<{ header: string; tip: string }> = ({
+export const SectionHeader: React.FC<{ header: string; tip: string }> = ({
   header,
   tip,
 }) => (
   <div>
-    <div className="flex items-center my-4 text-gray-600 font-semibold">
-      {header}
+    <Flex align="center" className="my-4" gap="2">
+      <Text weight="medium">{header}</Text>
       <IconTooltip message={tip} />
-    </div>
+    </Flex>
   </div>
 );

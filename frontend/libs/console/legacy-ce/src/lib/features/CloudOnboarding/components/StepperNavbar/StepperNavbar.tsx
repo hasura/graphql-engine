@@ -1,9 +1,7 @@
 import React from 'react';
-import clsx from 'clsx';
+import { Avatar, Flex, Strong } from '@radix-ui/themes';
 import { CustomRightChevron } from './components/CustomRightChevron';
-
-const commmonListItemStyle =
-  'flex-shrink-0 w-10 h-10 flex items-center justify-center border-2 rounded-full';
+import { Text } from '@hasura/shared/ui';
 
 export type StepperNavbarStep = {
   step: string;
@@ -26,40 +24,32 @@ export function StepperNavbar(props: StepperNavbarProps) {
 
   return (
     <nav>
-      <ol className="font-sans border-t border-l border-r border-gray-300 rounded-t divide-y mb-0 divide-gray-300 md:flex md:divide-y-0 bg-white">
+      <ol className="font-sans border-t border-l border-r border-gray-500 rounded-t divide-y mb-0 divide-gray-300 md:flex md:divide-y-0">
         {steps.map((stepDetails, index) => (
-          <li key={stepDetails.text} className="relative flex-grow md:flex">
-            <div className="group flex items-center w-full">
-              <span className="px-md py-sm flex items-center">
-                <span
-                  className={clsx(
-                    `font-bold text-sm`,
-                    commmonListItemStyle,
-                    index === currentActiveIndex
-                      ? `bg-[#f9c548] border-amber-500 text-slate-900`
-                      : `border-gray-300 text-muted-dark`
-                  )}
-                >
-                  {stepDetails.step}
-                </span>
-                <span
-                  className={clsx(
-                    'ml-sm font-bold ',
-                    index === currentActiveIndex
-                      ? 'text-slate-900'
-                      : 'text-muted-dark'
-                  )}
+          <li key={stepDetails.text} className="relative grow md:flex">
+            <Flex align="center" className="group w-full">
+              <Flex align="center" className="px-4 py-2" gap="2">
+                <Avatar
+                  radius="full"
+                  fallback={<Strong>{stepDetails.step}</Strong>}
+                  color={index === currentActiveIndex ? 'indigo' : 'gray'}
+                />
+                <Text
+                  size="2"
+                  weight="bold"
+                  color={currentActiveIndex ? 'indigo' : 'gray'}
+                  className={'ml-2'}
                 >
                   {stepDetails.text}
-                </span>
-              </span>
-            </div>
+                </Text>
+              </Flex>
+            </Flex>
             <div
               className="md:block absolute top-0 right-0 h-full w-5"
               aria-hidden="true"
             >
               {index !== lastStep && (
-                <CustomRightChevron className="h-full w-full text-gray-300" />
+                <CustomRightChevron className="h-full w-full" />
               )}
             </div>
           </li>

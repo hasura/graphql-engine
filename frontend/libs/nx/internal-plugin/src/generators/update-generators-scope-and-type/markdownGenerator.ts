@@ -1,11 +1,11 @@
 import { TagDefNew, tagDefs, tagGroups, TagGroupMap } from '../../TagConsts';
-import { Tree } from '@nrwl/devkit';
+import { Tree } from '@nx/devkit';
 
 const wrapWithPipes = (str: string) => `|${str}|`;
 export function generateDepConstrainMdTable(
   group: TagDefNew<any>[string],
   prefix: string,
-  importImageUrl: string
+  importImageUrl: string,
 ) {
   let lines: string[] = [];
 
@@ -13,18 +13,18 @@ export function generateDepConstrainMdTable(
 
   const header = wrapWithPipes(
     ` ![Can row import colum](${importImageUrl}) |` +
-      orderItems.map(it => ` \`${prefix}${it}\` `).join('|')
+      orderItems.map((it) => ` \`${prefix}${it}\` `).join('|'),
   );
   const dividerHeader = wrapWithPipes(
-    `---|` + orderItems.map(it => `:---:`).join('|')
+    `---|` + orderItems.map((it) => `:---:`).join('|'),
   );
 
   const rows = Object.entries(group).map(([source, { canImport }]) => {
     return wrapWithPipes(
       `\`${prefix}${source}\` | ${orderItems
-        .map(tag => (canImport[tag] ? '✅' : '⛔'))
-        .map(it => ` ${it} `)
-        .join('|')}`
+        .map((tag) => (canImport[tag] ? '✅' : '⛔'))
+        .map((it) => ` ${it} `)
+        .join('|')}`,
     );
   });
 
@@ -36,7 +36,7 @@ export function generateDepConstrainMdTable(
 export function generateMarkdownDocumentationForTags<T extends TagGroupMap>(
   tagGroupMap: T,
   tagDefs: TagDefNew<T>,
-  importImageUrl: string
+  importImageUrl: string,
 ) {
   return Object.entries(tagGroupMap)
     .map(
@@ -58,10 +58,10 @@ ${description}
 
 ${tags
   .map(
-    tag => `#### \`${prefix}${tag}\`
+    (tag) => `#### \`${prefix}${tag}\`
 
-${tagDefs[group][tag].description}
-`
+${(tagDefs[group] as Record<string, { description: string }>)[tag].description}
+`,
   )
   .join('\n\n')}
 
@@ -83,7 +83,7 @@ Here is the import rule matrix :
 
 ${generateDepConstrainMdTable(tagDefs[group], prefix, importImageUrl)}
       `;
-      }
+      },
     )
     .join('\n\n');
 }
@@ -91,14 +91,14 @@ ${generateDepConstrainMdTable(tagDefs[group], prefix, importImageUrl)}
 export function generateFullMdDocAboutTags<T extends TagGroupMap>(
   tagGroupMap: T,
   tagDefs: TagDefNew<T>,
-  importImageUrl: string
+  importImageUrl: string,
 ) {
   return `# Tags in the workspace and their organisation
 
 In this workspace, we use tags to organise the libraries and application to ensure have strong boundaries between projects.
 
 There is ${Object.keys(tagGroupMap).length} tag groups : ${Object.keys(
-    tagGroupMap
+    tagGroupMap,
   ).join(', ')}.
 
 You should use the internal generators to create libraries and application, they will have selectors for the tags groups.
@@ -120,7 +120,7 @@ export async function markdownGenerator(tree: Tree) {
   const mdFile = generateFullMdDocAboutTags(
     tagGroups,
     tagDefs,
-    './can-import-icon.png'
+    './can-import-icon.png',
   );
 
   tree.write('/docs/tags.md', mdFile);

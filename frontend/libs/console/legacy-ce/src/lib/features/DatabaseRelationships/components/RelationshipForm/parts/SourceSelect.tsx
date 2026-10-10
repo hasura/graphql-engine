@@ -1,11 +1,7 @@
-import { RemoteSchema, Table } from '../../../../hasura-metadata-types';
-import {
-  FieldWrapper,
-  FieldWrapperPassThroughProps,
-} from '../../../../../new-components/Form';
+import { RemoteSchema, SupportedDriver, Table } from '@hasura/shared/types';
+import { FieldWrapper, FieldWrapperPassThroughProps } from '@hasura/shared/ui';
 import isEqual from 'lodash/isEqual';
 import get from 'lodash/get';
-import React from 'react';
 import { Controller, FieldError, useFormContext } from 'react-hook-form';
 import { FaPlug, FaTable } from 'react-icons/fa';
 import Select, {
@@ -18,7 +14,12 @@ import './index.css';
 
 export interface SourceOption {
   value:
-    | { type: 'table'; dataSourceName: string; table: Table }
+    | {
+        type: 'table';
+        dataSourceName: string;
+        driver: SupportedDriver;
+        table: Table;
+      }
     | { type: 'remoteSchema'; remoteSchema: RemoteSchema['name'] };
   label: string;
 }
@@ -27,6 +28,7 @@ type SearchableSelectProps = FieldWrapperPassThroughProps & {
   options: SourceOption[];
   name: string;
   disabled?: boolean;
+  placeholder?: string;
 };
 
 const Option = (props: OptionProps<SourceOption>) => {
@@ -80,6 +82,7 @@ export const SourceSelect = ({
   options,
   name,
   disabled,
+  placeholder,
   ...wrapperProps
 }: SearchableSelectProps) => {
   const {
@@ -97,13 +100,14 @@ export const SourceSelect = ({
           <Select
             classNamePrefix="my-select"
             onBlur={onBlur}
-            value={options.find(c => isEqual(c.value, value))}
-            onChange={val => onChange((val as SourceOption).value)}
+            value={options.find((c) => isEqual(c.value, value))}
+            onChange={(val) => onChange((val as SourceOption).value)}
             ref={ref}
             components={{ Option, SingleValue }}
             options={options}
             styles={selectStyles}
             isDisabled={disabled}
+            placeholder={placeholder}
             // menuPortalTarget={document.body}
             // menuPosition={'fixed'}
             // menuContainerStyle={{ zIndex: 5 }}

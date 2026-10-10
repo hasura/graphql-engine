@@ -5,7 +5,7 @@
 
 'use strict'
 
-import { afterAll, beforeAll, expect, test } from '@jest/globals'
+import { afterAll, beforeAll, expect, test } from 'vitest'
 import { GraphQLObjectType, GraphQLSchema } from 'graphql'
 
 import * as openAPIToGraphQL from '../src/index'

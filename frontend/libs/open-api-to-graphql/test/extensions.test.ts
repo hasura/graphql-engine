@@ -5,7 +5,7 @@
 
 'use strict';
 
-import { beforeAll, describe, test, expect } from '@jest/globals';
+import { beforeAll, describe, test, expect } from 'vitest';
 import {
   GraphQLEnumType,
   GraphQLInputObjectType,
@@ -31,14 +31,16 @@ describe('GraphQL Extensions', () => {
     });
 
     test('should rename Query with x-graphql-field-name', () => {
-      const queries = Object.keys(createdSchema.getQueryType().getFields());
+      const queries = Object.keys(
+        createdSchema.getQueryType()?.getFields() ?? {},
+      );
       expect(queries).not.toContain('petFindByStatus');
       expect(queries).toContain('getPetsByStatus');
     });
 
     test('should rename Mutation with x-graphql-field-name', () => {
       const mutations = Object.keys(
-        createdSchema.getMutationType().getFields()
+        createdSchema.getMutationType()?.getFields() ?? {},
       );
       expect(mutations).not.toContain('updatePetWithForm');
       expect(mutations).toContain('updatePetForm');
@@ -46,7 +48,7 @@ describe('GraphQL Extensions', () => {
 
     test('should rename Subscription with x-graphql-field-name', () => {
       const subscriptions = Object.keys(
-        createdSchema.getSubscriptionType().getFields()
+        createdSchema.getSubscriptionType()?.getFields() ?? {},
       );
       expect(subscriptions).not.toContain('petEventListener');
       expect(subscriptions).toContain('petEvent');
@@ -72,9 +74,9 @@ describe('GraphQL Extensions', () => {
       const pendingValue = values.find(({ value }) => value === 'pending');
       const soldValue = values.find(({ value }) => value === 'sold');
       expect(values.length).toEqual(3);
-      expect(initialValue.name).toEqual('INITIAL');
-      expect(pendingValue.name).toEqual('IN_PROGRESS');
-      expect(soldValue.name).toEqual('SOLD');
+      expect(initialValue?.name).toEqual('INITIAL');
+      expect(pendingValue?.name).toEqual('IN_PROGRESS');
+      expect(soldValue?.name).toEqual('SOLD');
     });
 
     test('should rename Links with x-graphql-field-name', () => {
@@ -97,52 +99,52 @@ describe('GraphQL Extensions', () => {
     test('should throw when x-graphql-type-name causes naming conflicts', async () => {
       const oas = require('./fixtures/extensions_error1.json');
       await expect(
-        openAPIToGraphQL.createGraphQLSchema(oas)
+        openAPIToGraphQL.createGraphQLSchema(oas),
       ).rejects.toThrowError(
         new Error(
           `Cannot create type with name "User".\nYou provided "User" in ` +
             `x-graphql-type-name, but it conflicts with another type named ` +
-            `"User".`
-        )
+            `"User".`,
+        ),
       );
     });
 
     test('should throw when x-graphql-field-name causes naming conflicts on objects', async () => {
       const oas = require('./fixtures/extensions_error2.json');
       await expect(
-        openAPIToGraphQL.createGraphQLSchema(oas)
+        openAPIToGraphQL.createGraphQLSchema(oas),
       ).rejects.toThrowError(
         new Error(
           `Cannot create field with name "name".\nYou provided "name" in ` +
             `x-graphql-field-name, but it conflicts with another field named ` +
-            `"name".`
-        )
+            `"name".`,
+        ),
       );
     });
 
     test('should throw when x-graphql-field-name causes naming conflicts on queries', async () => {
       const oas = require('./fixtures/extensions_error3.json');
       await expect(
-        openAPIToGraphQL.createGraphQLSchema(oas)
+        openAPIToGraphQL.createGraphQLSchema(oas),
       ).rejects.toThrowError(
         new Error(
           `Cannot create query field with name "user".\nYou provided ` +
             `"user" in x-graphql-field-name, but it conflicts with another ` +
-            `field named "user".`
-        )
+            `field named "user".`,
+        ),
       );
     });
 
     test('should throw when x-graphql-field-name causes naming conflicts on mutations', async () => {
       const oas = require('./fixtures/extensions_error4.json');
       await expect(
-        openAPIToGraphQL.createGraphQLSchema(oas)
+        openAPIToGraphQL.createGraphQLSchema(oas),
       ).rejects.toThrowError(
         new Error(
           `Cannot create mutation field with name "createUser".\nYou ` +
             `provided "createUser" in x-graphql-field-name, but it ` +
-            `conflicts with another field named "createUser".`
-        )
+            `conflicts with another field named "createUser".`,
+        ),
       );
     });
 
@@ -152,40 +154,40 @@ describe('GraphQL Extensions', () => {
         openAPIToGraphQL.createGraphQLSchema(oas, {
           createSubscriptionsFromCallbacks: true,
           fillEmptyResponses: true,
-        })
+        }),
       ).rejects.toThrowError(
         new Error(
           `Cannot create subscription field with name ` +
             `"userEventListener".\nYou provided "userEventListener" ` +
             `in x-graphql-field-name, but it conflicts with another ` +
-            `field named "userEventListener".`
-        )
+            `field named "userEventListener".`,
+        ),
       );
     });
 
     test('should throw when x-graphql-field-name causes naming conflicts on links', async () => {
       const oas = require('./fixtures/extensions_error6.json');
       await expect(
-        openAPIToGraphQL.createGraphQLSchema(oas)
+        openAPIToGraphQL.createGraphQLSchema(oas),
       ).rejects.toThrowError(
         new Error(
           `Cannot create link field with name "group".\nYou provided ` +
             `"group" in x-graphql-field-name, but it conflicts with ` +
-            `another field named "group".`
-        )
+            `another field named "group".`,
+        ),
       );
     });
 
     test('should throw when x-graphql-enum-mapping causes naming conflicts', async () => {
       const oas = require('./fixtures/extensions_error7.json');
       await expect(
-        openAPIToGraphQL.createGraphQLSchema(oas)
+        openAPIToGraphQL.createGraphQLSchema(oas),
       ).rejects.toThrowError(
         new Error(
           `Cannot create enum value "CONFLICT".\nYou provided ` +
             `"CONFLICT" in x-graphql-enum-mapping, but it conflicts ` +
-            `with another value "CONFLICT".`
-        )
+            `with another value "CONFLICT".`,
+        ),
       );
     });
   });

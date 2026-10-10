@@ -1,5 +1,3 @@
-import { GetDataTypeOperatorsProps } from '../../utils/comparatorsFromSchema';
-
 export const mssqlRealColumnTypeInput = {
   comparators: {
     Int_MSSQL: {
@@ -978,7 +976,7 @@ export const mssqlRealColumnTypeInput = {
         { name: '_clte', operator: '_clte' },
       ],
     },
-    integer_mysql8: {
+    integer_mysql: {
       operators: [
         {
           type: 'comparision',
@@ -1052,7 +1050,7 @@ export const mssqlRealColumnTypeInput = {
         { name: '_clte', operator: '_clte' },
       ],
     },
-    string_mysql8: {
+    string_mysql: {
       operators: [
         {
           type: 'comparision',
@@ -1833,4 +1831,4 @@ export const mssqlRealColumnTypeInput = {
     },
   ],
   table: { name: 'ExampleTable', schema: 'dbo' },
-} as GetDataTypeOperatorsProps;
+} as any;

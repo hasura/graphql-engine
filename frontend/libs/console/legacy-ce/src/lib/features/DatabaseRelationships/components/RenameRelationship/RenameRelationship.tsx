@@ -1,28 +1,24 @@
-import React from 'react';
 import { z } from 'zod';
-import { Dialog } from '../../../../new-components/Dialog';
-import { InputField, SimpleForm } from '../../../../new-components/Form';
-import { IndicatorCard } from '../../../../new-components/IndicatorCard';
-import { Relationship } from '../../types';
-import { useCreateTableRelationships } from '../../hooks/useCreateTableRelationships/useCreateTableRelationships';
 import {
-  BulkAtomicResponse,
-  BulkKeepGoingResponse,
-} from '../../../hasura-metadata-types';
+  Dialog,
+  InputField,
+  SimpleForm,
+  IndicatorCard,
+  DialogFooter,
+} from '@hasura/shared/ui';
+import { Relationship } from '../../types';
+import { useRenameRelationship } from '@hasura/metadata/api';
 
 interface RenameRelationshipProps {
   relationship: Relationship;
   onCancel: () => void;
   onError?: (err: Error) => void;
-  onSuccess?: (data: BulkAtomicResponse | BulkKeepGoingResponse) => void;
+  onSuccess?: (data: unknown) => void;
 }
 
 export const RenameRelationship = (props: RenameRelationshipProps) => {
   const { relationship, onCancel, onSuccess, onError } = props;
-  const { renameRelationships } = useCreateTableRelationships(
-    relationship.fromSource,
-    { onSuccess, onError }
-  );
+  const { renameRelationship } = useRenameRelationship();
 
   if (
     relationship.type === 'remoteDatabaseRelationship' ||
@@ -43,7 +39,6 @@ export const RenameRelationship = (props: RenameRelationshipProps) => {
 
   return (
     <Dialog
-      hasBackdrop
       title={`Rename: ${relationship.name}`}
       description="Rename your current relationship. "
       onClose={onCancel}
@@ -57,17 +52,20 @@ export const RenameRelationship = (props: RenameRelationshipProps) => {
         schema={z.object({
           updatedName: z.string().min(1, 'Updated name cannot be empty!'),
         })}
-        onSubmit={data => {
-          renameRelationships({
-            data: [
-              {
-                name: relationship.name,
-                new_name: data.updatedName,
-                source: relationship.fromSource,
-                table: relationship.fromTable,
-              },
-            ],
-          });
+        onSubmit={(data) => {
+          if (!relationship.fromTable) {
+            return;
+          }
+
+          renameRelationship(
+            {
+              name: relationship.name,
+              new_name: data.updatedName,
+              source: relationship.fromSource,
+              table: relationship.fromTable,
+            },
+            { onSuccess, onError },
+          );
         }}
       >
         <>
@@ -75,11 +73,13 @@ export const RenameRelationship = (props: RenameRelationshipProps) => {
             <InputField
               name="updatedName"
               label="New name"
-              placeholder="Enter a new name"
               tooltip="New name of the relationship. Remember relationship names are unique."
+              fieldProps={{
+                placeholder: 'Enter a new name',
+              }}
             />
           </div>
-          <Dialog.Footer
+          <DialogFooter
             callToDeny="Cancel"
             callToAction="Rename"
             onClose={onCancel}

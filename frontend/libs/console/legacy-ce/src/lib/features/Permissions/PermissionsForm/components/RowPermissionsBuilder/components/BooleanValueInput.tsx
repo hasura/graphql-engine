@@ -1,6 +1,7 @@
 import { useContext } from 'react';
-import { Table } from '../../../../../hasura-metadata-types';
 import { rowPermissionsContext } from './RowPermissionsProvider';
+import { Flex } from '@radix-ui/themes';
+import { Select } from '@hasura/shared/ui';
 
 export function BooleanValueInput({
   path,
@@ -13,24 +14,19 @@ export function BooleanValueInput({
 }) {
   const { setValue, isLoading } = useContext(rowPermissionsContext);
   return (
-    <div className="flex">
-      <select
+    <Flex>
+      <Select
         disabled={isLoading}
         data-testid={componentLevelId}
-        className="border border-gray-200 rounded-md"
         value={JSON.stringify(value)}
-        defaultValue={JSON.parse(value) ?? false}
-        onChange={e => {
-          setValue(path, JSON.parse(e.target.value) as Table);
+        onChange={(value) => {
+          setValue(path, JSON.stringify(value));
         }}
-      >
-        <option key="false" value="false">
-          False
-        </option>
-        <option key="true" value="true">
-          True
-        </option>
-      </select>
-    </div>
+        options={['false', 'true'].map((v) => ({
+          value: v,
+          label: v,
+        }))}
+      />
+    </Flex>
   );
 }

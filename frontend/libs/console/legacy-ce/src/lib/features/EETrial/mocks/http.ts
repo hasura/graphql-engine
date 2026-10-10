@@ -1,84 +1,85 @@
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 import Endpoints from '../../../Endpoints';
 
 export const eeLicenseInfo = {
-  active: rest.get(Endpoints.entitlement, async (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({
+  active: http.get(Endpoints.entitlement, async () => {
+    return HttpResponse.json(
+      {
         status: 'active',
         type: 'trial',
         expiry_at: new Date(new Date().getTime() + 100000000),
         grace_at: new Date(),
-      })
+      },
+      { status: 200 },
     );
   }),
-  expired: rest.get(Endpoints.entitlement, async (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({
+  expired: http.get(Endpoints.entitlement, async () => {
+    return HttpResponse.json(
+      {
         status: 'expired',
         type: 'trial',
         expiry_at: new Date(new Date().getTime() - 100000000),
         grace_at: new Date(),
-      })
+      },
+      { status: 200 },
     );
   }),
-  expiredWithoutGrace: rest.get(
-    Endpoints.entitlement,
-    async (req, res, ctx) => {
-      return res(
-        ctx.status(200),
-        ctx.json({
-          status: 'expired',
-          type: 'trial',
-          expiry_at: new Date(new Date().getTime() - 100000000),
-        })
-      );
-    }
-  ),
-  expiredAfterGrace: rest.get(Endpoints.entitlement, async (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({
+  expiredWithoutGrace: http.get(Endpoints.entitlement, async () => {
+    return HttpResponse.json(
+      {
+        status: 'expired',
+        type: 'trial',
+        expiry_at: new Date(new Date().getTime() - 100000000),
+      },
+      { status: 200 },
+    );
+  }),
+  expiredAfterGrace: http.get(Endpoints.entitlement, async () => {
+    return HttpResponse.json(
+      {
         status: 'expired',
         type: 'trial',
         expiry_at: new Date(new Date().getTime() - 1000000000),
         grace_at: new Date(new Date().getTime() - 2000000000),
-      })
+      },
+      { status: 200 },
     );
   }),
-  deactivated: rest.get(Endpoints.entitlement, async (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({
+  deactivated: http.get(Endpoints.entitlement, async () => {
+    return HttpResponse.json(
+      {
         status: 'deactivated',
         type: 'trial',
         expiry_at: new Date(),
         grace_at: new Date(),
-      })
+      },
+      { status: 200 },
     );
   }),
-  none: rest.get(Endpoints.entitlement, async (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({
+  none: http.get(Endpoints.entitlement, async () => {
+    return HttpResponse.json(
+      {
         status: 'none',
         type: 'trial',
         expiry_at: new Date(),
         grace_at: new Date(),
-      })
+      },
+      { status: 200 },
     );
   }),
-  noneOnce: rest.get(Endpoints.entitlement, async (req, res, ctx) => {
-    return res.once(
-      ctx.status(200),
-      ctx.json({
-        status: 'none',
-        type: 'trial',
-        expiry_at: new Date(),
-        grace_at: new Date(),
-      })
-    );
-  }),
+  noneOnce: http.get(
+    Endpoints.entitlement,
+    async () => {
+      return HttpResponse.json(
+        {
+          status: 'none',
+          type: 'trial',
+          expiry_at: new Date(),
+          grace_at: new Date(),
+        },
+        { status: 200 },
+      );
+    },
+    { once: true },
+  ),
 };

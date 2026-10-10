@@ -1,5 +1,5 @@
 import { BuildServerAssetsExecutorSchema } from './schema';
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext } from '@nx/devkit';
 import runCommands from 'nx/src/executors/run-commands/run-commands.impl';
 import { flushChanges, FsTree, printChanges } from 'nx/src/generators/tree';
 import * as fs from 'node:fs';
@@ -40,14 +40,14 @@ export const validateAllowedAssets = (assets: Assets): void => {
   for (const cssEntry of assets.css) {
     if (forbiddenAssets[cssEntry.url]) {
       throw new Error(
-        `Cannot use ${cssEntry.url}: ${forbiddenAssets[cssEntry.url]}`
+        `Cannot use ${cssEntry.url}: ${forbiddenAssets[cssEntry.url]}`,
       );
     }
   }
   for (const jsEntry of assets.js) {
     if (forbiddenAssets[jsEntry.url]) {
       throw new Error(
-        `Cannot use ${jsEntry.url}: ${forbiddenAssets[jsEntry.url]}`
+        `Cannot use ${jsEntry.url}: ${forbiddenAssets[jsEntry.url]}`,
       );
     }
   }
@@ -55,13 +55,13 @@ export const validateAllowedAssets = (assets: Assets): void => {
 
 export const gzAssetNames = (assets: Assets): Assets => {
   return {
-    css: assets.css.map(asset => ({ ...asset, url: `${asset.url}.gz` })),
-    js: assets.js.map(asset => ({ ...asset, url: `${asset.url}.gz` })),
+    css: assets.css.map((asset) => ({ ...asset, url: `${asset.url}.gz` })),
+    js: assets.js.map((asset) => ({ ...asset, url: `${asset.url}.gz` })),
   };
 };
 
 export const generatePolyfillLoaderFile = (
-  assetLoaderString: string
+  assetLoaderString: string,
 ): string => {
   return `// This file exists for older cli using newer asset names.
 ${assetLoaderString}
@@ -79,29 +79,29 @@ function listFilesExtensions(directory: string, ignoredFiles: string[]) {
   const files = fs.readdirSync(directory);
 
   // Filter out ignored files
-  const filteredFiles = files.filter(file => !ignoredFiles.includes(file));
+  const filteredFiles = files.filter((file) => !ignoredFiles.includes(file));
 
   // Extract the file extensions from the list of files
-  const extensions = filteredFiles.map(file => {
+  const extensions = filteredFiles.map((file) => {
     const parts = file.split('.');
     return parts.length > 1 ? parts[parts.length - 1] : '';
   });
 
   // Remove duplicates and empty strings
-  return [...new Set(extensions.filter(extension => extension !== ''))];
+  return [...new Set(extensions.filter((extension) => extension !== ''))];
 }
 
 export default async function runMyExecutor(
   options: BuildServerAssetsExecutorSchema,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) {
   const projectName = context.projectName;
   if (!projectName) {
     throw new Error('No project name was given.');
   }
   const distTarget =
-    context.workspace?.projects?.[projectName]?.targets?.build?.options
-      ?.outputPath ?? `dist/apps/${projectName}`;
+    context.projectsConfigurations?.projects?.[projectName]?.targets?.build
+      ?.options?.outputPath ?? `dist/apps/${projectName}`;
   const serverAssetBase = `dist/apps/server-assets-${projectName}`;
 
   await runCommands(
@@ -114,7 +114,7 @@ export default async function runMyExecutor(
       parallel: false,
       __unparsed__: [],
     },
-    context
+    context,
   );
 
   const listOfExtToCopy = listFilesExtensions(serverAssetBase, ['index.html']);
@@ -134,9 +134,9 @@ export default async function runMyExecutor(
 
   console.log('This will be the loaded assets from this build :');
   console.log('Javascript assets :');
-  extractedAssets.js.forEach(it => console.log('- ' + it.url));
+  extractedAssets.js.forEach((it) => console.log('- ' + it.url));
   console.log('CSS assets :');
-  extractedAssets.css.forEach(it => console.log('- ' + it.url));
+  extractedAssets.css.forEach((it) => console.log('- ' + it.url));
 
   const finalAssets = gzAssetNames(extractedAssets);
 
@@ -144,7 +144,7 @@ export default async function runMyExecutor(
   tree.write(`${serverAssetBase}/versioned/assetLoader.js`, loaderFile);
   tree.write(
     `${serverAssetBase}/versioned/main.js`,
-    generatePolyfillLoaderFile(loaderFile)
+    generatePolyfillLoaderFile(loaderFile),
   );
 
   printChanges(tree.listChanges());
@@ -154,19 +154,20 @@ export default async function runMyExecutor(
     {
       commands: [
         ...listOfExtToCopy.map(
-          ext => `mv ${serverAssetBase}/*.${ext} ${serverAssetBase}/versioned`
+          (ext) =>
+            `mv ${serverAssetBase}/*.${ext} ${serverAssetBase}/versioned`,
         ),
         ...[
-          ...extractedAssets.css.map(css => css.url),
-          ...extractedAssets.js.map(js => js.url),
+          ...extractedAssets.css.map((css) => css.url),
+          ...extractedAssets.js.map((js) => js.url),
           'assetLoader.js',
           'main.js',
-        ].map(name => `gzip -f ${serverAssetBase}/versioned/${name}`),
+        ].map((name) => `gzip -f ${serverAssetBase}/versioned/${name}`),
       ],
       parallel: false,
       __unparsed__: [],
     },
-    context
+    context,
   );
   return {
     success: true,

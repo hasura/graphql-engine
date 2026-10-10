@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { UseQueryResult } from 'react-query';
+import { UseQueryResult } from '@tanstack/react-query';
 import { useEELicenseInfo } from '../hooks/useEELicenseInfo';
 import { EELicenseInfo } from '../types';
 

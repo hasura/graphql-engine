@@ -17,7 +17,7 @@ export const createForbiddenString =
   };
 
 export const createForbiddenEnv = (
-  envVariableName: string
+  envVariableName: string,
 ): CheckerFunction => {
   const envValue = process.env[envVariableName];
   return ({ fileContent, fileName }) => {
@@ -43,7 +43,7 @@ export const createForbiddenFileName = ({
   forbiddenName: string | RegExp;
   extraReason?: string;
 }): CheckerFunction => {
-  const fileChecker = fileName => {
+  const fileChecker = (fileName: string) => {
     if (typeof forbiddenName === 'string') {
       return fileName === forbiddenName;
     }

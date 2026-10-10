@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import { useState, useEffect } from 'react';
 import clsx from 'clsx';
 import { FaChevronDown } from 'react-icons/fa';
 
 import { SELECT_ALL_NAME_DISPLAY } from '../../constants';
 import styles from '../../Metrics.module.scss';
 import { v4 as uuid } from 'uuid';
+import { DropdownMenu } from '@radix-ui/themes';
+import { Button } from '@hasura/shared/ui';
+import { FaChevronRight } from 'react-icons/fa6';
 
 const DropdownComponent = (props: any) => {
   /* Accepts children which can be a single Menu Items
@@ -33,7 +35,7 @@ const DropdownComponent = (props: any) => {
     const component = document.getElementById(componentId);
     document.documentElement.style.setProperty(
       `--radix-dropdown-menu-trigger-width-${componentId}`,
-      component?.offsetWidth + 'px'
+      component?.offsetWidth + 'px',
     );
   }, [displayValue, componentId]);
 
@@ -66,42 +68,23 @@ const DropdownComponent = (props: any) => {
 
   return (
     <DropdownMenu.Root open={show} onOpenChange={handleToggle}>
-      <DropdownMenu.Trigger
-        id={componentId}
-        className={clsx(
-          styles['dropDownBtn'],
-          'flex justify-between gap-3 px-3 py-2 cursor-pointer',
-          'font-normal block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus-visible:outline-0 focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:border-yellow-400 placeholder-gray-500'
-        )}
-      >
-        <div
-          className={
-            Object.keys(selectedValuesList).length > 0 ? '' : 'text-gray-500'
-          }
-        >
+      <DropdownMenu.Trigger id={componentId}>
+        <Button color="gray" leftIcon={show ? FaChevronDown : FaChevronRight}>
           {displayValue}
-        </div>
-        <FaChevronDown className={clsx(show ? 'rotate-180' : 'rotate-0')} />
+        </Button>
       </DropdownMenu.Trigger>
 
-      <DropdownMenu.Content
-        className="border border-slate-300 rounded bg-white cursor-pointer z-50"
-        align="start"
-        style={{
-          minWidth: `var(--radix-dropdown-menu-trigger-width-${componentId})`,
-        }}
-      >
+      <DropdownMenu.Content align="start">
         {options.map((list: any, index: string) => {
           return (
             <DropdownMenu.Item
               key={displayValue + '_' + index}
-              className="bg-white hover:bg-slate-200 px-3 py-2 border-slate-300 border-b font-sans"
               onSelect={() => handleChange(list.title as string)}
             >
               <div
                 className={clsx(
                   styles['commonCheckBox'],
-                  'flex flex-row items-baseline'
+                  'flex flex-row items-baseline',
                 )}
               >
                 <input

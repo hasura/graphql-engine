@@ -1,90 +1,88 @@
 import { useState } from 'react';
-import { Button } from '../../../../new-components/Button';
-import {
-  QualifiedFunction,
-  SupportedDrivers,
-} from '../../../hasura-metadata-types';
+import { Flex } from '@radix-ui/themes';
+import { Button, RawSqlButton, SqlCodeBlock, Text } from '@hasura/shared/ui';
+import { MetadataFunction, Source } from '@hasura/shared/types';
 import { ModifyFunctionConfiguration } from './ModifyFunctionConfiguration';
-import { ModifyFunctionPermissionsDialog } from '../../../Permissions/FunctionPermissions/ModifyFunctionPermissionsDialog';
-import { IconTooltip } from '../../../../new-components/Tooltip';
-import { FaEdit, FaKey } from 'react-icons/fa';
+import { FaEdit } from 'react-icons/fa';
 import { DisplayConfigurationDetails } from './DisplayConfigurationDetails';
-import { FunctionGraphQLCustomization } from '../../../../components/Services/Data/Function/Modify/GraphQLCustomization/FunctionGraphQLCustomization';
-import { useMetadata } from '../../../hasura-metadata-api';
-import { findSource } from '../../../hasura-metadata-api/selectors';
-import Skeleton from 'react-loading-skeleton';
-import { FunctionName } from '../../../../metadata/types';
+import { GetFunctionDefinitionResult } from '@hasura/metadata/data-source';
+import FunctionCommentEditor from './FunctionCommentEditor';
+import { useAppContext } from '@hasura/shared/context';
 
 export type ModifyProps = {
-  dataSourceName: string;
-  qualifiedFunction: QualifiedFunction;
+  source: Source;
+  currentFunction: MetadataFunction;
+  functionDefinition: GetFunctionDefinitionResult | null | undefined;
+  refetchFunctionDefinition?: () => void;
 };
 
-export const Modify = (props: ModifyProps) => {
-  const { data: driverName, isFetching: isFetchingMetadata } = useMetadata(
-    m =>
-      m.metadata.sources.find(source => source.name === props.dataSourceName)
-        ?.kind
-  );
-
+export const Modify = ({
+  source,
+  currentFunction,
+  functionDefinition,
+}: ModifyProps) => {
+  const { readOnlyMode } = useAppContext();
   const [isEditConfigurationModalOpen, setIsEditConfigurationModalOpen] =
     useState(false);
-  const [isPermissionsEditorModalOpen, setIsPermissionsEditorModalOpen] =
-    useState(false);
-  const { data } = useMetadata(m => findSource(props.dataSourceName)(m));
 
   return (
-    <div className="py-4">
-      <div className="w-full bg-white p-4 rounded-sm border my-2">
-        <div className="flex gap-2 mb-sm items-center">
-          <div className="font-semibold text-2xl">Configuration</div>
-          <IconTooltip message="allows you to customize any given function with a custom name and custom root fields of an already tracked function. This will replace the already present customization." />
-        </div>
-
-        <DisplayConfigurationDetails {...props} />
-        <div className="flex gap-2 justify-end">
+    <Flex className="py-4" direction="column" gap="4">
+      <Flex gap="2" align="center">
+        {!readOnlyMode && (
           <Button
+            mode="default"
+            size="sm"
             onClick={() => setIsEditConfigurationModalOpen(true)}
-            icon={<FaEdit />}
+            leftIcon={FaEdit}
           >
             Edit Configuration
           </Button>
-          {data?.kind === 'snowflake' && (
-            <Button
-              onClick={() => setIsPermissionsEditorModalOpen(true)}
-              icon={<FaKey />}
-            >
-              Edit Permissions
-            </Button>
-          )}
-        </div>
-        {isEditConfigurationModalOpen && (
-          <ModifyFunctionConfiguration
-            {...props}
-            onSuccess={() => setIsEditConfigurationModalOpen(false)}
-            onClose={() => setIsEditConfigurationModalOpen(false)}
-          />
         )}
-        {isPermissionsEditorModalOpen && (
-          <ModifyFunctionPermissionsDialog
-            dataSourceName={props.dataSourceName}
-            qualifiedFunction={props.qualifiedFunction as FunctionName[]}
-            onClose={() => setIsPermissionsEditorModalOpen(false)}
-          />
-        )}
+      </Flex>
+      <DisplayConfigurationDetails
+        source={source}
+        currentFunction={currentFunction}
+        functionDefinition={functionDefinition}
+      />
+      {isEditConfigurationModalOpen && (
+        <ModifyFunctionConfiguration
+          currentFunction={currentFunction}
+          source={source}
+          isVolatile={functionDefinition?.isVolatile}
+          onSuccess={() => setIsEditConfigurationModalOpen(false)}
+          onClose={() => setIsEditConfigurationModalOpen(false)}
+        />
+      )}
+      <div className="w-full md:w-8/12">
+        <FunctionCommentEditor
+          source={source}
+          func={currentFunction}
+          defaultValue={currentFunction.configuration?.comment ?? ''}
+          readOnly={readOnlyMode}
+        />
+      </div>
+      {functionDefinition?.definition ? (
+        <div className="w-full md:w-8/12">
+          <Flex align="center" gap="2" className="mb-2">
+            <Text weight="medium">Function Definition:</Text>
+            {!readOnlyMode ? (
+              <RawSqlButton
+                sql={functionDefinition.definition}
+                data-test="modify-view"
+              >
+                Modify
+              </RawSqlButton>
+            ) : null}
+          </Flex>
 
-        {isFetchingMetadata && <Skeleton width={80} height={60} />}
-
-        {!isFetchingMetadata && (
           <div>
-            <FunctionGraphQLCustomization
-              driver={driverName as SupportedDrivers}
-              dataSourceName={props.dataSourceName}
-              qualifiedFunction={props.qualifiedFunction}
+            <SqlCodeBlock
+              language={source.kind}
+              text={functionDefinition.definition}
             />
           </div>
-        )}
-      </div>
-    </div>
+        </div>
+      ) : null}
+    </Flex>
   );
 };

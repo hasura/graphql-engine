@@ -1,17 +1,14 @@
 import React from 'react';
-
 import { UntrackedFunctions } from './UntrackedFunctions';
-import { useUntrackedFunctions } from '../hooks/useUntrackedFunctions';
-import {
-  MetadataSelectors,
-  useMetadata,
-} from '../../../../hasura-metadata-api';
-import { adaptFunctionName } from '../utils';
 import { TrackedFunctions } from './TrackedFunctions';
 import { TrackableResourceTabs } from '../../../ManageDatabase/components';
-import { PostgresTable } from '../../../../DataSource';
-import { ReactQueryStatusUI } from '../../../components';
-import { multipleQueryUtils } from '../../../components/ReactQueryWrappers/utils';
+import {
+  IntrospectedFunction,
+  useTrackedAndUntrackedFunctions,
+} from '@hasura/metadata/data-source';
+import { IndicatorCard, SkeletonList } from '@hasura/shared/ui';
+import { getErrorMessage } from '@hasura/shared/utils';
+import { Source } from '@hasura/shared/types';
 
 type TabState = 'tracked' | 'untracked';
 
@@ -22,40 +19,42 @@ export const ManageTrackedFunctions = ({
   dataSourceName: string;
   schema?: string;
 }) => {
-  const [tab, setTab] = React.useState<TabState>('untracked');
+  const { trackedFunctions, untrackedFunctions, isLoading, error, source } =
+    useTrackedAndUntrackedFunctions({ dataSourceName, schema });
 
-  const untrackedFunctionsResult = useUntrackedFunctions(
-    dataSourceName,
-    schema
-  );
+  if (isLoading) {
+    return <SkeletonList count={5} />;
+  }
 
-  const metadataResult = useMetadata(m => {
-    const result = (
-      MetadataSelectors.findSource(dataSourceName)(m)?.functions ?? []
-    ).map(fn => ({
-      qualifiedFunction: fn.function,
-      name: adaptFunctionName(fn.function).join(' / '),
-    }));
-
-    if (!schema) return result;
-
-    return result.filter(
-      fn => (fn.qualifiedFunction as PostgresTable).schema === schema
-    );
-  });
-
-  if (!untrackedFunctionsResult.isSuccess || !metadataResult.isSuccess) {
-    const results = [metadataResult, untrackedFunctionsResult];
+  if (error || !source) {
     return (
-      <ReactQueryStatusUI
-        status={multipleQueryUtils.status(results)}
-        error={multipleQueryUtils.firstError(results)}
-      />
+      <IndicatorCard status="negative" headline="Failed to fetch functions">
+        {getErrorMessage(error)}
+      </IndicatorCard>
     );
   }
 
-  const { data: untrackedFunctions } = untrackedFunctionsResult;
-  const { data: trackedFunctions } = metadataResult;
+  return (
+    <ManageTrackedFunctionsContent
+      source={source}
+      trackedFunctions={trackedFunctions ?? []}
+      untrackedFunctions={untrackedFunctions ?? []}
+    />
+  );
+};
+
+export const ManageTrackedFunctionsContent = ({
+  source,
+  trackedFunctions,
+  untrackedFunctions,
+}: {
+  source: Source;
+  trackedFunctions: IntrospectedFunction[];
+  untrackedFunctions: IntrospectedFunction[];
+}) => {
+  const [tab, setTab] = React.useState<TabState>(
+    untrackedFunctions.length ? 'untracked' : 'tracked',
+  );
 
   return (
     <TrackableResourceTabs
@@ -63,16 +62,16 @@ export const ManageTrackedFunctions = ({
         'Tracking functions adds them to your GraphQL API. All objects will be admin-only until permissions have been set.'
       }
       value={tab}
-      onValueChange={value => {
+      onValueChange={(value) => {
         setTab(value);
       }}
       items={{
         untracked: {
-          amount: untrackedFunctions.length,
+          amount: untrackedFunctions?.length ?? 0,
           content: (
             <UntrackedFunctions
-              dataSourceName={dataSourceName}
-              untrackedFunctions={untrackedFunctions}
+              dataSourceName={source.name}
+              untrackedFunctions={untrackedFunctions ?? []}
             />
           ),
         },
@@ -80,8 +79,8 @@ export const ManageTrackedFunctions = ({
           amount: trackedFunctions.length,
           content: (
             <TrackedFunctions
-              dataSourceName={dataSourceName}
-              trackedFunctions={trackedFunctions}
+              source={source}
+              trackedFunctions={trackedFunctions ?? []}
             />
           ),
         },

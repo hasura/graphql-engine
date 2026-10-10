@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { schemaRegsitryControlPlaneClient } from '../utils';
 
 import {
@@ -39,15 +39,15 @@ export const useGetSchemaRegistryList = (
   projectId: string,
   pageNumber: number,
   v2Count: number,
-  lastV2EntryCursor: string
+  lastV2EntryCursor: string,
 ): GetSchemaRegistryListResponse => {
   const [v1Count, setV1Count] = useState<number>(0);
 
   const [v2Dumps, setV2Dumps] = useState<SchemaRegistryDumpWithSiblingSchema[]>(
-    []
+    [],
   );
   const [v1Dumps, setV1Dumps] = useState<SchemaRegistryDumpWithSiblingSchema[]>(
-    []
+    [],
   );
 
   const [returnedDumps, setReturnedDumps] = useState<
@@ -76,20 +76,22 @@ export const useGetSchemaRegistryList = (
     queryKey: FETCH_SCHEMA_REGISTRY_DUMPS_V1_AGGREGATE_QUERY_NAME,
     queryFn: () => fetchSchemaRegistryDumpsV1AggregateFn(projectId),
     refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
     staleTime: SCHEMA_REGISTRY_REFRESH_TIME,
-    onSuccess: response => {
-      if (
-        response &&
-        response.data &&
-        response.data.schema_registry_dumps_aggregate?.aggregate?.count
-      ) {
-        const totalV1Dumps =
-          response.data.schema_registry_dumps_aggregate.aggregate.count;
-        setV1Count(totalV1Dumps);
-      }
-    },
   });
+
+  React.useEffect(() => {
+    if (
+      v1AggregateData &&
+      v1AggregateData.data &&
+      v1AggregateData.data.schema_registry_dumps_aggregate?.aggregate?.count
+    ) {
+      const totalV1Dumps =
+        v1AggregateData.data.schema_registry_dumps_aggregate.aggregate.count;
+      setV1Count(totalV1Dumps);
+    }
+  }, [v1AggregateData]);
+
   React.useEffect(() => {
     refetch();
   }, [lastV2EntryCursor]);
@@ -114,7 +116,7 @@ export const useGetSchemaRegistryList = (
   const fetchSchemaRegistryDumpsV2Fn = (
     projectId: string,
     limit: number,
-    offset: number
+    offset: number,
   ) => {
     return schemaRegsitryControlPlaneClient.query<
       GetSchemaRegstiryDumpsV2ResponseWithError,
@@ -137,27 +139,19 @@ export const useGetSchemaRegistryList = (
       fetchSchemaRegistryDumpsV2Fn(
         projectId,
         SCHEMA_LIST_FETCH_BATCH_SIZE,
-        v2Offset
+        v2Offset,
       ),
     enabled: lastV2Page >= pageNumber,
     refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    onSuccess: response => {
-      if (response && response.data && response.data.schema_registry_dumps_v2) {
-        const v2Dumps = response.data.schema_registry_dumps_v2;
-        setV2Dumps(v2Dumps);
-      }
-    },
+    refetchOnWindowFocus: false,
   });
 
   React.useEffect(() => {
-    if (lastV2Page <= pageNumber) {
-      v2Refetch();
+    if (v2Data && v2Data.data && v2Data.data.schema_registry_dumps_v2) {
+      const v2Dumps = v2Data.data.schema_registry_dumps_v2;
+      setV2Dumps(v2Dumps);
     }
-    if (v1PageNumber >= 0) {
-      v1Refetch();
-    }
-  }, [pageNumber, lastV2EntryCursor, v1Offset]);
+  }, [v2Data]);
 
   /**
    * Fetch Schema Registry V1 dumps based on the page number
@@ -167,7 +161,7 @@ export const useGetSchemaRegistryList = (
     projectId: string,
     limit: number,
     offset: number,
-    changeTimestamp: string
+    changeTimestamp: string,
   ) => {
     return schemaRegsitryControlPlaneClient.query<
       GetSchemaRegstiryDumpsV1ResponseWithError,
@@ -201,24 +195,34 @@ export const useGetSchemaRegistryList = (
         projectId,
         SCHEMA_LIST_FETCH_BATCH_SIZE,
         v1Offset,
-        lastV2EntryCursor
+        lastV2EntryCursor,
       ),
     enabled: v1PageNumber >= 0 && v1Offset >= 0,
     refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    onSuccess: response => {
-      if (response && response.data && response.data.schema_registry_dumps) {
-        const v1Dumps = response.data.schema_registry_dumps;
-        setV1Dumps(v1Dumps);
-      }
-    },
+    refetchOnWindowFocus: false,
   });
+
+  React.useEffect(() => {
+    if (v1Data && v1Data.data && v1Data.data.schema_registry_dumps) {
+      const v1Dumps = v1Data.data.schema_registry_dumps;
+      setV1Dumps(v1Dumps);
+    }
+  }, [v1Data]);
+
+  React.useEffect(() => {
+    if (lastV2Page <= pageNumber) {
+      v2Refetch();
+    }
+    if (v1PageNumber >= 0) {
+      v1Refetch();
+    }
+  }, [pageNumber, lastV2EntryCursor, v1Offset]);
 
   React.useEffect(() => {
     if (pageNumber === lastV2Page) {
       // Slicing the results to SCHEMA_LIST_FETCH_BATCH_SIZE as extra v1Dumps might be present
       setReturnedDumps(
-        [...v2Dumps, ...v1Dumps].slice(0, SCHEMA_LIST_FETCH_BATCH_SIZE)
+        [...v2Dumps, ...v1Dumps].slice(0, SCHEMA_LIST_FETCH_BATCH_SIZE),
       );
     } else if (pageNumber < lastV2Page) {
       setReturnedDumps(v2Dumps);

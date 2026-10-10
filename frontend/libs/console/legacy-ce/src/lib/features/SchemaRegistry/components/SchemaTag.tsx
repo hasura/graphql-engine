@@ -9,7 +9,7 @@ interface TagProps {
   onRemove: (id: string) => void;
 }
 
-export const SchemaTag: React.FC<TagProps> = props => {
+export const SchemaTag: React.FC<TagProps> = (props) => {
   const { schemaRegistryTag, onRemove } = props;
   const { id, color, name } = schemaRegistryTag;
 
@@ -28,11 +28,11 @@ export const SchemaTag: React.FC<TagProps> = props => {
       className="inline-flex items-center px-xs py-0.5 rounded text-sm tracking-wide font-semibold"
       style={{ backgroundColor: rgbaColorValue }}
     >
-      <div style={{ color: color }} className="mr-xs">
+      <div style={{ color: color }} className="mr-1">
         {name}
       </div>
       <FaTimes
-        className="fill-current cursor-pointer text-muted hover:text-gray-800 mt-[1px]"
+        className="fill-current cursor-pointer text-muted hover:text-gray-800 mt-px"
         onClick={onDelete}
       />
     </div>

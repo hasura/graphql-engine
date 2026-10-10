@@ -1,5 +1,6 @@
 import React from 'react';
 import { FaCheckCircle, FaRegCircle } from 'react-icons/fa';
+import { Flex } from '@radix-ui/themes';
 
 type Props = {
   status: 'enabled' | 'disabled';
@@ -12,15 +13,15 @@ export function StatusText(props: Props) {
     <div className="text-muted">
       <div className="font-semibold">Current Status</div>
       {status === 'enabled' ? (
-        <div className="flex items-center">
-          <FaCheckCircle className="mr-xs text-emerald-600" />
+        <Flex align="center">
+          <FaCheckCircle className="mr-1 text-emerald-600" />
           Cache Enabled
-        </div>
+        </Flex>
       ) : (
-        <div className="flex items-center">
-          <FaRegCircle className="mr-xs" />
+        <Flex align="center">
+          <FaRegCircle className="mr-1" />
           Cache Disabled
-        </div>
+        </Flex>
       )}
     </div>
   );

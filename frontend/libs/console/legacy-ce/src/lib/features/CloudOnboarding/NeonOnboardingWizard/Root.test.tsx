@@ -1,9 +1,7 @@
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from 'react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { setupServer } from 'msw/node';
-import { Provider as ReduxProvider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
 import {
   mutationBaseHandlers,
   fetchGithubMigrationHandler,
@@ -19,11 +17,7 @@ import {
   onboardingDataRunQueryClick,
   fetchAnsweredSurveysHandler,
 } from './mocks/handlers.mock';
-import {
-  mockSampleQueryUrl,
-  mockSchemaImageUrl,
-  MOCK_INITIAL_METADATA,
-} from './mocks/constants';
+import { mockSampleQueryUrl, mockSchemaImageUrl } from './mocks/constants';
 import { Root } from './Root';
 
 const server = setupServer(
@@ -34,13 +28,13 @@ const server = setupServer(
   fetchGithubMigrationHandler,
   fetchGithubMetadataHandler,
   metadataSuccessHandler,
-  querySuccessHandler
+  querySuccessHandler,
 );
 
 let reactQueryClient = new QueryClient();
 
 beforeAll(() => {
-  server.listen({ onUnhandledRequest: 'warn' });
+  server.listen({ onUnhandledFrame: 'warn' });
 });
 beforeEach(() => {
   // provide a fresh reactQueryClient for each test to prevent state caching among tests
@@ -64,21 +58,10 @@ type Props = {
   children?: ReactNode;
 };
 
-const store = configureStore({
-  reducer: {
-    tables: () => ({ currentDataSource: 'postgres', dataHeaders: {} }),
-    metadata: () => ({
-      metadataObject: MOCK_INITIAL_METADATA,
-    }),
-  },
-});
-
 const wrapper = ({ children }: Props) => (
-  <ReduxProvider store={store} key="provider">
-    <QueryClientProvider client={reactQueryClient}>
-      {children}
-    </QueryClientProvider>
-  </ReduxProvider>
+  <QueryClientProvider client={reactQueryClient}>
+    {children}
+  </QueryClientProvider>
 );
 
 describe('Check different configurations of Onboarding wizard depending on onboarding data', () => {
@@ -88,8 +71,8 @@ describe('Check different configurations of Onboarding wizard depending on onboa
 
     await waitFor(() =>
       expect(
-        screen.queryByText('Welcome to your new Hasura project!')
-      ).not.toBeInTheDocument()
+        screen.queryByText('Welcome to your new Hasura project!'),
+      ).not.toBeInTheDocument(),
     );
   });
 
@@ -99,8 +82,8 @@ describe('Check different configurations of Onboarding wizard depending on onboa
 
     await waitFor(() =>
       expect(
-        screen.queryByText('Welcome to your new Hasura project!')
-      ).not.toBeInTheDocument()
+        screen.queryByText('Welcome to your new Hasura project!'),
+      ).not.toBeInTheDocument(),
     );
   });
 
@@ -110,8 +93,8 @@ describe('Check different configurations of Onboarding wizard depending on onboa
 
     await waitFor(() =>
       expect(
-        screen.queryByText('Welcome to your new Hasura project!')
-      ).not.toBeInTheDocument()
+        screen.queryByText('Welcome to your new Hasura project!'),
+      ).not.toBeInTheDocument(),
     );
   });
 
@@ -121,8 +104,8 @@ describe('Check different configurations of Onboarding wizard depending on onboa
 
     await waitFor(() =>
       expect(
-        screen.queryByText('Welcome to your new Hasura project!')
-      ).not.toBeInTheDocument()
+        screen.queryByText('Welcome to your new Hasura project!'),
+      ).not.toBeInTheDocument(),
     );
   });
 
@@ -132,8 +115,8 @@ describe('Check different configurations of Onboarding wizard depending on onboa
 
     await waitFor(() =>
       expect(
-        screen.queryByText('Welcome to your new Hasura project!')
-      ).not.toBeInTheDocument()
+        screen.queryByText('Welcome to your new Hasura project!'),
+      ).not.toBeInTheDocument(),
     );
   });
 
@@ -143,8 +126,8 @@ describe('Check different configurations of Onboarding wizard depending on onboa
 
     await waitFor(() =>
       expect(
-        screen.queryByText('Welcome to your new Hasura project!')
-      ).not.toBeInTheDocument()
+        screen.queryByText('Welcome to your new Hasura project!'),
+      ).not.toBeInTheDocument(),
     );
   });
 });

@@ -14,15 +14,12 @@ import { TargetGraphQLType, Operation } from './types/operation';
 import { SubscriptionContext } from './types/graphql';
 import { PreprocessingData } from './types/preprocessing_data';
 import { RequestOptions, FileUploadOptions } from './types/options';
-import crossFetch from 'cross-fetch';
-import { FileUpload } from 'graphql-upload/Upload';
 
 // Imports:
 import stream from 'stream';
 import * as Oas3Tools from './oas_3_tools';
 import { JSONPath } from 'jsonpath-plus';
 import * as JSONPointer from 'jsonpointer';
-import { debug } from 'debug';
 import { GraphQLError, GraphQLFieldResolver } from 'graphql';
 import formurlencoded from 'form-urlencoded';
 import { PubSub } from 'graphql-subscriptions';
@@ -31,10 +28,10 @@ import FormData from 'form-data';
 
 const pubsub = new PubSub();
 
-const translationLog = debug('translation');
-const httpLog = debug('http');
-const pubsubLog = debug('pubsub');
-const uploadLog = debug('fileUpload');
+const translationLog = console.log;
+const httpLog = console.log;
+const pubsubLog = console.log;
+const uploadLog = console.log;
 
 // OAS runtime expression reference locations
 const RUNTIME_REFERENCES = ['header.', 'query.', 'path.', 'body'];
@@ -63,7 +60,7 @@ type GetResolverParams<TSource, TContext, TArgs> = {
   baseUrl?: string;
   requestOptions?: Partial<RequestOptions<TSource, TContext, TArgs>>;
   fileUploadOptions?: FileUploadOptions;
-  fetch: typeof crossFetch;
+  fetch: typeof fetch;
 };
 
 type inferLinkArgumentsParam<TSource, TContext, TArgs> = {
@@ -146,7 +143,7 @@ export function getSubscribe<TSource, TContext, TArgs extends object>({
     typeof customResolvers[title][path][method].subscribe === 'function'
   ) {
     translationLog(
-      `Use custom publish resolver for ${operation.operationString}`
+      `Use custom publish resolver for ${operation.operationString}`,
     );
 
     return customResolvers[title][path][method].subscribe;
@@ -161,7 +158,7 @@ export function getSubscribe<TSource, TContext, TArgs extends object>({
      */
     const paramName = Oas3Tools.sanitize(
       payloadName,
-      Oas3Tools.CaseStyle.camelCase
+      Oas3Tools.CaseStyle.camelCase,
     );
 
     let resolveData: any = {};
@@ -176,7 +173,7 @@ export function getSubscribe<TSource, TContext, TArgs extends object>({
         if (typeof args[sanePayloadName] === 'object') {
           const rawPayload = Oas3Tools.desanitizeObjectKeys(
             args[sanePayloadName],
-            data.saneMap
+            data.saneMap,
           );
           resolveData.usedPayload = rawPayload;
         } else {
@@ -197,7 +194,7 @@ export function getSubscribe<TSource, TContext, TArgs extends object>({
     }
 
     pubsubLog(
-      `Subscription schema: ${JSON.stringify(resolveData.usedPayload)}`
+      `Subscription schema: ${JSON.stringify(resolveData.usedPayload)}`,
     );
 
     let value = path;
@@ -216,7 +213,7 @@ export function getSubscribe<TSource, TContext, TArgs extends object>({
       const cbParams = value.match(/{([^}]*)}/g);
       pubsubLog(`Analyzing subscription path: ${cbParams.toString()}`);
 
-      cbParams.forEach(cbParam => {
+      cbParams.forEach((cbParam) => {
         value = value.replace(
           cbParam,
           resolveRuntimeExpression(
@@ -224,8 +221,8 @@ export function getSubscribe<TSource, TContext, TArgs extends object>({
             cbParam.substring(1, cbParam.length - 1),
             resolveData,
             root,
-            args
-          )
+            args,
+          ),
         );
       });
       args[paramNameWithoutLocation] = value;
@@ -235,7 +232,7 @@ export function getSubscribe<TSource, TContext, TArgs extends object>({
     pubsubLog(`Subscribing to: ${topic}`);
     return context.pubsub
       ? context.pubsub.asyncIterator(topic)
-      : pubsub.asyncIterator(topic);
+      : pubsub.asyncIterableIterator(topic);
   };
 }
 
@@ -267,7 +264,7 @@ export function getPublishResolver<TSource, TContext, TArgs>({
     typeof customResolvers[title][path][method].resolve === 'function'
   ) {
     translationLog(
-      `Use custom publish resolver for ${operation.operationString}`
+      `Use custom publish resolver for ${operation.operationString}`,
     );
 
     return customResolvers[title][path][method].resolve;
@@ -278,8 +275,8 @@ export function getPublishResolver<TSource, TContext, TArgs>({
     const typeOfResponse = operation.responseDefinition.targetGraphQLType;
     pubsubLog(
       `Message received: ${responseName}, ${typeOfResponse}, ${JSON.stringify(
-        payload
-      )}`
+        payload,
+      )}`,
     );
 
     let responseBody;
@@ -329,7 +326,7 @@ export function getPublishResolver<TSource, TContext, TArgs>({
     }
 
     pubsubLog(
-      `Message forwarded: ${JSON.stringify(saneData ? saneData : payload)}`
+      `Message forwarded: ${JSON.stringify(saneData ? saneData : payload)}`,
     );
     return saneData ? saneData : payload;
   };
@@ -374,7 +371,7 @@ function inferLinkArguments<TSource, TContext, TArgs>({
   } else {
     // Replace link parameters with appropriate values
     const linkParams = value.match(/{([^}]*)}/g);
-    linkParams.forEach(linkParam => {
+    linkParams.forEach((linkParam) => {
       value = value.replace(
         linkParam,
         resolveRuntimeExpression(
@@ -382,8 +379,8 @@ function inferLinkArguments<TSource, TContext, TArgs>({
           linkParam.substring(1, linkParam.length - 1),
           resolveData,
           source,
-          args
-        )
+          args,
+        ),
       );
     });
     return value;
@@ -456,7 +453,7 @@ export function getResolver<TSource, TContext, TArgs extends object>({
          * the object
          */
         resolveData = JSON.parse(
-          JSON.stringify(source[OPENAPI_TO_GRAPHQL].data[parentIdentifier])
+          JSON.stringify(source[OPENAPI_TO_GRAPHQL].data[parentIdentifier]),
         );
       }
     }
@@ -469,12 +466,12 @@ export function getResolver<TSource, TContext, TArgs extends object>({
      * Handle default values of parameters, if they have not yet been defined by
      * the user.
      */
-    operation.parameters.forEach(param => {
+    operation.parameters.forEach((param) => {
       const saneParamName = Oas3Tools.sanitize(
         param.name,
         !data.options.simpleNames
           ? Oas3Tools.CaseStyle.camelCase
-          : Oas3Tools.CaseStyle.simple
+          : Oas3Tools.CaseStyle.simple,
       );
       if (
         typeof args[saneParamName] === 'undefined' &&
@@ -487,7 +484,7 @@ export function getResolver<TSource, TContext, TArgs extends object>({
         if ('$ref' in schemaOrRef) {
           schema = Oas3Tools.resolveRef<SchemaObject>(
             schemaOrRef.$ref,
-            operation.oas
+            operation.oas,
           );
         } else {
           schema = schemaOrRef as SchemaObject;
@@ -505,7 +502,7 @@ export function getResolver<TSource, TContext, TArgs extends object>({
         paramName,
         !data.options.simpleNames
           ? Oas3Tools.CaseStyle.camelCase
-          : Oas3Tools.CaseStyle.simple
+          : Oas3Tools.CaseStyle.simple,
       );
 
       let value = argsFromLink[paramName];
@@ -527,7 +524,7 @@ export function getResolver<TSource, TContext, TArgs extends object>({
       operation.path,
       operation.parameters,
       args,
-      data
+      data,
     );
     const url = new URL(urljoin(baseUrl, path));
 
@@ -607,13 +604,13 @@ export function getResolver<TSource, TContext, TArgs extends object>({
       let rawPayload;
       if (operation.payloadContentType === 'application/json') {
         rawPayload = JSON.stringify(
-          Oas3Tools.desanitizeObjectKeys(args[sanePayloadName], data.saneMap)
+          Oas3Tools.desanitizeObjectKeys(args[sanePayloadName], data.saneMap),
         );
       } else if (
         operation.payloadContentType === 'application/x-www-form-urlencoded'
       ) {
         rawPayload = formurlencoded(
-          Oas3Tools.desanitizeObjectKeys(args[sanePayloadName], data.saneMap)
+          Oas3Tools.desanitizeObjectKeys(args[sanePayloadName], data.saneMap),
         );
       } else if (operation.payloadContentType === 'multipart/form-data') {
         form = new FormData(fileUploadOptions);
@@ -627,10 +624,11 @@ export function getResolver<TSource, TContext, TArgs extends object>({
 
           if (
             typeof fieldValue === 'object' &&
-            Boolean((fieldValue as Partial<FileUpload>).createReadStream)
+            'createReadStream' in fieldValue &&
+            typeof fieldValue.createReadStream === 'function'
           ) {
-            const uploadingFile = fieldValue as FileUpload;
-            const originalFileStream = uploadingFile.createReadStream();
+            const uploadingFile = fieldValue as Record<string, any>;
+            const originalFileStream = fieldValue.createReadStream();
             const filePassThrough = new stream.PassThrough();
 
             originalFileStream.on('readable', function () {
@@ -648,21 +646,21 @@ export function getResolver<TSource, TContext, TArgs extends object>({
             originalFileStream.on('error', () => {
               uploadLog(
                 'Encountered an error while uploading the file %s',
-                uploadingFile.filename
+                uploadingFile.filename,
               );
             });
 
             originalFileStream.on('end', () => {
               uploadLog(
                 'Upload for received file %s completed',
-                uploadingFile.filename
+                uploadingFile.filename,
               );
               filePassThrough.end();
             });
 
             uploadLog(
               'Queuing upload for received file %s',
-              uploadingFile.filename
+              uploadingFile.filename,
             );
 
             form.append(fieldName, filePassThrough, {
@@ -732,7 +730,7 @@ export function getResolver<TSource, TContext, TArgs extends object>({
       const { authHeaders, authQs, authCookie } = getAuthOptions(
         operation,
         source[OPENAPI_TO_GRAPHQL],
-        data
+        data,
       );
 
       // ...and pass them to the options
@@ -765,7 +763,7 @@ export function getResolver<TSource, TContext, TArgs extends object>({
     httpLog(
       `Call ${options.method.toUpperCase()} ${url.toString()}\n` +
         `headers: ${JSON.stringify(options.headers)}\n` +
-        `request body: ${options.body}`
+        `request body: ${options.body}`,
     );
 
     let response: Response;
@@ -820,16 +818,14 @@ export function getResolver<TSource, TContext, TArgs extends object>({
          *
          * i.e. text/plain; charset=utf-8
          */
-        if (
-          !(
-            response.headers
-              .get('content-type')
-              .includes(operation.responseContentType) ||
-            operation.responseContentType.includes(
-              response.headers.get('content-type')
-            )
+        if (!(
+          response.headers
+            .get('content-type')
+            .includes(operation.responseContentType) ||
+          operation.responseContentType.includes(
+            response.headers.get('content-type'),
           )
-        ) {
+        )) {
           const errorString =
             `Operation ` +
             `${operation.operationString} ` +
@@ -871,13 +867,13 @@ export function getResolver<TSource, TContext, TArgs extends object>({
               responseBody,
               !data.options.simpleNames
                 ? Oas3Tools.CaseStyle.camelCase
-                : Oas3Tools.CaseStyle.simple
+                : Oas3Tools.CaseStyle.simple,
             );
 
             // Pass on _openAPIToGraphQL to subsequent resolvers
             if (saneData && typeof saneData === 'object') {
               if (Array.isArray(saneData)) {
-                saneData.forEach(element => {
+                saneData.forEach((element) => {
                   if (typeof element[OPENAPI_TO_GRAPHQL] === 'undefined') {
                     element[OPENAPI_TO_GRAPHQL] = {
                       data: {},
@@ -891,7 +887,7 @@ export function getResolver<TSource, TContext, TArgs extends object>({
                   ) {
                     Object.assign(
                       element[OPENAPI_TO_GRAPHQL],
-                      source[OPENAPI_TO_GRAPHQL]
+                      source[OPENAPI_TO_GRAPHQL],
                     );
                   }
 
@@ -912,7 +908,7 @@ export function getResolver<TSource, TContext, TArgs extends object>({
                 ) {
                   Object.assign(
                     saneData[OPENAPI_TO_GRAPHQL],
-                    source[OPENAPI_TO_GRAPHQL]
+                    source[OPENAPI_TO_GRAPHQL],
                   );
                 }
 
@@ -930,13 +926,13 @@ export function getResolver<TSource, TContext, TArgs extends object>({
                *
                * Ensure that there is not preexisting 'limit' argument
                */
-              !operation.parameters.find(parameter => {
+              !operation.parameters.find((parameter) => {
                 return parameter.name === 'limit';
               }) &&
               // Only array data
               Array.isArray(saneData) &&
               // Only array of objects/arrays
-              saneData.some(data => {
+              saneData.some((data) => {
                 return typeof data === 'object';
               })
             ) {
@@ -949,12 +945,12 @@ export function getResolver<TSource, TContext, TArgs extends object>({
                   arraySaneData = arraySaneData.slice(0, limit);
                 } else {
                   throw new Error(
-                    `Auto-generated 'limit' argument must be greater than or equal to 0`
+                    `Auto-generated 'limit' argument must be greater than or equal to 0`,
                   );
                 }
               } else {
                 throw new Error(
-                  `Cannot get value for auto-generated 'limit' argument`
+                  `Cannot get value for auto-generated 'limit' argument`,
                 );
               }
 
@@ -1001,7 +997,7 @@ function headersToObject(headers: Headers) {
  */
 function createOAuthQS<TSource, TContext, TArgs>(
   data: PreprocessingData<TSource, TContext, TArgs>,
-  context: TContext
+  context: TContext,
 ): { [key: string]: string } {
   return typeof data.options.tokenJSONpath !== 'string'
     ? {}
@@ -1010,7 +1006,7 @@ function createOAuthQS<TSource, TContext, TArgs>(
 
 function extractToken<TSource, TContext, TArgs>(
   data: PreprocessingData<TSource, TContext, TArgs>,
-  context: TContext
+  context: TContext,
 ) {
   const tokenJSONpath = data.options.tokenJSONpath;
   const tokens = JSONPath({
@@ -1024,7 +1020,7 @@ function extractToken<TSource, TContext, TArgs>(
     };
   } else {
     httpLog(
-      `Warning: could not extract OAuth token from context at '${tokenJSONpath}'`
+      `Warning: could not extract OAuth token from context at '${tokenJSONpath}'`,
     );
     return {};
   }
@@ -1036,7 +1032,7 @@ function extractToken<TSource, TContext, TArgs>(
  */
 function createOAuthHeader<TSource, TContext, TArgs>(
   data: PreprocessingData<TSource, TContext, TArgs>,
-  context: TContext
+  context: TContext,
 ): { [key: string]: string } {
   if (typeof data.options.tokenJSONpath !== 'string') {
     return {};
@@ -1057,7 +1053,7 @@ function createOAuthHeader<TSource, TContext, TArgs>(
   } else {
     httpLog(
       `Warning: could not extract OAuth token from context at ` +
-        `'${tokenJSONpath}'`
+        `'${tokenJSONpath}'`,
     );
     return {};
   }
@@ -1071,7 +1067,7 @@ function createOAuthHeader<TSource, TContext, TArgs>(
 function getAuthOptions<TSource, TContext, TArgs>(
   operation: Operation,
   _openAPIToGraphQL: OpenAPIToGraphQLRoot<TSource, TContext, TArgs>,
-  data: PreprocessingData<TSource, TContext, TArgs>
+  data: PreprocessingData<TSource, TContext, TArgs>,
 ): AuthOptions {
   const authHeaders = {};
   const authQs = {};
@@ -1111,7 +1107,7 @@ function getAuthOptions<TSource, TContext, TArgs>(
             }
           } else {
             throw new Error(
-              `Cannot send API key in '${JSON.stringify(security.def.in)}'`
+              `Cannot send API key in '${JSON.stringify(security.def.in)}'`,
             );
           }
         }
@@ -1126,7 +1122,7 @@ function getAuthOptions<TSource, TContext, TArgs>(
               _openAPIToGraphQL.security[sanitizedSecurityRequirement].password;
             const credentials = `${username}:${password}`;
             authHeaders['Authorization'] = `Basic ${Buffer.from(
-              credentials
+              credentials,
             ).toString('base64')}`;
             break;
           case 'bearer':
@@ -1137,7 +1133,7 @@ function getAuthOptions<TSource, TContext, TArgs>(
           default:
             throw new Error(
               `Cannot recognize http security scheme ` +
-                `'${JSON.stringify(security.def.scheme)}'`
+                `'${JSON.stringify(security.def.scheme)}'`,
             );
         }
         break;
@@ -1150,7 +1146,7 @@ function getAuthOptions<TSource, TContext, TArgs>(
 
       default:
         throw new Error(
-          `Cannot recognize security type '${security.def.type}'`
+          `Cannot recognize security type '${security.def.type}'`,
         );
     }
   }
@@ -1164,7 +1160,7 @@ function getAuthOptions<TSource, TContext, TArgs>(
  */
 function getAuthReqAndProtcolName<TSource, TContext, TArgs>(
   operation: Operation,
-  _openAPIToGraphQL: OpenAPIToGraphQLRoot<TSource, TContext, TArgs>
+  _openAPIToGraphQL: OpenAPIToGraphQLRoot<TSource, TContext, TArgs>,
 ): AuthReqAndProtcolName {
   let authRequired = false;
   if (
@@ -1176,7 +1172,7 @@ function getAuthReqAndProtcolName<TSource, TContext, TArgs>(
     for (let securityRequirement of operation.securityRequirements) {
       const sanitizedSecurityRequirement = Oas3Tools.sanitize(
         securityRequirement,
-        Oas3Tools.CaseStyle.camelCase
+        Oas3Tools.CaseStyle.camelCase,
       );
       if (
         typeof _openAPIToGraphQL.security[sanitizedSecurityRequirement] ===
@@ -1207,7 +1203,7 @@ function resolveRuntimeExpression(
   runtimeExpression: string,
   resolveData: any,
   root: any,
-  args: any
+  args: any,
 ): any {
   if (runtimeExpression === '$url') {
     return resolveData.url;
@@ -1230,7 +1226,7 @@ function resolveRuntimeExpression(
         return tokens[0];
       } else {
         httpLog(
-          `Warning: could not extract parameter '${paramName}' from link`
+          `Warning: could not extract parameter '${paramName}' from link`,
         );
       }
 
@@ -1239,7 +1235,7 @@ function resolveRuntimeExpression(
       return resolveData.usedParams[
         Oas3Tools.sanitize(
           runtimeExpression.split('query.')[1],
-          Oas3Tools.CaseStyle.camelCase
+          Oas3Tools.CaseStyle.camelCase,
         )
       ];
 
@@ -1248,7 +1244,7 @@ function resolveRuntimeExpression(
       return resolveData.usedParams[
         Oas3Tools.sanitize(
           runtimeExpression.split('path.')[1],
-          Oas3Tools.CaseStyle.camelCase
+          Oas3Tools.CaseStyle.camelCase,
         )
       ];
 
@@ -1285,7 +1281,7 @@ function resolveRuntimeExpression(
       return resolveData.usedParams[
         Oas3Tools.sanitize(
           runtimeExpression.split('query.')[1],
-          Oas3Tools.CaseStyle.camelCase
+          Oas3Tools.CaseStyle.camelCase,
         )
       ];
 
@@ -1295,7 +1291,7 @@ function resolveRuntimeExpression(
       return resolveData.usedParams[
         Oas3Tools.sanitize(
           runtimeExpression.split('path.')[1],
-          Oas3Tools.CaseStyle.camelCase
+          Oas3Tools.CaseStyle.camelCase,
         )
       ];
 
@@ -1306,7 +1302,7 @@ function resolveRuntimeExpression(
   }
 
   throw new Error(
-    `Cannot resolve link because '${runtimeExpression}' is an invalid runtime expression.`
+    `Cannot resolve link because '${runtimeExpression}' is an invalid runtime expression.`,
   );
 }
 
@@ -1358,14 +1354,14 @@ function getIdentifierRecursive(path): string {
   return typeof path.prev === 'undefined'
     ? path.key
     : /**
-     * Check if the identifier contains array indexing, if so remove.
-     *
-     * i.e. instead of 0/friends/1/friends/2/friends/user, create
-     * friends/friends/friends/user
-     */
-    isNaN(parseInt(path.key))
-    ? `${path.key}/${getIdentifierRecursive(path.prev)}`
-    : getIdentifierRecursive(path.prev);
+       * Check if the identifier contains array indexing, if so remove.
+       *
+       * i.e. instead of 0/friends/1/friends/2/friends/user, create
+       * friends/friends/friends/user
+       */
+      isNaN(parseInt(path.key))
+      ? `${path.key}/${getIdentifierRecursive(path.prev)}`
+      : getIdentifierRecursive(path.prev);
 }
 
 /**
@@ -1373,7 +1369,7 @@ function getIdentifierRecursive(path): string {
  */
 function graphQLErrorWithExtensions(
   message: string,
-  extensions: { [key: string]: any }
+  extensions: { [key: string]: any },
 ): GraphQLError {
   return new GraphQLError(message, null, null, null, null, null, extensions);
 }
@@ -1387,12 +1383,12 @@ function graphQLErrorWithExtensions(
 export function extractRequestDataFromArgs<
   TSource,
   TContext,
-  TArgs extends object
+  TArgs extends object,
 >(
   path: string,
   parameters: ParameterObject[],
   args: TArgs, // NOTE: argument keys are sanitized!
-  data: PreprocessingData<TSource, TContext, TArgs>
+  data: PreprocessingData<TSource, TContext, TArgs>,
 ): {
   path: string;
   qs: { [key: string]: string };
@@ -1407,7 +1403,7 @@ export function extractRequestDataFromArgs<
       param.name,
       !data.options.simpleNames
         ? Oas3Tools.CaseStyle.camelCase
-        : Oas3Tools.CaseStyle.simple
+        : Oas3Tools.CaseStyle.simple,
     );
 
     if (saneParamName && saneParamName in args) {
@@ -1430,7 +1426,7 @@ export function extractRequestDataFromArgs<
                   acc += val.join(',');
                   return acc;
                 },
-                ''
+                '',
               );
             } else {
               Object.entries(args[saneParamName]).forEach(([key, value]) => {
@@ -1466,7 +1462,7 @@ export function extractRequestDataFromArgs<
           httpLog(
             `Warning: The parameter location '${param.in}' in the ` +
               `parameter '${param.name}' of operation '${path}' is not ` +
-              `supported`
+              `supported`,
           );
       }
     }
@@ -1484,7 +1480,7 @@ const setSearchParamsFromObj = (url: URL, obj: any, path: string[]) => {
     } else {
       const finalKey = newPath.reduce(
         (acc, pathElem, i) => (i === 0 ? pathElem : `${acc}[${pathElem}]`),
-        ''
+        '',
       );
       url.searchParams.set(finalKey, val);
     }

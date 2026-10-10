@@ -1,5 +1,3 @@
-/* eslint-disable no-continue */
-
 import {
   OneClickDeploymentStateTransition,
   CliLog,
@@ -15,11 +13,11 @@ import { OnboardingKind, OnboardingResponseData } from '../types';
 // returns null if the step hasn't had an error in the latest workflow
 const getStepError = (
   allStateTransitionsOrdered: OneClickDeploymentStateTransition[],
-  step: UserFacingStep
+  step: UserFacingStep,
 ): ProgressStateStatus | null => {
   let errorStatus: ProgressStateStatus | null = null;
   // run through all transitions to get the latest state of a step
-  allStateTransitionsOrdered.forEach(transition => {
+  allStateTransitionsOrdered.forEach((transition) => {
     if (transition.from_state === step) {
       if (transition.to_state === OneClickDeploymentState.Error) {
         errorStatus = {
@@ -43,11 +41,11 @@ const getStepError = (
  */
 const getStepSuccess = (
   allStateTransitionsOrdered: OneClickDeploymentStateTransition[],
-  step: UserFacingStep
+  step: UserFacingStep,
 ): ProgressStateStatus | null => {
   let successStatus: ProgressStateStatus | null = null;
   // run through all transitions to get the latest state of a step
-  allStateTransitionsOrdered.forEach(transition => {
+  allStateTransitionsOrdered.forEach((transition) => {
     if (transition.from_state === step) {
       // it's not a success if the step goes into an error
       if (transition.to_state === OneClickDeploymentState.Error) {
@@ -72,7 +70,7 @@ const getStepSuccess = (
   if (
     step === OneClickDeploymentState.Completed &&
     allStateTransitionsOrdered.some(
-      t => t.to_state === OneClickDeploymentState.Completed
+      (t) => t.to_state === OneClickDeploymentState.Completed,
     )
   ) {
     return {
@@ -91,7 +89,7 @@ const getStepSuccess = (
  */
 const getStepPendingState = (
   allStateTransitionsOrdered: OneClickDeploymentStateTransition[],
-  step: UserFacingStep
+  step: UserFacingStep,
 ): ProgressStateStatus | null => {
   // get the last transition
   const lastTransition =
@@ -109,7 +107,7 @@ const getStepPendingState = (
 
   // a step is `idle` if the step has never occured after the last initialized
   const lastInitializedIndex = allStateTransitionsOrdered
-    .map(t => t.from_state)
+    .map((t) => t.from_state)
     .lastIndexOf(OneClickDeploymentState.Initialized);
   if (lastInitializedIndex === -1) {
     return { kind: 'idle' };
@@ -132,7 +130,7 @@ const getStepPendingState = (
 
 const getStepProgressState = (
   allStateTransitionsOrdered: OneClickDeploymentStateTransition[],
-  step: UserFacingStep
+  step: UserFacingStep,
 ): ProgressStateStatus => {
   // if there are no steps, only return in-progress for the initialized step
   if (allStateTransitionsOrdered.length === 0) {
@@ -158,45 +156,45 @@ const getStepProgressState = (
 };
 
 export const getCliProgressState = (
-  allStateTransitionsOrdered: OneClickDeploymentStateTransition[]
+  allStateTransitionsOrdered: OneClickDeploymentStateTransition[],
 ): ProgressState => {
   return {
     [OneClickDeploymentState.Initialized]: getStepProgressState(
       allStateTransitionsOrdered,
-      OneClickDeploymentState.Initialized
+      OneClickDeploymentState.Initialized,
     ),
     [OneClickDeploymentState.CloningGitRepository]: getStepProgressState(
       allStateTransitionsOrdered,
-      OneClickDeploymentState.CloningGitRepository
+      OneClickDeploymentState.CloningGitRepository,
     ),
     [OneClickDeploymentState.ReadingEnvironmentVariables]: getStepProgressState(
       allStateTransitionsOrdered,
-      OneClickDeploymentState.ReadingEnvironmentVariables
+      OneClickDeploymentState.ReadingEnvironmentVariables,
     ),
     [OneClickDeploymentState.AwaitingEnvironmentVariables]:
       getStepProgressState(
         allStateTransitionsOrdered,
-        OneClickDeploymentState.AwaitingEnvironmentVariables
+        OneClickDeploymentState.AwaitingEnvironmentVariables,
       ),
     [OneClickDeploymentState.SufficientEnvironmentVariables]:
       getStepProgressState(
         allStateTransitionsOrdered,
-        OneClickDeploymentState.SufficientEnvironmentVariables
+        OneClickDeploymentState.SufficientEnvironmentVariables,
       ),
     [OneClickDeploymentState.ApplyingMetadataMigrationsSeeds]:
       getStepProgressState(
         allStateTransitionsOrdered,
-        OneClickDeploymentState.ApplyingMetadataMigrationsSeeds
+        OneClickDeploymentState.ApplyingMetadataMigrationsSeeds,
       ),
     [OneClickDeploymentState.Completed]: getStepProgressState(
       allStateTransitionsOrdered,
-      OneClickDeploymentState.Completed
+      OneClickDeploymentState.Completed,
     ),
   };
 };
 
 export const transformStatelogToCLILog = (
-  allStateTransitions: OneClickDeploymentStateTransition[]
+  allStateTransitions: OneClickDeploymentStateTransition[],
 ): CliLog[] => {
   let logs: CliLog[] = [];
 
@@ -258,7 +256,7 @@ export const transformStatelogToCLILog = (
   return logs;
 };
 export const shouldTriggerFirstDeployment = (
-  allStateTransitionsOrdered: OneClickDeploymentStateTransition[]
+  allStateTransitionsOrdered: OneClickDeploymentStateTransition[],
 ): boolean => {
   return allStateTransitionsOrdered.length === 0;
 };
@@ -298,7 +296,7 @@ export const getSampleQueriesUrl = (gitRepoDetails: GitRepoDetails) => {
 };
 
 export const oneClickDeploymentOnboardingKind = (
-  onboardingData: OnboardingResponseData
+  onboardingData: OnboardingResponseData,
 ): OnboardingKind => ({
   kind: 'one-click-deployment',
   deployment: {

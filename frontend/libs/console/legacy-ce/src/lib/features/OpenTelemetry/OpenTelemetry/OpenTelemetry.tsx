@@ -1,11 +1,11 @@
-import * as React from 'react';
-
 import type { FormValues } from './components/Form/schema';
 import { defaultValues } from './components/Form/schema';
 
 import { Form } from './components/Form/Form';
 import { Header } from './components/Header/Header';
 import { EELiteAccessStatus, EETrialCard } from '../../EETrial';
+import { Flex } from '@radix-ui/themes';
+import { Text } from '@hasura/shared/ui';
 
 interface OpenTelemetryProps {
   skeletonMode: boolean;
@@ -28,7 +28,7 @@ export function OpenTelemetry(props: OpenTelemetryProps) {
     withoutLicense = false,
     setOpenTelemetry,
     eeAccess,
-    loading,
+    loading = false,
   } = props;
 
   const formValues = metadataFormValues || defaultValues;
@@ -43,7 +43,11 @@ export function OpenTelemetry(props: OpenTelemetryProps) {
   if (skeletonMode) headerMode = 'skeleton';
 
   return (
-    <div className="space-y-md max-w-screen-md p-md">
+    <Flex
+      gap="4"
+      direction="column"
+      className="space-y-md max-w-(--breakpoint-lg) p-4"
+    >
       {/*
         While the form is stateful and shows its own version of the OpenTelemetry config, the
         Header reflects the real OpenTelemetry config stored in the metadata. It means that when
@@ -59,11 +63,11 @@ export function OpenTelemetry(props: OpenTelemetryProps) {
           cardTitle="Gain end-to-end visibility and performance insights with OpenTelemetry exports"
           id="open-telemetry"
           cardText={
-            <span>
+            <Text>
               Collect, aggregate and export metrics data from your API to your
               APM provider to give you a view of your systems performance to
               help troubleshoot issues.
-            </span>
+            </Text>
           }
           buttonLabel="Enable Enterprise"
           eeAccess={eeAccess}
@@ -81,6 +85,6 @@ export function OpenTelemetry(props: OpenTelemetryProps) {
           />
         </div>
       )}
-    </div>
+    </Flex>
   );
 }

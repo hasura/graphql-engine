@@ -1,0 +1,140 @@
+@import url('https://fonts.googleapis.com/css?family=Gudea:300,400,600,700');
+@import url('https://fonts.googleapis.com/css2?family=Overpass+Mono:wght@300,400,600,700&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Poppins:400,600&display=swap');
+
+@import '@radix-ui/themes/styles.css';
+
+.radix-themes {
+  --default-font-family: Gudea;
+  --heading-font-family: Gudea;
+  --code-font-family: 'Overpass Mono', ui-monospace, monospace;
+  --strong-font-family: Gudea;
+  --em-font-family: Gudea;
+  --quote-font-family: Gudea;
+  --cursor-button: pointer;
+  /* font weight */
+  --font-weight-medium: 600;
+}
+
+/*
+ * Dark mode:
+ * The custom brand indigo below overrides ONLY the LIGHT palette. The `:root`
+ * selector is guarded with `:not(.dark)` so that when the document root carries
+ * the `.dark` class (set by the ThemeProvider), these light values do NOT leak
+ * onto the page and shadow Radix's native dark indigo scale (which ships in
+ * `@radix-ui/themes/styles.css` under `.dark, .dark-theme`). Dark mode therefore
+ * uses Radix's coherent, dark-tuned indigo accent. `color-scheme` is declared per
+ * appearance so native UI (scrollbars, form controls) matches even before the
+ * bootstrap JS runs.
+ */
+.light,
+.light-theme {
+  color-scheme: light;
+}
+
+.dark,
+.dark-theme {
+  color-scheme: dark;
+}
+
+:root:not(.dark),
+.light,
+.light-theme {
+  --indigo-1: #fbfdff;
+  --indigo-2: #f5f9fe;
+  --indigo-3: #eaf3ff;
+  --indigo-4: #deebfd;
+  --indigo-5: #d0e0f8;
+  --indigo-6: #bfd3f0;
+  --indigo-7: #a9c1e4;
+  --indigo-8: #8da9d2;
+  --indigo-9: #314158;
+  --indigo-10: #42526a;
+  --indigo-11: #526c91;
+  --indigo-12: #2c3c52;
+
+  --indigo-a1: #0080ff04;
+  --indigo-a2: #0066e60a;
+  --indigo-a3: #006eff15;
+  --indigo-a4: #0065f021;
+  --indigo-a5: #0057da2f;
+  --indigo-a6: #0050c440;
+  --indigo-a7: #0048af56;
+  --indigo-a8: #003f9b72;
+  --indigo-a9: #001430ce;
+  --indigo-a10: #001636bd;
+  --indigo-a11: #00275dad;
+  --indigo-a12: #00132ed3;
+
+  --indigo-contrast: #fff;
+  --indigo-surface: #f3f8fecc;
+  --indigo-indicator: #314158;
+  --indigo-track: #314158;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    :root:not(.dark),
+    .light,
+    .light-theme {
+      --indigo-1: oklch(99.3% 0.0042 257.4);
+      --indigo-2: oklch(98% 0.0078 257.4);
+      --indigo-3: oklch(96.1% 0.0187 257.4);
+      --indigo-4: oklch(93.6% 0.0279 257.4);
+      --indigo-5: oklch(90.3% 0.0365 257.4);
+      --indigo-6: oklch(86.1% 0.0453 257.4);
+      --indigo-7: oklch(80.6% 0.0563 257.4);
+      --indigo-8: oklch(72.9% 0.0674 257.4);
+      --indigo-9: oklch(37.2% 0.0449 257.4);
+      --indigo-10: oklch(43.5% 0.0449 257.4);
+      --indigo-11: oklch(52.6% 0.0674 257.4);
+      --indigo-12: oklch(35.1% 0.0449 257.4);
+
+      --indigo-a1: color(display-p3 0.0235 0.5137 1 / 0.016);
+      --indigo-a2: color(display-p3 0.0235 0.349 0.7843 / 0.036);
+      --indigo-a3: color(display-p3 0.0078 0.3725 0.949 / 0.075);
+      --indigo-a4: color(display-p3 0.0039 0.3608 0.8745 / 0.122);
+      --indigo-a5: color(display-p3 0.0039 0.2784 0.7961 / 0.173);
+      --indigo-a6: color(display-p3 0.0039 0.2549 0.702 / 0.236);
+      --indigo-a7: color(display-p3 0.0039 0.2235 0.6314 / 0.318);
+      --indigo-a8: color(display-p3 0.0039 0.2039 0.5529 / 0.428);
+      --indigo-a9: color(display-p3 0 0.0627 0.1686 / 0.797);
+      --indigo-a10: color(display-p3 0 0.0706 0.1882 / 0.73);
+      --indigo-a11: color(display-p3 0 0.1216 0.3294 / 0.659);
+      --indigo-a12: color(display-p3 0 0.0627 0.1608 / 0.816);
+
+      --indigo-contrast: #fff;
+      --indigo-surface: color(display-p3 0.9569 0.9725 0.9922 / 0.8);
+      --indigo-indicator: oklch(37.2% 0.0449 257.4);
+      --indigo-track: oklch(37.2% 0.0449 257.4);
+    }
+  }
+}
+
+/*
+ * Toast backgrounds in dark mode.
+ * `hasuraToast` sets the pastel light background as an INLINE style on the toast
+ * container, which `dark:` Tailwind utilities cannot override. We override it per
+ * toast type (stable `data-notificationtype` attribute) with `!important` so it
+ * beats the inline style. The accent border/box-shadow are kept; only the fill
+ * and text color flip to a dark-friendly pair. Reacts to live toggles.
+ */
+.dark [data-notificationtype='error'] {
+  background-color: rgb(45, 26, 26) !important;
+  color: rgb(247, 211, 211) !important;
+}
+
+.dark [data-notificationtype='success'] {
+  background-color: rgb(25, 38, 20) !important;
+  color: rgb(208, 231, 184) !important;
+}
+
+.dark [data-notificationtype='info'] {
+  background-color: rgb(17, 36, 45) !important;
+  color: rgb(190, 221, 234) !important;
+}
+
+.dark [data-notificationtype='warning'] {
+  background-color: rgb(43, 37, 21) !important;
+  color: rgb(238, 224, 189) !important;
+}

@@ -12,7 +12,7 @@ services:
     environment:
       POSTGRES_PASSWORD: postgrespassword
   hasura:
-    image: hasura/graphql-engine:v2.49.5
+    image: hasura/graphql-engine:v2.50.3
     restart: always
     ports:
       - 8080:8080
@@ -42,12 +42,12 @@ services:
       # Configures the connection to the Data Connector agent for MySQL by default
       # You can also omit this and manually configure the same thing via the 'Data' tab, then 'Add Agent'
       # in the Hasura console
-      HASURA_GRAPHQL_METADATA_DEFAULTS: '{"backend_configs":{"dataconnector":{"mysql8":{"uri":"http://data-connector-agent:8081/api/v1/mysql"}}}}'
+      HASURA_GRAPHQL_METADATA_DEFAULTS: '{"backend_configs":{"dataconnector":{"mysql":{"uri":"http://data-connector-agent:8081/api/v1/mysql"}}}}'
     depends_on:
       data-connector-agent:
         condition: service_healthy
   data-connector-agent:
-    image: hasura/graphql-data-connector:v2.49.5
+    image: hasura/graphql-data-connector:v2.50.3
     restart: always
     ports:
       - 8081:8081

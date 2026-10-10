@@ -1,35 +1,24 @@
-import { expect } from '@storybook/jest';
-import { Meta, StoryFn, StoryObj } from '@storybook/react';
-import { waitFor, within } from '@storybook/testing-library';
-import { SimpleForm } from '../../../../../new-components/Form';
-import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
-import { ReduxDecorator } from '../../../../../storybook/decorators/redux-decorator';
+import { expect, waitFor, within } from 'storybook/test';
+import { Meta, StoryFn, StoryObj } from '@storybook/react-webpack5';
+import { SimpleForm } from '@hasura/shared/ui';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
 import { addLogicalModelValidationSchema } from '../validationSchema';
 import { LogicalModelFormInputs } from './LogicalModelFormInputs';
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 import { extractTypeAndArgs } from '../../AddNativeQuery/mocks/native-query-handlers';
 import { metadata } from '../mocks/metadata';
 
 export default {
   component: LogicalModelFormInputs,
-  decorators: [
-    ReactQueryDecorator(),
-    ReduxDecorator({
-      tables: {
-        dataHeaders: {
-          'x-hasura-admin-secret': 'myadminsecretkey',
-        } as any,
-      },
-    }),
-  ],
+  decorators: [ReactQueryDecorator()],
   parameters: {
     msw: [
-      rest.post('http://localhost:8080/v1/metadata', async (req, res, ctx) => {
-        const { type } = await extractTypeAndArgs(req);
+      http.post('http://localhost:8080/v1/metadata', async ({ request }) => {
+        const { type } = await extractTypeAndArgs(request);
 
         if (type === 'export_metadata') {
           console.log('EXPORT METADATA HANDLED');
-          return res(ctx.json(metadata));
+          return HttpResponse.json(metadata);
         }
       }),
     ],
@@ -92,16 +81,16 @@ export const WithDefaultValues: StoryObj<typeof LogicalModelFormInputs> = {
 
     // this first waitFor waits for the element to show the correct value which means the loading state has finished.
     await waitFor(async () => {
-      expect(await canvas.findByTestId('fields-input-type-0')).toHaveValue(
-        'scalar:int'
-      );
+      await expect(
+        await canvas.findByTestId('fields-input-type-0'),
+      ).toHaveValue('scalar:int');
     });
 
     await expect(await canvas.findByTestId('fields[1].name')).toHaveValue(
-      'first_name'
+      'first_name',
     );
     await expect(await canvas.findByTestId('fields-input-type-1')).toHaveValue(
-      'scalar:text'
+      'scalar:text',
     );
   },
 };

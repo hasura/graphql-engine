@@ -5,8 +5,7 @@
 
 // Type imports:
 import { GraphQLOperationType, SubscriptionContext } from './graphql';
-import { GraphQLFieldResolver, GraphQLResolveInfo } from 'graphql';
-import crossFetch from 'cross-fetch';
+import type { GraphQLFieldResolver, GraphQLResolveInfo } from 'graphql';
 import FormData from 'form-data';
 
 /**
@@ -57,7 +56,7 @@ export type RequestHeadersFunction<TSource, TContext, TArgs> = (
     args: TArgs;
     context: TContext;
     info: GraphQLResolveInfo;
-  }
+  },
 ) => HeadersInit;
 
 /**
@@ -371,5 +370,7 @@ export type InternalOptions<TSource, TContext, TArgs> = {
   /**
    * Custom W3 Compatible `fetch` implementation
    */
-  fetch: typeof crossFetch;
+  fetch: Fetch;
 };
+
+export type Fetch = typeof fetch;

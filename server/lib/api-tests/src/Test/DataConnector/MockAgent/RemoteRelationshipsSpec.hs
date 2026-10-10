@@ -475,6 +475,177 @@ tests = do
               ]
         )
 
+  mockAgentGraphqlTest "evaluates a Postgres remote-rel select-permission filter targeting a DC source (getColVals + valid IN cast)" $ \testEnv performGraphqlRequest -> do
+    let pgSchemaName = Schema.getSchemaName testEnv
+    -- Add a select permission on the Postgres PgTrack table whose row filter
+    -- traverses the RemoteAlbum remote relationship into the mock Data Connector
+    -- source. Evaluating this permission drives `getColVals @'DataConnector'` and
+    -- rewrites the filter to `PgTrack.AlbumId IN (<fetched values>)` on the
+    -- Postgres query. Before the B2 fix the outer IN literals were annotated with
+    -- the RHS (Data Connector) scalar type name (e.g. `'1'::number`), which is not
+    -- a valid Postgres type and made this query fail (Zendesk #15062); the fix
+    -- annotates them with the LHS (Postgres) column's type instead.
+    GraphqlEngine.postMetadata_
+      testEnv
+      [interpolateYaml|
+        type: pg_create_select_permission
+        args:
+          source: #{pgSourceName}
+          table:
+            schema: #{pgSchemaName}
+            name: PgTrack
+          role: test-role
+          permission:
+            columns:
+              - TrackId
+              - Name
+              - AlbumId
+            filter:
+              RemoteAlbum:
+                AlbumId:
+                  _eq: X-Hasura-AlbumId
+      |]
+
+    let headers =
+          [ ("X-Hasura-Role", "test-role"),
+            ("X-Hasura-AlbumId", "1")
+          ]
+    let graphqlRequest =
+          [graphql|
+            query getTracks {
+              PgTrack: #{pgSchemaName}_PgTrack {
+                TrackId
+                AlbumId
+              }
+            }
+          |]
+    -- The mock serves only the getColVals fetch (the main query runs on Postgres);
+    -- returning AlbumId = 1 makes the permission resolve to `PgTrack.AlbumId IN (1)`.
+    let queryResponse =
+          mkRowsQueryResponse
+            [ [("AlbumId", API.mkColumnFieldValue $ J.Number 1)]
+            ]
+    let mockConfig = mockQueryResponse queryResponse
+
+    MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
+
+    -- (1) The Postgres query executes (no invalid `::<dc-scalar-type>` cast) and
+    -- returns only the permitted rows (AlbumId = 1 -> TrackId 6).
+    _mrrResponse
+      `shouldBeYaml` [yaml|
+        data:
+          PgTrack:
+            - TrackId: 6
+              AlbumId: 1
+      |]
+
+    -- (2) The only agent request is the single-column, filtered getColVals fetch
+    -- (no foreach): SELECT AlbumId FROM Album WHERE AlbumId = '1'.
+    _mrrRecordedRequest
+      `shouldBe` Just
+        ( Query
+            $ mkTableRequest
+              (mkTableName "Album")
+              ( emptyQuery
+                  & API.qFields
+                  ?~ mkFieldsMap
+                    [ ("AlbumId", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number") Nothing)
+                    ]
+                    & API.qWhere
+                  ?~ API.ApplyBinaryComparisonOperator
+                    API.Equal
+                    (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "AlbumId") (API.ScalarType "number") Nothing)
+                    (API.ScalarValueComparison $ API.ScalarValue (J.String "1") (API.ScalarType "number"))
+              )
+        )
+
+  mockAgentGraphqlTest "returns no rows for a Postgres remote-rel select-permission filter targeting a DC source when getColVals finds no matches" $ \testEnv performGraphqlRequest -> do
+    let pgSchemaName = Schema.getSchemaName testEnv
+    -- Same shape of permission as the previous test, registered on a separate
+    -- role so this test is self-contained and doesn't depend on execution
+    -- order. Confirms the empty-match case (Zendesk #15062: "filter matches
+    -- nothing" should return `[]`, not a 500).
+    GraphqlEngine.postMetadata_
+      testEnv
+      [interpolateYaml|
+        type: pg_create_select_permission
+        args:
+          source: #{pgSourceName}
+          table:
+            schema: #{pgSchemaName}
+            name: PgTrack
+          role: test-role-nomatch
+          permission:
+            columns:
+              - TrackId
+              - Name
+              - AlbumId
+            filter:
+              RemoteAlbum:
+                AlbumId:
+                  _eq: X-Hasura-AlbumId
+      |]
+
+    let headers =
+          [ ("X-Hasura-Role", "test-role-nomatch"),
+            ("X-Hasura-AlbumId", "999")
+          ]
+    let graphqlRequest =
+          [graphql|
+            query getTracks {
+              PgTrack: #{pgSchemaName}_PgTrack {
+                TrackId
+                AlbumId
+              }
+            }
+          |]
+    -- getColVals fetches no AlbumId values for "999", so the permission
+    -- rewrites to an empty IN and the Postgres query returns nothing.
+    let queryResponse = mkRowsQueryResponse []
+    let mockConfig = mockQueryResponse queryResponse
+
+    MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
+
+    _mrrResponse
+      `shouldBeYaml` [yaml|
+        data:
+          PgTrack: []
+      |]
+
+  mockAgentGraphqlTest "admin (no role) bypasses the remote-rel permission filter entirely" $ \testEnv performGraphqlRequest -> do
+    let pgSchemaName = Schema.getSchemaName testEnv
+    let headers = []
+    let graphqlRequest =
+          [graphql|
+            query getTracks {
+              PgTrack: #{pgSchemaName}_PgTrack(order_by: {TrackId: asc}) {
+                TrackId
+                AlbumId
+              }
+            }
+          |]
+    -- Admin bypasses select permissions entirely, so no getColVals fetch is
+    -- ever issued -- the query runs directly on Postgres and returns every
+    -- row (Zendesk #15062: "Admin (no role header): all rows, unfiltered").
+    let mockConfig = mockQueryResponse (mkRowsQueryResponse [])
+
+    MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
+
+    _mrrResponse
+      `shouldBeYaml` [yaml|
+        data:
+          PgTrack:
+            - TrackId: 3
+              AlbumId: 3
+            - TrackId: 6
+              AlbumId: 1
+            - TrackId: 16
+              AlbumId: 4
+      |]
+
+    -- No agent request is recorded: the DC mock is never called for admin.
+    _mrrRecordedRequest `shouldBe` Nothing
+
 errorTests :: SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
 errorTests = do
   it "creating a remote relationship returns an error when it is unsupported by the target" $ \(testEnv, _) -> do

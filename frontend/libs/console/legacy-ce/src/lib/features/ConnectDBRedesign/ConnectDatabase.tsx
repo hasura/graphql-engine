@@ -4,7 +4,8 @@ import { ConnectDbBody } from './ConnectDbBody';
 import { ConnectDatabaseWrapper, FancyRadioCards } from './components';
 import { DEFAULT_DRIVER } from './constants';
 import { useDatabaseConnectDrivers } from './hooks/useConnectDatabaseDrivers';
-import { DbConnectConsoleType } from './types';
+import type { DbConnectConsoleType } from './types';
+import type { SupportedDriver } from '@hasura/shared/types';
 
 export type ConnectDatabaseProps = {
   /**
@@ -31,22 +32,20 @@ export type ConnectDatabaseProps = {
 export const ConnectDatabaseV2 = (props: ConnectDatabaseProps) => {
   const { initialDriverName, eeLicenseInfo, consoleType } = props;
 
-  // const [selectedDriver, setSelectedDriver] =
-  //   React.useState<DriverInfo>(DEFAULT_DRIVER);
   const [selectedDriverName, setSelectedDriverName] = React.useState(
-    DEFAULT_DRIVER.name
+    DEFAULT_DRIVER.name,
   );
 
   const { cardData, allDrivers, availableDrivers } = useDatabaseConnectDrivers({
     showEnterpriseDrivers: consoleType !== 'oss',
     onFirstSuccess: () =>
       setSelectedDriverName(
-        current =>
+        (current) =>
           allDrivers.find(
-            d =>
+            (d) =>
               d.name === initialDriverName &&
-              (d.enterprise === false || consoleType !== 'oss')
-          )?.name || current
+              (d.enterprise === false || consoleType !== 'oss'),
+          )?.name || current,
       ),
   });
 
@@ -54,12 +53,13 @@ export const ConnectDatabaseV2 = (props: ConnectDatabaseProps) => {
   // when "allDrivers" changes due to a react query invalidation/metadata reload, the properties of the driver may change
   // in order for this to reflect automatically, we make this value dependant on both the state of "allDrivers" array and the "selectedDriverName" string
   const selectedDriver = React.useMemo(
-    () => allDrivers.find(d => d.name === selectedDriverName) || DEFAULT_DRIVER,
-    [allDrivers, selectedDriverName]
+    () =>
+      allDrivers.find((d) => d.name === selectedDriverName) || DEFAULT_DRIVER,
+    [allDrivers, selectedDriverName],
   );
 
   const isDriverAvailable = (availableDrivers ?? []).some(
-    d => d.name === selectedDriver.name
+    (d) => d.name === selectedDriver.name,
   );
 
   return (
@@ -67,8 +67,8 @@ export const ConnectDatabaseV2 = (props: ConnectDatabaseProps) => {
       <FancyRadioCards
         items={cardData}
         value={selectedDriver?.name}
-        onChange={val => {
-          setSelectedDriverName(val);
+        onChange={(val) => {
+          setSelectedDriverName(val as SupportedDriver);
         }}
       />
       <ConnectDbBody

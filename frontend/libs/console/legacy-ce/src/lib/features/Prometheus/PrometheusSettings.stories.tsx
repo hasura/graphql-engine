@@ -1,26 +1,25 @@
 import React from 'react';
-import { StoryObj, Meta } from '@storybook/react';
-import { rest, DelayMode } from 'msw';
-import { QueryClient, QueryClientProvider } from 'react-query';
-import { ReactQueryDevtools } from 'react-query/devtools';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
+import { http, HttpResponse, delay as mswDelay, DelayMode } from 'msw';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 import { PrometheusSettings } from '.';
 import { eeLicenseInfo } from '../EETrial/mocks/http';
 import { registerEETrialLicenseActiveMutation } from '../EETrial/mocks/registration.mock';
-import { ConsoleTypeDecorator } from '../../storybook/decorators';
+import { ConsoleTypeDecorator } from '@hasura/shared/testing';
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: false,
-      cacheTime: 0,
+      gcTime: 0,
     },
   },
 });
 const baseUrl = 'http://localhost:8080';
-// eslint-disable-next-line no-underscore-dangle
+
 window.__env = {
-  // eslint-disable-next-line no-underscore-dangle
   ...window.__env,
   dataApiUrl: baseUrl,
 };
@@ -28,13 +27,13 @@ window.__env = {
 const mockConfigHandler = (
   prometheusEnabled: boolean,
   delay: number | DelayMode,
-  status = 200
+  status = 200,
 ) => {
-  return rest.get(`${baseUrl}/v1alpha1/config`, (req, res, ctx) => {
-    return res(
-      ctx.status(status),
-      ctx.delay(delay),
-      ctx.json({
+  return http.get(`${baseUrl}/v1alpha1/config`, async () => {
+    await mswDelay(delay);
+
+    return HttpResponse.json(
+      {
         version: '12345',
         is_function_permissions_inferred: true,
         is_remote_schema_permissions_enabled: false,
@@ -55,7 +54,8 @@ const mockConfigHandler = (
           '/home/alex/src/graphql-engine-mono/console/static/dist',
         experimental_features: [],
         is_prometheus_metrics_enabled: prometheusEnabled,
-      })
+      },
+      { status },
     );
   });
 };

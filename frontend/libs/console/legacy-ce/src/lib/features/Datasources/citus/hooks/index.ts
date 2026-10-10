@@ -1,1 +1,0 @@
-export { useTableRelationshipsQuery } from './useTableRelationshipsQuery';

@@ -1,19 +1,18 @@
 import startCase from 'lodash/startCase';
-import { Breadcrumbs } from '../../../../new-components/Breadcrumbs';
+import { Flex } from '@radix-ui/themes';
+import { Breadcrumbs, LearnMoreLink } from '@hasura/shared/ui';
 import { StoredProcedureWidget } from './StoredProcedureWidget';
-import { InjectedRouter, withRouter } from 'react-router';
-import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
+import { useLocation, useNavigate } from 'react-router';
 
-export const TrackStoredProcedureRoute = withRouter<{
-  location: Location;
-  router: InjectedRouter;
-}>(({ location, router }) => {
+export const TrackStoredProcedureRoute = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const pathname = location.pathname;
-  const push = router.push;
+  const push = navigate;
   const paths = pathname?.split('/').filter(Boolean) ?? [];
   return (
-    <div className="flex flex-col">
-      <div className="py-md px-md w-full">
+    <Flex direction="column">
+      <div className="py-4 px-4 w-full">
         <Breadcrumbs
           items={paths.map((path: string, index) => {
             return {
@@ -35,9 +34,9 @@ export const TrackStoredProcedureRoute = withRouter<{
           </div>
         </div>
       </div>
-      <div className="px-md w-full flex flex-col">
+      <Flex direction="column" className="px-4 w-full">
         <StoredProcedureWidget />
-      </div>
-    </div>
+      </Flex>
+    </Flex>
   );
-});
+};

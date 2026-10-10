@@ -1,10 +1,8 @@
 import React from 'react';
-import { action } from '@storybook/addon-actions';
+import { action } from 'storybook/actions';
 
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
-import { ReduxDecorator } from '../../../../storybook/decorators/redux-decorator';
-import { Meta } from '@storybook/react';
-import { handlers } from '../../../../mocks/metadata.mock';
+import { ReactQueryDecorator, handlers } from '@hasura/shared/testing';
+import { Meta } from '@storybook/react-webpack5';
 
 import { QueryCollectionOperationDialog } from './QueryCollectionOperationDialog';
 import { QueryCollectionOperationAdd } from './QueryCollectionOperationAdd';
@@ -13,10 +11,7 @@ import { QueryCollectionOperationEdit } from './QueryCollectionOperationEdit';
 export default {
   title: 'Features/Query Collections/Query Collection Operation Dialog',
   component: QueryCollectionOperationDialog,
-  decorators: [
-    ReduxDecorator({ tables: { currentDataSource: 'default' } }),
-    ReactQueryDecorator(),
-  ],
+  decorators: [ReactQueryDecorator()],
   parameters: {
     msw: handlers({ delay: 500 }),
   },

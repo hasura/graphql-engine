@@ -1,63 +1,71 @@
-import { QualifiedFunction } from '../../../hasura-metadata-types';
+import { TableFunction } from '@hasura/shared/types';
+import { useParams, useSearchParams } from 'react-router';
 
 //  TYPES
 export type QueryStringParseResult =
   | {
       querystringParseResult: 'success';
-      data: FunctionDefinition;
+      qualifiedFunction: TableFunction | undefined;
+      operation?: string;
     }
   | {
       querystringParseResult: 'error';
-      errorType: 'invalidTableDefinition' | 'invalidDatabaseDefinition';
+      errorType: 'invalidFunctionDefinition' | 'invalidDatabaseDefinition';
     };
-
-// TODO better types once GDC kicks in
-type FunctionDefinition = { database: string; function?: QualifiedFunction };
 
 //  CONSTANTS
 const FUNCTION_DEFINITION_SEARCH_KEY = 'function';
-const DATASOURCE_DEFINITION_SEARCH_KEY = 'database';
 
-const invalidTableDefinitionResult: QueryStringParseResult = {
+const invalidDefinitionResult: QueryStringParseResult = {
   querystringParseResult: 'error',
-  errorType: 'invalidTableDefinition',
-};
-const invalidDatabaseDefinitionResult: QueryStringParseResult = {
-  querystringParseResult: 'error',
-  errorType: 'invalidDatabaseDefinition',
+  errorType: 'invalidFunctionDefinition',
 };
 
-//  FUNCTION
-const getFunctionDefinitionFromUrl = (
-  location: Location
-): QueryStringParseResult => {
-  if (!location.search) return invalidTableDefinitionResult;
-  // if tableDefinition is present in query params;
-  // Idea is to use query params for GDC tables
-  const params = new URLSearchParams(location.search);
-  const qualifiedFunction = params.get(FUNCTION_DEFINITION_SEARCH_KEY);
-  const database = params.get(DATASOURCE_DEFINITION_SEARCH_KEY);
+export const useFunctionURLParameters = () => {
+  const params = useParams();
+  const [searchParams] = useSearchParams();
+
+  const database = params.source || searchParams.get('source');
 
   if (!database) {
-    return invalidDatabaseDefinitionResult;
+    return {
+      querystringParseResult: 'error',
+      errorType: 'invalidDatabaseDefinition',
+    };
   }
 
-  if (!qualifiedFunction) {
-    return { querystringParseResult: 'success', data: { database } };
+  const schema = params.schema || searchParams.get('schema');
+  const functionName = params.functionName;
+  const operation = params.operation;
+
+  if (schema && functionName) {
+    return {
+      querystringParseResult: 'success',
+      qualifiedFunction: {
+        name: functionName,
+        schema,
+      },
+      operation,
+    };
+  }
+
+  // if tableDefinition is present in query params;
+  // Idea is to use query params for GDC tables
+  const rawFunction = searchParams.get(FUNCTION_DEFINITION_SEARCH_KEY);
+
+  if (!rawFunction) {
+    return invalidDefinitionResult;
   }
 
   try {
     return {
       querystringParseResult: 'success',
-      data: { database, function: JSON.parse(qualifiedFunction) },
+      qualifiedFunction: JSON.parse(rawFunction),
+      operation,
     };
   } catch (error) {
     console.error('Unable to parse the function definition', error);
   }
 
-  return invalidTableDefinitionResult;
-};
-
-export const useURLParameters = (location = window.location) => {
-  return getFunctionDefinitionFromUrl(location);
+  return invalidDefinitionResult;
 };

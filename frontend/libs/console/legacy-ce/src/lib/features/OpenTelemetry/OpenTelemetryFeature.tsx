@@ -1,6 +1,5 @@
-import * as React from 'react';
 import { OpenTelemetryEEProvider } from './OpenTelemetryProvider/OpenTelemetryEEProvider';
-import { isOpenTelemetrySupported } from '../../utils/proConsole';
+import { isOpenTelemetrySupported } from '@hasura/shared/utils';
 import { OpenTelemetryProvider } from './OpenTelemetryProvider/OpenTelemetryProvider';
 
 export function OpenTelemetryFeature() {
@@ -9,7 +8,6 @@ export function OpenTelemetryFeature() {
   // circumstances, and the sidebar button should be rendered or not based on the same condition.
   // But the feature itself should not be aware of when it's rendered or not.
 
-  // eslint-disable-next-line no-underscore-dangle
   if (!isOpenTelemetrySupported(window.__env)) return null;
 
   if (window.__env.consoleType === 'pro-lite') {

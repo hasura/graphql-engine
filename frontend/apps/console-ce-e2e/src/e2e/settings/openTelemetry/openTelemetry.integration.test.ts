@@ -1,20 +1,17 @@
+import { hgeUrl } from '../../../support/endpoints';
 import { z } from 'zod';
-import produce from 'immer';
-
-import type {
-  SetOpenTelemetryQuery,
-  hasuraEnvVarsNotAllowedSchema,
-} from '@hasura/console-legacy-ce';
-import { unexistingEnvVarSchema } from '@hasura/console-legacy-ce';
-
 import { blockServerRequests } from './utils/requests/blockServerRequests';
-
 import {
   stubInitialServerRequests,
   waitForInitialServerRequests,
 } from './fixtures/initialRequests/stubInitialServerRequests';
 
 import { export_metadata } from './fixtures/initialRequests/export_metadata';
+import {
+  hasuraEnvVarsNotAllowedSchema,
+  SetOpenTelemetryQuery,
+  unexistingEnvVarSchema,
+} from '@hasura/shared/types';
 
 // Why this test is skipped?
 // - because OpenTelemetry is a "Pro Console" feature (it works with a EE Lite server)
@@ -39,14 +36,14 @@ describe.skip('OpenTelemetry', () => {
 
     cy.log('**--- STEP: Type the Endpoint**');
     cy.findByLabelText('Endpoint', { selector: 'input' }).type(
-      'http://example.io'
+      'http://example.io',
     );
 
     cy.log(
-      '**--- STEP: Intercept the set_opentelemetry_config request and the next export_metadata one**'
+      '**--- STEP: Intercept the set_opentelemetry_config request and the next export_metadata one**',
     );
     let openTelemetryFixture: SetOpenTelemetryQuery['args'] | undefined;
-    cy.intercept('POST', 'http://localhost:8080/v1/metadata', req => {
+    cy.intercept('POST', hgeUrl('/v1/metadata'), (req) => {
       if (req.body.type === 'set_opentelemetry_config') {
         Cypress.log({
           message: '**--- STEP: Intercept the set_opentelemetry_config call**',
@@ -73,9 +70,13 @@ describe.skip('OpenTelemetry', () => {
         req.reply(
           // Use the openTelemetry configuration passed from the Console to the server to get back
           // a metadata that includes the same configuration
-          produce(export_metadata, draft => {
-            draft.metadata.opentelemetry = openTelemetryFixture;
-          })
+          {
+            ...export_metadata,
+            metadata: {
+              ...export_metadata.metadata,
+              opentelemetry: openTelemetryFixture,
+            },
+          },
         );
       }
     });
@@ -92,15 +93,15 @@ describe.skip('OpenTelemetry', () => {
 
     cy.log('**--- STEP: Check the success notification**');
     cy.expectSuccessNotificationWithMessage(
-      'Successfully updated the OpenTelemetry Configuration'
+      'Successfully updated the OpenTelemetry Configuration',
     );
   });
 
   it('When an unexisting env var is added, then the user should be prompted about it', () => {
     cy.log(
-      '**--- STEP: Intercept the set_opentelemetry_config request and return the error**'
+      '**--- STEP: Intercept the set_opentelemetry_config request and return the error**',
     );
-    cy.intercept('POST', 'http://localhost:8080/v1/metadata', req => {
+    cy.intercept('POST', hgeUrl('/v1/metadata'), (req) => {
       if (req.body.type === 'set_opentelemetry_config') {
         Cypress.log({
           message: '**--- STEP: Intercept the set_opentelemetry_config call**',
@@ -131,15 +132,15 @@ describe.skip('OpenTelemetry', () => {
 
     cy.log('**--- STEP: Check the error notification**');
     cy.expectErrorNotificationWithMessage(
-      `Inconsistent object: environment variable 'foo' not set`
+      `Inconsistent object: environment variable 'foo' not set`,
     );
   });
 
   it('When an HASURA_GRAPHQL_ env var is added, then the user should be prompted about it', () => {
     cy.log(
-      '**--- STEP: Intercept the set_opentelemetry_config request and return the error**'
+      '**--- STEP: Intercept the set_opentelemetry_config request and return the error**',
     );
-    cy.intercept('POST', 'http://localhost:8080/v1/metadata', req => {
+    cy.intercept('POST', hgeUrl('/v1/metadata'), (req) => {
       if (req.body.type === 'set_opentelemetry_config') {
         Cypress.log({
           message: '**--- STEP: Intercept the set_opentelemetry_config call**',
@@ -168,15 +169,15 @@ describe.skip('OpenTelemetry', () => {
 
     cy.log('**--- STEP: Check the error notification**');
     cy.expectErrorNotificationWithMessage(
-      `env variables starting with "HASURA_GRAPHQL_" are not allowed in value_from_env: HASURA_GRAPHQL_ENABLED_APIS`
+      `env variables starting with "HASURA_GRAPHQL_" are not allowed in value_from_env: HASURA_GRAPHQL_ENABLED_APIS`,
     );
   });
 
   it('When an unexpected error is returned from the server, then the user should be prompted about it', () => {
     cy.log(
-      '**--- STEP: Intercept the set_opentelemetry_config request and return the error**'
+      '**--- STEP: Intercept the set_opentelemetry_config request and return the error**',
     );
-    cy.intercept('POST', 'http://localhost:8080/v1/metadata', req => {
+    cy.intercept('POST', hgeUrl('/v1/metadata'), (req) => {
       if (req.body.type === 'set_opentelemetry_config') {
         Cypress.log({
           message: '**--- STEP: Intercept the set_opentelemetry_config call**',
@@ -202,7 +203,7 @@ describe.skip('OpenTelemetry', () => {
 
     cy.log('**--- STEP: Check the error notification**');
     cy.expectErrorNotificationWithMessage(
-      `{"unmanagedError":"An error the Console does not manage"}`
+      `{"unmanagedError":"An error the Console does not manage"}`,
     );
   });
 });

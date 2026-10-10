@@ -24,9 +24,10 @@ export function FamiliaritySurveyTheme(props: HasuraFamiliaritySurveyProps) {
   }, [responses]);
 
   return (
-    <div className="mt-lg">
-      {orderedSurveyQuestionData.map(questionData => (
+    <div className="mt-6">
+      {orderedSurveyQuestionData.map((questionData) => (
         <SurveyQuestion
+          key={questionData.id}
           questionData={questionData}
           responses={responses}
           setResponses={setResponses}

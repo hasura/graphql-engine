@@ -1,31 +1,9 @@
-import { RemoteRelationshipFieldServer } from '../../components/Services/Data/TableRelationships/RemoteRelationships/utils';
-import { RelationshipSourceType, RelationshipType } from './types';
-
-export const getRemoteRelationType = (
-  relation: RelationshipType
-): [
-  name: string,
-  sourceType: RelationshipSourceType,
-  type: 'Object' | 'Array' | 'Remote Source' | 'Remote Schema'
-] => {
-  if (relation?.definition?.to_source) {
-    return [
-      relation?.name,
-      'to_source',
-      relation?.definition?.to_source?.relationship_type,
-    ];
-  }
-  if (relation?.definition?.to_remote_schema)
-    return [
-      relation?.source_name ?? relation?.remote_schema,
-      'to_remote_schema',
-      'Remote Schema',
-    ];
-  return [relation?.source_name, 'remote_schema_legacy', 'Remote Schema'];
-};
+import { RemoteRelationship } from '@hasura/shared/types';
+import { RemoteRelationshipFieldServer } from './remoteRelationshipsUtils';
+import { RelationshipSourceType } from './types';
 
 export const getRemoteFieldPath = (
-  remoteField?: Record<string, RemoteRelationshipFieldServer>
+  remoteField?: Record<string, RemoteRelationshipFieldServer>,
 ): string[] => {
   let resultArray: string[] = [];
   if (!remoteField) return resultArray;
@@ -40,22 +18,32 @@ export const getRemoteFieldPath = (
 };
 
 export const getRemoteSchemaRelationType = (
-  relation: RelationshipType
+  relation: RemoteRelationship,
 ): [
   name: string,
   sourceType: RelationshipSourceType,
-  type: 'Object' | 'Array' | 'Remote Source' | 'Remote Schema'
+  type: 'Object' | 'Array' | 'Remote Source' | 'Remote Schema',
 ] => {
-  if (relation?.definition?.to_source) {
+  if ('to_source' in relation.definition) {
     return [
-      relation?.definition?.to_source.source,
+      relation.definition.to_source.source,
       'to_source',
-      relation?.definition?.to_source?.relationship_type,
+      relation.definition.to_source.relationship_type === 'array'
+        ? 'Array'
+        : 'Object',
+    ];
+  }
+
+  if ('to_remote_schema' in relation.definition) {
+    return [
+      relation.definition.to_remote_schema.remote_schema,
+      'to_remote_schema',
+      'Remote Schema',
     ];
   }
 
   return [
-    relation?.definition?.to_remote_schema.remote_schema,
+    relation.definition.remote_schema,
     'to_remote_schema',
     'Remote Schema',
   ];

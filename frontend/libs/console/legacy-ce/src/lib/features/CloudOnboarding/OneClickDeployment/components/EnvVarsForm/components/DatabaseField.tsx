@@ -1,9 +1,5 @@
-import React from 'react';
 import { IAceOptions } from 'react-ace';
-import {
-  InputField,
-  CodeEditorField,
-} from '../../../../../../new-components/Form';
+import { InputField, CodeEditorField } from '@hasura/shared/ui';
 import { RequiredEnvVar } from '../../../types';
 import { PgDatabaseField } from './PgDatabaseField';
 
@@ -18,6 +14,7 @@ const editorOptions: IAceOptions = {
   showLineNumbers: true,
   minLines: 10,
   maxLines: 10,
+  mode: 'json',
 };
 
 export function DatabaseField(props: Props) {
@@ -34,7 +31,6 @@ export function DatabaseField(props: Props) {
         label={`${envVar.Name} *`}
         description={envVar.Description}
         editorOptions={editorOptions}
-        theme="eclipse"
       />
     );
   }
@@ -43,8 +39,10 @@ export function DatabaseField(props: Props) {
     <InputField
       name={envVar.Name}
       label={`${envVar.Name} *`}
-      placeholder={envVar.Placeholder ? envVar.Placeholder : envVar.Name}
       description={envVar.Description}
+      fieldProps={{
+        placeholder: envVar.Placeholder ? envVar.Placeholder : envVar.Name,
+      }}
     />
   );
 }

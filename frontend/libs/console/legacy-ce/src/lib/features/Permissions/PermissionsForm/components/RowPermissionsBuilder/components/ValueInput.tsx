@@ -1,6 +1,7 @@
 import { ValueInputType } from './ValueInputType';
 import { InputSuggestion } from './InputSuggestion';
 import { SelectTable } from './SelectTable';
+import { Flex } from '@radix-ui/themes';
 
 export const ValueInput = ({ value, path }: { value: any; path: string[] }) => {
   const comparatorName = path[path.length - 1];
@@ -17,7 +18,7 @@ export const ValueInput = ({ value, path }: { value: any; path: string[] }) => {
   }
 
   return (
-    <div className="flex items-center">
+    <Flex align="center">
       <ValueInputType
         componentLevelId={componentLevelId}
         path={path}
@@ -29,6 +30,6 @@ export const ValueInput = ({ value, path }: { value: any; path: string[] }) => {
         path={path}
         componentLevelId={componentLevelId}
       />
-    </div>
+    </Flex>
   );
 };

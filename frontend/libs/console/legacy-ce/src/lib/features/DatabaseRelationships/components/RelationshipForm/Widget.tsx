@@ -1,29 +1,35 @@
 import {
   BulkAtomicResponse,
   BulkKeepGoingResponse,
+  SupportedDriver,
   Table,
-} from '../../../hasura-metadata-types';
-import { Button } from '../../../../new-components/Button';
+} from '@hasura/shared/types';
 import {
+  Button,
   InputField,
-  Select,
   useConsoleForm,
-} from '../../../../new-components/Form';
+  IndicatorCard,
+  SkeletonList,
+  SelectField,
+  Text,
+  Card,
+  ReactSelectField,
+  getDialogPortalTarget,
+} from '@hasura/shared/ui';
 import { useEffect } from 'react';
+import { Flex } from '@radix-ui/themes';
 import { Controller } from 'react-hook-form';
 import { FaArrowRight, FaLink } from 'react-icons/fa';
-import { useRemoteSchemaIntrospection } from '../../hooks/useRemoteSchema';
-import { useTableColumns } from '../../hooks/useTableColumns';
 import { MODE, Relationship } from '../../types';
 import { MapRemoteSchemaFields } from './parts/MapRemoteSchemaFields';
 import { MapColumns } from './parts/MapColumns';
 import { schema, Schema } from './schema';
-import { SourceSelect } from './parts/SourceSelect';
+import { SourceOption } from './parts/SourceSelect';
 import { useHandleSubmit } from './utils';
-import { useSourceOptions } from '../../hooks/useSourceOptions';
-import Skeleton from 'react-loading-skeleton';
-import { useInconsistentMetadata } from '../../../hasura-metadata-api';
-import { IndicatorCard } from '../../../../new-components/IndicatorCard';
+import { useIntrospectRemoteSchema } from '@hasura/metadata/api';
+import { useTableColumns } from '@hasura/metadata/data-source';
+import { getTableLabel } from '@hasura/shared/utils';
+import { createFilter } from 'react-select';
 
 interface WidgetProps {
   dataSourceName: string;
@@ -32,7 +38,40 @@ interface WidgetProps {
   onSuccess: (data: BulkAtomicResponse | BulkKeepGoingResponse) => void;
   onError: (err: Error) => void;
   defaultValue?: Relationship;
+  sourceOptions: SourceOption[];
+  inconsistentSources: string[];
 }
+
+const DATABASE_RELATIONSHIP_OPTIONS = [
+  {
+    label: 'Object Relationship',
+    value: 'Object',
+  },
+  {
+    label: 'Array Relationship',
+    value: 'Array',
+  },
+];
+const adaptDataSourceKind = (
+  options: SourceOption[] | undefined,
+  dataSourceName: string,
+): SupportedDriver | undefined => {
+  if (!options) {
+    return undefined;
+  }
+
+  for (const option of options) {
+    if (option.value.type !== 'table') {
+      continue;
+    }
+
+    if (option.value.dataSourceName === dataSourceName) {
+      return option.value.driver;
+    }
+  }
+
+  return undefined;
+};
 
 const getDefaultValue = ({
   dataSourceName,
@@ -77,25 +116,24 @@ const getDefaultValue = ({
     },
     details: {
       columnMap: Object.entries(relationship.definition.mapping).map(
-        ([key, value]) => ({ from: key, to: value })
+        ([key, value]) => ({ from: key, to: value }),
       ),
       relationshipType: relationship.relationshipType,
     },
   };
 };
 
-export const Widget = (props: WidgetProps) => {
-  const { dataSourceName, table, onCancel, onSuccess, onError, defaultValue } =
-    props;
-
+export const Widget = ({
+  dataSourceName,
+  table,
+  onCancel,
+  onSuccess,
+  onError,
+  defaultValue,
+  sourceOptions,
+  inconsistentSources,
+}: WidgetProps) => {
   const isEditMode = !!defaultValue;
-
-  const { data: sourceOptions } = useSourceOptions();
-  const { data: inconsistentSources = [] } = useInconsistentMetadata(m => {
-    return m.inconsistent_objects
-      .filter(item => item.type === 'source')
-      .map(source => source.definition);
-  });
 
   const {
     Form,
@@ -120,7 +158,10 @@ export const Widget = (props: WidgetProps) => {
   });
 
   const { data: sourceTableColumns } = useTableColumns({
-    dataSourceName,
+    source: {
+      name: dataSourceName,
+      kind: adaptDataSourceKind(sourceOptions, dataSourceName)!,
+    },
     table,
   });
 
@@ -128,18 +169,28 @@ export const Widget = (props: WidgetProps) => {
 
   const { data: targetTableColumns, isLoading: isColumnDataLoading } =
     useTableColumns({
-      dataSourceName: toSource?.type === 'table' ? toSource.dataSourceName : '',
+      source:
+        toSource?.type === 'table'
+          ? {
+              name: toSource.dataSourceName,
+              kind: adaptDataSourceKind(
+                sourceOptions,
+                toSource.dataSourceName,
+              )!,
+            }
+          : undefined,
       table: toSource?.type === 'table' ? toSource.table : '',
     });
 
   const {
     data: remoteSchemaGraphQLSchema,
     isLoading: isRemoteSchemaIntrospectionLoading,
-  } = useRemoteSchemaIntrospection({
-    remoteSchemaName:
-      toSource?.type === 'remoteSchema' ? toSource.remoteSchema : '',
-    enabled: toSource?.type === 'remoteSchema',
-  });
+  } = useIntrospectRemoteSchema(
+    toSource?.type === 'remoteSchema' ? toSource.remoteSchema : '',
+    {
+      enabled: toSource?.type === 'remoteSchema',
+    },
+  );
 
   const { handleSubmit, ...rest } = useHandleSubmit({
     dataSourceName,
@@ -154,7 +205,7 @@ export const Widget = (props: WidgetProps) => {
       if (toSource?.type === 'table') {
         setValue('details.relationshipType', 'Object');
         setValue('details.columnMap', [{ from: '', to: '' }]);
-      } else setValue('details', {});
+      } else setValue('details', { rsFieldMapping: undefined });
     }
   }, [defaultValue, setValue, toSource]);
 
@@ -175,37 +226,55 @@ export const Widget = (props: WidgetProps) => {
     <Form onSubmit={handleSubmit}>
       <div
         id="create-local-rel"
-        className="mt-4 px-7"
+        className="mt-4"
         style={{ minHeight: '450px' }}
       >
         <InputField
           name="name"
           label="Relationship Name"
-          placeholder="Name..."
           dataTest="local-db-to-db-rel-name"
-          disabled={isEditMode}
+          fieldProps={{
+            placeholder: 'Name...',
+            disabled: isEditMode,
+          }}
         />
 
         <div>
           <div className="grid grid-cols-12">
             <div className="col-span-5">
-              <SourceSelect
-                options={sourceOptions ?? []}
+              <SelectField
+                options={[]}
                 name="fromSource"
                 label="From Source"
+                placeholder={getTableLabel({
+                  dataSourceName: dataSourceName,
+                  table,
+                })}
                 disabled
               />
             </div>
 
-            <div className="col-span-2 flex relative items-center justify-center w-full py-2 mt-3 text-muted">
+            <Flex
+              align="center"
+              justify="center"
+              className="col-span-2 relative w-full py-2 mt-3 text-muted"
+            >
               <FaArrowRight />
-            </div>
+            </Flex>
 
             <div className="col-span-5">
-              <SourceSelect
+              <ReactSelectField
                 options={sourceOptions ?? []}
                 name="toSource"
                 label="To Reference"
+                selectProps={{
+                  isSearchable: true,
+                  filterOption: createFilter({
+                    ignoreCase: true,
+                    matchFrom: 'any',
+                  }),
+                  menuPortalTarget: getDialogPortalTarget(),
+                }}
               />
             </div>
             {inconsistentSources.length ? (
@@ -220,41 +289,32 @@ export const Widget = (props: WidgetProps) => {
           </div>
 
           {toSource ? (
-            <div className="bg-white rounded-md shadow-sm border border-gray-300 mt-2 mb-4">
-              <div className="p-3 text-slate-900 font-semibold text-lg border-b border-gray-300">
+            <Card size="3">
+              <Text size="3" weight="bold">
                 Relationship Details
-              </div>
+              </Text>
               {isRemoteSchemaIntrospectionLoading || isColumnDataLoading ? (
-                <div className="px-sm m-sm">
-                  <Skeleton height={30} count={5} className="my-2" />
+                <div className="my-2">
+                  <SkeletonList count={5} />
                 </div>
               ) : (
-                <div className="px-6 pt-4">
+                <div>
                   {toSource?.type === 'table' && (
                     <div>
-                      <div className="px-6 pt-4 w-1/3">
-                        <Select
+                      <div className="pt-4 w-1/3">
+                        <SelectField
                           name="details.relationshipType"
                           label="Relationship Type"
                           dataTest="local-db-to-db-select-rel-type"
                           placeholder="Select a relationship type..."
-                          options={[
-                            {
-                              label: 'Object Relationship',
-                              value: 'Object',
-                            },
-                            {
-                              label: 'Array Relationship',
-                              value: 'Array',
-                            },
-                          ]}
+                          options={DATABASE_RELATIONSHIP_OPTIONS}
                         />
                       </div>
 
                       <MapColumns
                         name="details.columnMap"
-                        targetTableColumns={targetTableColumns ?? []}
-                        sourceTableColumns={sourceTableColumns ?? []}
+                        targetTableColumns={targetTableColumns?.columns ?? []}
+                        sourceTableColumns={sourceTableColumns?.columns ?? []}
                       />
                     </div>
                   )}
@@ -270,8 +330,8 @@ export const Widget = (props: WidgetProps) => {
                               graphQLSchema={remoteSchemaGraphQLSchema}
                               onChange={onChange}
                               defaultValue={value}
-                              tableColumns={sourceTableColumns.map(
-                                col => col.name
+                              tableColumns={sourceTableColumns.columns.map(
+                                (col) => col.name,
                               )}
                             />
                           )}
@@ -280,33 +340,35 @@ export const Widget = (props: WidgetProps) => {
                     )}
                 </div>
               )}
-            </div>
+            </Card>
           ) : (
-            <div
+            <Flex
+              direction="column"
+              align="center"
+              justify="center"
               style={{ minHeight: '200px' }}
-              className="bg-gray-100 rounded-md shadow-sm border border-gray-300 mt-2 mb-4 h-20 flex items-center justify-center flex-col"
             >
-              <div>
-                <FaLink />
-              </div>
-              <div>
+              <FaLink />
+              <Text>
                 Please select a source and a reference to create a relationship
-              </div>
-            </div>
+              </Text>
+            </Flex>
           )}
         </div>
       </div>
-      <div className="flex justify-end gap-2 sticky bottom-0 bg-slate-50 px-8 py-3 border-t border-gray-300">
-        <Button onClick={onCancel}>Close</Button>
+      <Flex justify="end" gap="2" className="mt-4">
+        <Button mode="default" onClick={onCancel}>
+          Close
+        </Button>
         <Button
           type="submit"
           mode="primary"
-          isLoading={rest.isLoading}
+          disabled={rest.isPending}
           loadingText="Creating"
         >
           {isEditMode ? 'Edit Relationship' : 'Create Relationship'}
         </Button>
-      </div>
+      </Flex>
     </Form>
   );
 };

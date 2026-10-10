@@ -1,26 +1,26 @@
-import produce from 'immer';
 import {
   LogicalModel,
   LogicalModelField,
   NativeQuery,
   NativeQueryRelationship,
   StoredProcedure,
+  SupportedDriver,
   isArrayLogicalModelType,
   isLogicalModelType,
-} from '../../hasura-metadata-types';
+} from '@hasura/shared/types';
 import { isFieldImplementingLogicalModel } from './LogicalModel/utils/findReferencedEntities';
 import cloneDeep from 'lodash/cloneDeep';
+import { TMigrationSingleQuery } from '@hasura/metadata/api';
+import { getDriverPrefix } from '@hasura/metadata/helpers';
 
 type CommonParams = {
   dataSourceName: string;
-  driver: string;
+  driver: SupportedDriver;
 };
 
 type SupportedTypes = NativeQuery | LogicalModel | StoredProcedure;
 type MetadataCommandFragments =
-  | 'logical_model'
-  | 'native_query'
-  | 'stored_procedure';
+  'logical_model' | 'native_query' | 'stored_procedure';
 interface MigrationPayloadBuilderParams<T extends SupportedTypes> {
   entity: T;
   commandEntity: MetadataCommandFragments;
@@ -35,9 +35,9 @@ interface MigrationPayloadBuilderParams<T extends SupportedTypes> {
  * The other methods mutate the nativeQuery initially passed in that will get used in the track() command
  */
 export class MigrationPayloadBuilder<T extends SupportedTypes> {
-  protected payloadSequence: Record<string, unknown>[] = [];
+  protected payloadSequence: TMigrationSingleQuery[] = [];
   protected source: string;
-  protected driver: string;
+  protected driver: SupportedDriver;
   protected entity: T;
   protected commandEntity: MetadataCommandFragments;
   protected entityKey: keyof T;
@@ -89,7 +89,7 @@ export class MigrationPayloadBuilder<T extends SupportedTypes> {
     this.payloadSequence = [
       ...this.payloadSequence,
       {
-        type: `${this.driver}_untrack_${this.commandEntity}`,
+        type: `${getDriverPrefix(this.driver)}_untrack_${this.commandEntity}` as any,
         args: {
           source: this.source,
           [this.entityKey]: entityKey ?? this.entity[this.entityKey],
@@ -103,7 +103,7 @@ export class MigrationPayloadBuilder<T extends SupportedTypes> {
     this.payloadSequence = [
       ...this.payloadSequence,
       {
-        type: `${this.driver}_track_${this.commandEntity}`,
+        type: `${getDriverPrefix(this.driver)}_track_${this.commandEntity}` as any,
         args: {
           source: this.source,
           ...this.entity,
@@ -114,7 +114,7 @@ export class MigrationPayloadBuilder<T extends SupportedTypes> {
   }
 
   // returns the payload sequence
-  payload(): Record<string, unknown>[] {
+  payload(): TMigrationSingleQuery[] {
     return this.payloadSequence;
   }
 }
@@ -156,7 +156,7 @@ export class NativeQueryMigrationBuilder extends MigrationPayloadBuilder<NativeQ
 
   addRelationship(
     type: 'object' | 'array',
-    relationshipDetails: NativeQueryRelationship
+    relationshipDetails: NativeQueryRelationship,
   ): this {
     const relationshipsKey =
       type === 'object' ? 'object_relationships' : 'array_relationships';
@@ -177,7 +177,7 @@ export class NativeQueryMigrationBuilder extends MigrationPayloadBuilder<NativeQ
     this.initializeRelationshipArrays();
 
     this.entity[relationshipsKey] = this.entity[relationshipsKey]?.filter(
-      rel => rel.name !== name
+      (rel) => rel.name !== name,
     );
 
     return this;
@@ -222,25 +222,42 @@ export class LogicalModelMigrationBuilder extends MigrationPayloadBuilder<Logica
     currentName: string;
     newName: string;
   }): this {
-    this.entity.fields = this.entity.fields.map(field => {
+    this.entity.fields = this.entity.fields.map((field) => {
       const isMatch = isFieldImplementingLogicalModel(field, currentName);
 
       if (!isMatch) return field;
 
-      return produce(field, draft => {
-        if (isLogicalModelType(draft.type)) {
-          draft.type.logical_model = newName;
-        } else if (isArrayLogicalModelType(draft.type)) {
-          draft.type.array.logical_model = newName;
-        }
-      });
+      if (isLogicalModelType(field.type)) {
+        return {
+          ...field,
+          type: {
+            ...field.type,
+            logical_model: newName,
+          },
+        };
+      }
+
+      if (isArrayLogicalModelType(field.type)) {
+        return {
+          ...field,
+          type: {
+            ...field.type,
+            array: {
+              ...field.type.array,
+              logical_model: newName,
+            },
+          },
+        };
+      }
+
+      return field;
     });
 
     return this;
   }
 
   removeField(name: string): this {
-    this.entity.fields = this.entity.fields.filter(f => f.name === name);
+    this.entity.fields = this.entity.fields.filter((f) => f.name === name);
     return this;
   }
 }

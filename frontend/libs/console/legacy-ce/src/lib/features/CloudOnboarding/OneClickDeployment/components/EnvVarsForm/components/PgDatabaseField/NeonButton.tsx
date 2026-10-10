@@ -1,10 +1,11 @@
 import React from 'react';
+import { IconType } from 'react-icons';
 import { MdRefresh } from 'react-icons/md';
-import { Analytics } from '../../../../../../Analytics';
-import { FaExclamationCircle, FaPlusCircle, FaSpinner } from 'react-icons/fa';
+import { Analytics } from '@hasura/shared/analytics';
+import { FaPlusCircle } from 'react-icons/fa';
 import { useFormContext } from 'react-hook-form';
-import { ErrorComponentTemplate } from '../../../../../../../new-components/Form';
-import { Button } from '../../../../../../../new-components/Button';
+import { Flex } from '@radix-ui/themes';
+import { Button, ErrorMessage } from '@hasura/shared/ui';
 import { NeonButtonIcons, NeonButtonProps } from '../../types';
 import { RequiredEnvVar } from '../../../../types';
 
@@ -13,10 +14,9 @@ export type Props = {
   neonButtonProps: NeonButtonProps;
 };
 
-const neonButtonIconMap: Record<NeonButtonIcons, JSX.Element> = {
-  refresh: <MdRefresh className="text-slate-900" />,
-  create: <FaPlusCircle className="text-slate-900" />,
-  loading: <FaSpinner className="text-slate-900 animate-spin" />,
+const neonButtonIconMap: Record<NeonButtonIcons, IconType> = {
+  refresh: MdRefresh,
+  create: FaPlusCircle,
 };
 
 export function NeonButton(props: Props) {
@@ -25,8 +25,8 @@ export function NeonButton(props: Props) {
 
   let errorMessage: string | undefined | React.ReactNode;
 
-  if (formState.errors?.[dbEnvVar.Name]) {
-    errorMessage = formState.errors?.[dbEnvVar.Name].message;
+  if (formState?.errors?.[dbEnvVar.Name]?.message) {
+    errorMessage = formState.errors[dbEnvVar.Name]!.message as string;
   }
   if (neonButtonProps.status.status === 'error') {
     errorMessage = neonButtonProps.status.errorDescription;
@@ -34,44 +34,27 @@ export function NeonButton(props: Props) {
 
   return (
     <>
-      <div className="flex items-center">
+      <Flex align="center">
         <Analytics
           name="one-click-deployment-neon-button"
           passHtmlAttributesToChildren
         >
           <Button
             onClick={neonButtonProps.onClickConnect}
-            icon={
+            leftIcon={
               neonButtonProps.icon
                 ? neonButtonIconMap[neonButtonProps.icon]
                 : undefined
             }
             size="md"
-            disabled={neonButtonProps.status.status === 'loading'}
+            mode="default"
+            loading={neonButtonProps.status.status === 'loading'}
           >
-            <span className="text-lg font-bold text-slate-900">
-              {neonButtonProps.buttonText}
-            </span>
+            {neonButtonProps.buttonText}
           </Button>
         </Analytics>
-      </div>
-
-      {errorMessage ? (
-        <ErrorComponentTemplate
-          label={
-            <>
-              <FaExclamationCircle className="fill-current h-4 w-4 mr-xs shrink-0" />
-              {errorMessage}
-            </>
-          }
-          ariaLabel={errorMessage ? 'Neon Database creation failed' : ''}
-          role="alert"
-        />
-      ) : (
-        // this acts as an empty placeholder for error, to prevent the form fields
-        // from shifting down when an error message is shown
-        <ErrorComponentTemplate label={<>&nbsp;</>} />
-      )}
+      </Flex>
+      <ErrorMessage error={errorMessage} />
     </>
   );
 }

@@ -12,9 +12,9 @@ describe('validateAllowedAssets', () => {
         validateAllowedAssets({
           js: [{ jsModule: false, type: 'js', tag: '', url: forbiddenAsset }],
           css: [],
-        })
+        }),
       ).toThrowError(
-        `Cannot use ${forbiddenAsset}: This file cannot be used anymore give it was used prior to 2.18 and we can't use that file name anymore since cli may load this instead of the correct assets.`
+        `Cannot use ${forbiddenAsset}: This file cannot be used anymore give it was used prior to 2.18 and we can't use that file name anymore since cli may load this instead of the correct assets.`,
       );
     });
     it(`should reject a css asset with the name ${forbiddenAsset}`, () => {
@@ -22,9 +22,9 @@ describe('validateAllowedAssets', () => {
         validateAllowedAssets({
           css: [{ type: 'css', tag: '', url: forbiddenAsset }],
           js: [],
-        })
+        }),
       ).toThrowError(
-        `Cannot use ${forbiddenAsset}: This file cannot be used anymore give it was used prior to 2.18 and we can't use that file name anymore since cli may load this instead of the correct assets.`
+        `Cannot use ${forbiddenAsset}: This file cannot be used anymore give it was used prior to 2.18 and we can't use that file name anymore since cli may load this instead of the correct assets.`,
       );
     });
   }
@@ -34,7 +34,7 @@ describe('validateAllowedAssets', () => {
       validateAllowedAssets({
         js: [{ url: 'something.js', tag: '', jsModule: true, type: 'js' }],
         css: [{ url: 'something.css', type: 'css', tag: '' }],
-      })
+      }),
     ).not.toThrow();
   });
 });
@@ -45,7 +45,7 @@ describe('gzAssetNames', () => {
       gzAssetNames({
         js: [{ url: 'my.js', tag: '', type: 'js', jsModule: false }],
         css: [{ url: 'my.css', tag: '', type: 'css' }],
-      })
+      }),
     ).toEqual({
       js: [{ url: 'my.js.gz', tag: '', type: 'js', jsModule: false }],
       css: [{ url: 'my.css.gz', tag: '', type: 'css' }],
@@ -80,8 +80,8 @@ describe('generatePolyfillLoaderFile', () => {
               type: 'css',
             },
           ],
-        })
-      )
+        }),
+      ),
     ).toMatchInlineSnapshot(`
       "// This file exists for older cli using newer asset names.
       // THIS FILE IS GENERATED; DO NOT MODIFY BY HAND.

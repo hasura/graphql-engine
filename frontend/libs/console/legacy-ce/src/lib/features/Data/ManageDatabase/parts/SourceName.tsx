@@ -1,18 +1,14 @@
-import { useGetDatabaseSchemas } from '../../hooks/introspection/useDatabaseSchemas';
-import { ManageDatabaseProps } from '../ManageDatabase';
+import { Flex, Heading } from '@radix-ui/themes';
 import { SchemaDropdown } from './SchemaDropdown';
+import { Source } from '@hasura/shared/types';
 
-export function SourceName({ dataSourceName }: ManageDatabaseProps) {
-  const { data } = useGetDatabaseSchemas(dataSourceName);
-  const schemas = data ?? [];
+export function SourceName({ source }: { source: Source }) {
   return (
-    <div className="flex items-center">
-      <div className="group relative flex flex-row items-center my-2">
-        {schemas.length > 0 && (
-          <SchemaDropdown schemas={schemas} dataSourceName={dataSourceName} />
-        )}
-        <h1 className="text-xl font-semibold">{dataSourceName}</h1>
-      </div>
-    </div>
+    <Flex align="center">
+      <Flex align="center" gap="2" className="relative my-2">
+        <SchemaDropdown source={source} />
+        <Heading size="4">{source.name}</Heading>
+      </Flex>
+    </Flex>
   );
 }

@@ -1,15 +1,7 @@
 import { z } from 'zod';
-import { implement } from '../../../../utils/zodUtils';
-import { NativeQueryForm } from './types';
+import { reqString } from '@hasura/shared/utils';
 
-const reqString = (name: string) => {
-  return z
-    .string({ required_error: `${name} is required` })
-    .trim()
-    .min(1, `${name} is required`);
-};
-
-export const schema = implement<NativeQueryForm>().with({
+export const schema = z.object({
   root_field_name: reqString('Native Query Name'),
   comment: z.string().optional(),
   source: reqString('Database'),
@@ -29,7 +21,7 @@ export const schema = implement<NativeQueryForm>().with({
       z.object({
         name: z.string(),
         using: z.object({
-          column_mapping: z.record(z.string()),
+          column_mapping: z.record(z.string(), z.string()),
           insertion_order: z.union([
             z.literal('before_parent'),
             z.literal('after_parent'),
@@ -37,7 +29,7 @@ export const schema = implement<NativeQueryForm>().with({
           ]),
           remote_native_query: z.string(),
         }),
-      })
+      }),
     )
     .optional(),
   object_relationships: z
@@ -45,7 +37,7 @@ export const schema = implement<NativeQueryForm>().with({
       z.object({
         name: z.string(),
         using: z.object({
-          column_mapping: z.record(z.string()),
+          column_mapping: z.record(z.string(), z.string()),
           insertion_order: z.union([
             z.literal('before_parent'),
             z.literal('after_parent'),
@@ -53,7 +45,7 @@ export const schema = implement<NativeQueryForm>().with({
           ]),
           remote_native_query: z.string(),
         }),
-      })
+      }),
     )
     .optional(),
 });

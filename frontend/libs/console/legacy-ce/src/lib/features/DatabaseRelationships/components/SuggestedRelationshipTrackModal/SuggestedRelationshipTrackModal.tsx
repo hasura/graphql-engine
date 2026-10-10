@@ -1,17 +1,15 @@
 import React from 'react';
 import { z } from 'zod';
-import { Dialog } from '../../../../new-components/Dialog';
 import {
+  Dialog,
   useConsoleForm,
   GraphQLSanitizedInputField,
-} from '../../../../new-components/Form';
-import { hasuraToast } from '../../../../new-components/Toasts';
+  hasuraToast,
+  DisplayToastErrorMessage,
+  DialogFooter,
+} from '@hasura/shared/ui';
 import { SuggestedRelationshipWithName } from '../SuggestedRelationships/hooks/useSuggestedRelationships';
-import { useCreateTableRelationships } from '../../hooks/useCreateTableRelationships/useCreateTableRelationships';
-import { DisplayToastErrorMessage } from '../../../Data/components/DisplayErrorMessage';
-import { useAppDispatch } from '../../../../storeHooks';
-import { updateSchemaInfo } from '../../../../components/Services/Data/DataActions';
-import { MetadataSelectors, useMetadata } from '../../../hasura-metadata-api';
+import { useCreateTableRelationships } from '@hasura/metadata/data-source';
 
 type SuggestedRelationshipTrackModalProps = {
   relationship: SuggestedRelationshipWithName;
@@ -19,30 +17,15 @@ type SuggestedRelationshipTrackModalProps = {
   onClose: () => void;
 };
 
-export const SuggestedRelationshipTrackModal: React.VFC<
+export const SuggestedRelationshipTrackModal: React.FC<
   SuggestedRelationshipTrackModalProps
 > = ({ relationship, dataSourceName, onClose }) => {
-  const dispatch = useAppDispatch();
-  const { data: driver } = useMetadata(
-    m => MetadataSelectors.findSource(dataSourceName)(m)?.kind
-  );
-
-  const isLoadSchemaRequired = driver === 'mssql' || driver === 'postgres';
-
-  const { createTableRelationships, isLoading } = useCreateTableRelationships(
-    dataSourceName,
-    {
-      onSuccess: () => {
-        if (isLoadSchemaRequired) {
-          dispatch(updateSchemaInfo());
-        }
-      },
-    }
-  );
+  const { createTableRelationships, isPending } =
+    useCreateTableRelationships(dataSourceName);
 
   const onTrackRelationship = async (relationshipName: string) => {
-    createTableRelationships({
-      data: [
+    createTableRelationships(
+      [
         {
           name: relationshipName,
           source: {
@@ -66,21 +49,23 @@ export const SuggestedRelationshipTrackModal: React.VFC<
           },
         },
       ],
-      onSuccess: () => {
-        hasuraToast({
-          type: 'success',
-          title: 'Tracked Successfully',
-        });
-        onClose();
+      {
+        onSuccess: () => {
+          hasuraToast({
+            type: 'success',
+            title: 'Tracked Successfully',
+          });
+          onClose();
+        },
+        onError: (err) => {
+          hasuraToast({
+            type: 'error',
+            title: 'Failed to track',
+            children: <DisplayToastErrorMessage message={err.message} />,
+          });
+        },
       },
-      onError: err => {
-        hasuraToast({
-          type: 'error',
-          title: 'Failed to track',
-          children: <DisplayToastErrorMessage message={err.message} />,
-        });
-      },
-    });
+    );
   };
 
   const { Form, methods } = useConsoleForm({
@@ -100,26 +85,25 @@ export const SuggestedRelationshipTrackModal: React.VFC<
 
   return (
     <Dialog
-      hasBackdrop
       title={`Track relationship: ${relationshipName}`}
       description="Add the relationship to the GraphQL API. "
       onClose={onClose}
     >
-      <Form onSubmit={data => onTrackRelationship(data.relationshipName)}>
+      <Form onSubmit={(data) => onTrackRelationship(data.relationshipName)}>
         <>
-          <div className="m-4">
+          <div className="my-4">
             <GraphQLSanitizedInputField
               name="relationshipName"
               label="Relationship name"
-              placeholder="Relationship name"
               tooltip="Relationship names must be unique."
+              fieldProps={{ placeholder: 'Relationship name' }}
             />
           </div>
-          <Dialog.Footer
+          <DialogFooter
             callToDeny="Cancel"
             callToAction="Track relationship"
             onClose={onClose}
-            isLoading={isLoading}
+            isLoading={isPending}
           />
         </>
       </Form>

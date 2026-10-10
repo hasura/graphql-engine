@@ -1,11 +1,10 @@
-import { TableColumn } from '../../DataSource';
-import { RelationshipType } from '../../RelationshipsTable/types';
-import { MetadataDataSource } from '../../../metadata/types';
-import { ManualObjectRelationship } from '../../hasura-metadata-types';
+import { TableColumn } from '@hasura/metadata/data-source';
+import { getTableDisplayName } from '@hasura/shared/utils';
+import { MetadataTable, Source } from '@hasura/shared/types';
 
 const boolOperators = ['_and', '_or', '_not'];
 export const getBoolOperators = () => {
-  const boolMap = boolOperators.map(boolOperator => ({
+  const boolMap = boolOperators.map((boolOperator) => ({
     name: boolOperator,
     kind: 'boolOperator',
     meta: null,
@@ -19,7 +18,7 @@ const getExistOperators = () => {
 
 export const formatTableColumns = (columns: TableColumn[]) => {
   if (!columns) return [];
-  return columns?.map(column => {
+  return columns?.map((column) => {
     return {
       kind: 'column',
       name: column.name,
@@ -28,40 +27,45 @@ export const formatTableColumns = (columns: TableColumn[]) => {
   });
 };
 
-export const formatTableRelationships = (
-  metadataTables: MetadataDataSource['tables']
-) => {
+export const formatTableRelationships = (metadataTables: MetadataTable[]) => {
   if (!metadataTables) return [];
   const met = metadataTables.reduce(
-    (tally: RelationshipType[], curr: RelationshipType) => {
+    (tally, curr) => {
       const object_relationships = curr.object_relationships;
-      if (!object_relationships) return tally;
+      if (!object_relationships?.length) return tally;
+
       const relations = object_relationships
-        .map(
-          (relationship: {
-            using: {
-              manual_configuration: {
-                remote_table: { dataset: string; name: string };
-              };
-            };
-            name: string;
-          }) => {
-            if (!relationship?.using) return undefined;
-            return {
-              kind: 'relationship',
+        .map((relationship) => {
+          const relType =
+            'manual_configuration' in relationship?.using
+              ? getTableDisplayName(
+                  relationship.using.manual_configuration.remote_table,
+                  '',
+                  '_',
+                )
+              : '';
+          return {
+            kind: 'relationship',
+            name: relationship?.name,
+            meta: {
               name: relationship?.name,
-              meta: {
-                name: relationship?.name,
-                type: `${relationship?.using?.manual_configuration?.remote_table?.dataset}_${relationship?.using?.manual_configuration?.remote_table?.name}`,
-                isObject: true,
-              },
-            };
-          }
-        )
+              type: relType,
+              isObject: true,
+            },
+          };
+        })
         .filter(Boolean);
       return [...tally, ...relations];
     },
-    []
+    [] as {
+      kind: string;
+      name: string;
+      meta: {
+        name: string;
+        type: string;
+        isObject: boolean;
+      };
+    }[],
   );
   return met;
 };
@@ -70,7 +74,7 @@ export interface CreateOperatorsArgs {
   tableName: string;
   existingPermission?: Record<string, any>;
   tableColumns: TableColumn[];
-  sourceMetadataTables: MetadataDataSource['tables'] | undefined;
+  sourceMetadataTables: Source['tables'] | undefined;
 }
 
 export const createOperatorsObject = ({
@@ -92,10 +96,8 @@ export const createOperatorsObject = ({
       : [],
   };
 
-  const colNames = data.columns.map(col => col.name);
-  const relationships = data.relationships.map(
-    (rel: ManualObjectRelationship) => rel.name
-  );
+  const colNames = data.columns.map((col) => col.name);
+  const relationships = data.relationships.map((rel) => rel.name);
 
   const operators = Object.entries(existingPermission).reduce(
     (_acc, [key, value]) => {
@@ -111,7 +113,7 @@ export const createOperatorsObject = ({
                   tableColumns,
                   existingPermission: each,
                   sourceMetadataTables,
-                })
+                }),
               )
             : createOperatorsObject({
                 tableName,
@@ -123,9 +125,9 @@ export const createOperatorsObject = ({
       }
       if (relationships.includes(key)) {
         const rel = data.relationships.find(
-          (relationship: ManualObjectRelationship) => key === relationship.name
+          (relationship) => key === relationship.name,
         );
-        const typeName = rel?.meta?.type?.type;
+        const typeName = rel?.meta?.type;
 
         return {
           name: key,
@@ -156,7 +158,7 @@ export const createOperatorsObject = ({
 
       return key;
     },
-    {}
+    {},
   );
 
   return operators;

@@ -1,11 +1,11 @@
-import Skeleton from 'react-loading-skeleton';
-
 import { LogicalModelPermissions } from './LogicalModelPermissions';
 import { useCreateLogicalModelsPermissions } from './hooks/useCreateLogicalModelsPermissions';
 import { useRemoveLogicalModelsPermissions } from './hooks/useRemoveLogicalModelsPermissions';
-import { MetadataSelectors, useMetadata } from '../../hasura-metadata-api';
-import { extractModelsAndQueriesFromMetadata } from '../../hasura-metadata-api/selectors';
+import { useMetadata } from '@hasura/metadata/api';
 import { usePermissionComparators } from '../PermissionsForm/components/RowPermissionsBuilder/hooks/usePermissionComparators';
+import { Flex, Skeleton } from '@radix-ui/themes';
+import { MetadataSelectors } from '@hasura/metadata/helpers';
+import { Text } from '@hasura/shared/ui';
 
 export const LogicalModelPermissionsPage = ({
   source,
@@ -14,51 +14,54 @@ export const LogicalModelPermissionsPage = ({
   source: string;
   name: string;
 }) => {
-  const { data, isLoading } = useMetadata(m =>
-    extractModelsAndQueriesFromMetadata(m)
+  const { data, isLoading } = useMetadata((m) =>
+    MetadataSelectors.extractModelsAndQueriesFromMetadata(m),
   );
   const comparators = usePermissionComparators();
-  const { data: roles = [] } = useMetadata(MetadataSelectors.getRoles);
+  const { data: roles = [] } = useMetadata(MetadataSelectors.selectRoles);
   const logicalModels = data?.models ?? [];
   const logicalModel = logicalModels.find(
-    model => model.name === name && model.source.name === source
+    (model) => model.name === name && model.source.name === source,
   );
-  const { create, isLoading: isCreating } = useCreateLogicalModelsPermissions({
+  const { create, isPending: isCreating } = useCreateLogicalModelsPermissions({
     logicalModels,
     source: logicalModel?.source,
   });
-  const { remove, isLoading: isRemoving } = useRemoveLogicalModelsPermissions({
+  const { remove, isPending: isRemoving } = useRemoveLogicalModelsPermissions({
     logicalModels,
     source: logicalModel?.source,
   });
   return (
     <div
-      className="mt-md"
+      className="mt-4"
       // Recreate the key when the logical model permissions change to reset the form
       key={logicalModel?.select_permissions?.length}
     >
       {isLoading ? (
-        <div
-          className="flex items-center justify-center h-64"
+        <Flex
+          align="center"
+          justify="center"
+          className="h-64"
           data-testid="loading-logical-model-permissions"
         >
-          <Skeleton />
-        </div>
+          <Skeleton height="224px" />
+        </Flex>
       ) : !logicalModel ? (
-        <div className="flex items-center justify-center h-64">
-          <span className="text-gray-500">
+        <Flex align="center" justify="center" className="h-64">
+          <Text>
             Logical model with name {name} and driver {source} not found
-          </span>
-        </div>
+          </Text>
+        </Flex>
       ) : (
         <LogicalModelPermissions
-          onSave={async permission => {
+          onSave={async (permission) => {
             create({
               logicalModelName: logicalModel?.name,
               permission,
+              onSuccess: null,
             });
           }}
-          onDelete={async permission => {
+          onDelete={async (permission) => {
             remove({
               logicalModelName: logicalModel?.name,
               permission,

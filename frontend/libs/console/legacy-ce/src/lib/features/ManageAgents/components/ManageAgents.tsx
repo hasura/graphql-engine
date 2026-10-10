@@ -1,5 +1,5 @@
-import { Button } from '../../../new-components/Button';
-import React, { useState } from 'react';
+import { Button } from '@hasura/shared/ui';
+import { useState } from 'react';
 import { AddAgentForm } from './AddAgentForm';
 import { ManageAgentsTable } from './ManageAgentsTable';
 
@@ -9,7 +9,9 @@ export const ManageAgents = () => {
   return (
     <div>
       <ManageAgentsTable />
-      <Button onClick={() => setShowCreateAgentForm(true)}>Add Agent</Button>
+      <Button mode="default" onClick={() => setShowCreateAgentForm(true)}>
+        Add Agent
+      </Button>
       {showCreateAgentForm ? (
         <AddAgentForm
           onClose={() => setShowCreateAgentForm(false)}

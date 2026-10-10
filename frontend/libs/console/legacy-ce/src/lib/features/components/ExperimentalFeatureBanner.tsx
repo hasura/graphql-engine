@@ -1,41 +1,32 @@
-import clsx from 'clsx';
 import React from 'react';
 import { FaGithub } from 'react-icons/fa';
-import { Button } from '../../new-components/Button';
-import { IndicatorCard } from '../../new-components/IndicatorCard';
+import { IconType } from 'react-icons';
+import { Flex } from '@radix-ui/themes';
+import { Button, IndicatorCard, Text } from '@hasura/shared/ui';
 
-const twButtonExperimental = `from-purple-50 to-purple-50 border-purple-300 hover:border-purple-500 focus-visible:from-purple-200 focus-visible:to-purple-200 disabled:border-purple-300 !text-purple-800`;
-
-export const ExperimentalFeatureBanner: React.VFC<{
+export const ExperimentalFeatureBanner: React.FC<{
   githubIssueLink: string;
-  feedbackIcon?: JSX.Element;
+  feedbackIcon?: IconType;
 }> = ({ githubIssueLink, feedbackIcon }) => {
   return (
     <IndicatorCard
       status="experimental"
-      className="py-4 px-md"
       showIcon
-      contentFullWidth
+      headline="This is an experimental feature"
     >
-      <div className='flex items-center justify-between mx-4"'>
+      <Flex align="center" justify="between" gap="4">
+        <Text as="div">
+          Join the discussion on GitHub to talk about this feature or report
+          bugs
+        </Text>
         <div>
-          <h1 className="text-purple-800 font-bold text-lg">
-            This is an experimental feature
-          </h1>
-          <div className="text-muted">
-            Join the discussion on GitHub to talk about this feature or report
-            bugs
-          </div>
+          <a href={githubIssueLink} target="_blank" rel="noreferrer">
+            <Button color="purple" leftIcon={feedbackIcon ?? FaGithub}>
+              Share Feedback
+            </Button>
+          </a>
         </div>
-        <a href={githubIssueLink} target="_blank" rel="noreferrer">
-          <Button
-            className={clsx(twButtonExperimental)}
-            icon={feedbackIcon ?? <FaGithub />}
-          >
-            Share Feedback
-          </Button>
-        </a>
-      </div>
+      </Flex>
     </IndicatorCard>
   );
 };

@@ -1,29 +1,32 @@
 import React from 'react';
-import { browserHistory, Link, RouteComponentProps } from 'react-router';
+import { Flex, Heading } from '@radix-ui/themes';
+import { useLocation, useNavigate } from 'react-router';
 import { FaEdit, FaTimes, FaSearch, FaFilter } from 'react-icons/fa';
-import { Analytics, REDACT_EVERYTHING } from '../../../Analytics';
-import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
-
-import { Button } from '../../../../new-components/Button';
-import AceEditor from '../../../../components/Common/AceEditor/BaseEditor';
-import { DropdownButton } from '../../../../new-components/DropdownButton';
-import { BadgeColor } from '../../../../new-components/Badge';
-import { CardedTable } from '../../../../new-components/CardedTable';
-import Landing from '../../../../components/Services/ApiExplorer/Rest/Landing';
+import { Analytics, REDACT_EVERYTHING } from '@hasura/shared/analytics';
+import {
+  LearnMoreLink,
+  Button,
+  DropdownButton,
+  BadgeColor,
+  CardedTable,
+  hasuraToast,
+  Collapsible,
+  Text,
+  DropdownMenu,
+  Input,
+  SkeletonList,
+  IndicatorCard,
+  Badge,
+  GraphqlCodeBlock,
+  RelativeLink,
+} from '@hasura/shared/ui';
 import { badgeSort } from './utils';
-import { CollapsibleToggle } from '../../../../components/Common';
-import URLPreview from '../../../../components/Services/ApiExplorer/Rest/URLPreview';
-import { ExportOpenApiButton } from '../../../../components/Services/ApiExplorer/Rest/Form/ExportOpenAPI';
+import URLPreview from './URLPreview';
 import debounce from 'lodash/debounce';
-import clsx from 'clsx';
-import { useMetadata } from '../../../hasura-metadata-api';
-import { hasuraToast } from '../../../../new-components/Toasts';
-import { getConfirmation } from '../../../../components/Common/utils/jsUtils';
-import { useDeleteRestEndpoints } from '../../hooks/useDeleteRestEndpoints';
-
-interface ListComponentProps {
-  location: RouteComponentProps<unknown, unknown>['location'];
-}
+import { useDeleteRestEndpoints, useMetadata } from '@hasura/metadata/api';
+import { getConfirmation } from '@hasura/shared/utils';
+import Landing from './Landing';
+import { ExportOpenApiButton } from '../Form/ExportOpenAPI';
 
 const badgeColors: Record<string, BadgeColor> = {
   GET: 'green',
@@ -33,38 +36,32 @@ const badgeColors: Record<string, BadgeColor> = {
   PATCH: 'purple',
 };
 
-const focusYellowRing =
-  'block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus-visible:outline-0 focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:border-yellow-400 placeholder:text-slate-400 pl-10';
-
-export const RestEndpointList: React.FC<ListComponentProps> = ({
-  location,
-}) => {
+export const RestEndpointList: React.FC = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const {
     data: { restEndpoints = [], queryCollections = [] } = {},
     isError,
     isLoading,
-  } = useMetadata(m => ({
+  } = useMetadata((m) => ({
     restEndpoints: m.metadata?.rest_endpoints,
     queryCollections: m.metadata?.query_collections,
   }));
 
   const { deleteRestEndpoints } = useDeleteRestEndpoints();
-
   const [selectedMethods, setSelectedMethods] = React.useState<string[]>([]);
 
-  const highlighted = (location.query?.highlight as string)?.split(',') || [];
+  const highlighted =
+    new URLSearchParams(location.search).get('highlight')?.split(',') || [];
 
   const [search, setSearch] = React.useState('');
 
-  const emptySearch = React.useRef(false);
-
-  const processedEndpoints = React.useMemo(() => {
-    let localEmptySearch = true;
-    const localRestEndpoints = restEndpoints
-      ?.map(endpoint => {
+  const { processedEndpoints, emptySearch } = React.useMemo(() => {
+    const matches =
+      restEndpoints?.map((endpoint) => {
         const searchMatch =
           !search ||
-          endpoint.methods.some(i => {
+          endpoint.methods.some((i) => {
             return i.toLowerCase().includes(search.toLowerCase());
           }) ||
           endpoint.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -72,27 +69,41 @@ export const RestEndpointList: React.FC<ListComponentProps> = ({
 
         const methodMatch =
           selectedMethods.length === 0 ||
-          endpoint.methods.some(method => selectedMethods.includes(method));
+          endpoint.methods.some((method) => selectedMethods.includes(method));
 
-        localEmptySearch = localEmptySearch && !(searchMatch && methodMatch);
         return {
           endpoint,
-          className: searchMatch && methodMatch ? '' : 'hidden',
+          isVisible: searchMatch && methodMatch,
         };
-      })
-      ?.sort(endpoint =>
-        highlighted.includes(endpoint?.endpoint?.name) ? -1 : 1
+      }) ?? [];
+
+    const localRestEndpoints = matches
+      .map(({ endpoint, isVisible }) => ({
+        endpoint,
+        className: isVisible ? '' : 'hidden',
+      }))
+      .sort((endpoint) =>
+        highlighted.includes(endpoint?.endpoint?.name) ? -1 : 1,
       );
-    emptySearch.current = localEmptySearch;
-    return localRestEndpoints;
+
+    const localEmptySearch = matches.every((m) => !m.isVisible);
+
+    return {
+      processedEndpoints: localRestEndpoints,
+      emptySearch: localEmptySearch,
+    };
   }, [highlighted, restEndpoints, search, selectedMethods]);
 
   if (isLoading) {
-    return <div className="pl-10 mt-5 mb-xs">Loading REST Endpoints...</div>;
+    return <SkeletonList count={5} />;
   }
 
   if (isError) {
-    return <div>Error getting REST Endpoints</div>;
+    return (
+      <IndicatorCard status="negative" showIcon>
+        Error getting REST Endpoints
+      </IndicatorCard>
+    );
   }
 
   if (!queryCollections || !restEndpoints) {
@@ -100,9 +111,9 @@ export const RestEndpointList: React.FC<ListComponentProps> = ({
   }
 
   const findQuery = (name: string, collectionName: string) => {
-    const collection = queryCollections.find(q => q.name === collectionName);
+    const collection = queryCollections.find((q) => q.name === collectionName);
     if (collection) {
-      const query = collection.definition.queries.find(q => q.name === name);
+      const query = collection.definition.queries.find((q) => q.name === name);
       return query ? query.query : '';
     }
     return '';
@@ -122,7 +133,7 @@ export const RestEndpointList: React.FC<ListComponentProps> = ({
           message: `Successfully deleted ${name} REST endpoint`,
         });
       },
-      onError: error => {
+      onError: (error) => {
         hasuraToast({
           type: 'error',
           message: `Error deleting ${name} REST endpoint: ${error}`,
@@ -132,7 +143,7 @@ export const RestEndpointList: React.FC<ListComponentProps> = ({
   };
 
   const onClickEdit = (link: string) => () => {
-    browserHistory.push(`/api/rest/edit/${encodeURIComponent(link)}`);
+    navigate(`/api/rest/edit/${encodeURIComponent(link)}`);
   };
 
   const onSearchChange = debounce((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -141,9 +152,9 @@ export const RestEndpointList: React.FC<ListComponentProps> = ({
 
   return (
     <Analytics name="RestList" {...REDACT_EVERYTHING}>
-      <div className="pl-md pt-md pr-md">
-        <div className="flex">
-          <h2 className="text-xl font-bold pr-2">REST Endpoints</h2>
+      <div className="p-4">
+        <Flex gap="2" align="center">
+          <Heading size="4">REST Endpoints</Heading>
           <Analytics
             name="restified-create-btn-from-list-page"
             passHtmlAttributesToChildren
@@ -151,168 +162,152 @@ export const RestEndpointList: React.FC<ListComponentProps> = ({
             <Button
               mode="primary"
               size="sm"
-              onClick={() => browserHistory.push('/api/rest/create')}
+              onClick={() => navigate('/api/rest/create')}
             >
               Create REST
             </Button>
           </Analytics>
-        </div>
-        <div className="">
+        </Flex>
+        <Text>
           Create Rest endpoints on the top of existing GraphQL queries and
           mutations{' '}
-          <div className="w-8/12 mt-sm">
-            REST endpoints allow for the creation of a REST interface to your
-            saved GraphQL queries and mutations. Endpoints are generated from
-            /api/rest/* and inherit the authorization and permission structure
-            from your associated GraphQL nodes.
+          <div className="w-8/12 mt-2">
+            <Text>
+              REST endpoints allow for the creation of a REST interface to your
+              saved GraphQL queries and mutations. Endpoints are generated from
+              /api/rest/* and inherit the authorization and permission structure
+              from your associated GraphQL nodes.{' '}
+            </Text>
             <LearnMoreLink href="https://hasura.io/docs/latest/graphql/core/api-reference/restified.html" />
           </div>
-        </div>
-        <div className="flex pt-2 pb-1">
-          <div className={clsx('flex relative w-1/3')}>
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              {React.cloneElement(<FaSearch />, {
-                className: 'h-5 w-5 text-gray-400',
-                role: 'img',
-              })}
-            </div>
-            <input
+        </Text>
+        <Flex className="my-4">
+          <Flex className="relative w-8/12" align="center">
+            <Input
+              icon={FaSearch}
               placeholder="Search endpoints..."
               name="search"
-              className={focusYellowRing}
               onChange={onSearchChange}
+              full
             />
             <DropdownButton
-              options={{
-                item: {
-                  onSelect(e) {
-                    e.preventDefault();
-                  },
-                },
-              }}
-              className="w-32 rounded-l-none"
-              size="md"
+              size="2"
+              mode="default"
               data-testid="dropdown-button"
-              items={[
-                Object.keys(badgeColors).map(method => (
-                  <div
-                    className="py-1 w-full"
-                    onClick={() => {
-                      if (selectedMethods.includes(method)) {
-                        setSelectedMethods(
-                          selectedMethods.filter((m: string) => m !== method)
-                        );
-                      } else {
-                        setSelectedMethods([...selectedMethods, method]);
-                      }
-                    }}
-                  >
-                    <div className="flex items-center">
-                      <div className="mr-2 relative -top-1">
-                        <input
-                          type="checkbox"
-                          className="border border-gray-300 rounded "
-                          checked={selectedMethods.includes(method)}
-                        />
-                      </div>
-                      <div>{method.toUpperCase()}</div>
-                    </div>
-                  </div>
-                )),
-              ]}
+              leftIcon={FaFilter}
+              items={Object.keys(badgeColors).map((method) => (
+                <DropdownMenu.CheckboxItem
+                  key={method}
+                  checked={selectedMethods.includes(method)}
+                  onCheckedChange={(checked) => {
+                    if (!checked) {
+                      setSelectedMethods(
+                        selectedMethods.filter((m: string) => m !== method),
+                      );
+                    } else {
+                      setSelectedMethods([...selectedMethods, method]);
+                    }
+                  }}
+                >
+                  {method.toUpperCase()}
+                </DropdownMenu.CheckboxItem>
+              ))}
             >
-              <FaFilter className="mr-1 w-3 h-3" /> Method{' '}
+              Method{' '}
               {selectedMethods.length > 0 && `(${selectedMethods.length})`}
             </DropdownButton>
-          </div>
+          </Flex>
           <div className="ml-auto">
             <ExportOpenApiButton />
           </div>
-        </div>
+        </Flex>
         <CardedTable
-          showActionCell={false}
-          keyBuilder={index =>
-            processedEndpoints?.[index].endpoint.name || index.toString()
-          }
-          rowClassNames={processedEndpoints?.map(
-            endpoint => endpoint.className
-          )}
           columns={[
             'DETAILS',
             'ENDPOINT',
             'METHODS',
-            <div className="pr-10 float-right">MODIFY</div>,
+            <div key="modify" className="text-right">
+              MODIFY
+            </div>,
           ]}
           data={
-            processedEndpoints?.map(endpoint => [
-              <>
-                <Link
-                  to={{
-                    pathname: `/api/rest/details/${encodeURIComponent(
-                      endpoint.endpoint.name
-                    )}`,
-                    state: {
-                      ...endpoint,
-                      currentQuery: findQuery(
-                        endpoint.endpoint.name,
-                        endpoint.endpoint.definition.query.collection_name
-                      ),
-                    },
+            processedEndpoints?.map((endpoint) => [
+              <React.Fragment key={`details-${endpoint.endpoint.name}`}>
+                <RelativeLink
+                  to={`/api/rest/details/${encodeURIComponent(
+                    endpoint.endpoint.name,
+                  )}`}
+                  state={{
+                    ...endpoint,
+                    currentQuery: findQuery(
+                      endpoint.endpoint.name,
+                      endpoint.endpoint.definition.query.collection_name,
+                    ),
                   }}
                 >
-                  <h4>
+                  <Text>
                     {endpoint.endpoint.name}{' '}
                     {highlighted.includes(endpoint.endpoint.name) && (
-                      <span className="relative bottom-2 text-green-700">
-                        ●
-                      </span>
+                      <Text color="green">●</Text>
                     )}
-                  </h4>
-                </Link>
+                  </Text>
+                </RelativeLink>
                 {endpoint.endpoint.comment && (
-                  <p>{endpoint.endpoint.comment}</p>
+                  <Text>{endpoint.endpoint.comment}</Text>
                 )}
-              </>,
-              <div className="flex flex-col w-3/4">
+              </React.Fragment>,
+              <Flex
+                direction="column"
+                key={`preview-${endpoint.endpoint.name}`}
+                className="w-3/4"
+                gap="2"
+              >
                 <URLPreview urlInput={endpoint.endpoint.url} />
-                <CollapsibleToggle title="GraphQL Request" useDefaultTitleStyle>
-                  <AceEditor
-                    name="query-viewer"
-                    value={findQuery(
+                <Collapsible
+                  triggerChildren={<Text weight="bold">GraphQL Request</Text>}
+                  disableContentStyles
+                >
+                  <GraphqlCodeBlock
+                    className="mt-2"
+                    text={findQuery(
                       endpoint.endpoint.name,
-                      endpoint.endpoint.definition.query.collection_name
+                      endpoint.endpoint.definition.query.collection_name,
                     )}
-                    placeholder="query SampleQuery {}"
-                    height="300px"
-                    mode="graphqlschema"
-                    readOnly
-                    setOptions={{ useWorker: false }}
                   />
-                </CollapsibleToggle>
-              </div>,
-              badgeSort(endpoint.endpoint.methods).map(method => (
-                <span className="mr-sm" key={`badge-list-${method}`}>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
+                </Collapsible>
+              </Flex>,
+              <Flex
+                align="center"
+                gap="2"
+                key={`methods-${endpoint.endpoint.name}`}
+              >
+                {badgeSort(endpoint.endpoint.methods).map((method) => (
+                  <Badge key={method} color={badgeColors[method]}>
                     {method}
-                  </span>
-                </span>
-              )),
-              <div className="px-sm py-xs align-top float-right">
+                  </Badge>
+                ))}
+              </Flex>,
+              <Flex
+                key={`actions-${endpoint.endpoint.name}`}
+                justify="end"
+                align="center"
+                gap="2"
+              >
                 <Analytics
                   name="restified-delete-btn"
                   passHtmlAttributesToChildren
                 >
                   <Button
+                    mode="destructive"
                     size="sm"
                     onClick={onClickDelete(
                       endpoint.endpoint.name,
                       findQuery(
                         endpoint.endpoint.name,
-                        endpoint.endpoint.definition.query.collection_name
-                      )
+                        endpoint.endpoint.definition.query.collection_name,
+                      ),
                     )}
-                    icon={<FaTimes />}
-                    className="mr-1"
+                    leftIcon={FaTimes}
                   >
                     Delete
                   </Button>
@@ -322,19 +317,25 @@ export const RestEndpointList: React.FC<ListComponentProps> = ({
                   passHtmlAttributesToChildren
                 >
                   <Button
+                    mode="default"
                     size="sm"
-                    icon={<FaEdit />}
+                    leftIcon={FaEdit}
                     onClick={onClickEdit(endpoint.endpoint.name)}
                   >
                     Edit
                   </Button>
                 </Analytics>
-              </div>,
+              </Flex>,
             ]) ?? [[]]
           }
         />
-        {emptySearch.current &&
-          'No REST Endpoints available for current search'}
+        {emptySearch && (
+          <div className="p-4">
+            <Text align="center" as="div">
+              No REST Endpoints available for current search
+            </Text>
+          </div>
+        )}
       </div>
     </Analytics>
   );

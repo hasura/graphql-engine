@@ -2,8 +2,8 @@ import {
   InputArgumentsType,
   InputArgumentValueType,
   RemoteField,
-} from '../../../../../hasura-metadata-types';
-import { isEmpty } from '../../../../../../components/Common/utils/jsUtils';
+} from '@hasura/shared/types';
+import { isEmpty } from '@hasura/shared/utils';
 import { RemoteSchemaRelationship } from '../../../../types';
 import { parseArgValue } from './parts/RemoteSchemaTree/utils';
 import { RelationshipFields } from './types';
@@ -12,10 +12,10 @@ const serialiseArguments = (
   args: InputArgumentValueType,
   key: string,
   depth: number,
-  callback: (f: RelationshipFields) => void
+  callback: (f: RelationshipFields) => void,
 ): void => {
   if (typeof args === 'object') {
-    Object.keys(args).forEach(argName => {
+    Object.keys(args).forEach((argName) => {
       const argValue = args[argName];
       const argValueMetadata = parseArgValue(argValue);
       if (argValueMetadata) {
@@ -47,7 +47,7 @@ const serialiseRemoteField = (
   },
   key: string,
   depth: number,
-  callback: (f: RelationshipFields) => void
+  callback: (f: RelationshipFields) => void,
 ): void => {
   callback({
     key,
@@ -63,7 +63,7 @@ const serialiseRemoteField = (
       subField,
       `${key}.field.${subFieldName}`,
       depth + 1,
-      callback
+      callback,
     );
   }
   if (field.arguments) {
@@ -71,7 +71,7 @@ const serialiseRemoteField = (
       field.arguments,
       `${key}.arguments`,
       depth + 1,
-      callback
+      callback,
     );
   }
 };
@@ -79,7 +79,7 @@ const serialiseRemoteField = (
 // TODO: this only parses the remote relationship in old format, and the type `RemoteRelationship` is old format
 // we should extend this for both old & new format once the server work is done, and remove this comment
 export const parseServerRelationship = (
-  remoteField: RemoteSchemaRelationship['definition']['remote_field']
+  remoteField: RemoteSchemaRelationship['definition']['remote_field'],
 ): RelationshipFields[] => {
   const remoteFields = remoteField;
   if (!remoteFields || isEmpty(remoteFields)) {
@@ -93,35 +93,13 @@ export const parseServerRelationship = (
     { key, depth, checkable: false, argValue: null, type: 'field' },
   ];
 
-  Object.keys(remoteFields).forEach(rf => {
+  Object.keys(remoteFields).forEach((rf) => {
     serialiseRemoteField(
       remoteFields[rf],
       `${key}.field.${rf}`,
       depth + 1,
-      (field: RelationshipFields) => relationshipFields.push(field)
+      (field: RelationshipFields) => relationshipFields.push(field),
     );
   });
   return relationshipFields;
-};
-
-const matchAll = (re: RegExp, str: string) => {
-  let match;
-  const matches = [];
-  // eslint-disable-next-line no-cond-assign
-  while ((match = re.exec(str)) !== null) {
-    // ref : https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/exec
-    matches.push(match[0]);
-  }
-
-  return matches;
-};
-
-export const generateLhsFields = (resultSet: Record<string, unknown>) => {
-  const regexp = /([$])\w+/g;
-  const str = JSON.stringify(resultSet, null, 2);
-  const lhs_fieldSet = new Set<string>();
-
-  const results = matchAll(regexp, str);
-  results.forEach(i => lhs_fieldSet.add(i.substring(1))); // remove $ symbol from the string to pass as lhs_fields
-  return Array.from(lhs_fieldSet);
 };

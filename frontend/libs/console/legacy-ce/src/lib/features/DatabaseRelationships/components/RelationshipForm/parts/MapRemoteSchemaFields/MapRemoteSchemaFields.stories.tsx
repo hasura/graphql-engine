@@ -1,12 +1,12 @@
-import { useConsoleForm } from '../../../../../../new-components/Form';
+import { useConsoleForm, Button } from '@hasura/shared/ui';
 import { z } from 'zod';
 import { Controller } from 'react-hook-form';
-import { Button } from '../../../../../../new-components/Button';
-import { ReactQueryDecorator } from '../../../../../../storybook/decorators/react-query';
-import { StoryFn, Meta } from '@storybook/react';
+
+import { ReactQueryDecorator } from '@hasura/shared/testing';
+import { StoryFn, Meta } from '@storybook/react-webpack5';
 import { MapRemoteSchemaFields } from './MapRemoteSchemaFields';
-import { useRemoteSchemaIntrospection } from '../../../../hooks/useRemoteSchema';
 import { handlers } from '../../../../mocks/handler.mock';
+import { useIntrospectRemoteSchema } from '@hasura/metadata/api';
 
 export default {
   component: MapRemoteSchemaFields,
@@ -20,9 +20,7 @@ export const StandaloneComponent: StoryFn<
   typeof MapRemoteSchemaFields
 > = () => {
   const { data: remoteSchemaGraphQLSchema, isLoading } =
-    useRemoteSchemaIntrospection({
-      remoteSchemaName: 'trevorBladeCountriesAPI',
-    });
+    useIntrospectRemoteSchema('trevorBladeCountriesAPI');
 
   if (isLoading) return <>Loading...</>;
 
@@ -31,7 +29,7 @@ export const StandaloneComponent: StoryFn<
   return (
     <MapRemoteSchemaFields
       graphQLSchema={remoteSchemaGraphQLSchema}
-      onChange={result => {
+      onChange={(result) => {
         console.log(result);
       }}
     />
@@ -40,9 +38,7 @@ export const StandaloneComponent: StoryFn<
 
 export const WithReactHookForm: StoryFn<typeof MapRemoteSchemaFields> = () => {
   const { data: remoteSchemaGraphQLSchema, isLoading } =
-    useRemoteSchemaIntrospection({
-      remoteSchemaName: 'trevorBladeCountriesAPI',
-    });
+    useIntrospectRemoteSchema('trevorBladeCountriesAPI');
 
   const {
     methods: { control },

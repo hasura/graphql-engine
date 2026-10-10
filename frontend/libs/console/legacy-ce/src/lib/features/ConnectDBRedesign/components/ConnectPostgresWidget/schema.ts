@@ -1,11 +1,11 @@
 import { z } from 'zod';
 import { graphQLCustomizationSchema } from '../GraphQLCustomization/schema';
-import { Source } from '../../../hasura-metadata-types';
+import { Source } from '@hasura/shared/types';
 import { adaptPostgresConnection } from './utils/adaptResponse';
 
 const numberSchema = z.preprocess(
-  val => parseInt(val as string, 10),
-  z.union([z.number().min(0), z.nan()])
+  (val) => parseInt(val as string, 10),
+  z.union([z.number().min(0), z.nan()]),
 );
 
 export const poolSettingsSchema = z
@@ -77,7 +77,7 @@ export const schema = z.object({
 });
 
 export const getDefaultValues = (
-  metadataSource?: Source
+  metadataSource?: Source,
 ): PostgresConnectionSchema => {
   // if there is no exisiting connection, then return this template as default
   if (!metadataSource)

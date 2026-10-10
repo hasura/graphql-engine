@@ -334,7 +334,7 @@ mkSpockAction ::
 mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
   AppEnv {..} <- lift askAppEnv
   AppContext {..} <- liftIO $ getAppContext appStateRef
-  SchemaCache {..} <- liftIO $ getSchemaCache appStateRef
+  SchemaCache {scOpenTelemetryConfig} <- liftIO $ getSchemaCache appStateRef
   req <- Spock.request
   let origHeaders = Wai.requestHeaders req
       ipAddress = Wai.getSourceFromFallback req
@@ -619,7 +619,7 @@ v1Alpha1GQHandler queryType query = do
   reqHeaders <- asks hcReqHeaders
   ipAddress <- asks hcSourceIpAddress
   requestId <- asks hcRequestId
-  GH.runGQBatched acEnvironment acSQLGenCtx schemaCache acEnableAllowlist appEnvEnableReadOnlyMode appEnvPrometheusMetrics (_lsLogger appEnvLoggers) appEnvLicenseKeyCache requestId acResponseInternalErrorsConfig acRemoteSchemaResponsePriority acHeaderPrecedence acTraceQueryStatus userInfo ipAddress reqHeaders queryType query
+  GH.runGQBatched acEnvironment acSQLGenCtx schemaCache acEnableAllowlist appEnvEnableReadOnlyMode appEnvPrometheusMetrics (_lsLogger appEnvLoggers) appEnvLicenseKeyCache requestId acResponseInternalErrorsConfig acRemoteSchemaResponsePriority acHeaderPrecedence acRedactActionHandlerLogs acTraceQueryStatus userInfo ipAddress reqHeaders queryType query
 
 v1GQHandler ::
   ( MonadIO m,
@@ -740,6 +740,7 @@ class (Monad m) => ConsoleRenderer m where
     TelemetryStatus ->
     Maybe Text ->
     Maybe Text ->
+    Bool ->
     ConsoleType m ->
     m (Either String Text)
 
@@ -755,7 +756,7 @@ ceConsoleTypeIdentifier = \case
 
 instance (ConsoleRenderer m) => ConsoleRenderer (Tracing.TraceT m) where
   type ConsoleType (Tracing.TraceT m) = ConsoleType m
-  renderConsole a b c d e f = lift $ renderConsole a b c d e f
+  renderConsole a b c d e f g = lift $ renderConsole a b c d e f g
 
 -- Type class to get any extra [Pair] for the version API
 class (Monad m) => MonadVersionAPIWithExtraData m where
@@ -984,8 +985,6 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore closeWebsocketsOn
     setHeader jsonHeader
     Spock.lazyBytes $ encode $ object $ ["version" .= currentVersion] <> extraData
 
-  responseErrorsConfig <- liftIO $ acResponseInternalErrorsConfig <$> getAppContext appStateRef
-
   let customEndpointHandler ::
         RestRequest Spock.SpockMethod ->
         Handler m (HttpLogGraphQLInfo, APIResp)
@@ -1008,7 +1007,7 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore closeWebsocketsOn
               Spock.PATCH -> pure EP.PATCH
               other -> throw400 BadRequest $ "Method " <> tshow other <> " not supported."
             _ -> throw400 BadRequest $ "Nonstandard method not allowed for REST endpoints"
-        fmap JSONResp <$> runCustomEndpoint acEnvironment acSQLGenCtx schemaCache acEnableAllowlist appEnvEnableReadOnlyMode acRemoteSchemaResponsePriority acHeaderPrecedence acTraceQueryStatus appEnvPrometheusMetrics (_lsLogger appEnvLoggers) appEnvLicenseKeyCache requestId userInfo reqHeaders ipAddress req endpoints responseErrorsConfig
+        fmap JSONResp <$> runCustomEndpoint acEnvironment acSQLGenCtx schemaCache acEnableAllowlist appEnvEnableReadOnlyMode acRemoteSchemaResponsePriority acHeaderPrecedence acRedactActionHandlerLogs acTraceQueryStatus appEnvPrometheusMetrics (_lsLogger appEnvLoggers) appEnvLicenseKeyCache requestId userInfo reqHeaders ipAddress req endpoints acResponseInternalErrorsConfig
 
   -- See Issue #291 for discussion around restified feature
   Spock.hookRouteAll ("api" <//> "rest" <//> Spock.wildcard) $ \wildcard -> do
@@ -1095,7 +1094,7 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore closeWebsocketsOn
       $ apiHandler
 
   Spock.post "v1/relay" serveV1Relay
-  
+
   Spock.post "v1beta1/relay" serveV1Relay
 
   -- This exposes some simple RTS stats when we run with `+RTS -T`. We want
@@ -1216,7 +1215,7 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore closeWebsocketsOn
           AppContext {..} <- liftIO $ getAppContext appStateRef
           req <- Spock.request
           let headers = Wai.requestHeaders req
-          consoleHtml <- lift $ renderConsole path acAuthMode acEnableTelemetry appEnvConsoleAssetsDir appEnvConsoleSentryDsn consoleType
+          consoleHtml <- lift $ renderConsole path acAuthMode acEnableTelemetry appEnvConsoleAssetsDir appEnvConsoleSentryDsn appEnvDisableAdminSecret consoleType
           either (raiseGenericApiError logger appEnvLoggingSettings headers . internalError . T.pack) Spock.html consoleHtml
 
     serveApiConsoleAssets = do

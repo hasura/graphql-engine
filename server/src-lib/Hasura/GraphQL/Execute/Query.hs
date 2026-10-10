@@ -40,7 +40,7 @@ import Hasura.RemoteSchema.Metadata.Base (RemoteSchemaName (..))
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Init.Config (ResponseInternalErrorsConfig (..), shouldIncludeInternal)
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
-import Hasura.Server.Types (HeaderPrecedence, MonadGetPolicies, RequestId (..), TraceQueryStatus)
+import Hasura.Server.Types (HeaderPrecedence, MonadGetPolicies, RedactActionHandlerLogsStatus, RequestId (..), TraceQueryStatus)
 import Hasura.Services.Network
 import Hasura.Tracing (MonadTrace)
 import Hasura.Tracing qualified as Tracing
@@ -95,6 +95,7 @@ convertQuerySelSet ::
   Maybe G.Name ->
   ResponseInternalErrorsConfig ->
   HeaderPrecedence ->
+  RedactActionHandlerLogsStatus ->
   TraceQueryStatus ->
   m (ExecutionPlan, [QueryRootField UnpreparedValue], DirectiveMap, ParameterizedQueryHash, [ModelInfoPart])
 convertQuerySelSet
@@ -115,6 +116,7 @@ convertQuerySelSet
   maybeOperationName
   responseErrorsConfig
   headerPrecedence
+  redactActionHandlerLogs
   traceQueryStatus = do
     -- 1. Parse the GraphQL query into the 'RootFieldMap' and a 'SelectionSet'
     (unpreparedQueries, normalizedDirectives, normalizedSelectionSet) <-
@@ -168,7 +170,8 @@ convertQuerySelSet
                         (ActionExecContext reqHeaders (_uiSession userInfo))
                         (Just (GH._grQuery gqlUnparsed))
                         (shouldIncludeInternal (_uiRole userInfo) responseErrorsConfig)
-                        headerPrecedence,
+                        headerPrecedence
+                        redactActionHandlerLogs,
                     _aaeName s,
                     _aaeForwardClientHeaders s
                   )

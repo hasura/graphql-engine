@@ -1,6 +1,6 @@
-import { supportedNumericTypes } from '../../../../components/Services/ApiExplorer/Rest/utils';
-import { CardedTable } from '../../../../new-components/CardedTable';
-import { Collapsible } from '../../../../new-components/Collapsible';
+import { CardedTable, Collapsible } from '@hasura/shared/ui';
+
+import { supportedNumericTypes } from '../../../ApiExplorer/components/Rest/utils';
 import { Variable } from './RestEndpointDetails';
 
 type VariablesProps = {
@@ -26,12 +26,14 @@ export const Variables = (props: VariablesProps) => {
         <div className="absolute top-0 right-0"></div>
         <div className="font-semibold text-muted mb-4">Variables List</div>
         <CardedTable
-          showActionCell
           columns={['Name', 'Type', 'Value']}
           data={variables.map((variable, i) => [
-            <span className="font-semibold text-muted">{variable.name}</span>,
+            <span key={`name-${i}`} className="font-semibold text-muted">
+              {variable.name}
+            </span>,
             variable.type,
             <input
+              key={`value-${i}`}
               type={
                 supportedNumericTypes.includes(variable.type)
                   ? 'number'
@@ -41,12 +43,12 @@ export const Variables = (props: VariablesProps) => {
               placeholder="Enter value..."
               className="w-full font-normal text-muted border-0"
               value={variable.value}
-              onChange={e =>
+              onChange={(e) =>
                 setVariables(
-                  variables.map(v => ({
+                  variables.map((v) => ({
                     ...v,
                     value: v.name === variable.name ? e.target.value : v.value,
-                  }))
+                  })),
                 )
               }
             />,

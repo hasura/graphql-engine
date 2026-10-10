@@ -169,10 +169,7 @@
 .clearBoth {
   clear: both;
 }
-.displayFlex {
-  display: flex;
-  align-items: center;
-}
+
 .eclipseText {
   white-space: nowrap;
   overflow: hidden;
@@ -236,11 +233,7 @@
   padding-left: 0;
   padding-right: 0;
 }
-.noAccessContainer {
-  font-size: 16px;
-  margin-left: 20px;
-  margin-top: 20px;
-}
+
 .metricsWrapper {
   display: flex;
 }
@@ -387,9 +380,6 @@
 .ul_left_small {
   -webkit-padding-start: 15px;
 }
-.add_mar_top_small {
-  margin-top: 10px;
-}
 
 .addOperationsToAllowListBtn {
   max-width: 400px;
@@ -410,10 +400,6 @@
     color: #333;
     text-decoration: none;
   }
-}
-
-.add_mar_top {
-  margin-top: 20px;
 }
 
 .componentLeftSpacing {
@@ -520,6 +506,9 @@
   height: calc(100vh - 54px);
   overflow: auto;
   width: calc(100% - 240px);
+  background-color: white;
+  color: #505050;
+
   .headerWrapper {
     display: flex;
     align-items: center;
@@ -688,10 +677,6 @@
   padding: 8px 0;
   box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.16);
   margin-bottom: 30px;
-}
-.selectBoxWrapper {
-  // display: flex;
-  // align-items: center;
 }
 .commonInput {
   height: 37px;
@@ -1393,10 +1378,6 @@
   display: flex;
   align-items: center;
   width: 100%;
-
-  :global .react-toggle {
-    margin-left: 25px;
-  }
 }
 
 .disabledButton {
@@ -1455,8 +1436,6 @@
   padding-bottom: 24px;
 }
 .filterBadge {
-  display: inline-block;
-  text-align: center;
   margin: 0 10px;
   padding: 5px 4px 4px 6px;
 
@@ -1525,13 +1504,6 @@
   font-weight: 500;
   outline: none;
   margin-left: 5px;
-}
-
-.paginationFooter {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-around;
-  margin-top: 10px;
 }
 
 .textCenterAlign {
@@ -1624,7 +1596,9 @@
   animation: fadeIn 0.3s ease-out;
   text-decoration: none;
   width: 100vw; /* Set width to 100% of viewport */
-  transition: background-color 0.3s, box-shadow 0.3s;
+  transition:
+    background-color 0.3s,
+    box-shadow 0.3s;
 }
 
 .banner:hover {

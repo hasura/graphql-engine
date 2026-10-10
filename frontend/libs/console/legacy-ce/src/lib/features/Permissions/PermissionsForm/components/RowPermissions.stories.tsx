@@ -1,9 +1,8 @@
-/* eslint-disable react/jsx-pascal-case */
 import React from 'react';
-import { StoryObj, Meta } from '@storybook/react';
-import { SimpleForm } from '../../../../new-components/Form';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
+import { SimpleForm } from '@hasura/shared/ui';
 import { z } from 'zod';
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
 import {
   RowPermissionsProps,
   RowPermissionsSection,
@@ -49,7 +48,7 @@ const defaultProps: Props = {
 };
 
 export const Insert: StoryObj<Props> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsSectionWrapper {...args.wrapper}>
       <RowPermissionsSection {...args.section} />
     </RowPermissionsSectionWrapper>
@@ -61,7 +60,7 @@ export const Insert: StoryObj<Props> = {
 };
 
 export const Select: StoryObj<Props> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsSectionWrapper {...args.wrapper}>
       <RowPermissionsSection {...args.section} />
     </RowPermissionsSectionWrapper>
@@ -77,7 +76,7 @@ export const Select: StoryObj<Props> = {
 };
 
 export const Update: StoryObj<Props> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsSectionWrapper {...args.wrapper}>
       <RowPermissionsSection {...args.section} />
     </RowPermissionsSectionWrapper>
@@ -93,7 +92,7 @@ export const Update: StoryObj<Props> = {
 };
 
 export const Delete: StoryObj<Props> = {
-  render: args => (
+  render: (args) => (
     <RowPermissionsSectionWrapper {...args.wrapper}>
       <RowPermissionsSection {...args.section} />
     </RowPermissionsSectionWrapper>
@@ -116,7 +115,7 @@ type ShowcaseProps = {
 };
 
 export const Showcase: StoryObj<ShowcaseProps> = {
-  render: args => (
+  render: (args) => (
     <>
       {Object.entries(args).map(([, value]) => (
         <RowPermissionsSectionWrapper {...value.wrapper}>

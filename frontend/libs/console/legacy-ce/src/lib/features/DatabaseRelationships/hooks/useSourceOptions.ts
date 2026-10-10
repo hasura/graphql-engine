@@ -1,27 +1,27 @@
-import {
-  useInconsistentMetadata,
-  useMetadata,
-} from '../../hasura-metadata-api';
+import { useInconsistentMetadata, useMetadata } from '@hasura/metadata/api';
+import { getTableLabel } from '@hasura/shared/utils';
 import { SourceOption } from '../components/RelationshipForm/parts/SourceSelect';
-import { getTableLabel } from '../components/RelationshipForm/utils';
+import { useMemo } from 'react';
 
 export const useSourceOptions = () => {
-  const { data: inconsistentSources = [], isFetching } =
-    useInconsistentMetadata(m => {
-      return m.inconsistent_objects
-        .filter(item => item.type === 'source')
-        .map(source => source.definition);
-    });
+  const { data: inconsistentSources } = useInconsistentMetadata((m) => {
+    return m.inconsistent_objects
+      .filter((item) => 'type' in item && item.type === 'source')
+      .map((source) => source.definition);
+  });
 
-  return useMetadata(
-    m => {
-      const tables: SourceOption[] = m.metadata.sources
-        .filter(source => !inconsistentSources.includes(source.name))
-        .map(source => {
-          return source.tables.map<SourceOption>(t => ({
+  const { data: m, ...queryResults } = useMetadata();
+
+  const sourceOptions = useMemo(() => {
+    const tables: SourceOption[] =
+      m?.metadata.sources
+        .filter((source) => !inconsistentSources?.includes(source.name))
+        .map((source) => {
+          return source.tables.map<SourceOption>((t) => ({
             value: {
               type: 'table',
               dataSourceName: source.name,
+              driver: source.kind,
               table: t.table,
             },
             label: getTableLabel({
@@ -30,19 +30,21 @@ export const useSourceOptions = () => {
             }),
           }));
         })
-        .flat();
+        .flat() ?? [];
 
-      const remoteSchemas = (m.metadata.remote_schemas ?? []).map<SourceOption>(
-        rs => ({
-          value: { type: 'remoteSchema', remoteSchema: rs.name },
-          label: rs.name,
-        })
-      );
+    const remoteSchemas = (m?.metadata.remote_schemas ?? []).map<SourceOption>(
+      (rs) => ({
+        value: { type: 'remoteSchema', remoteSchema: rs.name },
+        label: rs.name,
+      }),
+    );
 
-      return [...tables, ...remoteSchemas];
-    },
-    {
-      enabled: !isFetching,
-    }
-  );
+    return [...tables, ...remoteSchemas];
+  }, [m, inconsistentSources]);
+
+  return {
+    ...queryResults,
+    sourceOptions,
+    inconsistentSources: inconsistentSources ?? [],
+  };
 };

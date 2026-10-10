@@ -1,9 +1,10 @@
 import * as React from 'react';
+import { Flex } from '@radix-ui/themes';
 import { RoleBasedSchema } from '../types';
 
-export const ChangeSummary: React.VFC<{
+export const ChangeSummary: React.FC<{
   changes: RoleBasedSchema['changes'];
-}> = props => {
+}> = (props) => {
   const { changes } = props;
 
   if (!changes) {
@@ -11,13 +12,13 @@ export const ChangeSummary: React.VFC<{
   }
 
   const numBreakingChanges = changes.filter(
-    c => c.criticality.level === 'BREAKING'
+    (c) => c.criticality.level === 'BREAKING',
   ).length;
   const numDangerousChanges = changes.filter(
-    c => c.criticality.level === 'DANGEROUS'
+    (c) => c.criticality.level === 'DANGEROUS',
   ).length;
   const numSafeChanges = changes.filter(
-    c => c.criticality.level === 'NON_BREAKING'
+    (c) => c.criticality.level === 'NON_BREAKING',
   ).length;
 
   if (
@@ -29,25 +30,25 @@ export const ChangeSummary: React.VFC<{
   }
 
   return (
-    <div className="flex flex-row justify-between w-[28%]">
+    <Flex direction="row" justify="between" className="w-[28%]">
       <div className="flex-col">
-        <div className="flex text-red-600 text-2xl font-bold">
+        <Flex className="text-red-600 text-2xl font-bold">
           {numBreakingChanges}
-        </div>
+        </Flex>
         <span>Breaking</span>
       </div>
       <div className="flex-col">
-        <div className="flex text-red-800 text-2xl font-bold">
+        <Flex className="text-red-800 text-2xl font-bold">
           {numDangerousChanges}
-        </div>
+        </Flex>
         <span>Dangerous</span>
       </div>
       <div className="flex-col">
-        <div className="flex text-green-600 text-2xl font-bold">
+        <Flex className="text-green-600 text-2xl font-bold">
           {numSafeChanges}
-        </div>
+        </Flex>
         <span>Safe</span>
       </div>
-    </div>
+    </Flex>
   );
 };

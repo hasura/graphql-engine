@@ -3,7 +3,7 @@ import React from 'react';
 const GlobalTypesDefIcon: React.FC = () => {
   return (
     <svg
-      className="w-4 mr-xs h-5 w-5"
+      className="w-4 mr-1 h-5 w-5"
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 20 20"
       fill="currentColor"

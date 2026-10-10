@@ -1,36 +1,29 @@
-import { transformErrorResponse } from '../../ConnectDBRedesign/utils';
-import { useMetadataMigration } from '../../MetadataAPI';
-import { MetadataMigrationOptions } from '../../MetadataAPI/hooks/useMetadataMigration';
-import { useMetadata } from '../../hasura-metadata-api';
-import { NativeQuery, Source } from '../../hasura-metadata-types';
+import {
+  useMetadataMigration,
+  MetadataMigrationOptions,
+  useMetadataHelpers,
+} from '@hasura/metadata/api';
+import { NativeQuery } from '@hasura/shared/types';
 import { NativeQueryMigrationBuilder } from '../LogicalModels/MigrationBuilder';
-import { getSourceDriver } from './utils';
+import { getDriverPrefix } from '@hasura/metadata/helpers';
 
 export type TrackNativeQuery = {
   source: string;
 } & NativeQuery;
 
-export type UntrackNativeQuery = { source: Source } & Pick<
-  NativeQuery,
-  'root_field_name'
->;
+export type UntrackNativeQuery = {
+  sourceName: string;
+  rootFieldName: string;
+};
 
 export const useTrackNativeQuery = (
-  globalMutateOptions?: MetadataMigrationOptions
+  globalMutateOptions?: MetadataMigrationOptions,
 ) => {
-  /**
-   * Get the required metadata variables - sources & resource_version
-   */
-  const { data: { sources = [], resource_version } = {} } = useMetadata(m => ({
-    sources: m.metadata.sources,
-    resource_version: m.resource_version,
-  }));
-
+  const { fetchSource } = useMetadataHelpers();
   const { mutate, ...rest } = useMetadataMigration({
     ...globalMutateOptions,
-    errorTransform: transformErrorResponse,
-    onSuccess: (data, variable, ctx) => {
-      globalMutateOptions?.onSuccess?.(data, variable, ctx);
+    onSuccess: (data, variable, onMutateResult, context) => {
+      globalMutateOptions?.onSuccess?.(data, variable, onMutateResult, context);
     },
   });
 
@@ -43,15 +36,12 @@ export const useTrackNativeQuery = (
     editDetails?: { rootFieldName: string };
   } & MetadataMigrationOptions) => {
     const { source, ...nativeQuery } = args;
-    const driver = getSourceDriver(sources, args.source);
-
-    if (!driver) {
-      throw new Error('Source could not be found. Unable to identify driver.');
-    }
+    const { source: selectedSource, resource_version } =
+      await fetchSource(source);
 
     const builder = new NativeQueryMigrationBuilder({
       dataSourceName: source,
-      driver,
+      driver: selectedSource.kind,
       nativeQuery,
     });
 
@@ -62,37 +52,36 @@ export const useTrackNativeQuery = (
       ? builder.untrack(editDetails.rootFieldName).track().payload()
       : builder.track().payload();
 
-    mutate(
+    return mutate(
       {
         query: {
           resource_version,
           type: 'bulk_atomic',
-
           args: argz,
         },
       },
-      options
+      options,
     );
   };
 
-  const untrackNativeQuery = async ({
-    data: args,
-    ...options
-  }: {
-    data: UntrackNativeQuery;
-  } & MetadataMigrationOptions) => {
-    mutate(
+  const untrackNativeQuery = async (
+    args: UntrackNativeQuery,
+    options?: MetadataMigrationOptions,
+  ) => {
+    const { source, resource_version } = await fetchSource(args.sourceName);
+
+    return mutate(
       {
         query: {
           resource_version,
-          type: `${args.source.kind}_untrack_native_query`,
+          type: `${getDriverPrefix(source.kind)}_untrack_native_query` as const,
           args: {
-            source: args.source.name,
-            root_field_name: args.root_field_name,
+            source: source.name,
+            root_field_name: args.rootFieldName,
           },
         },
       },
-      options
+      options,
     );
   };
 

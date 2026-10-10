@@ -16,89 +16,18 @@
       "inputs": ["{workspaceRoot}/dist/apps/console-ce/**"],
       "dependsOn": ["build"]
     },
-    "build": {
-      "executor": "@nrwl/webpack:webpack",
-      "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
-      "options": {
-        "compiler": "babel",
-        "outputPath": "dist/apps/console-ce",
-        "index": "apps/console-ce/src/index.html",
-        "baseHref": "/",
-        "main": "apps/console-ce/src/main.tsx",
-        "polyfills": "apps/console-ce/src/polyfills.ts",
-        "tsConfig": "apps/console-ce/tsconfig.app.json",
-        "buildLibsFromSource": false,
-        "assets": [
-          {
-            "glob": "**",
-            "input": "apps/console-ce/src/assets/common",
-            "output": "common"
-          }
-        ],
-        "styles": ["apps/console-ce/src/css/tailwind.css"],
-        "scripts": [],
-        "webpackConfig": "custom-webpack.config.js",
-        "postcssConfig": "apps/console-ce/postcss.config.js",
-        "isolatedConfig": true
-      },
-      "configurations": {
-        "development": {
-          "extractLicenses": false,
-          "outputHashing": "none",
-          "extractCss": false,
-          "optimization": false,
-          "sourceMap": true,
-          "vendorChunk": true
-        },
-        "production": {
-          "fileReplacements": [
-            {
-              "replace": "apps/console-ce/src/environments/environment.ts",
-              "with": "apps/console-ce/src/environments/environment.prod.ts"
-            }
-          ],
-          "optimization": true,
-          "outputHashing": "bundles",
-          "extractCss": false,
-          "sourceMap": true,
-          "namedChunks": true,
-          "generateIndexHtml": true,
-          "extractLicenses": false,
-          "vendorChunk": true
-        }
-      }
-    },
-    "serve": {
-      "executor": "@nrwl/webpack:dev-server",
-      "defaultConfiguration": "development",
-      "options": {
-        "buildTarget": "console-ce:build",
-        "hmr": true
-      },
-      "configurations": {
-        "development": {
-          "buildTarget": "console-ce:build:development"
-        },
-        "production": {
-          "buildTarget": "console-ce:build:production",
-          "hmr": false
-        }
-      }
-    },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["apps/console-ce/**/*.{ts,tsx,js,jsx,json}"]
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/apps/console-ce"],
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "jestConfig": "apps/console-ce/jest.config.ts",
-        "passWithNoTests": true
+        "reportsDirectory": "coverage/apps/console-ce"
       }
     }
   }

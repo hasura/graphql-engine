@@ -1,42 +1,53 @@
 import { getAllTableRelationships } from '../../../../../DatabaseRelationships/utils/tableRelationships';
 import { useTablesWithColumns } from './useTablesWithColumns';
-import { useSources } from '../../../../../MetadataAPI';
-import { TableToLoad, Tables } from '../components';
+import { TableToLoad } from '../components';
 import { useAllSuggestedRelationships } from '../../../../../DatabaseRelationships/components/SuggestedRelationships/hooks/useAllSuggestedRelationships';
+import { Metadata, Source, Table } from '@hasura/shared/types';
+import { useState } from 'react';
 
 export const usePermissionTables = ({
-  dataSourceName,
-  tablesToLoad,
+  source,
+  metadata,
+  table,
 }: {
-  dataSourceName: string;
-  tablesToLoad: TableToLoad;
-}): { isLoading: boolean; tables: Tables | null } => {
-  const { data: sources, isLoading: isLoadingSources } = useSources();
+  source: Source;
+  table: Table;
+  metadata: Metadata['metadata'];
+}) => {
+  const [tablesToLoad, setTablesToLoad] = useState<TableToLoad>([
+    { table, source: source.name },
+  ]);
+
   const { data: tables, isLoading: isLoadingTables } = useTablesWithColumns({
     tablesToLoad,
+    metadata,
   });
 
   const { suggestedRelationships, isLoadingSuggestedRelationships } =
     useAllSuggestedRelationships({
-      dataSourceName,
+      source,
       isEnabled: true,
       omitTracked: false,
     });
 
-  if (isLoadingTables || isLoadingSuggestedRelationships || isLoadingSources)
-    return { isLoading: true, tables: [] };
+  if (isLoadingTables || isLoadingSuggestedRelationships)
+    return { isLoading: true, tablesToLoad, setTablesToLoad, tables: [] };
 
   return {
     isLoading: false,
+    tablesToLoad,
+    setTablesToLoad,
     tables:
       tables?.map(({ metadataTable, columns, sourceName }) => {
         return {
           table: metadataTable.table,
-          dataSource: sources?.find(source => source.name === sourceName),
+          dataSource: metadata.sources?.find(
+            (source) => source.name === sourceName,
+          ),
           relationships: getAllTableRelationships(
             metadataTable,
-            dataSourceName,
-            suggestedRelationships
+            source.name,
+            suggestedRelationships,
           ),
           columns,
           computedFields: metadataTable.computed_fields ?? [],

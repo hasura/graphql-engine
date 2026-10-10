@@ -1,11 +1,12 @@
-import { Meta, StoryObj } from '@storybook/react';
+import { Meta, StoryObj } from '@storybook/react-webpack5';
 import globals from '../../Globals';
-import { ReactQueryDecorator } from '../../storybook/decorators/react-query';
-import { isCloudConsole } from '../../utils';
+import {
+  ReactQueryDecorator,
+  ConsoleTypeDecorator,
+} from '@hasura/shared/testing';
 import { ConnectDatabaseV2 } from './ConnectDatabase';
 import { useEnvironmentState } from './hooks';
 import { handlers } from './mocks/handlers.mock';
-import { ConsoleTypeDecorator } from '../../storybook/decorators';
 
 export default {
   component: ConnectDatabaseV2,
@@ -16,7 +17,7 @@ export default {
 } as Meta<typeof ConnectDatabaseV2>;
 
 const Template: StoryObj<typeof ConnectDatabaseV2> = {
-  render: args => <ConnectDatabaseV2 {...args} />,
+  render: (args) => <ConnectDatabaseV2 {...args} />,
   args: {
     eeLicenseInfo: 'eligible',
     consoleType: 'pro-lite',
@@ -27,7 +28,7 @@ export const FromEnvironment: StoryObj<typeof ConnectDatabaseV2> = {
   decorators: [ConsoleTypeDecorator({ consoleType: 'cloud-pro' })],
   render: () => {
     const env = useEnvironmentState();
-    const cloud = isCloudConsole(globals);
+    const cloud = true;
     return (
       <div>
         <div className="my-3">

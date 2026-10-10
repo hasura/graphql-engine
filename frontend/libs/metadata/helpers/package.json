@@ -1,0 +1,13 @@
+{
+  "name": "@hasura/metadata/helpers",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "tslib": "^2.3.0",
+    "@hasura/shared/types": "0.0.1",
+    "@hasura/shared/utils": "0.0.1"
+  }
+}

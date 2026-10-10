@@ -1,6 +1,5 @@
 import { FeatureFlagDefinition } from './types';
-import { isProConsole } from '../../utils/proConsole';
-import globals from '../../Globals';
+import { isProConsole } from '@hasura/shared/utils';
 
 const relationshipTabTablesId = 'f6c57c31-abd3-46d9-aae9-b97435793273';
 const importActionFromOpenApiId = '12e5aaf4-c794-4b8f-b762-5fda0bff946a';
@@ -55,6 +54,6 @@ export const availableFeatureFlags: FeatureFlagDefinition[] = [
     defaultValue: false,
     discussionUrl: '',
   },
-  // eslint-disable-next-line no-underscore-dangle
-  ...(isProConsole(globals) ? [importActionFromOpenApi] : []),
+
+  ...(isProConsole(window.__env) ? [importActionFromOpenApi] : []),
 ];

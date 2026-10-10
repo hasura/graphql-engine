@@ -1,18 +1,25 @@
 import { TbMathFunction } from 'react-icons/tb';
-import { QualifiedFunction } from '../../../../hasura-metadata-types';
-import { functionDisplayName } from '../utils';
+import { Flex } from '@radix-ui/themes';
+import { TableFunction } from '@hasura/shared/types';
+import { functionDisplayName } from '@hasura/metadata/helpers';
+import { To } from 'react-router';
+import { RelativeLink } from '@hasura/shared/ui';
 
 export const FunctionDisplayName = ({
   dataSourceName,
   qualifiedFunction,
+  to,
 }: {
   dataSourceName?: string;
-  qualifiedFunction: QualifiedFunction;
+  qualifiedFunction: TableFunction;
+  to?: To;
 }) => {
-  return (
-    <div className="flex gap-1 items-center">
-      <TbMathFunction className="text-muted mr-xs" />
+  const content = (
+    <Flex gap="1" align="center">
+      <TbMathFunction className="text-muted mr-1" />
       {functionDisplayName({ dataSourceName, qualifiedFunction })}
-    </div>
+    </Flex>
   );
+
+  return to ? <RelativeLink to={to}>{content}</RelativeLink> : content;
 };

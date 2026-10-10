@@ -6,7 +6,7 @@ export type { SlackOauthStatus } from './useSlackOAuth';
 
 export const useSlackIntegration = (
   onDeleteClose: () => void,
-  oauthString?: string
+  oauthString?: string,
 ) => {
   const { slackOauthStatus, startSlackOAuth } = useSlackOAuth(oauthString);
   const { deleteSlackApp } = useDeleteSlackApp(onDeleteClose);

@@ -1,14 +1,14 @@
-import { LogicalModel } from '../../../../hasura-metadata-types';
+import { LogicalModel } from '@hasura/shared/types';
 import {
   isArrayLogicalModelType,
   isArrayScalarFieldType,
   isLogicalModelType,
   isScalarFieldType,
-} from '../../../../hasura-metadata-types/source/typeGuards';
+} from '@hasura/shared/types';
 import { AddLogicalModelFormData } from '../../LogicalModelWidget/validationSchema';
 
 export function logicalModelFieldToFormField(
-  f: LogicalModel['fields'][number]
+  f: LogicalModel['fields'][number],
 ): AddLogicalModelFormData['fields'][number] {
   if (isScalarFieldType(f.type)) {
     return {

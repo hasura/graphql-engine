@@ -1,40 +1,13 @@
 import {
-  isSchemaTable,
-  isDatasetTable,
-  isGDCTable,
-} from '../../../DataSource/utils';
-import {
   BulkAtomicResponse,
   BulkKeepGoingResponse,
   Table,
-} from '../../../hasura-metadata-types';
+} from '@hasura/shared/types';
 import { useCallback } from 'react';
 import { MODE } from '../../types';
-import { generateLhsFields } from './parts/MapRemoteSchemaFields/utils';
 import { Schema } from './schema';
-import { useCreateTableRelationships } from '../../hooks/useCreateTableRelationships/useCreateTableRelationships';
-
-export const getTableLabel = ({
-  dataSourceName,
-  table,
-}: {
-  dataSourceName: string;
-  table: Table;
-}) => {
-  if (isSchemaTable(table)) {
-    return `${dataSourceName} / ${table.schema} / ${table.name}`;
-  }
-
-  if (isDatasetTable(table)) {
-    return `${dataSourceName} / ${table.dataset} / ${table.name}`;
-  }
-
-  if (isGDCTable(table)) {
-    return `${dataSourceName} / ${table.join(' /')}`;
-  }
-
-  return '';
-};
+import { generateLhsFields } from '../../../RemoteRelationships/utils';
+import { useCreateTableRelationships } from '@hasura/metadata/data-source';
 
 export const useHandleSubmit = ({
   dataSourceName,
@@ -54,7 +27,7 @@ export const useHandleSubmit = ({
     {
       onSuccess,
       onError,
-    }
+    },
   );
 
   const handleSubmit = useCallback(
@@ -62,27 +35,25 @@ export const useHandleSubmit = ({
       const { fromSource, toSource, details } = formData;
 
       if (toSource.type === 'remoteSchema' && 'rsFieldMapping' in details) {
-        createTableRelationships({
-          data: [
-            {
-              name: formData.name,
-              source: {
-                fromSource: fromSource.dataSourceName,
-                fromTable: fromSource.table,
+        createTableRelationships([
+          {
+            name: formData.name,
+            source: {
+              fromSource: fromSource.dataSourceName,
+              fromTable: fromSource.table,
+            },
+            isEditMode: mode === MODE.EDIT,
+            definition: {
+              target: {
+                toRemoteSchema: toSource.remoteSchema,
               },
-              isEditMode: mode === MODE.EDIT,
-              definition: {
-                target: {
-                  toRemoteSchema: toSource.remoteSchema,
-                },
-                detail: {
-                  lhs_fields: generateLhsFields(details.rsFieldMapping),
-                  remote_field: details.rsFieldMapping,
-                },
+              detail: {
+                lhs_fields: generateLhsFields(details.rsFieldMapping),
+                remote_field: details.rsFieldMapping,
               },
             },
-          ],
-        });
+          },
+        ]);
         return;
       }
 
@@ -94,33 +65,29 @@ export const useHandleSubmit = ({
         fromSource.dataSourceName === toSource.dataSourceName &&
         'columnMap' in details
       ) {
-        console.log('here', formData);
-        createTableRelationships({
-          data: [
-            {
-              name: formData.name,
-              source: {
-                fromSource: fromSource.dataSourceName,
-                fromTable: fromSource.table,
+        createTableRelationships([
+          {
+            name: formData.name,
+            source: {
+              fromSource: fromSource.dataSourceName,
+              fromTable: fromSource.table,
+            },
+            isEditMode: mode === MODE.EDIT,
+            definition: {
+              target: {
+                toSource: toSource.dataSourceName,
+                toTable: toSource.table,
               },
-              isEditMode: mode === MODE.EDIT,
-              definition: {
-                target: {
-                  toSource: toSource.dataSourceName,
-                  toTable: toSource.table,
-                },
-                type:
-                  details.relationshipType === 'Object' ? 'object' : 'array',
-                detail: {
-                  columnMapping: (details.columnMap ?? []).reduce(
-                    (acc, entry) => ({ ...acc, [entry.from]: entry.to }),
-                    {}
-                  ),
-                },
+              type: details.relationshipType === 'Object' ? 'object' : 'array',
+              detail: {
+                columnMapping: (details.columnMap ?? []).reduce(
+                  (acc, entry) => ({ ...acc, [entry.from]: entry.to }),
+                  {},
+                ),
               },
             },
-          ],
-        });
+          },
+        ]);
         return;
       }
 
@@ -132,36 +99,33 @@ export const useHandleSubmit = ({
         fromSource.dataSourceName !== toSource.dataSourceName &&
         'columnMap' in details
       ) {
-        createTableRelationships({
-          data: [
-            {
-              name: formData.name,
-              source: {
-                fromSource: fromSource.dataSourceName,
-                fromTable: fromSource.table,
+        createTableRelationships([
+          {
+            name: formData.name,
+            source: {
+              fromSource: fromSource.dataSourceName,
+              fromTable: fromSource.table,
+            },
+            isEditMode: mode === MODE.EDIT,
+            definition: {
+              target: {
+                toRemoteSource: toSource.dataSourceName,
+                toRemoteTable: toSource.table,
               },
-              isEditMode: mode === MODE.EDIT,
-              definition: {
-                target: {
-                  toRemoteSource: toSource.dataSourceName,
-                  toRemoteTable: toSource.table,
-                },
-                type:
-                  details.relationshipType === 'Object' ? 'object' : 'array',
-                detail: {
-                  columnMapping: (details.columnMap ?? []).reduce(
-                    (acc, entry) => ({ ...acc, [entry.from]: entry.to }),
-                    {}
-                  ),
-                },
+              type: details.relationshipType === 'Object' ? 'object' : 'array',
+              detail: {
+                columnMapping: (details.columnMap ?? []).reduce(
+                  (acc, entry) => ({ ...acc, [entry.from]: entry.to }),
+                  {},
+                ),
               },
             },
-          ],
-        });
+          },
+        ]);
         return;
       }
     },
-    [createTableRelationships, mode]
+    [createTableRelationships, mode],
   );
 
   return {

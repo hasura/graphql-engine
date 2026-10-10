@@ -48,7 +48,7 @@ const getKeyPath = ({
 
 function replacePath(
   keyPath: string[],
-  permissionsState: Pick<RowPermissionsState, 'permissions' | 'operators'>
+  permissionsState: Pick<RowPermissionsState, 'permissions' | 'operators'>,
 ) {
   unset(permissionsState, ['permissions', ...keyPath]);
   return keyPath.slice(0, -1);
@@ -133,7 +133,7 @@ export const updateKey = ({
 };
 
 export const isComparator = (k: string) => {
-  return allOperators.find(o => o.name === k);
+  return allOperators.find((o) => o.name === k);
 };
 
 export const isPrimitive = (value: any) => {

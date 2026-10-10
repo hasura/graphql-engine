@@ -14,6 +14,7 @@ import FilterTypeInput from './FilterTypeInput';
 import TimeRangeFilter from './TimeRangeFilter';
 import FilterTypeCheckbox from './FilterTypeCheckbox';
 import ComposeDropdownFilter from './ComposeDropdownFilter';
+import { Grid } from '@radix-ui/themes';
 
 /*
  * Dropdown filters are not rendered. The pattern ensures that data for
@@ -41,10 +42,10 @@ const GenerateFilters = ({
   values,
   selectAll,
 }: any) => {
-  const filtersHtml = [];
+  const filtersHtml: React.ReactNode[] = [];
   const [dropdownFilters, nonDropdownFilters] = splitByType(
     filters,
-    FILTER_TYPE_DROPDOWN
+    FILTER_TYPE_DROPDOWN,
   );
   if (dropdownFilters.length === 0 && nonDropdownFilters.length === 0) {
     return null;
@@ -62,7 +63,7 @@ const GenerateFilters = ({
               id={value}
               title={getTitle(value)}
               onChange={onFilterChange}
-            />
+            />,
           );
           break;
         case FILTER_TYPE_DROPDOWN_DEFAULT:
@@ -74,7 +75,7 @@ const GenerateFilters = ({
               onChange={onFilterChange}
               filters={values}
               options={retrieveDefaultDropdownOptions(value)}
-            />
+            />,
           );
           break;
         case FILTER_TYPE_CHECKBOX:
@@ -85,13 +86,13 @@ const GenerateFilters = ({
               title={getTitle(value)}
               onChange={onFilterChange}
               filters={values}
-            />
+            />,
           );
           break;
         default:
           console.error('Unsupported type');
       }
-    }
+    },
   );
 
   if (dropdownFilters.length > 0) {
@@ -107,21 +108,25 @@ const GenerateFilters = ({
         filters={dropdownFilters}
         values={values}
         selectAll={selectAll}
-      />
+      />,
     );
   }
 
   return (
-    <div
-      className="grid"
+    <Grid
+      columns={{
+        initial: '1',
+        sm: '2',
+        md: '3',
+        lg: '4',
+      }}
+      gap="2"
       style={{
-        backgroundColor: '#f5f5f5',
         gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-        gridGap: '2px',
       }}
     >
       {filtersHtml}
-    </div>
+    </Grid>
   );
 };
 

@@ -1,7 +1,7 @@
 # DATE VERSION: 2026-07-17
 # Modify the above date version (YYYY-MM-DD) if you want to rebuild the image
 
-FROM registry.access.redhat.com/ubi10-minimal:10.2-1784094212 AS pg_dump_source
+FROM registry.access.redhat.com/ubi10/ubi-minimal:1789645544 AS pg_dump_source
 
 ARG TARGETPLATFORM
 
@@ -13,18 +13,11 @@ RUN set -ex; \
   fi; \
   microdnf install -y postgresql18-server 
 
-FROM registry.access.redhat.com/ubi10-minimal:10.2-1784094212
+FROM registry.access.redhat.com/ubi10/ubi-minimal:1789645544
 
 ARG TARGETPLATFORM
 
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
-# Do not auto-load the OpenSSL FIPS provider based on the host kernel flag.
-# HGE's own HTTP TLS is pure-Haskell and unaffected; this only concerns the
-# libpq -> OpenSSL path baked into the image. Forcing FIPS mode off keeps the
-# container bootable on FIPS-enabled hosts. This does NOT make the container a
-# FIPS-validated crypto module -- it only prevents OpenSSL from trying to load a
-# provider we do not ship.
-ENV OPENSSL_FORCE_FIPS_MODE=0
 
 RUN set -ex; \
   microdnf install -y shadow-utils; \

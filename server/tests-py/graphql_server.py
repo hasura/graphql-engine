@@ -808,6 +808,63 @@ class HeaderTestGraphQL(RequestHandler):
         return mkJSONResp(res)
 
 
+class IntrospectionHeadersGraphQL(RequestHandler):
+    def get(self, request):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+
+    def post(self, request):
+        if not request.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+
+        mode = request.path.split("mode=", 1)[-1]
+        is_introspection = "__schema" in request.json["query"]
+        actual_runtime_header = request.headers.get("x-runtime-header")
+        actual_introspection_header = request.headers.get("x-introspection-header")
+
+        if is_introspection:
+            expected_runtime_header = (
+                "runtime" if mode in ["legacy", "null"] else None
+            )
+            expected_introspection_header = (
+                "introspection" if mode == "distinct" else None
+            )
+            unexpected_security_headers = [
+                name
+                for name in ["authorization", "x-hasura-admin-secret", "x-hasura-role"]
+                if request.headers.get(name) is not None
+            ]
+        else:
+            expected_runtime_header = "runtime"
+            expected_introspection_header = None
+            unexpected_security_headers = []
+
+        mismatch = (
+            actual_runtime_header != expected_runtime_header
+            or actual_introspection_header != expected_introspection_header
+            or unexpected_security_headers
+        )
+        if mismatch:
+            return Response(
+                HTTPStatus.OK,
+                {
+                    "errors": [
+                        {
+                            "message": (
+                                "unexpected remote schema headers: "
+                                f"runtime={actual_runtime_header!r}, "
+                                f"introspection={actual_introspection_header!r}, "
+                                f"security={unexpected_security_headers!r}"
+                            )
+                        }
+                    ]
+                },
+                {"Content-Type": "application/json"},
+            )
+
+        res = hello_schema.execute(request.json["query"])
+        return mkJSONResp(res)
+
+
 class Message(graphene.ObjectType):
     id = graphene.Int()
     msg = graphene.String()
@@ -900,6 +957,7 @@ def handlers(context):
         '/default-value-echo-graphql' : EchoGraphQL,
         '/person-graphql': PersonGraphQL,
         '/header-graphql': HeaderTestGraphQL,
+        '/introspection-headers-graphql': IntrospectionHeadersGraphQL,
         '/messages-graphql' : MessagesGraphQL,
         '/auth-graphql': SampleAuthGraphQL,
         '/json-scalar-graphql': JsonScalarGraphQL,

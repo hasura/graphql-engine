@@ -1,5 +1,4 @@
-import { Collapsible } from '../../../../../new-components/Collapsible';
-import { InputField } from '../../../../../new-components/Form';
+import { Card, Collapsible, InputField, Text } from '@hasura/shared/ui';
 import { GraphQLCustomization } from '../../GraphQLCustomization';
 import { LimitedFeatureWrapper } from '../../LimitedFeatureWrapper/LimitedFeatureWrapper';
 import { DatabaseUrl } from './DatabaseUrl';
@@ -20,26 +19,32 @@ export const ConnectPostgresForm = ({
       <InputField
         name="name"
         label="Database name"
-        placeholder="Database name"
+        fieldProps={{
+          placeholder: 'Database name',
+        }}
       />
 
-      <div className="bg-white border border-hasGray-300 rounded-md shadow-sm overflow-hidden p-4">
+      <Card size="2">
         <DatabaseUrl
           name="configuration.connectionInfo.databaseUrl"
           hideOptions={hiddenOptions}
         />
-      </div>
+      </Card>
 
-      <div className="mt-sm">
+      <div className="mt-2">
         <Collapsible
           triggerChildren={
-            <div className="font-semibold text-muted">Advanced Settings</div>
+            <Text className="cursor-pointer" weight="bold">
+              Advanced Settings
+            </Text>
           }
         >
           <PoolSettings name={`configuration.connectionInfo.poolSettings`} />
-          <IsolationLevel
-            name={`configuration.connectionInfo.isolationLevel`}
-          />
+          <div className="mb-4">
+            <IsolationLevel
+              name={`configuration.connectionInfo.isolationLevel`}
+            />
+          </div>
           <UsePreparedStatements
             name={`configuration.connectionInfo.usePreparedStatements`}
           />
@@ -49,47 +54,25 @@ export const ConnectPostgresForm = ({
             id="db-ssl-settings"
             description="Get production-ready today with a 30-day free trial of Hasura EE, no credit card required."
           >
-            <div className="mt-sm">
-              <Collapsible
-                triggerChildren={
-                  <div className="font-semibold text-muted">
-                    SSL Certificates Settings
-                    <span className="px-1.5 italic font-light">
-                      (Certificates will be loaded from{' '}
-                      <a
-                        href="https://hasura.io/docs/2.0/databases/postgres/gcp/#step-72-add-env-vars"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        environment variables
-                      </a>
-                      )
-                    </span>
-                  </div>
-                }
-              >
-                <SslSettings
-                  name={`configuration.connectionInfo.sslSettings`}
-                />
-              </Collapsible>
+            <div className="mt-2">
+              <SslSettings name={`configuration.connectionInfo.sslSettings`} />
             </div>
           </LimitedFeatureWrapper>
         </Collapsible>
       </div>
-
-      <div className="mt-sm">
+      <div className="mt-2">
         <Collapsible
           triggerChildren={
-            <div className="font-semibold text-muted">
+            <Text as="span" weight="bold" className="cursor-pointer">
               GraphQL Customization
-            </div>
+            </Text>
           }
         >
           <GraphQLCustomization name="customization" />
         </Collapsible>
       </div>
 
-      <div className="mt-sm">
+      <div className="mt-2">
         <LimitedFeatureWrapper
           id="read-replicas"
           title="Improve performance and handle increased traffic with read replicas"
@@ -99,7 +82,9 @@ and availability for users."
         >
           <Collapsible
             triggerChildren={
-              <div className="font-semibold text-muted">Read Replicas</div>
+              <Text as="span" weight="bold" className="cursor-pointer">
+                Read Replicas
+              </Text>
             }
           >
             <ReadReplicas

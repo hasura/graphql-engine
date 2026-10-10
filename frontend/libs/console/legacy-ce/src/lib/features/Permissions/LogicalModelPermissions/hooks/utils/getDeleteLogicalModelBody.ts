@@ -1,33 +1,24 @@
-import { mapPostgresToPg } from '.';
-import { Source } from '../../../../hasura-metadata-types';
+import { getDriverPrefix } from '@hasura/metadata/helpers';
+import { Source } from '@hasura/shared/types';
 import { Permission } from '../../components/types';
+import { TMigrationSingleQuery } from '@hasura/metadata/api';
+
 export interface DeleteLogicalModalBodyArgs {
   logicalModelName: string;
   permission: Permission;
   source: Source;
 }
 
-type PermissionArgsType = {
-  name: string;
-  role: string;
-  source: string;
-};
-
-type PermissionBodyType = {
-  type: string;
-  args: PermissionArgsType;
-};
-
 export const getDeleteLogicalModelBody = ({
   logicalModelName,
   permission,
   source,
-}: DeleteLogicalModalBodyArgs): PermissionBodyType[] => {
+}: DeleteLogicalModalBodyArgs): TMigrationSingleQuery[] => {
   const args = [
     {
-      type: `${mapPostgresToPg(source.kind)}_drop_logical_model_${
+      type: `${getDriverPrefix(source.kind)}_drop_logical_model_${
         permission.action
-      }_permission`,
+      }_permission` as const,
       args: {
         name: logicalModelName,
         role: permission.roleName,

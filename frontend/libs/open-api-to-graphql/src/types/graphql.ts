@@ -49,7 +49,7 @@ export type SubscriptionIterator = (
   root: object,
   args: object,
   context: SubscriptionContext,
-  info?: object
+  info?: object,
 ) => AsyncIterable<string | string[]>;
 
 export type Field<TSource, TContext, TArgs> = {

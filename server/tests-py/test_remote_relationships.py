@@ -87,7 +87,7 @@ class TestDeleteRemoteRelationship:
     def test_delete(self, hge_ctx):
         hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
         hge_ctx.v1q_f(self.dir() + 'delete_remote_rel.yaml')
-
+        
     def test_delete_dependencies(self, hge_ctx):
         hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
         hge_ctx.v1q_f(self.dir() + 'remove_remote_schema.yaml', expected_status_code = 400)
@@ -110,7 +110,7 @@ class TestDeleteRemoteRelationship:
         tables = resp['sources'][0]['tables']
         for t in tables:
             if t['table']['name'] == table:
-                assert 'event_triggers' not in t
+                assert 'remote_relationships' not in t
 
 @use_test_fixtures
 class TestUpdateRemoteRelationship:
@@ -270,6 +270,42 @@ class TestDeepExecution:
         check_query_f(hge_ctx, self.dir() + 'query_with_deep_nesting_complex_path_arr.yaml')
         check_query_f(hge_ctx, self.dir() + 'query_with_deep_nesting_complex_path_arr2.yaml')
 
+
+class TestDeleteRemoteRelationship:
+    @classmethod
+    def dir(cls):
+        return "queries/remote_schemas/remote_relationships/"
+
+    @pytest.fixture(autouse=True)
+    def transact(self, hge_ctx, graphql_service):
+        print("In setup method")
+        hge_ctx.v1q_f(self.dir() + 'setup.yaml')
+        hge_ctx.v1q_f(self.dir() + 'setup_address.yaml')
+        yield
+        hge_ctx.v1q_f(self.dir() + 'teardown_address.yaml')
+        hge_ctx.v1q_f(self.dir() + 'teardown_database_only.yaml')
+
+    def test_delete_dependencies_with_cascade_dependents(self, hge_ctx):
+        hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
+        hge_ctx.v1q({
+            'type': 'remove_remote_schema',
+            'args': {
+                'name': 'my-remote-schema',
+                'cascade': True,
+            }
+        })
+        self._check_no_remote_relationships(hge_ctx, 'profiles')
+        
+    def _check_no_remote_relationships(self, hge_ctx, table):
+        export_metadata_q = {
+            'type': 'export_metadata',
+            'args': {}
+        }
+        resp = hge_ctx.v1q(export_metadata_q)
+        tables = resp['sources'][0]['tables']
+        for t in tables:
+            if t['table']['name'] == table:
+                assert 'remote_relationships' not in t
 
 class TestExecutionWithPermissions:
 

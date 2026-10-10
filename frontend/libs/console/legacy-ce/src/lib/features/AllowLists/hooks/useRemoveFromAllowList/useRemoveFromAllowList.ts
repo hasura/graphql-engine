@@ -1,12 +1,17 @@
-import { useMetadata, useMetadataMigration } from '../../../MetadataAPI';
+import { useMetadata, useMetadataMigration } from '@hasura/metadata/api';
 
 export const useRemoveFromAllowList = () => {
   const { data: metadata } = useMetadata();
-  const { mutate, isSuccess, isLoading, error } = useMetadataMigration({});
+  const {
+    mutate,
+    isSuccess,
+    isPending: isLoading,
+    error,
+  } = useMetadataMigration({});
 
   const removeFromAllowList = async (
     name: string,
-    options?: Parameters<typeof mutate>[1]
+    options?: Parameters<typeof mutate>[1],
   ) => {
     mutate(
       {
@@ -20,7 +25,7 @@ export const useRemoveFromAllowList = () => {
           },
         },
       },
-      options
+      options,
     );
   };
 

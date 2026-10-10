@@ -1,34 +1,43 @@
-import { Badge } from '../../../../new-components/Badge';
-import { Button } from '../../../../new-components/Button';
+import { Badge, IconButton, Text } from '@hasura/shared/ui';
 import React from 'react';
-import { FaKey, FaRegComment } from 'react-icons/fa';
+import { FaEdit, FaKey, FaRegComment, FaTrash } from 'react-icons/fa';
 import { ModifyTableColumn } from '../types';
-import { columnDataType } from '../../../DataSource/utils';
+import { columnDataType } from '@hasura/metadata/data-source';
+import { Flex } from '@radix-ui/themes';
 
-export const TableColumnDescription: React.VFC<{
+export const TableColumnDescription: React.FC<{
   column: ModifyTableColumn;
   onEdit: (column: ModifyTableColumn) => void;
-}> = ({ column, onEdit }) => {
+  /** Omit when the column can't be removed (e.g. views, unsupported drivers). */
+  onRemove?: (column: ModifyTableColumn) => void;
+}> = ({ column, onEdit, onRemove }) => {
   return (
-    <div key={column.name} className="flex gap-4 items-center mb-2">
-      {/* To assist with tests */}
-      <input
-        type="hidden"
-        data-data-type={columnDataType(column.dataType)}
-        data-console-data-type={column.consoleDataType}
-        data-testid={`${column.name}-data`}
-      />
-      <Button
-        size="sm"
+    <Flex gap="2" align="center" className="mb-2">
+      <IconButton
+        color="gray"
+        variant="outline"
+        title="Edit"
+        size="1"
+        icon={FaEdit}
         onClick={() => {
           onEdit(column);
         }}
-      >
-        Edit
-      </Button>
+      />
+      {onRemove && (
+        <IconButton
+          type="button"
+          color="red"
+          variant="outline"
+          title="Remove"
+          size="1"
+          aria-label={`Remove column ${column.name}`}
+          onClick={() => onRemove(column)}
+          icon={FaTrash}
+        />
+      )}
 
       <div>
-        <div className="font-bold">
+        <Text weight="bold">
           {column.name}
           {column.config?.custom_name && (
             <>
@@ -36,11 +45,11 @@ export const TableColumnDescription: React.VFC<{
               <span className="font-normal">{column.config.custom_name}</span>
             </>
           )}
-        </div>
+        </Text>
         {!!column.config?.comment && (
-          <div className="italic">
+          <Text className="italic">
             <FaRegComment className="opacity-50" /> {column.config?.comment}
-          </div>
+          </Text>
         )}
       </div>
       <div>
@@ -58,6 +67,6 @@ export const TableColumnDescription: React.VFC<{
           <FaKey className="mr-2 h-3" /> Primary Key
         </Badge>
       )}
-    </div>
+    </Flex>
   );
 };

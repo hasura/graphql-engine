@@ -1,3 +1,4 @@
+import { RemoteRelationship } from '@hasura/shared/types';
 import { z } from 'zod';
 
 export const schema = z.object({
@@ -12,11 +13,37 @@ export const schema = z.object({
     z.object({
       field: z.string(),
       column: z.string(),
-    })
+    }),
   ),
   typeName: z.string().min(1, { message: 'Type is required!' }),
-  sourceRemoteSchema: z.string(),
-  driver: z.string(),
 });
 
 export type Schema = z.infer<typeof schema>;
+
+export const getDefaultRemoteSchemaToDbValues = (
+  relationship: RemoteRelationship | undefined,
+  typeName?: string,
+) => {
+  const relationshipInfo =
+    relationship?.definition && 'to_source' in relationship?.definition
+      ? relationship.definition.to_source
+      : undefined;
+
+  const defaultValues: Schema = {
+    relationshipName: relationship?.name || '',
+    target: {
+      dataSourceName: relationshipInfo?.source || '',
+      table: relationshipInfo?.table,
+      type: 'table',
+    },
+    mapping: relationshipInfo?.field_mapping
+      ? Object.entries(relationshipInfo?.field_mapping).map(
+          ([field, column]) => ({ field, column }),
+        )
+      : [],
+    typeName: typeName || '',
+    relationshipType: relationshipInfo?.relationship_type || 'array',
+  };
+
+  return defaultValues;
+};

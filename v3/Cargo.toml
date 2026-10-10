@@ -128,10 +128,10 @@ openssl = "0.10"
 opentelemetry = "0.31"
 opentelemetry-contrib = "0.23"
 opentelemetry-http = "0.31"
-opentelemetry-otlp = { version = "0.31", features = ["grpc-tonic", "trace"] }
+opentelemetry-otlp = { version = "0.31", default-features = false, features = ["grpc-tonic", "trace"] }
 opentelemetry-semantic-conventions = "0.31"
 opentelemetry-stdout = { version = "0.31", default-features = false, features = ["trace"] }
-opentelemetry-zipkin = "0.31"
+opentelemetry-zipkin = { version = "0.31", default-features = false }
 opentelemetry_sdk = { version = "0.31", features = ["rt-tokio"] }
 partition_eithers = "0.1.0"
 postcard = { version = "1", features = ["use-std"] }
@@ -144,7 +144,7 @@ regex = "1"
 # Adding the gzip/zstd features have the library send appropriate
 # Accept-Encoding and automatically decompress. As of this version it doesn't
 # express preference with quality (q) values, but we'd prefer zstd always
-reqwest = { version = "0.12", features = ["gzip", "zstd", "json", "multipart", "stream"] }
+reqwest = { version = "0.12", default-features = false, features = ["charset", "http2", "system-proxy", "gzip", "zstd", "json", "multipart", "stream", "rustls-tls"] }
 rmp-serde = "1"
 semver = "1.0"
 schemars = { version = "0.8", features = ["preserve_order", "smol_str", "url"] }

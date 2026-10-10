@@ -1,21 +1,16 @@
 import React from 'react';
-import globals from '../../../../Globals';
 import { useEELiteAccess } from '../../hooks/useEELiteAccess';
 import { EETrialCard } from '../EETrialCard/EETrialCard';
 
 type Props = {
-  children?: React.ReactElement;
+  children?: React.ReactElement<any>;
 };
 
 export function ETAutoCleanupWrapper(props: Props) {
   const { children } = props;
-  const { access } = useEELiteAccess(globals);
+  const { access, consoleType } = useEELiteAccess();
 
-  if (
-    globals.consoleType === 'cloud' ||
-    globals.consoleType === 'pro' ||
-    access === 'active'
-  ) {
+  if (consoleType === 'cloud' || consoleType === 'pro' || access === 'active') {
     return children ?? null;
   }
 

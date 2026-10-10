@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { NeonIntegrationStatus } from '../../../../components/Services/Data/DataSources/CreateDataSource/Neon/useNeonIntegration';
+import { NeonIntegrationStatus } from './useNeonIntegration';
 import {
   neonOAuthStartVariables,
   neonDbCreationStartVariables,
@@ -11,7 +11,7 @@ import { emitOnboardingEvent } from '../../utils';
 
 export function useEmitOnboardingEvents(
   neonIntegrationStatus: NeonIntegrationStatus,
-  installingTemplate: boolean
+  installingTemplate: boolean,
 ) {
   useEffect(() => {
     switch (neonIntegrationStatus.status) {
@@ -20,12 +20,12 @@ export function useEmitOnboardingEvents(
         break;
       case 'neon-database-creation-error':
         emitOnboardingEvent(
-          getNeonOnboardingErrorVariables('neon-database-creation')
+          getNeonOnboardingErrorVariables('neon-database-creation'),
         );
         break;
       case 'hasura-source-creation-error':
         emitOnboardingEvent(
-          getNeonOnboardingErrorVariables('hasura-source-creation')
+          getNeonOnboardingErrorVariables('hasura-source-creation'),
         );
         break;
       case 'authentication-loading':

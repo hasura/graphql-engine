@@ -1,4 +1,4 @@
-import { useIntrospectSchema } from '.';
+import { useIntrospectSchema } from '@hasura/metadata/api';
 import { comparatorsFromSchema } from '../components/utils/comparatorsFromSchema';
 
 export function usePermissionComparators() {

@@ -1,52 +1,63 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "npmScope": "hasura",
-  "affected": {
-    "defaultBase": "main"
-  },
-  "tasksRunnerOptions": {
-    "default": {
-      "runner": "@nrwl/nx-cloud",
-      "options": {
-        "cacheableOperations": [
-          "build",
-          "lint",
-          "test",
-          "e2e",
-          "build-storybook"
-        ],
-        "accessToken": "NGNkOWJlZjgtMzI5ZS00MGRjLTg3YmEtMWFmZTBjYzkwOGY2fHJlYWQ="
-      }
-    }
-  },
   "targetDefaults": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["production", "^production", "sharedWebpack"]
+      "inputs": ["production", "^production", "sharedWebpack"],
+      "cache": true
     },
     "serve": {
       "dependsOn": ["^build"]
     },
     "test": {
-      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"]
+      "inputs": ["default", "^production"],
+      "cache": true
     },
-    "e2e": {
-      "dependsOn": ["^build"],
-      "inputs": ["default", "^production"]
-    },
+    "e2e": [
+      {
+        "dependsOn": ["^build"],
+        "inputs": ["default", "^production"],
+        "cache": true
+      },
+      {
+        "filter": {
+          "plugin": "@nx/cypress/plugin"
+        },
+        "configurations": {
+          "ci": {
+            "args": ["--record", "--parallel"]
+          }
+        },
+        "options": {
+          "config-file": "./cypress.config.ts"
+        }
+      }
+    ],
     "lint": {
-      "inputs": [
-        "default",
-        "{workspaceRoot}/.eslintrc.json",
-        "{workspaceRoot}/tools/eslint-rules/**/*"
-      ]
+      "inputs": ["default", "{workspaceRoot}/eslint.config.mjs"],
+      "cache": true
     },
     "build-storybook": {
-      "inputs": ["default", "^production", "{workspaceRoot}/.storybook/**/*"]
+      "inputs": ["default", "^production", "{workspaceRoot}/.storybook/**/*"],
+      "cache": true
+    },
+    "@nx/js:tsc": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"]
+    },
+    "@nx/vitest:test": {
+      "cache": true,
+      "inputs": ["default", "^production"]
+    },
+    "@nx/vite:build": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"]
     }
   },
   "generators": {
-    "@nrwl/react": {
+    "@nx/react": {
       "application": {
         "style": "css",
         "linter": "eslint",
@@ -60,7 +71,8 @@
       "library": {
         "style": "none",
         "linter": "eslint",
-        "pascalCaseFiles": true
+        "pascalCaseFiles": true,
+        "unitTestRunner": "vitest"
       }
     }
   },
@@ -69,17 +81,77 @@
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "sharedGlobals": ["{workspaceRoot}/babel.config.json"],
     "sharedWebpack": [
-      "{workspaceRoot}/custom-webpack.config.js",
+      "{projectRoot}/webpack.config.js",
       "{workspaceRoot}/tools/webpack/**/*.js"
     ],
     "production": [
       "default",
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
       "!{projectRoot}/tsconfig.spec.json",
-      "!{projectRoot}/jest.config.[jt]s",
-      "!{projectRoot}/.eslintrc.json",
+      "!{projectRoot}/vite.config.[jt]s",
+      "!{projectRoot}/vite.config.[cm][jt]s",
+      "!{projectRoot}/vitest.config.[jt]s",
+      "!{projectRoot}/vitest.config.[cm][jt]s",
+      "!{projectRoot}/eslint.config.mjs",
       "!{projectRoot}/.storybook/**/*",
-      "!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)"
+      "!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+      "!{projectRoot}/src/test-setup.[jt]s"
     ]
-  }
+  },
+  "nxCloudAccessToken": "NGNkOWJlZjgtMzI5ZS00MGRjLTg3YmEtMWFmZTBjYzkwOGY2fHJlYWQ=",
+  "useInferencePlugins": false,
+  "defaultBase": "main",
+  "analytics": false,
+  "plugins": [
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
+      },
+      "include": [
+        "apps/console-ce/**/*",
+        "apps/console-ce-e2e/**/*",
+        "apps/console-ee/**/*",
+        "apps/console-ee-e2e/**/*",
+        "apps/nx/internal-plugin-e2e/**/*",
+        "libs/console/legacy-ce/**/*",
+        "libs/console/legacy-ee/**/*",
+        "libs/nx/internal-plugin/**/*",
+        "libs/nx/storybook-addon-console-env/**/*",
+        "libs/nx/unplugin-dynamic-asset-loader/**/*",
+        "libs/open-api-to-graphql/**/*",
+        "libs/metadata/**/*",
+        "libs/shared/**/*"
+      ]
+    },
+    {
+      "plugin": "@nx/js",
+      "options": {
+        "analyzeSourceFiles": true
+      }
+    },
+    {
+      "plugin": "@nx/webpack/plugin",
+      "include": ["apps/console-ce/**/*", "apps/console-ee/**/*"]
+    },
+    {
+      "plugin": "@nx/storybook/plugin",
+      "exclude": [".storybook/**"],
+      "options": {
+        "buildStorybookTargetName": "build-storybook",
+        "serveStorybookTargetName": "storybook",
+        "staticStorybookTargetName": "static-storybook",
+        "testStorybookTargetName": "test-storybook"
+      }
+    },
+    {
+      "plugin": "@nx/cypress/plugin",
+      "options": {
+        "targetName": "e2e",
+        "ciTargetName": "e2e-ci",
+        "componentTestingTargetName": "component-test",
+        "openTargetName": "open-cypress"
+      }
+    }
+  ]
 }

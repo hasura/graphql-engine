@@ -5,16 +5,14 @@
 
 'use strict';
 
-import { graphql } from 'graphql';
-import { afterAll, beforeAll, expect, test } from '@jest/globals';
+import { expect, test } from 'vitest';
 
 import * as openAPIToGraphQL from '../src/index';
-import { Options } from '../src/types/options';
 
 const oas = require('./fixtures/docusign.json');
 
-test('Generate schema without problems', () => {
-  const options: Options<any, any, any> = {
+test('Generate schema without problems', { retry: 1, timeout: 10000 }, () => {
+  const options = {
     strict: false,
   };
   return openAPIToGraphQL

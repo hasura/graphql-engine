@@ -1,23 +1,13 @@
-import { Meta, StoryObj } from '@storybook/react';
-import { Button } from '../../../../../new-components/Button';
-import { SimpleForm } from '../../../../../new-components/Form';
-import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
-import { ReduxDecorator } from '../../../../../storybook/decorators/redux-decorator';
+import { Meta, StoryObj } from '@storybook/react-webpack5';
+import { Button, SimpleForm } from '@hasura/shared/ui';
+
+import { ReactQueryDecorator } from '@hasura/shared/testing';
 import { TrackNativeQueryRelationshipForm } from './TrackNativeQueryRelationshipForm';
 import { nativeQueryRelationshipValidationSchema } from '../schema';
 
 export default {
   component: TrackNativeQueryRelationshipForm,
-  decorators: [
-    ReactQueryDecorator(),
-    ReduxDecorator({
-      tables: {
-        // dataHeaders: {
-        //   'x-hasura-admin-secret': 'myadminsecretkey',
-        // } as any,
-      },
-    }),
-  ],
+  decorators: [ReactQueryDecorator()],
 } as Meta<typeof TrackNativeQueryRelationshipForm>;
 
 export const DefaultView: StoryObj<typeof TrackNativeQueryRelationshipForm> = {
@@ -25,7 +15,7 @@ export const DefaultView: StoryObj<typeof TrackNativeQueryRelationshipForm> = {
     return (
       <SimpleForm
         schema={nativeQueryRelationshipValidationSchema}
-        onSubmit={data => {
+        onSubmit={(data) => {
           console.log(data);
         }}
       >

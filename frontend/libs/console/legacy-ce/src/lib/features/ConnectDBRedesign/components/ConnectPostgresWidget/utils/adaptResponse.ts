@@ -1,7 +1,4 @@
-import {
-  PostgresConfiguration,
-  Source,
-} from '../../../../hasura-metadata-types';
+import { PostgresConfiguration, Source } from '@hasura/shared/types';
 import { adaptGraphQLCustomization } from '../../GraphQLCustomization/utils/adaptResponse';
 import {
   PostgresConnectionInfoSchema,
@@ -9,7 +6,7 @@ import {
 } from '../schema';
 
 export const adaptDatabaseUrl = (
-  databaseUrl: PostgresConfiguration['connection_info']['database_url']
+  databaseUrl: PostgresConfiguration['connection_info']['database_url'],
 ): PostgresConnectionInfoSchema['databaseUrl'] => {
   return typeof databaseUrl === 'string'
     ? {
@@ -17,27 +14,30 @@ export const adaptDatabaseUrl = (
         url: databaseUrl,
       }
     : 'from_env' in databaseUrl
-    ? {
-        connectionType: 'envVar',
-        envVar: databaseUrl.from_env,
-      }
-    : 'dynamic_from_file' in databaseUrl
-    ? {
-        connectionType: 'dynamicFromFile',
-        dynamicFromFile: databaseUrl.dynamic_from_file,
-      }
-    : {
-        connectionType: 'connectionParams',
-        host: databaseUrl.host,
-        password: databaseUrl.password,
-        database: databaseUrl.database,
-        port: parseInt(databaseUrl.port),
-        username: databaseUrl.username,
-      };
+      ? {
+          connectionType: 'envVar',
+          envVar: databaseUrl.from_env,
+        }
+      : 'dynamic_from_file' in databaseUrl
+        ? {
+            connectionType: 'dynamicFromFile',
+            dynamicFromFile: databaseUrl.dynamic_from_file,
+          }
+        : {
+            connectionType: 'connectionParams',
+            host: databaseUrl.host,
+            password: databaseUrl.password,
+            database: databaseUrl.database,
+            port:
+              typeof databaseUrl.port === 'string'
+                ? parseInt(databaseUrl.port)
+                : databaseUrl.port,
+            username: databaseUrl.username,
+          };
 };
 
 export const adaptPostgresConnectionInfo = (
-  connectionInfo: PostgresConfiguration['connection_info']
+  connectionInfo: PostgresConfiguration['connection_info'],
 ): PostgresConnectionInfoSchema => {
   return {
     databaseUrl: adaptDatabaseUrl(connectionInfo.database_url),
@@ -62,7 +62,7 @@ export const adaptPostgresConnectionInfo = (
 };
 
 export const adaptPostgresConnection = (
-  metadataSource: Source
+  metadataSource: Source,
 ): PostgresConnectionSchema => {
   // This assertion is safe because of the check above.
   const configuration = metadataSource.configuration as PostgresConfiguration;
@@ -71,15 +71,15 @@ export const adaptPostgresConnection = (
     name: metadataSource.name,
     configuration: {
       connectionInfo: adaptPostgresConnectionInfo(
-        configuration.connection_info
+        configuration.connection_info,
       ),
-      readReplicas: (configuration.read_replicas ?? []).map(read_replica =>
-        adaptPostgresConnectionInfo(read_replica)
+      readReplicas: (configuration.read_replicas ?? []).map((read_replica) =>
+        adaptPostgresConnectionInfo(read_replica),
       ),
       extensionSchema: configuration.extensions_schema,
     },
     customization: adaptGraphQLCustomization(
-      metadataSource.customization ?? {}
+      metadataSource.customization ?? {},
     ),
   };
 };

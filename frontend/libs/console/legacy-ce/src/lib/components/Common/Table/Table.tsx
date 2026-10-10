@@ -12,6 +12,7 @@ import styles from './Table.module.scss';
 type TableProps = {
   columnCount: number;
   rowCount: number;
+  children?: React.ReactNode;
 };
 
 const SideBarItem: React.FC<{
@@ -50,7 +51,7 @@ const SideBarItem: React.FC<{
           className="form_control"
           value={inputValue}
           placeholder="Enter new Role"
-          onChange={e => setInputValue(e.target.value)}
+          onChange={(e) => setInputValue(e.target.value)}
         />
       )}
       <div className={`${isLast ? styles.hidden : ''}`}>
@@ -276,7 +277,9 @@ export const TableSideBar: React.FC<TableSideBarProps> = ({
   );
 };
 
-export const TableLegend: React.FC = ({ children }) => {
+export const TableLegend: React.FC<React.PropsWithChildren> = ({
+  children,
+}) => {
   const { setHasLegend } = useTable();
   useEffect(() => {
     setHasLegend(true);

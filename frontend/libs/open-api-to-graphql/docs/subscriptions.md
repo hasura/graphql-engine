@@ -10,43 +10,6 @@ To create these two functions, OpenAPI-to-GraphQL relies on the popular [graphql
 
 A typical example of using OpenAPI-to-GraphQL to create a GraphQL server supporting subscriptions may look like this:
 
-### Creating PubSub instance
-
-First, initialize a PubSub instance to spread events between your API and the GraphQL Server, in a `pubsub.js` file.
-
-```javascript
-import { EventEmitter2 } from 'eventEmitter2';
-import { PubSub } = from 'graphql-subscriptions'
-
-const eventEmitter = new EventEmitter2({
-  wildcard: true,
-  delimiter: '/'
-});
-
-// Create the PubSub instance (here by wrapping an EventEmitter client)
-const pubsub = new PubSub()
-
-export default pubsub
-```
-
-PubSub could also wrap an MQTT client connected to a broker, like in this [example API](../test/example_api5_server.js).
-
-```javascript
-import { connect } = from 'mqtt'
-import { MQTTPubSub } = from 'graphql-mqtt-subscriptions'
-
-const MQTT_PORT = 1883
-
-// Create a PubSub instance (here by wrapping a MQTT client)
-const client = connect(`mqtt://localhost:${MQTT_PORT}`)
-
-const pubsub = new MQTTPubSub({
-  client
-})
-
-export default pubsub
-```
-
 ## GraphQL server
 
 Create GraphQL schema, resolvers and endpoints.
@@ -94,7 +57,7 @@ const init = async () => {
       {
         server: wsServer,
         path: '/subscriptions',
-      }
+      },
     );
   });
 };

@@ -1,4 +1,4 @@
-import { allowedMetadataTypes } from '../../MetadataAPI';
+import { getDriverPrefix } from '@hasura/metadata/helpers';
 import {
   LocalRelationship,
   RemoteDatabaseRelationship,
@@ -17,7 +17,7 @@ export const generateRenameLocalRelationshipRequest = ({
   newName: string;
 }) => ({
   resource_version,
-  type: `${driver}_rename_relationship` as allowedMetadataTypes,
+  type: `${getDriverPrefix(driver)}_rename_relationship` as const,
   args: {
     table: relationship.fromTable,
     source: relationship.fromSource,
@@ -42,7 +42,7 @@ export const generateCreateLocalRelationshipWithManualConfigurationRequest = ({
 
   return {
     resource_version,
-    type: `${driver}_${type}` as allowedMetadataTypes,
+    type: `${getDriverPrefix(driver)}_${type}` as const,
     args: {
       table: relationship.fromTable,
       source: relationship.fromSource,
@@ -67,7 +67,7 @@ export const generateDeleteLocalRelationshipRequest = ({
   relationship: LocalRelationship;
 }) => ({
   resource_version,
-  type: `${driver}_drop_relationship` as allowedMetadataTypes,
+  type: `${getDriverPrefix(driver)}_drop_relationship` as const,
   args: {
     table: relationship.fromTable,
     source: relationship.fromSource,
@@ -88,7 +88,7 @@ export const generateRemoteRelationshipCreateRequest = ({
 
   return {
     resource_version,
-    type: `${driver}_${type}` as allowedMetadataTypes,
+    type: `${getDriverPrefix(driver)}_${type}` as const,
     args: {
       name: relationship.name,
       source: relationship.fromSource,
@@ -128,7 +128,7 @@ export const generateRemoteRelationshipEditRequest = ({
 
   return {
     resource_version,
-    type: `${driver}_${type}` as allowedMetadataTypes,
+    type: `${getDriverPrefix(driver)}_${type}` as const,
     args: {
       name: relationship.name,
       source: relationship.fromSource,
@@ -168,7 +168,7 @@ export const generateRemoteRelationshipDeleteRequest = ({
 
   return {
     resource_version,
-    type: `${driver}_${type}` as allowedMetadataTypes,
+    type: `${getDriverPrefix(driver)}_${type}` as const,
     args: {
       name: relationship.name,
       source: relationship.fromSource,

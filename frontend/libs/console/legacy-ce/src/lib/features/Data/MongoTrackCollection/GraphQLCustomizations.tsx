@@ -1,11 +1,15 @@
-import { GraphQLSanitizedInputField } from '../../../new-components/Form';
-import { Analytics } from '../../Analytics';
+import { Analytics } from '@hasura/shared/analytics';
 import {
   query_field_props,
   mutation_field_props,
   customFieldNamesPlaceholders,
 } from '../CustomFieldNames/utils';
-import { Collapse } from '../../../new-components/deprecated';
+import {
+  Collapsible,
+  CollapsibleHeader,
+  GraphQLSanitizedInputField,
+} from '@hasura/shared/ui';
+import { Flex } from '@radix-ui/themes';
 
 type GraphQLCustomizations = {
   customCollectionName: string;
@@ -17,12 +21,12 @@ export const CollectionGraphQLCustomizations = ({
   collectionName,
 }: GraphQLCustomizations) => {
   const placeholders = customFieldNamesPlaceholders(
-    customCollectionName || collectionName
+    customCollectionName || collectionName,
   );
 
   return (
     <div>
-      <div className="px-4 pb-sm">
+      <div className="px-4 pb-2">
         <div className="text-muted">
           Customize GraphQL fields based on your needs
         </div>
@@ -31,68 +35,78 @@ export const CollectionGraphQLCustomizations = ({
           <Analytics name="custom_name" htmlAttributesToRedact="value">
             <GraphQLSanitizedInputField
               hideTips
-              clearButton
               name="custom_name"
               label="Custom Collection Name"
-              placeholder={placeholders.custom_name}
+              fieldProps={{
+                clearable: true,
+                placeholder: placeholders.custom_name,
+              }}
             />
           </Analytics>
         </div>
 
-        <div className="mb-sm">
-          <div className="flex items-center">
-            <Collapse title="Query and Subscription" rootClassName="w-full">
-              <Collapse.Content>
-                <div className="pl-sm py-xs ml-[0.47rem]">
-                  <div className="space-y-sm">
-                    {query_field_props.map(name => (
-                      <Analytics
-                        key={`query-and-subscription-${name}`}
+        <div className="mb-2">
+          <Flex align="center">
+            <Collapsible
+              triggerClassName="w-full"
+              triggerChildren={
+                <CollapsibleHeader title="Query and Subscription" />
+              }
+            >
+              <div className="pl-sm py-xs ml-[0.47rem]">
+                <div className="space-y-2">
+                  {query_field_props.map((name) => (
+                    <Analytics
+                      key={`query-and-subscription-${name}`}
+                      name={`custom_root_fields.${name}`}
+                      htmlAttributesToRedact="value"
+                    >
+                      <GraphQLSanitizedInputField
+                        hideTips
                         name={`custom_root_fields.${name}`}
-                        htmlAttributesToRedact="value"
-                      >
-                        <GraphQLSanitizedInputField
-                          clearButton
-                          hideTips
-                          name={`custom_root_fields.${name}`}
-                          label={name}
-                          placeholder={placeholders[name]}
-                        />
-                      </Analytics>
-                    ))}
-                  </div>
+                        label={name}
+                        fieldProps={{
+                          clearable: true,
+                          placeholder: placeholders[name],
+                        }}
+                      />
+                    </Analytics>
+                  ))}
                 </div>
-              </Collapse.Content>
-            </Collapse>
-          </div>
+              </div>
+            </Collapsible>
+          </Flex>
         </div>
 
         <div>
-          <div className="flex items-center">
-            <Collapse title="Mutation" rootClassName="w-full">
-              <Collapse.Content>
-                <div className="pl-sm py-xs ml-[0.47rem]">
-                  <div className="space-y-sm">
-                    {mutation_field_props.map(name => (
-                      <Analytics
-                        key={`mutation-${name}`}
-                        name={name}
-                        htmlAttributesToRedact="value"
-                      >
-                        <GraphQLSanitizedInputField
-                          clearButton
-                          hideTips
-                          name={`custom_root_fields.${name}`}
-                          label={name}
-                          placeholder={placeholders[name]}
-                        />
-                      </Analytics>
-                    ))}
-                  </div>
+          <Flex align="center">
+            <Collapsible
+              triggerClassName="w-full"
+              triggerChildren={<CollapsibleHeader title="Mutation" />}
+            >
+              <div className="pl-sm py-xs ml-[0.47rem]">
+                <div className="space-y-2">
+                  {mutation_field_props.map((name) => (
+                    <Analytics
+                      key={`mutation-${name}`}
+                      name={name}
+                      htmlAttributesToRedact="value"
+                    >
+                      <GraphQLSanitizedInputField
+                        hideTips
+                        name={`custom_root_fields.${name}`}
+                        label={name}
+                        fieldProps={{
+                          clearable: true,
+                          placeholder: placeholders[name],
+                        }}
+                      />
+                    </Analytics>
+                  ))}
                 </div>
-              </Collapse.Content>
-            </Collapse>
-          </div>
+              </div>
+            </Collapsible>
+          </Flex>
         </div>
       </div>
     </div>

@@ -1,74 +1,73 @@
-import { useQueryClient } from 'react-query';
-import { useHasuraAlert } from '../../../new-components/Alert';
-import { Button } from '../../../new-components/Button';
-import { hasuraToast } from '../../../new-components/Toasts';
-import { useReloadMetadata } from '../../hasura-metadata-api/useReloadMetadata';
-import { usePushRoute } from '../hooks';
-import { DriverInfo } from '../../DataSource';
-import to from 'await-to-js';
+import { useQueryClient } from '@tanstack/react-query';
+import { Button, useHasuraAlert, hasuraToast, Text } from '@hasura/shared/ui';
+import { useReloadMetadata } from '@hasura/metadata/api';
+import { DriverInfo } from '@hasura/metadata/data-source';
+import { dataRoutes, getErrorMessage } from '@hasura/shared/utils';
+import { useNavigate } from 'react-router';
+import { Code } from '@radix-ui/themes';
 
 export const ConnectButton = ({
   selectedDriver,
+  isDriverAvailable,
 }: {
   selectedDriver: DriverInfo;
+  isDriverAvailable?: boolean;
 }) => {
-  const pushRoute = usePushRoute();
+  const pushRoute = useNavigate();
   const { hasuraConfirm } = useHasuraAlert();
   const { reloadMetadata } = useReloadMetadata();
   const client = useQueryClient();
 
-  const connectionIssue = !selectedDriver.available;
+  const connectionIssue = !isDriverAvailable;
 
   const handleClick = () => {
     if (connectionIssue) {
       hasuraConfirm({
         message: (
-          <>
-            <p>The selected driver cannot be reached at the moment.</p>
-            <p>
+          <div className="pb-4">
+            <Text as="p">
+              The selected driver <Code>{selectedDriver.displayName}</Code>{' '}
+              cannot be reached at the moment.
+            </Text>
+            <Text as="p">
               This is usually due to a connection issue and can be resolved by
               reloading metadata.
-            </p>
-            <p>If this issue persists, please contact support.</p>
-          </>
+            </Text>
+            <Text as="p">If this issue persists, please contact support.</Text>
+          </div>
         ),
         title: 'Driver Error',
         confirmText: 'Reload Metadata',
 
         onCloseAsync: async ({ confirmed }) => {
-          if (!confirmed) return;
+          if (!confirmed)
+            return {
+              withSuccess: false,
+            };
 
-          const [err, result] = await to(
-            reloadMetadata({
+          try {
+            await reloadMetadata({
               shouldReloadAllSources: false,
               shouldReloadRemoteSchemas: false,
-            })
-          );
-          if (err) {
-            hasuraToast({
-              message: 'There was an error reloading your metadata.',
-              title: 'Error',
-              type: 'error',
             });
-            return;
-          }
-          const { success } = result;
 
-          if (success) {
             client.invalidateQueries();
             return { withSuccess: true, successText: 'Metadata Reloaded' };
-          } else {
+          } catch (err) {
             hasuraToast({
-              message: 'There was an error reloading your metadata.',
-              title: 'Error',
+              message: getErrorMessage(err),
+              title: 'There was an error reloading your metadata.',
               type: 'error',
             });
-            return;
+
+            return {
+              withSuccess: false,
+            };
           }
         },
       });
     } else {
-      pushRoute(`/data/v2/manage/database/add?driver=${selectedDriver.name}`);
+      pushRoute(dataRoutes.connectDatabase(selectedDriver.name));
     }
   };
   return (

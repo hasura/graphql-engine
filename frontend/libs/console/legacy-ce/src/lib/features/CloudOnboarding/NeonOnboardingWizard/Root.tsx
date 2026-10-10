@@ -1,5 +1,4 @@
 import React from 'react';
-import { useAppDispatch } from '../../../storeHooks';
 import { ConnectDBScreen, TemplateSummary } from './components';
 import { DialogContainer } from '../components';
 
@@ -17,10 +16,7 @@ import { OnboardingResponseData } from '../types';
 export function Root(props: {
   onboardingData: OnboardingResponseData | undefined;
 }) {
-  const dispatch = useAppDispatch();
-
   const [stepperIndex, setStepperIndex] = React.useState<number>(1);
-
   const { state, setState } = useWizardState(props.onboardingData);
 
   const transitionToTemplateSummary = () => {
@@ -43,7 +39,6 @@ export function Root(props: {
           <ConnectDBScreen
             dismissOnboarding={dismiss}
             proceed={transitionToTemplateSummary}
-            dispatch={dispatch}
             setStepperIndex={setStepperIndex}
           />
         </DialogContainer>
@@ -60,7 +55,6 @@ export function Root(props: {
           <TemplateSummary
             templateUrl={NEON_TEMPLATE_BASE_PATH}
             dismiss={dismiss}
-            dispatch={dispatch}
           />
         </DialogContainer>
       );

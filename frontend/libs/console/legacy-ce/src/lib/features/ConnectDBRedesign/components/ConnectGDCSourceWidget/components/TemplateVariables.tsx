@@ -1,26 +1,27 @@
-import {
-  createColumnHelper,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
+import { createColumnHelper, useTable } from '@tanstack/react-table';
 import React, { useRef } from 'react';
 import { useFieldArray, useFormContext } from 'react-hook-form';
+import { GDCFormSchema } from '../useFormValidationSchema';
+import { FaPlusCircle } from 'react-icons/fa';
 import {
+  Button,
   GraphQLSanitizedInputField,
   InputField,
-} from '../../../../../new-components/Form';
-import { GDCFormSchema } from '../useFormValidationSchema';
+  IconTooltip,
+  coreTableFeatures,
+  CoreTableFeatures,
+} from '@hasura/shared/ui';
+import { createCardedTableFromReactTableWithRef } from '../../../../Data';
+import { Flex } from '@radix-ui/themes';
 
-import { FaPlusCircle } from 'react-icons/fa';
-import { Button } from '../../../../../new-components/Button';
-import { IconTooltip } from '../../../../../new-components/Tooltip';
-import { useCardedTableFromReactTableWithRef } from '../../../../Data';
 type Variable = {
   name: string;
   type: string;
   filepath: string;
 };
-const columnHelper = createColumnHelper<Variable>();
+const columnHelper = createColumnHelper<CoreTableFeatures, Variable>();
+const TemplateVariablesTableElement =
+  createCardedTableFromReactTableWithRef<Variable>();
 
 export const TemplateVariables = () => {
   const { control } = useFormContext<GDCFormSchema>();
@@ -40,8 +41,10 @@ export const TemplateVariables = () => {
           <GraphQLSanitizedInputField
             noErrorPlaceholder
             hideTips
-            placeholder="Variable Name"
             name={`template_variables.${row.index}.name`}
+            fieldProps={{
+              placeholder: 'Variable Name',
+            }}
           />
         ),
         header: 'Name',
@@ -65,13 +68,15 @@ export const TemplateVariables = () => {
         cell: ({ row }) => (
           <InputField
             noErrorPlaceholder
-            placeholder="File Path"
             name={`template_variables.${row.index}.filepath`}
+            fieldProps={{
+              placeholder: 'File Path',
+            }}
           />
         ),
         header: () => {
           const toolTipMessage = (
-            <div className="flex flex-col gap-3">
+            <Flex direction="column" gap="3">
               <p>
                 Specify a file system path to dynamically load the variable
                 value.
@@ -86,13 +91,13 @@ export const TemplateVariables = () => {
                 Only file paths that have this prefix will be allowed to be
                 accessed as a template variable.
               </p>
-            </div>
+            </Flex>
           );
           return (
-            <div className="flex items-center">
+            <Flex align="center">
               File Path
               <IconTooltip message={toolTipMessage} />
-            </div>
+            </Flex>
           );
         },
       }),
@@ -100,34 +105,32 @@ export const TemplateVariables = () => {
         id: 'action',
         header: 'Actions',
         cell: ({ row }) => (
-          <div className="flex flex-row gap-2">
+          <Flex gap="2">
             <Button mode="destructive" onClick={() => remove(row.index)}>
               Remove
             </Button>
-          </div>
+          </Flex>
         ),
       }),
     ],
-    [remove]
+    [remove],
   );
 
-  const table = useReactTable({
+  const table = useTable({
+    features: coreTableFeatures,
     data: fields,
     columns: columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
-
-  const TableElement = useCardedTableFromReactTableWithRef<Variable>();
+  } as any);
 
   return (
     <div>
-      <div className="flex flex-col gap-2 ">
-        <div className="flex justify-between items-center">
+      <Flex direction="column" gap="2">
+        <Flex justify="between" align="center">
           <div className={'text-gray-600 font-semibold'}>
             Template Variables
           </div>
           <Button
-            icon={<FaPlusCircle />}
+            leftIcon={FaPlusCircle}
             onClick={() => {
               append({
                 name: '',
@@ -138,13 +141,13 @@ export const TemplateVariables = () => {
           >
             Add Variable
           </Button>
-        </div>
-        <TableElement
-          table={table}
+        </Flex>
+        <TemplateVariablesTableElement
+          table={table as any}
           ref={tableRef}
           noRowsMessage={'No template variables added.'}
         />
-      </div>
+      </Flex>
     </div>
   );
 };

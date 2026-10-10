@@ -1,6 +1,6 @@
 import { createOperatorsObject } from '../../../PermissionsForm.utils';
-import { TableColumn } from '../../../../../DataSource';
-import { MetadataDataSource } from '../../../../../../metadata/types';
+import { TableColumn } from '@hasura/metadata/data-source';
+import { Source } from '@hasura/shared/types';
 
 export interface CreateOperatorsArgs {
   tableName: string;
@@ -9,7 +9,7 @@ export interface CreateOperatorsArgs {
 export interface CreateDefaultsArgs {
   tableName: string;
   existingPermission?: Record<string, any>;
-  sourceMetadata: MetadataDataSource | undefined;
+  sourceMetadata: Source | undefined;
   tableColumns: TableColumn[];
 }
 

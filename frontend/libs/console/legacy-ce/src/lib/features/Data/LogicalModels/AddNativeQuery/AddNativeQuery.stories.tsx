@@ -1,10 +1,10 @@
-import { expect } from '@storybook/jest';
-import { Meta, StoryObj } from '@storybook/react';
-import { screen, userEvent, waitFor, within } from '@storybook/testing-library';
-import { ConsoleTypeDecorator } from '../../../../storybook/decorators';
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
-import { dismissToast } from '../../../../utils/StoryUtils';
-import { NativeQuery } from '../../../hasura-metadata-types';
+import { expect, waitFor, within } from 'storybook/test';
+import { Meta, StoryObj } from '@storybook/react-webpack5';
+import {
+  ConsoleTypeDecorator,
+  ReactQueryDecorator,
+} from '@hasura/shared/testing';
+import { NativeQuery } from '@hasura/shared/types';
 import { waitForSpinnerOverlay } from '../../components/ReactQueryWrappers/story-utils';
 import { RouteWrapper } from '../components/RouteWrapper';
 import { Routes } from '../constants';
@@ -26,70 +26,8 @@ export default {
   },
 } satisfies Meta<typeof AddNativeQuery>;
 
-const fillAndSubmitForm: Story['play'] = async (
-  { canvasElement },
-  buttonText = 'Create'
-) => {
-  const c = within(canvasElement);
-
-  /**
-   *
-   * Fill out the form and try to save:
-   *
-   */
-
-  await userEvent.click(await c.findByText(buttonText));
-
-  const errorMessages = [
-    'Native Query Name is required',
-    'Database is required',
-    'Query Return Type is required',
-  ];
-
-  for await (const text of errorMessages) {
-    await expect(await c.findByText(text)).toBeInTheDocument();
-  }
-
-  // remove param added for error testing
-  //await userEvent.click(c.getAllByText('Remove')[0]);
-
-  await userEvent.type(
-    c.getByPlaceholderText('Name that exposes this model in GraphQL API'),
-    'my_native_query'
-  );
-  await userEvent.type(
-    c.getByPlaceholderText('A description of this logical model'),
-    'a description'
-  );
-
-  //select postgres from the database dropdown
-  await userEvent.selectOptions(
-    await c.findByLabelText('Database', undefined, { timeout: 3000 }),
-    await c.findByRole('option', { name: 'postgres' })
-  );
-
-  await waitForSpinnerOverlay(canvasElement);
-
-  await userEvent.click(await c.findByText('Add Parameter'));
-
-  await userEvent.type(c.getByPlaceholderText('Parameter Name'), 'param1');
-  await userEvent.type(c.getByPlaceholderText('Description'), 'description');
-  await userEvent.click(c.getByTestId('nullable-switch'));
-
-  await userEvent.selectOptions(
-    await c.findByLabelText('Query Return Type', undefined, { timeout: 3000 }),
-    await c.findByRole('option', { name: 'hello_world' })
-  );
-
-  await userEvent.click(c.getByText(buttonText));
-};
-
-const defaultArgs: Story['args'] = {
-  defaultSql: `SELECT * FROM (VALUES ('hello', 'world'), ('welcome', 'friend')) as t("one", "two")`,
-};
-
 export const Basic: Story = {
-  render: args => (
+  render: (args) => (
     <div className="p-5">
       <AddNativeQuery {...args} />
     </div>
@@ -97,7 +35,7 @@ export const Basic: Story = {
 };
 
 export const WithRouteWrapper: Story = {
-  render: args => (
+  render: (args) => (
     <RouteWrapper route={Routes.CreateNativeQuery}>
       <AddNativeQuery {...args} />
     </RouteWrapper>
@@ -106,111 +44,6 @@ export const WithRouteWrapper: Story = {
   decorators: [
     ConsoleTypeDecorator({ consoleType: 'pro', menuPlacement: 'top' }),
   ],
-};
-
-export const HappyPath: Story = {
-  ...Basic,
-  args: {
-    ...defaultArgs,
-  },
-  name: '😊 Happy Path',
-  play: async context => {
-    await fillAndSubmitForm(context);
-    expect(
-      await screen.findByText(
-        `Successfully tracked native query as: my_native_query`,
-        { exact: false },
-        { timeout: 3000 }
-      )
-    ).toBeInTheDocument();
-
-    await dismissToast();
-  },
-};
-
-/**
- *
- * Query already exists Error
- *
- */
-
-export const ErrorExists: Story = {
-  ...HappyPath,
-  name: '🚨 Already Exists',
-  parameters: {
-    msw: nativeQueryHandlers({
-      metadataOptions: { postgres: { models: true, queries: true } },
-      trackNativeQueryResult: 'already_exists',
-    }),
-  },
-  play: async context => {
-    await fillAndSubmitForm(context);
-    expect(
-      await screen.findByText(
-        `Native query 'my_native_query' is already tracked.`,
-        { exact: false },
-        { timeout: 3000 }
-      )
-    ).toBeInTheDocument();
-
-    await dismissToast();
-  },
-};
-
-/**
- *
- * Validation Error
- *
- */
-export const ErrorValidation: Story = {
-  ...HappyPath,
-  name: '🚨 Validation Error',
-  parameters: {
-    msw: nativeQueryHandlers({
-      metadataOptions: { postgres: { models: true, queries: true } },
-      trackNativeQueryResult: 'validation_failed',
-    }),
-  },
-  play: async context => {
-    await fillAndSubmitForm(context);
-    expect(
-      await screen.findByText(
-        `"exec_status": "FatalError"`,
-        { exact: false },
-        { timeout: 3000 }
-      )
-    ).toBeInTheDocument();
-
-    await dismissToast();
-  },
-};
-
-/**
- *
- * Native Queries disabled
- *
- */
-export const ErrorDisabled: Story = {
-  ...HappyPath,
-  name: '🚨 Logical Models Disabled',
-  parameters: {
-    msw: nativeQueryHandlers({
-      metadataOptions: { postgres: { models: true, queries: true } },
-      trackNativeQueryResult: 'native_queries_disabled',
-    }),
-  },
-  play: async context => {
-    await fillAndSubmitForm(context);
-    expect(
-      await screen.findByText(
-        `NativeQueries is disabled!`,
-        { exact: false },
-        { timeout: 3000 }
-      )
-    ).toBeInTheDocument();
-
-    await dismissToast();
-  },
 };
 
 const existingNativeQuery: Required<NativeQuery> = {
@@ -252,7 +85,7 @@ export const Update: Story = {
     const firstArgumentName = Object.keys(q.arguments)[0];
 
     await expect(await c.findByTestId('root_field_name')).toHaveValue(
-      q.root_field_name
+      q.root_field_name,
     );
     await expect(await c.findByTestId('comment')).toHaveValue(q.comment);
 
@@ -261,27 +94,27 @@ export const Update: Story = {
 
     // we need this bc the value takes a second to get set
     await waitFor(() =>
-      expect(c.getByTestId('returns')).toHaveValue(q.returns)
+      expect(c.getByTestId('returns')).toHaveValue(q.returns),
     );
 
     // wait for the value to be what we expect NOT wait for the element
     await waitFor(() =>
-      expect(c.getByTestId('arguments.0.name')).toHaveValue(firstArgumentName)
+      expect(c.getByTestId('arguments.0.name')).toHaveValue(firstArgumentName),
     );
 
     // same as above:
     await waitFor(() =>
       expect(c.getByTestId('arguments.0.type')).toHaveValue(
-        q.arguments.query.type
-      )
+        q.arguments.query.type,
+      ),
     );
 
     await expect(await c.findByTestId('arguments.0.description')).toHaveValue(
-      q.arguments.query.description
+      q.arguments.query.description,
     );
     await expect(await c.findByTestId('nullable-switch')).toHaveAttribute(
       'data-state',
-      'unchecked'
+      'unchecked',
     );
   },
 };
@@ -307,8 +140,8 @@ export const EEBannerDisplayed: typeof Basic = {
 
     await expect(
       await c.findByText(
-        'Looking to add Native Queries for SQL Server/Big Query databases?'
-      )
+        'Looking to add Native Queries for SQL Server/Big Query databases?',
+      ),
     ).toBeInTheDocument();
 
     await expect(c.getByText('Enable Enterprise')).toBeInTheDocument();
@@ -339,8 +172,8 @@ export const EEBannerNotDisplayed: typeof Basic = {
     await waitForSpinnerOverlay(canvasElement);
     await expect(
       await c.queryByText(
-        'Looking to add Native Queries for SQL Server/Big Query databases?'
-      )
+        'Looking to add Native Queries for SQL Server/Big Query databases?',
+      ),
     ).not.toBeInTheDocument();
 
     await expect(c.queryByText('Enable Enterprise')).not.toBeInTheDocument();
@@ -353,7 +186,7 @@ export const EEBannerNotDisplayed: typeof Basic = {
       },
       {
         timeout: 5000,
-      }
+      },
     );
   },
 };

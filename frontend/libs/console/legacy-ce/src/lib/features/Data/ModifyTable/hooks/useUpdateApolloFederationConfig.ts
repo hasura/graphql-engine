@@ -1,25 +1,31 @@
 import { useCallback } from 'react';
-import { MetadataSelectors, useMetadata } from '../../../hasura-metadata-api';
-import { useMetadataMigration } from '../../../MetadataAPI';
-import { MetadataMigrationOptions } from '../../../MetadataAPI/hooks/useMetadataMigration';
-import { transformErrorResponse } from '../../errorUtils';
-import { Table } from '../../../hasura-metadata-types';
+import {
+  useMetadata,
+  useMetadataMigration,
+  MetadataMigrationOptions,
+} from '@hasura/metadata/api';
+import { Table } from '@hasura/shared/types';
+import { getDriverPrefix, MetadataSelectors } from '@hasura/metadata/helpers';
 
 export const useUpdateApolloFederationConfig = ({
   dataSourceName,
   ...globalMutateOptions
 }: { dataSourceName: string } & MetadataMigrationOptions) => {
-  const { data: { driver, resource_version } = {} } = useMetadata(m => ({
+  const { data: { driver, resource_version } = {} } = useMetadata((m) => ({
     driver: MetadataSelectors.findSource(dataSourceName)(m)?.kind,
     resource_version: m.resource_version,
   }));
 
   const { mutate, ...rest } = useMetadataMigration({
     ...globalMutateOptions,
-    onSuccess: (data, variables, ctx) => {
-      globalMutateOptions?.onSuccess?.(data, variables, ctx);
+    onSuccess: (data, variables, onMutateResult, context) => {
+      globalMutateOptions?.onSuccess?.(
+        data,
+        variables,
+        onMutateResult,
+        context,
+      );
     },
-    errorTransform: transformErrorResponse,
   });
 
   const updateApolloConfig = useCallback(
@@ -34,7 +40,7 @@ export const useUpdateApolloFederationConfig = ({
       mutate(
         {
           query: {
-            type: `${driver}_set_apollo_federation_config`,
+            type: `${getDriverPrefix(driver ?? 'postgres')}_set_apollo_federation_config`,
             resource_version,
             args: {
               table,
@@ -47,10 +53,10 @@ export const useUpdateApolloFederationConfig = ({
             },
           },
         },
-        mutateOptions
+        mutateOptions,
       );
     },
-    [dataSourceName, driver, mutate, resource_version]
+    [dataSourceName, driver, mutate, resource_version],
   );
 
   return {

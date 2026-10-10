@@ -23,7 +23,7 @@ export const tables: Tables = [
   },
   {
     table: ['Artist'],
-    dataSource: { name: 'SQLite', kind: 'SQLite' },
+    dataSource: { name: 'SQLite', kind: 'sqlite' },
     columns: [
       {
         name: 'id',
@@ -43,7 +43,7 @@ export const tables: Tables = [
   },
   {
     table: ['Album'],
-    dataSource: { name: 'SQLite', kind: 'SQLite' },
+    dataSource: { name: 'SQLite', kind: 'sqlite' },
     columns: [
       {
         name: 'id',
@@ -86,7 +86,7 @@ export const tables: Tables = [
   },
   {
     table: ['Customer'],
-    dataSource: { name: 'SQLite', kind: 'SQLite' },
+    dataSource: { name: 'SQLite', kind: 'sqlite' },
     columns: [],
     relationships: [],
     computedFields: [],

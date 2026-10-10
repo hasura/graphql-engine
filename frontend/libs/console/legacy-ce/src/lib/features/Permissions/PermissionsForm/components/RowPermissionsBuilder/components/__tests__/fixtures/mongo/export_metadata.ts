@@ -5,7 +5,7 @@ export default {
     sources: [
       {
         name: 'M',
-        kind: 'Mongo',
+        kind: 'mongodb',
         tables: [
           {
             table: ['students'],
@@ -51,7 +51,7 @@ export default {
     ],
     backend_configs: {
       dataconnector: {
-        Mongo: {
+        mongodb: {
           uri: 'http://host.docker.internal:3000',
         },
       },

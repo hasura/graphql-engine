@@ -1,0 +1,26 @@
+{
+  "name": "shared-context",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared/context/src",
+  "projectType": "library",
+  "tags": ["scope:shared"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/shared/context",
+        "main": "libs/shared/context/src/index.ts",
+        "tsConfig": "libs/shared/context/tsconfig.lib.json",
+        "assets": ["libs/shared/context/*.md"]
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "coverage/libs/shared/context"
+      }
+    }
+  }
+}

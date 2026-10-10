@@ -1,7 +1,8 @@
 import React from 'react';
-import { Button } from '../../../new-components/Button';
+import { Button } from '@hasura/shared/ui';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import { RelationshipType } from '../types';
+import { Flex } from '@radix-ui/themes';
 
 interface ModifyActionsColProps {
   relationship: RelationshipType;
@@ -14,14 +15,24 @@ const ModifyActions = ({
   onEdit,
   onDelete,
 }: ModifyActionsColProps) => (
-  <div className="flex items-center justify-end whitespace-nowrap text-right gap-0.5">
-    <Button onClick={() => onEdit(relationship)} icon={<FaEdit />}>
+  <Flex align="center" justify="end" gap="2">
+    <Button
+      size="1"
+      mode="default"
+      onClick={() => onEdit(relationship)}
+      leftIcon={FaEdit}
+    >
       Edit
     </Button>
-    <Button onClick={() => onDelete(relationship)} icon={<FaTrash />}>
+    <Button
+      size="1"
+      mode="destructive"
+      onClick={() => onDelete(relationship)}
+      leftIcon={FaTrash}
+    >
       Remove
     </Button>
-  </div>
+  </Flex>
 );
 
 export default ModifyActions;

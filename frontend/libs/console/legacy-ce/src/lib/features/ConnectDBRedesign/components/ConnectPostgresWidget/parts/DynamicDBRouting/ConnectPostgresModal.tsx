@@ -1,14 +1,14 @@
-import React from 'react';
 import z from 'zod';
-
-import { Collapsible } from '../../../../../../new-components/Collapsible';
-import { Dialog } from '../../../../../../new-components/Dialog';
-import { schema } from '../../schema';
-
 import {
+  Collapsible,
+  Dialog,
   InputField,
   useConsoleForm,
-} from '../../../../../../new-components/Form';
+  DialogFooter,
+} from '@hasura/shared/ui';
+
+import { schema } from '../../schema';
+
 import { areSSLSettingsEnabled } from '../../utils/helpers';
 import { DatabaseUrl } from '../DatabaseUrl';
 import { IsolationLevel } from '../IsolationLevel';
@@ -45,33 +45,37 @@ export const ConnectPostgresModal = (props: ConnectPostgresModalProps) => {
   });
 
   return (
-    <Form
-      onSubmit={(values: z.infer<typeof schema>) => {
-        if (alreadyUseNames?.includes(values.name)) {
-          setError('name', {
-            type: 'manual',
-            message: 'This name is already in use',
-          });
-        } else {
-          onSubmit(values);
-        }
-      }}
+    // The Form must live INSIDE the Dialog: Dialog content is rendered through a
+    // portal, so a Form wrapping the Dialog would leave the submit button (which
+    // sits in the portaled content) detached from the <form> element — clicking
+    // "Add/Update Connection" (or pressing Enter) would then never submit. This
+    // matches the established pattern elsewhere (e.g. RenameRelationship).
+    <Dialog
+      size="lg"
+      title={defaultValues ? 'Edit Connection' : 'Add Connection'}
+      description={`${
+        defaultValues ? 'Edit connection' : 'Add connections'
+      } which will be available to be referenced in your dynamic connection template.`}
+      onClose={onClose}
     >
-      <Dialog
-        size="lg"
-        hasBackdrop
-        title={defaultValues ? 'Edit Connection' : 'Add Connection'}
-        description={`${
-          defaultValues ? 'Edit connection' : 'Add connections'
-        } which will be available to be referenced in your dynamic connection template.`}
-        onClose={onClose}
+      <Form
+        onSubmit={(values: z.infer<typeof schema>) => {
+          if (alreadyUseNames?.includes(values.name)) {
+            setError('name', {
+              type: 'manual',
+              message: 'This name is already in use',
+            });
+          } else {
+            onSubmit(values);
+          }
+        }}
       >
         <>
           <div className="px-6 mb-8">
             <InputField
               name="name"
               label="Connection name"
-              placeholder="Connection name"
+              fieldProps={{ placeholder: 'Connection name' }}
             />
 
             <div>
@@ -81,7 +85,7 @@ export const ConnectPostgresModal = (props: ConnectPostgresModalProps) => {
               />
             </div>
 
-            <div className="mt-sm">
+            <div className="mt-2">
               <Collapsible
                 triggerChildren={
                   <div className="font-semibold text-muted">
@@ -92,8 +96,12 @@ export const ConnectPostgresModal = (props: ConnectPostgresModalProps) => {
                 <PoolSettings
                   name={`configuration.connectionInfo.poolSettings`}
                 />
-                <IsolationLevel name={`configuration.connectionInfo`} />
-                <UsePreparedStatements name={`configuration.connectionInfo`} />
+                <IsolationLevel
+                  name={`configuration.connectionInfo.isolationLevel`}
+                />
+                <UsePreparedStatements
+                  name={`configuration.connectionInfo.usePreparedStatements`}
+                />
                 {areSSLSettingsEnabled() && (
                   <Collapsible
                     triggerChildren={
@@ -121,7 +129,7 @@ export const ConnectPostgresModal = (props: ConnectPostgresModalProps) => {
               </Collapsible>
             </div>
           </div>
-          <Dialog.Footer
+          <DialogFooter
             callToDeny="Cancel"
             callToAction={
               defaultValues ? 'Update Connection' : 'Add Connection'
@@ -132,7 +140,7 @@ export const ConnectPostgresModal = (props: ConnectPostgresModalProps) => {
             onCancelAnalyticsName="data-tab-dynamic-db-routing-add-connection-cancel"
           />
         </>
-      </Dialog>
-    </Form>
+      </Form>
+    </Dialog>
   );
 };

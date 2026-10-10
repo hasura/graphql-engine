@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { schemaRegsitryControlPlaneClient } from '../utils';
 
 import { FETCH_SCHEMA_REGSITRY_DUMPS_V2_INFO_QUERY } from '../queries';
@@ -24,7 +24,7 @@ type GetSchemaRegistryListResponse =
     };
 
 export const useGetV2Info = (
-  projectId: string
+  projectId: string,
 ): GetSchemaRegistryListResponse => {
   const [v2Count, setV2Count] = useState<number>(0);
 
@@ -42,7 +42,7 @@ export const useGetV2Info = (
         projectId: projectId,
       });
     },
-    []
+    [],
   );
 
   const {
@@ -53,26 +53,27 @@ export const useGetV2Info = (
     queryKey: FETCH_SCHEMA_REGSITRY_DUMPS_V2_INFO_QUERY_NAME,
     queryFn: () => fetchSchemaRegistryDumpsV2AggregateFn(projectId),
     refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
     staleTime: SCHEMA_REGISTRY_REFRESH_TIME,
-    onSuccess: response => {
-      if (response && response.data) {
-        const totalV2Dumps =
-          response.data.schema_registry_dumps_v2_aggregate?.aggregate?.count;
-        setV2Count(totalV2Dumps);
-
-        if (
-          response.data &&
-          response.data.schema_registry_dumps_v2.length &&
-          response.data.schema_registry_dumps_v2[0].change_recorded_at
-        ) {
-          setLastV2EntryCursor(
-            response.data.schema_registry_dumps_v2[0].change_recorded_at
-          );
-        }
-      }
-    },
   });
+
+  React.useEffect(() => {
+    if (v2InfoData && v2InfoData.data) {
+      const totalV2Dumps =
+        v2InfoData.data.schema_registry_dumps_v2_aggregate?.aggregate?.count;
+      setV2Count(totalV2Dumps);
+
+      if (
+        v2InfoData.data &&
+        v2InfoData.data.schema_registry_dumps_v2.length &&
+        v2InfoData.data.schema_registry_dumps_v2[0].change_recorded_at
+      ) {
+        setLastV2EntryCursor(
+          v2InfoData.data.schema_registry_dumps_v2[0].change_recorded_at,
+        );
+      }
+    }
+  }, [v2InfoData]);
 
   if (v2InfoLoading) {
     return {

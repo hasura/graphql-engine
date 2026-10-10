@@ -207,7 +207,7 @@ removeEventTriggerEventFromLockedEvents sourceName eventId lockedEvents =
       -- delete eventId from set, maintaining no-empty-sets invariant
       writeTVar lockedEvents $! HashMap.update deleteEventIdNE sourceName lockedEventsVals
   where
-    deleteEventIdNE s = 
+    deleteEventIdNE s =
       let sDeleted = Set.delete eventId s
        in sDeleted <$ guard (not $ null sDeleted)
 
@@ -315,8 +315,9 @@ processEventQueue ::
   EventTriggerMetrics ->
   MaintenanceMode () ->
   TriggersErrorLogLevelStatus ->
+  RedactEventTriggerLogsStatus ->
   m (Forever m)
-processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx activeEventProcessingThreads LockedEventsCtx {leEvents} serverMetrics eventTriggerMetrics maintenanceMode triggersErrorLogLevelStatus = do
+processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx activeEventProcessingThreads LockedEventsCtx {leEvents} serverMetrics eventTriggerMetrics maintenanceMode triggersErrorLogLevelStatus redactEventTriggerLogs = do
   events0 <- popEventsBatch
   return $ Forever (events0, 0, False) go
   where
@@ -582,7 +583,7 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
                           let request = extractRequest reqDetails
                               tracesPropagator = getOtelTracesPropagator $ scOpenTelemetryConfig cache
                               logger' res details = do
-                                logHTTPForET res extraLogCtx details (_envVarName webhook) logHeaders triggersErrorLogLevelStatus
+                                logHTTPForET res extraLogCtx details (_envVarName webhook) logHeaders triggersErrorLogLevelStatus redactEventTriggerLogs
                                 liftIO $ do
                                   case res of
                                     Left _err -> pure ()

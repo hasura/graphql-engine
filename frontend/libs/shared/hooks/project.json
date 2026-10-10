@@ -1,0 +1,26 @@
+{
+  "name": "shared-hooks",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared/hooks/src",
+  "projectType": "library",
+  "tags": ["scope:shared"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/shared/hooks",
+        "main": "libs/shared/hooks/src/index.ts",
+        "tsConfig": "libs/shared/hooks/tsconfig.lib.json",
+        "assets": ["libs/shared/hooks/*.md"]
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "coverage/libs/shared/hooks"
+      }
+    }
+  }
+}

@@ -3,8 +3,8 @@ import {
   isManualArrayRelationship,
   isManualObjectRelationship,
   isRemoteSchemaRelationship,
-} from '../../DataSource';
-import { MetadataTable } from '../../hasura-metadata-types';
+} from '@hasura/metadata/data-source';
+import { MetadataTable } from '@hasura/shared/types';
 import { SuggestedRelationshipWithName } from '../components/SuggestedRelationships/hooks/useSuggestedRelationships';
 import {
   LocalRelationship,
@@ -24,15 +24,15 @@ import {
 } from '../utils/adaptResponse';
 
 export const getTableLocalRelationships = (
-  metadataTable: MetadataTable | undefined,
+  metadataTable: MetadataTable,
   dataSourceName: string,
-  suggestedRelationships: SuggestedRelationshipWithName[]
+  suggestedRelationships: SuggestedRelationshipWithName[],
 ) => {
   const table = metadataTable?.table;
   // adapt local array relationships
   const localArrayRelationships = (
     metadataTable?.array_relationships ?? []
-  ).map<LocalRelationship>(relationship => {
+  ).map<LocalRelationship>((relationship) => {
     if (isManualArrayRelationship(relationship))
       return adaptLocalArrayRelationshipWithManualConfiguration({
         table,
@@ -41,7 +41,7 @@ export const getTableLocalRelationships = (
       });
 
     const arraySuggestedRelationship = suggestedRelationships.filter(
-      rel => rel.type === 'array'
+      (rel) => rel.type === 'array',
     );
     return adaptLocalArrayRelationshipWithFkConstraint({
       table,
@@ -53,7 +53,7 @@ export const getTableLocalRelationships = (
 
   const localObjectRelationships = (
     metadataTable?.object_relationships ?? []
-  ).map<LocalRelationship>(relationship => {
+  ).map<LocalRelationship>((relationship) => {
     if (isManualObjectRelationship(relationship))
       return adaptLocalObjectRelationshipWithManualConfiguration({
         table,
@@ -62,7 +62,7 @@ export const getTableLocalRelationships = (
       });
 
     const objectSuggestedRelationship = suggestedRelationships.filter(
-      rel => rel.type === 'object'
+      (rel) => rel.type === 'object',
     );
 
     return adaptLocalObjectRelationshipWithFkConstraint({
@@ -77,20 +77,20 @@ export const getTableLocalRelationships = (
 };
 
 export const getAllTableRelationships = (
-  metadataTable: MetadataTable | undefined,
+  metadataTable: MetadataTable,
   dataSourceName: string,
-  suggestedRelationships: SuggestedRelationshipWithName[]
+  suggestedRelationships: SuggestedRelationshipWithName[],
 ): Relationship[] => {
   const table = metadataTable?.table;
   // adapt local array relationships
   const localRelationships = getTableLocalRelationships(
     metadataTable,
     dataSourceName,
-    suggestedRelationships
+    suggestedRelationships,
   );
   const remoteRelationships = (metadataTable?.remote_relationships ?? []).map<
     RemoteSchemaRelationship | RemoteDatabaseRelationship
-  >(relationship => {
+  >((relationship) => {
     if (isRemoteSchemaRelationship(relationship))
       return adaptRemoteSchemaRelationship({
         table,

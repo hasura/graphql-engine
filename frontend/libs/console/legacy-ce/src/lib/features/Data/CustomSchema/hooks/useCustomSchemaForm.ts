@@ -1,12 +1,21 @@
-import { useConsoleForm } from '../../../../new-components/Form';
-import { implement } from '../../../../utils/zodUtils';
+import { useConsoleForm } from '@hasura/shared/ui';
 import React from 'react';
 import { z } from 'zod';
 import { CustomSchemaFormProps } from '../CustomSchemaForm';
 import { CustomSchemaFormVals } from '../types';
 
-const schema = implement<CustomSchemaFormVals>().with({
-  schemaSamplingSize: z.string(),
+const schema = z.object({
+  // A `type: 'number'` input stores a number (NaN when empty); keep the
+  // string form the rest of this form uses.
+  schemaSamplingSize: z.preprocess(
+    (value) =>
+      typeof value === 'number'
+        ? Number.isNaN(value)
+          ? ''
+          : String(value)
+        : value,
+    z.string(),
+  ),
   schemaType: z.enum(['json', 'graphql']),
   graphqlSchema: z.string().optional(),
   jsonSchema: z.string().optional(),
@@ -41,8 +50,8 @@ export const useCustomSchemaForm = ({
   const values = watch();
 
   const hasValues = React.useMemo(
-    () => Object.values(values).some(value => !!value),
-    [values]
+    () => Object.values(values).some((value) => !!value),
+    [values],
   );
 
   const reset = () => {

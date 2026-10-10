@@ -1,9 +1,9 @@
 import React from 'react';
 import * as z from 'zod';
-import { StoryObj, Meta } from '@storybook/react';
-import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
-import { action } from '@storybook/addon-actions';
-import { SimpleForm } from '../../../../../new-components/Form';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
+import { action } from 'storybook/actions';
+import { SimpleForm } from '@hasura/shared/ui';
 import {
   customer_columns,
   handlers,
@@ -30,7 +30,7 @@ export default {
   component: RemoteSchemaWidget,
   decorators: [
     ReactQueryDecorator(),
-    StoryComponent => (
+    (StoryComponent) => (
       <SimpleForm
         schema={z.any()}
         onSubmit={action('onSubmit')}

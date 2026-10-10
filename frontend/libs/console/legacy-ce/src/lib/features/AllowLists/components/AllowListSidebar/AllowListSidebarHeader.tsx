@@ -1,6 +1,6 @@
-/* eslint-disable no-underscore-dangle */
 import React from 'react';
-import { Button } from '../../../../new-components/Button';
+import { Flex } from '@radix-ui/themes';
+import { Button, Text } from '@hasura/shared/ui';
 import { FaFolderPlus } from 'react-icons/fa';
 import { QueryCollectionCreateDialog } from './QueryCollectionCreateDialog';
 import { AllowListStatus } from './AllowListStatus';
@@ -16,7 +16,7 @@ export const AllowListSidebarHeader = (props: AllowListSidebarHeaderProps) => {
     <div className="pb-4">
       {isCreateModalOpen && (
         <QueryCollectionCreateDialog
-          onCreate={name => {
+          onCreate={(name) => {
             if (onQueryCollectionCreate) {
               onQueryCollectionCreate(name);
             }
@@ -24,27 +24,28 @@ export const AllowListSidebarHeader = (props: AllowListSidebarHeaderProps) => {
           onClose={() => setIsCreateModalOpen(false)}
         />
       )}
-      <div className="flex flex-col 2xl:flex-row">
-        <div className="flex items-center ">
-          <span className="text-sm font-semibold text-muted uppercase tracking-wider whitespace-nowrap">
+      <Flex direction="column" className="2xl:flex-row">
+        <Flex align="center" gap="2">
+          <Text
+            weight="bold"
+            className="uppercase tracking-wider whitespace-nowrap"
+          >
             Allow List
-          </span>
-          <div className="ml-1.5">
-            <AllowListStatus />
-          </div>
-        </div>
+          </Text>
+          <AllowListStatus />
+        </Flex>
         {onQueryCollectionCreate && (
           <div className="mt-2 2xl:mt-0 2xl:ml-auto">
             <Button
-              icon={<FaFolderPlus />}
-              size="sm"
+              leftIcon={FaFolderPlus}
+              size="1"
               onClick={() => setIsCreateModalOpen(true)}
             >
               Add Collection
             </Button>
           </div>
         )}
-      </div>
+      </Flex>
     </div>
   );
 };

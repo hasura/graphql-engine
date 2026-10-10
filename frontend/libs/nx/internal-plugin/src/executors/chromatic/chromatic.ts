@@ -104,7 +104,7 @@ export async function postChromatic(params: PostChromaticParams) {
   console.log('Read diagnostic file');
   const diagnosticFile = await readDiagnosticFile(
     tree,
-    '/chromatic-diagnostics.json'
+    '/chromatic-diagnostics.json',
   );
 
   const commentStrategy = generateCommentStrategy({
@@ -125,7 +125,7 @@ export async function postChromatic(params: PostChromaticParams) {
       await updatePrComment(
         octokit,
         commentStrategy.comment,
-        existingComment.id
+        existingComment.id,
       );
     } else {
       console.log('Add the PR message');

@@ -1,5 +1,4 @@
-import { useConsoleForm } from '../../../../new-components/Form';
-import { implement } from '../../../../utils/zodUtils';
+import { useConsoleForm } from '@hasura/shared/ui';
 import React from 'react';
 import { useWatch } from 'react-hook-form';
 import { z } from 'zod';
@@ -13,7 +12,7 @@ import {
   query_field_props,
 } from '../utils';
 
-const schema = implement<CustomFieldNamesFormVals>().with({
+const schema = z.object({
   custom_name: z.string(),
   select: z.string(),
   select_by_pk: z.string(),
@@ -54,7 +53,7 @@ export const useCustomFieldNamesForm = ({
   });
 
   const placeholders = customFieldNamesPlaceholders(
-    customTableName || initialTableName
+    customTableName || initialTableName,
   );
 
   const values = watch();
@@ -62,31 +61,31 @@ export const useCustomFieldNamesForm = ({
   const isQueryOpen = React.useMemo(
     () =>
       Object.entries(currentConfiguration?.custom_root_fields || {}).some(
-        entry => {
+        (entry) => {
           const key = entry[0] as keyof CustomFieldNamesFormVals;
           const [, value] = entry;
           return query_field_props.includes(key) && !!value;
-        }
+        },
       ),
 
-    [currentConfiguration?.custom_root_fields]
+    [currentConfiguration?.custom_root_fields],
   );
 
   const isMutateOpen = React.useMemo(
     () =>
       Object.entries(currentConfiguration?.custom_root_fields || {}).some(
-        entry => {
+        (entry) => {
           const key = entry[0] as keyof CustomFieldNamesFormVals;
           const [, value] = entry;
           return mutation_field_props.includes(key) && !!value;
-        }
+        },
       ),
-    [currentConfiguration?.custom_root_fields]
+    [currentConfiguration?.custom_root_fields],
   );
 
   const hasValues = React.useMemo(
-    () => Object.values(values).some(value => !!value),
-    [values]
+    () => Object.values(values).some((value) => !!value),
+    [values],
   );
 
   const reset = () => {

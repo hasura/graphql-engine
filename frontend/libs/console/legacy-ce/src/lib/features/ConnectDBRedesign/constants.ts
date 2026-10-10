@@ -1,4 +1,4 @@
-import { DriverInfo } from '../DataSource';
+import { DriverInfo } from '@hasura/metadata/data-source';
 import { EELiteAccess } from '../EETrial';
 
 export const DEFAULT_DRIVER: DriverInfo = {
@@ -9,7 +9,7 @@ export const DEFAULT_DRIVER: DriverInfo = {
   enterprise: false,
 };
 export const eeCardContentMap = (
-  dbName: string
+  dbName: string,
 ): Record<
   Extract<
     EELiteAccess['access'],

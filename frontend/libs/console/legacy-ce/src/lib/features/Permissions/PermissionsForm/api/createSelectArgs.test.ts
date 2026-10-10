@@ -24,6 +24,12 @@ test('create select args object from form data', () => {
           set: {},
           allow_aggregations: false,
           computed_fields: [],
+          // The mock's `formData.rowCount` is the explicit string '0' (the
+          // user typed 0 into the "Limit number of rows" field), which is
+          // meaningfully different from leaving the field blank. createSelectObject
+          // (api/utils.ts) treats `rowCount === '0'` as "limit to 0 rows" on
+          // purpose, not as "no limit" -- see createPermissionsData.mock.ts.
+          limit: 0,
         },
         source: 'Chinook',
       },
@@ -50,6 +56,39 @@ test('create delete args object from form data', () => {
       },
     },
   ]);
+});
+
+test('create delete args object keeps input validation', () => {
+  const result = createInsertArgs({
+    ...deleteArgs,
+    formData: {
+      ...deleteArgs.formData,
+      validateInput: {
+        enabled: true,
+        type: 'http',
+        definition: {
+          url: 'http://host.docker.internal',
+          forward_client_headers: true,
+          headers: [],
+          timeout: 40,
+        },
+      },
+    },
+  });
+
+  expect(result[1].args.permission).toEqual({
+    backend_only: false,
+    filter: { Title: { _eq: 'Test' } },
+    validate_input: {
+      type: 'http',
+      definition: {
+        url: 'http://host.docker.internal',
+        forward_client_headers: true,
+        headers: [],
+        timeout: 40,
+      },
+    },
+  });
 });
 
 test('create insert args object from form data', () => {

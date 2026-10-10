@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import GenerateFilters from './GenerateFilters';
-import { Button } from '@hasura/console-legacy-ce';
 import { FaChevronDown } from 'react-icons/fa';
 import FilterSection from './FilterSection';
 import FilterBadge from './FilterBadge';
-import filter from '../../images/filter.svg';
-
 import styles from '../../Metrics.module.scss';
 import clsx from 'clsx';
+import { Button } from '@hasura/shared/ui';
+import { FaFilter } from 'react-icons/fa6';
 
 const Filters = ({
   projectId,
@@ -29,7 +28,7 @@ const Filters = ({
   const resetFilter = () => {
     if (values.length > 0) {
       return (
-        <Button mode="destructive" onClick={reset}>
+        <Button size="1" mode="destructive" onClick={reset}>
           Reset all filters
         </Button>
       );
@@ -42,7 +41,7 @@ const Filters = ({
         const composeFilterObj = (o: { [x: string]: any }) => {
           const keyElements = Object.keys(o);
           if (keyElements.length > 0) {
-            return keyElements.map(k => `${k}: ${o[k]}`).join(', ');
+            return keyElements.map((k) => `${k}: ${o[k]}`).join(', ');
           }
           return 'N/A';
         };
@@ -79,25 +78,21 @@ const Filters = ({
             <FaChevronDown
               className={clsx(
                 'w-8 h-8 p-2 group-hover:bg-slate-200 transition-all duration-150 rounded-full',
-                displayFilters ? 'rotate-180' : 'rotate-0'
+                displayFilters ? 'rotate-180' : 'rotate-0',
               )}
             />
           </button>
-          <div onClick={toggleFilters} className={styles['cursorPointer']}>
-            <img
-              src={filter}
-              alt="Filter"
-              style={{
-                marginRight: '8px',
-                marginBottom: '3px',
-                width: '20px',
-                height: '20px',
-              }}
-            />
-            <div className={styles['subHeader']}>
+          <Button
+            color="gray"
+            leftIcon={FaFilter}
+            variant="ghost"
+            onClick={toggleFilters}
+            className="text-gray-500!"
+          >
+            <span className="text-gray-800 font-bold">
               Filters {renderSelectedFiltersCount()}
-            </div>
-          </div>
+            </span>
+          </Button>
           {renderSelectedFilters()}
           {resetFilter()}
         </div>

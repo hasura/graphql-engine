@@ -1,37 +1,35 @@
 import React, { useEffect } from 'react';
+import { Flex } from '@radix-ui/themes';
 import { z } from 'zod';
-import AceEditor from 'react-ace';
 import {
   CheckboxesField,
   CodeEditorField,
   InputField,
-  Textarea,
+  TextAreaField,
   useConsoleForm,
-} from '../../../../new-components/Form';
-import { Button } from '../../../../new-components/Button';
+  Button,
+  hasuraToast,
+  AceEditor,
+} from '@hasura/shared/ui';
 import { FaArrowRight, FaPlay } from 'react-icons/fa';
-import { useRestEndpoint } from '../../hooks/useRestEndpoint';
-import { parseQueryVariables } from '../../../../components/Services/ApiExplorer/Rest/utils';
 import { useRestEndpointRequest } from '../../hooks/useRestEndpointRequest';
 import { RequestHeaders } from './RequestHeaders';
 import { Variables } from './Variables';
-import { AllowedRESTMethods } from '../../../../metadata/types';
-import { openInGraphiQL } from './utils';
-import { LS_KEYS, getLSItem } from '../../../../utils';
-import { hasuraToast } from '../../../../new-components/Toasts';
-import { Analytics } from '../../../Analytics';
+import { openInGraphiQL } from '../../utils';
+import { Analytics } from '@hasura/shared/analytics';
+import { useAuthContext } from '@hasura/shared/context';
+import { DataHeader } from '@hasura/shared/types';
+import { useNavigate } from 'react-router';
+import { parseQueryVariables } from '../../../ApiExplorer/components/Rest/utils';
+import { getPersistedGraphiQLHeaders } from '../../../ApiExplorer/components/ApiRequest/utils';
+import { useRestEndpoint } from '@hasura/metadata/api';
+import { AllowedRestMethods } from '@hasura/shared/types';
 
 export type Variable = Exclude<
   ReturnType<typeof parseQueryVariables>,
   undefined
 >[0] & {
   value: string;
-};
-
-export type Header = {
-  name: string;
-  value: string;
-  selected: boolean;
 };
 
 export type RestEndpointDetailsProps = {
@@ -67,50 +65,17 @@ const validationSchema = z.object({
     .array()
     .nonempty({ message: 'Choose at least one method' }),
   request: z.string().min(1, { message: 'Please add a GraphQL query' }),
+  response: z.string().nullish(),
 });
 
-export const getInitialHeaders = (): Header[] => {
-  const headers = getLSItem(LS_KEYS.apiExplorerConsoleGraphQLHeaders);
-
-  if (headers) {
-    return JSON.parse(headers).map(
-      (header: { key: string; value: string; isDisabled: boolean }) => {
-        const value =
-          header.key === 'x-hasura-admin-secret'
-            ? window.__env.adminSecret || getLSItem(LS_KEYS.consoleAdminSecret)
-            : header.value;
-        return {
-          name: header.key,
-          value,
-          selected: !header.isDisabled,
-        };
-      }
-    );
-  }
-  return [
-    {
-      name: '',
-      value: '',
-      selected: true,
-    },
-  ];
-};
-
 export const RestEndpointDetails = (props: RestEndpointDetailsProps) => {
+  const navigate = useNavigate();
   const endpoint = useRestEndpoint(props.name);
+  const { getHeaders } = useAuthContext();
 
-  const initialHeaders = getInitialHeaders();
-
-  const [headers, setHeaders] = React.useState(
-    initialHeaders.map(header => ({
-      ...header,
-      selected: true,
-    }))
-  );
-
+  const [headers, setHeaders] = React.useState<DataHeader[]>([]);
   const [variables, setVariables] = React.useState<Variable[]>([]);
-
-  const { data, mutate, isLoading } = useRestEndpointRequest();
+  const { data, mutate, isPending: isLoading } = useRestEndpointRequest();
 
   const {
     Form,
@@ -120,16 +85,28 @@ export const RestEndpointDetails = (props: RestEndpointDetailsProps) => {
   });
 
   useEffect(() => {
+    getHeaders().then((authHeaders) => {
+      const initialHeaders = getPersistedGraphiQLHeaders(authHeaders);
+      setHeaders(
+        initialHeaders.map((header) => ({
+          ...header,
+          selected: true,
+        })),
+      );
+    });
+  }, []);
+
+  useEffect(() => {
     if (endpoint?.query?.query) {
       const parsedVariables = parseQueryVariables(endpoint.query.query);
-      setVariables(parsedVariables?.map(v => ({ ...v, value: '' })) ?? []);
+      setVariables(parsedVariables?.map((v) => ({ ...v, value: '' })) ?? []);
     }
 
     if (endpoint) {
       setValue('name', endpoint.endpoint?.name);
-      setValue('comment', endpoint?.endpoint?.comment);
+      setValue('comment', endpoint?.endpoint?.comment ?? null);
       setValue('url', endpoint?.endpoint?.url);
-      setValue('methods', endpoint?.endpoint?.methods);
+      setValue('methods', (endpoint?.endpoint?.methods ?? []) as any);
       setValue('request', endpoint?.query?.query);
     }
   }, [endpoint?.query?.query, endpoint?.endpoint]);
@@ -145,7 +122,7 @@ export const RestEndpointDetails = (props: RestEndpointDetailsProps) => {
   return (
     <Form onSubmit={() => {}}>
       <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-2">
+        <Flex direction="column" gap="2">
           <div className="relative">
             <CodeEditorField
               disabled
@@ -161,11 +138,10 @@ export const RestEndpointDetails = (props: RestEndpointDetailsProps) => {
                 passHtmlAttributesToChildren
               >
                 <Button
-                  icon={<FaArrowRight />}
-                  iconPosition="end"
+                  rightIcon={FaArrowRight}
                   size="sm"
-                  onClick={e => {
-                    openInGraphiQL(endpoint.query.query);
+                  onClick={(e) => {
+                    openInGraphiQL(navigate, endpoint.query.query);
                   }}
                 >
                   Test it in GraphiQL
@@ -173,18 +149,20 @@ export const RestEndpointDetails = (props: RestEndpointDetailsProps) => {
               </Analytics>
             </div>
           </div>
-          <Textarea
+          <TextAreaField
             disabled
             name="comment"
             label="Description"
             placeholder="Description"
           />
           <InputField
-            disabled
             name="url"
             label="Location"
-            placeholder="Location"
             description={`This is the location of your endpoint (must be unique). Any parameterized variables`}
+            fieldProps={{
+              disabled: true,
+              placeholder: 'Location',
+            }}
           />
           <CheckboxesField
             disabled
@@ -197,7 +175,7 @@ export const RestEndpointDetails = (props: RestEndpointDetailsProps) => {
               { value: 'PATCH', label: 'PATCH' },
               { value: 'DELETE', label: 'DELETE' },
             ].filter(({ value }) =>
-              endpoint.endpoint?.methods.includes(value as AllowedRESTMethods)
+              endpoint.endpoint?.methods.includes(value as AllowedRestMethods),
             )}
             orientation="horizontal"
           />
@@ -212,8 +190,8 @@ export const RestEndpointDetails = (props: RestEndpointDetailsProps) => {
             >
               <Button
                 disabled={!endpoint?.endpoint}
-                isLoading={isLoading}
-                icon={<FaPlay />}
+                loading={isLoading}
+                leftIcon={FaPlay}
                 onClick={() => {
                   mutate(
                     {
@@ -222,7 +200,7 @@ export const RestEndpointDetails = (props: RestEndpointDetailsProps) => {
                       variables,
                     },
                     {
-                      onSuccess: data => {
+                      onSuccess: (data) => {
                         hasuraToast({
                           title: 'Success',
                           message: 'Request successful',
@@ -233,7 +211,7 @@ export const RestEndpointDetails = (props: RestEndpointDetailsProps) => {
                           behavior: 'smooth',
                         });
                       },
-                      onError: error => {
+                      onError: (error) => {
                         hasuraToast({
                           title: 'Error',
                           message: 'Request failed',
@@ -241,7 +219,6 @@ export const RestEndpointDetails = (props: RestEndpointDetailsProps) => {
                           children: (
                             <div className="overflow-hidden">
                               <AceEditor
-                                theme="github"
                                 setOptions={{
                                   minLines: 1,
                                   maxLines: Infinity,
@@ -254,7 +231,7 @@ export const RestEndpointDetails = (props: RestEndpointDetailsProps) => {
                           ),
                         });
                       },
-                    }
+                    },
                   );
                 }}
                 mode="primary"
@@ -263,12 +240,15 @@ export const RestEndpointDetails = (props: RestEndpointDetailsProps) => {
               </Button>
             </Analytics>
           </div>
-        </div>
+        </Flex>
         <div>
           <CodeEditorField
             editorOptions={responseEditorOptions}
             name="response"
             label="GraphQL Response"
+            editorProps={{
+              mode: 'json',
+            }}
           />
         </div>
       </div>

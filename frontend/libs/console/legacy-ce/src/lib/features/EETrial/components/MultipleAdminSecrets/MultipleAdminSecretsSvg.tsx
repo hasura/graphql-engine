@@ -679,9 +679,9 @@ export function MultipleAdminSecretsSvg(props: Props) {
           y2="248"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#E2E8F0" />
-          <stop offset="0.739583" stop-color="#E2E8F0" stop-opacity="0.75" />
-          <stop offset="1" stop-color="#E2E8F0" stop-opacity="0" />
+          <stop stopColor="#E2E8F0" />
+          <stop offset="0.739583" stopColor="#E2E8F0" stopOpacity="0.75" />
+          <stop offset="1" stopColor="#E2E8F0" stopOpacity="0" />
         </linearGradient>
         <clipPath id="clip0_571_46831">
           <rect

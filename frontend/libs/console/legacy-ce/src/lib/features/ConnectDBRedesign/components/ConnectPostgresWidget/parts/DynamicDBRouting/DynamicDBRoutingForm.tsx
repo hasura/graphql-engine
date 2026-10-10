@@ -1,16 +1,24 @@
 import React from 'react';
+import { Flex } from '@radix-ui/themes';
 import { useFormContext } from 'react-hook-form';
 import { FaExclamationCircle, FaPlay, FaPlusCircle } from 'react-icons/fa';
 import z from 'zod';
-import { Badge } from '../../../../../../new-components/Badge';
-import { Button } from '../../../../../../new-components/Button';
-import { CardedTable } from '../../../../../../new-components/CardedTable';
-import { CardRadioGroup } from '../../../../../../new-components/CardRadioGroup';
+import {
+  Badge,
+  Button,
+  CardedTable,
+  CodeEditorField,
+  LearnMoreLink,
+  IconTooltip,
+  RadioCardGroup,
+  Text,
+  Card,
+  Link,
+} from '@hasura/shared/ui';
+
 import { schema as postgresSchema } from '../../schema';
-import { CodeEditorField } from '../../../../../../new-components/Form';
-import { LearnMoreLink } from '../../../../../../new-components/LearnMoreLink';
-import { IconTooltip } from '../../../../../../new-components/Tooltip';
-import { Analytics, trackCustomEvent } from '../../../../../Analytics';
+
+import { Analytics, trackCustomEvent } from '@hasura/shared/analytics';
 
 const editorOptions = {
   minLines: 34,
@@ -111,8 +119,8 @@ export const DynamicDBRoutingForm = (props: DynamicDBRoutingFormProps) => {
   const { setValue, watch } = useFormContext();
   const [template, setTemplate] = React.useState<keyof typeof templates>(
     (Object.entries(templates).find(([_, template]) =>
-      template.isSelected(connectionTemplate)
-    )?.[0] as keyof typeof templates) || 'disabled'
+      template.isSelected(connectionTemplate),
+    )?.[0] as keyof typeof templates) || 'disabled',
   );
 
   const localConnectionTemplate = watch('connection_template');
@@ -126,8 +134,8 @@ export const DynamicDBRoutingForm = (props: DynamicDBRoutingFormProps) => {
         template.isSelected(connectionTemplate)
           ? connectionTemplate
           : template.template,
-      ])
-    )
+      ]),
+    ),
   );
 
   return (
@@ -135,47 +143,50 @@ export const DynamicDBRoutingForm = (props: DynamicDBRoutingFormProps) => {
       <div>
         <div className="mb-2">
           {template !== 'disabled' && (
-            <div
-              className={`flex items-center rounded bg-gray-200 border border-gray-300 py-sm px-sm mb-md`}
-            >
-              <FaExclamationCircle className="fill-current self-start h-md text-muted" />
-              <div className="ml-xs max-w-2xl">
-                <strong>Dynamic Routing Precedence</strong>
-                <p>
-                  {' '}
-                  Dynamic routing takes precedence over read replicas. You may
-                  use both read replica routing and default database routing in
-                  your connection template.
-                </p>
-              </div>
-              <a
-                href="https://hasura.io/docs/latest/databases/database-config/dynamic-db-connection/#setting-up-connection-set-and-connection-template"
-                target="__blank"
-                className="font-semibold ml-auto mr-md px-sm py-xs font-base text-muted border border-muted rounded hover:bg-gray-300"
-              >
-                Learn More
-              </a>
-            </div>
+            <Card className={'mb-4'}>
+              <Flex align="center" gap="2">
+                <FaExclamationCircle className="fill-current self-start h-6 text-muted" />
+                <div className="max-w-2xl">
+                  <Text as="p" weight="bold">
+                    Dynamic Routing Precedence
+                  </Text>
+                  <Text>
+                    {' '}
+                    Dynamic routing takes precedence over read replicas. You may
+                    use both read replica routing and default database routing
+                    in your connection template.
+                  </Text>
+                </div>
+                <Button mode="default" asChild>
+                  <Link
+                    href="https://hasura.io/docs/latest/databases/database-config/dynamic-db-connection/#setting-up-connection-set-and-connection-template"
+                    target="__blank"
+                  >
+                    Learn More
+                  </Link>
+                </Button>
+              </Flex>
+            </Card>
           )}
-          <div className="block flex items-center text-gray-600 font-semibold">
-            <label htmlFor="connection_template" className="font-semibold">
+          <Flex align="center" gap="2">
+            <Text as="label" htmlFor="connection_template" weight="medium">
               Connection Template
-            </label>
+            </Text>
             <IconTooltip message="Connection templates to route GraphQL requests based on different request parameters such as session variables, headers and tenant IDs." />
             <LearnMoreLink
               href="https://hasura.io/docs/latest/databases/database-config/dynamic-db-connection/#connection-template"
               className="font-normal"
             />
-          </div>
-          <div className="text-muted">
+          </Flex>
+          <Text as="p">
             Database connection template to define dynamic connection routing.
-          </div>
+          </Text>
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <CardRadioGroup
+          <RadioCardGroup
             value={template}
             orientation="vertical"
-            onChange={value => {
+            onChange={(value) => {
               setLocalTemplate({
                 ...localTemplate,
                 [template]: localConnectionTemplate,
@@ -183,7 +194,7 @@ export const DynamicDBRoutingForm = (props: DynamicDBRoutingFormProps) => {
               setTemplate(value as keyof typeof templates);
               setValue(
                 'connection_template',
-                localTemplate[value as keyof typeof templates]
+                localTemplate[value as keyof typeof templates],
               );
               trackCustomEvent(
                 {
@@ -195,13 +206,19 @@ export const DynamicDBRoutingForm = (props: DynamicDBRoutingFormProps) => {
                   data: {
                     temlate: value,
                   },
-                }
+                },
               );
             }}
-            items={Object.values(templates).map(template => ({
+            options={Object.values(templates).map((template) => ({
               value: template.value,
-              title: template.title,
-              body: template.body,
+              label: (
+                <div>
+                  <Text as="div" weight="bold">
+                    {template.title}
+                  </Text>
+                  <Text as="div">{template.body}</Text>
+                </div>
+              ),
             }))}
           />
           <div data-testid="template-editor">
@@ -213,20 +230,17 @@ export const DynamicDBRoutingForm = (props: DynamicDBRoutingFormProps) => {
             />
           </div>
         </div>
-        <div className="flex justify-end mt-4">
+        <Flex justify="end" className="mt-4" gap="2">
           <Analytics
             name="data-tab-dynamic-db-routing-validate-connection-template"
             passHtmlAttributesToChildren
           >
             <Button
+              size="1"
               onClick={onOpenValidate}
               disabled={template === 'disabled'}
-              className="mr-2"
-              icon={
-                <div className="w-3 h-3 mr-1">
-                  <FaPlay />
-                </div>
-              }
+              leftIcon={FaPlay}
+              mode="default"
             >
               Validate
             </Button>
@@ -238,6 +252,7 @@ export const DynamicDBRoutingForm = (props: DynamicDBRoutingFormProps) => {
             <Button
               type="submit"
               mode="primary"
+              size="1"
               disabled={
                 isLoading || localConnectionTemplate === connectionTemplate
               }
@@ -245,57 +260,63 @@ export const DynamicDBRoutingForm = (props: DynamicDBRoutingFormProps) => {
               Update Connection Template
             </Button>
           </Analytics>
-        </div>
+        </Flex>
       </div>
-      <div className="mb-2 mt-8 flex justify-between items-end">
+      <Flex justify="between" align="end" className="mb-2 mt-8">
         <div>
-          <div className="block flex items-center text-gray-600 font-semibold">
-            <label htmlFor="template" className="font-semibold">
+          <Flex align="center" gap="2">
+            <Text as="label" weight="medium" htmlFor="template">
               Available Connections for Templating
-            </label>
+            </Text>
             <IconTooltip message="Available database connections which can be referenced in your dynamic connection template." />
             <LearnMoreLink
               href="https://hasura.io/docs/latest/databases/database-config/dynamic-db-connection/#connection-set"
               text="(Learn More)"
-              className="font-normal"
             />
-          </div>
-          <div className="text-muted">
+          </Flex>
+          <Text as="p">
             Available connections which can be referenced in your dynamic
-            connection template.{' '}
-          </div>
+            connection template.
+          </Text>
         </div>
         <Analytics
           name="data-tab-dynamic-db-routing-add-connection"
           passHtmlAttributesToChildren
         >
           <Button
+            mode="default"
+            size="1"
             onClick={onAddConnection}
-            icon={<FaPlusCircle />}
+            leftIcon={FaPlusCircle}
             disabled={isLoading}
           >
             Add Connection
           </Button>
         </Analytics>
-      </div>
+      </Flex>
       <div>
         <CardedTable
-          showActionCell
-          columns={['Connection']}
+          columns={['Connection', '']}
           data={[
             [
               '{{$.default}}',
-              <Badge color="light-gray">Default Routing Behavior</Badge>,
+              <Badge key="default" color="gray">
+                Default Routing Behavior
+              </Badge>,
             ],
             [
               '{{$.primary}}',
-              <Badge color="light-gray">The Database Primary</Badge>,
+              <Badge key="primary" color="gray">
+                The Database Primary
+              </Badge>,
             ],
             [
               '{{$.read_replicas}}',
-              <Badge color="light-gray">Read Replica Routing</Badge>,
+              <Badge key="read_replicas" color="gray">
+                Read Replica Routing
+              </Badge>,
             ],
-            ...connectionSetMembers.map(connection => [
+            ...connectionSetMembers.map((connection) => [
               `{{$.connection_set.${connection.name}}}`,
               <>
                 <Analytics

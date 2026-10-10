@@ -27,5 +27,11 @@ declare namespace Cypress {
     expectErrorNotificationWithMessage(message: string): Chainable<unknown>;
 
     toMatchSnapshot(options?: { name?: string }): void;
+
+    /**
+     * Pick an option of a Radix `Select`, chained off its hidden native select
+     * @example cy.get('[name=source]').radixSelect('default')
+     */
+    radixSelect(label: string): Chainable<unknown>;
   }
 }

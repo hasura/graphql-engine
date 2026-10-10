@@ -1,5 +1,12 @@
-import { Button } from '../../../new-components/Button';
-import { InputField, SimpleForm } from '../../../new-components/Form';
+import {
+  Button,
+  Card,
+  InputField,
+  Separator,
+  SimpleForm,
+} from '@hasura/shared/ui';
+import { Flex, Heading } from '@radix-ui/themes';
+
 import { z } from 'zod';
 import { useAddAgent } from '../hooks/useAddAgent';
 import { UrlInput } from './UrlInput';
@@ -26,7 +33,7 @@ export const schema = z.object({
 export type FormValues = z.infer<typeof schema>;
 
 export const AddAgentForm = (props: CreateAgentFormProps) => {
-  const { addAgent, isLoading } = useAddAgent();
+  const { addAgent, isPending } = useAddAgent();
 
   const handleSubmit = (values: FormValues) => {
     addAgent({
@@ -35,7 +42,7 @@ export const AddAgentForm = (props: CreateAgentFormProps) => {
         values.url.type === 'envVar'
           ? { from_env: values.url.value }
           : values.url.value,
-    }).then(response => {
+    }).then((response) => {
       response.makeToast();
       if (response.status === 'added') {
         props?.onSuccess?.();
@@ -53,39 +60,36 @@ export const AddAgentForm = (props: CreateAgentFormProps) => {
       }}
       className="py-4"
     >
-      <div className="bg-white p-6 border border-gray-300 rounded space-y-4 mb-6 max-w-xl">
-        <p className="text-lg text-gray-600 font-bold">
-          Connect a Data Connector Agent
-        </p>
-        <hr />
-
+      <Card size="1" className="md:w-8/12">
+        <Heading size="3">Connect a Data Connector Agent</Heading>
+        <Separator size="4" className="my-4" />
         <InputField
           label="Name"
           name="name"
-          type="text"
           tooltip="This value will be used as the source kind in metadata"
-          placeholder="Enter the name of the agent"
+          fieldProps={{
+            type: 'text',
+            placeholder: 'Enter the name of the agent',
+          }}
         />
 
         <UrlInput />
 
-        <div className="flex gap-4 justify-end">
-          <Button type="submit" mode="primary" isLoading={isLoading}>
-            Connect
-          </Button>
+        <Flex gap="4" align="center" justify="end">
           <Button
+            color="gray"
+            variant="ghost"
             onClick={() => {
               props.onClose();
             }}
           >
             Close
           </Button>
-        </div>
-      </div>
+          <Button type="submit" mode="primary" loading={isPending}>
+            Connect
+          </Button>
+        </Flex>
+      </Card>
     </SimpleForm>
   );
-};
-
-AddAgentForm.defaultProps = {
-  onSuccess: () => {},
 };

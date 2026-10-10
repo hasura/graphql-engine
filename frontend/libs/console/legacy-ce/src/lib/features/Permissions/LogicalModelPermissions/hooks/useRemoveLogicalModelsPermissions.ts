@@ -1,15 +1,12 @@
 import { useCallback } from 'react';
-import { useFireNotification } from '../../../../new-components/Notifications/index';
-import { exportMetadata } from '../../../DataSource';
-import { useMetadataMigration } from '../../../MetadataAPI';
-import { useHttpClient } from '../../../Network';
-import { LogicalModel, Source } from '../../../hasura-metadata-types';
+import { useMetadataMigration, useMetadata } from '@hasura/metadata/api';
+import { LogicalModel, Source } from '@hasura/shared/types';
 import { Permission } from '../components/types';
 import { errorTransform } from './utils/errorTransform';
 import { getDeleteLogicalModelBody } from './utils/getDeleteLogicalModelBody';
+import { hasuraToast } from '@hasura/shared/ui';
 
 const useRemoveLogicalModelsPermissions = ({
-  logicalModels,
   source,
 }: {
   logicalModels: LogicalModel[];
@@ -18,8 +15,9 @@ const useRemoveLogicalModelsPermissions = ({
   const mutate = useMetadataMigration({
     errorTransform,
   });
-  const { fireNotification } = useFireNotification();
-  const httpClient = useHttpClient();
+  const { refetch: refetchMetadata } = useMetadata(undefined, {
+    enabled: false,
+  });
 
   const remove = useCallback(
     async ({
@@ -31,10 +29,12 @@ const useRemoveLogicalModelsPermissions = ({
       logicalModelName: string;
       onSuccess?: () => void;
     }) => {
-      const { resource_version } = await exportMetadata({
-        httpClient,
-      });
       if (!source) return;
+
+      const { data, error } = await refetchMetadata();
+      if (!data) {
+        throw error || new Error('failed to fetch metadata');
+      }
 
       const body = getDeleteLogicalModelBody({
         permission,
@@ -43,20 +43,24 @@ const useRemoveLogicalModelsPermissions = ({
       });
 
       try {
-        await mutate.mutateAsync(
+        await mutate.mutate(
           {
-            query: { type: 'bulk', args: body, resource_version },
+            query: {
+              type: 'bulk',
+              args: body,
+              resource_version: data.resource_version,
+            },
           },
           {
             onSuccess: async () => {
-              fireNotification({
+              hasuraToast({
                 type: 'success',
                 title: 'Success!',
                 message: 'Permissions successfully deleted!',
               });
             },
-            onError: err => {
-              fireNotification({
+            onError: (err) => {
+              hasuraToast({
                 type: 'error',
                 title: 'Error!',
                 message:
@@ -67,10 +71,10 @@ const useRemoveLogicalModelsPermissions = ({
             onSettled: async () => {
               onSuccess?.();
             },
-          }
+          },
         );
       } catch (error: any) {
-        fireNotification({
+        hasuraToast({
           type: 'error',
           title: 'Error!',
           message:
@@ -78,7 +82,7 @@ const useRemoveLogicalModelsPermissions = ({
         });
       }
     },
-    [source]
+    [mutate, source],
   );
 
   return {

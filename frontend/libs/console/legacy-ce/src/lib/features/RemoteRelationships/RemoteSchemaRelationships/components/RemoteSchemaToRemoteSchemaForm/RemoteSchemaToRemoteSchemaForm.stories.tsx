@@ -1,7 +1,6 @@
-import { StoryObj, Meta } from '@storybook/react';
-import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
-import { within, userEvent } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
+import { StoryObj, Meta } from '@storybook/react-webpack5';
+import { ReactQueryDecorator } from '@hasura/shared/testing';
+import { expect, userEvent, within } from 'storybook/test';
 
 import {
   RemoteSchemaToRemoteSchemaForm,
@@ -37,34 +36,34 @@ export const PrimaryWithTest: StoryObj<RemoteSchemaToRemoteSchemaFormProps> = {
 
     const submitButton = (await canvas.findAllByText('Add Relationship'))[1];
 
-    userEvent.click(submitButton);
+    await userEvent.click(submitButton);
 
     const nameError = await canvas.findByText('Name is required');
     const selectError = await canvas.findByText(
-      'Related remote schema is required'
+      'Related remote schema is required',
     );
 
     // expect error messages
-    expect(nameError).toBeInTheDocument();
-    expect(selectError).toBeInTheDocument();
+    await expect(nameError).toBeInTheDocument();
+    await expect(selectError).toBeInTheDocument();
 
     // update fields
     const nameInput = await canvas.findByLabelText('Relationship Name');
-    userEvent.type(nameInput, 'test');
+    await userEvent.type(nameInput, 'test');
 
     const sourceType = await canvas.findByText('Select a type');
-    userEvent.click(sourceType);
+    await userEvent.click(sourceType);
     await userEvent.click(await canvas.findByText('Continent'), undefined, {
       skipHover: true,
     });
 
     const referenceSchema = await canvas.findByText('Select a remote schema');
-    userEvent.click(referenceSchema);
+    await userEvent.click(referenceSchema);
     await userEvent.click(await canvas.findByText('remoteSchema2'), undefined, {
       skipHover: true,
     });
 
-    userEvent.click(submitButton);
+    await userEvent.click(submitButton);
   },
 };
 

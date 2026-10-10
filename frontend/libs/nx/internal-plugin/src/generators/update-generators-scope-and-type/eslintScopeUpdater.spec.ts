@@ -13,7 +13,7 @@ describe('generateDepConstraint', () => {
         test2: true,
       },
       'test:',
-      'test3'
+      'test3',
     );
 
     expect(result).toEqual({
@@ -28,7 +28,7 @@ describe('generateDepConstraint', () => {
         test2: false,
       },
       'test:',
-      'test3'
+      'test3',
     );
 
     expect(result).toEqual({

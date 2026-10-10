@@ -47,7 +47,7 @@ export const LogicalModelPermissions = ({
   roles,
 }: LogicalModelPermissionsProps) => {
   const logicalModel = logicalModels.find(
-    model => model.name === logicalModelName
+    (model) => model.name === logicalModelName,
   );
 
   return (
@@ -114,7 +114,7 @@ const PureLogicalModelPermissions = ({
                 table={undefined}
                 forbidden={['exists']}
                 tables={[]}
-                onPermissionsChange={permissionFilter => {
+                onPermissionsChange={(permissionFilter) => {
                   setPermission(permission.roleName, permissionFilter);
                 }}
                 logicalModel={logicalModelName}

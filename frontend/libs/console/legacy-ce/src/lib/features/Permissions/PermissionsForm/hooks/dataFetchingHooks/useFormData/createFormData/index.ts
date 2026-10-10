@@ -1,20 +1,20 @@
-import { TableColumn } from '../../../../../../DataSource';
-import { Metadata } from '../../../../../../hasura-metadata-types';
-import { isPermission } from '../../../../../utils';
+import { TableColumn } from '@hasura/metadata/data-source';
 import {
   ComputedField,
-  MetadataDataSource,
-  TableEntry,
-} from '../../../../../../../metadata/types';
-import z from 'zod';
-import { inputValidationSchema } from '../../../../../../../components/Services/Data/TablePermissions/InputValidation/InputValidation';
+  MetadataTable,
+  Source,
+  Table,
+} from '@hasura/shared/types';
+import { isPermission } from '../../../../../utils';
+import { areTablesEqual } from '@hasura/metadata/helpers';
+import { TablePermissionInputValidationSchema } from '../../../../components/InputValidation/InputValidation';
 
 type Operation = 'insert' | 'select' | 'update' | 'delete';
 
 const supportedQueries: Operation[] = ['select'];
 
 export const getAllowedFilterKeys = (
-  query: 'insert' | 'select' | 'update' | 'delete'
+  query: 'insert' | 'select' | 'update' | 'delete',
 ): ('check' | 'filter')[] => {
   switch (query) {
     case 'insert':
@@ -29,14 +29,14 @@ export const getAllowedFilterKeys = (
 type GetMetadataTableArgs = {
   dataSourceName: string;
   table: unknown;
-  trackedTables: TableEntry[] | undefined;
+  trackedTables: MetadataTable[] | undefined;
 };
 
 const getMetadataTable = (args: GetMetadataTableArgs) => {
   const { table, trackedTables } = args;
 
-  const selectedTable = trackedTables?.find(
-    trackedTable => JSON.stringify(trackedTable.table) === JSON.stringify(table)
+  const selectedTable = trackedTables?.find((trackedTable) =>
+    areTablesEqual(trackedTable.table, table as Table),
   );
 
   // find selected table
@@ -44,11 +44,11 @@ const getMetadataTable = (args: GetMetadataTableArgs) => {
     table: selectedTable,
     tables: trackedTables,
     // for gdc tables will be an array of strings so this needs updating
-    tableNames: trackedTables?.map(each => each.table),
+    tableNames: trackedTables?.map((each) => each.table),
   };
 };
 
-const getRoles = (metadataTables?: TableEntry[]) => {
+const getRoles = (metadataTables?: MetadataTable[]) => {
   // go through all tracked tables
   const res = metadataTables?.reduce<Set<string>>((acc, each) => {
     // go through all permissions
@@ -57,7 +57,7 @@ const getRoles = (metadataTables?: TableEntry[]) => {
       // check object key of metadata is a permission
       if (isPermission(props)) {
         // add each role from each permission to the set
-        props.value.forEach(permission => {
+        props.value.forEach((permission) => {
           acc.add(permission.role);
         });
       }
@@ -69,24 +69,20 @@ const getRoles = (metadataTables?: TableEntry[]) => {
 };
 
 export interface CreateFormDataArgs {
-  dataSourceName: string;
   table: unknown;
-  metadata: Metadata;
   tableColumns: TableColumn[];
-  metadataSource: MetadataDataSource;
-  trackedTables: TableEntry[];
-  validateInput: z.infer<typeof inputValidationSchema>;
+  source: Source;
+  validateInput: TablePermissionInputValidationSchema;
   computedFields: ComputedField[];
 }
 
 export const createFormData = (props: CreateFormDataArgs) => {
-  const { dataSourceName, table, tableColumns, trackedTables, computedFields } =
-    props;
+  const { source, table, tableColumns, computedFields } = props;
   // find the specific metadata table
   const metadataTable = getMetadataTable({
-    dataSourceName,
+    dataSourceName: source.name,
     table,
-    trackedTables: trackedTables,
+    trackedTables: source.tables,
   });
 
   const roles = getRoles(metadataTable.tables);

@@ -1,16 +1,16 @@
-import { useQuery } from 'react-query';
-import { Api } from '../../../../hooks/apiUtils';
+import { useQuery } from '@tanstack/react-query';
+import { requestJson } from '@hasura/shared/utils';
 
 export function fetchSampleQuery(dataUrl: string) {
-  return Api.get({
-    url: dataUrl,
+  return requestJson(dataUrl, {
+    method: 'GET',
     headers: {},
   });
 }
 
 export const useSampleQuery = (sampleQueriesPath: string) => {
   const { data: sampleQueriesData } = useQuery({
-    queryKey: sampleQueriesPath,
+    queryKey: [sampleQueriesPath],
     queryFn: () => fetchSampleQuery(sampleQueriesPath),
     staleTime: 300000,
   });

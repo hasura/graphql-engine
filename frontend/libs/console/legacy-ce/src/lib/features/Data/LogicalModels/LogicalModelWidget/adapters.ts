@@ -1,4 +1,4 @@
-import { LogicalModel } from '../../../hasura-metadata-types';
+import { LogicalModel } from '@hasura/shared/types';
 import { AddLogicalModelFormData } from './validationSchema';
 
 export const adaptLogicalModelToFormData = ({

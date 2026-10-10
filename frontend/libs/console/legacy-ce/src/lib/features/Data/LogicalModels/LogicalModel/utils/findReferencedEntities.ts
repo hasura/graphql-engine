@@ -3,12 +3,12 @@ import {
   Source,
   isArrayLogicalModelType,
   isLogicalModelType,
-} from '../../../../hasura-metadata-types';
+} from '@hasura/shared/types';
 
 // returns true if field implements logical model by name
 export const isFieldImplementingLogicalModel = (
   field: LogicalModelField,
-  nameToMatch: string
+  nameToMatch: string,
 ) =>
   (isLogicalModelType(field.type) &&
     field.type.logical_model === nameToMatch) ||
@@ -25,27 +25,27 @@ export const findReferencedEntities = ({
 }) => {
   const entities = {
     stored_procedures: (source?.stored_procedures ?? []).filter(
-      p => p.returns === logicalModelName
+      (p) => p.returns === logicalModelName,
     ),
     native_queries: (source?.native_queries ?? []).filter(
-      n => n.returns === logicalModelName
+      (n) => n.returns === logicalModelName,
     ),
     logical_models: (source?.logical_models ?? [])
       // first, narrow to only logical models whose fields reference THIS logical model
-      .filter(m =>
-        m.fields.some(field =>
-          isFieldImplementingLogicalModel(field, logicalModelName)
-        )
+      .filter((m) =>
+        m.fields.some((field) =>
+          isFieldImplementingLogicalModel(field, logicalModelName),
+        ),
       )
       // then, return those models, as well as a list of the matching fields
-      .map(m => ({
+      .map((m) => ({
         logicalModel: m,
-        matchingFields: m.fields.filter(field =>
-          isFieldImplementingLogicalModel(field, logicalModelName)
+        matchingFields: m.fields.filter((field) =>
+          isFieldImplementingLogicalModel(field, logicalModelName),
         ),
       })),
     // schemaless tables need a link to a logical model:
-    tables: (source?.tables ?? []).filter(table => {
+    tables: (source?.tables ?? []).filter((table) => {
       return (
         'logical_model' in table && table.logical_model === logicalModelName
       );

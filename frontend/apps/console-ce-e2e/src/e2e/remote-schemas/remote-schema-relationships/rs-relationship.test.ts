@@ -1,6 +1,6 @@
-import type { Metadata } from '@hasura/console-legacy-ce';
 import { replaceMetadata, resetMetadata } from '../helpers/metadata';
 import { postgres } from '../../data/manage-database/postgres.spec';
+import { Metadata } from '@hasura/shared/types';
 
 describe('check if remote schema relationships are displayed properly', () => {
   before(() => {
@@ -19,6 +19,7 @@ describe('check if remote schema relationships are displayed properly', () => {
                 schema: 'public',
                 name: 'destination_table',
               },
+              event_triggers: [],
             },
           ],
           configuration: {
@@ -56,7 +57,6 @@ describe('check if remote schema relationships are displayed properly', () => {
           comment: '',
           remote_relationships: [
             {
-              // @ts-expect-error Originally...
               // 1. The whole metadata object used in this test was not typed.
               // 2. As a result, it went outdated compared to the Metadata type used in the app.
               // 3. By adding the type to the object, we realized the `relationships` property does not exist in the type.
@@ -74,7 +74,10 @@ describe('check if remote schema relationships are displayed properly', () => {
                     to_source: {
                       relationship_type: 'object',
                       source: 'default',
-                      table: 'destination_table',
+                      table: {
+                        schema: 'public',
+                        name: 'destination_table',
+                      },
                       field_mapping: {
                         code: 'id',
                       },
@@ -115,11 +118,11 @@ describe('check if remote schema relationships are displayed properly', () => {
       .should('have.length', 3);
     cy.get('[data-test=remote-schema-relationships-table]').contains(
       'td',
-      'an_example_rs_to_db_relationship'
+      'an_example_rs_to_db_relationship',
     );
     cy.get('[data-test=remote-schema-relationships-table]').contains(
       'td',
-      'an_example_rs_to_rs_relationship'
+      'an_example_rs_to_rs_relationship',
     );
   });
 

@@ -1,9 +1,10 @@
 import React, { ReactNode } from 'react';
 import { waitFor, screen, render } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from 'react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
-import { Provider as ReduxProvider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
+import { vi } from 'vitest';
+import { AppContext, defaultAppState } from '@hasura/shared/context';
 import {
   mockGithubServerDownHandler,
   fetchGithubMetadataHandler,
@@ -16,18 +17,17 @@ import {
 import {
   mockMetadataUrl,
   mockMigrationUrl,
-  MOCK_INITIAL_METADATA,
   serverDownErrorMessage,
 } from '../mocks/constants';
 import { useInstallTemplate } from './useInstallTemplate';
 import { NEON_TEMPLATE_BASE_PATH } from '../../constants';
-import 'whatwg-fetch';
+import Endpoints from '../../../../Endpoints';
 
 const server = setupServer();
 
 let reactQueryClient = new QueryClient();
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }));
+beforeAll(() => server.listen({ onUnhandledFrame: 'warn' }));
 beforeEach(() => {
   // provide a fresh reactQueryClient for each test to prevent state caching among tests
   reactQueryClient = new QueryClient();
@@ -44,9 +44,9 @@ beforeEach(() => {
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-const onSuccessCb = jest.fn(() => {});
+const onSuccessCb = vi.fn(() => {});
 
-const onErrorCb = jest.fn(() => {});
+const onErrorCb = vi.fn(() => {});
 
 const Component = () => {
   // fetch the function to apply migration
@@ -54,7 +54,7 @@ const Component = () => {
     'default',
     NEON_TEMPLATE_BASE_PATH,
     onSuccessCb,
-    onErrorCb
+    onErrorCb,
   );
 
   React.useEffect(() => {
@@ -70,21 +70,14 @@ type Props = {
   children?: ReactNode;
 };
 
-const store = configureStore({
-  reducer: {
-    tables: () => ({ currentDataSource: 'postgres', dataHeaders: {} }),
-    metadata: () => ({
-      metadataObject: MOCK_INITIAL_METADATA,
-    }),
-  },
-});
-
 const wrapper = ({ children }: Props) => (
-  <ReduxProvider store={store} key="provider">
-    <QueryClientProvider client={reactQueryClient}>
-      {children}
-    </QueryClientProvider>
-  </ReduxProvider>
+  <QueryClientProvider client={reactQueryClient}>
+    <MemoryRouter>
+      <AppContext.Provider value={{ ...defaultAppState, endpoints: Endpoints }}>
+        {children}
+      </AppContext.Provider>
+    </MemoryRouter>
+  </QueryClientProvider>
 );
 
 describe('Check useInstallMigration installs the correct migrations', () => {
@@ -93,13 +86,13 @@ describe('Check useInstallMigration installs the correct migrations', () => {
       fetchGithubMetadataHandler,
       fetchGithubMigrationHandler,
       querySuccessHandler,
-      metadataSuccessHandler
+      metadataSuccessHandler,
     );
 
     render(<Component />, { wrapper });
 
     // STEP 1: expect our mock component renders successfully
-    expect(screen.queryByText('Welcome')).toBeInTheDocument();
+    expect(screen.getByText('Welcome')).toBeInTheDocument();
 
     // STEP 2: expect success callback to be called
     await waitFor(() => expect(onSuccessCb).toHaveBeenCalled());
@@ -110,12 +103,12 @@ describe('Check useInstallMigration installs the correct migrations', () => {
       mockGithubServerDownHandler(mockMetadataUrl),
       fetchGithubMigrationHandler,
       metadataSuccessHandler,
-      querySuccessHandler
+      querySuccessHandler,
     );
     render(<Component />, { wrapper });
 
     // STEP 1: expect our mock component renders successfully
-    expect(screen.queryByText('Welcome')).toBeInTheDocument();
+    expect(screen.getByText('Welcome')).toBeInTheDocument();
 
     // STEP 2: expect error callback to be called, after fetching metadata file from github fails
     await waitFor(() => expect(onErrorCb).toHaveBeenCalled());
@@ -130,12 +123,12 @@ describe('Check useInstallMigration installs the correct migrations', () => {
       mockGithubServerDownHandler(mockMigrationUrl),
       fetchGithubMetadataHandler,
       metadataSuccessHandler,
-      querySuccessHandler
+      querySuccessHandler,
     );
     render(<Component />, { wrapper });
 
     // STEP 1: expect our mock component renders successfully
-    expect(screen.queryByText('Welcome')).toBeInTheDocument();
+    expect(screen.getByText('Welcome')).toBeInTheDocument();
 
     // STEP 2: expect error callback to be called, after fetching migration file from github fails
     await waitFor(() => expect(onErrorCb).toHaveBeenCalled());
@@ -150,13 +143,13 @@ describe('Check useInstallMigration installs the correct migrations', () => {
       fetchGithubMetadataHandler,
       fetchGithubMigrationHandler,
       querySuccessHandler,
-      metadataFailureHandler
+      metadataFailureHandler,
     );
 
     render(<Component />, { wrapper });
 
     // STEP 1: expect our mock component renders successfully
-    expect(screen.queryByText('Welcome')).toBeInTheDocument();
+    expect(screen.getByText('Welcome')).toBeInTheDocument();
 
     // STEP 2: expect error callback to be called, after applying metadata to server fails
     await waitFor(() => expect(onErrorCb).toHaveBeenCalled());
@@ -171,13 +164,13 @@ describe('Check useInstallMigration installs the correct migrations', () => {
       fetchGithubMetadataHandler,
       fetchGithubMigrationHandler,
       metadataSuccessHandler,
-      queryFailureHandler
+      queryFailureHandler,
     );
 
     render(<Component />, { wrapper });
 
     // STEP 1: expect our mock component renders successfully
-    expect(screen.queryByText('Welcome')).toBeInTheDocument();
+    expect(screen.getByText('Welcome')).toBeInTheDocument();
 
     // STEP 2: expect error callback to be called, after applying migration to server fails
     await waitFor(() => expect(onErrorCb).toHaveBeenCalled());

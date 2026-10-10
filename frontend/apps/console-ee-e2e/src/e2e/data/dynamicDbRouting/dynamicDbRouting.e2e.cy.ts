@@ -11,7 +11,7 @@ xdescribe('Dynamic Db Routing', () => {
     // click on radio button with name "connection-type" and value "ENVIRONMENT_VARIABLES"
     cy.get('[name="connection-type"]').check('ENVIRONMENT_VARIABLES');
     cy.get('[data-test="database-url-env"]').type(
-      'HASURA_GRAPHQL_DATABASE_URL'
+      'HASURA_GRAPHQL_DATABASE_URL',
     );
     cy.get('[data-test="connect-database-btn"]').click();
 
@@ -47,12 +47,12 @@ xdescribe('Dynamic Db Routing', () => {
 
     cy.log('**--- Type in the Connection String**');
     cy.get('[data-testid="configuration.connectionInfo.databaseUrl.url"]').type(
-      'postgres://postgres:postgres@localhost:5433/postgres'
+      'postgres://postgres:postgres@localhost:5433/postgres',
     );
 
     cy.log('**--- Click on Add Connection**');
     cy.get(
-      '[data-analytics-name="data-tab-dynamic-db-routing-add-connection-submit"]'
+      '[data-analytics-name="data-tab-dynamic-db-routing-add-connection-submit"]',
     ).click();
 
     cy.log('**--- Wait for metadata update to finish **');
@@ -84,8 +84,8 @@ xdescribe('Dynamic Db Routing', () => {
     readMetadata().then((md: { body: Metadata['metadata'] }) => {
       cy.wrap(
         (md.body.sources || []).find(
-          source => source.name === 'dynamic-db-routing'
-        )
+          (source) => source.name === 'dynamic-db-routing',
+        ),
       ).toMatchSnapshot({ name: 'Action metadata' });
     });
 

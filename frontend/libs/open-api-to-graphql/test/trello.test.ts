@@ -5,7 +5,7 @@
 
 'use strict';
 
-import { beforeAll, expect, test } from '@jest/globals';
+import { beforeAll, expect, test } from 'vitest';
 import { GraphQLObjectType, GraphQLSchema, printSchema } from 'graphql';
 
 import * as openAPIToGraphQL from '../src/index';
@@ -22,7 +22,7 @@ beforeAll(() => {
     .then(({ schema, report }) => {
       createdSchema = schema;
     })
-    .catch(e => {
+    .catch((e) => {
       console.log(e);
     });
 });
@@ -32,7 +32,7 @@ test('Trello API works', () => {
     (
       (createdSchema.getTypeMap().Query as GraphQLObjectType).getFields()
         .viewerAnyAuth.type as GraphQLObjectType
-    ).getFields()
+    ).getFields(),
   ).length;
   expect(gqlTypes).toEqual(82);
 });

@@ -1,81 +1,116 @@
-import { Badge } from '../../../../new-components/Badge';
-import { Button } from '../../../../new-components/Button';
-import { DropdownMenu } from '../../../../new-components/DropdownMenu';
+import {
+  Badge,
+  DropdownButton,
+  DropdownMenu,
+  hasuraToast,
+  showErrorNotification,
+  Text,
+  useDestructiveConfirm,
+} from '@hasura/shared/ui';
 import React from 'react';
-import { FaChevronDown } from 'react-icons/fa';
-import { QualifiedFunction } from '../../../hasura-metadata-types';
-import { hasuraToast } from '../../../../new-components/Toasts';
-import { useAppDispatch } from '../../../../storeHooks';
-import { getRoute } from '../../../../utils/getDataRoute';
-import _push from '../../../../components/Services/Data/push';
-import { useTrackFunction } from '../../hooks/useTrackFunction';
-import { DisplayToastErrorMessage } from '../../components/DisplayErrorMessage';
+import { QualifiedDataSource, TableFunction } from '@hasura/shared/types';
 import { FunctionDisplayName } from '../../TrackResources/TrackFunctions/components/FunctionDisplayName';
+import { useNavigate } from 'react-router';
+import { useUntrackFunctions } from '@hasura/metadata/api';
+import { Flex } from '@radix-ui/themes';
+import { dataRoutes } from '@hasura/shared/utils';
+import {
+  getDatabaseMethods,
+  useDropFunction,
+} from '@hasura/metadata/data-source';
+import { functionDisplayName } from '@hasura/metadata/helpers';
 
-export const Heading: React.VFC<{
-  dataSourceName: string;
-  qualifiedFunction: QualifiedFunction;
-}> = ({ qualifiedFunction, dataSourceName }) => {
-  const dispatch = useAppDispatch();
-  const { untrackFunction } = useTrackFunction({
-    dataSourceName,
-    onSuccess: () => {
-      hasuraToast({
-        type: 'success',
-        title: 'Successfully untracked function',
-      });
-      dispatch(_push(getRoute().database(dataSourceName)));
-    },
-    onError: err => {
-      hasuraToast({
-        type: 'error',
-        title: 'Error while untracking table',
-        children: <DisplayToastErrorMessage message={err.message} />,
-      });
-    },
-  });
+export const Heading: React.FC<{
+  source: QualifiedDataSource;
+  qualifiedFunction: TableFunction;
+}> = ({ qualifiedFunction, source }) => {
+  const navigate = useNavigate();
+  const destructiveConfirm = useDestructiveConfirm();
+  const { untrackFunctions, isPending: isUntracking } = useUntrackFunctions();
+  const { mutateAsync: dropFunction, isPending: isDropping } =
+    useDropFunction();
+
+  const onUntrackClick = () => {
+    untrackFunctions(
+      [
+        {
+          function: qualifiedFunction,
+          source: source.name,
+        },
+      ],
+      {
+        onSuccess: () => {
+          hasuraToast({
+            type: 'success',
+            title: 'Successfully untracked function',
+          });
+          navigate(dataRoutes.manageDatabaseSource(source.name, 'functions'));
+        },
+        onError: (err) => {
+          showErrorNotification({
+            title: 'Error while untracking table',
+            error: err,
+          });
+        },
+      },
+    );
+  };
+
+  const onDropFunction = () => {
+    destructiveConfirm({
+      resourceName: functionDisplayName({
+        qualifiedFunction,
+      }),
+      resourceType: 'function',
+      onConfirm: () =>
+        dropFunction({
+          func: qualifiedFunction,
+          source,
+        })
+          .then(() => {
+            navigate(dataRoutes.manageDatabaseSource(source.name, 'functions'));
+            return true;
+          })
+          .catch(() => false),
+    });
+  };
+
+  const disabled = isUntracking || isDropping;
+  const dbMethods = getDatabaseMethods(source.kind);
 
   return (
-    <div className="flex items-center gap-3 mb-3">
-      <div className="group relative">
-        <div>
-          <DropdownMenu
-            items={[
-              [
-                <span
-                  className="py-xs text-red-600"
-                  onClick={() => {
-                    untrackFunction({
-                      functionsToBeUntracked: [qualifiedFunction],
-                    });
-                  }}
-                >
-                  Untrack
-                </span>,
-              ],
-            ]}
+    <Flex align="center" gap="3" className="my-4">
+      <DropdownButton
+        variant="ghost"
+        items={[
+          <DropdownMenu.Item
+            key="untrack"
+            onSelect={onUntrackClick}
+            disabled={disabled}
           >
-            <div className="flex gap-0.5 items-center">
-              <Button
-                iconPosition="end"
-                icon={
-                  <FaChevronDown
-                    size={12}
-                    className="text-gray-400 text-sm transition-transform group-radix-state-open:rotate-180"
-                  />
-                }
-              >
-                <div className="flex flex-row items-center ">
-                  <FunctionDisplayName qualifiedFunction={qualifiedFunction} />
-                </div>
-              </Button>
-            </div>
-          </DropdownMenu>
-        </div>
-      </div>
+            Untrack
+          </DropdownMenu.Item>,
+        ].concat(
+          dbMethods.modify?.dropFunction ? (
+            <DropdownMenu.Item
+              color="red"
+              onSelect={onDropFunction}
+              disabled={disabled}
+            >
+              Delete
+            </DropdownMenu.Item>
+          ) : (
+            []
+          ),
+        )}
+      >
+        <Text weight="bold">
+          <FunctionDisplayName qualifiedFunction={qualifiedFunction} />
+        </Text>
+      </DropdownButton>
       <div>
         <Badge color="green">Tracked</Badge>
       </div>
-    </div>
+    </Flex>
   );
 };

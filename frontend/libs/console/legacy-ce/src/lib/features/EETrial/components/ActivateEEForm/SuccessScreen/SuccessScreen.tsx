@@ -1,7 +1,7 @@
-import React from 'react';
-import { Button } from '../../../../../new-components/Button';
+import { Button, Separator, IconButton } from '@hasura/shared/ui';
 import { FaArrowRight, FaCheck } from 'react-icons/fa';
-import { Analytics } from '../../../../Analytics';
+import { Analytics } from '@hasura/shared/analytics';
+import { Code, Em, Flex, Heading } from '@radix-ui/themes';
 
 type Props = {
   /**
@@ -22,14 +22,21 @@ export const SuccessScreen = (props: Props) => {
   const { showBenefitsButton, onViewBenefitsClick, onCloseClick } = props;
   return (
     <>
-      <div className="flex flex-col p-md">
-        <div className="mb-xs text-gray-50 font-semibold rounded-full bg-gradient-to-br from-yellow-200 to-yellow-600 self-start h-7 w-7 flex items-center justify-center aspect-square mt-1">
-          <FaCheck />
-        </div>
-        <h1 className="text-xl text-slate-900 font-semibold mb-sm">
-          Your trial of Hasura Enterprise has been activated
-        </h1>
-        <p className="text-muted mt-0 mb-sm">
+      <Flex direction="column" className="py-4" gap="2">
+        <Flex align="center" justify="start" gap="2">
+          <IconButton
+            color="green"
+            variant="outline"
+            radius="full"
+            className="cursor-none!"
+          >
+            <FaCheck />
+          </IconButton>
+          <Heading size="5">
+            Your trial of Hasura Enterprise has been activated
+          </Heading>
+        </Flex>
+        <p className="text-muted mt-0 mb-2">
           <strong>What&apos;s next?</strong>
           <br />
           Please restart your Hasura service in order to start using your new
@@ -38,10 +45,10 @@ export const SuccessScreen = (props: Props) => {
         <p className="text-muted mt-0 mb-0">
           In Docker, you can restart your container using:
         </p>
-        <p className="text-muted font-mono tracking-widest text-sm w-max mb-4">
-          docker restart [container-name]
-        </p>
-        <p className="text-muted mt-0 mb-sm">
+        <Code color="red">
+          <Em>docker restart [container-name]</Em>
+        </Code>
+        <p className="text-muted mt-0 mb-2">
           Read our{' '}
           <a
             href="https://hasura.io/docs/latest/enterprise/index"
@@ -53,8 +60,9 @@ export const SuccessScreen = (props: Props) => {
           </a>{' '}
           to learn how to get the most out of the features of your trial.
         </p>
-      </div>
-      <footer className="bg-white border-t border-slate-300 flex justify-between gap-4 px-6 py-3">
+      </Flex>
+      <Separator size="4" />
+      <Flex justify="between" gap="4" className="py-3">
         {showBenefitsButton ? (
           <Button onClick={onViewBenefitsClick}>View Benefits</Button>
         ) : null}
@@ -62,13 +70,12 @@ export const SuccessScreen = (props: Props) => {
           <Button
             mode="primary"
             onClick={onCloseClick}
-            icon={<FaArrowRight />}
-            iconPosition="end"
+            rightIcon={FaArrowRight}
           >
             Close and Continue
           </Button>
         </Analytics>
-      </footer>
+      </Flex>
     </>
   );
 };

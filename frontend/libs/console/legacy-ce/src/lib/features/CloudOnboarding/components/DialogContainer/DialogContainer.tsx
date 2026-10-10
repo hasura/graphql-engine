@@ -1,21 +1,22 @@
 import React, { ReactElement } from 'react';
-import * as Dialog from '@radix-ui/react-dialog';
 import { TopHeaderBar } from '../TopHeaderBar/TopHeaderBar';
 import {
   StepperNavbar,
   StepperNavbarStep,
 } from '../StepperNavbar/StepperNavbar';
+import { Dialog } from '@radix-ui/themes';
 
 type DialogContainer = {
-  header: string | ReactElement;
-  subHeader?: string | ReactElement;
+  children?: React.ReactNode;
+  header: string | ReactElement<any>;
+  subHeader?: string | ReactElement<any>;
   showSubHeaderAboveHeader?: boolean;
   showStepper?: boolean;
   stepperNavSteps?: StepperNavbarStep[];
   activeIndex?: number;
 };
 
-export const DialogContainer: React.FC<DialogContainer> = props => {
+export const DialogContainer: React.FC<DialogContainer> = (props) => {
   const {
     activeIndex,
     showStepper,
@@ -30,10 +31,10 @@ export const DialogContainer: React.FC<DialogContainer> = props => {
     //
     // modal={false} is set to prevent focus issues when multiple modals are visible,
     // for example survey modal and onboarding modal
-    <Dialog.Root modal={false} open>
-      <Dialog.Content className="fixed top-0 w-full h-full focus:outline-none bg-gray-50 overflow-y-scroll z-[100]">
+    <Dialog.Root open>
+      <Dialog.Content className="w-full h-full focus:outline-none overflow-y-scroll">
         <TopHeaderBar />
-        <div className="max-w-5xl p-md ml-auto mr-auto mt-xl">
+        <div className="max-w-5xl py-4 ml-auto mr-auto">
           <div className="mb-5 font-sans">
             {showSubHeaderAboveHeader ? (
               <>
