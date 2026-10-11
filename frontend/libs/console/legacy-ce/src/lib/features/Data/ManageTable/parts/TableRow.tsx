@@ -7,6 +7,7 @@ import {
   hasuraToast,
   showErrorNotification,
   Table,
+  useAppearance,
 } from '@hasura/shared/ui';
 import { MetadataTable, QualifiedDataSource } from '@hasura/shared/types';
 import { TableDisplayName } from '../components/TableDisplayName';
@@ -43,6 +44,7 @@ export const TableRow = React.memo(
     onTableTrack,
     isRowSelectionEnabled,
   }: TableRowProps) => {
+    const { appearance } = useAppearance();
     const [showCustomModal, setShowCustomModal] = React.useState(false);
     const [isMongoTrackingModalVisible, setShowMongoTrackingModalVisible] =
       React.useState(false);
@@ -114,7 +116,15 @@ export const TableRow = React.memo(
     };
 
     return (
-      <Table.Row className={checked ? 'bg-indigo-50' : 'bg-transparent'}>
+      <Table.Row
+        className={
+          checked
+            ? appearance === 'dark'
+              ? 'bg-gray-800'
+              : 'bg-indigo-50'
+            : 'bg-transparent'
+        }
+      >
         {isRowSelectionEnabled && (
           <Table.Cell className="w-10">
             <Flex align="center" className="h-full">

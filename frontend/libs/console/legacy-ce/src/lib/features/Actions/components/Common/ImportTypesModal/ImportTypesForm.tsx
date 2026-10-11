@@ -22,9 +22,10 @@ const filterItemsBySearch = (searchQuery: string, itemList: string[]) => {
     }
   });
   // the results are sorted by how early the search query appears in the type
-  // name. `indexOf` is used instead of `search`, since `search` coerces its
-  // argument to a RegExp and therefore throws on queries containing
-  // metacharacters
+  // name. `indexOf` is used rather than `search`, which coerces its argument
+  // to a RegExp and so throws on a query containing metacharacters.
+  // Subtracting the positions also keeps the comparator consistent when two
+  // names match at the same offset.
   return [
     ...caseSensitiveResults.sort(
       (item1, item2) => item1.indexOf(searchQuery) - item2.indexOf(searchQuery),

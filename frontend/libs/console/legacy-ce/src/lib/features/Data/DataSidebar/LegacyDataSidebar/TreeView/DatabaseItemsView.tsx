@@ -58,7 +58,12 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
         onClick={onDatabaseChange}
         onKeyDown={onDatabaseChange}
       >
-        <Button color={isActive ? 'indigo' : 'gray'} variant="ghost" full>
+        <Button
+          color={isActive ? 'indigo' : 'gray'}
+          variant="ghost"
+          className="justify-start! text-left!"
+          full
+        >
           <Flex align="center" gap="2">
             {isActive ? <AiOutlineDown /> : <AiOutlineRight />}
             {sourceItemsTypesToIcons['database']} <Strong>{sourceName}</Strong>

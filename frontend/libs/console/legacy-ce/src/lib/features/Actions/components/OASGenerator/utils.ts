@@ -1,9 +1,4 @@
-import {
-  buildClientSchema,
-  getIntrospectionQuery,
-  graphqlSync,
-  printSchema,
-} from 'graphql';
+import { GraphQLObjectType, GraphQLSchema, printSchema } from 'graphql';
 import {
   GraphQLOperationType,
   Oas2,
@@ -12,7 +7,6 @@ import {
   ReferenceObject,
   SchemaObject,
 } from '@hasura/open-api-to-graphql';
-import { Microfiber } from 'microfiber';
 import {
   DataDefinition,
   GeneratedAction,
@@ -355,61 +349,30 @@ export const translateAction = (
 ): GeneratedAction => {
   const { schema } = graphqlSchema;
 
-  const introspectionQuery = graphqlSync({
-    schema,
-    source: getIntrospectionQuery({
-      descriptions: true,
-      schemaDescription: true,
-      typeDepth: 7,
-    }),
+  const operationDescription = lastOfArray(
+    operation.description.trim().split('\n\n'),
+  );
+
+  // keep only the root field generated for this operation
+  const filterRootType = (type: GraphQLObjectType | null | undefined) => {
+    if (!type) return undefined;
+    const config = type.toConfig();
+    return new GraphQLObjectType({
+      ...config,
+      fields: Object.fromEntries(
+        Object.entries(config.fields).filter(([, field]) =>
+          (field.description ?? '').trim().endsWith(operationDescription),
+        ),
+      ),
+    });
+  };
+
+  // without an explicit `types` list, the schema only collects the types
+  // reachable from its root types, which drops everything else
+  const newSchema = new GraphQLSchema({
+    query: filterRootType(schema.getQueryType()),
+    mutation: filterRootType(schema.getMutationType()),
   });
-
-  if (introspectionQuery.errors) {
-    const joinedMessage = introspectionQuery.errors
-      .map((e) => e.message)
-      .join('\n');
-    throw new Error(joinedMessage);
-  }
-
-  const microfiber = new Microfiber(introspectionQuery, {
-    cleanupSchemaImmediately: false,
-  });
-  const queryNamesToRemove = (
-    microfiber.getQueryType().fields as { name: string; description: string }[]
-  )
-    ?.filter(
-      (field) =>
-        !field.description
-          .trim()
-          .endsWith(lastOfArray(operation.description.trim().split('\n\n'))),
-    )
-    ?.map((field) => field.name);
-
-  const mutationNamesToRemove = (
-    microfiber.getMutationType().fields as {
-      name: string;
-      description: string;
-    }[]
-  )
-    ?.filter(
-      (field) =>
-        !field.description
-          .trim()
-          .endsWith(lastOfArray(operation.description.trim().split('\n\n'))),
-    )
-    ?.map((field) => field.name);
-
-  queryNamesToRemove?.forEach((query) => {
-    microfiber.removeQuery({ name: query, cleanup: false });
-  });
-
-  mutationNamesToRemove?.forEach((mutation) => {
-    microfiber.removeMutation({ name: mutation, cleanup: false });
-  });
-
-  microfiber.cleanSchema();
-
-  const newSchema = buildClientSchema(microfiber.getResponse().data);
 
   const sdl = printSchema(newSchema);
 

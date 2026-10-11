@@ -52,20 +52,24 @@ export async function runDatabaseMigration({
     });
   }
 
+  // The CLI does not accept pg_run_sql type.
+  // Therefore we need to fallback to run_sql.
   const migrationBody = {
     name: sanitize(args.name.substring(0, MAX_ALLOWED_MIGRATION_LENGTH)),
-    up: args.up.map((up) =>
-      getRunSqlQuery({
+    up: args.up.map((up) => ({
+      ...getRunSqlQuery({
         ...up,
         source: args.source,
       }),
-    ),
-    down: args.down.map((down) =>
-      getRunSqlQuery({
+      type: 'run_sql' as const,
+    })),
+    down: args.down.map((down) => ({
+      ...getRunSqlQuery({
         ...down,
         source: args.source,
       }),
-    ),
+      type: 'run_sql' as const,
+    })),
     datasource: args.source.name,
     skip_execution: args.skip_execution,
   };

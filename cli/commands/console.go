@@ -15,6 +15,11 @@ import (
 	"github.com/spf13/viper"
 )
 
+const (
+	basePath         = "templates/gohtml/"
+	templateFilename = "console.gohtml"
+)
+
 // NewConsoleCmd returns the console command.
 func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	var apiHost string
@@ -210,19 +215,13 @@ func (o *ConsoleOptions) Run() error {
 		"dataApiUrl":           dataApiUrl,
 		"dataApiVersion":       "",
 		"hasAccessKey":         adminSecretHeader == cli.XHasuraAccessKey,
+		"isAdminSecretSet":     o.EC.Config.AdminSecret != "",
 		"adminSecret":          o.EC.Config.AdminSecret,
 		"enableTelemetry":      o.EC.GlobalConfig.EnableTelemetry,
 		"cliUUID":              o.EC.GlobalConfig.UUID,
 		"migrateSkipExecution": true,
 		"cdnAssets":            !o.UseServerAssets,
-		"consolePath":          "/console",
-		"urlPrefix":            "/console",
 	}
-
-	const (
-		basePath         = "templates/gohtml/"
-		templateFilename = "console.gohtml"
-	)
 
 	versionInfo, err := o.EC.APIClient.V1Version.GetVersion()
 	if err != nil {
