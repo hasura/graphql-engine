@@ -31,5 +31,5 @@ in the same change:
   `frontend/yarn.lock` (not the `^`/`~` range) and the `license` field from
   the installed package.
 
-Keep each section's existing ordering, preserve the file's CRLF line endings,
+Keep each section's existing ordering, preserve the file's LF line endings,
 and format with `docs/.prettierrc.json`.

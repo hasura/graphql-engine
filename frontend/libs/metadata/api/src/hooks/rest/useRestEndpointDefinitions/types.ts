@@ -1,3 +1,4 @@
+import type { GraphQLArgument, GraphQLField, GraphQLInputField } from 'graphql';
 import {
   MetadataTable,
   QueryCollectionQuery,
@@ -10,22 +11,9 @@ export type EndpointDefinition = {
   query: QueryCollectionQuery;
 };
 
-export type Operation = {
-  name: string;
-  type: GraphQLType;
-  args: Field[];
-};
+export type Operation = GraphQLField<unknown, unknown>;
 
-export type Field = {
-  type: GraphQLType;
-  name: string;
-};
-
-export type GraphQLType = {
-  kind: string;
-  name?: string;
-  ofType?: GraphQLType;
-};
+export type Field = GraphQLArgument | GraphQLInputField;
 
 export type Generator = {
   operationName: (source: Source, table: MetadataTable) => string;
@@ -33,7 +21,6 @@ export type Generator = {
     root: string,
     table: string,
     operation: Operation,
-    microfiber: any,
     customTableName?: string,
   ) => EndpointDefinition;
 };

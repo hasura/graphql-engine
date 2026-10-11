@@ -44,7 +44,7 @@ export const BreakingChangesTooltipMessage = 'Breaking changes detected!';
 export const DangerousChangesTooltipMessage = 'Dangerous changes detected!';
 export const SafeChangesTooltipMessage = 'Checkout the Latest Schema Change';
 
-export const DefaultToopTipMessage =
+export const DefaultToolTipMessage =
   'Detect breaking and dangerous changes, view schema change history. Keep your GraphQL services safe and reliable! 🚀';
 
 export const BreakingChangesColor = 'red';

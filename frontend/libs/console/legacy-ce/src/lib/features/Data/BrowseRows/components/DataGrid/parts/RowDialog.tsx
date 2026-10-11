@@ -80,19 +80,19 @@ export const RowDialog = ({ onClose, row, columns }: RowDialogProps) => {
 
   return (
     <Dialog title="Table Row" onClose={onClose}>
-      <>
-        <SimpleForm
-          schema={schema}
-          onSubmit={() => {}}
-          options={{
-            defaultValues: {
-              ...row,
-            },
-          }}
-        >
-          <div className="p-4">{rowSections}</div>
-        </SimpleForm>
-      </>
+      <SimpleForm
+        schema={schema}
+        onSubmit={() => {
+          //
+        }}
+        options={{
+          defaultValues: {
+            ...row,
+          },
+        }}
+      >
+        {rowSections}
+      </SimpleForm>
     </Dialog>
   );
 };

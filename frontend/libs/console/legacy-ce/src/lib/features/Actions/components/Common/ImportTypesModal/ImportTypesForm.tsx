@@ -23,11 +23,11 @@ const filterItemsBySearch = (searchQuery: string, itemList: string[]) => {
   });
   return [
     ...caseSensitiveResults.sort((item1, item2) => {
-      return item1.search(searchQuery) > item2.search(searchQuery) ? 1 : -1;
+      return item1.indexOf(searchQuery) > item2.indexOf(searchQuery) ? 1 : -1;
     }),
     ...caseAgnosticResults.sort((item1, item2) => {
-      return item1.toLowerCase().search(searchQuery.toLowerCase()) >
-        item2.toLowerCase().search(searchQuery.toLowerCase())
+      return item1.toLowerCase().indexOf(searchQuery.toLowerCase()) >
+        item2.toLowerCase().indexOf(searchQuery.toLowerCase())
         ? 1
         : -1;
     }),
