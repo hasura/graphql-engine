@@ -67,6 +67,7 @@ Further reading:
 		newMetadataApplyCmd(ec),
 		newMetadataApplyDataSourcesCmd(ec),
 		newMetadataInconsistencyCmd(ec),
+		newMetadataCodemodCmd(ec, v),
 	)
 
 	f := metadataCmd.PersistentFlags()

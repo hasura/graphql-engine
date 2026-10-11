@@ -694,7 +694,11 @@ buildSchemaCacheRule logger env disableNativeQueryValidation mSchemaRegistryCont
             Just sourceConfig -> do
               databaseResponse <- bindA -< resolveDatabaseMetadata logger _bcasmSourceMetadata sourceConfig
               case databaseResponse of
-                Right databaseMetadata -> do
+                Right rawDatabaseMetadata -> do
+                  -- Apply backend-specific normalisation (e.g. Postgres drops the
+                  -- deprecated database COMMENT descriptions) before persisting and
+                  -- using the introspection.
+                  let databaseMetadata = normaliseDBObjectsIntrospection rawDatabaseMetadata
                   -- Collect database introspection to persist in the storage
                   tellA -< pure (CollectStoredIntrospection $ SourceIntrospectionItem sourceName $ encJFromJValue databaseMetadata)
                   returnA -< Just (sourceConfig, databaseMetadata)
@@ -704,8 +708,12 @@ buildSchemaCacheRule logger env disableNativeQueryValidation mSchemaRegistryCont
                     Nothing ->
                       -- If no stored introspection exist, re-throw the database exception
                       (| withRecordInconsistency (throwA -< databaseError) |) metadataObj
-                    Just storedMetadata -> do
-                      let inconsistencyMessage =
+                    Just rawStoredMetadata -> do
+                      -- Apply the same normalisation to stored introspection so that
+                      -- stale stored data (e.g. captured by an older server) cannot
+                      -- reintroduce database COMMENT descriptions.
+                      let storedMetadata = normaliseDBObjectsIntrospection rawStoredMetadata
+                          inconsistencyMessage =
                             T.unwords
                               [ "source " <>> sourceName,
                                 " is inconsistent because of stale database introspection is used.",
