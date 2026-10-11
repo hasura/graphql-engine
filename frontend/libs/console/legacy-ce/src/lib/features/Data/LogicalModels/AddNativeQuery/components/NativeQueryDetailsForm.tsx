@@ -62,13 +62,13 @@ export const NativeQueryFormFields = ({ sources }: { sources?: Source[] }) => {
           label="Native Query Name"
           hideTips
           fieldProps={{
-            placeholder: 'Name that exposes this model in GraphQL API',
+            placeholder: 'Name that exposes this query in GraphQL API',
           }}
         />
         <InputField
           name="comment"
           label="Comment"
-          fieldProps={{ placeholder: 'A description of this logical model' }}
+          fieldProps={{ placeholder: 'A description of this native query' }}
         />
         <SelectField
           name="source"
