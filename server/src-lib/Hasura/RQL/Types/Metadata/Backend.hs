@@ -118,6 +118,21 @@ class
     SourceConfig b ->
     m (Either QErr (DBObjectsIntrospection b))
 
+  -- | Normalise a source's database introspection before it is used to build the
+  -- schema cache. Applied to both freshly-fetched introspection and introspection
+  -- restored from stored introspection (the offline fallback).
+  --
+  -- Defaults to the identity function, so most backends (including Data
+  -- Connectors) are unaffected. Postgres-family backends use this to drop the
+  -- table/column descriptions that originate from database @COMMENT@s, which are
+  -- no longer imported into the GraphQL schema; this guarantees that stale stored
+  -- introspection captured by an older server cannot reintroduce them. Function
+  -- and scalar introspection is left untouched.
+  normaliseDBObjectsIntrospection ::
+    DBObjectsIntrospection b ->
+    DBObjectsIntrospection b
+  normaliseDBObjectsIntrospection = id
+
   parseBoolExpOperations ::
     (MonadError QErr m) =>
     ValueParser b m v ->

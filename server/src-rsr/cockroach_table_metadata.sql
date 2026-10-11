@@ -30,7 +30,11 @@ SELECT
       'is_insertable', ((pg_catalog.pg_relation_is_updatable("table".oid, true) & 8) = 8),
       'is_deletable', ((pg_catalog.pg_relation_is_updatable("table".oid, true) & 16) = 16)
     ) END,
-    'description', description.description,
+    -- Importing database COMMENTs into the GraphQL schema is deprecated: the
+    -- table description is no longer read from pg_description. The 'description'
+    -- key is kept (NULL) to preserve the DBTableMetadata JSON shape. (Cockroach
+    -- column descriptions were already not imported.)
+    'description', NULL,
     'extra_table_metadata', jsonb_build_object(
       'table_type', CASE WHEN "table".relkind IN ('v', 'm') THEN 'view' ELSE 'table' END
     )
@@ -58,11 +62,8 @@ FROM "tabletable" "table"
   --ON  "table"."table_name" = "tracked_table"."table_name"
   --AND "table"."table_schema" = "tracked_table"."table_schema"
 
--- description
-LEFT JOIN pg_catalog.pg_description description
-  ON  description.classoid = 'pg_catalog.pg_class'::regclass
-  AND description.objoid = "table".oid
-  AND description.objsubid = 0
+-- NOTE: importing database COMMENTs is deprecated, so the pg_description join
+-- used for the table description has been removed.
 
 -- columns
 LEFT JOIN LATERAL

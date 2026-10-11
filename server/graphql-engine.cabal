@@ -1226,6 +1226,7 @@ test-suite graphql-engine-tests
     Hasura.Backends.Postgres.SQL.Select.RenameIdentifiersSpec
     Hasura.Backends.Postgres.SQL.SplitSQLSpec
     Hasura.Backends.Postgres.SQL.ValueSpec
+    Hasura.Backends.Postgres.TableMetadataSpec
     Hasura.Backends.Postgres.Translate.DeleteSpec
     Hasura.Backends.Postgres.Translate.InsertSpec
     Hasura.Backends.Postgres.Translate.UpdateSpec

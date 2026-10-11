@@ -1,0 +1,106 @@
+---
+sidebar_label: hasura metadata codemod migrate-postgres-comments
+sidebar_position: 23
+description: (PREVIEW) Copy PostgreSQL table, column, function and computed-field COMMENTs into local Hasura Metadata using the Hasura CLI
+keywords:
+  - hasura
+  - docs
+  - CLI
+  - hasura metadata codemod migrate-postgres-comments
+---
+
+# Hasura CLI: hasura metadata codemod migrate-postgres-comments
+
+(PREVIEW) Copy PostgreSQL table, column, function and computed-field COMMENTs into local Hasura Metadata.
+
+## Synopsis
+
+(PREVIEW) Read table, column and function COMMENTs from the database catalogs of
+your Postgres-family sources (postgres, citus, cockroach) and copy them into the
+local project Metadata, so they are preserved as GraphQL descriptions after Hasura
+stops importing database COMMENTs automatically (now deprecated).
+
+What is migrated and where:
+- table COMMENT            -> configuration.comment
+- column COMMENT           -> configuration.column_config.COLUMN_NAME.comment
+- computed-field function COMMENT -> the computed field's 'comment'
+- tracked-function COMMENT -> the function's top-level 'comment'
+
+Computed-field comments restore prior behaviour: Hasura previously used the backing
+function's database COMMENT as the computed field's description. Tracked-function
+comments are also migrated, as requested; note that Hasura does not render a tracked
+function's database COMMENT today (the function's query-root description comes from
+the metadata 'comment' only), so this moves the database text into metadata as a new
+query-root description rather than restoring one. Mutation and aggregate root
+defaults are unchanged.
+
+Run it, review the diff, then 'hasura metadata apply' to push the changes to the
+server.
+
+Only tracked tables, their computed fields, and tracked functions are touched,
+matched by their actual database schema/table/column/function names. Existing
+Metadata is preserved: comments that are already set (including an empty string,
+which suppresses the description) are never overwritten, and custom names / root
+fields / column, computed-field and function configuration/permissions/definitions
+are left intact. The command only writes to local Metadata files; it never applies
+to the server.
+
+For CockroachDB only table comments are migrated (column and function descriptions
+were never imported for Cockroach).
+
+This command supports config v3 projects whose tables and functions are stored as
+separate !include files. It refuses to run (before writing anything) on metadata it
+cannot edit safely, so that existing metadata is never clobbered: a table, computed
+field or function whose node is itself an !include, a YAML alias, or uses a YAML
+merge key; a metadata file shared by more than one source; or a computed field or
+tracked function whose database function has multiple overloads (the comment cannot
+be attributed unambiguously, since function metadata does not encode the argument
+signature). A 'configuration: null' is treated as empty.
+
+```bash
+hasura metadata codemod migrate-postgres-comments [flags]
+```
+
+## Examples
+
+```bash
+# Preview the changes without writing anything:
+hasura metadata codemod migrate-postgres-comments --dry-run
+
+# Migrate comments for all Postgres-family sources into local metadata:
+hasura metadata codemod migrate-postgres-comments
+
+# Migrate comments for a single source:
+hasura metadata codemod migrate-postgres-comments --source default
+
+# Afterwards, review the diff and apply to the server:
+hasura metadata apply
+```
+
+## Options
+
+```sass
+    --dry-run         print the proposed metadata changes without writing any files
+-h, --help            help for migrate-postgres-comments
+    --source string   the Postgres-family source to migrate comments for (default: all Postgres-family sources)
+```
+
+## Options inherited from parent commands
+
+```sass
+--admin-secret string            admin secret for Hasura GraphQL Engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
+--certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
+--endpoint string                http(s) endpoint for Hasura GraphQL Engine (env "HASURA_GRAPHQL_ENDPOINT")
+--envfile string                 .env filename to load ENV vars from (default ".env")
+--insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) (env "HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY")
+--log-level string               log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+--no-color                       do not colorize output (default: false)
+--project string                 directory where commands are executed (default: current dir)
+--skip-update-check              skip automatic update check on command execution
+```
+
+## SEE ALSO
+
+- [hasura metadata codemod](/hasura-cli/commands/hasura_metadata_codemod.mdx) - (PREVIEW) Run codemods on Hasura Metadata
+
+_Auto generated by spf13/cobra_

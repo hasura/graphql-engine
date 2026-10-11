@@ -281,6 +281,7 @@ instance
   fetchAndValidateEnumValues = Postgres.fetchAndValidateEnumValues
   resolveSourceConfig = Postgres.resolveSourceConfig
   resolveDatabaseMetadata _ = Postgres.resolveDatabaseMetadata
+  normaliseDBObjectsIntrospection = Postgres.pgStripImportedDescriptions
   parseBoolExpOperations = Postgres.parseBoolExpOperations
   buildArrayRelationshipInfo _ = defaultBuildArrayRelationshipInfo
   buildObjectRelationshipInfo _ = defaultBuildObjectRelationshipInfo
