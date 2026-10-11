@@ -10,7 +10,11 @@ FROM (
     json_agg(
       json_build_object(
         'oid', "pg_function".function_oid,
-        'description', "pg_function".description,
+        -- Importing database COMMENTs into the GraphQL schema is deprecated: the
+        -- function description is no longer read from pg_description. The
+        -- 'description' key is kept (NULL) to preserve the RawFunctionInfo JSON
+        -- shape; function/computed-field descriptions now come from metadata only.
+        'description', NULL,
         'has_variadic', "pg_function".has_variadic,
         'function_type', "pg_function".function_type,
         'return_type_schema', "pg_function".return_type_schema,
@@ -28,7 +32,6 @@ FROM (
       SELECT
         "function".function_name,
         "function".function_schema,
-        pd.description,
 
         CASE
           WHEN ("function".provariadic = (0) :: oid) THEN false
@@ -112,7 +115,8 @@ FROM (
                      AND "function".function_schema = tracked.schema
         JOIN pg_type rt ON (rt.oid = "function".prorettype)
         JOIN pg_namespace rtn ON (rtn.oid = rt.typnamespace)
-        LEFT JOIN pg_description pd ON "function".function_oid = pd.objoid AND pd.classoid = 'pg_proc'::regclass
+        -- NOTE: importing database COMMENTs is deprecated, so the pg_description
+        -- join used for the function description has been removed.
       WHERE
         -- Do not fetch some default functions in public schema
         "function".function_name NOT LIKE 'pgp_%'
