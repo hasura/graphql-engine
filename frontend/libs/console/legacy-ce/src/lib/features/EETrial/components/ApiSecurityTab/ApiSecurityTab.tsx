@@ -22,43 +22,41 @@ export function ApiSecurityTabEELiteWrapper(props: Props) {
     return children ?? null;
   }
 
-  if (access === 'forbidden') {
-    return null;
-  }
-
   return (
-    <Flex justify="center" direction="column" gap="4" className="w-8/12">
-      <Heading size="4">API Security</Heading>
-      <div>
-        <Text size="2">
-          Enable advanced security options to help secure your GraphQL API for
-          production.
-        </Text>{' '}
-        <Link
-          href="https://hasura.io/docs/latest/security/index"
-          target="_blank"
-          rel="noopener noreferrer"
-          size="1"
-          className="italic"
-        >
-          (Know More)
-        </Link>
-      </div>
-      <ApiSecuritySvg className="w-full" />
-      <EETrialCard
-        id="security-tab"
-        cardTitle="Production grade security for your API"
-        cardText={
-          <span>
-            Add additional security features to your API such as depth / node
-            limits, rate limiting (RPM), batch requests limits, timeouts, and
-            schema introspection.
-          </span>
-        }
-        buttonLabel="Enable Enterprise"
-        eeAccess={access}
-        horizontal
-      />
+    <Flex justify="center" className="p-6 w-full h-screen">
+      <Flex direction="column" gap="4" className="w-172.5">
+        <Heading size="6">API Security</Heading>
+        <div>
+          <Text size="2">
+            Enable advanced security options to help secure your GraphQL API for
+            production.
+          </Text>{' '}
+          <Link
+            href="https://hasura.io/docs/latest/security/index"
+            target="_blank"
+            rel="noopener noreferrer"
+            size="1"
+            className="italic"
+          >
+            (Know More)
+          </Link>
+        </div>
+        <ApiSecuritySvg className="w-full" />
+        <EETrialCard
+          id="security-tab"
+          cardTitle="Production grade security for your API"
+          cardText={
+            <span>
+              Add additional security features to your API such as depth / node
+              limits, rate limiting (RPM), batch requests limits, timeouts, and
+              schema introspection.
+            </span>
+          }
+          buttonLabel="Enable Enterprise"
+          eeAccess={access}
+          horizontal
+        />
+      </Flex>
     </Flex>
   );
 }

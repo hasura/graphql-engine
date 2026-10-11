@@ -94,11 +94,8 @@ const Router = () => {
           <Route path="voyager-view" element={<VoyagerView />} />
           <Route path="access-denied" element={<AccessDeniedComponent />} />
           {/* Disable monitoring tab when consoleType is pro-lite or oss */}
-          {isMonitoringTabSupportedEnvironment(window.__env) ? (
-            getMetricsRouter()
-          ) : (
-            <></>
-          )}
+          {isMonitoringTabSupportedEnvironment(window.__env) &&
+            getMetricsRouter()}
           <Route path="" element={<DataRouteGuard />}>
             <Route path="settings" element={<MetadataContainer />}>
               <Route

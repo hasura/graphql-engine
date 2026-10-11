@@ -16238,7 +16238,6 @@ __metadata:
     lodash: "npm:4.18.1"
     lottie-react: "npm:3.1.2"
     lz-string: "npm:^1.5.0"
-    microfiber: "npm:^2.1.2"
     msw: "npm:3.0.3"
     msw-storybook-addon: "npm:3.0.3"
     nx: "npm:23.3.0"
@@ -20186,15 +20185,6 @@ __metadata:
     "@types/node":
       optional: true
   checksum: 10/9269b243f91b714b75169f63231af81bcd4c049c1308f6e78fc08214af89323ce2e36a7c1603cde6f32cf4ba79075365335c0d6b549e997b53124568f213f0a5
-  languageName: node
-  linkType: hard
-
-"microfiber@npm:^2.1.2":
-  version: 2.1.2
-  resolution: "microfiber@npm:2.1.2"
-  dependencies:
-    lodash: "npm:^4.17.23"
-  checksum: 10/9e36ec8792544a585a5e28a571f789b91318a071fd043014dc942d2fee94a1e22de17a39b1fd43a252e82425b6cc84be2c376a5a68b7d92449aab8a942df2e2a
   languageName: node
   linkType: hard
 

@@ -1,6 +1,6 @@
 import { Flex } from '@radix-ui/themes';
 import { BsDatabaseFillGear } from 'react-icons/bs';
-import { MdAdd, MdEditNote } from 'react-icons/md';
+import { MdEditNote } from 'react-icons/md';
 import { DropdownMenu, IconButton } from '@hasura/shared/ui';
 import { QualifiedDataSource } from '@hasura/shared/types';
 import { dataRoutes } from '@hasura/shared/utils';
@@ -34,12 +34,9 @@ export function SchemaDropdown({ source }: SchemaDropdownProps) {
           </DropdownMenu.Item>
           <DropdownMenu.Label>Table</DropdownMenu.Label>
           <DropdownMenu.Item
-            onClick={() => push(dataRoutes.addTable(source.name))}
+            onClick={() => push(dataRoutes.permissionSummary(source.name))}
           >
-            <Flex gap="3" align="center">
-              <MdAdd />
-              New Table
-            </Flex>
+            Show Permissions Summary
           </DropdownMenu.Item>
         </>,
       ]}
