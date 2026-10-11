@@ -114,6 +114,69 @@ spec = do
             ("role_4", "query_2")
           ]
 
+    describe "query normalization" $ do
+      let allows :: Text -> Text -> Bool
+          allows registered incoming =
+            let normalizedAllowlist =
+                  inlineAllowlist
+                    (InsOrdHashMap.fromList [mkCollection coll1 [mkQuery "registered" registered]])
+                    (InsOrdHashMap.fromList [mkAllowGlobal coll1])
+             in allowlistAllowsQuery normalizedAllowlist AllowlistModeFull role1 (query (mkQuery "incoming" incoming))
+
+          normalizationCases :: [(String, Text, Text)]
+          normalizationCases =
+            [ ( "inline fragments",
+                "query { user { ... on user { id } } }",
+                "query { user { ... on user { __typename id } } }"
+              ),
+              ( "untyped operations",
+                "{ user { ... on user { id } } }",
+                "{ user { ... on user { __typename id } } }"
+              ),
+              ( "nested inline fragments",
+                "query { user { ... on user { ... on user { id } } } }",
+                "query { user { ... on user { __typename ... on user { __typename id } } } }"
+              ),
+              ( "inline fragments in named fragment definitions",
+                "query { user { ...UserFields } } fragment UserFields on user { ... on user { id } }",
+                "query { user { ...UserFields } } fragment UserFields on user { ... on user { __typename id } }"
+              ),
+              ( "inline fragments without type conditions",
+                "query { user { ... @include(if: true) { id } } }",
+                "query { user { ... @include(if: true) { __typename id } } }"
+              ),
+              ( "aliased __typename fields",
+                "query { user { ... on user { id } } }",
+                "query { user { ... on user { typeName: __typename id } } }"
+              )
+            ]
+
+      forM_ normalizationCases $ \(label, withoutTypename, withTypename) ->
+        describe label $ do
+          it "ignores __typename in the incoming query" $
+            allows withoutTypename withTypename `shouldBe` True
+
+          it "ignores __typename in the stored allowlist query" $
+            allows withTypename withoutTypename `shouldBe` True
+
+      it "rejects additional non-__typename fields in inline fragments" $
+        allows
+          "query { user { ... on user { id } } }"
+          "query { user { ... on user { __typename id name } } }"
+          `shouldBe` False
+
+      it "preserves inline fragment type conditions" $
+        allows
+          "query { user { ... on user { id } } }"
+          "query { user { ... on other_user { __typename id } } }"
+          `shouldBe` False
+
+      it "preserves inline fragment directives" $
+        allows
+          "query { user { ... on user @include(if: true) { id } } }"
+          "query { user { ... on user @include(if: false) { __typename id } } }"
+          `shouldBe` False
+
     it "round-trips roles when serializing via codecs" do
       let expected =
             maybeToEither "nonempty"

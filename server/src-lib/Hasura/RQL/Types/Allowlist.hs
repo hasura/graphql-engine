@@ -192,6 +192,9 @@ normalizeQuery =
           else
             let newSelset = filterSelSet $ G._fSelectionSet f
              in Just $ G.SelectionField f {G._fSelectionSet = newSelset}
+      G.SelectionInlineFragment frag ->
+        let newSelset = filterSelSet $ G._ifSelectionSet frag
+         in Just $ G.SelectionInlineFragment frag {G._ifSelectionSet = newSelset}
       _ -> Just s
 
 -- | InlinedAllowlist is the data type with which the allowlist is represented
