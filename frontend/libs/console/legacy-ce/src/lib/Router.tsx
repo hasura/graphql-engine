@@ -21,6 +21,7 @@ import {
 import InheritedRoles from './features/Settings/components/InheritedRoles/InheritedRoles';
 import { getRemoteSchemaRoutes } from './features/RemoteSchema';
 import makeDataRouter from './features/Data/routes';
+import { ApiSecurityTabEELiteWrapper } from './features/EETrial';
 
 const Router = () => {
   return (
@@ -50,6 +51,10 @@ const Router = () => {
             <Route path="api-explorer" element={<ApiExplorer />} />
             {getRestRoutes()}
             {getAllowListRoutes()}
+            <Route
+              path="security/api_limits"
+              element={<ApiSecurityTabEELiteWrapper />}
+            />
           </Route>
 
           <Route path="voyager-view" element={<VoyagerView />} />

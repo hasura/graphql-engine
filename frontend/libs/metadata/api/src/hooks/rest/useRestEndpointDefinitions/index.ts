@@ -1,4 +1,9 @@
-import { Microfiber } from 'microfiber';
+import {
+  getNamedType,
+  GraphQLObjectType,
+  GraphQLSchema,
+  isObjectType,
+} from 'graphql';
 import { useEffect, useState } from 'react';
 import {
   MetadataTable,
@@ -72,42 +77,36 @@ export const getSchemaPrefix = (source: Source, table: MetadataTable) => {
     : `${schemaName}_`;
 };
 
-export const getOperations = (root: string, microfiber: any) => {
-  const queryType = microfiber.getQueryType();
-  const mutationType = microfiber.getMutationType();
+const getOperationType = (
+  rootType: GraphQLObjectType | null | undefined,
+  root: string,
+) => {
+  if (!rootType || !root) return rootType;
 
-  // if there are customizations, there is an additional level in the types.
-  // using an heuristic to find the correct type
-  // if query and mutations have only 1 fields which name contains 'query' and 'mutation' respectively
-  // then we assume that the query and mutation types are one level deeper
+  // if there are customizations, there is an additional level in the types:
+  // the namespace field holds the actual operations
+  const namespaceField = rootType.getFields()[root];
+  const namespaceType = namespaceField
+    ? getNamedType(namespaceField.type)
+    : undefined;
+  return isObjectType(namespaceType) ? namespaceType : undefined;
+};
 
-  let queryTypeName: string = queryType.name;
-  let mutationTypeName: string = mutationType.name;
+export const getOperations = (root: string, schema: GraphQLSchema) => {
+  const queryType = schema.getQueryType();
 
-  if (queryType.fields[0].name === 'no_queries_available') {
+  if (
+    !queryType ||
+    Object.keys(queryType.getFields())[0] === 'no_queries_available'
+  ) {
     return [];
   }
 
-  if (root) {
-    queryTypeName = queryType.fields.find((f: any) => f.name === root)?.type
-      .name;
-  }
+  const queries = getOperationType(queryType, root)?.getFields() ?? {};
+  const mutations =
+    getOperationType(schema.getMutationType(), root)?.getFields() ?? {};
 
-  if (root) {
-    mutationTypeName = mutationType.fields.find((f: any) => f.name === root)
-      ?.type.name;
-  }
-
-  const queries = microfiber.getType({
-    kind: 'OBJECT',
-    name: queryTypeName,
-  }).fields;
-  const mutations = microfiber.getType({
-    kind: 'OBJECT',
-    name: mutationTypeName,
-  }).fields;
-
-  return [...queries, ...mutations];
+  return [...Object.values(queries), ...Object.values(mutations)];
 };
 
 const generators: Record<EndpointType, Generator> = {
@@ -230,7 +229,6 @@ export const useRestEndpointDefinitions = ({
 
     if (introspectionSchema) {
       const response: EndpointDefinitions = {};
-      const microfiber = new Microfiber(introspectionSchema);
       const source = (metadata?.sources ?? []).find(
         (s) => s.name === dataSourceName,
       );
@@ -238,7 +236,7 @@ export const useRestEndpointDefinitions = ({
       if (!source) return;
 
       const root = source?.customization?.root_fields?.namespace ?? '';
-      const operations = getOperations(root, microfiber);
+      const operations = getOperations(root, introspectionSchema);
       const sourcePrefix = source.customization?.root_fields?.prefix || '';
       const sourceSuffix = source.customization?.root_fields?.suffix || '';
 
@@ -276,7 +274,6 @@ export const useRestEndpointDefinitions = ({
           root,
           tableName,
           operation,
-          microfiber,
           customTableName,
         );
 

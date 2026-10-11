@@ -254,7 +254,12 @@ export const AddTableForm = ({
           />
         </div>
 
-        <Button type="submit" mode="primary" loading={isPending}>
+        <Button
+          type="submit"
+          mode="primary"
+          loading={isPending}
+          loadingText="Adding..."
+        >
           Add Table
         </Button>
       </div>

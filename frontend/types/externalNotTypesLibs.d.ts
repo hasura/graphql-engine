@@ -5,8 +5,6 @@ declare module '@walmartlabs/json-to-simple-graphql-schema/lib' {
   }): { value: string };
 }
 
-declare module 'microfiber';
-
 declare module 'react-progress-bar-plus';
 
 declare module 'graphiql-code-exporter/lib/snippets' {

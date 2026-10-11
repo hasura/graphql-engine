@@ -244,7 +244,6 @@ export const DataTableOptions = (props: DataTableOptionsProps) => {
           </Button>
         </DropdownMenu.Root>
 
-        <span className="h-12 border-r-slate-300 border-r border-solid" />
         {!query.disableRunQuery && (
           <>
             <Button

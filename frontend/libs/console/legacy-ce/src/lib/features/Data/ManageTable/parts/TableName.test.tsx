@@ -20,6 +20,7 @@ globalThis.ResizeObserver =
   globalThis.ResizeObserver ?? (ResizeObserverStub as never);
 
 let dropTableSupported = true;
+let renameSupported = true;
 
 vi.mock('@hasura/metadata/api', () => ({
   useUntrackTable: () => ({ mutateAsync: vi.fn(), isPending: false }),
@@ -28,8 +29,17 @@ vi.mock('@hasura/metadata/api', () => ({
 vi.mock('@hasura/metadata/data-source', () => ({
   useDropTable: () => ({ mutate: vi.fn(), isPending: false }),
   getDatabaseMethods: () => ({
-    modify: dropTableSupported ? { dropTable: () => undefined } : {},
+    modify: {
+      ...(dropTableSupported ? { dropTable: () => undefined } : {}),
+      ...(renameSupported ? { changeTableName: () => undefined } : {}),
+    },
   }),
+}));
+
+vi.mock('./RenameTableDialog', () => ({
+  RenameTableDialog: ({ currentName }: { currentName: string }) => (
+    <div>Rename dialog for {currentName}</div>
+  ),
 }));
 
 vi.mock('@hasura/metadata/helpers', () => ({
@@ -48,9 +58,10 @@ const setup = () =>
     </Theme>,
   );
 
-describe('ManageTable TableName untrack/delete', () => {
+describe('ManageTable TableName actions', () => {
   beforeEach(() => {
     dropTableSupported = true;
+    renameSupported = true;
   });
 
   it('offers Untrack and Delete when the driver supports dropTable', async () => {
@@ -66,5 +77,20 @@ describe('ManageTable TableName untrack/delete', () => {
     await userEvent.click(screen.getByRole('button', { name: /orders/i }));
     expect(screen.getByText('Untrack')).toBeInTheDocument();
     expect(screen.queryByText('Delete')).not.toBeInTheDocument();
+  });
+
+  it('opens the rename dialog from the Rename item', async () => {
+    setup();
+    await userEvent.click(screen.getByRole('button', { name: /orders/i }));
+    await userEvent.click(screen.getByText('Rename'));
+    expect(screen.getByText('Rename dialog for orders')).toBeInTheDocument();
+  });
+
+  it('hides Rename when the driver does not support changeTableName', async () => {
+    renameSupported = false;
+    setup();
+    await userEvent.click(screen.getByRole('button', { name: /orders/i }));
+    expect(screen.getByText('Untrack')).toBeInTheDocument();
+    expect(screen.queryByText('Rename')).not.toBeInTheDocument();
   });
 });

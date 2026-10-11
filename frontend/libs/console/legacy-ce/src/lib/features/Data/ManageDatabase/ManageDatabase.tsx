@@ -23,6 +23,7 @@ import { useDataSourceContext } from '../context/DataSourceContext';
 import { dataRoutes } from '@hasura/shared/utils';
 import { FaFolder } from 'react-icons/fa6';
 import ManageSchema from '../ManageSchema/ManageSchema';
+import { MdAdd } from 'react-icons/md';
 
 export const ManageDatabase = () => {
   const { currentSource } = useDataSourceContext();
@@ -71,9 +72,9 @@ export const ManageDatabase = () => {
           />
           <Flex align="center" gap="2">
             <SourceName source={currentSource} />
-            <RelativeLink to={dataRoutes.permissionSummary(currentSource.name)}>
-              <Button mode="default" size="sm">
-                Show Permissions Summary
+            <RelativeLink to={dataRoutes.addTable(currentSource.name)}>
+              <Button mode="primary" size="sm" leftIcon={MdAdd}>
+                New Table
               </Button>
             </RelativeLink>
           </Flex>
@@ -182,7 +183,7 @@ const Tabs = ({
       areUserDefinedFunctionsSupported,
       source,
       schema,
-      source?.kind,
+      dbMethods.introspection.getDatabaseSchemas,
     ],
   );
   return (

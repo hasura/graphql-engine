@@ -147,8 +147,8 @@ d.resource_version)`.
   missing), `useCreateRestEndpoints`, `useDeleteRestEndpoints`,
   `useDropRestEndpoint`, `useEditRestEndpoint`, `useRestEndpoint` (pure
   metadata lookup, no network), and `useRestEndpointDefinitions/` —
-  generates REST endpoint + GraphQL query definitions from introspection
-  using `microfiber`; derives per-operation HTTP path/method per
+  generates REST endpoint + GraphQL query definitions from the
+  `GraphQLSchema` returned by `useIntrospectSchema` (graphql-js); derives per-operation HTTP path/method per
   `EndpointType` (`READ`/`READ_ALL`/`CREATE`/`UPDATE`/`DELETE`).
 - **hooks/source/** — `useDropSource` (`{driver}_drop_source`, always
   `cascade: true`).
@@ -285,8 +285,3 @@ afterAll(() => server.close());
   `QueryClientProvider`, `AppContext`, and a `MemoryRouter` (needed by
   `useAuthFetchJson`). `Button` and other components come from
   `@hasura/shared/ui`.
-
-**Pre-existing (unrelated to the mocks):**
-`hooks/rest/useRestEndpointDefinitions/utils.test.ts` fails to import
-`./useRestEndpointDefinitions` (`getOperations` moved to `index.ts`); this
-breakage predates the shared-handlers work.

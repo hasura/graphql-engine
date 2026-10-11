@@ -25,7 +25,7 @@ export type RunSqlArgs = {
 
 // https://hasura.io/docs/2.0/api-reference/schema-api/run-sql/#schema-run-sql-syntax
 export type GetRunSqlQueryReturn = {
-  type: AllowedRunSQLKeys;
+  type: AllowedRunSQLKeys | 'run_sql';
   args: {
     source: string;
     sql: string;

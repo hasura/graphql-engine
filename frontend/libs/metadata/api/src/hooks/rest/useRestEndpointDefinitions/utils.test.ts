@@ -1,4 +1,4 @@
-import { Microfiber } from 'microfiber';
+import { buildClientSchema, IntrospectionQuery } from 'graphql';
 import introspectionNoCustom from './mocks/introspectionWithoutCustomizations.json';
 import introspectionCustom from './mocks/introspectionWithCustomizations.json';
 
@@ -10,12 +10,23 @@ import {
   generateViewEndpoint,
 } from './utils';
 import { getOperations } from './index';
+import { Operation } from './types';
 import { formatGraphQL } from '@hasura/shared/utils';
 
-const microfiberNoCustom = new Microfiber(introspectionNoCustom);
-const operationsWithoutCustom = getOperations('', microfiberNoCustom);
-const microfiberCustom = new Microfiber(introspectionCustom);
-const operationsCustom = getOperations('root_', microfiberCustom);
+const schemaNoCustom = buildClientSchema(
+  introspectionNoCustom.data as unknown as IntrospectionQuery,
+);
+const operationsWithoutCustom = getOperations('', schemaNoCustom);
+const schemaCustom = buildClientSchema(
+  introspectionCustom.data as unknown as IntrospectionQuery,
+);
+const operationsCustom = getOperations('root_', schemaCustom);
+
+const findOperation = (operations: Operation[], name: string) => {
+  const operation = operations.find((op) => op.name === name);
+  if (!operation) throw new Error(`operation ${name} not found`);
+  return operation;
+};
 
 describe('generateViewEndpoint', () => {
   it('should generate a query and a rest endpoint for a view operation without customizations', () => {
@@ -24,8 +35,7 @@ describe('generateViewEndpoint', () => {
     const { query, restEndpoint } = generateViewEndpoint(
       '',
       table,
-      operationsWithoutCustom?.find(({ name }) => name === 'user_by_pk'),
-      microfiberNoCustom,
+      findOperation(operationsWithoutCustom, 'user_by_pk'),
     );
 
     expect(query).toEqual({
@@ -62,8 +72,7 @@ describe('generateViewEndpoint', () => {
     const { query, restEndpoint } = generateViewEndpoint(
       'root_',
       table,
-      operationsCustom?.find(({ name }) => name === 'a_user_by_pk_b'),
-      microfiberCustom,
+      findOperation(operationsCustom, 'a_user_by_pk_b'),
     );
 
     expect(query).toEqual({
@@ -104,8 +113,7 @@ describe('generateViewAllEndpoint', () => {
     const { query, restEndpoint } = generateViewAllEndpoint(
       '',
       table,
-      operationsWithoutCustom?.find(({ name }) => name === 'user'),
-      microfiberNoCustom,
+      findOperation(operationsWithoutCustom, 'user'),
     );
 
     expect(query).toEqual({
@@ -142,8 +150,7 @@ describe('generateViewAllEndpoint', () => {
     const { query, restEndpoint } = generateViewAllEndpoint(
       'root_',
       table,
-      operationsCustom?.find(({ name }) => name === 'a_user_b'),
-      microfiberCustom,
+      findOperation(operationsCustom, 'a_user_b'),
     );
 
     expect(query).toEqual({
@@ -184,8 +191,7 @@ describe('generateDeleteEndpoint', () => {
     const { query, restEndpoint } = generateDeleteEndpoint(
       '',
       table,
-      operationsWithoutCustom?.find(({ name }) => name === 'delete_user_by_pk'),
-      microfiberNoCustom,
+      findOperation(operationsWithoutCustom, 'delete_user_by_pk'),
     );
 
     expect(query).toEqual({
@@ -222,8 +228,7 @@ describe('generateDeleteEndpoint', () => {
     const { query, restEndpoint } = generateDeleteEndpoint(
       'root_',
       table,
-      operationsCustom?.find(({ name }) => name === 'a_delete_user_by_pk_b'),
-      microfiberCustom,
+      findOperation(operationsCustom, 'a_delete_user_by_pk_b'),
     );
 
     expect(query).toEqual({
@@ -264,8 +269,7 @@ describe('generateUpdateEndpoint', () => {
     const { query, restEndpoint } = generateUpdateEndpoint(
       '',
       table,
-      operationsWithoutCustom?.find(({ name }) => name === 'update_user_by_pk'),
-      microfiberNoCustom,
+      findOperation(operationsWithoutCustom, 'update_user_by_pk'),
     );
 
     expect(query).toEqual({
@@ -303,8 +307,7 @@ describe('generateUpdateEndpoint', () => {
     const { query, restEndpoint } = generateUpdateEndpoint(
       'root_',
       table,
-      operationsCustom?.find(({ name }) => name === 'a_update_user_by_pk_b'),
-      microfiberCustom,
+      findOperation(operationsCustom, 'a_update_user_by_pk_b'),
     );
 
     expect(query).toEqual({
@@ -346,8 +349,7 @@ describe('generateInsertEndpoint', () => {
     const { query, restEndpoint } = generateInsertEndpoint(
       '',
       table,
-      operationsWithoutCustom?.find(({ name }) => name === 'insert_user_one'),
-      microfiberNoCustom,
+      findOperation(operationsWithoutCustom, 'insert_user_one'),
     );
 
     expect(query).toEqual({
@@ -385,8 +387,7 @@ describe('generateInsertEndpoint', () => {
     const { query, restEndpoint } = generateInsertEndpoint(
       'root_',
       table,
-      operationsCustom?.find(({ name }) => name === 'a_insert_user_one_b'),
-      microfiberCustom,
+      findOperation(operationsCustom, 'a_insert_user_one_b'),
     );
 
     expect(query).toEqual({
