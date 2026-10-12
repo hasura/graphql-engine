@@ -5,9 +5,9 @@ export const DisplayToastErrorMessage = ({ message }: { message: unknown }) => {
   return (
     <div className="overflow-hidden py-1.5">
       {typeof message === 'object' ? (
-        <JsonCodeBlock value={message} hideCopyButton />
+        <JsonCodeBlock value={message} />
       ) : (
-        <CodeBlock text={String(message)} hideCopyButton />
+        <CodeBlock text={String(message)} />
       )}
     </div>
   );

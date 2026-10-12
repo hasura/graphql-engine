@@ -54,6 +54,7 @@ export const DateInput: React.FC<TextInputProps> = ({
         rightButton={
           <IconButton
             mode="primary"
+            variant="outline"
             disabled={disabled}
             onClick={() => {
               if (disabled) {

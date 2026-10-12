@@ -83,6 +83,7 @@ export const TimeInput = forwardRef(
           rightButton={
             <IconButton
               mode="primary"
+              variant="outline"
               disabled={disabled}
               onClick={() => {
                 if (disabled) {

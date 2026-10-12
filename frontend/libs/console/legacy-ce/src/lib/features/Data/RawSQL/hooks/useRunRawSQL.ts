@@ -3,13 +3,12 @@ import { useAuthFetchJson } from '@hasura/shared/hooks';
 import { useAppContext } from '@hasura/shared/context';
 import {
   getDownQueryComments,
-  getRunSqlQuery,
   getTrackFunctionQuery,
   getTrackTableArgs,
+  runDatabaseMigration,
   runMetadataQuery,
   RunSqlArgs,
   runSQLBulk,
-  runSQLMigrate,
   TMigrationSingleQuery,
   toastMetadataOutOfDateError,
   useInvalidateMetadata,
@@ -114,23 +113,24 @@ export const useRunRawSQL = (
       }
     }
 
-    const migrationBody = {
-      name: migration.name,
-      up: [
-        getRunSqlQuery({
-          ...args,
-          sql,
-          readOnly: isReadOnly,
-        }),
-      ],
-      down: getDownQueryComments([sql], args.source),
-      datasource: args.source.name,
-    };
-
-    return runSQLMigrate({
-      url: endpoints.hasuraCliServerMigrate,
+    return runDatabaseMigration({
+      endpoints,
       fetchJson,
-      body: migrationBody,
+      isMigration: true,
+      args: {
+        name: migration.name,
+        up: [
+          {
+            ...args,
+            sql,
+            readOnly: isReadOnly,
+          },
+        ],
+        down: getDownQueryComments([sql], args.source).map((query) => ({
+          sql: query.args.sql,
+        })),
+        source: args.source,
+      },
     });
   };
 
