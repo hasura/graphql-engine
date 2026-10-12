@@ -61,11 +61,11 @@ func MyersDiff(before, after, from, to string, writer io.Writer, disableColor bo
 			break
 		}
 
-		if (string)(line[0]) == "-" {
+		if string(line[0]) == "-" {
 			fmt.Fprintf(writer, "%s\n", MakeDiffLine(line, "red", disableColor))
-		} else if (string)(line[0]) == "+" {
+		} else if string(line[0]) == "+" {
 			fmt.Fprintf(writer, "%s\n", MakeDiffLine(line, "green", disableColor))
-		} else if (string)(line[0]) == "@" {
+		} else if string(line[0]) == "@" {
 			fmt.Fprintf(writer, "%s\n", MakeDiffLine(line, "cyan", disableColor))
 		}
 	}
