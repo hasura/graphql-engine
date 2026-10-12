@@ -325,8 +325,7 @@ func (m *Migrate) readStatusFromSource() error {
 
 	firstVersion, err := m.sourceDrv.First()
 	if err != nil {
-		var pathErr *os.PathError
-		if errors.As(err, &pathErr) {
+		if _, ok := errors.AsType[*os.PathError](err); ok {
 			return nil
 		}
 

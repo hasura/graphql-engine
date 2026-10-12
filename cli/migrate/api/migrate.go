@@ -222,7 +222,7 @@ func MigrateAPI(c *gin.Context) {
 			}
 
 			if kind == nil && len(request.Up) != 0 {
-				switch databaseKind := strings.Split(request.Up[0].Type, "_")[0]; databaseKind {
+				switch databaseKind, _, _ := strings.Cut(request.Up[0].Type, "_"); databaseKind {
 				case "pg":
 					sourceKind = hasura.SourceKindPG
 				case "mssql":

@@ -40,6 +40,7 @@ linters:
     - goprintffuncname
     - gochecknoinits
     - dupl
+    # - exhaustruct_v5
 
   settings:
     nestif:

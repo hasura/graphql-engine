@@ -48,9 +48,9 @@ article (id uuid, title text, content text, author_id uuid)
 ## Step 1: Disable the Console served by the server {#migrations-project-init}
 
 The Hasura Console can be served directly by the Hasura Server and also by the Hasura CLI. To use Migrations, the
-console served by the server (which is served at `/console`) should be disabled and all changes must go through the
-Console served by the CLI. Otherwise, changes could be made through the Server Console which _**will not**_ be tracked
-by Migrations.
+console served by the server (which is served at `/console`) should be disabled. Make changes through the Console served
+by the CLI, or author version-controlled SQL migration and Metadata files directly and apply them with the CLI.
+Otherwise, changes could be made through the Server Console which _**will not**_ be tracked by Migrations.
 
 In order to disable the Server Console either remove the `--enable-console` flag from the command that starts the server
 or set the following environment variable to `false`:
@@ -102,6 +102,18 @@ Let's break all this down:
 we also specified. It will create a `config.yaml` file and a `migrations`, `metadata` and `seeds` directory. This
 directory structure is mandatory and should not be changed in order to use Hasura Migrations properly.
 
+For CLI config v3 projects, the CLI also creates an `AGENTS.md` file in the project root. This guide describes the
+multi-source directory layout, Metadata authoring conventions, SQL migration practices, and a workflow for AI coding
+agents to generate and validate changes without running `hasura console`. It distinguishes local file generation from
+applying changes to a development server, and includes precautions for secrets, permissions, destructive changes, and
+full Metadata replacement.
+
+Treat `AGENTS.md` as a starting point and customize it with your project's conventions. An existing `AGENTS.md` is
+preserved when initializing in the current directory with `hasura init .`.
+
+The Console workflow below remains available; alternatively, edit the Metadata and migration files directly and use the
+CLI commands documented in `AGENTS.md` to apply and validate them on an authorized development instance.
+
 ### Endpoint
 
 We use the `--endpoint` flag to give the `init` command the URI location of our endpoint. Change this to your own Hasura
@@ -139,6 +151,7 @@ Our directory structure should now look something like this:
 
 ```text
 📂 demo-project
+├─ 📄 AGENTS.md
 ├─ 📂 metadata
 │  ├─ 📂 databases
 │  │  ├─ 📂 default
