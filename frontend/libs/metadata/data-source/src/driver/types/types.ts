@@ -279,6 +279,11 @@ export type InsertRowArgs = {
   objects: Record<string, unknown>[];
   columns: TableColumn[];
   defaultColumns: string[];
+  /**
+   * Also write a CLI migration file for the inserted rows (console CLI mode).
+   * Ignored by drivers that don't support it.
+   */
+  isMigration?: boolean;
 };
 
 export type InsertRowProps = DataSourceNetworkArgs & {

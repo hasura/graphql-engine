@@ -207,14 +207,7 @@ export const ReactTableWrapper: React.FC<ReactTableWrapperProps> = ({
 
   return (
     <>
-      <Table.Root
-        className="overflow-y-auto rounded-t-none! border-t-0"
-        style={{
-          maxHeight: '65vh',
-          borderTopLeftRadius: '0',
-          borderTopRightRadius: '0',
-        }}
-      >
+      <Table.Root variant="surface" className="overflow-auto max-h-[65vh]">
         <Table.Header>
           {ReactTable.getHeaderGroups().map((headerGroup, id) => (
             <Table.Row key={`${headerGroup.id}-${id}`}>

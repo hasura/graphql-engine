@@ -1,4 +1,4 @@
-import { Button, SkeletonList } from '@hasura/shared/ui';
+import { Button, Checkbox, IconTooltip, SkeletonList } from '@hasura/shared/ui';
 import { useState } from 'react';
 import { ColumnRow } from './components/ColumnRow';
 import { convertTableValue } from './InsertRowForm.utils';
@@ -21,6 +21,11 @@ export type InsertRowFormProps = {
   driver: SupportedDriver;
   initialValues?: Record<string, unknown>;
   submitLabel?: string;
+  /** shows the "This is a migration" checkbox (console CLI mode) */
+  migration?: {
+    checked: boolean;
+    onChange: (checked: boolean) => void;
+  };
 };
 
 export const InsertRowForm: React.FC<InsertRowFormProps> = ({
@@ -31,6 +36,7 @@ export const InsertRowForm: React.FC<InsertRowFormProps> = ({
   driver,
   initialValues,
   submitLabel = 'Insert row',
+  migration,
 }) => {
   const { data: supportedDataTypes } = useSupportedDataTypes(driver);
   const [values, setValues] = useState<Record<string, unknown>[]>(() =>
@@ -156,6 +162,17 @@ export const InsertRowForm: React.FC<InsertRowFormProps> = ({
           />
         ))}
       </Flex>
+      {migration && (
+        <Flex align="center" gap="1" className="px-4 pb-4">
+          <Checkbox
+            value={migration.checked}
+            onChange={(checked) => migration.onChange(checked === true)}
+          >
+            This is a migration
+          </Checkbox>
+          <IconTooltip message="Create a migration file with the current insertion" />
+        </Flex>
+      )}
       <Flex gap="3">
         <Button mode="default" onClick={() => onResetForm()}>
           Reset

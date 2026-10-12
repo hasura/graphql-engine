@@ -46,7 +46,9 @@ export const useInsertRows = (options?: MutationOptions) => {
     onSuccess: (data, variables, onMutateResult, context) => {
       hasuraToast({
         title: 'Success!',
-        message: 'Row inserted successfully!',
+        message: variables.isMigration
+          ? 'Row inserted and migration created!'
+          : 'Row inserted successfully!',
         type: 'success',
       });
 

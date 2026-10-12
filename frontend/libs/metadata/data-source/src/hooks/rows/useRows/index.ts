@@ -6,11 +6,7 @@ import { useAuthFetchJson } from '@hasura/shared/hooks';
 import { useAppContext } from '@hasura/shared/context';
 import { getDatabaseMethods, TableColumn, TableRow } from '../../../driver';
 
-/**
- * TODO: We need to set this to 3600 * 1000 (1 hour) after removing the useQuery usage from the component level hooks
- * which seems to be interferring with qc.invalidateQuery effect from trickling down to the leaf level hooks.
- */
-export const DEFAULT_STALE_TIME = 0;
+const DEFAULT_STALE_TIME = 5000;
 
 export type UseRowsPropType = {
   source: QualifiedDataSource | undefined;

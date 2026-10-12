@@ -10,7 +10,7 @@ type GetUniqueTableKeyProps = {
   dataSourceName: string;
 };
 
-const getUniqueTableKey = ({
+export const getUniqueTableKey = ({
   table,
   dataSourceName,
 }: GetUniqueTableKeyProps) => {
@@ -18,7 +18,9 @@ const getUniqueTableKey = ({
     return `${dataSourceName}.${table.join('-')}.query`;
   }
 
-  return `${dataSourceName}.${table}.query`;
+  // object tables (e.g. `{ schema, name }`) must be serialized, otherwise all
+  // of them share the same `[object Object]` key
+  return `${dataSourceName}.${JSON.stringify(table)}.query`;
 };
 
 type WhereAndOrderBy = Pick<DataGridOptions, 'where' | 'order_by'>;

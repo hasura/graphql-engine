@@ -161,6 +161,7 @@ export const DataGrid = (props: DataGridProps) => {
         order_by: orderByClauses,
         where: whereClauses,
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageIndex, pageSize]);
 
   const { onExportRows } = useExportRows();
