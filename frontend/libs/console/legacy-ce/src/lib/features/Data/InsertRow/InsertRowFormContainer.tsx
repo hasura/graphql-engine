@@ -1,4 +1,8 @@
+import { useState } from 'react';
 import { Source, Table } from '@hasura/shared/types';
+import { useAppContext } from '@hasura/shared/context';
+import { useMigrationStatus } from '@hasura/metadata/api';
+import { isPostgresFlavour } from '@hasura/metadata/helpers';
 import { InsertRowForm, InsertRowFormProps } from './InsertRowForm';
 import { SupportedDriver } from '@hasura/shared/types';
 import {
@@ -33,6 +37,15 @@ export const InsertRowFormContainer = ({
     table,
   });
 
+  const { envVars } = useAppContext();
+  const { data: migrationStatus } = useMigrationStatus();
+  const [isMigration, setIsMigration] = useState(false);
+  // only the Postgres-family drivers can write the insertion as a migration
+  const canCreateMigration =
+    envVars.consoleMode === 'cli' &&
+    migrationStatus === 'healthy' &&
+    isPostgresFlavour(source.kind);
+
   const isLoading = isLoadingColumns || isLoadingTableInfo;
   const { mutate: insertRows, isPending: isInserting } = useInsertRows();
 
@@ -48,6 +61,7 @@ export const InsertRowFormContainer = ({
         objects: [formData],
         columns,
         defaultColumns: [],
+        isMigration: canCreateMigration && isMigration,
       },
       { onSuccess },
     );
@@ -80,6 +94,11 @@ export const InsertRowFormContainer = ({
       driver={driver as SupportedDriver}
       initialValues={initialValues}
       submitLabel={submitLabel}
+      migration={
+        canCreateMigration
+          ? { checked: isMigration, onChange: setIsMigration }
+          : undefined
+      }
     />
   );
 };

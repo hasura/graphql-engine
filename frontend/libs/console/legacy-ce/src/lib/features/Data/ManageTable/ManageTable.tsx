@@ -8,7 +8,6 @@ import {
   dataRoutes,
 } from '@hasura/shared/utils';
 import { IndicatorCard, Tabs } from '@hasura/shared/ui';
-import { sessionStore } from '@hasura/shared/utils';
 import {
   useDriverCapabilities,
   useIsTableView,
@@ -179,12 +178,6 @@ const ManageTableUI = ({
                 metadataTable.table,
                 _operation,
               ),
-            );
-
-            // save last tab to session storage:
-            sessionStore.setItem(
-              'manageTable.lastTab',
-              _operation as ManageTableTabs,
             );
           }}
           items={tabItems}
