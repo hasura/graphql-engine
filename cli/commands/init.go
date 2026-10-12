@@ -12,6 +12,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/fsm"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/initialization"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions"
 	actionMetadataFileTypes "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/types"
@@ -44,6 +45,7 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Use:   "init [directory-name]",
 		Short: "Initialize a new Hasura GraphQL Engine project",
 		Long: `This is generally the first command that you would run in a new project. It creates a directory with the necessary files and directories to configure an instance of the Hasura GraphQL Engine. You can pass various flags to customize the behavior of the command and pre-configure environment variables.
+For config v3 projects, it also creates an AGENTS.md guide for developing metadata and migrations without the Console. An existing AGENTS.md is preserved.
 		
 Further reading:
 - https://hasura.io/docs/latest/migrations-metadata-seeds/migrations-metadata-setup/
@@ -342,6 +344,10 @@ func (o *InitOptions) createFiles() error {
 		return errors.E(op, fmt.Errorf("cannot write seeds directory: %w", err))
 	}
 
+	if err := o.createAgentsFile(); err != nil {
+		return errors.E(op, err)
+	}
+
 	return nil
 }
 
@@ -367,6 +373,16 @@ func (o *InitOptions) Run() error {
 	}
 
 	return nil
+}
+
+// createAgentsFile writes config v3 project-local guidance without overwriting
+// instructions supplied by the user (including a symlink or directory named AGENTS.md).
+func (o *InitOptions) createAgentsFile() error {
+	if o.Version != cli.V3 {
+		return nil
+	}
+
+	return initialization.CreateAgentsFile(o.EC.ExecutionDirectory)
 }
 
 const (
@@ -637,6 +653,10 @@ func (a *gotoEndstateAction) Execute(ctx fsm.EventContext) eventType {
 		infoMsg = `hasura project initialised. execute the following command to continue:
 		hasura console
 	  `
+	}
+
+	if opts.Version == cli.V3 {
+		infoMsg += "\nFor a console-free metadata and migration workflow, see AGENTS.md.\n"
 	}
 
 	context.logger.Infoln(infoMsg)

@@ -130,7 +130,7 @@ func ExecuteMigration(cmd string, t *migrate.Migrate, stepOrVersion int64) error
 			direction = "up"
 		} else {
 			direction = "down"
-			stepOrVersion = -(stepOrVersion)
+			stepOrVersion = -stepOrVersion
 		}
 
 		err = mig.GotoCmd(t, uint64(stepOrVersion), direction)
