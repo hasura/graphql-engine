@@ -423,6 +423,8 @@ function run_adhoc_operation_benchmarks() (
       allocated_bytes_after=$(curl "$HASURA_URL/dev/rts_stats" 2>/dev/null | jq '.allocated_bytes')
       mem_in_use_bytes_after=$(curl "$HASURA_URL/dev/rts_stats" 2>/dev/null | jq '.gc.gcdetails_mem_in_use_bytes')
       live_bytes_after=$(curl "$HASURA_URL/dev/rts_stats" 2>/dev/null | jq '.gc.gcdetails_live_bytes')
+      max_live_bytes_after=$(curl "$HASURA_URL/dev/rts_stats" 2>/dev/null | jq '.max_live_bytes')
+      max_mem_in_use_bytes_after=$(curl "$HASURA_URL/dev/rts_stats" 2>/dev/null | jq '.max_mem_in_use_bytes')
 
       mean_ms=$(echo "$latencies_ns" | jq -s '(add/length)/1000000')
       min_ms=$(echo "$latencies_ns"  | jq -s 'min/1000000')
@@ -452,6 +454,8 @@ function run_adhoc_operation_benchmarks() (
          --argjson live_bytes_after "$live_bytes_after" \
          --argjson mem_in_use_bytes_before "$mem_in_use_bytes_before" \
          --argjson mem_in_use_bytes_after "$mem_in_use_bytes_after" \
+         --argjson max_live_bytes_after "$max_live_bytes_after" \
+         --argjson max_mem_in_use_bytes_after "$max_mem_in_use_bytes_after" \
          '. +
           [{
             "name": "ADHOC-\($name)",
@@ -483,7 +487,9 @@ function run_adhoc_operation_benchmarks() (
               "live_bytes_before": $live_bytes_before,
               "live_bytes_after": $live_bytes_after,
               "mem_in_use_bytes_before": $mem_in_use_bytes_before,
-              "mem_in_use_bytes_after": $mem_in_use_bytes_after
+              "mem_in_use_bytes_after": $mem_in_use_bytes_after,
+              "max_live_bytes_after": $max_live_bytes_after,
+              "max_mem_in_use_bytes_after": $max_mem_in_use_bytes_after
             }
           }]' < report.json > "$temp_result_file"
       mv -f "$temp_result_file" report.json
