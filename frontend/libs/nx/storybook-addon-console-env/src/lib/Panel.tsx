@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useEffect } from 'react';
+import React, { useMemo, useCallback, useEffect, useRef } from 'react';
 import {
   useGlobals,
   useGlobalTypes,
@@ -48,14 +48,29 @@ export const Panel = ({ active = true }: PanelProps) => {
     [updateGlobals],
   );
 
+  // This effect pushes the active story's parameters into Storybook globals and
+  // must run ONLY when those parameters change. `globals` and
+  // `refreshAndUpdateGlobal` are read via a ref holding their latest values so
+  // the effect does not re-run on every globals change (which would revert
+  // manual edits made through the args table back to the story parameters).
+  const latestRef = useRef({ globals, refreshAndUpdateGlobal });
+  // Keep the ref pointed at the latest values. Declared before the sync effect
+  // below so, on every commit, the ref is refreshed first and the sync effect
+  // reads current values.
   useEffect(() => {
+    latestRef.current = { globals, refreshAndUpdateGlobal };
+  });
+
+  useEffect(() => {
+    const { globals: currentGlobals, refreshAndUpdateGlobal: refresh } =
+      latestRef.current;
     if (
       (adminSecretSetParameter !== null &&
-        adminSecretSetParameter !== globals['adminSecretSet']) ||
+        adminSecretSetParameter !== currentGlobals['adminSecretSet']) ||
       (consoleTypeParameter !== null &&
-        consoleTypeParameter !== globals['consoleType'])
+        consoleTypeParameter !== currentGlobals['consoleType'])
     ) {
-      const newGlobals = { ...globals };
+      const newGlobals = { ...currentGlobals };
       console.log('newGlobals', newGlobals);
       if (adminSecretSetParameter !== null) {
         newGlobals['adminSecretSet'] = adminSecretSetParameter;
@@ -63,7 +78,7 @@ export const Panel = ({ active = true }: PanelProps) => {
       if (consoleTypeParameter !== null) {
         newGlobals['consoleType'] = consoleTypeParameter;
       }
-      refreshAndUpdateGlobal(newGlobals);
+      refresh(newGlobals);
     }
   }, [adminSecretSetParameter, consoleTypeParameter]);
 

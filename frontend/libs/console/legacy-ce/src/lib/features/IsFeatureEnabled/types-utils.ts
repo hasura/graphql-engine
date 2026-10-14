@@ -36,7 +36,7 @@ type ConditionalPickDeepOptions = {
 export type ConditionalPickDeepCompatibilityProperties<
   Type,
   Condition,
-  Options extends ConditionalPickDeepOptions = {},
+  Options extends ConditionalPickDeepOptions = NonNullable<unknown>,
 > = ConditionalSimplifyDeep<
   ConditionalExcept<
     {

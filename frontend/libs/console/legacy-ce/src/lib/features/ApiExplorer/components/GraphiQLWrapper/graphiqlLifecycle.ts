@@ -9,8 +9,43 @@
  *  - `planExternalQuerySync`: the pure decision for syncing an external query
  *    (e.g. `query_file`) into the Monaco editor without clobbering user edits.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { createClient, Client } from 'graphql-ws';
+
+/**
+ * A tiny external store holding the "current" graphql-ws client. The client is
+ * an external resource (opens a websocket), so we synchronize it to React via
+ * `useSyncExternalStore` instead of `useState`: the effect that owns the client
+ * lifecycle updates the store, and the store notifies subscribers to re-render.
+ * This keeps the client creation/disposal entirely inside one effect (the
+ * StrictMode-safe shape) without calling a React state setter from the effect.
+ */
+function createWsClientStore() {
+  let client: Client | null = null;
+  const listeners = new Set<() => void>();
+
+  return {
+    subscribe(listener: () => void) {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+    getSnapshot() {
+      return client;
+    },
+    setClient(next: Client | null) {
+      client = next;
+      listeners.forEach((listener) => listener());
+    },
+    /** Clear only if we still own `expected` (guards stale cleanup). */
+    clearClient(expected: Client) {
+      if (client === expected) {
+        this.setClient(null);
+      }
+    },
+  };
+}
 
 /**
  * Owns a graphql-ws client for the current (wsUrl, headers). Returns `null` on
@@ -29,33 +64,36 @@ export function useGraphqlWsClient(
   wsUrl: string,
   headers: Record<string, string>,
 ): Client | null {
-  const [client, setClient] = useState<Client | null>(null);
+  // One stable store instance per hook instance (lazy-initialized once).
+  const [store] = useState(createWsClientStore);
 
   // `headers` is typically a fresh object every render; key the effect off its
   // serialized VALUE so only a real url/headers change recreates the client.
+  // Re-deriving the object from that same string inside the effect keeps the
+  // effect's dependencies honest (`headersKey` is both the dep and the source
+  // of the headers used) without depending on the per-render object identity.
   const headersKey = JSON.stringify(headers);
 
   useEffect(() => {
-    // The effect only re-runs when `headersKey` (the value) changes, and this
-    // closure captures the `headers` object from exactly that render — so it is
-    // the latest headers without writing a ref during render.
+    // The client is created AND disposed inside this one effect, which is what
+    // makes it StrictMode-safe: React runs effects mount -> cleanup -> mount, so
+    // the first (throwaway) client is disposed by its own cleanup and the store
+    // ends up holding the second, live client.
     const activeClient = createClient({
       url: wsUrl,
-      connectionParams: { headers },
+      connectionParams: { headers: JSON.parse(headersKey) },
       lazy: true,
     });
-    setClient(activeClient);
+    store.setClient(activeClient);
     return () => {
-      // Only clear state if we still own it (guards against a stale cleanup
-      // nulling a newer client during rapid reconfig).
-      setClient((current) => (current === activeClient ? null : current));
+      // Clear only if we still own it (guards against a stale cleanup nulling a
+      // newer client during rapid reconfig), then dispose.
+      store.clearClient(activeClient);
       activeClient.dispose();
     };
-    // headersKey is the value-stable stand-in for the headers object.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wsUrl, headersKey]);
+  }, [wsUrl, headersKey, store]);
 
-  return client;
+  return useSyncExternalStore(store.subscribe, store.getSnapshot);
 }
 
 export interface ExternalQuerySyncInput {

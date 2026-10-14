@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useFormContext } from 'react-hook-form';
 import {
   IndicatorCard,
@@ -106,21 +106,32 @@ const RelationshipMapSelector = ({
     table,
   });
 
-  const columns: string[] = columnData
-    ? (columnData.columns ?? []).map((column) => column.name)
-    : [];
-  const types =
-    remoteSchemaTypes.find((x) => x.typeName === rsTypeName)?.fields ?? [];
+  // Stabilize these so they only change when their source data changes; this
+  // keeps the pruning effect below from depending on a fresh array every render.
+  const columns: string[] = useMemo(
+    () =>
+      columnData ? (columnData.columns ?? []).map((column) => column.name) : [],
+    [columnData],
+  );
+  const types = useMemo(
+    () =>
+      remoteSchemaTypes.find((x) => x.typeName === rsTypeName)?.fields ?? [],
+    [remoteSchemaTypes, rsTypeName],
+  );
 
+  // Prune mappings that reference columns/types which are no longer available.
+  // `filter` only ever removes entries, so an unchanged length means nothing was
+  // pruned; guarding on that keeps this idempotent and prevents an update loop
+  // now that `mapping` (and the stable `setValue`) are dependencies.
   useEffect(() => {
-    setValue(
-      'mapping',
-      mapping.filter(
-        (typeMap) =>
-          columns.includes(typeMap.column) && types.includes(typeMap.field),
-      ),
+    const prunedMapping = mapping.filter(
+      (typeMap) =>
+        columns.includes(typeMap.column) && types.includes(typeMap.field),
     );
-  }, [columns, types]);
+    if (prunedMapping.length !== mapping.length) {
+      setValue('mapping', prunedMapping);
+    }
+  }, [columns, types, mapping, setValue]);
 
   return (
     <>

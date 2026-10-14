@@ -121,7 +121,11 @@ export const QueryDialog = ({
   return (
     <div className="m-4">
       <Dialog title="Query Data" onClose={onClose}>
-        <Form onSubmit={() => {}}>
+        <Form
+          onSubmit={() => {
+            /* noop */
+          }}
+        >
           <div className="pt-3">
             <FilterRows
               name="filters"

@@ -3,6 +3,8 @@ import { AuthService } from '@hasura/shared/context';
 import useNavigateAuth from './useNavigateAuth';
 import { useFetchInconsistentMetadata } from '@hasura/metadata/api';
 
+const getHeaders = async () => ({});
+
 /**
  * The noAuth mode is used if the server does not set admin secret.
  */
@@ -18,13 +20,14 @@ export const useNoAuth = (): AuthService<any> => {
 
       return true;
     } catch (err) {
-      if (isAuthenticated) {
-        setIsAuthenticated(false);
-      }
+      // Use a functional update so we don't need `isAuthenticated` as a
+      // dependency (and avoid a stale closure). Setting the same value is a
+      // no-op in React, matching the previous guarded behavior.
+      setIsAuthenticated((prev) => (prev ? false : prev));
 
       throw err;
     }
-  }, [setIsAuthenticated]);
+  }, [fetchInconsistentMetadata]);
 
   const initialize = async () => {
     await authenticate().then(navigateAuth);
@@ -38,7 +41,7 @@ export const useNoAuth = (): AuthService<any> => {
     authType: 'none',
     authenticate,
     isAuthenticated,
-    getHeaders: async () => ({}),
+    getHeaders,
     initialize,
     logout,
   };

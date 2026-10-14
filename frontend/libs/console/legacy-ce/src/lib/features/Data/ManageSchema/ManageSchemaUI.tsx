@@ -166,7 +166,7 @@ const ManageSchemaUI = ({
               mode="primary"
               size="1"
               onClick={() =>
-                navigate(dataRoutes.addTable(source.name!, item.id))
+                navigate(dataRoutes.addTable(source.name, item.id))
               }
             >
               Create Table

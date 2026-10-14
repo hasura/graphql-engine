@@ -16,12 +16,12 @@ export function ColumnComparatorEntry({
 }) {
   const { setValue } = useContext(rowPermissionsContext);
   const showRootColumns = v.includes('$');
-  const stringifiedValue = JSON.stringify(v);
+  const valueIsArray = Array.isArray(v);
   useEffect(() => {
-    if (!Array.isArray(v)) {
+    if (!valueIsArray) {
       setValue(path, []);
     }
-  }, [stringifiedValue, setValue]);
+  }, [valueIsArray, path, setValue]);
   return (
     <ConditionalTableProvider path={path}>
       <div

@@ -17,7 +17,7 @@ import { useAppContext } from '@hasura/shared/context';
 
 export const RESPONSE_TIME_CACHE_WARNING = 1000;
 const DISMISS_TIME = 24 * 60 * 60 * 1000;
-interface ResponseTimeWarningProps {}
+type ResponseTimeWarningProps = Record<string, never>;
 
 type DismissStatus =
   | {

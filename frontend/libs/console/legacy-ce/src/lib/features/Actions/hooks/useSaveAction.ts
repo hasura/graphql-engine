@@ -137,7 +137,7 @@ const useSaveAction = () => {
         },
       );
     },
-    [mutation],
+    [mutation, navigate],
   );
 };
 

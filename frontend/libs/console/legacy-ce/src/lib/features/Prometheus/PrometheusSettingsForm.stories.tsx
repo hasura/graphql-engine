@@ -63,7 +63,7 @@ export const Error: StoryObj<typeof PrometheusSettingsForm> = {
 };
 
 const urlRegExp =
-  /^(https?):\/\/(?:www\.)?([-a-zA-Z0-9@:%._\+~#=]{1,256}\.?[a-zA-Z0-9()]{0,6})\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/;
+  /^(https?):\/\/(?:www\.)?([-a-zA-Z0-9@:%._+~#=]{1,256}\.?[a-zA-Z0-9()]{0,6})\b(?:[-a-zA-Z0-9()@:%_+.~#?&/=]*)$/;
 const prometheusUrl = 'https://mydomain.io:8080/v1/metrics';
 const prometheusUrlExtract = prometheusUrl.match(urlRegExp);
 

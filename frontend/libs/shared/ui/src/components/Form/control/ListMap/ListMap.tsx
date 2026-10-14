@@ -83,7 +83,7 @@ export const ListMap = (props: Props) => {
   const mapping = formContext.watch(name);
   const initValue = React.useMemo(
     () => props.value ?? mapping ?? {},
-    [props, mapping],
+    [props.value, mapping],
   );
 
   const [localMaps, setLocalMaps] = useState<{ from: string; to: string }[]>(
@@ -114,11 +114,23 @@ export const ListMap = (props: Props) => {
     );
   };
 
-  React.useEffect(() => {
+  // When editing an existing relationship, re-seed the local maps from the
+  // incoming value. This is a reaction to the `existingRelationshipName` /
+  // `initValue` props changing, so adjust the state during render (guarded by
+  // the previous values) instead of in an effect to avoid cascading renders.
+  const [prevReset, setPrevReset] = useState({
+    existingRelationshipName,
+    initValue,
+  });
+  if (
+    prevReset.existingRelationshipName !== existingRelationshipName ||
+    prevReset.initValue !== initValue
+  ) {
+    setPrevReset({ existingRelationshipName, initValue });
     if (existingRelationshipName) {
       setLocalMaps(initLocalMaps(initValue));
     }
-  }, [existingRelationshipName, initValue]);
+  }
 
   return (
     <Card id="reference" className={clsx(`mb-4`, className)}>

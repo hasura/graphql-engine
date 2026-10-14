@@ -26,14 +26,16 @@ const formDecorator =
       Form,
     } = useConsoleForm({
       schema,
-      ...(withDefaultValue ? { options: { defaultValues } } : ({} as {})),
+      ...(withDefaultValue
+        ? { options: { defaultValues } }
+        : ({} as Record<string, never>)),
     });
 
     React.useEffect(() => {
       if (triggerValidation) {
         void trigger();
       }
-    }, []);
+    }, [trigger]);
 
     return (
       <Form onSubmit={action('onSubmit')}>

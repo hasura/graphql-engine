@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useGetSchemaRegistryList } from '../hooks/useGetSchemaRegistryList';
 import { Role, SchemaChangeCard, SchemaRegistryTag } from '../types';
 import globals from '../../../Globals';
@@ -67,8 +67,6 @@ export const SchemaRegistryHome: React.FC<SchemaRegistryHomeProps> = (
       schemaList[0]?.roles?.find((item) => item.role === ADMIN_ROLE)?.id ||
       null;
   }
-  //selectedRole ID determines what should render in SchemaChangeDetails
-  const [selectedRoleID, setSelectedRoleID] = useState<string | null>(null);
   const handleNext = (i: number) => {
     setPageno(pageNo + i);
   };
@@ -76,22 +74,34 @@ export const SchemaRegistryHome: React.FC<SchemaRegistryHomeProps> = (
     setPageno(pageNo - 1);
   };
 
-  //setting the selected role ID as admin role ID by default
-  useEffect(() => {
-    if (schemaRoleID === EMPTY_UUID_STRING) {
-      if (latestAdminRoleID) {
-        setSelectedRoleID(latestAdminRoleID);
-        navigate(`/api/schema-registry/${latestAdminRoleID}`);
-      }
-    } else {
-      setSelectedRoleID(schemaRoleID);
-    }
-  }, [schemaRoleID]);
+  // selectedRole ID determines what should render in SchemaChangeDetails.
+  // It is fully derived from the URL: a specific role id when the URL points at
+  // one, otherwise null until the effects below redirect to the default role.
+  const selectedRoleID =
+    schemaRoleID !== EMPTY_UUID_STRING ? schemaRoleID : null;
 
+  // `navigate` changes identity on every location change (non-data router), so
+  // read it from a ref: otherwise selecting another role (a URL change) would
+  // re-run the effects below and bounce back to the latest admin role.
+  const navigateRef = useRef(navigate);
+  useEffect(() => {
+    navigateRef.current = navigate;
+  });
+
+  //setting the selected role ID as admin role ID by default
+  // When the page lands without a specific role selected, default to the latest
+  // admin role by reflecting it in the URL.
+  useEffect(() => {
+    if (schemaRoleID === EMPTY_UUID_STRING && latestAdminRoleID) {
+      navigateRef.current(`/api/schema-registry/${latestAdminRoleID}`);
+    }
+  }, [schemaRoleID, latestAdminRoleID]);
+
+  // On page changes, jump to the latest admin role of the newly loaded list and
+  // keep the page number in the URL search params.
   useEffect(() => {
     if (latestAdminRoleID) {
-      setSelectedRoleID(latestAdminRoleID);
-      navigate(`/api/schema-registry/${latestAdminRoleID}`);
+      navigateRef.current(`/api/schema-registry/${latestAdminRoleID}`);
     }
     setSearchParam(pageNo);
   }, [latestAdminRoleID, pageNo]);
@@ -287,9 +297,19 @@ const SchemaCard: React.FC<{
   } = props;
   const navigate = useNavigate();
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
-  const [isCurrentCardOpen, setIsCurrentCardOpen] = useState(false);
+  // Purely derived from props: this card is "open" when its key matches the
+  // currently opened card index.
+  const isCurrentCardOpen = cardKey === openSchemaCardIndex;
 
   const [tagsList, setTagsList] = React.useState<SchemaRegistryTag[]>(tags);
+  // Re-sync the editable tags list whenever the tags prop changes. Doing this
+  // during render (guarded by the previous prop value) avoids an extra render
+  // pass while preserving local edits (add/remove) between prop changes.
+  const [prevTags, setPrevTags] = React.useState(tags);
+  if (tags !== prevTags) {
+    setPrevTags(tags);
+    setTagsList(tags);
+  }
   const onRemoveTag = (id: string) => {
     const filteredTags = tagsList.filter(
       (schemaRegistryTag) => schemaRegistryTag.id !== id,
@@ -304,12 +324,6 @@ const SchemaCard: React.FC<{
     roles.unshift(adminRole);
   }
 
-  useEffect(() => {
-    setTagsList(tags);
-  }, [tags]);
-  React.useEffect(() => {
-    setIsCurrentCardOpen(cardKey === openSchemaCardIndex);
-  }, [cardKey, openSchemaCardIndex]);
   const handleRoleClick = (roleBasedChange: Role) => {
     navigate(`/api/schema-registry/${roleBasedChange.id}`);
   };

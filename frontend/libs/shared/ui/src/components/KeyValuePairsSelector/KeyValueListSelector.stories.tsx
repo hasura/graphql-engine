@@ -17,9 +17,14 @@ export default {
   component: KeyValueListSelector,
 } as Meta<typeof KeyValueListSelector>;
 
-export const showcase = () => (
+export const Showcase = () => (
   <div className="space-y-4">
-    <SimpleForm schema={formSchema} onSubmit={() => {}}>
+    <SimpleForm
+      schema={formSchema}
+      onSubmit={() => {
+        /* noop */
+      }}
+    >
       <KeyValueListSelector name="list" />
     </SimpleForm>
   </div>

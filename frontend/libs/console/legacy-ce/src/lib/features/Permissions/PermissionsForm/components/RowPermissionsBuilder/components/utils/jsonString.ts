@@ -1,5 +1,5 @@
 export function jsonToString(value: any) {
-  let inputValue = value;
+  let inputValue;
   // If value is valid JSON, stringify it
   // Else, just use the value as is
   try {

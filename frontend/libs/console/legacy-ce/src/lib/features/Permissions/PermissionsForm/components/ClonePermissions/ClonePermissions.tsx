@@ -79,7 +79,7 @@ export const ClonePermissionsSection: React.FC<
         roleName: '',
       } as ClonePermissionItem);
     }
-  }, [controlledFields, append]);
+  }, [controlledFields, append, watched?.length]);
 
   const roles = MetadataSelectors.getRoles(metadata);
   const dbMethods = getDatabaseMethods(source.kind);

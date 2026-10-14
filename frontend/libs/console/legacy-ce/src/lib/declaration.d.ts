@@ -4,7 +4,7 @@ declare module '*.scss' {
 }
 
 declare namespace SvgPanZoom {
-  export interface Instance {}
+  export type Instance = Record<string, never>;
 }
 
 declare module '*.svg' {

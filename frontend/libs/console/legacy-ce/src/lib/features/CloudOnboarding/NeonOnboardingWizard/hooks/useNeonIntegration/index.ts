@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNeonOAuth } from '../useNeonOAuth';
 import { useNeonDatabase } from '../useNeonDatabase';
 import { useCreateHasuraCloudDatasource } from './useCreateHasuraCloudDatasource';
@@ -104,13 +104,34 @@ export function useNeonIntegration(
     ) {
       createNeonDatabase();
     }
-  }, [neonDBCreationStatus, neonOauthStatus]);
+  }, [
+    neonDBCreationStatus,
+    neonOauthStatus,
+    createNeonDatabase,
+    resetNeonDBCreationState,
+    startNeonOAuth,
+  ]);
+
+  // `addHasuraDatasource`, `dbCreationCallback` and `failureCallback` are
+  // event-like emitters: the effect must only react to status transitions, not
+  // re-run when the parent re-creates these callbacks (they are passed inline
+  // by callers). We keep the latest versions in refs so the effect always calls
+  // the current implementation while its dependency list stays limited to the
+  // status it genuinely synchronizes on.
+  const addHasuraDatasourceRef = useRef(addHasuraDatasource);
+  const dbCreationCallbackRef = useRef(dbCreationCallback);
+  const failureCallbackRef = useRef(failureCallback);
+  useEffect(() => {
+    addHasuraDatasourceRef.current = addHasuraDatasource;
+    dbCreationCallbackRef.current = dbCreationCallback;
+    failureCallbackRef.current = failureCallback;
+  });
 
   useEffect(() => {
     if (neonDBCreationStatus.status === 'success') {
       switch (hasuraCloudDataSourceConnectionStatus.status) {
         case 'idle':
-          addHasuraDatasource();
+          addHasuraDatasourceRef.current();
           break;
         case 'adding-env-var-failed':
           // FIXME: do we still need it?
@@ -120,7 +141,7 @@ export function useNeonIntegration(
           //     dbName: 'default',
           //   })
           // );
-          failureCallback();
+          failureCallbackRef.current();
           break;
         case 'adding-data-source-failed':
           // FIXME: do we still need it?
@@ -130,10 +151,10 @@ export function useNeonIntegration(
           //     dbName: 'default',
           //   })
           // );
-          failureCallback();
+          failureCallbackRef.current();
           break;
         case 'success':
-          dbCreationCallback(
+          dbCreationCallbackRef.current(
             hasuraCloudDataSourceConnectionStatus.payload.dataSourceName,
           );
           break;

@@ -63,7 +63,7 @@ export const useSourceOptions = (meta: Metadata) => {
         }));
       })
       .flat();
-  }, [inconsistentSources, meta, inconsistentSources, driverCapabilities]);
+  }, [inconsistentSources, meta, driverCapabilities]);
 
   return {
     data: tables,

@@ -22,7 +22,7 @@ export const useIsTableView = ({
         }
 
         const databaseMethods = getDatabaseMethods(source?.kind ?? '');
-        const result = data.find((t) => areTablesEqual(t.table, table!));
+        const result = data.find((t) => areTablesEqual(t.table, table));
 
         return (
           result?.type !== undefined &&

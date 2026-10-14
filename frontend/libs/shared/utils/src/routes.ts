@@ -289,7 +289,7 @@ export const manageFunction = (
 
 export const addTable = (database: string, schema?: string): To => {
   return {
-    pathname: `${manageDatabaseSource(database!)}/table/add`,
+    pathname: `${manageDatabaseSource(database)}/table/add`,
     search: schema ? `?schema=${schema}` : undefined,
   };
 };

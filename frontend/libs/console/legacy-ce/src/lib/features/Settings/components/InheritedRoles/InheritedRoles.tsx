@@ -39,11 +39,6 @@ const InheritedRoles: React.FC = () => {
   } = useInconsistentMetadata();
   const allRoles = MetadataSelectors.getRoles(meta?.metadata);
   const inheritedRoles = meta?.metadata.inherited_roles ?? [];
-  const inconsistentInheritedRoles: InconsistentObjectInheritedRole[] =
-    inconsistentMetadata?.inconsistent_objects?.filter(
-      (io) =>
-        'type' in io && io.type === 'inherited role permission inconsistency',
-    ) ?? [];
 
   const [inheritedRoleName, setInheritedRoleName] = useState('');
   const [inheritedRole, setInheritedRole] = useState<InheritedRole | null>(
@@ -100,13 +95,21 @@ const InheritedRoles: React.FC = () => {
   };
 
   useEffect(() => {
-    if (inconsistentInheritedRoles?.length) {
+    // Computed inside the effect so the `?? []` fallback doesn't create a new
+    // array identity on every render (which would re-run the effect each time).
+    const inconsistentInheritedRoles: InconsistentObjectInheritedRole[] =
+      inconsistentMetadata?.inconsistent_objects?.filter(
+        (io) =>
+          'type' in io && io.type === 'inherited role permission inconsistency',
+      ) ?? [];
+
+    if (inconsistentInheritedRoles.length) {
       // redirection will happen when there is an inconsitency detected for the first time
       // second time inherited roles page will load as expected
       // whenever there is an updation/ creation cause the inconsistency, it will redirect to status page once
       navigate(METADATA_STATUS_PATH);
     }
-  }, [inconsistentInheritedRoles]);
+  }, [inconsistentMetadata, navigate]);
 
   const isFetching =
     (!meta || !inconsistentMetadata) &&

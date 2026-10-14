@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import Onboarding from '../Common/Onboarding';
 import { UpdateVersion } from './components/UpdateVersion';
@@ -25,9 +25,22 @@ const Main = () => {
   } = useReloadMetadata();
   const { data: meta } = useMetadata();
 
+  // `refreshCatalogState` is recreated on every render by `useCatalogState`, so
+  // capture the mount-time version in a ref and invoke it exactly once on mount
+  // (the original intent of the `[]` effect) without re-running on each render.
+  const refreshCatalogStateRef = useRef(refreshCatalogState);
+
   useEffect(() => {
-    refreshCatalogState();
+    refreshCatalogStateRef.current();
   }, []);
+
+  // `navigate` changes identity on every location change (non-data router), so
+  // read it from a ref: the redirect must only fire when the metadata
+  // consistency changes, not on every navigation.
+  const navigateRef = useRef(navigate);
+  useEffect(() => {
+    navigateRef.current = navigate;
+  });
 
   useEffect(() => {
     if (inconsistentLoading || !inconsistentMetadata) {
@@ -35,7 +48,7 @@ const Main = () => {
     }
 
     if (!inconsistentMetadata.is_consistent) {
-      navigate(METADATA_STATUS_PATH);
+      navigateRef.current(METADATA_STATUS_PATH);
       return;
     }
   }, [inconsistentLoading, inconsistentMetadata]);
@@ -58,7 +71,7 @@ const Main = () => {
           <div className={styles.main + ' container-fluid'}>
             <Outlet />
           </div>
-          {consoleState ? <UpdateVersion consoleState={consoleState!} /> : null}
+          {consoleState ? <UpdateVersion consoleState={consoleState} /> : null}
         </div>
       </div>
     </ErrorBoundary>

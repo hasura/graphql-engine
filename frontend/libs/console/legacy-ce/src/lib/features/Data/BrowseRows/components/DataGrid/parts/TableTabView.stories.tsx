@@ -37,7 +37,9 @@ const Component = () => {
       onTabClose={(value) =>
         setTabs((oldTabs) => oldTabs.filter((tab) => tab.value !== value))
       }
-      onCloseAll={() => {}}
+      onCloseAll={() => {
+        /* noop */
+      }}
     />
   );
 };

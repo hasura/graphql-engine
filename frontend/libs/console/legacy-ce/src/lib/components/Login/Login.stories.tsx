@@ -50,7 +50,9 @@ const withAuthService = (overrides: Partial<AuthService<any>>): Decorator => {
         authType: 'admin-secret',
         getHeaders: async () => ({}),
         authenticate: () => Promise.resolve(true),
-        logout: () => {},
+        logout: () => {
+          /* noop */
+        },
         ...overrides,
       }}
     >
@@ -70,7 +72,10 @@ type Story = StoryObj<typeof Login>;
 export const Default: Story = {
   decorators: [
     withAuthService({
-      authenticate: () => new Promise(() => {}),
+      authenticate: () =>
+        new Promise(() => {
+          /* noop */
+        }),
     }),
   ],
 };
@@ -78,7 +83,10 @@ export const Default: Story = {
 export const Loading: Story = {
   decorators: [
     withAuthService({
-      authenticate: () => new Promise(() => {}),
+      authenticate: () =>
+        new Promise(() => {
+          /* noop */
+        }),
     }),
   ],
   play: async ({ canvasElement, step }) => {
@@ -117,7 +125,10 @@ export const EEConsole: Story = {
   decorators: [
     withAppState({ envVars: eeEnvVars }),
     withAuthService({
-      authenticate: () => new Promise(() => {}),
+      authenticate: () =>
+        new Promise(() => {
+          /* noop */
+        }),
     }),
   ],
 };

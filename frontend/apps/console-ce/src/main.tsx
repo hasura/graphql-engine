@@ -9,5 +9,8 @@ import { initAppearance } from '@hasura/shared/ui';
 initAppearance();
 
 const container = document.getElementById('content');
-const root = createRoot(container!);
+if (!container) {
+  throw new Error('Root container #content was not found in the document');
+}
+const root = createRoot(container);
 root.render(<ConsoleCeApp />);

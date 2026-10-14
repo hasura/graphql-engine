@@ -22,7 +22,9 @@ export default {
 export const Primary: StoryObj<RemoteSchemaToRemoteSchemaFormProps> = {
   args: {
     sourceRemoteSchema: 'countries',
-    closeHandler: () => {},
+    closeHandler: () => {
+      /* noop */
+    },
   },
 };
 

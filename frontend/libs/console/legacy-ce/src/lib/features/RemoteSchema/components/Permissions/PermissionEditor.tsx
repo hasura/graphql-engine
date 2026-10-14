@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { GraphQLSchema } from 'graphql';
 import { generateSDL, getArgTreeFromPermissionSDL } from './utils';
 import {
@@ -10,7 +10,7 @@ import {
 import { PermissionEditorContext } from './context';
 import Tree from './Tree';
 import { isEmpty } from '@hasura/shared/utils';
-import { Button, Input, Text } from '@hasura/shared/ui';
+import { Button, Card, Input, Text } from '@hasura/shared/ui';
 import { Flex } from '@radix-ui/themes';
 import { FaSearch } from 'react-icons/fa';
 
@@ -59,34 +59,58 @@ const PermissionEditor: React.FC<PermissionEditorProps> = (props) => {
   const [state, setState] = useState<RemoteSchemaFields[] | FieldType[]>(
     remoteSchemaFields,
   );
-  const [argTree, setArgTree] = useState<ArgTreeType>({}); // all @presets as an object tree
-  const [resultString, setResultString] = useState(''); // Generated SDL
-  const [search, setSearch] = useState('');
-  const { isNewRole, isNewPerm } = permissionEdit;
-
-  useEffect(() => {
-    if (!state) return;
-    setResultString(generateSDL(state, argTree));
-  }, [state, argTree]);
-
-  useEffect(() => {
-    setState(remoteSchemaFields);
-    setResultString(schemaDefinition);
-  }, [remoteSchemaFields]);
-
-  useEffect(() => {
+  // all @presets as an object tree. Seeded from the permission SDL on mount via
+  // lazy init (equivalent to the previous mount-time effect) and re-seeded on
+  // later `schemaDefinition` changes through the adjust-during-render block
+  // below.
+  const [argTree, setArgTree] = useState<ArgTreeType>(() => {
     if (!isEmpty(schemaDefinition)) {
       try {
-        const newArgTree = getArgTreeFromPermissionSDL(
+        return getArgTreeFromPermissionSDL(
           schemaDefinition,
           introspectionSchema,
         );
-        setArgTree(newArgTree);
       } catch (e) {
         console.error(e);
       }
     }
-  }, [schemaDefinition]);
+    return {};
+  });
+  const [search, setSearch] = useState('');
+  const { isNewRole, isNewPerm } = permissionEdit;
+
+  // Reset the editable field tree whenever the `remoteSchemaFields` prop
+  // changes. Done during render (React's "adjust state on prop change" pattern)
+  // instead of in an effect so it does not cascade an extra render.
+  const [prevRemoteSchemaFields, setPrevRemoteSchemaFields] =
+    useState(remoteSchemaFields);
+  if (remoteSchemaFields !== prevRemoteSchemaFields) {
+    setPrevRemoteSchemaFields(remoteSchemaFields);
+    setState(remoteSchemaFields);
+  }
+
+  // Re-seed the preset tree whenever the permission SDL changes.
+  const [prevSchemaDefinition, setPrevSchemaDefinition] =
+    useState(schemaDefinition);
+  if (schemaDefinition !== prevSchemaDefinition) {
+    setPrevSchemaDefinition(schemaDefinition);
+    if (!isEmpty(schemaDefinition)) {
+      try {
+        setArgTree(
+          getArgTreeFromPermissionSDL(schemaDefinition, introspectionSchema),
+        );
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }
+
+  // The generated SDL is fully derived from the field tree and the preset tree,
+  // so compute it during render instead of syncing it into state via an effect.
+  const resultString = useMemo(
+    () => (state ? generateSDL(state, argTree) : ''),
+    [state, argTree],
+  );
 
   if (!isEditing) return null;
 
@@ -160,7 +184,7 @@ const PermissionEditor: React.FC<PermissionEditorProps> = (props) => {
   );
 
   return (
-    <div className="bg-white p-2 border border-gray-300">
+    <Card className="mt-4">
       <div>
         <PermissionEditorContext.Provider
           value={{ argTree, setArgTree, scrollToElement }}
@@ -218,7 +242,7 @@ const PermissionEditor: React.FC<PermissionEditorProps> = (props) => {
           Cancel
         </Button>
       </Flex>
-    </div>
+    </Card>
   );
 };
 

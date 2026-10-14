@@ -11,8 +11,14 @@ export const CreateMode: StoryFn<typeof Widget> = () => (
   <Widget
     dataSourceName="chinook"
     table={{ name: 'Album', schema: 'public' }}
-    onSuccess={() => {}}
-    onError={() => {}}
-    onCancel={() => {}}
+    onSuccess={() => {
+      /* noop */
+    }}
+    onError={() => {
+      /* noop */
+    }}
+    onCancel={() => {
+      /* noop */
+    }}
   />
 );

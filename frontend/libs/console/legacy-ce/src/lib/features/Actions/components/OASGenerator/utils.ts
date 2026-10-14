@@ -230,24 +230,24 @@ const postProcessTransform = (output: Transform): string | null => {
   }
   let string = JSON.stringify(transform, null, 2)
     // removing quotes from values
-    .replace(/\"(.*)\": \"(.*)\"/g, '"$1": $2')
+    .replace(/"(.*)": "(.*)"/g, '"$1": $2')
     .replace(/\\"/g, '"')
     .replace(/\\n/g, '\n\t')
     // processing arrays
     .replace(
-      /\"(.*?)\": \{\n\s*\"ARRAYSTART\((.*)\)\": true,/g,
+      /"(.*?)": \{\n\s*"ARRAYSTART\((.*)\)": true,/g,
       '"$1": {{if inverse(empty($2))}} {{ range _, $1 := $2}} {',
     )
     .replace(
-      /,(\n\s*?)\"ARRAYEND\": true\n\s*?}/g,
+      /,(\n\s*?)"ARRAYEND": true\n\s*?}/g,
       '$1} {{end}} {{else}} null {{end}}',
     );
 
   // processing root array
-  if (string.match(/\{\n\s*\"ARRAYSTART\((.*)\)\": true,/g)) {
+  if (string.match(/\{\n\s*"ARRAYSTART\((.*)\)": true,/g)) {
     string = string
       .replace(
-        /\{\n\s*\"ARRAYSTART\((.*)\)\": true,/g,
+        /\{\n\s*"ARRAYSTART\((.*)\)": true,/g,
         '{{if inverse(empty($_body))}} {{ range _, item := $_body}} {',
       )
       .replace(/\$body/g, 'item')
@@ -313,7 +313,7 @@ const createXWWWFormURLEncodedRequestTransform = (
 export const createRequestTransform = (
   operation: Operation,
 ): GeneratedAction['requestTransforms'] | null => {
-  let inputName = '';
+  let inputName: string;
   const inputObjectType = operation.payloadDefinition?.graphQLInputObjectType;
   if (inputObjectType && 'name' in inputObjectType) {
     inputName = normalizeOperationId(inputObjectType.name);

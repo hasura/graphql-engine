@@ -45,7 +45,9 @@ export const Happy: StoryFn = () => (
       },
       [OneClickDeploymentState.Completed]: { kind: 'success' },
     }}
-    triggerDeployment={() => {}}
+    triggerDeployment={() => {
+      /* noop */
+    }}
     fallbackApps={fallbackApps}
   />
 );
@@ -71,7 +73,9 @@ export const Error: StoryFn = () => {
         },
         [OneClickDeploymentState.Completed]: { kind: 'idle' },
       }}
-      triggerDeployment={() => {}}
+      triggerDeployment={() => {
+        /* noop */
+      }}
       fallbackApps={fallbackApps}
     />
   );

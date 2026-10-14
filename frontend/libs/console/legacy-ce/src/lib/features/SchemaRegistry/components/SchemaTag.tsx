@@ -19,7 +19,7 @@ export const SchemaTag: React.FC<TagProps> = (props) => {
     deleteSchemaRegistryTagMutation.mutate({
       ID: id,
     });
-  }, [schemaRegistryTag]);
+  }, [deleteSchemaRegistryTagMutation, id]);
 
   const rgbaColorValue = hexToRGB(color, 0.2);
   return (

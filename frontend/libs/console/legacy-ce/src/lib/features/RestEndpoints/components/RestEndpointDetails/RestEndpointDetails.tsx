@@ -84,8 +84,13 @@ export const RestEndpointDetails = (props: RestEndpointDetailsProps) => {
     schema: validationSchema,
   });
 
+  // Seed the request headers once on mount. `getHeaders` is recreated on every
+  // render by the auth context, so we deliberately read the latest one through a
+  // ref to keep this a mount-only fetch (re-running it would discard the user's
+  // header edits).
+  const getHeadersRef = React.useRef(getHeaders);
   useEffect(() => {
-    getHeaders().then((authHeaders) => {
+    getHeadersRef.current().then((authHeaders) => {
       const initialHeaders = getPersistedGraphiQLHeaders(authHeaders);
       setHeaders(
         initialHeaders.map((header) => ({
@@ -96,31 +101,50 @@ export const RestEndpointDetails = (props: RestEndpointDetailsProps) => {
     });
   }, []);
 
-  useEffect(() => {
-    if (endpoint?.query?.query) {
-      const parsedVariables = parseQueryVariables(endpoint.query.query);
+  // `useRestEndpoint` returns a new wrapper object each render, but its
+  // `.endpoint`/`.query` sub-objects are stable (react-query). Depend on those
+  // stable values instead of the wrapper to avoid re-running on every render.
+  const endpointData = endpoint?.endpoint;
+  const queryString = endpoint?.query?.query;
+
+  // Reset the editable variables while rendering whenever the endpoint's query
+  // changes (adjusting state during render instead of in an effect to avoid a
+  // cascading render; the variables remain user-editable afterwards).
+  const [prevQueryString, setPrevQueryString] = React.useState<
+    string | undefined
+  >(undefined);
+  if (queryString !== prevQueryString) {
+    setPrevQueryString(queryString);
+    if (queryString) {
+      const parsedVariables = parseQueryVariables(queryString);
       setVariables(parsedVariables?.map((v) => ({ ...v, value: '' })) ?? []);
     }
+  }
 
-    if (endpoint) {
-      setValue('name', endpoint.endpoint?.name);
-      setValue('comment', endpoint?.endpoint?.comment ?? null);
-      setValue('url', endpoint?.endpoint?.url);
-      setValue('methods', (endpoint?.endpoint?.methods ?? []) as any);
-      setValue('request', endpoint?.query?.query);
+  useEffect(() => {
+    if (endpointData) {
+      setValue('name', endpointData?.name);
+      setValue('comment', endpointData?.comment ?? null);
+      setValue('url', endpointData?.url);
+      setValue('methods', (endpointData?.methods ?? []) as any);
+      setValue('request', queryString ?? '');
     }
-  }, [endpoint?.query?.query, endpoint?.endpoint]);
+  }, [endpointData, queryString, setValue]);
 
   useEffect(() => {
     setValue('response', JSON.stringify(data, null, 2));
-  }, [data]);
+  }, [data, setValue]);
 
   if (!endpoint) {
     return null;
   }
 
   return (
-    <Form onSubmit={() => {}}>
+    <Form
+      onSubmit={() => {
+        /* noop */
+      }}
+    >
       <div className="grid grid-cols-2 gap-4">
         <Flex direction="column" gap="2">
           <div className="relative">

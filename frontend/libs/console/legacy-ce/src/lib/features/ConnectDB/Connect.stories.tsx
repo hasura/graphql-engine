@@ -19,7 +19,9 @@ export const Primary: StoryFn<typeof Connect.CreateConnection> = () => (
   <Connect.CreateConnection
     name="new_connection"
     driver="postgres"
-    onDriverChange={() => {}}
+    onDriverChange={() => {
+      /* noop */
+    }}
   />
 );
 
@@ -29,6 +31,8 @@ export const WithExistingConfig: StoryFn<
   <Connect.CreateConnection
     name="default"
     driver="postgres"
-    onDriverChange={() => {}}
+    onDriverChange={() => {
+      /* noop */
+    }}
   />
 );

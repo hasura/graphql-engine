@@ -85,57 +85,50 @@ export const RemoteSchemaToRemoteSchemaForm = ({
     : 'Add Relationship';
   return (
     <Form onSubmit={submit} className="p-4">
-      <>
-        <Card size="2">
-          <Flex align="center" gap="4" className="w-full mb-4">
-            <Button
-              mode="default"
-              type="button"
-              size="sm"
-              onClick={closeHandler}
-            >
-              Cancel
-            </Button>
-            <Text weight="bold">{relationshipTitle}</Text>
-          </Flex>
+      <Card size="2">
+        <Flex align="center" gap="4" className="w-full mb-4">
+          <Button mode="default" type="button" size="sm" onClick={closeHandler}>
+            Cancel
+          </Button>
+          <Text weight="bold">{relationshipTitle}</Text>
+        </Flex>
 
-          {existingRelationship ? null : (
-            <RelationshipTypeCardRadioGroup
-              value="remoteSchema"
-              onChange={relModeHandler}
-            />
-          )}
-
-          <FormElements
-            sourceRemoteSchema={sourceRemoteSchema}
-            existingRelationship={existingRelationship}
+        {existingRelationship ? null : (
+          <RelationshipTypeCardRadioGroup
+            value="remoteSchema"
+            onChange={relModeHandler}
           />
+        )}
 
-          {/* submit */}
-          <div className="mt-4">
-            <Button
-              mode="primary"
-              size="md"
-              type="submit"
-              loading={isPending}
-              loadingText={
-                existingRelationship
-                  ? 'Updating relationship'
-                  : 'Creating relationship'
-              }
-              data-test="add-rs-relationship"
-            >
-              {relationshipTitle}
-            </Button>
-          </div>
+        <FormElements
+          sourceRemoteSchema={sourceRemoteSchema}
+          existingRelationship={existingRelationship}
+        />
 
-          {!!Object.keys(formState.errors).length && (
-            <IndicatorCard status="negative">
-              Error saving relationship
-            </IndicatorCard>
-          )}
-        </Card>
-      </>
+        {/* submit */}
+        <div className="mt-4">
+          <Button
+            mode="primary"
+            size="md"
+            type="submit"
+            loading={isPending}
+            loadingText={
+              existingRelationship
+                ? 'Updating relationship'
+                : 'Creating relationship'
+            }
+            data-test="add-rs-relationship"
+          >
+            {relationshipTitle}
+          </Button>
+        </div>
+
+        {!!Object.keys(formState.errors).length && (
+          <IndicatorCard status="negative">
+            Error saving relationship
+          </IndicatorCard>
+        )}
+      </Card>
     </Form>
   );
 };

@@ -7,7 +7,7 @@ export default {
   component: IndicatorCard,
 } as Meta<typeof IndicatorCard>;
 
-export const showcase = () => (
+export const Showcase = () => (
   <div className="space-y-4">
     <IndicatorCard>
       This is a card component with an `info` indication state.

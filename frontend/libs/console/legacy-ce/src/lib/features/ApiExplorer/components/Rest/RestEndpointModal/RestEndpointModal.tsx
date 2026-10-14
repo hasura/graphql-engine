@@ -44,7 +44,13 @@ export const RestEndpointModal = (props: RestEndpointModalProps) => {
       table: props.table,
     });
 
-  const tableEndpointDefinitions = endpointDefinitions?.[tableName] ?? {};
+  // `endpointDefinitions?.[tableName] ?? {}` would produce a fresh `{}` on every
+  // render when the lookup is undefined, destabilizing the `filteredEndpoints`
+  // memo below. Memoize it so it only changes when its real inputs change.
+  const tableEndpointDefinitions = React.useMemo(
+    () => endpointDefinitions?.[tableName] ?? {},
+    [endpointDefinitions, tableName],
+  );
 
   const [selectedMethods, setSelectedMethods] = React.useState<EndpointType[]>(
     [],

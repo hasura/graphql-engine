@@ -16,7 +16,6 @@ export function PgDatabaseField(props: PgDatabaseFieldProps) {
   const { dbEnvVar } = props;
   const { setValue } = useFormContext();
   const [showNeonButton, setShowNeonButton] = React.useState(true);
-  const [neonDBURL, setNeonDBURL] = React.useState('');
 
   const toggleShowNeonButton = () => {
     setShowNeonButton((s) => !s);
@@ -30,13 +29,28 @@ export function PgDatabaseField(props: PgDatabaseFieldProps) {
     [neonIntegrationStatus],
   );
 
+  // The populated Neon database URL is fully derived from the integration
+  // status, so we compute it during render instead of mirroring it into state
+  // via an effect (which would cause an extra render pass).
+  const neonDBURL =
+    neonButtonProps.status.status === 'success'
+      ? (neonButtonProps.dbURL ?? '')
+      : '';
+
+  // Writing the resolved URL into the form is a genuine side effect to an
+  // external store (react-hook-form), so it stays in an effect — now with a
+  // complete dependency list.
   React.useEffect(() => {
     const dbUrl = neonButtonProps.dbURL;
     if (neonButtonProps.status.status === 'success' && dbUrl) {
-      setNeonDBURL(dbUrl);
       setValue(dbEnvVar.Name, dbUrl);
     }
-  }, [neonButtonProps.status.status]);
+  }, [
+    neonButtonProps.status.status,
+    neonButtonProps.dbURL,
+    dbEnvVar.Name,
+    setValue,
+  ]);
 
   return (
     <>

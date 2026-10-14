@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { FaArrowRight } from 'react-icons/fa';
 import { CardedTable, AceEditor } from '@hasura/shared/ui';
 import { TypeSearchForm } from './SearchTypes';
@@ -42,7 +42,22 @@ export const ImportTypesForm = (props: {
 
   const { data: clientSchema, isLoading } = useIntrospectSchema();
   const [selectedTypes, setSelectedTypes] = useState([] as string[]);
-  const [typeDef, setTypeDef] = useState('');
+
+  // `typeDef` is fully derived from the introspected schema and the currently
+  // selected types, so compute it during render with useMemo instead of
+  // mirroring it into state from an effect (which triggered cascading renders).
+  const typeDef = useMemo(() => {
+    if (isLoading || !clientSchema) return '';
+
+    const allTypeDefs = generateAllTypeDefinitions(
+      clientSchema,
+      selectedTypes,
+      'type',
+    );
+
+    return ` # Imported Types from table schema
+${allTypeDefs}`;
+  }, [selectedTypes, clientSchema, isLoading]);
 
   useEffect(() => {
     setValues({
@@ -57,20 +72,10 @@ export const ImportTypesForm = (props: {
     ? filterItemsBySearch(searchText, allTypes)
     : allTypes;
 
-  const handleSearch = (value: string) => setSearchText(value);
-
-  useEffect(() => {
-    if (isLoading || !clientSchema) return;
-
-    const allTypeDefs = generateAllTypeDefinitions(
-      clientSchema,
-      selectedTypes,
-      'type',
-    );
-
-    setTypeDef(` # Imported Types from table schema
-${allTypeDefs}`);
-  }, [selectedTypes, clientSchema, isLoading]);
+  const handleSearch = React.useCallback(
+    (value: string) => setSearchText(value),
+    [],
+  );
 
   const rowData =
     itemSearchResults?.map((typeName) => {

@@ -65,12 +65,16 @@ export const ManageFunction: React.FC = () => {
   const { currentSource } = useDataSourceContext();
   const urlData = useFunctionURLParameters();
 
-  const currentFunction: MetadataFunction | undefined =
-    urlData.querystringParseResult === 'success' && urlData.qualifiedFunction
-      ? currentSource.functions?.find((fn) =>
-          areTablesEqual(fn.function, urlData.qualifiedFunction!),
-        )
+  const qualifiedFunction =
+    urlData.querystringParseResult === 'success'
+      ? urlData.qualifiedFunction
       : undefined;
+
+  const currentFunction: MetadataFunction | undefined = qualifiedFunction
+    ? currentSource.functions?.find((fn) =>
+        areTablesEqual(fn.function, qualifiedFunction),
+      )
+    : undefined;
 
   if (!currentFunction) {
     return (
@@ -130,7 +134,7 @@ export const ManageFunctionTabs = ({
           navigate(
             dataRoutes.manageFunction(
               source.name,
-              currentFunction.function!,
+              currentFunction.function,
               _operation,
             ),
           );

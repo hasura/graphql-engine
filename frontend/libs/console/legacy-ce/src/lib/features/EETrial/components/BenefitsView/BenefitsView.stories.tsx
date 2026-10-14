@@ -14,7 +14,12 @@ export default {
 
 export const NoEnterpriseLicense: StoryObj<typeof BenefitsView> = {
   render: (args) => (
-    <Dialog size="md" onClose={() => {}}>
+    <Dialog
+      size="md"
+      onClose={() => {
+        /* noop */
+      }}
+    >
       <BenefitsView
         licenseInfo={{
           status: 'none',
@@ -29,7 +34,12 @@ export const NoEnterpriseLicense: StoryObj<typeof BenefitsView> = {
 
 export const ActiveEnterpriceLicense: StoryObj<typeof BenefitsView> = {
   render: (args) => (
-    <Dialog size="md" onClose={() => {}}>
+    <Dialog
+      size="md"
+      onClose={() => {
+        /* noop */
+      }}
+    >
       <BenefitsView
         licenseInfo={{
           status: 'active',
@@ -45,7 +55,12 @@ export const ActiveEnterpriceLicense: StoryObj<typeof BenefitsView> = {
 export const ExpiredEnterpriseLicenseWithGrace: StoryObj<typeof BenefitsView> =
   {
     render: (args) => (
-      <Dialog size="md" onClose={() => {}}>
+      <Dialog
+        size="md"
+        onClose={() => {
+          /* noop */
+        }}
+      >
         <BenefitsView
           licenseInfo={{
             status: 'expired',
@@ -62,7 +77,12 @@ export const ExpiredEnterpriseLicenseWithoutGrace: StoryObj<
   typeof BenefitsView
 > = {
   render: (args) => (
-    <Dialog size="md" onClose={() => {}}>
+    <Dialog
+      size="md"
+      onClose={() => {
+        /* noop */
+      }}
+    >
       <BenefitsView
         licenseInfo={{
           status: 'expired',
@@ -77,7 +97,12 @@ export const ExpiredEnterpriseLicenseWithoutGrace: StoryObj<
 export const ExpiredEnterpriseLicenseAfterGrace: StoryObj<typeof BenefitsView> =
   {
     render: (args) => (
-      <Dialog size="md" onClose={() => {}}>
+      <Dialog
+        size="md"
+        onClose={() => {
+          /* noop */
+        }}
+      >
         <BenefitsView
           licenseInfo={{
             status: 'expired',
@@ -94,7 +119,12 @@ export const DeactivatedEnterpriseLicenseAfterGrace: StoryObj<
   typeof BenefitsView
 > = {
   render: (args) => (
-    <Dialog size="md" onClose={() => {}}>
+    <Dialog
+      size="md"
+      onClose={() => {
+        /* noop */
+      }}
+    >
       <BenefitsView
         licenseInfo={{
           status: 'deactivated',

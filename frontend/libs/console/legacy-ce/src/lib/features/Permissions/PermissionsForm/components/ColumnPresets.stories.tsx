@@ -20,7 +20,9 @@ export default {
             rowPermissionsCheckType: 'custom',
           },
         }}
-        onSubmit={() => {}}
+        onSubmit={() => {
+          /* noop */
+        }}
         className="p-4"
       >
         <StoryComponent />
@@ -74,7 +76,9 @@ export const WithPartialPresets: StoryObj<ColumnPresetsSectionProps> = {
             rowPermissionsCheckType: 'custom',
           },
         }}
-        onSubmit={() => {}}
+        onSubmit={() => {
+          /* noop */
+        }}
         className="p-4"
       >
         <S />
@@ -128,7 +132,9 @@ export const WithAllPresets: StoryObj<ColumnPresetsSectionProps> = {
             rowPermissionsCheckType: 'custom',
           },
         }}
-        onSubmit={() => {}}
+        onSubmit={() => {
+          /* noop */
+        }}
         className="p-4"
       >
         <S />

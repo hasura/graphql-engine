@@ -17,9 +17,18 @@ export function FamiliaritySurveyTheme(props: HasuraFamiliaritySurveyProps) {
 
   const [responses, setResponses] = React.useState<SurveyResponseV2[]>([]);
 
+  // `handleSubmit` is passed inline by the parent and re-created every render, so
+  // it must not be an effect dependency (that would re-submit on every parent
+  // render). The effect's real trigger is `responses` changing; we read the
+  // latest `handleSubmit` from a ref so submission always uses the current one.
+  const handleSubmitRef = React.useRef(handleSubmit);
+  React.useEffect(() => {
+    handleSubmitRef.current = handleSubmit;
+  });
+
   React.useEffect(() => {
     if (responses.length > 0) {
-      handleSubmit(responses);
+      handleSubmitRef.current(responses);
     }
   }, [responses]);
 

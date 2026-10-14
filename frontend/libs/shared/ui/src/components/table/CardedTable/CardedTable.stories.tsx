@@ -44,19 +44,19 @@ const data = [
 
 const dataWithActions = data.map((row) => [...row, action]);
 
-export const withActions = () => (
+export const WithActions = () => (
   <CardedTable columns={[...columns, null]} data={dataWithActions} />
 );
 
-export const withoutActions = () => (
+export const WithoutActions = () => (
   <CardedTable columns={columns} data={data} />
 );
 
-export const horizontalTable = () => (
+export const HorizontalTable = () => (
   <CardedTable orientation="horizontal" columns={columns} data={data} />
 );
 
-export const withHelperComponents = () => (
+export const WithHelperComponents = () => (
   <Table.Root>
     <CardedTable.Header columns={columns} />
     <CardedTable.Body data={data} />

@@ -4,13 +4,13 @@ import { PermissionsIcon } from '@hasura/shared/ui';
 
 export const PermissionsLegend: React.FC = () => (
   <Flex gap="4">
-    <span>
+    <Flex align="center">
       <PermissionsIcon type="fullAccess" />
       &nbsp;-&nbsp;allowed
-    </span>
-    <span>
+    </Flex>
+    <Flex align="center">
       <PermissionsIcon type="noAccess" />
       &nbsp;-&nbsp;not allowed
-    </span>
+    </Flex>
   </Flex>
 );

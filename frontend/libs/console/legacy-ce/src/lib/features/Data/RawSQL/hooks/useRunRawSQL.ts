@@ -268,9 +268,10 @@ function extractTableConfigurationsFromSQL(
 
   const customColumnNames = escapeTableColumnsMap(columns);
   if (!isEmpty(customColumnNames)) {
-    configuration.column_config = {};
+    const columnConfig: NonNullable<MetadataTableConfig['column_config']> = {};
+    configuration.column_config = columnConfig;
     Object.entries(customColumnNames).forEach(([column, columnCustomName]) => {
-      configuration.column_config![column] = { custom_name: columnCustomName };
+      columnConfig[column] = { custom_name: columnCustomName };
     });
   }
 

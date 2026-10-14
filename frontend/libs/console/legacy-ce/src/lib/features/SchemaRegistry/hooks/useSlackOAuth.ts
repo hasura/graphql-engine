@@ -132,7 +132,7 @@ export const useSlackOAuth = (oauthString?: string) => {
         });
       }
     },
-    [oauth2State],
+    [oauth2State, isUnmounted, queryClient],
   );
 
   // function to start the oauth process
@@ -202,7 +202,7 @@ export const useSlackOAuth = (oauthString?: string) => {
         clearPersistedSlackCallbackSearch();
       }, 500);
     }, 500);
-  }, [oauth2State, isUnmounted]);
+  }, [oauth2State, isUnmounted, startFetchingControlPlaneData]);
 
   return {
     oauth2State,

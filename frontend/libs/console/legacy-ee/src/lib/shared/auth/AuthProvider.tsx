@@ -12,9 +12,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
-    authContext.initialize().then(() => {
-      setInitializing(false);
-    });
+    authContext.initialize().finally(() => setInitializing(false));
   }, [authContext]);
 
   return initializing ? (

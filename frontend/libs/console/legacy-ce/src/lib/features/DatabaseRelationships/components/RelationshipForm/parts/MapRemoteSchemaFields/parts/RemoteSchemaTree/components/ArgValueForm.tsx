@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { FaCircle } from 'react-icons/fa';
 import { GraphQLType } from 'graphql';
 import { useDebouncedEffect } from '@hasura/shared/hooks';
@@ -38,10 +38,16 @@ export const ArgValueForm = ({
   argType,
 }: ArgValueFormProps) => {
   const [localArgValue, setLocalArgValue] = useState(argValue);
+  const [prevArgValue, setPrevArgValue] = useState(argValue);
 
-  useEffect(() => {
+  // Keep the locally-edited value in sync when the `argValue` prop changes.
+  // This runs during render (React's "adjust state while rendering" pattern)
+  // instead of inside an effect, so it mirrors the previous sync behavior
+  // without triggering a cascading render.
+  if (argValue !== prevArgValue) {
+    setPrevArgValue(argValue);
     setLocalArgValue(argValue);
-  }, [argValue]);
+  }
 
   useDebouncedEffect(
     () => {

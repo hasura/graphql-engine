@@ -26,7 +26,7 @@ export const useTableForeignKeys = <T = TableFkRelationships[]>(
         return [];
       }
 
-      return dataSource.introspection.getFKRelationships!({
+      return dataSource.introspection.getFKRelationships({
         endpoints,
         fetchJson,
         table,

@@ -51,7 +51,7 @@ export const hasuraEnvVarsNotAllowedSchema = z.object({
         if (typeof val !== 'string') return false;
 
         // see: https://regex101.com/r/afZdol/1
-        return /^env variables starting with \"HASURA_GRAPHQL_\" are not allowed in value_from_env: HASURA_GRAPHQL_(?<envVarName>.[A-Z_]+)$/.test(
+        return /^env variables starting with "HASURA_GRAPHQL_" are not allowed in value_from_env: HASURA_GRAPHQL_(?<envVarName>.[A-Z_]+)$/.test(
           val,
         );
       },

@@ -124,7 +124,13 @@ export const useNeonIntegrationForOneClickDeployment = () => {
     ) {
       createNeonDatabase();
     }
-  }, [neonDBCreationStatus, neonOauthStatus]);
+  }, [
+    neonDBCreationStatus,
+    neonOauthStatus,
+    createNeonDatabase,
+    resetNeonDBCreationState,
+    startNeonOAuth,
+  ]);
 
   const getNeonDBCreationStatus = (): NeonIntegrationStatus => {
     switch (neonDBCreationStatus.status) {

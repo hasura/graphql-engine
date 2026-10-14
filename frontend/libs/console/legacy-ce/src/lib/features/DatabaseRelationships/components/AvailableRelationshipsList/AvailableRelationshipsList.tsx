@@ -37,7 +37,7 @@ export const AvailableRelationshipsList = ({
   return (
     <div>
       <CardedTable
-        columns={['NAME', 'SOURCE', 'TYPE', 'RELATIONSHIP', <></>]}
+        columns={['NAME', 'SOURCE', 'TYPE', 'RELATIONSHIP', '']}
         data={relationships.map((relationship) => [
           relationship.name,
           <Flex align="center" gap="2" key={`${relationship.name}-target`}>

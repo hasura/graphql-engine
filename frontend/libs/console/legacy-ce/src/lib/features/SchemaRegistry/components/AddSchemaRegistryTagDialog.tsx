@@ -45,7 +45,13 @@ export const AddSchemaRegistryTagDialog: React.FC<
       entryHash: entryHash,
       color: selectedColor,
     });
-  }, [tag, selectedColor]);
+  }, [
+    createSchemaRegistryTagMutation,
+    tag,
+    projectID,
+    entryHash,
+    selectedColor,
+  ]);
 
   const handleColorChange = (color: string) => {
     setSelectedColor(color);

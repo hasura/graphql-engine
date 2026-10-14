@@ -17,8 +17,14 @@ export const WithManualConfiguration: StoryFn<typeof RenderWidget> = () => (
     dataSourceName="chinook"
     table={{ name: 'Album', schema: 'public' }}
     mode={MODE.CREATE}
-    onCancel={() => {}}
-    onSuccess={() => {}}
-    onError={() => {}}
+    onCancel={() => {
+      /* noop */
+    }}
+    onSuccess={() => {
+      /* noop */
+    }}
+    onError={() => {
+      /* noop */
+    }}
   />
 );

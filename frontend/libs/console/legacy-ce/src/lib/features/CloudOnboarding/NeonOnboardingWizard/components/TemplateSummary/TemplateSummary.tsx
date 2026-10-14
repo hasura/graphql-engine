@@ -48,20 +48,18 @@ export function TemplateSummary(props: Props) {
   const schemaImagePath = `${templateUrl}/diagram.png`;
   const sampleQueriesPath = `${templateUrl}/sample.graphql`;
 
-  const [sampleQuery, setSampleQuery] = React.useState(defaultQuery);
-
   const { data: sampleQueriesData, error: sampleQueriesError } = useQuery({
     queryKey: [sampleQueriesPath],
     queryFn: () => fetchTemplateDataQueryFn(sampleQueriesPath, {}),
     staleTime,
   });
 
-  // this effect makes sure that the query is filled in GraphiQL as soon as possible
-  React.useEffect(() => {
-    if (typeof sampleQueriesData === 'string') {
-      setSampleQuery(sampleQueriesData);
-    }
-  }, [sampleQueriesData]);
+  // The sample query shown in GraphiQL is fully derived from the fetched data:
+  // until the request resolves (or if it is not a string) we fall back to the
+  // default query. Deriving during render keeps the query filled in as soon as
+  // the data is available without an extra render pass.
+  const sampleQuery =
+    typeof sampleQueriesData === 'string' ? sampleQueriesData : defaultQuery;
 
   React.useEffect(() => {
     if (sampleQueriesError) {

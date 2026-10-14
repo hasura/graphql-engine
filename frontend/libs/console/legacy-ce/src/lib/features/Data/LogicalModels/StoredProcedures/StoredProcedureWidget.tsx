@@ -68,7 +68,7 @@ export const StoredProcedureWidget = () => {
     refetch,
   } = useStoredProcedures(
     {
-      source: source!,
+      source,
     },
     {
       select: (data) => {

@@ -20,7 +20,7 @@ const Migrations = () => {
     if (envVars.consoleMode === 'server') {
       navigate('/data', { replace: true });
     }
-  }, [envVars]);
+  }, [envVars, navigate]);
 
   const handleMigrationModeToggle = () => {
     const isOk = getConfirmation();

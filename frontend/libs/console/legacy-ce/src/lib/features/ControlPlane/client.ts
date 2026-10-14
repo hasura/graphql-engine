@@ -74,7 +74,9 @@ export const createControlPlaneClient = (
         error: (error: Error) => {
           errorCallback(new GraphQLError(error.message));
         },
-        complete: () => {},
+        complete: () => {
+          /* noop */
+        },
       },
     );
 

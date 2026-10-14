@@ -124,7 +124,11 @@ export const ModifyFunctionConfiguration = ({
         />
       }
     >
-      <Form onSubmit={() => {}}>
+      <Form
+        onSubmit={() => {
+          /* noop */
+        }}
+      >
         <InputField
           name="custom_name"
           label="Custom Name"

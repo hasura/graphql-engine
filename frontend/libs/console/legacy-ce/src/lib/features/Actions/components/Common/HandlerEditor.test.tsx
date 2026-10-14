@@ -34,9 +34,7 @@ describe('HandlerEditor', () => {
     const { onChange } = renderEditor({ value: '' });
 
     const input = screen.getByRole('textbox');
-    act(() => {
-      fireEvent.change(input, { target: { value: 'http://new-handler.test' } });
-    });
+    fireEvent.change(input, { target: { value: 'http://new-handler.test' } });
 
     // input reflects the typed value right away
     expect(input).toHaveValue('http://new-handler.test');
@@ -58,5 +56,55 @@ describe('HandlerEditor', () => {
   it('disables the input when disabled is true', () => {
     renderEditor({ disabled: true });
     expect(screen.getByRole('textbox')).toBeDisabled();
+  });
+
+  it('syncs the input when the value prop changes', () => {
+    const onChange = vi.fn();
+    const { rerender } = render(
+      <Theme>
+        <HandlerEditor
+          value="http://first.test"
+          onChange={onChange}
+          disabled={false}
+        />
+      </Theme>,
+    );
+    expect(screen.getByRole('textbox')).toHaveValue('http://first.test');
+
+    // a new value coming from the parent resets the local (editable) value
+    rerender(
+      <Theme>
+        <HandlerEditor
+          value="http://second.test"
+          onChange={onChange}
+          disabled={false}
+        />
+      </Theme>,
+    );
+    expect(screen.getByRole('textbox')).toHaveValue('http://second.test');
+  });
+
+  it('does not re-render in a loop when the value prop changes (debounced onChange fires once)', () => {
+    const onChange = vi.fn();
+    const { rerender } = render(
+      <Theme>
+        <HandlerEditor value="a" onChange={onChange} disabled={false} />
+      </Theme>,
+    );
+
+    rerender(
+      <Theme>
+        <HandlerEditor value="b" onChange={onChange} disabled={false} />
+      </Theme>,
+    );
+    expect(screen.getByRole('textbox')).toHaveValue('b');
+
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    // the synced value is pushed back up exactly once (no runaway loop)
+    const bCalls = onChange.mock.calls.filter((c) => c[0] === 'b');
+    expect(bCalls).toHaveLength(1);
   });
 });

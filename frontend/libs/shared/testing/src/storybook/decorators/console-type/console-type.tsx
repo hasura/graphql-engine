@@ -1,5 +1,11 @@
 import { Decorator } from '@storybook/react';
-import React, { ReactNode, useCallback, useEffect, useState } from 'react';
+import React, {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { MenuContent } from './MenuContent';
 import { updateStorybookGlobals } from './storybook-globals';
 import { ConsoleTypes, EnvStateArgs, MenuOptions } from './types';
@@ -57,9 +63,15 @@ const ConsoleTypeWrapper = ({
     [args],
   );
 
+  // Capture `updateState` so the mount-only effect below can seed the window
+  // exactly once without re-seeding every time `args`/`updateState` change.
+  // Subsequent updates are owned by the menu handlers (admin switch / console
+  // type), so this effect is deliberately mount-only.
+  const updateStateRef = useRef(updateState);
+
   useEffect(() => {
     // update the window on mount:
-    updateState();
+    updateStateRef.current();
 
     // then, render the content
     // eslint-disable-next-line react-hooks/set-state-in-effect

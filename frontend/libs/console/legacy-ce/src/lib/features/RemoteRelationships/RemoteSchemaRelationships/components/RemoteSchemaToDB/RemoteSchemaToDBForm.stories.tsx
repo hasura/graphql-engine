@@ -21,7 +21,9 @@ export default {
 export const Primary: StoryObj<RemoteSchemaToDbFormProps> = {
   args: {
     sourceRemoteSchema: 'source_remote_schema',
-    closeHandler: () => {},
+    closeHandler: () => {
+      /* noop */
+    },
   },
 };
 

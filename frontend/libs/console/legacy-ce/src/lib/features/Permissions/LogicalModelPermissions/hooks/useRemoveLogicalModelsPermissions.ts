@@ -82,7 +82,7 @@ const useRemoveLogicalModelsPermissions = ({
         });
       }
     },
-    [mutate, source],
+    [mutate, source, refetchMetadata],
   );
 
   return {

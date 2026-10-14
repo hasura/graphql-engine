@@ -79,10 +79,8 @@ describe('Create RS with shortest possible path', () => {
 
     // edit RS webhook url (the form is disabled until the RS has loaded)
     cy.log('**--- Modify the webhoook URL');
-    cy.get('[name="url.value"]')
-      .should('be.enabled')
-      .clear()
-      .type('https://countries.trevorblades.com/');
+    cy.get('[name="url.value"]').should('be.enabled').clear();
+    cy.get('[name="url.value"]').type('https://countries.trevorblades.com/');
 
     // check forward client header
     cy.log('**--- Check forward client header');
@@ -96,7 +94,8 @@ describe('Create RS with shortest possible path', () => {
 
     // add server timeout
     cy.log('**--- Add the gql server timeout');
-    cy.get('[name=timeout_seconds]').clear().type('80');
+    cy.get('[name=timeout_seconds]').clear();
+    cy.get('[name=timeout_seconds]').type('80');
 
     cy.log('**--- Click on Save Remote Schema');
     interceptUpdateRs();
@@ -296,10 +295,8 @@ describe('Create RS with longest possible path', () => {
 
     // edit RS webhook url
     cy.log('**--- Modify the webhoook URL');
-    cy.get('[name="url.value"]')
-      .should('be.enabled')
-      .clear()
-      .type('https://countries.trevorblades.com/');
+    cy.get('[name="url.value"]').should('be.enabled').clear();
+    cy.get('[name="url.value"]').type('https://countries.trevorblades.com/');
 
     // check forward client header
     cy.log('**--- Check forward client header');

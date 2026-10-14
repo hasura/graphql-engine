@@ -12,7 +12,14 @@ export default {
 } as Meta<typeof FormWrapper>;
 
 export const Default: StoryObj<typeof FormWrapper> = {
-  render: () => <FormWrapper onFormClose={() => {}} showBenefitsView />,
+  render: () => (
+    <FormWrapper
+      onFormClose={() => {
+        /* noop */
+      }}
+      showBenefitsView
+    />
+  ),
 
   name: '💠 Default',
 
@@ -22,7 +29,14 @@ export const Default: StoryObj<typeof FormWrapper> = {
 };
 
 export const LicenseExpired: StoryObj<typeof FormWrapper> = {
-  render: () => <FormWrapper onFormClose={() => {}} showBenefitsView />,
+  render: () => (
+    <FormWrapper
+      onFormClose={() => {
+        /* noop */
+      }}
+      showBenefitsView
+    />
+  ),
 
   name: '💠 License Expired',
 };

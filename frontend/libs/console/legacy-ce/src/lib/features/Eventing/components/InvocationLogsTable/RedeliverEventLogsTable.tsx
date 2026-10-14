@@ -54,7 +54,7 @@ const RedeliverEventLogsTable: React.FC<RedeliverEventLogsTableProps> = ({
       ),
     ];
     return cols;
-  }, [invocationColumns, expandedRowIndex]);
+  }, [invocationColumns, expandedRowIndex, setExpandedRowIndex]);
 
   const table = useTable({
     features: coreTableFeatures,

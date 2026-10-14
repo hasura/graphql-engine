@@ -81,7 +81,7 @@ export const FieldsInput = ({
                     return;
                   }
 
-                  const [typeClass, selectedValue] = option?.value.split(':');
+                  const [typeClass, selectedValue] = option.value.split(':');
 
                   update(row.index, {
                     ...thisField,

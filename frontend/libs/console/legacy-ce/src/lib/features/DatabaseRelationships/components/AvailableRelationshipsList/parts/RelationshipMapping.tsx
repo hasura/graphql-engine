@@ -15,7 +15,7 @@ const Columns = ({
   const isMappingPresent = Object.entries(mapping)?.length ?? undefined;
 
   if (!isMappingPresent) {
-    return <></>;
+    return null;
   }
 
   return type === 'from' ? (

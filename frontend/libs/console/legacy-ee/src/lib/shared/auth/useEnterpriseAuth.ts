@@ -162,9 +162,11 @@ const useEnterpriseAuth = (): EnterpriseAuthService => {
       }
     }
 
-    await authenticate(authState).then((isAuthenticated) =>
-      navigateAuth(isAuthenticated ? authState : null),
-    );
+    await authenticate(authState)
+      .then((isAuthenticated) =>
+        navigateAuth(isAuthenticated ? authState : null),
+      )
+      .catch(() => navigateAuth(null));
   };
 
   const logout = () => {

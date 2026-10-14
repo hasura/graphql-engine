@@ -62,7 +62,9 @@ const PrometheusFormFields = ({
       prometheusUrl: z.string().optional(),
       prometheusConfig: z.string().optional(),
     })}
-    onSubmit={() => {}}
+    onSubmit={() => {
+      /* noop */
+    }}
     options={{
       defaultValues: {
         prometheusUrl,

@@ -92,6 +92,6 @@ export const useReplaceMetadata = () => {
         },
       );
     },
-    [mutation],
+    [mutation, showErrorNotification],
   );
 };

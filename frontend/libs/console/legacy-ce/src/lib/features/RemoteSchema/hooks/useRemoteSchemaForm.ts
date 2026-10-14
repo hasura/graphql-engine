@@ -31,11 +31,11 @@ export type EditState = {
 const createFormState = (existingRemoteSchema?: RemoteSchema): FormState => ({
   name: existingRemoteSchema?.name ?? '',
   manualUrl:
-    existingRemoteSchema && 'url' in existingRemoteSchema?.definition
+    existingRemoteSchema && 'url' in existingRemoteSchema.definition
       ? existingRemoteSchema.definition.url
       : null,
   envName:
-    existingRemoteSchema && 'url_from_env' in existingRemoteSchema?.definition
+    existingRemoteSchema && 'url_from_env' in existingRemoteSchema.definition
       ? existingRemoteSchema.definition.url_from_env
       : null,
   timeoutConf: existingRemoteSchema?.definition.timeout_seconds

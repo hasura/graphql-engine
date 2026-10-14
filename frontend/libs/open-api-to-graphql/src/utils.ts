@@ -121,7 +121,7 @@ export function handleWarning<TSource, TContext, TArgs>({
   mitigationAddendum?: string;
   path?: string[];
   data: PreprocessingData<TSource, TContext, TArgs>;
-  log?: Function;
+  log?: (...args: unknown[]) => unknown;
 }) {
   const mitigation = mitigations[mitigationType];
 

@@ -29,7 +29,7 @@ export const useCreateRemoteRelationship = () => {
     const { source: currentSource, resource_version } = await fetchSource(
       args.source,
     );
-    const prefix = getDriverPrefix(currentSource.kind!);
+    const prefix = getDriverPrefix(currentSource.kind);
     const requestBody = {
       type: `${prefix}_create_remote_relationship` as const,
       args,

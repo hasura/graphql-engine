@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useDebouncedEffect } from '@hasura/shared/hooks';
 import { TransformationType } from './stateDefaults';
 import KeyValueInput from './CustomEditors/KeyValueInput';
@@ -27,13 +27,20 @@ const SampleContextTransforms: React.FC<SampleContextTransformsProps> = ({
   const [localSessionVars, setLocalSessionVars] =
     useState<NameValue[]>(sessionVars);
 
-  useEffect(() => {
+  // Reset the local buffers when the upstream props change. Done during render
+  // (the React "adjust state when a prop changes" pattern) rather than in an
+  // effect, avoiding an extra render pass.
+  const [prevEnvVars, setPrevEnvVars] = useState(envVars);
+  if (envVars !== prevEnvVars) {
+    setPrevEnvVars(envVars);
     setLocalEnvVars(envVars);
-  }, [envVars]);
+  }
 
-  useEffect(() => {
+  const [prevSessionVars, setPrevSessionVars] = useState(sessionVars);
+  if (sessionVars !== prevSessionVars) {
+    setPrevSessionVars(sessionVars);
     setLocalSessionVars(sessionVars);
-  }, [sessionVars]);
+  }
 
   useDebouncedEffect(
     () => {

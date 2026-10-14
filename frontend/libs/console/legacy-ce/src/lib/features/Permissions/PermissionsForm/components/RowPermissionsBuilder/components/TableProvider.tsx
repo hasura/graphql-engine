@@ -5,18 +5,29 @@ import { rootTableContext } from './RootTableProvider';
 import { fieldsToColumns } from './utils/nestedObjects';
 import { rowPermissionsContext } from './RowPermissionsProvider';
 import { areTablesEqual } from '@hasura/metadata/helpers';
+import { getTableDisplayName } from '@hasura/shared/utils';
 
 export const tableContext = createContext<TableContext>({
   table: [],
-  setTable: () => {},
+  setTable: () => {
+    /* noop */
+  },
   comparator: undefined,
-  setComparator: () => {},
+  setComparator: () => {
+    /* noop */
+  },
   columns: [],
-  setColumns: () => {},
+  setColumns: () => {
+    /* noop */
+  },
   computedFields: [],
-  setComputedFields: () => {},
+  setComputedFields: () => {
+    /* noop */
+  },
   relationships: [],
-  setRelationships: () => {},
+  setRelationships: () => {
+    /* noop */
+  },
 });
 
 export const TableProvider = ({
@@ -45,30 +56,45 @@ export const TableProvider = ({
     .filter((s) => s?.kind === 'postgres')
     .map((s) => s?.name);
 
-  //  Stringify values to get a stable value for useEffect
-  const stringifiedTable = JSON.stringify(table);
-  const stringifiedTables = JSON.stringify(tables);
+  //  Stringify values to get a stable key for the derived-state sync below
+  const stringifiedTable = getTableDisplayName(table);
+  const stringifiedTables = `[${tables.map((t) => getTableDisplayName(t)).join(',')}]`;
+  const syncKey = `${stringifiedTable}|${stringifiedTables}|${
+    objectPath ?? ''
+  }|${closestTableName ? getTableDisplayName(closestTableName) : ''}|${
+    rootTable?.dataSource?.name ?? ''
+  }`;
 
-  useEffect(() => {
+  // Sync the derived columns/computed fields/relationships while rendering when
+  // the relevant inputs change. This is the React "adjusting state during
+  // render" pattern: it avoids the cascading renders of setting this state in an
+  // effect while producing identical output (the setters are idempotent, so
+  // unchanged values bail out). `loadRelationships` is a genuine side effect and
+  // is kept in the effect below.
+  const [prevSyncKey, setPrevSyncKey] = useState<string | null>(null);
+  if (syncKey !== prevSyncKey) {
+    setPrevSyncKey(syncKey);
     const foundTable = tables.find((t) => areTablesEqual(t.table, table));
+    let skipObjectPath = false;
     if (foundTable) {
       setColumns(foundTable.columns);
       setComputedFields(foundTable.computedFields);
-      if (foundTable?.dataSource?.name !== rootTable?.dataSource?.name) return;
-      setRelationships(
-        foundTable.relationships.filter((rel) => {
-          return (
-            rel.type === 'localRelationship' ||
-            (rel.type !== 'remoteSchemaRelationship' &&
-              supportedSources?.includes(rel.definition.toSource))
-          );
-        }),
-      );
-      // Load initial related tables' columns
-      loadRelationships?.(foundTable.relationships);
+      if (foundTable?.dataSource?.name !== rootTable?.dataSource?.name) {
+        skipObjectPath = true;
+      } else {
+        setRelationships(
+          foundTable.relationships.filter((rel) => {
+            return (
+              rel.type === 'localRelationship' ||
+              (rel.type !== 'remoteSchemaRelationship' &&
+                supportedSources?.includes(rel.definition.toSource))
+            );
+          }),
+        );
+      }
     }
     // If it's a nested object, set its fields as columns instead of the parent's columns
-    if (objectPath) {
+    if (!skipObjectPath && objectPath) {
       setColumns(
         fieldsToColumns(
           closestTable?.columns?.find((c) => {
@@ -79,16 +105,18 @@ export const TableProvider = ({
         ),
       );
     }
-  }, [
-    stringifiedTable,
-    stringifiedTables,
-    setColumns,
-    setRelationships,
-    objectPath,
-    loadRelationships,
-    computedFields,
-    setComputedFields,
-  ]);
+  }
+
+  useEffect(() => {
+    const foundTable = tables.find((t) => areTablesEqual(t.table, table));
+    if (
+      foundTable &&
+      foundTable?.dataSource?.name === rootTable?.dataSource?.name
+    ) {
+      // Load initial related tables' columns
+      loadRelationships?.(foundTable.relationships);
+    }
+  }, [table, tables, rootTable?.dataSource?.name, loadRelationships]);
 
   return (
     <tableContext.Provider

@@ -22,7 +22,9 @@ export const AuthContext = createContext<AuthService<any>>({
   authType: 'none',
   authenticate: () => Promise.resolve(true),
   initialize: () => Promise.resolve(),
-  logout: () => {},
+  logout: () => {
+    /* noop */
+  },
 });
 
 export const useAuthContext = () =>

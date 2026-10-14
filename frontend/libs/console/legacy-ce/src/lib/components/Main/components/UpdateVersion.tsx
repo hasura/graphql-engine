@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { FaTimes } from 'react-icons/fa';
 import styles from '../Main.module.scss';
 import useCatalogState from '../../../telemetry/useCatalogState';
@@ -48,12 +48,14 @@ export const UpdateVersion: React.FC<UpdateVersionProps> = ({
 }) => {
   const { envVars } = useAppContext();
   const { serverVersion, latestServerVersion } = useAppContext();
-  const [updateNotificationVersion, setUpdateNotificationVersion] = useState<
-    string | null
-  >(null);
   const { setPreReleaseNotificationOptOut } = useCatalogState();
 
-  const setShowUpdateNotification = () => {
+  // The notification to show is fully determined by the mount-time props /
+  // localStorage, so compute it once as the lazy initial state instead of
+  // seeding it from an effect (which would synchronously set state on mount).
+  const [updateNotificationVersion, setUpdateNotificationVersion] = useState<
+    string | null
+  >(() => {
     const allowPreReleaseNotifications =
       !consoleState.disablePreReleaseUpdateNotifications;
 
@@ -75,17 +77,15 @@ export const UpdateVersion: React.FC<UpdateVersionProps> = ({
         );
 
         if (isUpdateAvailable) {
-          setUpdateNotificationVersion(latestServerVersionToCheck);
+          return latestServerVersionToCheck;
         }
       }
     } catch (e) {
       console.error(e);
     }
-  };
 
-  useEffect(() => {
-    setShowUpdateNotification();
-  }, []);
+    return null;
+  });
 
   const closeUpdateBanner = () => {
     if (updateNotificationVersion) {

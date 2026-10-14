@@ -19,7 +19,7 @@ export const useUpdateRemoteRelationship = () => {
       args.source,
     );
 
-    const prefix = getDriverPrefix(currentSource.kind!);
+    const prefix = getDriverPrefix(currentSource.kind);
     const requestBody = {
       type: `${prefix}_update_remote_relationship` as const,
       args,

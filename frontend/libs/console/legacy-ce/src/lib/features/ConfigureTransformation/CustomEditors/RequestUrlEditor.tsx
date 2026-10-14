@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Flex } from '@radix-ui/themes';
 import KeyValueInput from './KeyValueInput';
 import { editorDebounceTime } from '../utils';
@@ -62,40 +62,43 @@ const RequestUrlEditor: React.FC<RequestUrlEditorProps> = ({
   const [localQueryParams, setLocalQueryParams] =
     useState<QueryParams>(requestQueryParams);
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+  // Re-sync the local editing buffers whenever the upstream props change. These
+  // are done during render (the React "adjust state when a prop changes"
+  // pattern) rather than in effects, so the resets land in the same commit with
+  // no extra render pass. The guards (`prop !== prevProp`) make them run exactly
+  // once per upstream change, exactly like the previous dependency-array effects.
+  const [prevRequestQueryParams, setPrevRequestQueryParams] =
+    useState(requestQueryParams);
+  if (requestQueryParams !== prevRequestQueryParams) {
+    setPrevRequestQueryParams(requestQueryParams);
     setQueryParamstype(
       typeof requestQueryParams === 'string' ? 'url-string' : 'key-value',
     );
-
     setKeyValueQueryParams(
       typeof requestQueryParams !== 'string'
         ? requestQueryParams
         : keyValueQueryParams,
     );
-
     setStringQueryParams(
       typeof requestQueryParams === 'string'
         ? requestQueryParams
         : stringQueryParams,
     );
-  }, [requestQueryParams]);
-
-  useEffect(() => {
-    setLocalUrl(requestUrl);
-  }, [requestUrl]);
-
-  useEffect(() => {
-    if (requestUrlError) {
-      setLocalError(requestUrlError);
-    } else {
-      setLocalError(null);
-    }
-  }, [requestUrlError]);
-
-  useEffect(() => {
     setLocalQueryParams(requestQueryParams);
-  }, [requestQueryParams]);
+  }
+
+  const [prevRequestUrl, setPrevRequestUrl] = useState(requestUrl);
+  if (requestUrl !== prevRequestUrl) {
+    setPrevRequestUrl(requestUrl);
+    setLocalUrl(requestUrl);
+  }
+
+  const [prevRequestUrlError, setPrevRequestUrlError] =
+    useState(requestUrlError);
+  if (requestUrlError !== prevRequestUrlError) {
+    setPrevRequestUrlError(requestUrlError);
+    setLocalError(requestUrlError ? requestUrlError : null);
+  }
 
   useDebouncedEffect(
     () => {

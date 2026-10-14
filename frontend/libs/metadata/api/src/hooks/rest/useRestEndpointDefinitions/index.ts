@@ -4,7 +4,7 @@ import {
   GraphQLSchema,
   isObjectType,
 } from 'graphql';
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import {
   MetadataTable,
   SchemaTable,
@@ -222,80 +222,84 @@ export const useRestEndpointDefinitions = ({
     sources: m.metadata?.sources,
   }));
 
-  const [data, setData] = useState<EndpointDefinitions>();
-
-  useEffect(() => {
+  // `data` is fully derived from the introspection schema, metadata, and the
+  // requested source/table, so compute it during render with `useMemo` instead
+  // of mirroring it into state from an effect (which synchronously set state on
+  // every schema/metadata change and ignored `dataSourceName`/`table` changes).
+  const data = useMemo<EndpointDefinitions | undefined>(() => {
     const existingRestEndpoints = metadata?.restEndpoints || [];
 
-    if (introspectionSchema) {
-      const response: EndpointDefinitions = {};
-      const source = (metadata?.sources ?? []).find(
-        (s) => s.name === dataSourceName,
+    if (!introspectionSchema) {
+      return undefined;
+    }
+
+    const response: EndpointDefinitions = {};
+    const source = (metadata?.sources ?? []).find(
+      (s) => s.name === dataSourceName,
+    );
+
+    if (!source) return undefined;
+
+    const root = source?.customization?.root_fields?.namespace ?? '';
+    const operations = getOperations(root, introspectionSchema);
+    const sourcePrefix = source.customization?.root_fields?.prefix || '';
+    const sourceSuffix = source.customization?.root_fields?.suffix || '';
+
+    const metadataTable = source.tables.find((t) =>
+      areTablesEqual(table, t.table),
+    );
+
+    if (!metadataTable) return undefined;
+
+    for (const [type, generator] of Object.entries(generators)) {
+      let baseOperationName = generator.operationName(
+        source,
+        metadataTable as any,
+      );
+      if (
+        sourcePrefix &&
+        source.customization?.naming_convention === 'graphql-default'
+      ) {
+        baseOperationName =
+          baseOperationName[0].toUpperCase() + baseOperationName.slice(1);
+      }
+      const operationName = `${sourcePrefix}${baseOperationName}${sourceSuffix}`;
+
+      const operation = operations.find(
+        (operation) => operation.name === operationName,
       );
 
-      if (!source) return;
+      if (!operation) {
+        continue;
+      }
+      const customTableName = metadataTable.configuration?.custom_name;
+      const tableName = (metadataTable.table as SchemaTable).name;
 
-      const root = source?.customization?.root_fields?.namespace ?? '';
-      const operations = getOperations(root, introspectionSchema);
-      const sourcePrefix = source.customization?.root_fields?.prefix || '';
-      const sourceSuffix = source.customization?.root_fields?.suffix || '';
-
-      const metadataTable = source.tables.find((t) =>
-        areTablesEqual(table, t.table),
+      const definition = generators[type as EndpointType].generator(
+        root,
+        tableName,
+        operation,
+        customTableName,
       );
 
-      if (!metadataTable) return;
-
-      for (const [type, generator] of Object.entries(generators)) {
-        let baseOperationName = generator.operationName(
-          source,
-          metadataTable as any,
-        );
-        if (
-          sourcePrefix &&
-          source.customization?.naming_convention === 'graphql-default'
-        ) {
-          baseOperationName =
-            baseOperationName[0].toUpperCase() + baseOperationName.slice(1);
-        }
-        const operationName = `${sourcePrefix}${baseOperationName}${sourceSuffix}`;
-
-        const operation = operations.find(
-          (operation) => operation.name === operationName,
-        );
-
-        if (!operation) {
-          continue;
-        }
-        const customTableName = metadataTable.configuration?.custom_name;
-        const tableName = (metadataTable.table as SchemaTable).name;
-
-        const definition = generators[type as EndpointType].generator(
-          root,
-          tableName,
-          operation,
-          customTableName,
-        );
-
-        if (definition.query.query) {
-          definition.query.query = formatGraphQL(definition.query.query);
-        }
-
-        response[tableName] = {
-          ...(response[tableName] || {}),
-          [type]: {
-            ...definition,
-            exists: existingRestEndpoints.some(
-              (endpoint) =>
-                endpoint.definition.query.query_name === definition.query.name,
-            ),
-          },
-        };
+      if (definition.query.query) {
+        definition.query.query = formatGraphQL(definition.query.query);
       }
 
-      setData(response);
+      response[tableName] = {
+        ...(response[tableName] || {}),
+        [type]: {
+          ...definition,
+          exists: existingRestEndpoints.some(
+            (endpoint) =>
+              endpoint.definition.query.query_name === definition.query.name,
+          ),
+        },
+      };
     }
-  }, [introspectionSchema, metadata]);
+
+    return response;
+  }, [introspectionSchema, metadata, dataSourceName, table]);
 
   return {
     data,
