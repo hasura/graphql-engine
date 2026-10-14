@@ -62,7 +62,15 @@ export const RemoteSchemaTree = ({
       }
     }
     return tree;
-  }, [relationshipFields, schema, rootFields, fields, selectedOperation]);
+  }, [
+    relationshipFields,
+    schema,
+    rootFields,
+    fields,
+    selectedOperation,
+    setRelationshipFields,
+    showOnlySelectable,
+  ]);
 
   const expandedKeys = useMemo(
     () => getExpandedKeys(relationshipFields),

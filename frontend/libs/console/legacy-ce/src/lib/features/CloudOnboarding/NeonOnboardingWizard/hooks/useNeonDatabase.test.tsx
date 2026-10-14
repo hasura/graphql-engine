@@ -1,11 +1,5 @@
 import { GraphQLError } from 'graphql';
-import {
-  act,
-  render,
-  screen,
-  waitFor,
-  fireEvent,
-} from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { useNeonDatabase } from './useNeonDatabase';
 
 const TestComponent = () => {
@@ -71,9 +65,7 @@ describe('useNeonDatabase', () => {
     };
     mockHTTPResponse(200, creationResponse);
     await render(<TestComponent />);
-    act(() => {
-      fireEvent.click(screen.getByTestId('start'));
-    });
+    fireEvent.click(screen.getByTestId('start'));
     await waitFor(() => {
       expect(screen.getByTestId('status')).toHaveTextContent('loading');
     });
@@ -90,9 +82,7 @@ describe('useNeonDatabase', () => {
     const creationResponse = { errors: [new GraphQLError('api error')] };
     mockHTTPResponse(200, creationResponse);
     await render(<TestComponent />);
-    act(() => {
-      fireEvent.click(screen.getByTestId('start'));
-    });
+    fireEvent.click(screen.getByTestId('start'));
     await waitFor(() => {
       expect(screen.getByTestId('status')).toHaveTextContent('loading');
     });

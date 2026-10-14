@@ -34,4 +34,24 @@ describe('TypeSearchForm', () => {
       expect(setSearch).toHaveBeenLastCalledWith('User');
     });
   });
+
+  it('does not call setSearch in a runaway loop (bounded calls per distinct value)', async () => {
+    const { setSearch } = renderSearchForm();
+
+    // mount syncs the initial empty value
+    expect(setSearch).toHaveBeenCalledTimes(1);
+    expect(setSearch).toHaveBeenCalledWith('');
+
+    fireEvent.change(screen.getByPlaceholderText('Search Types...'), {
+      target: { value: 'User' },
+    });
+
+    await waitFor(() => {
+      expect(setSearch).toHaveBeenLastCalledWith('User');
+    });
+
+    // one sync on mount + one for the new value; the stable setSearch dep must
+    // not retrigger the effect on unrelated re-renders
+    expect(setSearch).toHaveBeenCalledTimes(2);
+  });
 });

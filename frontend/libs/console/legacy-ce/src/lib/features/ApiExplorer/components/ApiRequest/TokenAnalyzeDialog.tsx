@@ -38,7 +38,7 @@ const TokenAnalyzeDialog = ({
       return null;
     }
 
-    let claimData = '';
+    let claimData: string;
 
     const generateValidNameSpaceData = (claimD) => {
       return JSON.stringify(claimD, null, 2);

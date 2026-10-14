@@ -79,7 +79,7 @@ const StatsPanel = ({
       return val.value;
     });
     // Tracks all the options which are either unselected or selected depending upon what the action is (Select All or Unselect All resp.)
-    let nextOptions: { title: string }[] = [];
+    let nextOptions: { title: string }[];
 
     if (unSelect) {
       nextOptions = options;

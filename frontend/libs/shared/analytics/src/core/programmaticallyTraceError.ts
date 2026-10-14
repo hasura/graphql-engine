@@ -22,7 +22,9 @@ type ErrorWithOptions = Options & {
   error: Error;
 };
 
-const noop = () => {};
+const noop = () => {
+  /* noop */
+};
 
 /**
  * Programmatically trace a caught error.

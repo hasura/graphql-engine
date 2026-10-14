@@ -93,8 +93,11 @@ export async function requestJson<T>(
     const message =
       error instanceof Error ? error.message : JSON.stringify(error);
 
-    throw new Error(
-      `An unexpected error occurred during decoding JSON response: ${message}`,
+    throw Object.assign(
+      new Error(
+        `An unexpected error occurred during decoding JSON response: ${message}`,
+      ),
+      { cause: error },
     );
   }
 }

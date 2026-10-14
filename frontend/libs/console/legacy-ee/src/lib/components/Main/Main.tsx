@@ -221,7 +221,7 @@ const Main = () => {
       </div>
       <CloudOnboarding />
       {consoleState && envVars.consoleType !== 'cloud' ? (
-        <UpdateVersion consoleState={consoleState!} />
+        <UpdateVersion consoleState={consoleState} />
       ) : null}
     </div>
   );

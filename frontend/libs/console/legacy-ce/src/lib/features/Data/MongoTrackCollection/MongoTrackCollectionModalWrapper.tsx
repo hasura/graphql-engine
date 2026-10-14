@@ -131,7 +131,7 @@ export const MongoTrackCollectionModalWrapper = ({
             },
           ],
         },
-        driver!,
+        driver ?? 'mongodb',
       );
 
       migrateMetadata({

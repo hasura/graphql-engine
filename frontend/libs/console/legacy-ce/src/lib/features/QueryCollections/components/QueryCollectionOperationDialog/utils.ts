@@ -10,14 +10,12 @@ export const readFileAsync = async (file: File | null): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (event) => {
-      const content = event.target!.result as string;
+      const content = reader.result as string;
       resolve(content);
     };
 
     reader.onerror = (event) => {
-      reject(
-        Error(`File could not be read! Code ${event.target!.error!.code}`),
-      );
+      reject(Error(`File could not be read! Code ${reader.error?.code}`));
     };
 
     if (file) reader.readAsText(file);
@@ -78,7 +76,7 @@ export const parseQueryString = (queryString: string) => {
   try {
     parsedQueryString = parse(queryString);
   } catch (ex) {
-    throw new Error('Parsing operation failed');
+    throw Object.assign(new Error('Parsing operation failed'), { cause: ex });
   }
 
   const definitions: NewDefinitionNode[] = [...parsedQueryString.definitions];

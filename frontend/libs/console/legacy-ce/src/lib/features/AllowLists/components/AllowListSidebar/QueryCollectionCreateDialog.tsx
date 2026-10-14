@@ -33,7 +33,11 @@ export const QueryCollectionCreateDialog: React.FC<
   const name = watch('name');
 
   return (
-    <Form onSubmit={() => {}}>
+    <Form
+      onSubmit={() => {
+        /* noop */
+      }}
+    >
       <Dialog title="Create Collection" onClose={onClose}>
         <>
           <Analytics name="AllowList" {...REDACT_EVERYTHING}>

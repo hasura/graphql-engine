@@ -40,7 +40,7 @@ export const useGetSchema = (schemaId: string): FetchSchemaResponse => {
   });
   React.useEffect(() => {
     refetch();
-  }, [schemaId]);
+  }, [schemaId, refetch]);
   if (isLoading) {
     return {
       kind: 'loading',

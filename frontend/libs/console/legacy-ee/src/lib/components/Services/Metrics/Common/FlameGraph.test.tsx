@@ -63,7 +63,7 @@ describe('FlameGraph', () => {
   it('zooms into a clicked node and back out via a dimmed ancestor', () => {
     render(<FlameGraph data={data} width={200} height={200} />);
 
-    fireEvent.click(node('a')!);
+    fireEvent.click(screen.getByRole('button', { name: 'a' }));
     // `a` now fills the width; its child scales with it
     expect(widthOf('a')).toBe('200px');
     expect(widthOf('a1')).toBe('100px');
@@ -72,7 +72,7 @@ describe('FlameGraph', () => {
     // the root above is dimmed
     expect(node('root')?.style.opacity).toBe('0.5');
 
-    fireEvent.click(node('root')!);
+    fireEvent.click(screen.getByRole('button', { name: 'root' }));
     expect(widthOf('a')).toBe('120px');
     expect(leftOf('b')).toBe('120px');
   });
@@ -94,7 +94,7 @@ describe('FlameGraph', () => {
       />,
     );
 
-    fireEvent.click(node('a')!);
+    fireEvent.click(screen.getByRole('button', { name: 'a' }));
     expect(node('c')).not.toBeInTheDocument();
   });
 });

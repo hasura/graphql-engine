@@ -14,5 +14,9 @@ export default {
 } as Meta<typeof AddAgentForm>;
 
 export const Primary: StoryFn<typeof AddAgentForm> = () => (
-  <AddAgentForm onClose={() => {}} />
+  <AddAgentForm
+    onClose={() => {
+      /* noop */
+    }}
+  />
 );

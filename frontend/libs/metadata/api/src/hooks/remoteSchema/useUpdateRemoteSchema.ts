@@ -38,7 +38,7 @@ export const useUpdateRemoteSchema = () => {
         },
       );
     },
-    [mutation],
+    [mutation, showErrorNotification],
   );
 
   return {

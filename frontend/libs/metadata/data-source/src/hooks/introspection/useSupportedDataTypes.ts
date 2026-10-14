@@ -22,7 +22,7 @@ export function useSupportedDataTypes<T = TableColumnTypeMap>(
   return useQuery<TableColumnTypeMap, HttpError<any>, T, QueryKey>({
     queryKey: [GET_SUPPORTED_DATA_TYPES_QUERY_KEY, driver],
     queryFn: async () => {
-      const sourceAPI = getDatabaseMethods(driver!);
+      const sourceAPI = getDatabaseMethods(driver ?? '');
 
       if (!driver) {
         return {} as TableColumnTypeMap;

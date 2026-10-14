@@ -63,12 +63,8 @@ const HasuraNotifications = () => {
   const consoleScope = getConsoleScope(serverVersion, consoleId);
 
   const pagination = useNotificationsPagination(notifications.length);
-  const [latestVersion, setLatestVersion] = React.useState(serverVersion);
-  const [displayNewVersionUpdate, setDisplayNewVersionUpdate] =
-    React.useState(false);
 
   const [opened, updateOpenState] = React.useState(false);
-  const [numberNotifications, updateNumberNotifications] = React.useState(0);
 
   const userType = hasuraUserId || 'admin';
 
@@ -85,26 +81,29 @@ const HasuraNotifications = () => {
     [consoleState?.console_notifications, userType],
   );
 
+  // `getConsoleNotification` is recreated on every render, so capture the
+  // mount-time version in a ref and call it exactly once on mount (the original
+  // `[]` intent) without re-running on every render.
+  const getConsoleNotificationRef = React.useRef(getConsoleNotification);
   React.useEffect(() => {
-    getConsoleNotification();
+    getConsoleNotificationRef.current();
   }, []);
-  React.useEffect(() => {
-    const [versionUpdateCheck, latestReleasedVersion] = checkVersionUpdate(
-      latestServerVersion.latest,
-      latestServerVersion.prerelease,
-      serverVersion,
-      consoleState,
-    );
 
-    setLatestVersion(latestReleasedVersion || serverVersion);
-
-    if (versionUpdateCheck) {
-      setDisplayNewVersionUpdate(true);
-      return;
-    }
-
-    setDisplayNewVersionUpdate(false);
-  }, [latestServerVersion, consoleState, serverVersion]);
+  // The latest version and whether to surface a new-version update are fully
+  // derived from the server versions + console state, so compute them during
+  // render instead of mirroring them into state from an effect.
+  const [versionUpdateCheck, latestReleasedVersion] = React.useMemo(
+    () =>
+      checkVersionUpdate(
+        latestServerVersion.latest,
+        latestServerVersion.prerelease,
+        serverVersion,
+        consoleState,
+      ),
+    [latestServerVersion, consoleState, serverVersion],
+  );
+  const latestVersion = latestReleasedVersion || serverVersion;
+  const displayNewVersionUpdate = Boolean(versionUpdateCheck);
 
   const fixedVersion = React.useMemo(() => {
     const vulnerableVersionsMapping: Record<string, string> = {
@@ -115,8 +114,8 @@ const HasuraNotifications = () => {
     return vulnerableVersionsMapping[serverVersion] || '';
   }, [serverVersion]);
 
-  React.useEffect(() => {
-    // once mark all as read is clicked
+  // once mark all as read is clicked
+  const computeReadNumber = () => {
     let readNumber = consoleNotificationsLength;
 
     if (
@@ -131,43 +130,72 @@ const HasuraNotifications = () => {
       readNumber -= previouslyReadState.length;
     }
 
-    updateNumberNotifications(readNumber);
-  }, [
+    return readNumber;
+  };
+
+  // `numberNotifications` is reset whenever any of these inputs change, but it is
+  // also decremented locally by `onClickUpdate` between resets, so it cannot be
+  // purely derived. Use the React "adjust state during render" pattern instead
+  // of synchronously setting state inside an effect.
+  const [numberNotifications, updateNumberNotifications] =
+    React.useState(computeReadNumber);
+  const [prevNotificationInputs, setPrevNotificationInputs] = React.useState({
     consoleNotificationsLength,
     displayNewVersionUpdate,
     userType,
     previouslyReadState,
     fixedVersion,
-  ]);
+  });
+  if (
+    prevNotificationInputs.consoleNotificationsLength !==
+      consoleNotificationsLength ||
+    prevNotificationInputs.displayNewVersionUpdate !==
+      displayNewVersionUpdate ||
+    prevNotificationInputs.userType !== userType ||
+    prevNotificationInputs.previouslyReadState !== previouslyReadState ||
+    prevNotificationInputs.fixedVersion !== fixedVersion
+  ) {
+    setPrevNotificationInputs({
+      consoleNotificationsLength,
+      displayNewVersionUpdate,
+      userType,
+      previouslyReadState,
+      fixedVersion,
+    });
+    updateNumberNotifications(computeReadNumber());
+  }
 
-  const onClickUpdate = (id?: number) => {
-    updateNumberNotifications((prev) => prev - 1);
+  const onClickUpdate = React.useCallback(
+    (id?: number) => {
+      updateNumberNotifications((prev) => prev - 1);
 
-    if (!id) {
-      return;
-    }
+      if (!id) {
+        return;
+      }
 
-    if (
-      previouslyReadState === 'all' ||
-      previouslyReadState === 'default' ||
-      previouslyReadState === 'error' ||
-      !previouslyReadState
-    ) {
-      return;
-    }
+      if (
+        previouslyReadState === 'all' ||
+        previouslyReadState === 'default' ||
+        previouslyReadState === 'error' ||
+        !previouslyReadState
+      ) {
+        return;
+      }
 
-    if (!previouslyReadState.includes(`${id}`)) {
-      updateConsoleNotificationsState({
-        read: [...previouslyReadState, `${id}`],
-        date: new Date().toISOString(),
-        showBadge: false,
-      });
-    }
-  };
+      if (!previouslyReadState.includes(`${id}`)) {
+        updateConsoleNotificationsState({
+          read: [...previouslyReadState, `${id}`],
+          date: new Date().toISOString(),
+          showBadge: false,
+        });
+      }
+    },
+    [previouslyReadState, updateConsoleNotificationsState],
+  );
 
-  const optOutCallback = () => {
+  const optOutCallback = React.useCallback(() => {
     setPreReleaseNotificationOptOut();
-  };
+  }, [setPreReleaseNotificationOptOut]);
 
   const onClickMarkAllAsRead = () => {
     const readAllState = getReadAllNotificationsState();
@@ -186,19 +214,16 @@ const HasuraNotifications = () => {
   const onClickNotificationButton = () => {
     if (showBadge) {
       if (consoleState?.console_notifications) {
-        let updatedState = {};
-        if (consoleState.console_notifications[userType]?.date) {
-          updatedState = {
-            ...consoleState.console_notifications[userType],
-            showBadge: false,
-          };
-        } else {
-          updatedState = {
-            ...consoleState.console_notifications[userType],
-            date: new Date().toISOString(),
-            showBadge: false,
-          };
-        }
+        const updatedState = consoleState.console_notifications[userType]?.date
+          ? {
+              ...consoleState.console_notifications[userType],
+              showBadge: false,
+            }
+          : {
+              ...consoleState.console_notifications[userType],
+              date: new Date().toISOString(),
+              showBadge: false,
+            };
         updateConsoleNotificationsState(updatedState as NotificationsState);
       }
     }
@@ -245,6 +270,7 @@ const HasuraNotifications = () => {
     fixedVersion,
     latestVersion,
     optOutCallback,
+    onClickUpdate,
     pagination.shownCount,
     previouslyReadState,
   ]);

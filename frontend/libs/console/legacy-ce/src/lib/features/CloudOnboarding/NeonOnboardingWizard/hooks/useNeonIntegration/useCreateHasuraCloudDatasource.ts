@@ -80,7 +80,7 @@ export function useCreateHasuraCloudDatasource(
         errorCallback,
       );
     },
-    [dataSourceName, dbUrl],
+    [dataSourceName, context, connectDataSource],
   );
 
   const start = useCallback(() => {

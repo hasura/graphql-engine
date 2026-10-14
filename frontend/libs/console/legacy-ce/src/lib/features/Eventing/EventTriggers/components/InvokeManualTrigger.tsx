@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Flex } from '@radix-ui/themes';
 import { Dialog, hasuraToast, JsonCodeBlock, Spinner } from '@hasura/shared/ui';
 import useInvokeManualTrigger, {
@@ -42,7 +42,7 @@ const InvokeManualTrigger = ({ onClose, sourceKind, ...invokeArgs }: Props) => {
         name: invokeArgs.source,
         kind: sourceKind,
       },
-      event_id: eventId!,
+      event_id: eventId ?? '',
     },
     {
       enabled: Boolean(eventId),
@@ -55,7 +55,18 @@ const InvokeManualTrigger = ({ onClose, sourceKind, ...invokeArgs }: Props) => {
     onClose && onClose();
   };
 
+  // The manual trigger must be invoked exactly once, when this dialog mounts —
+  // re-invoking would create duplicate events. We still declare every value the
+  // effect reads, and guard with a ref so that a re-render (e.g. a new
+  // `invokeArgs` identity produced by the rest-spread) can never fire a second
+  // invocation.
+  const hasInvokedRef = useRef(false);
   useEffect(() => {
+    if (hasInvokedRef.current) {
+      return;
+    }
+    hasInvokedRef.current = true;
+
     invokeManualTrigger(sourceKind, invokeArgs)
       .then((data) => {
         setEventId(data.event_id);
@@ -70,7 +81,7 @@ const InvokeManualTrigger = ({ onClose, sourceKind, ...invokeArgs }: Props) => {
       .finally(() => {
         setIsCreatingManualTrigger(false);
       });
-  }, []);
+  }, [invokeManualTrigger, sourceKind, invokeArgs]);
 
   if (isCreatingManualTrigger) {
     return <Spinner />;
@@ -81,7 +92,10 @@ const InvokeManualTrigger = ({ onClose, sourceKind, ...invokeArgs }: Props) => {
       return <div>Fetching invocation info {eventId}</div>;
     }
 
-    const latestInvocation = invocations[invocations?.length - 1]!;
+    const latestInvocation = invocations[invocations.length - 1];
+    if (!latestInvocation) {
+      return <div>Fetching invocation info {eventId}</div>;
+    }
 
     return (
       <Flex>

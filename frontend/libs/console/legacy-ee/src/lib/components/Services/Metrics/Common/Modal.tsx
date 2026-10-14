@@ -284,7 +284,10 @@ const Modal = ({ onHide, data }) => {
           <LabelValue
             label="Request size"
             value={
-              ((transformedVals.hasOwnProperty('request_size') &&
+              ((Object.prototype.hasOwnProperty.call(
+                transformedVals,
+                'request_size',
+              ) &&
                 transformedVals.request_size(requestSize)) ||
                 requestSize) + ' kB'
             }

@@ -100,9 +100,15 @@ export const Default: StoryFn<EnvVarsFormProps> = () => (
   <EnvVarsForm
     envVars={sampleEnvVars}
     formState="default"
-    setFormState={() => {}}
-    successCb={() => {}}
-    errorCb={() => {}}
+    setFormState={() => {
+      /* noop */
+    }}
+    successCb={() => {
+      /* noop */
+    }}
+    errorCb={() => {
+      /* noop */
+    }}
   />
 );
 
@@ -110,9 +116,15 @@ export const Loading: StoryFn<EnvVarsFormProps> = () => (
   <EnvVarsForm
     envVars={sampleEnvVarsMinimal}
     formState="loading"
-    setFormState={() => {}}
-    successCb={() => {}}
-    errorCb={() => {}}
+    setFormState={() => {
+      /* noop */
+    }}
+    successCb={() => {
+      /* noop */
+    }}
+    errorCb={() => {
+      /* noop */
+    }}
   />
 );
 
@@ -120,8 +132,14 @@ export const Error: StoryFn<EnvVarsFormProps> = () => (
   <EnvVarsForm
     envVars={sampleEnvVarsMinimal}
     formState="error"
-    setFormState={() => {}}
-    successCb={() => {}}
-    errorCb={() => {}}
+    setFormState={() => {
+      /* noop */
+    }}
+    successCb={() => {
+      /* noop */
+    }}
+    errorCb={() => {
+      /* noop */
+    }}
   />
 );

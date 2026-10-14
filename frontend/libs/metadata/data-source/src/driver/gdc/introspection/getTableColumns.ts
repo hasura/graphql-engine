@@ -90,6 +90,8 @@ export const getTableColumns = async (
       .filter(Boolean) as TableColumn[];
   } catch (error) {
     console.error(error);
-    throw new Error('Error fetching GDC columns');
+    throw Object.assign(new Error('Error fetching GDC columns'), {
+      cause: error,
+    });
   }
 };

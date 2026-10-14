@@ -66,22 +66,28 @@ describe('check if remote schema to db relationships are created properly', () =
     // clickable element is the card itself (role=radio).
     cy.findByRole('radio', { name: /^Remote Database/ }).click();
     cy.get('[name=relationshipName]').type('RelationshipName');
-    cy.get('[aria-labelledby=typeName]')
-      .focus() // workaround for selecting things with react-select
-      .type('Pokemon{enter}', { force: true });
-    cy.get('[aria-labelledby=target]')
-      .focus() // workaround for selecting things with react-select
-      .type('default / public / destination_table{enter}', { force: true });
+    // workaround for selecting things with react-select
+    cy.get('[aria-labelledby=typeName]').focus();
+    cy.get('[aria-labelledby=typeName]').type('Pokemon{enter}', {
+      force: true,
+    });
+    // workaround for selecting things with react-select
+    cy.get('[aria-labelledby=target]').focus();
+    cy.get('[aria-labelledby=target]').type(
+      'default / public / destination_table{enter}',
+      { force: true },
+    );
     // The relationship type and field mapping appear once both sides are chosen.
     cy.get('[name=relationshipType]').radixSelect('Array Relationship');
     // map a source field to a reference column (the last row is the new one)
+    // workaround for selecting things with react-select
+    cy.get('input[aria-label="Source field"]').last().focus();
     cy.get('input[aria-label="Source field"]')
       .last()
-      .focus() // workaround for selecting things with react-select
       .type('id{enter}', { force: true });
+    cy.get('input[aria-label="Reference column"]').last().focus();
     cy.get('input[aria-label="Reference column"]')
       .last()
-      .focus()
       .type('name{enter}', { force: true });
     cy.findByRole('button', { name: 'Add Relationship' }).click();
 

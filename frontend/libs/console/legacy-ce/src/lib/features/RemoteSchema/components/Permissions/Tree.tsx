@@ -4,7 +4,13 @@ import { FieldType, ExpandedItems } from './types';
 import { Field } from './Field';
 import { addDepFields, getExpandedItems } from './utils';
 import { FaChevronDown, FaChevronRight } from 'react-icons/fa';
-import { Checkbox, CheckboxProps } from '@hasura/shared/ui';
+import {
+  Button,
+  Checkbox,
+  CheckboxProps,
+  IconButton,
+  Text,
+} from '@hasura/shared/ui';
 import { PermissionEdit } from '../../hooks/useRemoteSchemaRelationshipForm';
 
 type RSPTreeComponentProps = {
@@ -25,7 +31,22 @@ const Tree: React.FC<RSPTreeComponentProps> = ({
   permissionEdit,
   onToggleAll,
 }) => {
-  const [expandedItems, setExpandedItems] = useState<ExpandedItems>({});
+  // Seed the expanded items from the initial list (lazy init) and merge in any
+  // newly-expandable items whenever `list` changes (adjust-during-render,
+  // below). This only ever expands items — it never collapses ones already
+  // expanded — matching the previous effect's behaviour without the cascading
+  // render that a setState-in-effect caused.
+  const [expandedItems, setExpandedItems] = useState<ExpandedItems>(() =>
+    getExpandedItems(list),
+  );
+  const [prevList, setPrevList] = useState(list);
+  if (list !== prevList) {
+    setPrevList(list);
+    setExpandedItems((oldExpandedItems) => ({
+      ...oldExpandedItems,
+      ...getExpandedItems(list),
+    }));
+  }
   const prevIsNewRole = useRef(false);
 
   const onCheck = useCallback(
@@ -78,11 +99,6 @@ const Tree: React.FC<RSPTreeComponentProps> = ({
   );
 
   useEffect(() => {
-    const expandedItemsFromList = getExpandedItems(list);
-    setExpandedItems({ ...expandedItems, ...expandedItemsFromList }); // this will only handle expand, it wont collapse anything which are already expanded.
-  }, [list]);
-
-  useEffect(() => {
     if (
       permissionEdit &&
       (!permissionEdit?.isNewRole ||
@@ -105,17 +121,17 @@ const Tree: React.FC<RSPTreeComponentProps> = ({
 
   return (
     <ul
-      className={`pl-md  border-gray-300 border-dotted ${
+      className={`pl-4  border-gray-300 border-dotted ${
         depth === 1 ? '' : 'border-l-2'
       }`}
     >
       {depth > 1 && (
-        <div className="pt-2 pb-1">
-          <span className="text-gray-400">Fields</span>
-          <button className="ml-8 text-[#337ab7]" onClick={onToggleAll}>
+        <Flex className="pt-2 pb-1" align="center" gap="4">
+          <Text>Fields</Text>
+          <Button mode="primary" variant="ghost" onClick={onToggleAll}>
             {list.every((i) => i.checked) ? 'Unselect All' : 'Select All'}
-          </button>
-        </div>
+          </Button>
+        </Flex>
       )}
       {list.map((i: FieldType, ix) => {
         if (filteredTypes && !filteredTypes.has(i.name)) {
@@ -125,7 +141,7 @@ const Tree: React.FC<RSPTreeComponentProps> = ({
           !i.name.startsWith('enum') &&
           !i.name.startsWith('scalar') && (
             <li className="my-1" key={i.name}>
-              <Flex align="start">
+              <Flex align="center" gap="2">
                 {i.checked !== undefined && (
                   <Checkbox
                     name={i.name}
@@ -136,13 +152,13 @@ const Tree: React.FC<RSPTreeComponentProps> = ({
                   />
                 )}
                 {i.children && (
-                  <button onClick={toggleExpand(ix)}>
-                    {expandedItems[ix] ? (
-                      <FaChevronDown size={10} />
-                    ) : (
-                      <FaChevronRight size={10} />
-                    )}
-                  </button>
+                  <IconButton
+                    size="1"
+                    color="gray"
+                    variant="ghost"
+                    onClick={toggleExpand(ix)}
+                    icon={expandedItems[ix] ? FaChevronDown : FaChevronRight}
+                  />
                 )}
                 <div>
                   <Field

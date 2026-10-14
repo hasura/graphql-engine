@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useDebouncedEffect } from '@hasura/shared/hooks';
 import { Analytics, REDACT_EVERYTHING } from '@hasura/shared/analytics';
 import { FaShieldAlt } from 'react-icons/fa';
@@ -19,10 +19,15 @@ const HandlerEditor: React.FC<HandlerEditorProps> = ({
   disabled = false,
 }) => {
   const [localValue, setLocalValue] = useState<string>(value);
-
-  useEffect(() => {
+  // Keep the local (editable) value in sync with the `value` prop without an
+  // effect: adjust it during render when the incoming prop changes. This avoids
+  // the extra commit/render pass of a setState-in-effect while preserving the
+  // exact same behaviour (local edits stay local, parent updates reset them).
+  const [prevValue, setPrevValue] = useState<string>(value);
+  if (value !== prevValue) {
+    setPrevValue(value);
     setLocalValue(value);
-  }, [value]);
+  }
 
   useDebouncedEffect(
     () => {

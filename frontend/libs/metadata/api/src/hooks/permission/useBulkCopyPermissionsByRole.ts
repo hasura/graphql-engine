@@ -180,7 +180,7 @@ export const useBulkCopyPermissionsByRole = () => {
         },
       );
     },
-    [mutation],
+    [fetchSource, mutate],
   );
 
   return {

@@ -140,7 +140,7 @@ const PermissionsTable: React.FC<PermissionsTableProps> = ({
 
   return (
     <div>
-      <PermissionsLegend />
+      <PermissionsLegend className="mb-4" />
       <PermissionsTableView
         columns={[PERMISSION_COLUMN]}
         rows={rows}

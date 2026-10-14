@@ -70,7 +70,7 @@ export const InputField = <T extends z.infer<Schema>>({
           <FieldWrapper
             {...wrapperProps}
             id={name}
-            label={label!}
+            label={label}
             error={fieldState.error}
             dataTest={dataTest}
             dataTestId={dataTestId}

@@ -1,3 +1,4 @@
+import { createElement, Fragment } from 'react';
 import { detectChildrenType } from './detectChildrenType';
 
 function Component() {
@@ -6,15 +7,15 @@ function Component() {
 
 describe('detectChildrenType', () => {
   it.each`
-    children           | description            | expectedType
-    ${null}            | ${'null'}              | ${'noChildren'}
-    ${undefined}       | ${'undefined'}         | ${'noChildren'}
-    ${true}            | ${'a boolean'}         | ${'text'}
-    ${0}               | ${'a number'}          | ${'text'}
-    ${''}              | ${'a string'}          | ${'text'}
-    ${(<div />)}       | ${'an HTML element'}   | ${'htmlElement'}
-    ${(<></>)}         | ${'a React Fragment'}  | ${'reactComponent'}
-    ${(<Component />)} | ${'a React Component'} | ${'reactComponent'}
+    children                   | description            | expectedType
+    ${null}                    | ${'null'}              | ${'noChildren'}
+    ${undefined}               | ${'undefined'}         | ${'noChildren'}
+    ${true}                    | ${'a boolean'}         | ${'text'}
+    ${0}                       | ${'a number'}          | ${'text'}
+    ${''}                      | ${'a string'}          | ${'text'}
+    ${(<div />)}               | ${'an HTML element'}   | ${'htmlElement'}
+    ${createElement(Fragment)} | ${'a React Fragment'}  | ${'reactComponent'}
+    ${(<Component />)}         | ${'a React Component'} | ${'reactComponent'}
   `(
     'should, given $description:$description, return $expectedType',
     ({ children, expectedType }) => {

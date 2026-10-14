@@ -53,22 +53,22 @@ export const findRemoteSchemaPermission = (
  * @returns Array of schema fields (query_root and mutation_root)
  */
 export const getTree = (
-  introspectionSchema: GraphQLSchema | null,
+  introspectionSchema: GraphQLSchema,
   permissionsSchema: GraphQLSchema | null,
   typeS: string,
 ) => {
   const introspectionSchemaFields =
     typeS === 'QUERY'
-      ? introspectionSchema!.getQueryType()?.getFields()
-      : introspectionSchema!.getMutationType()?.getFields();
+      ? introspectionSchema.getQueryType()?.getFields()
+      : introspectionSchema.getMutationType()?.getFields();
 
   let permissionsSchemaFields: GraphQLFieldMap<any, any> | null | undefined =
     null;
   if (permissionsSchema !== null) {
     permissionsSchemaFields =
       typeS === 'QUERY'
-        ? permissionsSchema!.getQueryType()?.getFields()
-        : permissionsSchema!.getMutationType()?.getFields();
+        ? permissionsSchema.getQueryType()?.getFields()
+        : permissionsSchema.getMutationType()?.getFields();
   }
 
   if (introspectionSchemaFields) {
@@ -119,14 +119,14 @@ export const getSchemaRoots = (schema: GraphQLSchema) => {
  * @returns Array of all types
  */
 export const getType = (
-  introspectionSchema: GraphQLSchema | null,
+  introspectionSchema: GraphQLSchema,
   permissionsSchema: GraphQLSchema | null,
 ) => {
-  const introspectionSchemaFields = introspectionSchema!.getTypeMap();
+  const introspectionSchemaFields = introspectionSchema.getTypeMap();
 
   let permissionsSchemaFields: any = null;
   if (permissionsSchema !== null) {
-    permissionsSchemaFields = permissionsSchema!.getTypeMap();
+    permissionsSchemaFields = permissionsSchema.getTypeMap();
   }
 
   const enumTypes: RemoteSchemaFields[] = [];
@@ -776,15 +776,12 @@ export const addPresetDefinition = (schema: string) => `scalar PresetValue\n
 ${schema}`;
 
 export const buildSchemaFromRoleDefn = (roleDefinition: string) => {
-  let permissionsSchema: GraphQLSchema | null = null;
-
   try {
     const newDef = addPresetDefinition(roleDefinition);
-    permissionsSchema = buildSchema(newDef);
+    return buildSchema(newDef);
   } catch (err) {
     return null;
   }
-  return permissionsSchema;
 };
 
 const parseObjectField = (arg: ArgumentNode | ObjectFieldNode) => {

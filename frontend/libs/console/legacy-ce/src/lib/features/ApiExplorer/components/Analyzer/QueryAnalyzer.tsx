@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import RootFields from './RootFields';
 import {
   hasuraToast,
@@ -24,7 +24,25 @@ const QueryAnalyzer = ({ mode, query, headers, clearAnalyse }: Props) => {
   const [analyseData, setAnalyseData] = useState<ExplainResult[]>([]);
   const [activeNode, setActiveNode] = useState(0);
 
+  // This dialog is mounted fresh (via a conditional render in AnalyzeButton)
+  // each time the user triggers an analysis, so the analysis must run exactly
+  // once on mount for the query the dialog was opened with. The props/callbacks
+  // it needs can change identity on unrelated parent re-renders (`clearAnalyse`
+  // is a fresh closure every render; `headers`/`query` are fresh objects), and
+  // re-running would wrongly re-issue the analysis — so we capture the
+  // mount-render values in a ref and run the fetch exactly once instead of
+  // listing them as effect dependencies.
+  const mountPropsRef = useRef({
+    query,
+    headers,
+    mode,
+    clearAnalyse,
+    showErrorNotification,
+  });
+
   useEffect(() => {
+    const { query, headers, mode, clearAnalyse, showErrorNotification } =
+      mountPropsRef.current;
     analyzeFetcher(query, headers, mode === 'relay')
       .then((data) => {
         // todo: unsure if this guard is necessary. Replaces previous guard that would silently return

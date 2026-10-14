@@ -136,9 +136,12 @@ describe('Create event trigger with shortest possible path', () => {
     // modify the retry config
     cy.log('**--- Click on Edit retry config and modify the config');
     cy.get('[data-test=edit-retry-config]').click();
-    cy.get('[name=num_retries]').clear().type('10');
-    cy.get('[name=interval_sec]').clear().type('5');
-    cy.get('[name=timeout_sec]').clear().type('70');
+    cy.get('[name=num_retries]').clear();
+    cy.get('[name=num_retries]').type('10');
+    cy.get('[name=interval_sec]').clear();
+    cy.get('[name=interval_sec]').type('5');
+    cy.get('[name=timeout_sec]').clear();
+    cy.get('[name=timeout_sec]').type('70');
     cy.findByRole('button', { name: 'Save' }).click();
 
     // add headers
@@ -277,9 +280,12 @@ describe('Create event trigger with logest possible path', () => {
     // toggle the adv setting, add retry config and headers
     cy.log('**--- Add retry config');
     cy.findByText('Advanced Settings').click();
-    cy.get('[name=num_retries]').clear().type('10');
-    cy.get('[name=interval_sec]').clear().type('5');
-    cy.get('[name=timeout_sec]').clear().type('70');
+    cy.get('[name=num_retries]').clear();
+    cy.get('[name=num_retries]').type('10');
+    cy.get('[name=interval_sec]').clear();
+    cy.get('[name=interval_sec]').type('5');
+    cy.get('[name=timeout_sec]').clear();
+    cy.get('[name=timeout_sec]').type('70');
 
     // add headers
     cy.log('**--- Add header');

@@ -20,7 +20,6 @@ export const makeApolloClient = (
     headers,
   });
 
-  let link = httpLink;
   const wsClient = createClient({
     url: replaceURLHttpToWs(url),
     connectionParams: () => {
@@ -35,7 +34,7 @@ export const makeApolloClient = (
 
   // to ensure the duration to attempt to reconnect is set properly https://github.com/apollographql/subscriptions-transport-ws/issues/377
   // wsLink.subscriptionClient.maxConnectTimeGenerator.duration = () => wsLink.subscriptionClient.maxConnectTimeGenerator.max;
-  link = ApolloLink.split(
+  const link = ApolloLink.split(
     ({ operationType }) => {
       return operationType === OperationTypeNode.SUBSCRIPTION;
     },

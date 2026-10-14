@@ -50,8 +50,11 @@ function validateInputValue(
       try {
         return typeof rawValue === 'string' ? JSON.parse(rawValue) : rawValue;
       } catch (e) {
-        throw new Error(
-          `${column.name} ' :: could not read ${rawValue} as a valid JSON'`,
+        throw Object.assign(
+          new Error(
+            `${column.name} ' :: could not read ${rawValue} as a valid JSON'`,
+          ),
+          { cause: e },
         );
       }
     case 'array':

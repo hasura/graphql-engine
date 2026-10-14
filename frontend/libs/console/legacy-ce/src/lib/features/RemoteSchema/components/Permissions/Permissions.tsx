@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { GraphQLSchema } from 'graphql';
 import PermissionsTable from './PermissionsTable';
 import PermissionEditor from './PermissionEditor';
@@ -62,22 +62,43 @@ const Permissions: React.FC<PermissionsProps> = ({
     setBulkSelect,
   } = useRemoteSchemaRelationshipForm();
 
-  useEffect(() => {
-    if (!schema) return;
+  // Re-derive the remote schema fields whenever the introspected schema, the
+  // new-role flag, or the SDL changes. Done during render (React's "adjust
+  // state on prop change" pattern) instead of in an effect so it does not
+  // cascade an extra render. `syncedFrom` tracks the inputs the current
+  // `remoteSchemaFields` were built from; starting at `null` makes this run on
+  // the first render where the async `schema` is available (matching the
+  // previous mount effect that no-op'd until `schema` arrived).
+  const [syncedFrom, setSyncedFrom] = useState<{
+    schema: GraphQLSchema;
+    isNewRole: boolean;
+    schemaDefinition: string;
+  } | null>(null);
+  if (
+    schema &&
+    (syncedFrom === null ||
+      syncedFrom.schema !== schema ||
+      syncedFrom.isNewRole !== permissionEdit.isNewRole ||
+      syncedFrom.schemaDefinition !== schemaDefinition)
+  ) {
+    setSyncedFrom({
+      schema,
+      isNewRole: permissionEdit.isNewRole,
+      schemaDefinition,
+    });
+
     const isNewRole: boolean = permissionEdit.isNewRole;
-    let permissionsSchema: GraphQLSchema | null = null;
 
-    if (!isNewRole && !!schemaDefinition) {
-      permissionsSchema = buildSchemaFromRoleDefn(schemaDefinition);
-    }
-
-    // when server throws error while saving new role, do not reset the remoteSchemaFields
-    // persist the user defined schema in th UI
-    if (isNewRole && schemaDefinition) return;
-
-    if (schema)
+    // when server throws error while saving new role, do not reset the
+    // remoteSchemaFields — persist the user defined schema in the UI
+    if (!(isNewRole && schemaDefinition)) {
+      let permissionsSchema: GraphQLSchema | null = null;
+      if (!isNewRole && !!schemaDefinition) {
+        permissionsSchema = buildSchemaFromRoleDefn(schemaDefinition);
+      }
       setRemoteSchemaFields(getRemoteSchemaFields(schema, permissionsSchema));
-  }, [schema, permissionEdit.isNewRole, schemaDefinition]);
+    }
+  }
 
   const inconsistencyDetails = findInconsistentRemoteSchema(
     inconsistentMetadata?.inconsistent_objects,

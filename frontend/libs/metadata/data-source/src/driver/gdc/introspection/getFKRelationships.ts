@@ -34,6 +34,8 @@ export const getFKRelationships: (
     });
   } catch (error) {
     console.error(error);
-    throw new Error('Error fetching GDC foreign keys');
+    throw Object.assign(new Error('Error fetching GDC foreign keys'), {
+      cause: error,
+    });
   }
 };

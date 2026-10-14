@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { hasuraToast } from '@hasura/shared/ui';
 import { getGraphQLEndpoint, getHeadersAsJSON } from '../../utils';
@@ -49,7 +49,31 @@ const createAnalyzingTokenState = () => ({
 const useApiExplorer = ({ numberOfTables }: Props) => {
   const { getHeaders } = useAuthContext();
   const [searchParams] = useSearchParams();
-  const [query, setQuery] = useState('');
+  // Seed the query synchronously from local storage / table state on mount
+  // (lazy initializer). The one asynchronous source — a remote `query_file` —
+  // is loaded in the mount effect below and starts empty here.
+  const [query, setQuery] = useState(() => {
+    const queryFile = searchParams.get('query_file');
+    if (queryFile) {
+      return '';
+    }
+
+    const localStorageQuery = getGraphiQLQueryFromLocalStorage();
+    if (numberOfTables === 0 && !localStorageQuery) {
+      // FIX ME : this message will be shown, whenever there are no tables tracked and nothing in history (LS),
+      // there could still be a possibility when there are no tables but remote schemas even then this message will be shown only for the first time
+      // after that when the user type something, the LS gets populated and this message will not be shown afterwards
+      return NO_TABLES_MESSAGE;
+    }
+
+    if (localStorageQuery) {
+      return localStorageQuery.includes('do not have')
+        ? FRESH_GRAPHQL_MSG
+        : localStorageQuery;
+    }
+
+    return '';
+  });
   const [mode, setMode] = useState<GraphiqlMode>('graphql');
   const [headers, setHeaders] = useState<DataHeader[]>([]);
   const [objectHeaders, setObjectHeaders] = useState<Record<string, string>>(
@@ -65,50 +89,6 @@ const useApiExplorer = ({ numberOfTables }: Props) => {
 
   const resetAnalyzingToken = () => {
     setAnalyzingToken(createAnalyzingTokenState());
-  };
-
-  const setPersistedQuery = async () => {
-    const queryFile = searchParams.get('query_file');
-    const localStorageQuery = getGraphiQLQueryFromLocalStorage();
-    if (queryFile) {
-      return request(queryFile)
-        .then((result) => result.text())
-        .then((query) => {
-          if (query) {
-            setQuery(query);
-            return;
-          }
-
-          return hasuraToast({
-            type: 'warning',
-            title: FETCH_REMOTE_FILE_ERROR_MESSAGE,
-            message: 'The content of remote query file is empty',
-          });
-        })
-        .catch((err) => {
-          return hasuraToast({
-            type: 'warning',
-            title: FETCH_REMOTE_FILE_ERROR_MESSAGE,
-            message: getErrorMessage(err),
-          });
-        });
-    }
-
-    if (numberOfTables === 0 && !localStorageQuery) {
-      // FIX ME : this message will be shown, whenever there are no tables tracked and nothing in history (LS),
-      // there could still be a possibility when there are no tables but remote schemas even then this message will be shown only for the first time
-      // after that when the user type something, the LS gets populated and this message will not be shown afterwards
-      setQuery(NO_TABLES_MESSAGE);
-      return;
-    }
-
-    if (localStorageQuery) {
-      if (localStorageQuery.includes('do not have')) {
-        setQuery(FRESH_GRAPHQL_MSG);
-      } else {
-        setQuery(localStorageQuery);
-      }
-    }
   };
 
   const toggleGraphiqlMode = () => {
@@ -173,8 +153,42 @@ const useApiExplorer = ({ numberOfTables }: Props) => {
     }
   };
 
+  // Mount-only initialization. `query` is seeded synchronously by the lazy
+  // useState initializer above; this effect handles only the asynchronous work
+  // (loading a remote `query_file` and the auth headers) plus a one-time LS
+  // cleanup. `getHeaders`/`searchParams` can change identity on later renders,
+  // so we capture the mount-render values in a ref and run the init exactly once
+  // instead of listing them as effect dependencies (which would re-fetch on
+  // unrelated re-renders).
+  const initRef = useRef({ getHeaders, searchParams });
+
   useEffect(() => {
-    setPersistedQuery();
+    const { getHeaders, searchParams } = initRef.current;
+
+    const queryFile = searchParams.get('query_file');
+    if (queryFile) {
+      request(queryFile)
+        .then((result) => result.text())
+        .then((query) => {
+          if (query) {
+            setQuery(query);
+            return;
+          }
+
+          return hasuraToast({
+            type: 'warning',
+            title: FETCH_REMOTE_FILE_ERROR_MESSAGE,
+            message: 'The content of remote query file is empty',
+          });
+        })
+        .catch((err) => {
+          return hasuraToast({
+            type: 'warning',
+            title: FETCH_REMOTE_FILE_ERROR_MESSAGE,
+            message: getErrorMessage(err),
+          });
+        });
+    }
 
     const graphqlQueryInLS = getLSItem(LS_KEYS.graphiqlQuery);
     if (graphqlQueryInLS && graphqlQueryInLS.indexOf('do not have') !== -1) {

@@ -13,10 +13,18 @@ export default {
 export const Base: StoryObj = {
   render: () => (
     <ConnectDBScreen
-      proceed={() => {}}
-      dismissOnboarding={() => {}}
-      dispatch={() => {}}
-      setStepperIndex={() => {}}
+      proceed={() => {
+        /* noop */
+      }}
+      dismissOnboarding={() => {
+        /* noop */
+      }}
+      dispatch={() => {
+        /* noop */
+      }}
+      setStepperIndex={() => {
+        /* noop */
+      }}
     />
   ),
 

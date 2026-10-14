@@ -38,14 +38,19 @@ export const EmailAlerts: React.FC<EmailAlertsProps> = ({ onClose }) => {
 
   const onSet = React.useCallback(() => {
     setEmailAlertMutation.mutate({ projectId: projectID, rules: config });
-  }, [config]);
+  }, [setEmailAlertMutation, projectID, config]);
 
-  // initialise checkboxes
-  React.useEffect(() => {
-    if (kind === 'success') {
-      setConfig(alertConfig);
-    }
-  }, [alertConfig]);
+  // initialise checkboxes from the fetched config: when the fetched config
+  // changes (i.e. the request succeeds), seed the editable local state with it.
+  // Adjusting state during render (rather than in an effect) keeps the
+  // checkboxes in sync on the same commit the data arrives, without an extra
+  // render pass.
+  const [prevAlertConfig, setPrevAlertConfig] =
+    React.useState<Record<string, boolean>>(defaultAlertConfig);
+  if (kind === 'success' && alertConfig !== prevAlertConfig) {
+    setPrevAlertConfig(alertConfig);
+    setConfig(alertConfig);
+  }
 
   return (
     <div className="-ml-4">

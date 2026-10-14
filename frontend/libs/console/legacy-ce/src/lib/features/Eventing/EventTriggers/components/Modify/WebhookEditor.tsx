@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { FaShieldAlt } from 'react-icons/fa';
 import {
   DropdownButton,
@@ -48,10 +48,17 @@ const WebhookEditor = (props: WebhookEditorProps) => {
   };
 
   const [localValue, setLocalValue] = useState<string>(webhook.value);
-
-  useEffect(() => {
+  // Sync the local (editable) value with the `webhook.value` prop during render
+  // rather than in an effect. This avoids an extra setState-in-effect commit
+  // while keeping identical behaviour: user edits stay local and are debounced
+  // back up, and an external change to webhook.value resets the local value.
+  const [prevWebhookValue, setPrevWebhookValue] = useState<string>(
+    webhook.value,
+  );
+  if (webhook.value !== prevWebhookValue) {
+    setPrevWebhookValue(webhook.value);
     setLocalValue(webhook.value);
-  }, [webhook.value]);
+  }
 
   useDebouncedEffect(
     () => {

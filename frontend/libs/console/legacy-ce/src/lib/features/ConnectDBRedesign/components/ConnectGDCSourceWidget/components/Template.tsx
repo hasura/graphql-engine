@@ -25,7 +25,7 @@ export const Template = ({ name }: { name: string }) => {
         <Code>jdbc_url</Code> would look like -
         <div className="pmt-2 py-2">
           <Code>
-            {`{\"jdbc_url\": \"{{getEnvironmentVariable(\"SNOWFLAKE_JDBC_URL\")}}\"}`}
+            {`{"jdbc_url": "{{getEnvironmentVariable("SNOWFLAKE_JDBC_URL")}}"}`}
           </Code>
         </div>
       </IndicatorCard>

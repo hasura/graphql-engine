@@ -26,7 +26,12 @@ export default {
 } as Meta<typeof LogicalModelFormInputs>;
 
 export const Basic: StoryFn<typeof LogicalModelFormInputs> = () => (
-  <SimpleForm schema={addLogicalModelValidationSchema} onSubmit={() => {}}>
+  <SimpleForm
+    schema={addLogicalModelValidationSchema}
+    onSubmit={() => {
+      /* noop */
+    }}
+  >
     <LogicalModelFormInputs
       logicalModels={[]}
       sourceOptions={[
@@ -60,7 +65,9 @@ export const WithDefaultValues: StoryObj<typeof LogicalModelFormInputs> = {
             name: 'foobar',
           },
         }}
-        onSubmit={() => {}}
+        onSubmit={() => {
+          /* noop */
+        }}
       >
         <LogicalModelFormInputs
           logicalModels={[]}

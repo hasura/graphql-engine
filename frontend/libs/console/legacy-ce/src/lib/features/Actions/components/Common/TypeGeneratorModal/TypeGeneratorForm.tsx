@@ -39,7 +39,7 @@ export const TypeGeneratorForm = (props: {
       graphqlInput,
       graphqlOutput,
     });
-  }, [jsonInput, jsonOutput, graphqlInput, graphqlOutput]);
+  }, [jsonInput, jsonOutput, graphqlInput, graphqlOutput, setValues]);
 
   useDebouncedEffect(
     () => {

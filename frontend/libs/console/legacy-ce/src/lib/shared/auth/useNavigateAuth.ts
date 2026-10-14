@@ -1,22 +1,24 @@
 import { useLocation, useNavigate } from 'react-router';
 import { LOGIN_PATH } from '@hasura/shared/types';
-import { useAppContext } from '@hasura/shared/context';
+import { useCallback } from 'react';
 
 const useNavigateAuth = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { envVars } = useAppContext();
 
-  return (isAuthenticated: boolean) => {
-    if (isAuthenticated && location.pathname === LOGIN_PATH) {
-      navigate(envVars.urlPrefix || '/', { replace: true });
-      return;
-    }
+  return useCallback(
+    (isAuthenticated: boolean) => {
+      if (isAuthenticated && location.pathname === LOGIN_PATH) {
+        navigate('/', { replace: true });
+        return;
+      }
 
-    if (!isAuthenticated && location.pathname !== LOGIN_PATH) {
-      navigate(LOGIN_PATH, { replace: true });
-    }
-  };
+      if (!isAuthenticated && location.pathname !== LOGIN_PATH) {
+        navigate(LOGIN_PATH, { replace: true });
+      }
+    },
+    [navigate, location],
+  );
 };
 
 export default useNavigateAuth;

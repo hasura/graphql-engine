@@ -57,7 +57,7 @@ export const RemoteSchemaTree = ({
         fields,
         rootFields,
       }),
-    [relationshipFields, schema, rootFields, fields],
+    [relationshipFields, schema, rootFields, fields, setRelationshipFields],
   );
 
   const expandedKeys = useMemo(

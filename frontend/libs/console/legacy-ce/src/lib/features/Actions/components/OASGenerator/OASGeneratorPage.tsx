@@ -86,7 +86,9 @@ export const OASGeneratorPage = () => {
         </div>
       </div>
       <SimpleForm
-        onSubmit={() => {}}
+        onSubmit={() => {
+          /* noop */
+        }}
         schema={formSchema}
         options={{
           defaultValues: {

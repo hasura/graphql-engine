@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from 'react';
+import { useEffect, useReducer, useRef } from 'react';
 import { useDebouncedEffect } from '@hasura/shared/hooks';
 import {
   EventRequestTransform,
@@ -73,12 +73,32 @@ export const CronRequestTransformation = (
     transformDispatch(setRequestSampleInput(JSON.stringify(value, null, 2)));
   };
 
+  // The initialisation effect (reset + load initial transform) must run only
+  // when `initialValue` changes, and the parent-notification effect only when
+  // `transformState` changes. They read `resetSampleInput`, the current sample
+  // input, and `onChange` via this ref so neither effect re-runs on those
+  // values' identity changes. Updated in an effect to avoid writing during
+  // render.
+  const latestRef = useRef({
+    resetSampleInput,
+    requestSampleInput: transformState.requestSampleInput,
+    onChange,
+  });
   useEffect(() => {
-    resetSampleInput();
+    latestRef.current = {
+      resetSampleInput,
+      requestSampleInput: transformState.requestSampleInput,
+      onChange,
+    };
+  });
+
+  useEffect(() => {
+    const { resetSampleInput: reset, requestSampleInput } = latestRef.current;
+    reset();
     if (initialValue) {
       transformDispatch(
         setRequestTransformState(
-          getTransformState(initialValue, transformState.requestSampleInput),
+          getTransformState(initialValue, requestSampleInput),
         ),
       );
     }
@@ -233,7 +253,7 @@ export const CronRequestTransformation = (
   useEffect(() => {
     const data = getRequestTransformObject(transformState);
     if (data) {
-      onChange(data);
+      latestRef.current.onChange(data);
     }
   }, [transformState]);
 

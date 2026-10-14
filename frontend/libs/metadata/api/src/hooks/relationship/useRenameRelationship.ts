@@ -29,7 +29,7 @@ export const useRenameRelationship = () => {
     const { source: currentSource, resource_version } = await fetchSource(
       args.source,
     );
-    const prefix = getDriverPrefix(currentSource.kind!);
+    const prefix = getDriverPrefix(currentSource.kind);
     const requestBody = {
       type: `${prefix}_rename_relationship` as const,
       args,

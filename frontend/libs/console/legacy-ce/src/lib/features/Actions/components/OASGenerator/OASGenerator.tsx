@@ -12,7 +12,12 @@ export interface OASGeneratorProps {
 export const OASGenerator = (props: OASGeneratorProps) => {
   const { onGenerate, onDelete, disabled } = props;
   return (
-    <SimpleForm onSubmit={() => {}} schema={formSchema}>
+    <SimpleForm
+      onSubmit={() => {
+        /* noop */
+      }}
+      schema={formSchema}
+    >
       <OasGeneratorForm
         onGenerate={onGenerate}
         onDelete={onDelete}

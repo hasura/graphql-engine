@@ -54,7 +54,7 @@ export const SqlCodeBlock = ({
     } catch {
       return text;
     }
-  }, [text]);
+  }, [text, language]);
 
   const highlighted = useMemo(() => {
     try {

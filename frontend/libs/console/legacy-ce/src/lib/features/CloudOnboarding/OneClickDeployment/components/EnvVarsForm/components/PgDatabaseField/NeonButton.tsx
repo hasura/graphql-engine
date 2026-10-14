@@ -26,7 +26,7 @@ export function NeonButton(props: Props) {
   let errorMessage: string | undefined | React.ReactNode;
 
   if (formState?.errors?.[dbEnvVar.Name]?.message) {
-    errorMessage = formState.errors[dbEnvVar.Name]!.message as string;
+    errorMessage = formState.errors[dbEnvVar.Name]?.message as string;
   }
   if (neonButtonProps.status.status === 'error') {
     errorMessage = neonButtonProps.status.errorDescription;

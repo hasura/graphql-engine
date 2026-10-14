@@ -6,7 +6,7 @@ import { useServerConfig } from '@hasura/metadata/api';
 
 export const extractPrometheusUrl = (prometheusUrl: string) => {
   const urlRegExp =
-    /^(https?):\/\/(?:www\.)?([-a-zA-Z0-9@:%._\+~#=]{1,256}\.?[a-zA-Z0-9()]{0,6})\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/;
+    /^(https?):\/\/(?:www\.)?([-a-zA-Z0-9@:%._+~#=]{1,256}\.?[a-zA-Z0-9()]{0,6})\b(?:[-a-zA-Z0-9()@:%_+.~#?&/=]*)$/;
   let prometheusUrlExtract = prometheusUrl.match(urlRegExp);
   if (!prometheusUrlExtract) {
     prometheusUrlExtract = ['', 'http', 'myhasuradomain.com'];

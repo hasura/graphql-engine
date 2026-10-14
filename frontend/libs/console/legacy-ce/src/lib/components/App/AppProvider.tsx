@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   AppContext,
   defaultAppState,
@@ -20,8 +20,14 @@ const AppProvider = ({ children }: { children: React.ReactNode }) => {
     envVars,
   });
 
+  // Kick off the one-time server-version fetch on mount only. `initServerVersion`
+  // is a fresh closure every render (it isn't memoized in useServerVersion), so
+  // we capture the mount-render instance in a ref and invoke it exactly once,
+  // rather than listing the ever-changing object in the dependency array and
+  // re-running the fetch on every render.
+  const initServerVersionRef = useRef(serverVersionProps.initServerVersion);
   useEffect(() => {
-    serverVersionProps.initServerVersion();
+    initServerVersionRef.current();
   }, []);
 
   return (

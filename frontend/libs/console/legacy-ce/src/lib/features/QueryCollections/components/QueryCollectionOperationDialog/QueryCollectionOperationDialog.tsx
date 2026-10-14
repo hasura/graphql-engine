@@ -36,7 +36,7 @@ const schema = z.discriminatedUnion('option', [
         .refine((files) => files?.length === 1, 'GraphQL file is required.')
         .refine(async (files) => {
           let validQuery = true;
-          const data = await readFileAsync(files![0]);
+          const data = await readFileAsync(files[0]);
           try {
             parseQueryString(data);
           } catch (error) {

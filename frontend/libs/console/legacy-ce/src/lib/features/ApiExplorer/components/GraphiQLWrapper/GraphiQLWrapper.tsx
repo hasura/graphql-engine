@@ -100,7 +100,20 @@ const GraphiQLWrapper = ({
             : (await resp.clone().bytes()).length;
 
           const isResponseCached = resp.headers.has('Cache-Control');
-          const trimmedQuery = query.trim();
+          // Derive "is this request cachable" from the query actually being
+          // sent (init.body is the serialized GraphQL request — the same editor
+          // document as the `query` prop) rather than closing over the `query`
+          // prop. This keeps the check correct without rebuilding the fetcher on
+          // every keystroke.
+          let requestQuery: string;
+          try {
+            const parsedBody = JSON.parse(init.body);
+            requestQuery =
+              typeof parsedBody?.query === 'string' ? parsedBody.query : '';
+          } catch {
+            requestQuery = '';
+          }
+          const trimmedQuery = requestQuery.trim();
           const isRequestCachable =
             trimmedQuery.startsWith('{') || trimmedQuery.startsWith('query ');
           const cacheWarning = getCacheRequestWarning(

@@ -157,26 +157,30 @@ export const Widget = ({
     },
   });
 
+  const sourceKind = adaptDataSourceKind(sourceOptions, dataSourceName);
   const { data: sourceTableColumns } = useTableColumns({
-    source: {
-      name: dataSourceName,
-      kind: adaptDataSourceKind(sourceOptions, dataSourceName)!,
-    },
+    source: sourceKind
+      ? {
+          name: dataSourceName,
+          kind: sourceKind,
+        }
+      : undefined,
     table,
   });
 
   const toSource = watch('toSource');
+  const toSourceKind =
+    toSource?.type === 'table'
+      ? adaptDataSourceKind(sourceOptions, toSource.dataSourceName)
+      : undefined;
 
   const { data: targetTableColumns, isLoading: isColumnDataLoading } =
     useTableColumns({
       source:
-        toSource?.type === 'table'
+        toSource?.type === 'table' && toSourceKind
           ? {
               name: toSource.dataSourceName,
-              kind: adaptDataSourceKind(
-                sourceOptions,
-                toSource.dataSourceName,
-              )!,
+              kind: toSourceKind,
             }
           : undefined,
       table: toSource?.type === 'table' ? toSource.table : '',

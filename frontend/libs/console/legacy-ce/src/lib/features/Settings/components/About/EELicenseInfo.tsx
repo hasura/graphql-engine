@@ -72,7 +72,7 @@ export const EELicenseInfoUI: React.FC<{
       );
     }
     case 'active':
-    case 'expired':
+    case 'expired': {
       const expiryDate = info.license.expiry_at ?? new Date();
       return (
         <div>
@@ -91,6 +91,7 @@ export const EELicenseInfoUI: React.FC<{
           />
         </div>
       );
+    }
     case 'deactivated':
       return (
         <div>

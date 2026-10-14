@@ -61,9 +61,7 @@ export const CustomFooter: StoryObj<DialogProps & FooterProps> = {
       onClose={args.onClose}
       footer={args.footer}
     >
-      <>
-        <div>I am the body!</div>
-      </>
+      <div>I am the body!</div>
     </Dialog>
   ),
 

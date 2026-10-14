@@ -67,7 +67,7 @@ export const useManageDatabaseConnection = ({
         //console.log('Error in create connection telemetry: ', telemetryError);
       });
     },
-    [fetchJson, mutate, onError],
+    [endpoints, fetchJson, mutate, onError, onSuccess, refetchMetadata],
   );
 
   const editConnection = useCallback(
@@ -120,7 +120,7 @@ export const useManageDatabaseConnection = ({
         },
       );
     },
-    [mutate, resource_version],
+    [mutate, onError, onSuccess, refetchMetadata, resource_version],
   );
 
   return { createConnection, editConnection, ...rest };

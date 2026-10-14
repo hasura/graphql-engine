@@ -62,11 +62,16 @@ const PayloadOptionsTransforms: React.FC<PayloadOptionsTransformsProps> = ({
     requestBody.form_template ?? [{ name: '', value: '' }],
   );
 
-  React.useEffect(() => {
+  // Reset the local form buffer when the upstream requestBody changes. Done
+  // during render (the React "adjust state when a prop changes" pattern) rather
+  // than in an effect, avoiding an extra render pass.
+  const [prevRequestBody, setPrevRequestBody] = React.useState(requestBody);
+  if (requestBody !== prevRequestBody) {
+    setPrevRequestBody(requestBody);
     setLocalFormElements(
       requestBody.form_template ?? [{ name: '', value: '' }],
     );
-  }, [requestBody]);
+  }
 
   useDebouncedEffect(
     () => {

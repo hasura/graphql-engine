@@ -40,7 +40,8 @@ describe('Create a insert type table permission with input validation', () => {
 
     // --------------------
     cy.log('**--- Enter a new Role**');
-    cy.get('[aria-label=create-new-role]').click().type('new_role');
+    cy.get('[aria-label=create-new-role]').click();
+    cy.get('[aria-label=create-new-role]').type('new_role');
 
     // --------------------
     cy.log('**--- Click to open permission form**');
@@ -56,9 +57,18 @@ describe('Create a insert type table permission with input validation', () => {
 
     // --------------------
     cy.log('**--- Click to save permission');
+    cy.intercept(/\/(v1\/metadata|apis\/migrate)/, (req) => {
+      if (
+        req.method === 'POST' &&
+        /permission/i.test(JSON.stringify(req.body ?? {}))
+      ) {
+        req.alias = 'permissionSave';
+      }
+    });
     cy.get('[data-testid=permissions-form-submit]').click();
-    // NOTE: will remove the wait time (have to merge PR because of release)
-    cy.wait(2000);
+    // Wait for the actual permission-save request to complete (server mode:
+    // /v1/metadata, CLI mode: /apis/migrate) instead of a fixed delay.
+    cy.wait('@permissionSave');
 
     cy.log('**------------------------------**');
     cy.log('**------------------------------**');
@@ -73,15 +83,24 @@ describe('Create a insert type table permission with input validation', () => {
     cy.get('button[aria-label=new_role-insert]').click();
     cy.findByText('Input Validation').click();
     cy.findByText('Forward client headers to webhook').click();
-    cy.get('[name="validateInput.definition.timeout"]').clear().type('40');
+    cy.get('[name="validateInput.definition.timeout"]').clear();
+    cy.get('[name="validateInput.definition.timeout"]').type('40');
     cy.findByRole('button', { name: 'Add Additional Headers' }).click();
     cy.findByPlaceholderText('Key...').type('x-hasura-user-id');
     cy.findByPlaceholderText('Value...').type('1234');
 
     // --------------------
     cy.log('**--- Click to Save Permission');
+    cy.intercept(/\/(v1\/metadata|apis\/migrate)/, (req) => {
+      if (
+        req.method === 'POST' &&
+        /permission/i.test(JSON.stringify(req.body ?? {}))
+      ) {
+        req.alias = 'permissionSave';
+      }
+    });
     cy.get('[data-testid=permissions-form-submit]').click();
-    cy.wait(2000);
+    cy.wait('@permissionSave');
 
     readMetadata().then((md: { body: HasuraMetadataV3 }) => {
       cy.wrap(
@@ -138,7 +157,8 @@ describe('Create a update type table permission with input validation', () => {
 
     // --------------------
     cy.log('**--- Enter a new Role**');
-    cy.get('[aria-label=create-new-role]').click().type('new_role');
+    cy.get('[aria-label=create-new-role]').click();
+    cy.get('[aria-label=create-new-role]').type('new_role');
 
     // --------------------
     cy.log('**--- Click to open permission form**');
@@ -154,8 +174,16 @@ describe('Create a update type table permission with input validation', () => {
 
     // --------------------
     cy.log('**--- Click to save permission');
+    cy.intercept(/\/(v1\/metadata|apis\/migrate)/, (req) => {
+      if (
+        req.method === 'POST' &&
+        /permission/i.test(JSON.stringify(req.body ?? {}))
+      ) {
+        req.alias = 'permissionSave';
+      }
+    });
     cy.get('[data-testid=permissions-form-submit]').click();
-    cy.wait(2000);
+    cy.wait('@permissionSave');
 
     cy.log('**------------------------------**');
     cy.log('**------------------------------**');
@@ -170,15 +198,24 @@ describe('Create a update type table permission with input validation', () => {
     cy.get('button[aria-label=new_role-update]').click();
     cy.findByText('Input Validation').click();
     cy.findByText('Forward client headers to webhook').click();
-    cy.get('[name="validateInput.definition.timeout"]').clear().type('40');
+    cy.get('[name="validateInput.definition.timeout"]').clear();
+    cy.get('[name="validateInput.definition.timeout"]').type('40');
     cy.findByRole('button', { name: 'Add Additional Headers' }).click();
     cy.findByPlaceholderText('Key...').type('x-hasura-user-id');
     cy.findByPlaceholderText('Value...').type('1234');
 
     // --------------------
     cy.log('**--- Click to Save Permission');
+    cy.intercept(/\/(v1\/metadata|apis\/migrate)/, (req) => {
+      if (
+        req.method === 'POST' &&
+        /permission/i.test(JSON.stringify(req.body ?? {}))
+      ) {
+        req.alias = 'permissionSave';
+      }
+    });
     cy.get('[data-testid=permissions-form-submit]').click();
-    cy.wait(2000);
+    cy.wait('@permissionSave');
 
     readMetadata().then((md: { body: HasuraMetadataV3 }) => {
       cy.wrap(
@@ -235,7 +272,8 @@ describe('Create a delete type table permission with input validation', () => {
 
     // --------------------
     cy.log('**--- Enter a new Role**');
-    cy.get('[aria-label=create-new-role]').click().type('new_role');
+    cy.get('[aria-label=create-new-role]').click();
+    cy.get('[aria-label=create-new-role]').type('new_role');
 
     // --------------------
     cy.log('**--- Click to open permission form**');
@@ -251,8 +289,16 @@ describe('Create a delete type table permission with input validation', () => {
 
     // --------------------
     cy.log('**--- Click to save permission');
+    cy.intercept(/\/(v1\/metadata|apis\/migrate)/, (req) => {
+      if (
+        req.method === 'POST' &&
+        /permission/i.test(JSON.stringify(req.body ?? {}))
+      ) {
+        req.alias = 'permissionSave';
+      }
+    });
     cy.get('[data-testid=permissions-form-submit]').click();
-    cy.wait(2000);
+    cy.wait('@permissionSave');
 
     cy.log('**------------------------------**');
     cy.log('**------------------------------**');
@@ -267,15 +313,24 @@ describe('Create a delete type table permission with input validation', () => {
     cy.get('button[aria-label=new_role-delete]').click();
     cy.findByText('Input Validation').click();
     cy.findByText('Forward client headers to webhook').click();
-    cy.get('[name="validateInput.definition.timeout"]').clear().type('40');
+    cy.get('[name="validateInput.definition.timeout"]').clear();
+    cy.get('[name="validateInput.definition.timeout"]').type('40');
     cy.findByRole('button', { name: 'Add Additional Headers' }).click();
     cy.findByPlaceholderText('Key...').type('x-hasura-user-id');
     cy.findByPlaceholderText('Value...').type('1234');
 
     // --------------------
     cy.log('**--- Click to Save Permission');
+    cy.intercept(/\/(v1\/metadata|apis\/migrate)/, (req) => {
+      if (
+        req.method === 'POST' &&
+        /permission/i.test(JSON.stringify(req.body ?? {}))
+      ) {
+        req.alias = 'permissionSave';
+      }
+    });
     cy.get('[data-testid=permissions-form-submit]').click();
-    cy.wait(2000);
+    cy.wait('@permissionSave');
 
     readMetadata().then((md: { body: HasuraMetadataV3 }) => {
       cy.wrap(

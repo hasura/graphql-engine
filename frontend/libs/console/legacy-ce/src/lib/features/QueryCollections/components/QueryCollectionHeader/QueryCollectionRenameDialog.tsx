@@ -33,7 +33,11 @@ export const QueryCollectionRenameDialog: React.FC<
   const name = watch('name');
 
   return (
-    <Form onSubmit={() => {}}>
+    <Form
+      onSubmit={() => {
+        /* noop */
+      }}
+    >
       <Dialog title="Rename Collection" onClose={onClose}>
         <>
           <Analytics name="QueryCollectionRenameDialog" {...REDACT_EVERYTHING}>

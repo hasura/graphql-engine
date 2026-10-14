@@ -130,7 +130,7 @@ export const useNeonOAuth = (oauthString?: string) => {
         });
       }
     },
-    [oauth2State, fetchControlPlaneData],
+    [oauth2State, fetchControlPlaneData, isUnmounted],
   );
 
   // function to start the oauth process
@@ -200,7 +200,7 @@ export const useNeonOAuth = (oauthString?: string) => {
         clearPersistedNeonCallbackSearch();
       }, 500);
     }, 500);
-  }, [oauth2State, isUnmounted]);
+  }, [oauth2State, isUnmounted, startFetchingControlPlaneData]);
 
   return {
     oauth2State,

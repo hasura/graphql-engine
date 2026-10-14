@@ -123,7 +123,7 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
 
   React.useEffect(() => {
     setFocus('name');
-  }, []);
+  }, [setFocus]);
 
   const request = watch('request');
 

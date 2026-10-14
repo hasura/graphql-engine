@@ -1,4 +1,4 @@
-import React, { ReactElement, useEffect, useMemo, useState } from 'react';
+import React, { ReactElement, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { FaDatabase } from 'react-icons/fa';
 import { Em, Flex, Text } from '@radix-ui/themes';
@@ -20,10 +20,15 @@ const CollapsibleItems: React.FC<CollapsibleItemsProps> = ({
   defaultOpen = false,
 }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [prevDefaultOpen, setPrevDefaultOpen] = useState(defaultOpen);
 
-  useEffect(() => {
+  // Keep the open state in sync with the `defaultOpen` prop by adjusting state
+  // during render instead of in an effect (avoids a cascading render):
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  if (prevDefaultOpen !== defaultOpen) {
+    setPrevDefaultOpen(defaultOpen);
     setIsOpen(defaultOpen);
-  }, [defaultOpen]);
+  }
   return (
     <div className="max-h-[360px] overflow-y-auto">
       <Flex

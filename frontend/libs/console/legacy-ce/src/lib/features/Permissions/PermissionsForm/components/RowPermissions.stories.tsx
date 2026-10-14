@@ -14,7 +14,12 @@ export default {
   component: RowPermissionsSection,
   decorators: [
     (StoryComponent: React.FC) => (
-      <SimpleForm schema={z.any()} onSubmit={() => {}}>
+      <SimpleForm
+        schema={z.any()}
+        onSubmit={() => {
+          /* noop */
+        }}
+      >
         <StoryComponent />
       </SimpleForm>
     ),

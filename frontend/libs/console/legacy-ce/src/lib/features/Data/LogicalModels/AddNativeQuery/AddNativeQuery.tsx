@@ -60,7 +60,7 @@ export const AddNativeQuery = ({
       }
     });
     return () => subscription.unsubscribe();
-  }, [watch]);
+  }, [watch, setValue]);
 
   const { trackNativeQuery, isPending: isSaving } = useTrackNativeQuery();
 
@@ -174,7 +174,7 @@ function useDefaultFormValues({
             ),
           }
         : {},
-    [mode],
+    [mode, editDetails?.dataSourceName, editDetails?.nativeQuery],
   );
 
   const defaultFormValues = _defaultFormValues;

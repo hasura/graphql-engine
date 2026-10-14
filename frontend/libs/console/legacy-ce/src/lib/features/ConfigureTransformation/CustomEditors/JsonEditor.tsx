@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useDebouncedEffect } from '@hasura/shared/hooks';
 import CrossIcon from '../../../components/Common/Icons/Cross';
 import { isConsoleError, isJsonString } from '@hasura/shared/utils';
-import { AceEditor } from '@hasura/shared/ui';
+import { AceEditor, Text } from '@hasura/shared/ui';
+import { Flex } from '@radix-ui/themes';
 
 type JsonEditorProps = {
   value: string;
@@ -22,9 +23,15 @@ const JsonEditor: React.FC<JsonEditorProps> = ({
   const [localValue, setLocalValue] = useState(value);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  // Mirror the `value` prop into the local editing buffer when it changes
+  // upstream. Done during render (the React "adjust state when a prop changes"
+  // pattern) rather than in an effect, so the reset is applied in the same
+  // commit without an extra render pass.
+  const [prevValue, setPrevValue] = useState(value);
+  if (value !== prevValue) {
+    setPrevValue(value);
     setLocalValue(value);
-  }, [value]);
+  }
 
   const onChangeHandler = (val: string) => {
     setLocalValue(val);
@@ -52,10 +59,10 @@ const JsonEditor: React.FC<JsonEditorProps> = ({
   return (
     <>
       {error && (
-        <div className="mb-2">
+        <Flex className="mb-2" gap="2" align="center">
           <CrossIcon />
-          <span className="text-red-500 ml-2">{error}</span>
-        </div>
+          <Text color="red">{error}</Text>
+        </Flex>
       )}
       <AceEditor
         name="json-editor"

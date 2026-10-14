@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Flex } from '@radix-ui/themes';
 import { DropdownButton, DropdownMenu, Text } from '@hasura/shared/ui';
 import { parseQueryString } from './utils';
@@ -113,18 +113,17 @@ interface QuickAddProps {
 export const QuickAdd = (props: QuickAddProps) => {
   const { onAdd } = props;
 
-  const [graphiqlQueries, setGraphiqlQueries] = React.useState<Operation[]>([]);
-
-  useEffect(() => {
+  const [graphiqlQueries] = React.useState<Operation[]>(() => {
     const graphiQlLocalStorage = getLSItem(LS_KEYS.graphiqlQuery);
     if (graphiQlLocalStorage) {
       try {
-        setGraphiqlQueries(parseQueryString(graphiQlLocalStorage));
+        return parseQueryString(graphiQlLocalStorage);
       } catch (error) {
         console.error(error);
       }
     }
-  }, []);
+    return [];
+  });
 
   return (
     <Flex justify="end">

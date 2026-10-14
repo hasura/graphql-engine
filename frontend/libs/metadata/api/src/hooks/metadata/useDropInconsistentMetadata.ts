@@ -30,5 +30,5 @@ export const useDropInconsistentMetadata = () => {
         },
       },
     );
-  }, [mutation]);
+  }, [mutation, showErrorNotification]);
 };

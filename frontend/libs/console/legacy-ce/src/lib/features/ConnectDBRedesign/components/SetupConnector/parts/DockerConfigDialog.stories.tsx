@@ -17,7 +17,11 @@ export const Primary: StoryObj<typeof DockerConfigDialog> = {
   },
 
   args: {
-    onCancel: () => {},
-    onSetupSuccess: () => {},
+    onCancel: () => {
+      /* noop */
+    },
+    onSetupSuccess: () => {
+      /* noop */
+    },
   },
 };

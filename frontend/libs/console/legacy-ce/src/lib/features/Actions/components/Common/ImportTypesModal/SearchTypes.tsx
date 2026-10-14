@@ -16,7 +16,7 @@ const SearchInput: React.FC<TypeSearchFormProps> = ({ setSearch }) => {
   const search = watch('search');
   useEffect(() => {
     setSearch(search);
-  }, [search]);
+  }, [search, setSearch]);
 
   return (
     <InputField
@@ -36,7 +36,9 @@ export const TypeSearchForm: React.FC<TypeSearchFormProps> = ({
   return (
     <SimpleForm
       schema={schema}
-      onSubmit={() => {}}
+      onSubmit={() => {
+        /* noop */
+      }}
       options={{ defaultValues: { search: '' } }}
       className="pr-0 pt-0 pb-0 relative"
     >

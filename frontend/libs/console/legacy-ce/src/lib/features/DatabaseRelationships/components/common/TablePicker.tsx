@@ -1,5 +1,5 @@
 import { Table } from '@hasura/shared/types';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { FaArrowAltCircleLeft, FaArrowAltCircleRight } from 'react-icons/fa';
 import { useMetadata } from '@hasura/metadata/api';
@@ -45,11 +45,23 @@ export const TablePicker: React.FC<TablePickerProps> = ({
       })
     : undefined;
 
+  // `defaultValue` is recomputed from the watched form values on every render,
+  // so we intentionally only re-run the apply effect when its resolved `.type`
+  // changes (depending on the object itself would re-run on every keystroke and
+  // fight the user's own selection, since `setValue` updates the watched
+  // value). We keep the latest `defaultValue` in a ref — written from an effect
+  // so no ref is touched during render — and read it when applying.
+  const defaultValueRef = useRef(defaultValue);
   useEffect(() => {
-    if (defaultValue) {
-      setValue(type, mapItemsToSourceOptions([defaultValue])[0]);
+    defaultValueRef.current = defaultValue;
+  });
+
+  useEffect(() => {
+    const latestDefaultValue = defaultValueRef.current;
+    if (latestDefaultValue) {
+      setValue(type, mapItemsToSourceOptions([latestDefaultValue])[0]);
     }
-  }, [defaultValue?.type]);
+  }, [defaultValue?.type, setValue, type]);
 
   if (!metadataSources) return <SkeletonList count={5} />;
 

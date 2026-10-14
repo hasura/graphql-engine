@@ -65,7 +65,7 @@ export const useDropRemoteSchemaPermissions = () => {
         },
       );
     },
-    [mutation],
+    [mutation, showErrorNotification],
   );
 
   return {

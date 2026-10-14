@@ -9,7 +9,12 @@ export default {
 } as ComponentMeta<typeof InputValidation>;
 
 export const Base = () => (
-  <SimpleForm schema={inputValidationSchema} onSubmit={() => {}}>
+  <SimpleForm
+    schema={inputValidationSchema}
+    onSubmit={() => {
+      /* noop */
+    }}
+  >
     <InputValidation />
   </SimpleForm>
 );

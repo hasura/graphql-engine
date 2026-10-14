@@ -17,8 +17,17 @@ export default {
 
 export const Default: StoryObj<typeof Form> = {
   render: () => (
-    <Dialog size="sm" onClose={() => {}}>
-      <Form onSuccess={() => {}} />
+    <Dialog
+      size="sm"
+      onClose={() => {
+        /* noop */
+      }}
+    >
+      <Form
+        onSuccess={() => {
+          /* noop */
+        }}
+      />
     </Dialog>
   ),
 
@@ -31,12 +40,21 @@ export const Default: StoryObj<typeof Form> = {
 
 export const GraphqlError: StoryObj<typeof Form> = {
   render: () => (
-    <Dialog size="sm" onClose={() => {}}>
+    <Dialog
+      size="sm"
+      onClose={() => {
+        /* noop */
+      }}
+    >
       <>
         <div className="px-4 mt-1 text-red-500 text-lg">
           Tip: Fill and submit the form to see error states.
         </div>
-        <Form onSuccess={() => {}} />
+        <Form
+          onSuccess={() => {
+            /* noop */
+          }}
+        />
       </>
     </Dialog>
   ),
@@ -50,12 +68,21 @@ export const GraphqlError: StoryObj<typeof Form> = {
 
 export const LicenseAlreadyApplied: StoryObj<typeof Form> = {
   render: () => (
-    <Dialog size="sm" onClose={() => {}}>
+    <Dialog
+      size="sm"
+      onClose={() => {
+        /* noop */
+      }}
+    >
       <>
         <div className="px-4 mt-1 text-red-500 text-lg">
           Tip: Fill and submit the form to see error states.
         </div>
-        <Form onSuccess={() => {}} />
+        <Form
+          onSuccess={() => {
+            /* noop */
+          }}
+        />
       </>
     </Dialog>
   ),
@@ -68,7 +95,17 @@ export const LicenseAlreadyApplied: StoryObj<typeof Form> = {
 };
 
 export const ActivateExistingLicense: StoryFn<typeof Form> = () => (
-  <Dialog size="sm" onClose={() => {}}>
-    <Form onSuccess={() => {}} formState="activate" />
+  <Dialog
+    size="sm"
+    onClose={() => {
+      /* noop */
+    }}
+  >
+    <Form
+      onSuccess={() => {
+        /* noop */
+      }}
+      formState="activate"
+    />
   </Dialog>
 );

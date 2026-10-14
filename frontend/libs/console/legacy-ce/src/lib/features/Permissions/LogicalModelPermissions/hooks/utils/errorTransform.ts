@@ -1,7 +1,7 @@
 export function errorTransform(error: any) {
   const err = error as Record<string, any>;
 
-  let message = '';
+  let message: string;
   let name = `Error code: ${err.code}`;
 
   if ('internal' in err) {

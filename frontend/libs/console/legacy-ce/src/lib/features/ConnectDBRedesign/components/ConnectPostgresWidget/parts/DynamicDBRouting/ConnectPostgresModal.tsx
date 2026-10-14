@@ -135,7 +135,9 @@ export const ConnectPostgresModal = (props: ConnectPostgresModalProps) => {
               defaultValues ? 'Update Connection' : 'Add Connection'
             }
             onClose={onClose}
-            onSubmit={() => {}}
+            onSubmit={() => {
+              /* noop */
+            }}
             onSubmitAnalyticsName="data-tab-dynamic-db-routing-add-connection-submit"
             onCancelAnalyticsName="data-tab-dynamic-db-routing-add-connection-cancel"
           />

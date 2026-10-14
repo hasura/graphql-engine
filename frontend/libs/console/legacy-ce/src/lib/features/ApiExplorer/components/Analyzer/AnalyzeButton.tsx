@@ -65,7 +65,7 @@ const AnalyzeButton = ({
   };
 
   const onRun = (operation: OperationDefinitionNode) => {
-    let jsonVariables: Record<string, any> | null = {};
+    let jsonVariables: Record<string, any> | null;
     try {
       jsonVariables =
         variables && variables.trim() !== '' ? JSON.parse(variables) : null;

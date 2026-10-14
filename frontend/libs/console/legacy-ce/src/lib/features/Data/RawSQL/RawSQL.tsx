@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Analytics, REDACT_EVERYTHING } from '@hasura/shared/analytics';
 import {
   AceEditor,
@@ -73,10 +73,14 @@ const RawSQL = () => {
   const [selectedDatabase, setSelectedDatabase] = useState(
     searchParams.get('source') || nativeSources?.[0]?.name,
   );
-  const [suggestLangChange, setSuggestLangChange] = useState(false);
   const selectedDriver = nativeSources.find(
     (source) => source.name === selectedDatabase,
   )?.kind;
+
+  // `suggestLangChange` is fully derived from the SQL text and the selected
+  // driver, so compute it during render instead of mirroring it into state via
+  // an effect (this also removes an extra render pass).
+  const suggestLangChange = checkChangeLang(sql, selectedDriver);
 
   const dataSource = selectedDriver ? getDatabaseMethods(selectedDriver) : null;
   const isTrackingSupported =
@@ -89,24 +93,17 @@ const RawSQL = () => {
     ? typeof dataSource.utilities.statementTimeoutSQL === 'function'
     : null;
 
-  useEffect(() => {
-    if (isStatementTimeoutSupported === false) {
-      setStatementTimeout(null);
-    }
-  }, [isStatementTimeoutSupported]);
+  // If the selected driver doesn't support a statement timeout, force the stored
+  // value to null. Done during render (the guard converges once the value is
+  // null) rather than in an effect, which would trigger an extra render pass.
+  if (isStatementTimeoutSupported === false && statementTimeout !== null) {
+    setStatementTimeout(null);
+  }
 
   const dropDownSelectorValueChange = (value: string) => {
     const driver = getSourceDriver(nativeSources, value);
     setSelectedDatabase(driver);
   };
-
-  useEffect(() => {
-    if (checkChangeLang(sql, selectedDriver)) {
-      setSuggestLangChange(true);
-    } else if (suggestLangChange) {
-      setSuggestLangChange(false);
-    }
-  }, [sql, selectedDriver]);
 
   const submitSQL = () => {
     if (!selectedDriver) {
@@ -243,18 +240,16 @@ const RawSQL = () => {
           ? dataSource?.utilities.parseCreateSchemaSQL(cleanSql)
           : [];
         if (objects?.length) {
-          let allObjectsTrackable = true;
-
           const trackedTables = (
             meta ? MetadataSelectors.getTables(selectedDatabase)(meta) : []
           )
-            .map((t) => extractTableInfo(t.table)!)
-            .filter(Boolean);
+            .map((t) => extractTableInfo(t.table))
+            .filter((info): info is NonNullable<typeof info> => Boolean(info));
           const trackedObjectNames = trackedTables.map((schema) => {
             return [schema.schema, schema.name].join('.');
           });
 
-          allObjectsTrackable = objects.every((object) => {
+          const allObjectsTrackable = objects.every((object) => {
             if (object.type === 'function') {
               return false;
             }

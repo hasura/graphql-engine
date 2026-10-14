@@ -72,6 +72,7 @@ export const useUpdateTableConfiguration = (
       resource_version,
       source,
       table,
+      showErrorNotification,
     ],
   );
 

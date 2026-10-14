@@ -11,5 +11,5 @@ export function useIsFirstRender(): () => boolean {
     }
 
     return isFirst.current;
-  }, [isFirst.current]);
+  }, []);
 }

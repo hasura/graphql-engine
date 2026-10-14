@@ -1,7 +1,7 @@
 import { TableColumn } from '@hasura/metadata/data-source';
 import { Table } from '@hasura/shared/types';
 import { getLSItem, setLSItem } from '@hasura/shared/utils';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { DataGridOptions } from '../../DataGrid/DataGrid';
 import { convertUrlToDataGridOptions } from '../../DataGrid/DataGrid.utils';
 
@@ -65,10 +65,6 @@ export const useInitialWhereAndOrderBy = ({
   table,
   dataSourceName,
 }: UseInitialWhereAndOrderByProps) => {
-  const [options, setOptions] = useState<DataGridOptions | undefined>(
-    undefined,
-  );
-
   const localStorageWhereAndOrderBy = getWhereAndOrderByFromLocalStorage({
     table,
     dataSourceName,
@@ -77,41 +73,64 @@ export const useInitialWhereAndOrderBy = ({
 
   const [initialUrlSearchParams] = useState(window.location.search);
 
-  useEffect(() => {
-    if (columns) {
-      if (initialUrlSearchParams) {
-        const newOptions = convertUrlToDataGridOptions(
-          initialUrlSearchParams,
-          columns,
-        );
+  /**
+   * The initial grid options are fully derived from the (async) columns, the
+   * URL search params captured on mount, and the persisted local-storage value.
+   * Because this is a pure computation it lives in render (via useMemo) instead
+   * of being mirrored into state through an effect. `shouldPersist` records
+   * whether the derived options came from the URL and therefore need to be
+   * written back to local storage (a side effect handled below).
+   */
+  const initialOptions = useMemo<{
+    options: DataGridOptions | undefined;
+    shouldPersist: boolean;
+  }>(() => {
+    if (!columns) {
+      return { options: undefined, shouldPersist: false };
+    }
 
-        const hasWhere = newOptions.where && newOptions.where?.length > 0;
-        const hasOrderBy =
-          newOptions.order_by && newOptions.order_by?.length > 0;
+    if (initialUrlSearchParams) {
+      const newOptions = convertUrlToDataGridOptions(
+        initialUrlSearchParams,
+        columns,
+      );
 
-        if (hasWhere || hasOrderBy) {
-          setWhereAndOrderByToLocalStorage({
-            table,
-            dataSourceName,
-            whereAndOrderBy: {
-              where: newOptions?.where || [],
-              order_by: newOptions?.order_by || [],
-            },
-          });
-          setOptions(newOptions);
-          return;
-        }
-      }
+      const hasWhere = newOptions.where && newOptions.where?.length > 0;
+      const hasOrderBy = newOptions.order_by && newOptions.order_by?.length > 0;
 
-      if (initialWhereAndOrderBy) {
-        const newOptions: DataGridOptions = {
-          where: initialWhereAndOrderBy.where,
-          order_by: initialWhereAndOrderBy.order_by,
-        };
-        setOptions(newOptions);
+      if (hasWhere || hasOrderBy) {
+        return { options: newOptions, shouldPersist: true };
       }
     }
-  }, [columns]);
+
+    if (initialWhereAndOrderBy) {
+      return {
+        options: {
+          where: initialWhereAndOrderBy.where,
+          order_by: initialWhereAndOrderBy.order_by,
+        },
+        shouldPersist: false,
+      };
+    }
+
+    return { options: undefined, shouldPersist: false };
+  }, [columns, initialUrlSearchParams, initialWhereAndOrderBy]);
+
+  const options = initialOptions.options;
+
+  // Persisting to local storage is a side effect, so it stays in an effect.
+  useEffect(() => {
+    if (initialOptions.shouldPersist && initialOptions.options) {
+      setWhereAndOrderByToLocalStorage({
+        table,
+        dataSourceName,
+        whereAndOrderBy: {
+          where: initialOptions.options.where || [],
+          order_by: initialOptions.options.order_by || [],
+        },
+      });
+    }
+  }, [initialOptions, table, dataSourceName]);
 
   const onUpdateOptions = (_options: DataGridOptions) => {
     const whereAndOrderBy: WhereAndOrderBy = {

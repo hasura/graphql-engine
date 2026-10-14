@@ -22,7 +22,7 @@ export function getNewTablesToLoad({
   const tablesToAddSet = new Set<string>();
 
   relatedTables.forEach((relationship) => {
-    let tableObject = '';
+    let tableObject: string;
     if (
       'toSource' in relationship.definition &&
       typeof relationship.definition.toTable === 'object'

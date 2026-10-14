@@ -116,33 +116,36 @@ const CopyPermissionsModal = ({ onClose, source, roles, tables }: Props) => {
       values.toTables === ALL_TABLES_VALUE
         ? undefined
         : tableOptions.find((opt) => opt.label === values.toTables)?.value;
-    if (!values.allTables && (!fromTable || !toTable)) {
+    const common = {
+      fromRole: values.fromRole,
+      actions: [values.queryType],
+      source: source.name,
+      toRoles: [
+        values.createNewRole ? (values.newRole ?? '') : (values.toRole ?? ''),
+      ],
+    };
+    const mutationOptions = {
+      onSuccess: () => {
+        onClose();
+      },
+    };
+
+    if (values.allTables) {
+      bulkCopyPermissionsByRole(
+        { ...common, allTables: true },
+        mutationOptions,
+      );
+      return;
+    }
+
+    // Non-"all tables" copy requires both a source and target table.
+    if (!fromTable || !toTable) {
       return;
     }
 
     bulkCopyPermissionsByRole(
-      {
-        fromRole: values.fromRole,
-        actions: [values.queryType],
-        source: source.name,
-        toRoles: [
-          values.createNewRole ? (values.newRole ?? '') : (values.toRole ?? ''),
-        ],
-        ...(values.allTables
-          ? {
-              allTables: true,
-            }
-          : {
-              allTables: false,
-              fromTable: fromTable!,
-              toTable: toTable!,
-            }),
-      },
-      {
-        onSuccess: () => {
-          onClose();
-        },
-      },
+      { ...common, allTables: false, fromTable, toTable },
+      mutationOptions,
     );
   };
 

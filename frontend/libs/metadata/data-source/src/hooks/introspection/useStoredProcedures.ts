@@ -9,7 +9,10 @@ export const useStoredProcedures = <FinalResult = StoredProcedure[]>(
   {
     source,
   }: {
-    source: QualifiedDataSource;
+    // `source` is optional so the query can be mounted before a data source has
+    // been selected (callers gate the fetch with `enabled: !!source`); the
+    // query key and function both handle the absent case.
+    source: QualifiedDataSource | undefined;
   },
   options?: Omit<
     UseQueryOptions<StoredProcedure[], unknown, FinalResult>,
@@ -22,8 +25,11 @@ export const useStoredProcedures = <FinalResult = StoredProcedure[]>(
   return useQuery<StoredProcedure[], unknown, FinalResult>({
     ...defaultQueryOptions,
     ...options,
-    queryKey: [source.name, 'stored_procedures'],
+    queryKey: [source?.name, 'stored_procedures'],
     queryFn: async () => {
+      if (!source) {
+        return [];
+      }
       const databaseMethods = getDatabaseMethods(source.kind);
       if (!databaseMethods.introspection.getStoredProcedures) {
         return [];

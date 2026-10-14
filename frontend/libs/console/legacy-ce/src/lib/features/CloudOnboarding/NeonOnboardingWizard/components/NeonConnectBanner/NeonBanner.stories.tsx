@@ -14,7 +14,9 @@ export const Creating: StoryObj = {
       onClickConnect={() => window.alert('clicked connect button')}
       status={{ status: 'loading' }}
       buttonText="Creating Neon Database"
-      setStepperIndex={() => {}}
+      setStepperIndex={() => {
+        /* noop */
+      }}
     />
   ),
 
@@ -44,7 +46,9 @@ export const Error: StoryObj = {
       }}
       buttonText="Try Again"
       icon="refresh"
-      setStepperIndex={() => {}}
+      setStepperIndex={() => {
+        /* noop */
+      }}
     />
   ),
 

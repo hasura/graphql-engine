@@ -41,7 +41,7 @@ export const useAdminSecretAuth = (): AuthService<AdminSecretState> => {
 
       return true;
     },
-    [setAuthState],
+    [envVars.consoleMode, fetchInconsistentMetadata],
   );
 
   const initialize = async () => {
@@ -65,10 +65,15 @@ export const useAdminSecretAuth = (): AuthService<AdminSecretState> => {
     clearConsoleAuthState();
   };
 
+  const getHeaders = useCallback(
+    async () => getAdminSecretHeaders(authState?.adminSecret),
+    [authState],
+  );
+
   return {
     authenticate,
+    getHeaders,
     isAuthenticated: Boolean(authState?.adminSecret),
-    getHeaders: async () => getAdminSecretHeaders(authState?.adminSecret),
     authType: 'admin-secret',
     initialize,
     logout,

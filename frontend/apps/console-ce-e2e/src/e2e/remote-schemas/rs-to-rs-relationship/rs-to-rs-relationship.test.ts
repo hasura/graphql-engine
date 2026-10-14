@@ -75,15 +75,21 @@ describe('check if remote schema to remote schema relationships are created prop
     // clickable element is the card itself (role=radio).
     cy.findByRole('radio', { name: /^Remote Schema/ }).click();
     cy.get('[name=name]').type('RelationshipName');
-    cy.get('[aria-labelledby=rsSourceType]')
-      .focus() // workaround for selecting things with react-select
-      .type('Pokemon{enter}', { force: true });
-    cy.get('[aria-labelledby=referenceRemoteSchema]')
-      .focus() // workaround for selecting things with react-select
-      .type('ref_rs{enter}', { force: true });
-    cy.get('[aria-labelledby=selectedOperation]')
-      .focus() // workaround for selecting things with react-select
-      .type('continents{enter}', { force: true });
+    // workaround for selecting things with react-select
+    cy.get('[aria-labelledby=rsSourceType]').focus();
+    cy.get('[aria-labelledby=rsSourceType]').type('Pokemon{enter}', {
+      force: true,
+    });
+    // workaround for selecting things with react-select
+    cy.get('[aria-labelledby=referenceRemoteSchema]').focus();
+    cy.get('[aria-labelledby=referenceRemoteSchema]').type('ref_rs{enter}', {
+      force: true,
+    });
+    // workaround for selecting things with react-select
+    cy.get('[aria-labelledby=selectedOperation]').focus();
+    cy.get('[aria-labelledby=selectedOperation]').type('continents{enter}', {
+      force: true,
+    });
 
     cy.findByRole('button', { name: 'Add Relationship' }).click();
 

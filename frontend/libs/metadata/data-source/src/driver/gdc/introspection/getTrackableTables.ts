@@ -21,7 +21,7 @@ export const getTrackableTables = async (props: GetTrackableTablesProps) => {
        * Ideally each table is supposed to be GDCTable, but the server fix has not yet been merged to main.
        * Right now it returns string as a table.
        */
-      let name = '';
+      let name: string;
 
       if (typeof table === 'string') name = table;
       else if (Array.isArray(table)) name = table.join('.');
@@ -37,6 +37,8 @@ export const getTrackableTables = async (props: GetTrackableTablesProps) => {
 
     return tables;
   } catch (error) {
-    throw new Error('Error fetching GDC tables');
+    throw Object.assign(new Error('Error fetching GDC tables'), {
+      cause: error,
+    });
   }
 };

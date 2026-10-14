@@ -1,6 +1,6 @@
 import { Source, Table } from '@hasura/shared/types';
 import { getTableDisplayName } from '@hasura/shared/utils';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { setWhereAndSortToUrl } from './BrowseRows.utils';
 import {
   DataGrid,
@@ -126,22 +126,31 @@ export const BrowseRows = ({
   const defaultActiveTab = getTableDisplayName(table);
   const [activeTab, setActiveTab] = useState(defaultActiveTab);
 
-  useEffect(() => {
+  /**
+   * When the `options` prop changes, reset back to the single original tab with
+   * the new options. This is done by adjusting state during render (guarded by
+   * the previous `options` value) rather than in an effect, to avoid a
+   * cascading render:
+   * https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+   */
+  const [prevOptions, setPrevOptions] = useState(options);
+  if (prevOptions !== options) {
+    setPrevOptions(options);
     setOriginalTableOptions(options);
-    const currentTab = openTabs[0];
+    setOpenTabs((currentTabs) => {
+      const currentTab = currentTabs[0];
 
-    setOpenTabs([
-      {
-        ...currentTab,
-        details: {
-          ...currentTab.details,
-          options,
+      return [
+        {
+          ...currentTab,
+          details: {
+            ...currentTab.details,
+            options,
+          },
         },
-      },
-    ]);
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options]);
+      ];
+    });
+  }
 
   /**
    * when relationships are open, disable sorting and searching through all the views

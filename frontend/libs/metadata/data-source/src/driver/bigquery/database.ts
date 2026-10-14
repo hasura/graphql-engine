@@ -28,7 +28,7 @@ import { validateInputRowValues } from '../common/validation';
 // An example string it matches: CREATE TABLE myschema.user(id serial primary key, name text);
 // type = table, schema = myschema, nameWithSchema = user, partition = undefined
 const createSQLRegex =
-  /create\s*(?:|or\s*replace)\s*(?<type>view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((?<schema>\"?\w+\"?)\.(?<nameWithSchema>\"?\w+\"?)|(?<name>\"?\w+\"?))\s*(?<partition>partition\s*of)?/gim;
+  /create\s*(?:|or\s*replace)\s*(?<type>view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((?<schema>"?\w+"?)\.(?<nameWithSchema>"?\w+"?)|(?<name>"?\w+"?))\s*(?<partition>partition\s*of)?/gim;
 
 export const bigquery: Database = {
   introspection: {

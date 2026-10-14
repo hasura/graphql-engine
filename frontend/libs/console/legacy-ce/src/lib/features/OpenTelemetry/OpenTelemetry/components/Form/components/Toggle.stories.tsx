@@ -39,7 +39,12 @@ export const Basic: StoryObj<typeof Toggle> = {
     const schema = z.object({ status: z.boolean() });
 
     return (
-      <SimpleForm schema={schema} onSubmit={() => {}}>
+      <SimpleForm
+        schema={schema}
+        onSubmit={() => {
+          /* noop */
+        }}
+      >
         <Toggle {...args} />
       </SimpleForm>
     );
@@ -64,7 +69,12 @@ export const WithoutLabel: StoryObj<typeof Toggle> = {
     const schema = z.object({ status: z.boolean() });
 
     return (
-      <SimpleForm schema={schema} onSubmit={() => {}}>
+      <SimpleForm
+        schema={schema}
+        onSubmit={() => {
+          /* noop */
+        }}
+      >
         <Toggle {...args} />
       </SimpleForm>
     );
@@ -91,7 +101,12 @@ export const Disabled: StoryObj<typeof Toggle> = {
     const schema = z.object({ status: z.boolean() });
 
     return (
-      <SimpleForm schema={schema} onSubmit={() => {}}>
+      <SimpleForm
+        schema={schema}
+        onSubmit={() => {
+          /* noop */
+        }}
+      >
         <Toggle {...args} />
       </SimpleForm>
     );
@@ -118,7 +133,12 @@ export const WrittenStatus: StoryObj<typeof Toggle> = {
     const schema = z.object({ status: z.boolean() });
 
     return (
-      <SimpleForm schema={schema} onSubmit={() => {}}>
+      <SimpleForm
+        schema={schema}
+        onSubmit={() => {
+          /* noop */
+        }}
+      >
         <Toggle {...args} />
       </SimpleForm>
     );
@@ -154,7 +174,12 @@ export const TestingScalability: StoryObj<typeof Toggle> = {
     const schema = z.object({ status: z.boolean() });
 
     return (
-      <SimpleForm schema={schema} onSubmit={() => {}}>
+      <SimpleForm
+        schema={schema}
+        onSubmit={() => {
+          /* noop */
+        }}
+      >
         <Toggle {...args} />
         <span>
           <i>After-toggle text</i>
@@ -184,7 +209,12 @@ export const HappyPath: StoryObj<typeof Toggle> = {
     const schema = z.object({ status: z.boolean() });
 
     return (
-      <SimpleForm schema={schema} onSubmit={() => {}}>
+      <SimpleForm
+        schema={schema}
+        onSubmit={() => {
+          /* noop */
+        }}
+      >
         <Toggle {...args} />
       </SimpleForm>
     );

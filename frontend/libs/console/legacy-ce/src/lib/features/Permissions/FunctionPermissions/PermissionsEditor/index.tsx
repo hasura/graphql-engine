@@ -33,10 +33,10 @@ const Permissions: React.FC<PermissionsProps> = ({
   const [role, setRole] = useState('');
 
   const allRoles = MetadataSelectors.getRoles(metadata);
-  const tableSelectPermissions = currentFunction.configuration?.response?.table
-    ? currentSource.tables.find((t) =>
-        areTablesEqual(t.table, currentFunction.configuration!.response!.table),
-      )?.select_permissions
+  const responseTable = currentFunction.configuration?.response?.table;
+  const tableSelectPermissions = responseTable
+    ? currentSource.tables.find((t) => areTablesEqual(t.table, responseTable))
+        ?.select_permissions
     : [];
 
   const permCloseEdit = () => {

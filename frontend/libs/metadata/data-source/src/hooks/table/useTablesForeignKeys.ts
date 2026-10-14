@@ -26,13 +26,14 @@ export const useTablesForeignKeys = <T = TableFkRelationships[][]>(
       }
 
       const dataSource = getDatabaseMethods(source.kind);
-      if (!dataSource.introspection.getFKRelationships) {
+      const { getFKRelationships } = dataSource.introspection;
+      if (!getFKRelationships) {
         return [];
       }
 
       return Promise.all(
         tables.map((table) =>
-          dataSource.introspection.getFKRelationships!({
+          getFKRelationships({
             endpoints,
             fetchJson,
             table,

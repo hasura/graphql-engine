@@ -24,7 +24,7 @@ import {
 } from '../common/modify';
 
 const createSQLRegex =
-  /create\s*(?:|or\s*replace)\s*(?<type>view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((?<schema>\"?\w+\"?)\.(?<nameWithSchema>\"?\w+\"?)|(?<name>\"?\w+\"?))\s*(?<partition>partition\s*of)?/gim;
+  /create\s*(?:|or\s*replace)\s*(?<type>view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((?<schema>"?\w+"?)\.(?<nameWithSchema>"?\w+"?)|(?<name>"?\w+"?))\s*(?<partition>partition\s*of)?/gim;
 
 export const mssql: Database = {
   introspection: {

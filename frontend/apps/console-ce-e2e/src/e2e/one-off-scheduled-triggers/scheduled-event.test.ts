@@ -38,9 +38,12 @@ describe('Create Scheduled trigger', () => {
     // Add headers retry config
     cy.log('**--- Add headers');
     cy.findByText('Retry Configuration').click();
-    cy.get('[name=num_retries]').clear().type('3');
-    cy.get('[name=retry_interval_seconds]').clear().type('20');
-    cy.get('[name=timeout_seconds]').clear().type('80');
+    cy.get('[name=num_retries]').clear();
+    cy.get('[name=num_retries]').type('3');
+    cy.get('[name=retry_interval_seconds]').clear();
+    cy.get('[name=retry_interval_seconds]').type('20');
+    cy.get('[name=timeout_seconds]').clear();
+    cy.get('[name=timeout_seconds]').type('80');
 
     // click on create button to save scheduled trigger
     cy.log('**--- Click on Create scheduled event');

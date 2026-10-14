@@ -46,7 +46,7 @@ export const FilterRows = ({
         });
       });
     }
-  }, [initialFilters?.length]);
+  }, [initialFilters, update]);
 
   const removeEntry = (index: number) => {
     remove(index);

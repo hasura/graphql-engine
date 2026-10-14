@@ -1,5 +1,5 @@
 import set from 'lodash/set';
-import { useCallback, useEffect, useState, createContext } from 'react';
+import { useCallback, useState, createContext } from 'react';
 import { Permissions, RowPermissionsState } from './types';
 import { updateKey } from './utils/helpers';
 import cloneDeep from 'lodash/cloneDeep';
@@ -8,9 +8,15 @@ export const rowPermissionsContext = createContext<RowPermissionsState>({
   comparators: {},
   operators: {},
   permissions: {},
-  setValue: () => {},
-  setKey: () => {},
-  setPermissions: () => {},
+  setValue: () => {
+    /* noop */
+  },
+  setKey: () => {
+    /* noop */
+  },
+  setPermissions: () => {
+    /* noop */
+  },
 });
 
 export const RowPermissionsProvider = ({
@@ -37,6 +43,9 @@ export const RowPermissionsProvider = ({
   >({ operators, permissions });
   const stringifiedPermissions = JSON.stringify(permissionsState.permissions);
   const stringifiedServerPermissionsValue = JSON.stringify(permissions);
+  const [prevServerPermissions, setPrevServerPermissions] = useState(
+    stringifiedServerPermissionsValue,
+  );
 
   const setValue = useCallback<RowPermissionsState['setValue']>(
     (path, value) => {
@@ -73,12 +82,17 @@ export const RowPermissionsProvider = ({
     [permissionsState, setPermissionsState, onPermissionsChange],
   );
 
-  // Set internal state when outside permissions change
-  useEffect(() => {
-    if (JSON.stringify(permissions) !== stringifiedPermissions) {
-      setPermissionsState({ ...permissionsState, permissions });
+  // Set internal state when outside permissions change.
+  // This is the React "adjusting state while rendering" pattern: when the
+  // server-provided `permissions` prop changes, sync the internal state during
+  // render instead of in an effect, which avoids an extra commit/cascading
+  // render while preserving identical output.
+  if (stringifiedServerPermissionsValue !== prevServerPermissions) {
+    setPrevServerPermissions(stringifiedServerPermissionsValue);
+    if (stringifiedServerPermissionsValue !== stringifiedPermissions) {
+      setPermissionsState((prev) => ({ ...prev, permissions }));
     }
-  }, [stringifiedServerPermissionsValue, setPermissionsState]);
+  }
   return (
     <rowPermissionsContext.Provider
       value={{

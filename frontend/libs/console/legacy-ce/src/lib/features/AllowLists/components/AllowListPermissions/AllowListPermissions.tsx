@@ -45,7 +45,7 @@ export const AllowListPermissions: React.FC<AllowListPermissionsTabProps> = ({
 
   const handleToggle = (roleName: string) => {
     setUpdatingRoles([...updatingRoles, roleName]);
-    let newEnabledRoles: string[] = [];
+    let newEnabledRoles: string[];
     // add roleName to enabledRoles, remove duplicates
     if (enabledRoles.includes(roleName)) {
       newEnabledRoles = Array.from(
@@ -186,7 +186,11 @@ export const AllowListPermissions: React.FC<AllowListPermissionsTabProps> = ({
                   <Switch
                     value={enabledRoles.includes(newRole)}
                     onChange={
-                      newRole !== '' ? () => handleToggle(newRole) : () => {}
+                      newRole !== ''
+                        ? () => handleToggle(newRole)
+                        : () => {
+                            /* noop */
+                          }
                     }
                     data-testid={newRole}
                   />
