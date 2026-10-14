@@ -72,7 +72,9 @@ ${values.typeDef}`);
           }}
           className="pl-0 pr-0"
           schema={schema}
-          onSubmit={() => {}}
+          onSubmit={() => {
+            /* noop */
+          }}
         >
           <ImportTypesForm setValues={setValues} />
         </SimpleForm>

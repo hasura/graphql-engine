@@ -20,7 +20,9 @@ export default {
     (StoryComponent: React.FC) => (
       <SimpleForm
         schema={schema}
-        onSubmit={() => {}}
+        onSubmit={() => {
+          /* noop */
+        }}
         options={{
           defaultValues: {
             columns: { id: false, name: false, description: false },
@@ -79,7 +81,9 @@ export const PartiallySelected: StoryObj<ColumnPermissionsSectionProps> = {
     (S: React.FC) => (
       <SimpleForm
         schema={schema}
-        onSubmit={() => {}}
+        onSubmit={() => {
+          /* noop */
+        }}
         options={{
           defaultValues: {
             columns: { id: true, name: false, description: true },
@@ -102,7 +106,9 @@ export const AllSelected: StoryObj<ColumnPermissionsSectionProps> = {
     (S: React.FC) => (
       <SimpleForm
         schema={schema}
-        onSubmit={() => {}}
+        onSubmit={() => {
+          /* noop */
+        }}
         options={{
           defaultValues: {
             columns: { id: true, name: true, description: true },

@@ -20,7 +20,7 @@ export type DropRelationshipArgs = {
 };
 
 export const getDropRelationshipType = (driver: SupportedDriver) => {
-  const prefix = getDriverPrefix(driver!);
+  const prefix = getDriverPrefix(driver);
   return `${prefix}_drop_relationship` as const;
 };
 

@@ -22,9 +22,9 @@ const sourceItemsTypesToIcons: Record<SourceItemsTypes, ReactNode> = {
   enum: <FaListUl />,
   database: <FaDatabase />,
   function: <FaDatabase />,
-  schema: <></>,
+  schema: null,
   table: <FaTable />,
-  view: <></>,
+  view: null,
 };
 
 const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({

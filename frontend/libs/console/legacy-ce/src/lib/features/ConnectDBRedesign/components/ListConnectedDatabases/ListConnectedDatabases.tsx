@@ -37,8 +37,6 @@ type DatabaseItem = {
 export const ListConnectedDatabases = (props?: { className?: string }) => {
   const navigate = useNavigate();
   const { envVars } = useAppContext();
-  const [showAccelerateProjectSection, setShowAccelerateProjectSection] =
-    useState(false);
 
   const {
     data: databaseList,
@@ -62,14 +60,15 @@ export const ListConnectedDatabases = (props?: { className?: string }) => {
     enabled: false,
   });
 
-  React.useEffect(() => {
-    if (isDatabaseCheckSuccess) {
-      const result = (latencies as any as Latency[]) ?? [];
-      const isAnyLatencyHigh = result.find(
-        (latency) => latency.avgLatency > 200,
-      );
-      setShowAccelerateProjectSection(!!isAnyLatencyHigh);
-    }
+  // Whether to surface the "accelerate project" section is fully derived from
+  // the latency-check result: it is shown only on a successful check that found
+  // at least one high-latency source (and is implicitly hidden on error/loading
+  // because `isDatabaseCheckSuccess` is false then). Deriving it during render
+  // avoids mirroring query state into local state inside an effect.
+  const showAccelerateProjectSection = React.useMemo(() => {
+    if (!isDatabaseCheckSuccess) return false;
+    const result = (latencies as any as Latency[]) ?? [];
+    return !!result.find((latency) => latency.avgLatency > 200);
   }, [isDatabaseCheckSuccess, latencies]);
 
   React.useEffect(() => {
@@ -79,7 +78,6 @@ export const ListConnectedDatabases = (props?: { className?: string }) => {
         title: 'Could not fetch latency data!',
         message: 'Something went wrong',
       });
-      setShowAccelerateProjectSection(false);
     }
   }, [isDatabaseCheckError]);
 
@@ -114,14 +112,17 @@ export const ListConnectedDatabases = (props?: { className?: string }) => {
 
   const columns = ['database', 'driver', '', ''];
 
-  const handleEdit = React.useCallback((databaseItem: DatabaseItem) => {
-    navigate(
-      dataRoutes.editDatabase({
-        name: databaseItem.dataSourceName,
-        kind: databaseItem.driver,
-      }),
-    );
-  }, []);
+  const handleEdit = React.useCallback(
+    (databaseItem: DatabaseItem) => {
+      navigate(
+        dataRoutes.editDatabase({
+          name: databaseItem.dataSourceName,
+          kind: databaseItem.driver,
+        }),
+      );
+    },
+    [navigate],
+  );
 
   const { destructivePrompt } = useDestructiveAlert();
 
@@ -235,6 +236,7 @@ export const ListConnectedDatabases = (props?: { className?: string }) => {
       ]),
     [
       databaseList,
+      databaseVersionError,
       databaseVersions,
       handleEdit,
       handleRemove,
@@ -278,7 +280,7 @@ export const ListConnectedDatabases = (props?: { className?: string }) => {
 
       window.open(cloudDetailsPage, '_blank');
     },
-    [updateProjectRegionForRowId],
+    [envVars, updateProjectRegionForRowId],
   );
 
   if (isLoading) return <>Loading...</>;

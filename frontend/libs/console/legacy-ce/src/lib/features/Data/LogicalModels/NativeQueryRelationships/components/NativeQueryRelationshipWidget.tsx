@@ -96,7 +96,15 @@ export const NativeQueryRelationshipWidget = ({
         }}
         render={({ data }) => (
           <div className="px-4">
-            <Form onSubmit={!asDialog ? onSubmit : () => {}}>
+            <Form
+              onSubmit={
+                !asDialog
+                  ? onSubmit
+                  : () => {
+                      /* noop */
+                    }
+              }
+            >
               <TrackNativeQueryRelationshipForm
                 fromNativeQuery={data.fromQuery?.root_field_name ?? ''}
                 nativeQueryOptions={data.queries

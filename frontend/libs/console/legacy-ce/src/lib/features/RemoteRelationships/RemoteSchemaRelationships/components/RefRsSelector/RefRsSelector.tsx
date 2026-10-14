@@ -24,26 +24,32 @@ export const RefRsSelector = ({ allRemoteSchemas }: RefRsSelectorProps) => {
     referenceRemoteSchema,
   );
 
-  const [operations, setOperations] = React.useState<string[]>([]);
+  // The available operations are fully derived from the introspected schema.
+  // While a new reference schema is loading, `data` is undefined (the query key
+  // changes), so this naturally resets to `[]` — matching the previous explicit
+  // reset-on-schema-change behavior without mirroring into state via effects.
+  const operations = React.useMemo(
+    () => Object.keys(data?.getQueryType()?.getFields() || {}),
+    [data],
+  );
 
   const rsOptions = React.useMemo(
     () => allRemoteSchemas.map((t) => ({ value: t, label: t })),
     [allRemoteSchemas],
   );
 
+  // When the loaded schema no longer offers the currently selected operation,
+  // clear it. Guarded by `selectedOperation` so re-running after the reset (now
+  // that `selectedOperation` is a dependency) does not write '' again.
   useEffect(() => {
-    if (referenceRemoteSchema) {
-      setOperations([]);
-    }
-  }, [referenceRemoteSchema]);
-
-  useEffect(() => {
-    const operations = Object.keys(data?.getQueryType()?.getFields() || {});
-    setOperations(operations);
-    if (operations.length > 0 && !operations.includes(selectedOperation)) {
+    if (
+      selectedOperation &&
+      operations.length > 0 &&
+      !operations.includes(selectedOperation)
+    ) {
       setValue(refRemoteOperationSelectorKey, '');
     }
-  }, [data]);
+  }, [operations, selectedOperation, setValue]);
 
   useEffect(() => {
     if (isError) {
@@ -55,7 +61,7 @@ export const RefRsSelector = ({ allRemoteSchemas }: RefRsSelectorProps) => {
     } else {
       clearErrors(refRemoteOperationSelectorKey);
     }
-  }, [isError]);
+  }, [isError, clearErrors, setError, setValue]);
 
   useEffect(() => {
     setValue('resultSet', { [selectedOperation]: { arguments: {} } });

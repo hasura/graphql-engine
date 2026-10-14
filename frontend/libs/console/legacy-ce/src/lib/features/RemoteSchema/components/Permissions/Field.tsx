@@ -14,6 +14,7 @@ import { generateTypeString, getChildArguments } from './utils';
 import Pen from './Pen';
 import { FaChevronDown, FaChevronRight, FaFilter } from 'react-icons/fa';
 import { Flex } from '@radix-ui/themes';
+import { Button, IconButton, Link, Text } from '@hasura/shared/ui';
 
 export interface FieldProps {
   i: FieldType;
@@ -25,16 +26,18 @@ export interface FieldProps {
 
 export const Field: React.FC<FieldProps> = ({
   i,
-  setItem = (e) => () => {},
-  onExpand = () => {},
+  setItem = (e) => () => {
+    /* noop */
+  },
+  onExpand = () => {
+    /* noop */
+  },
   expanded,
   items,
 }) => {
-  const [inputPresetMode, setInputPresetMode] = useState<boolean>(false);
   const [argumentsExpanded, setArgumentsExpanded] = useState<boolean>(true);
-  const [autoExpandInputPresets, setAutoExpandInputPresets] =
-    useState<boolean>(false);
   const context: any = useContext(PermissionEditorContext);
+  const { setArgTree } = context;
   let initState;
   if (i.parentName) {
     initState = context.argTree?.[i.parentName]?.[i.name]
@@ -43,36 +46,31 @@ export const Field: React.FC<FieldProps> = ({
   } else {
     initState = context.argTree?.[i.name] ? { ...context.argTree[i.name] } : {};
   }
+  // auto expand args for InputObjectTypes when there are prefilled values.
+  // This "happens only first time when the node is created", so instead of
+  // seeding the state from an effect (which caused a cascading render) we
+  // compute the seed once via lazy initial state.
+  const hasPrefilledPresets =
+    !!initState && Object.keys(initState).length > 0 && !isEmpty(initState);
+  const [inputPresetMode, setInputPresetMode] =
+    useState<boolean>(hasPrefilledPresets);
+  // Locked at mount (lazy init): the previous effect only seeded this once when
+  // the node was created and never reacted to later `fieldVal` changes.
+  const [autoExpandInputPresets] = useState<boolean>(hasPrefilledPresets);
   const [fieldVal, setfieldVal] = useState<Record<string, any>>(initState);
-  const setArg = useCallback(
-    (vStr: Record<string, unknown>) => {
-      setfieldVal((oldVal) => {
-        const newState = {
-          ...oldVal,
-          ...vStr,
-        };
-        return newState;
-      });
-    },
-    [setItem, i],
-  );
-  useEffect(() => {
-    // auto expand args for InputObjectTypes when there is prefilled values
-    // happens only first time when the node is created
-    if (
-      fieldVal &&
-      Object.keys(fieldVal).length > 0 &&
-      !isEmpty(fieldVal) &&
-      !autoExpandInputPresets
-    ) {
-      setAutoExpandInputPresets(true);
-      setInputPresetMode(true);
-    }
-  }, [autoExpandInputPresets]);
+  const setArg = useCallback((vStr: Record<string, unknown>) => {
+    setfieldVal((oldVal) => {
+      const newState = {
+        ...oldVal,
+        ...vStr,
+      };
+      return newState;
+    });
+  }, []);
 
   useEffect(() => {
     if (fieldVal && Object.keys(fieldVal).length > 0 && !isEmpty(fieldVal)) {
-      context.setArgTree((argTree: Record<string, any>) => {
+      setArgTree((argTree: Record<string, any>) => {
         const tree = i.parentName
           ? {
               ...argTree,
@@ -82,7 +80,7 @@ export const Field: React.FC<FieldProps> = ({
         return tree;
       });
     }
-  }, [fieldVal]);
+  }, [fieldVal, setArgTree, i.name, i.parentName]);
 
   const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
@@ -103,10 +101,11 @@ export const Field: React.FC<FieldProps> = ({
           expanded={expanded}
         />
         {items && (
-          <span className="text-gray-400 pt-4 pb-2 pl-6">
+          <Text>
+            {' '}
             {items.filter((item: any) => item.checked).length ?? 0} of{' '}
             {items.length ?? 0} Fields
-          </span>
+          </Text>
         )}
       </>
     );
@@ -119,22 +118,21 @@ export const Field: React.FC<FieldProps> = ({
 
   return (
     <>
-      <span className="pl-xs font-semibold" id={i.name}>
+      <Text weight="medium" id={i.name}>
         {i.name}
         {i.return && (
-          <span className="font-semibold">
-            {' '}
-            :{' '}
-            <a
+          <>
+            <span> : </span>
+            <Link
               onClick={handleClick}
               id={generateTypeString(i.return || '')}
               href={`./permissions#${generateTypeString(i.return || '')}`}
             >
               {i.return}
-            </a>
-          </span>
+            </Link>
+          </>
         )}
-      </span>
+      </Text>
       {(i.isInputObjectType &&
         inputPresetMode &&
         !isFirstLevelInputObjPreset) ||
@@ -142,17 +140,15 @@ export const Field: React.FC<FieldProps> = ({
         <div className="ml-4">
           {Object.keys(i?.args ?? {})?.length > 0 && (
             <>
-              <Flex align="center" className="text-gray-400 mt-1">
-                <button
+              <Flex align="start">
+                <Button
                   onClick={() => setArgumentsExpanded(!argumentsExpanded)}
+                  variant="ghost"
+                  color="gray"
+                  leftIcon={argumentsExpanded ? FaChevronDown : FaChevronRight}
                 >
-                  {argumentsExpanded ? (
-                    <FaChevronDown className="relative -top-0.5" size={10} />
-                  ) : (
-                    <FaChevronRight className="relative -top-0.5" size={10} />
-                  )}
-                  <span className="pl-xs">Arguments</span>
-                </button>
+                  Arguments
+                </Button>
                 {!argumentsExpanded &&
                   Object.keys(i.args).some((key) => !!fieldVal[key]) && (
                     <FaFilter className="relative ml-2" size={10} />
@@ -184,9 +180,13 @@ export const Field: React.FC<FieldProps> = ({
       ) : null}
       {/* show pen icon for input object types presets */}
       {i.isInputObjectType && !inputPresetMode && !autoExpandInputPresets ? (
-        <button onClick={() => setInputPresetMode(true)}>
-          <Pen />
-        </button>
+        <IconButton
+          color="gray"
+          radius="full"
+          variant="ghost"
+          icon={Pen}
+          onClick={() => setInputPresetMode(true)}
+        />
       ) : null}
       {i.isInputObjectType && inputPresetMode && isFirstLevelInputObjPreset ? (
         <ArgSelect

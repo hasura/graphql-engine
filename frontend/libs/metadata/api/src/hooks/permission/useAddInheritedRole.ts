@@ -37,6 +37,6 @@ export const useAddInheritedRole = () => {
         },
       );
     },
-    [mutation],
+    [mutation, showErrorNotification],
   );
 };

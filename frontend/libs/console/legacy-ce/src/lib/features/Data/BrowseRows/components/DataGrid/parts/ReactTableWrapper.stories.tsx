@@ -142,8 +142,12 @@ export const WithRelationships: StoryObj<typeof ReactTableWrapper> = {
         rows={mockDataForRows}
         relationships={{
           allRelationships: relationships,
-          onClick: () => {},
-          onClose: () => {},
+          onClick: () => {
+            /* noop */
+          },
+          onClose: () => {
+            /* noop */
+          },
         }}
         isRowsSelectionEnabled
         onRowsSelect={action('onRowsSelect')}

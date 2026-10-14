@@ -56,7 +56,7 @@ describe('TemplateGalleryBody', () => {
     renderSchemaGalleryBody();
 
     await waitForElementToBeRemoved(() =>
-      screen.getByText(/loading templates/i),
+      screen.queryByText(/loading templates/i),
     );
 
     expect(
@@ -69,7 +69,7 @@ describe('TemplateGalleryBody', () => {
     renderSchemaGalleryBody();
 
     await waitForElementToBeRemoved(() =>
-      screen.getByText(/loading templates/i),
+      screen.queryByText(/loading templates/i),
     );
 
     expect(screen.getByText(/no templates/i)).toBeVisible();
@@ -80,7 +80,7 @@ describe('TemplateGalleryBody', () => {
     const { openModalFn } = renderSchemaGalleryBody();
 
     await waitForElementToBeRemoved(() =>
-      screen.getByText(/loading templates/i),
+      screen.queryByText(/loading templates/i),
     );
 
     expect(

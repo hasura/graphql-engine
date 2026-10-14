@@ -26,10 +26,16 @@ export function ErrorBox(props: Props) {
 
   const [isRetrying, setIsRetrying] = React.useState(false);
 
-  // mark retry as complete if logId is different
-  React.useEffect(() => {
+  // mark retry as complete if logId is different. `isRetrying` is toggled by the
+  // retry click handler and reset when a new log arrives, so it cannot be purely
+  // derived. We reset it during render when `logId` changes (React's "adjusting
+  // state while a prop changes" pattern) instead of using an effect, which would
+  // trigger an extra render pass.
+  const [prevLogId, setPrevLogId] = React.useState(logId);
+  if (logId !== prevLogId) {
+    setPrevLogId(logId);
     setIsRetrying(false);
-  }, [logId]);
+  }
 
   const onRetryClick = () => {
     if (!isRetrying && retryAction) {
@@ -39,7 +45,7 @@ export function ErrorBox(props: Props) {
   };
 
   const getErrorMessage = () => {
-    let errorMsg: string | React.ReactElement<any> = '';
+    let errorMsg: string | React.ReactElement<any>;
 
     if (error?.error?.message) {
       errorMsg = capitalize(error.error.message);

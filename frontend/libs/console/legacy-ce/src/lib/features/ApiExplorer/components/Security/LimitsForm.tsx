@@ -1,4 +1,4 @@
-import React, { ReactElement, useEffect, useState } from 'react';
+import React, { ReactElement, useState } from 'react';
 import { Box, Flex, Text } from '@radix-ui/themes';
 import { FaPlus, FaTimes } from 'react-icons/fa';
 import {
@@ -63,14 +63,40 @@ export const LimitsForm: React.FC<LimitFormProps> = ({
 }) => {
   const isRateLimit = limit === 'rate_limit';
   const isGlobal = role === 'global';
-  const [addUniqueParams, setAddUniqueParams] = useState(false);
   const uniqueParams = isGlobal ? unique_params_global : unique_params_role;
 
-  useEffect(() => {
-    setAddUniqueParams(
-      isGlobal ? !isEmpty(unique_params_global) : !isEmpty(unique_params_role),
-    );
-  }, [isGlobal, role, unique_params_global, unique_params_role]);
+  // Whether the "Additional Unique Parameters" toggle should be on, derived from
+  // whichever unique-params prop is relevant for this row.
+  const hasUniqueParams = isGlobal
+    ? !isEmpty(unique_params_global)
+    : !isEmpty(unique_params_role);
+
+  // `addUniqueParams` is also user-toggleable, so it can't be pure derived
+  // state. Seed it from the props on mount and re-sync it when any of the
+  // source props change — done during render (the React "adjust state when a
+  // prop changes" pattern) instead of in an effect, so there is no extra render
+  // pass and no initial "off" flash before the effect runs.
+  const [addUniqueParams, setAddUniqueParams] = useState(hasUniqueParams);
+  const [prevUniqueParamsDeps, setPrevUniqueParamsDeps] = useState({
+    isGlobal,
+    role,
+    unique_params_global,
+    unique_params_role,
+  });
+  if (
+    prevUniqueParamsDeps.isGlobal !== isGlobal ||
+    prevUniqueParamsDeps.role !== role ||
+    prevUniqueParamsDeps.unique_params_global !== unique_params_global ||
+    prevUniqueParamsDeps.unique_params_role !== unique_params_role
+  ) {
+    setPrevUniqueParamsDeps({
+      isGlobal,
+      role,
+      unique_params_global,
+      unique_params_role,
+    });
+    setAddUniqueParams(hasUniqueParams);
+  }
 
   const isdisabledGlobally =
     (isEmpty(globalLimit) || (globalLimit as number) < 0) && !isGlobal;

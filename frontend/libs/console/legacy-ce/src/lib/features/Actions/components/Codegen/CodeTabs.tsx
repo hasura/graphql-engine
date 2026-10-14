@@ -1,4 +1,5 @@
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getFrameworkCodegen } from './utils';
 import {
   getErrorMessage,
@@ -30,35 +31,38 @@ const CodeTabs = ({
   parentMutation,
   shouldDerive,
 }: Props) => {
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState(null);
-  const [codegenFiles, setCodegenFiles] = React.useState([]);
   const [selectedTab, setSelectedTab] = React.useState<string | undefined>();
 
-  const init = () => {
-    if (!framework) {
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    getFrameworkCodegen(
+  // Fetching the generated code is a server-synchronisation concern, so it is
+  // modelled with react-query instead of a manual effect that synchronously
+  // flipped loading/error state (which caused cascading renders). The query key
+  // captures every input the result depends on, so the code regenerates
+  // whenever the framework, action name, SDL, or derivation settings change.
+  const {
+    data: codegenFiles = [],
+    isFetching: loading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: [
+      'actions-framework-codegen',
       framework,
       currentAction.name,
       actionsSdl,
+      shouldDerive,
       shouldDerive ? parentMutation : null,
-    )
-      .then((codeFiles) => {
-        setCodegenFiles(codeFiles);
-        setLoading(false);
-      })
-      .catch((e) => {
-        setError(e);
-        setLoading(false);
-      });
-  };
-
-  React.useEffect(init, [framework, parentMutation, shouldDerive]);
+    ],
+    queryFn: () =>
+      getFrameworkCodegen(
+        framework,
+        currentAction.name,
+        actionsSdl,
+        shouldDerive ? parentMutation : null,
+      ),
+    enabled: !!framework,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
 
   const files = codegenFiles
     .map(
@@ -107,7 +111,7 @@ const CodeTabs = ({
     return (
       <IndicatorCard status="negative" showIcon>
         Error generating code.&nbsp;
-        <Link onClick={init} className="cursor-pointer!">
+        <Link onClick={() => refetch()} className="cursor-pointer!">
           Try again
         </Link>
         <br />

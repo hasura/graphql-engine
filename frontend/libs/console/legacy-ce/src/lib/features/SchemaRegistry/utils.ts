@@ -92,13 +92,10 @@ export const schemaTransformFn = (
   const roleBasedSchemas: RoleBasedSchema[] = [];
 
   const prevSchemaDiff = data.diff_with_previous_schema;
-  let changes: SchemaChange[] | undefined = [];
-
-  if (prevSchemaDiff?.length > 0) {
-    changes = [...(prevSchemaDiff[0]?.schema_diff_data || [])];
-  } else {
-    changes = undefined;
-  }
+  const changes: SchemaChange[] | undefined =
+    prevSchemaDiff?.length > 0
+      ? [...(prevSchemaDiff[0]?.schema_diff_data || [])]
+      : undefined;
 
   const roleBasedSchema: RoleBasedSchema = {
     id: data.id,

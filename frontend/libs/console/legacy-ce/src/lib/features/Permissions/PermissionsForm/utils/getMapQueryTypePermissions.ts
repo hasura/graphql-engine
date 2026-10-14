@@ -45,7 +45,7 @@ const getPermissionsMappedByRole = ({
     if (!perms.filter) perms.filter = perms?.check;
   }
 
-  perms.columns = formatColumns(perms.columns! as string[]) as any;
+  perms.columns = formatColumns(perms.columns as string[]) as any;
 
   return {
     queryType,

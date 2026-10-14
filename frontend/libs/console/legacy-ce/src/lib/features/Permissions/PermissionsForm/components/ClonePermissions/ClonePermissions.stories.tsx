@@ -13,7 +13,13 @@ export default {
   component: ClonePermissionsSection,
   decorators: [
     (StoryComponent: React.FC) => (
-      <SimpleForm schema={z.any()} onSubmit={() => {}} className="p-4">
+      <SimpleForm
+        schema={z.any()}
+        onSubmit={() => {
+          /* noop */
+        }}
+        className="p-4"
+      >
         <StoryComponent />
       </SimpleForm>
     ),

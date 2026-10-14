@@ -195,7 +195,11 @@ export const SlackAlerts: React.FC<SlackAlertsProps> = ({ onClose }) => {
     useSlackIntegration(onCloseDeleteConfirmation);
 
   const [slackIntegrationStatus, setSlackIntegrationStatus] =
-    React.useState<SlackOauthStatus>(slackOauthStatus);
+    React.useState<SlackOauthStatus>(() =>
+      !doesSlackIntegrationExist && slackOauthStatus.status === 'authenticated'
+        ? { status: 'idle' }
+        : slackOauthStatus,
+    );
 
   const onIntegrateSlack = () => {
     startSlackOAuth();
@@ -215,14 +219,29 @@ export const SlackAlerts: React.FC<SlackAlertsProps> = ({ onClose }) => {
     }
   }, [slackIntegrationStatus]);
 
-  React.useEffect(() => {
-    setSlackIntegrationStatus(slackOauthStatus);
+  // Mirror the OAuth status coming from the integration hook. When either the
+  // OAuth status or whether an integration already exists changes, re-sync the
+  // local state during render (guarded by the previous values). This keeps
+  // user-driven overrides (e.g. dismissing an error -> idle) in place until the
+  // next real change, and avoids the extra render pass of an effect.
+  const [prevSync, setPrevSync] = React.useState({
+    slackOauthStatus,
+    doesSlackIntegrationExist,
+  });
+  if (
+    prevSync.slackOauthStatus !== slackOauthStatus ||
+    prevSync.doesSlackIntegrationExist !== doesSlackIntegrationExist
+  ) {
+    setPrevSync({ slackOauthStatus, doesSlackIntegrationExist });
     if (
       !doesSlackIntegrationExist &&
       slackOauthStatus.status === 'authenticated'
-    )
+    ) {
       setSlackIntegrationStatus({ status: 'idle' });
-  }, [slackOauthStatus, doesSlackIntegrationExist]);
+    } else {
+      setSlackIntegrationStatus(slackOauthStatus);
+    }
+  }
 
   return (
     <div className="-ml-4">

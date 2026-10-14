@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer } from 'react';
+import React, { useEffect, useReducer, useRef } from 'react';
 import { Analytics, REDACT_EVERYTHING } from '@hasura/shared/analytics';
 import { isProConsole, dataRoutes } from '@hasura/shared/utils';
 import {
@@ -71,6 +71,15 @@ const AddEventTrigger: React.FC = () => {
   const { access: eeLiteAccess } = useEELiteAccess();
   const createEventTrigger = useCreateEventTrigger();
   const testWebhook = useTestWebhookTransform();
+  // `useTestWebhookTransform` returns a fresh function every render. Keep the
+  // latest one in a ref so the url-preview effect below can depend only on the
+  // transform inputs (and re-run when they change) without re-running — and
+  // looping — on the function's identity. Updated in an effect to avoid
+  // mutating the ref during render.
+  const testWebhookRef = useRef(testWebhook);
+  useEffect(() => {
+    testWebhookRef.current = testWebhook;
+  });
 
   const currentSource = source
     ? dataSourcesList?.find((s) => s.name === source)
@@ -188,16 +197,17 @@ const AddEventTrigger: React.FC = () => {
         'Please configure your webhook handler to generate request url transform',
       );
     } else {
-      testWebhook({
-        version: transformState.version,
-        inputPayloadString: transformState.requestSampleInput,
-        webhookUrl: webhook.value,
-        envVarsFromContext: transformState.envVars,
-        sessionVarsFromContext: transformState.sessionVars,
-        requestUrl: transformState.requestUrl,
-        queryParams: transformState.requestQueryParams,
-        isEnvVar: webhook.type === 'env',
-      })
+      testWebhookRef
+        .current({
+          version: transformState.version,
+          inputPayloadString: transformState.requestSampleInput,
+          webhookUrl: webhook.value,
+          envVarsFromContext: transformState.envVars,
+          sessionVarsFromContext: transformState.sessionVars,
+          requestUrl: transformState.requestUrl,
+          queryParams: transformState.requestQueryParams,
+          isEnvVar: webhook.type === 'env',
+        })
         .then(onResponse)
         // parseValidateApiData will parse both success and error
         .catch(onResponse);
@@ -209,6 +219,7 @@ const AddEventTrigger: React.FC = () => {
     transformState.requestQueryParams,
     transformState.envVars,
     transformState.sessionVars,
+    transformState.version,
   ]);
 
   useDebouncedEffect(

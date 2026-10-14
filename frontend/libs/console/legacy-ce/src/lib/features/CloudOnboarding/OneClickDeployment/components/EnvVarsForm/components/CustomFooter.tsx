@@ -28,7 +28,9 @@ export function CustomFooter(props: Props) {
         }}
         disabled={state === 'loading'}
         isLoading={state === 'loading'}
-        onClose={() => {}}
+        onClose={() => {
+          /* noop */
+        }}
       />
     </Analytics>
   );

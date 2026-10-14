@@ -20,7 +20,7 @@ export default {
   ],
 } as Meta<typeof RenderOpenApi3Form>;
 
-export const booleanInput: StoryFn<typeof RenderOpenApi3Form> = () => {
+export const BooleanInput: StoryFn<typeof RenderOpenApi3Form> = () => {
   return (
     <RenderOpenApi3Form
       name="BooleanInput"
@@ -37,7 +37,7 @@ export const booleanInput: StoryFn<typeof RenderOpenApi3Form> = () => {
   );
 };
 
-export const booleanInputWithExistingValues: StoryFn<
+export const BooleanInputWithExistingValues: StoryFn<
   typeof RenderOpenApi3Form
 > = () => {
   return (

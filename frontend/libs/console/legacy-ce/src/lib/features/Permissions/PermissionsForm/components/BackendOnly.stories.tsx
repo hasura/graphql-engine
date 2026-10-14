@@ -26,7 +26,9 @@ export const BackendOnlyEnabled: StoryObj<BackEndOnlySectionProps> = {
     (StoryComponent: React.FC) => (
       <SimpleForm
         schema={schema}
-        onSubmit={() => {}}
+        onSubmit={() => {
+          /* noop */
+        }}
         options={{ defaultValues: { backendOnly: true } }}
         className="p-4"
       >
@@ -45,7 +47,9 @@ export const BackendOnlyDisabled: StoryObj<BackEndOnlySectionProps> = {
     (StoryComponent: React.FC) => (
       <SimpleForm
         schema={schema}
-        onSubmit={() => {}}
+        onSubmit={() => {
+          /* noop */
+        }}
         options={{ defaultValues: { backendOnly: false } }}
         className="p-4"
       >

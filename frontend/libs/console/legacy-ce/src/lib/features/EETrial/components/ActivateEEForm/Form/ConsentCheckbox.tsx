@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Checkbox, ErrorMessage } from '@hasura/shared/ui';
 import { CheckboxProps, Link } from '@radix-ui/themes';
@@ -11,17 +11,14 @@ export const ConsentCheckbox = (props: Props) => {
   const { fieldName } = props;
   const { watch, setValue, formState } = useFormContext();
   const field = watch(fieldName);
-  const [errorMessage, setErrorMessage] = React.useState('');
 
-  useEffect(() => {
-    if (field) {
-      setErrorMessage('');
-    } else if (formState?.errors?.[fieldName]?.message) {
-      setErrorMessage(formState.errors[fieldName].message as string);
-    } else {
-      setErrorMessage('');
-    }
-  }, [formState?.errors?.[fieldName], field]);
+  // The error message is fully derivable from the field value and the form
+  // state, so we compute it during render instead of mirroring it into state
+  // via an effect (which triggered cascading renders).
+  const errorMessage =
+    !field && formState?.errors?.[fieldName]?.message
+      ? (formState.errors[fieldName].message as string)
+      : '';
 
   const onCheckedChange = (value: CheckboxProps['checked']) => {
     setValue(fieldName, value);

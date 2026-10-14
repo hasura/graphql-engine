@@ -63,9 +63,12 @@ xdescribe('Dynamic Db Routing', () => {
     cy.contains('Edit Connection').click();
 
     cy.log('**--- Change the URL**');
-    cy.get('[data-testid="configuration.connectionInfo.databaseUrl.url"]')
-      .clear()
-      .type('postgres://postgres:postgres@localhost:5432/postgres');
+    cy.get(
+      '[data-testid="configuration.connectionInfo.databaseUrl.url"]',
+    ).clear();
+    cy.get('[data-testid="configuration.connectionInfo.databaseUrl.url"]').type(
+      'postgres://postgres:postgres@localhost:5432/postgres',
+    );
 
     cy.log('**--- Click Update Connection ');
     cy.contains('Update Connection').click();

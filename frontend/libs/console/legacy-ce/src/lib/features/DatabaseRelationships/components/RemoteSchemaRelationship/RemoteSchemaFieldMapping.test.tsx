@@ -14,7 +14,7 @@
  * (imported by the component from the same module) is stubbed to a deterministic
  * shape so we can assert exactly what `onChange` receives.
  */
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { buildSchema } from 'graphql';
 import { RemoteSchemaFieldMapping } from './RemoteSchemaFieldMapping';
@@ -67,5 +67,28 @@ describe('RemoteSchemaFieldMapping (React 19 defaultProps -> default params)', (
     // The interaction changes the mapping (2 fields) -> onChange fires again.
     expect(onChange.mock.calls.length).toBeGreaterThan(callsBeforeInteraction);
     expect(onChange).toHaveBeenLastCalledWith({ fieldCount: 2 });
+  });
+
+  it('does not re-fire onChange when only the onChange identity changes (no runaway renders)', async () => {
+    const onChangeA = vi.fn();
+    const { rerender } = render(
+      <RemoteSchemaFieldMapping graphQLSchema={schema} onChange={onChangeA} />,
+    );
+
+    // Mount effect fires exactly once with the initial (empty) mapping.
+    await waitFor(() => expect(onChangeA).toHaveBeenCalledTimes(1));
+
+    // Parent re-renders and hands a brand new onChange reference while the
+    // relationship fields are unchanged. The effect depends only on the fields
+    // (latest onChange is read via a ref), so neither handler should be called.
+    const onChangeB = vi.fn();
+    rerender(
+      <RemoteSchemaFieldMapping graphQLSchema={schema} onChange={onChangeB} />,
+    );
+
+    // Give any stray effect a chance to run before asserting stability.
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(onChangeA).toHaveBeenCalledTimes(1);
+    expect(onChangeB).not.toHaveBeenCalled();
   });
 });

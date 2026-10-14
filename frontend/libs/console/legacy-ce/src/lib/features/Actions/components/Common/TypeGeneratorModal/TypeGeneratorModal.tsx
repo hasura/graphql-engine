@@ -64,7 +64,9 @@ export const TypeGeneratorModal = ({
             defaultValues: values,
           }}
           schema={schema}
-          onSubmit={() => {}}
+          onSubmit={() => {
+            /* noop */
+          }}
         >
           <TypeGeneratorForm setValues={setValues} />
         </SimpleForm>

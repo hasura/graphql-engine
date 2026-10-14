@@ -15,6 +15,8 @@ export const Primary: StoryObj<BulkDeleteProps> = {
   args: {
     dataSourceName: 'default',
     roles: ['user'],
-    handleClose: () => {},
+    handleClose: () => {
+      /* noop */
+    },
   },
 };

@@ -44,9 +44,7 @@ export const RequestHeadersSelector = ({
               <Table.RowHeaderCell>Key</Table.RowHeaderCell>
               {typeSelect ? (
                 <Table.RowHeaderCell>Type</Table.RowHeaderCell>
-              ) : (
-                <></>
-              )}
+              ) : null}
               <Table.RowHeaderCell>
                 <Flex align="center" gap="2">
                   Value

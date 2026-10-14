@@ -22,7 +22,7 @@ export function useSupportedScalars<T = string[]>(
   return useQuery<string[], HttpError, T, QueryKey>({
     queryKey: [GET_SUPPORTED_SCALARS_QUERY_KEY, driver],
     queryFn: async () => {
-      const sourceAPI = getDatabaseMethods(driver!);
+      const sourceAPI = getDatabaseMethods(driver ?? '');
       if (!driver) {
         return [];
       }

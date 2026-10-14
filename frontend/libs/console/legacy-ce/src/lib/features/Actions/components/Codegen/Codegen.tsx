@@ -83,14 +83,17 @@ const Codegen = () => {
     const getGlitchButton = () => {
       if (selectedFramework !== 'nodejs-express') return null;
       return (
-        <Link
-          href={getGlitchProjectURL()}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={'mr-5'}
-        >
-          <BsLink /> Try on glitch
-        </Link>
+        <div className="mr-5">
+          <Link
+            href={getGlitchProjectURL()}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Button variant="ghost" leftIcon={BsLink}>
+              Try on glitch
+            </Button>
+          </Link>
+        </div>
       );
     };
 

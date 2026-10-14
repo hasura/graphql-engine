@@ -126,7 +126,7 @@ export function getSubscribe<TSource, TContext, TArgs extends object>({
 > {
   // Determine the appropriate URL:
   if (typeof baseUrl === 'undefined') {
-    baseUrl = Oas3Tools.getBaseUrl(operation);
+    Oas3Tools.getBaseUrl(operation);
   }
 
   // Return custom resolver if it is defined
@@ -296,8 +296,6 @@ export function getPublishResolver<TSource, TContext, TArgs>({
             pubsubLog(errorString);
             return null;
           }
-        } else {
-          responseBody = payload;
         }
         saneData = Oas3Tools.sanitizeObjectKeys(payload);
       } else if (
@@ -854,7 +852,7 @@ export function getResolver<TSource, TContext, TArgs extends object>({
                 `even though it has content-type 'application/json'`;
 
               httpLog(errorString);
-              throw new Error(errorString);
+              throw Object.assign(new Error(errorString), { cause: e });
             }
 
             resolveData.responseHeaders = {};

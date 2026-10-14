@@ -115,10 +115,11 @@ export const DelayedDialog = ({
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       setVisible(true);
     }, delay);
-  }, []);
+    return () => clearTimeout(timer);
+  }, [delay]);
 
   return <Dialog {...props}>{visible ? children : null}</Dialog>;
 };

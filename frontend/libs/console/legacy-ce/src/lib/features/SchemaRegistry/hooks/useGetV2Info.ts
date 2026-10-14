@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { schemaRegsitryControlPlaneClient } from '../utils';
 
@@ -26,10 +26,6 @@ type GetSchemaRegistryListResponse =
 export const useGetV2Info = (
   projectId: string,
 ): GetSchemaRegistryListResponse => {
-  const [v2Count, setV2Count] = useState<number>(0);
-
-  const [lastV2EntryCursor, setLastV2EntryCursor] = useState<string>('now()');
-
   /**
    * Fetch the aggregate count for Schema Registry Dumps V2 along with the change_recorded_at of the last entry in the V2 table
    */
@@ -57,23 +53,15 @@ export const useGetV2Info = (
     staleTime: SCHEMA_REGISTRY_REFRESH_TIME,
   });
 
-  React.useEffect(() => {
-    if (v2InfoData && v2InfoData.data) {
-      const totalV2Dumps =
-        v2InfoData.data.schema_registry_dumps_v2_aggregate?.aggregate?.count;
-      setV2Count(totalV2Dumps);
+  // Both values are fully derived from the fetched aggregate data, so compute
+  // them during render instead of mirroring into state from an effect.
+  const v2Count =
+    v2InfoData?.data?.schema_registry_dumps_v2_aggregate?.aggregate?.count ?? 0;
 
-      if (
-        v2InfoData.data &&
-        v2InfoData.data.schema_registry_dumps_v2.length &&
-        v2InfoData.data.schema_registry_dumps_v2[0].change_recorded_at
-      ) {
-        setLastV2EntryCursor(
-          v2InfoData.data.schema_registry_dumps_v2[0].change_recorded_at,
-        );
-      }
-    }
-  }, [v2InfoData]);
+  const lastV2EntryCursor =
+    (v2InfoData?.data?.schema_registry_dumps_v2?.length &&
+      v2InfoData.data.schema_registry_dumps_v2[0].change_recorded_at) ||
+    'now()';
 
   if (v2InfoLoading) {
     return {

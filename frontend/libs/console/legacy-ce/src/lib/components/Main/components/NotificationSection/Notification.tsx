@@ -28,13 +28,16 @@ const Notification: React.FC<UpdateProps> = ({
 }) => {
   const [currentReadState, updateReadState] = React.useState(is_read);
 
-  React.useEffect(() => {
-    if (is_read) {
-      updateReadState(true);
-      return;
-    }
-    updateReadState(false);
-  }, [is_read]);
+  // Sync the local read state when the `is_read` prop changes. This is the
+  // React "adjust state during render" pattern (https://react.dev/learn/
+  // you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes),
+  // which avoids synchronously calling setState inside an effect while keeping
+  // the local override set by `onClickNotification`.
+  const [prevIsRead, setPrevIsRead] = React.useState(is_read);
+  if (is_read !== prevIsRead) {
+    setPrevIsRead(is_read);
+    updateReadState(Boolean(is_read));
+  }
 
   const onClickNotification = () => {
     if (!currentReadState) {

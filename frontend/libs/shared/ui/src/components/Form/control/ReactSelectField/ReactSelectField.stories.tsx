@@ -27,14 +27,16 @@ const formDecorator =
       Form,
     } = useConsoleForm({
       schema,
-      ...(withDefaultValue ? { options: { defaultValues } } : ({} as {})),
+      ...(withDefaultValue
+        ? { options: { defaultValues } }
+        : ({} as Record<string, never>)),
     });
 
     React.useEffect(() => {
       if (triggerValidation) {
         void trigger();
       }
-    }, []);
+    }, [trigger]);
 
     return (
       <Form onSubmit={action('onSubmit')}>
@@ -73,7 +75,7 @@ const formDecoratorMulti =
       if (triggerValidation) {
         void trigger();
       }
-    }, []);
+    }, [trigger]);
 
     return (
       <Form onSubmit={action('onSubmit')}>
@@ -339,7 +341,7 @@ const formDecoratorObject =
       if (triggerValidation) {
         void trigger();
       }
-    }, []);
+    }, [trigger]);
 
     return (
       <Form onSubmit={action('onSubmit')}>
@@ -393,7 +395,7 @@ const formDecoratorObjectMulti =
       if (triggerValidation) {
         void trigger();
       }
-    }, []);
+    }, [trigger]);
 
     return (
       <Form onSubmit={action('onSubmit')}>

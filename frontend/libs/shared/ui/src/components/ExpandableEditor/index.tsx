@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Flex } from '@radix-ui/themes';
 import { Button } from '../Button';
 import { Text } from '../typography';
@@ -53,11 +53,17 @@ export const ExpandableEditor = ({
 }: Props) => {
   const [isEditing, setIsEditing] = useState(toggled ?? false);
 
-  useEffect(() => {
+  // Keep `isEditing` in sync with the controlled `toggled` prop. Adjusting the
+  // state during render (instead of in an effect) avoids an extra commit/
+  // cascading render while preserving the exact behavior: when `toggled`
+  // changes to a non-null value, follow it.
+  const [prevToggled, setPrevToggled] = useState(toggled);
+  if (toggled !== prevToggled) {
+    setPrevToggled(toggled);
     if (toggled !== undefined && toggled !== null && toggled !== isEditing) {
       setIsEditing(toggled);
     }
-  }, [toggled]);
+  }
 
   const toggleEditor = () => {
     if (expandCallback && !isEditing) {
@@ -133,7 +139,7 @@ export const ExpandableEditor = ({
     );
   };
 
-  let editorLabel: React.ReactNode = null;
+  let editorLabel: React.ReactNode;
   let editorContent: React.ReactNode = null;
   let actionButtons: React.ReactNode = null;
 

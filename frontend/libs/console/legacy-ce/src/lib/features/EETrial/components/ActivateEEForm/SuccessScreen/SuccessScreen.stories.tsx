@@ -12,7 +12,12 @@ export default {
 export const Demo: StoryObj<typeof SuccessScreen> = {
   render: () => {
     return (
-      <Dialog size="sm" onClose={() => {}}>
+      <Dialog
+        size="sm"
+        onClose={() => {
+          /* noop */
+        }}
+      >
         <SuccessScreen />
       </Dialog>
     );

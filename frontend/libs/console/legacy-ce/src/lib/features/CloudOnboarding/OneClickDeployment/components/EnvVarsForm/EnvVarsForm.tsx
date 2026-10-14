@@ -23,13 +23,22 @@ export function EnvVarsForm(props: EnvVarsFormProps) {
 
   const { data: tenantEnvData } = useGetTenantEnvs();
 
+  // `useErrorNotification` returns a new function on every render, so it cannot
+  // be a stable effect dependency without re-firing the notification each
+  // render. The effect's real trigger is `tenantEnvData` resolving with errors;
+  // we keep the latest notifier in a ref so the effect stays scoped to that.
+  const showErrorNotificationRef = React.useRef(showErrorNotification);
+  useEffect(() => {
+    showErrorNotificationRef.current = showErrorNotification;
+  });
+
   useEffect(() => {
     if (
       tenantEnvData &&
       tenantEnvData.errors &&
       tenantEnvData.errors.length > 0
     ) {
-      showErrorNotification({
+      showErrorNotificationRef.current({
         title: 'Error fetching Environment Variables',
         error: tenantEnvData.errors[0],
       });

@@ -44,9 +44,13 @@ beforeEach(() => {
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-const onSuccessCb = vi.fn(() => {});
+const onSuccessCb = vi.fn(() => {
+  /* noop */
+});
 
-const onErrorCb = vi.fn(() => {});
+const onErrorCb = vi.fn(() => {
+  /* noop */
+});
 
 const Component = () => {
   // fetch the function to apply migration

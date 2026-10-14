@@ -6,7 +6,8 @@ Cypress.Commands.add(
   'clearConsoleTextarea',
   { prevSubject: 'element' },
   (el) => {
-    cy.wrap(el).type('{selectall}', { force: true }).trigger('keydown', {
+    cy.wrap(el).type('{selectall}', { force: true });
+    cy.wrap(el).trigger('keydown', {
       keyCode: 46,
       which: 46,
       force: true,

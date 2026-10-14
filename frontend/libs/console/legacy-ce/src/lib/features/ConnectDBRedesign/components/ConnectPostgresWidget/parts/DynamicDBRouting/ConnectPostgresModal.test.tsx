@@ -51,9 +51,15 @@ describe('ConnectPostgresModal (Dynamic DB Routing) field binding', () => {
     // ResizeObserver, which jsdom does not implement. It is instantiated with
     // `new`, so the stub must be constructable (a class, not an arrow fn).
     global.ResizeObserver = class {
-      observe() {}
-      unobserve() {}
-      disconnect() {}
+      observe() {
+        /* noop */
+      }
+      unobserve() {
+        /* noop */
+      }
+      disconnect() {
+        /* noop */
+      }
     } as unknown as typeof ResizeObserver;
 
     // The Radix UI Select opens its listbox using the Pointer Capture /

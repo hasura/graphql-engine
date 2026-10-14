@@ -14,7 +14,9 @@ export const Default: StoryFn = () => (
     status="success"
     gitRepoName="abhi40308/hasura-sample-app-ocd"
     gitRepoFullLink="https://github.com/abhi40308/hasura-sample-app-ocd/tree/main/hasura"
-    dismissCb={() => {}}
+    dismissCb={() => {
+      /* noop */
+    }}
   />
 );
 
@@ -24,7 +26,9 @@ export const Error: StoryFn = () => {
       status="error"
       gitRepoName="abhi40308/hasura-sample-app-ocd"
       gitRepoFullLink="https://github.com/abhi40308/hasura-sample-app-ocd/tree/main/hasura"
-      dismissCb={() => {}}
+      dismissCb={() => {
+        /* noop */
+      }}
     />
   );
 };

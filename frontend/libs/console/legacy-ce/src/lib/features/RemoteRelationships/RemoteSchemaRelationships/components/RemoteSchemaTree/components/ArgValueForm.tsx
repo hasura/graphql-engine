@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { FaCircle } from 'react-icons/fa';
 import { GraphQLType } from 'graphql';
 import { useDebouncedEffect } from '@hasura/shared/hooks';
@@ -44,6 +44,16 @@ export const ArgValueForm = ({
 }: ArgValueFormProps) => {
   const [localArgValue, setLocalArgValue] = useState(argValue);
 
+  // Reset the local (debounced) copy when the `argValue` prop changes, using
+  // the "adjust state during render" pattern instead of an effect so the reset
+  // happens in the same commit as the prop change (no extra render pass). Local
+  // edits don't touch `argValue`, so they are preserved.
+  const [prevArgValue, setPrevArgValue] = useState(argValue);
+  if (argValue !== prevArgValue) {
+    setPrevArgValue(argValue);
+    setLocalArgValue(argValue);
+  }
+
   const { watch } = useFormContext<RsToRsSchema>();
 
   const sourceType = watch('rsSourceType');
@@ -52,10 +62,6 @@ export const ArgValueForm = ({
     { key: 'field', content: `Source Type Field (${sourceType})` },
     { key: 'static', content: 'Static Value' },
   ];
-
-  useEffect(() => {
-    setLocalArgValue(argValue);
-  }, [argValue]);
 
   useDebouncedEffect(
     () => {

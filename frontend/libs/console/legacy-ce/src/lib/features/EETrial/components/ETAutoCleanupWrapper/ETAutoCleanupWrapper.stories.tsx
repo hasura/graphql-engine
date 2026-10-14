@@ -40,7 +40,11 @@ export const Default: StoryObj<typeof ETAutoCleanupWrapper> = {
   render: () => {
     return (
       <ETAutoCleanupWrapper>
-        <AutoCleanupForm onChange={() => {}} />
+        <AutoCleanupForm
+          onChange={() => {
+            /* noop */
+          }}
+        />
       </ETAutoCleanupWrapper>
     );
   },
@@ -56,7 +60,11 @@ export const LicenseActive: StoryObj<typeof ETAutoCleanupWrapper> = {
   render: () => {
     return (
       <ETAutoCleanupWrapper>
-        <AutoCleanupForm onChange={() => {}} />
+        <AutoCleanupForm
+          onChange={() => {
+            /* noop */
+          }}
+        />
       </ETAutoCleanupWrapper>
     );
   },
@@ -72,7 +80,11 @@ export const LicenseExpired: StoryObj<typeof ETAutoCleanupWrapper> = {
   render: () => {
     return (
       <ETAutoCleanupWrapper>
-        <AutoCleanupForm onChange={() => {}} />
+        <AutoCleanupForm
+          onChange={() => {
+            /* noop */
+          }}
+        />
       </ETAutoCleanupWrapper>
     );
   },
@@ -88,7 +100,11 @@ export const LicenseDeactivated: StoryObj<typeof ETAutoCleanupWrapper> = {
   render: () => {
     return (
       <ETAutoCleanupWrapper>
-        <AutoCleanupForm onChange={() => {}} />
+        <AutoCleanupForm
+          onChange={() => {
+            /* noop */
+          }}
+        />
       </ETAutoCleanupWrapper>
     );
   },

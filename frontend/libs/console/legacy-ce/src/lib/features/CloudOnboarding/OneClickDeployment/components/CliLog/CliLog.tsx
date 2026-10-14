@@ -38,7 +38,7 @@ export const CliLog: React.FC<Props> = (props) => {
   switch (step) {
     case OneClickDeploymentState.SufficientEnvironmentVariables:
       return null;
-    default:
+    default: {
       const log = (
         <div className="mt-4">
           {showProgressBar ? (
@@ -74,5 +74,6 @@ export const CliLog: React.FC<Props> = (props) => {
         );
       }
       return log;
+    }
   }
 };

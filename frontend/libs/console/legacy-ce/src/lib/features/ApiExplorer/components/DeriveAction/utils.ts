@@ -46,7 +46,9 @@ const validateOperation = (
   try {
     operationAst = sdlParse(print(operation));
   } catch (e) {
-    throw Error('this seems to be an invalid GraphQL query');
+    throw Object.assign(Error('this seems to be an invalid GraphQL query'), {
+      cause: e,
+    });
   }
 
   const schemaValidationErrors = validate(clientSchema, operationAst);

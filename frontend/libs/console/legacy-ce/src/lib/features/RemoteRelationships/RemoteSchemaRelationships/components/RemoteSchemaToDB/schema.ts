@@ -25,7 +25,7 @@ export const getDefaultRemoteSchemaToDbValues = (
   typeName?: string,
 ) => {
   const relationshipInfo =
-    relationship?.definition && 'to_source' in relationship?.definition
+    relationship?.definition && 'to_source' in relationship.definition
       ? relationship.definition.to_source
       : undefined;
 

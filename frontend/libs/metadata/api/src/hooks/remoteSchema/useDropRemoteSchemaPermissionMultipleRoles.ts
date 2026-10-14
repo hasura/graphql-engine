@@ -82,7 +82,7 @@ export const useDropRemoteSchemaPermissionMultipleRoles = () => {
         },
       );
     },
-    [mutation],
+    [mutation, showErrorNotification],
   );
 
   return {

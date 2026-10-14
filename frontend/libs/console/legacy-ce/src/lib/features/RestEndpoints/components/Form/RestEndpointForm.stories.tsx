@@ -37,7 +37,7 @@ const TemplateStoriesFactory =
     </div>
   );
 
-export const stories = {
+export const Stories = {
   'Demo - Creation form': {
     formState: {
       request: dedent`query Catalog {
@@ -98,31 +98,31 @@ export const stories = {
 
 export const CreationForm: StoryObj = {
   name: 'Creation form',
-  args: stories['Demo - Creation form'],
+  args: Stories['Demo - Creation form'],
   render: (args) => Template(args),
 };
 
 export const EditionForm: StoryObj = {
   name: 'Edition form',
-  args: stories['Demo - Edition form'],
+  args: Stories['Demo - Edition form'],
   render: (args) => Template(args),
 };
 
 export const LoadingForm: StoryObj = {
   name: 'Loading form',
-  args: stories['State - Loading form'],
+  args: Stories['State - Loading form'],
   render: (args) => Template(args),
 };
 
 export const ApiPlayground: StoryObj = {
   name: 'API playground',
-  args: stories['API playground'],
+  args: Stories['API playground'],
   render: (args) => Template(args),
 };
 
 export const TestingSnapshot: StoryObj = {
   name: 'Testing - Snapshot',
-  args: stories,
+  args: Stories,
   parameters: {
     chromatic: { disableSnapshot: false },
   },

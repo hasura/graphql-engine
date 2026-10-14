@@ -37,12 +37,7 @@ const useConsoleNotifications = (
     }
 
     const { console_state: current_console_state } = catalogState;
-    let composedUpdatedState: ConsoleState = {
-      ...current_console_state,
-      console_notifications: {
-        ...current_console_state?.console_notifications,
-      },
-    };
+    let composedUpdatedState: ConsoleState;
 
     const userType = hasuraUserId || 'admin';
     const dbReadState =

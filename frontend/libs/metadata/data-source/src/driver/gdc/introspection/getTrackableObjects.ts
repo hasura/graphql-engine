@@ -62,6 +62,8 @@ export const getTrackableObjects = async ({
 
     return { tables, functions };
   } catch (error) {
-    throw new Error('Error fetching GDC trackable objects');
+    throw Object.assign(new Error('Error fetching GDC trackable objects'), {
+      cause: error,
+    });
   }
 };

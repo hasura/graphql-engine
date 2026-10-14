@@ -11,7 +11,9 @@ const withAuthService = (overrides: Partial<AuthService<any>>): Decorator => {
         authType: 'admin-secret',
         getHeaders: async () => ({}),
         authenticate: () => Promise.resolve(true),
-        logout: () => {},
+        logout: () => {
+          /* noop */
+        },
         ...overrides,
       }}
     >

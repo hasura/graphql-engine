@@ -47,12 +47,20 @@ const useModifyEventTrigger = () => {
       const requestTransform =
         getRequestTransformObject(transformState) ?? undefined;
 
+      if (!state.table) {
+        return hasuraToast({
+          type: 'error',
+          title: errorTitle,
+          message: 'Cannot modify an event trigger without a table selected.',
+        });
+      }
+
       const upQuery = generateCreateEventTriggerQuery(
         parseServerETDefinition({
           eventTrigger: trigger,
           columns,
           source: source.name,
-          table: state.table!,
+          table: state.table,
         }),
         source.kind,
         true,

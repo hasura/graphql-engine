@@ -18,7 +18,9 @@ export const Base: StoryObj = {
       orderedSurveyQuestionData={
         mockFetchAllSurveysData?.data?.survey_v2?.[2].survey_questions ?? []
       }
-      handleSubmit={() => {}}
+      handleSubmit={() => {
+        /* noop */
+      }}
     />
   ),
 

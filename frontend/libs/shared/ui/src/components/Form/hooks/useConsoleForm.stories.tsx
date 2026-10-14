@@ -139,7 +139,7 @@ export const ManuallyTriggerFormValidation: StoryObj<any> = {
     React.useEffect(() => {
       // Use useEffect hook to wait for the form to be rendered before triggering validation
       void trigger();
-    }, []);
+    }, [trigger]);
 
     return (
       <Form onSubmit={action('onSubmit')}>
@@ -185,7 +185,7 @@ export const ManuallyFocusField: StoryObj<any> = {
 
     React.useEffect(() => {
       setFocus('inputFieldName');
-    }, []);
+    }, [setFocus]);
 
     return (
       <Form onSubmit={action('onSubmit')}>
@@ -263,7 +263,7 @@ export const AllInputs: StoryObj<any> = {
     React.useEffect(() => {
       // Use useEffect hook to wait for the form to be rendered before triggering focus
       setFocus('textareaName');
-    }, []);
+    }, [setFocus]);
 
     return (
       <Form onSubmit={action('onSubmit')}>

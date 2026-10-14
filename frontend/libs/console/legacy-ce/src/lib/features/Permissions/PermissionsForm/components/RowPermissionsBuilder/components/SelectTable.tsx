@@ -27,7 +27,7 @@ export function SelectTable({
     if (comparatorName === '_table' && !areTablesEqual(value, table)) {
       setTable(value);
     }
-  }, [comparatorName, stringifiedTable, value, setTable, setComparator]);
+  }, [comparatorName, stringifiedTable, table, value, setTable, setComparator]);
 
   return (
     <div className="ml-6">

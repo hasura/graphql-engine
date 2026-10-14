@@ -40,7 +40,7 @@ export const useRemoveRemoteSchema = () => {
         },
       );
     },
-    [mutation],
+    [mutation, showErrorNotification],
   );
 
   return {

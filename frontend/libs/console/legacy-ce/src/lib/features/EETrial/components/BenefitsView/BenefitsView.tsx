@@ -32,9 +32,9 @@ export const BenefitsView = (props: EETrialBenefitsProps) => {
   } = props;
   const badgeColor = status === 'active' ? 'indigo' : 'red';
 
-  let expirationMessage = '';
-  let expiryBannerBadge: React.ReactNode = null;
-  let ctaButtonText = 'Enable Enterprise';
+  let expirationMessage: string;
+  let expiryBannerBadge: React.ReactNode;
+  let ctaButtonText: string;
   let ctaButtonIcon: IconType | undefined;
 
   const benefitsHeaderText = 'Benefits of Hasura Enterprise Edition';

@@ -304,7 +304,11 @@ const mapEventTrigger = (
   return {
     ...et,
     table: {
-      ...extractTableInfo(table)!,
+      // `extractTableInfo` is typed `QualifiedTable | null`; for a real event
+      // trigger's table it always resolves, but the `?? {}` fallback keeps
+      // `name`/`schema` required (matching `EventTriggerWithTableInfo`) without
+      // a non-null assertion.
+      ...(extractTableInfo(table) ?? { name: '', schema: '' }),
       source: sourceName,
     },
   };
@@ -342,7 +346,7 @@ export const selectEventTriggerByName =
       return undefined;
     }
 
-    for (const source of m?.metadata.sources) {
+    for (const source of m.metadata.sources) {
       for (const t of source.tables) {
         // `event_triggers` is optional and omitted by export_metadata for
         // tables with none (e.g. after the last trigger is deleted); guard so

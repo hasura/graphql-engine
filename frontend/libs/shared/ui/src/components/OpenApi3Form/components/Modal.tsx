@@ -17,7 +17,11 @@ export const ActionInitialModal = ({
   handleOpenApiForm,
 }: props) => {
   return (
-    <Dialog onClose={() => {}}>
+    <Dialog
+      onClose={() => {
+        /* noop */
+      }}
+    >
       <>
         <div className="px-6 py-8">
           <Heading size="4">Let&apos;s create an Action from</Heading>

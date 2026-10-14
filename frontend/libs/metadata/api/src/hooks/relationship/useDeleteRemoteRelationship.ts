@@ -11,7 +11,7 @@ export type DeleteRemoteRelationshipArgs = {
 };
 
 export const getDeleteRemoteRelationshipType = (driver: SupportedDriver) => {
-  const prefix = getDriverPrefix(driver!);
+  const prefix = getDriverPrefix(driver);
   return `${prefix}_delete_remote_relationship` as const;
 };
 

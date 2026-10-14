@@ -41,7 +41,9 @@ export const Initializing: StoryFn = () => (
       status={{
         kind: 'in-progress',
       }}
-      retryAction={() => {}}
+      retryAction={() => {
+        /* noop */
+      }}
       fallbackApps={fallbackApps}
     />
   </StoryWrapper>
@@ -54,7 +56,9 @@ export const Initialized: StoryFn = () => (
       status={{
         kind: 'success',
       }}
-      retryAction={() => {}}
+      retryAction={() => {
+        /* noop */
+      }}
       fallbackApps={fallbackApps}
     />
   </StoryWrapper>
@@ -68,7 +72,9 @@ export const ErrorLogWithExpectedError: StoryFn = () => (
         kind: 'error',
         error: { error: { message: 'something went wrong' } },
       }}
-      retryAction={() => {}}
+      retryAction={() => {
+        /* noop */
+      }}
       fallbackApps={fallbackApps}
     />
   </StoryWrapper>
@@ -82,7 +88,9 @@ export const ErrorLogWithUnknownError: StoryFn = () => (
         kind: 'error',
         error: { message: 'something went wrong' },
       }}
-      retryAction={() => {}}
+      retryAction={() => {
+        /* noop */
+      }}
       fallbackApps={fallbackApps}
     />
   </StoryWrapper>

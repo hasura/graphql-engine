@@ -1,4 +1,5 @@
-import { useEffect, useReducer, useState } from 'react';
+import { useEffect, useReducer } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import {
   QueryParams,
   RequestTransformState,
@@ -57,7 +58,16 @@ const useActionForm = (
 ) => {
   const testWebhookTransform = useTestWebhookTransform();
   const { readOnlyMode } = useAppContext();
-  const [isFetching, setIsFetching] = useState(false);
+  // The webhook-transform preview requests are server-synchronisation calls.
+  // Modelling them with react-query mutations lets us derive `isFetching` from
+  // the mutations' pending state instead of flipping a boolean synchronously
+  // inside the effects below (which caused cascading renders). `mutate` is a
+  // stable reference, and react-query always invokes the latest `mutationFn`.
+  const { mutate: testUrlTransform, isPending: isUrlTransformPending } =
+    useMutation({ mutationFn: testWebhookTransform });
+  const { mutate: testBodyTransform, isPending: isBodyTransformPending } =
+    useMutation({ mutationFn: testWebhookTransform });
+  const isFetching = isUrlTransformPending || isBodyTransformPending;
   const [state, dispatch] = useReducer(reducer, initialState);
   const [transformState, transformDispatch] = useReducer(
     requestTransformReducer,
@@ -97,7 +107,6 @@ const useActionForm = (
       );
     } else {
       const onResponse = (data: Record<string, any>) => {
-        setIsFetching(false);
         parseValidateApiData(
           data,
           requestUrlErrorOnChange,
@@ -105,18 +114,19 @@ const useActionForm = (
         );
       };
 
-      setIsFetching(true);
-      testWebhookTransform({
-        version: transformState.version,
-        inputPayloadString: transformState.requestSampleInput,
-        webhookUrl: state.handler,
-        envVarsFromContext: transformState.envVars,
-        sessionVarsFromContext: transformState.sessionVars,
-        requestUrl: transformState.requestUrl,
-        queryParams: transformState.requestQueryParams,
-      })
-        .then(onResponse)
-        .catch(onResponse);
+      testUrlTransform(
+        {
+          version: transformState.version,
+          inputPayloadString: transformState.requestSampleInput,
+          webhookUrl: state.handler,
+          envVarsFromContext: transformState.envVars,
+          sessionVarsFromContext: transformState.sessionVars,
+          requestUrl: transformState.requestUrl,
+          queryParams: transformState.requestQueryParams,
+        },
+        // parseValidateApiData parses both success and error payloads
+        { onSuccess: onResponse, onError: onResponse },
+      );
     }
   }, [
     transformState.requestSampleInput,
@@ -125,6 +135,8 @@ const useActionForm = (
     transformState.requestQueryParams,
     transformState.envVars,
     transformState.sessionVars,
+    transformState.version,
+    testUrlTransform,
   ]);
 
   useEffect(() => {
@@ -134,7 +146,6 @@ const useActionForm = (
       );
     } else if (transformState.requestBody && state.handler) {
       const onResponse = (data: Record<string, any>) => {
-        setIsFetching(false);
         parseValidateApiData(
           data,
           requestBodyErrorOnChange,
@@ -143,19 +154,20 @@ const useActionForm = (
         );
       };
 
-      setIsFetching(true);
-      testWebhookTransform({
-        version: transformState.version,
-        inputPayloadString: transformState.requestSampleInput,
-        webhookUrl: state.handler,
-        envVarsFromContext: transformState.envVars,
-        sessionVarsFromContext: transformState.sessionVars,
-        requestUrl: transformState.requestUrl,
-        queryParams: transformState.requestQueryParams,
-        transformerBody: transformState.requestBody,
-      })
-        .then(onResponse)
-        .catch(onResponse);
+      testBodyTransform(
+        {
+          version: transformState.version,
+          inputPayloadString: transformState.requestSampleInput,
+          webhookUrl: state.handler,
+          envVarsFromContext: transformState.envVars,
+          sessionVarsFromContext: transformState.sessionVars,
+          requestUrl: transformState.requestUrl,
+          queryParams: transformState.requestQueryParams,
+          transformerBody: transformState.requestBody,
+        },
+        // parseValidateApiData parses both success and error payloads
+        { onSuccess: onResponse, onError: onResponse },
+      );
     }
   }, [
     transformState.requestSampleInput,
@@ -164,6 +176,10 @@ const useActionForm = (
     transformState.envVars,
     transformState.sessionVars,
     transformState.requestTransformedBody,
+    transformState.requestUrl,
+    transformState.requestQueryParams,
+    transformState.version,
+    testBodyTransform,
   ]);
 
   const handlerOnChange = (val: string) => {

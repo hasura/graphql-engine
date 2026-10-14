@@ -37,7 +37,7 @@ export const formatTableRelationships = (metadataTables: MetadataTable[]) => {
       const relations = object_relationships
         .map((relationship) => {
           const relType =
-            'manual_configuration' in relationship?.using
+            'manual_configuration' in relationship.using
               ? getTableDisplayName(
                   relationship.using.manual_configuration.remote_table,
                   '',

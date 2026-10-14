@@ -101,24 +101,26 @@ export const DynamicDBRouting = (props: DynamicDBRoutingProps) => {
   const formTemplate = watch('connection_template');
   const modalTemplate = watch('validation.connection_template');
 
-  // keep form template and modal template in sync
+  // keep form template and modal template in sync. The `!==` guards make these
+  // idempotent, so re-running when either value (or the stable `setValue`)
+  // changes converges without an update loop.
   React.useEffect(() => {
     if (modalTemplate && modalTemplate && formTemplate !== modalTemplate) {
       setValue('connection_template', modalTemplate);
     }
-  }, [modalTemplate]);
+  }, [modalTemplate, formTemplate, setValue]);
 
   React.useEffect(() => {
     if (formTemplate && formTemplate && modalTemplate !== formTemplate) {
       setValue('validation.connection_template', formTemplate);
     }
-  }, [formTemplate]);
+  }, [formTemplate, modalTemplate, setValue]);
 
   React.useEffect(() => {
     if (connectionTemplate) {
       setValue('connection_template', connectionTemplate);
     }
-  }, [connectionTemplate]);
+  }, [connectionTemplate, setValue]);
 
   const connectionSetMembers = connectionSet.map((connection) => {
     const { name, connection_info } = connection;

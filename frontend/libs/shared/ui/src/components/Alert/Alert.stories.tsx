@@ -61,7 +61,9 @@ export const Confirm: StoryObj<any> = {
             hasuraConfirm({
               message: 'This is a confirm!',
               title: 'Some  Title',
-              onClose: ({ confirmed }) => {},
+              onClose: ({ confirmed }) => {
+                /* noop */
+              },
             });
           }}
         >
@@ -661,7 +663,9 @@ export const ReferenceStability: StoryObj<any> = {
               hasuraConfirm({
                 title: 'Test',
                 message: 'test',
-                onClose: () => {},
+                onClose: () => {
+                  /* noop */
+                },
               });
             }}
           >
@@ -674,7 +678,9 @@ export const ReferenceStability: StoryObj<any> = {
               hasuraPrompt({
                 title: 'Test',
                 message: 'test',
-                onClose: () => {},
+                onClose: () => {
+                  /* noop */
+                },
               });
             }}
           >

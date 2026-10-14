@@ -1,5 +1,5 @@
 import get from 'lodash/get';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FaExclamationTriangle } from 'react-icons/fa';
 import { ZodType, z } from 'zod';
 import {
@@ -126,9 +126,12 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
     (isLoadingValidationSchema && !isValidationSchemaError) ||
     (isLoadingAvailableDrivers && !isAvailableDriversError);
 
-  const [schema, setSchema] = useState<
+  // The validation schema is fully derived from the loaded config. Deriving it
+  // during render (instead of mirroring it into state via an effect) avoids an
+  // extra render pass while keeping a stable reference until the data changes.
+  const schema = useMemo<
     ZodType<Record<string, unknown>, Record<string, unknown>>
-  >(z.any());
+  >(() => data?.validationSchema ?? z.any(), [data?.validationSchema]);
 
   const {
     Form,
@@ -141,10 +144,6 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
       },
     },
   });
-
-  useEffect(() => {
-    if (data?.validationSchema) setSchema(data.validationSchema);
-  }, [data?.validationSchema]);
 
   useEffect(() => {
     if (metadataSource) {

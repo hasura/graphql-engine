@@ -41,7 +41,7 @@ export const SortRows = ({
         update(index, { column: sort.column, type: sort.type });
       });
     }
-  }, [initialSorts?.length]);
+  }, [initialSorts, update]);
 
   const columnOptions = columns
     .sort((a, b) => (a.name > b.name ? 1 : -1))

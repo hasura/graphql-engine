@@ -34,12 +34,13 @@ export const ArgSelect: React.FC<ArgSelectProps> = ({
     ),
   );
   const prevState = useRef<Record<string, any>>(undefined);
-  useEffect(() => {
-    if (value && typeof value === 'string' && value.length > 0 && !editMode) {
-      // show value instead of pen icon, if the value is defined in the prop
-      setEditMode(true);
-    }
-  }, [value, editMode]);
+  // show value instead of pen icon, if the value is defined in the prop.
+  // This mirrors the previous effect but runs during render (React's "adjust
+  // state while rendering" pattern); the `!editMode` guard makes it converge in
+  // a single extra render so it can't loop or cascade.
+  if (value && typeof value === 'string' && value.length > 0 && !editMode) {
+    setEditMode(true);
+  }
 
   useEffect(() => {
     // auto expand args when there is prefilled values
@@ -143,7 +144,9 @@ export const ArgSelect: React.FC<ArgSelectProps> = ({
         editMode
         setArgVal={setArgVal}
         value={value}
-        setEditMode={() => {}}
+        setEditMode={() => {
+          /* noop */
+        }}
         isFirstLevelInputObjPreset
       />
     );

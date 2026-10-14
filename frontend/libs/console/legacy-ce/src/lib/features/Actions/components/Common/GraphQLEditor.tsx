@@ -79,7 +79,7 @@ const GraphQLEditor: React.FC<GraphQLEditorProps> = ({
         {label ? (
           <Flex align="center" gap="2">
             <Heading size="3">{label}</Heading>
-            {tooltip ? <IconTooltip message={tooltip} /> : <></>}
+            {tooltip ? <IconTooltip message={tooltip} /> : null}
           </Flex>
         ) : null}
         <div className="my-2 relative">

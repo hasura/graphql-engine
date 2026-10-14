@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, Flex, Strong } from '@radix-ui/themes';
 import {
   Button,
@@ -47,7 +47,28 @@ const InheritedRolesEditor: React.FC<EditorProps> = ({
 
   const [options, setOptions] = useState(defaultValues);
 
-  useEffect(() => {
+  // The editor mirrors these props into local, editable state. When any of them
+  // change we re-sync by adjusting state during render (guarded by the previous
+  // values) instead of in an effect, which avoids a cascading render:
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const [prevSyncedProps, setPrevSyncedProps] = useState({
+    inheritedRoleName: props.inheritedRoleName,
+    inheritedRole: props.inheritedRole,
+    isCollapsed: props.isCollapsed,
+    allRoles,
+  });
+  if (
+    prevSyncedProps.inheritedRoleName !== props.inheritedRoleName ||
+    prevSyncedProps.inheritedRole !== props.inheritedRole ||
+    prevSyncedProps.isCollapsed !== props.isCollapsed ||
+    prevSyncedProps.allRoles !== allRoles
+  ) {
+    setPrevSyncedProps({
+      inheritedRoleName: props.inheritedRoleName,
+      inheritedRole: props.inheritedRole,
+      isCollapsed: props.isCollapsed,
+      allRoles,
+    });
     setInheritedRoleName(props.inheritedRoleName);
     setInheritedRole(props.inheritedRole);
     setIsCollapsed(props.isCollapsed);
@@ -56,12 +77,7 @@ const InheritedRolesEditor: React.FC<EditorProps> = ({
     setOptions(
       allRoles.filter((role) => inheritedRole?.role_set.includes(role)),
     );
-  }, [
-    props.inheritedRoleName,
-    props.inheritedRole,
-    props.isCollapsed,
-    allRoles,
-  ]);
+  }
 
   const [filterText, setFilterText] = useState('');
 

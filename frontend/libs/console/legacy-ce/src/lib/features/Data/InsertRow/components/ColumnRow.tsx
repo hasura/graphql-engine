@@ -54,6 +54,18 @@ export const ColumnRow = ({
   const valueRadioRef = useRef<HTMLInputElement>(null);
   const valueInputRef = useRef<HTMLInputElement>(null);
 
+  // The reset effect below must run only when `resetToken` changes, but it
+  // needs the latest `onChange`/`name` (which the parent recreates on every
+  // render). Keep them in refs so they stay current without re-triggering the
+  // effect. The refs are updated in their own effect (updating a ref during
+  // render is not allowed).
+  const onChangeRef = useRef(onChange);
+  const nameRef = useRef(name);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+    nameRef.current = name;
+  });
+
   const checkValueRadio = () => {
     if (valueRadioRef.current) {
       valueRadioRef.current.checked = true;
@@ -67,8 +79,8 @@ export const ColumnRow = ({
   useEffect(() => {
     if (valueInputRef.current && !!valueInputRef.current.value) {
       valueInputRef.current.value = '';
-      onChange({
-        columnName: name,
+      onChangeRef.current({
+        columnName: nameRef.current,
         selectionType: 'default',
         value: '',
       });

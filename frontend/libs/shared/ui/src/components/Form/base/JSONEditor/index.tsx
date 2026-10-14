@@ -17,36 +17,47 @@ export const JSONEditor: React.FC<JSONEditorProps> = ({
   minLines,
 }) => {
   const [value, setValue] = useState(initData || data || '');
-  const [annotations, setAnnotations] = useState<IAnnotation[]>([]);
   const prevDataRef = useRef(data);
 
+  // Keep the latest `onChange` in a ref so the effect below can notify the
+  // parent with the current callback without having to re-run (and without
+  // forcing parents to memoize `onChange`).
+  const onChangeRef = useRef(onChange);
   useEffect(() => {
-    // if the data prop is changed do nothing
-    if (prevDataRef.current !== data) return;
+    onChangeRef.current = onChange;
+  });
+
+  useEffect(() => {
+    // if the data prop is changed do nothing (but remember it, so later edits
+    // are still propagated to the parent)
+    if (prevDataRef.current !== data) {
+      prevDataRef.current = data;
+      return;
+    }
     // when state gets new data, trigger parent callback
-    if (value !== data) onChange(value);
+    if (value !== data) onChangeRef.current(value);
   }, [value, data]);
 
-  // check and set error message
-  useEffect(() => {
-    if (isJsonString(value)) {
-      setAnnotations([]);
-    } else {
-      setAnnotations([
-        { row: 0, column: 0, text: 'Invalid JSON', type: 'error' },
-      ]);
-    }
-    return () => {
-      setAnnotations([]);
-    };
-  }, [value]);
+  // The error annotation is fully derived from the current value, so compute it
+  // during render instead of mirroring it into state via an effect.
+  const annotations = React.useMemo<IAnnotation[]>(
+    () =>
+      isJsonString(value)
+        ? []
+        : [{ row: 0, column: 0, text: 'Invalid JSON', type: 'error' }],
+    [value],
+  );
 
-  useEffect(() => {
-    // set data to editor only if the prop has a valid json string
-    // setting value from query editor will always have a valid json
-    // any invalid json means, the value is set from this component so no need to set that again
+  // Sync the editor value when the `data` prop changes to a valid json string.
+  // Done during render (guarded by the previous prop) rather than in an effect
+  // to avoid an extra commit.
+  // setting value from query editor will always have a valid json
+  // any invalid json means, the value is set from this component so no need to set that again
+  const [prevData, setPrevData] = useState(data);
+  if (data !== prevData) {
+    setPrevData(data);
     if (isJsonString(data)) setValue(data);
-  }, [data]);
+  }
 
   return (
     <AceEditor

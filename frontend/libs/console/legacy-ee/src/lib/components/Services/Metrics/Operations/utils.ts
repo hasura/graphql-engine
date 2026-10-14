@@ -100,22 +100,26 @@ const removeSecondsMiliseconds = (d) => {
 const getTimeRangeValue = (symbol) => {
   const now = new Date();
   switch (symbol) {
-    case TIME_RANGE_BY_HOUR:
+    case TIME_RANGE_BY_HOUR: {
       const oneHourBack = new Date();
       oneHourBack.setHours(now.getHours() - 1);
       return removeSecondsMiliseconds(oneHourBack).toISOString();
-    case TIME_RANGE_BY_DAY:
+    }
+    case TIME_RANGE_BY_DAY: {
       const oneDayBack = new Date();
       oneDayBack.setDate(oneDayBack.getDate() - 1);
       return removeSecondsMiliseconds(oneDayBack).toISOString();
-    case TIME_RANGE_BY_6_HOURS:
+    }
+    case TIME_RANGE_BY_6_HOURS: {
       const sixHoursBack = new Date();
       sixHoursBack.setHours(sixHoursBack.getHours() - 6);
       return removeSecondsMiliseconds(sixHoursBack).toISOString();
-    case TIME_RANGE_BY_12_HOURS:
+    }
+    case TIME_RANGE_BY_12_HOURS: {
       const twelveHoursBack = new Date();
       twelveHoursBack.setHours(now.getHours() - 12);
       return removeSecondsMiliseconds(twelveHoursBack).toISOString();
+    }
     default:
       return new Date(0).toISOString();
   }

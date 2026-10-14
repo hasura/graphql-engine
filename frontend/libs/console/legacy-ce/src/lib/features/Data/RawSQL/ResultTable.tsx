@@ -15,7 +15,7 @@ interface ResultTableProps {
   rows: Array<string[]>;
 }
 const getColCellContent = (rowColumnValue: React.ReactNode) => {
-  let cellValue: React.ReactNode = '';
+  let cellValue: React.ReactNode;
 
   if (rowColumnValue === null) {
     cellValue = <i>NULL</i>;

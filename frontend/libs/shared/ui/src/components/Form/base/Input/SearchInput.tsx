@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { FaSearch } from 'react-icons/fa';
 import { Input, InputProps } from './Input';
 import { useDebouncedEffect } from '@hasura/shared/hooks';
@@ -33,11 +33,15 @@ export const SearchInput = ({
     [searchValue],
   );
 
-  useEffect(() => {
+  // Sync the controlled `value` prop into local state during render rather than
+  // in an effect, avoiding an extra commit.
+  const [prevValue, setPrevValue] = React.useState(value);
+  if (value !== prevValue) {
+    setPrevValue(value);
     if (value !== searchValue) {
-      setSearchValue(searchValue);
+      setSearchValue(value ?? '');
     }
-  }, [value]);
+  }
 
   return (
     <Input

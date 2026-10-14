@@ -108,7 +108,9 @@ export const hasuraToast = ({
   title,
   message,
   button,
-  onRemove = () => {},
+  onRemove = () => {
+    /* noop */
+  },
   toastOptions = {},
   children,
 }: ToastProps) => {

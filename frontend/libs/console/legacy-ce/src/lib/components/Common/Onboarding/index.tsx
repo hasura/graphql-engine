@@ -124,7 +124,11 @@ interface OnboardingProps {
 const Onboarding: React.FC<OnboardingProps> = ({ console_opts, metadata }) => {
   const { envVars } = useAppContext();
   const { setOnboardingCompleted } = useCatalogState();
-  const [visible, setVisible] = React.useState(true);
+  const [visible, setVisible] = React.useState(() => {
+    const show = getLSItem(LS_KEYS.showConsoleOnboarding) || 'true';
+
+    return show === 'true';
+  });
 
   const shouldShowOnbaording = useMemo(() => {
     const shown = console_opts?.onboardingShown;
@@ -136,12 +140,6 @@ const Onboarding: React.FC<OnboardingProps> = ({ console_opts, metadata }) => {
     }
     return isMetadataEmpty(metadata) && !shown;
   }, [metadata, console_opts]);
-
-  React.useEffect(() => {
-    const show = getLSItem(LS_KEYS.showConsoleOnboarding) || 'true';
-
-    setVisible(show === 'true');
-  }, []);
 
   // Only show onboarding popup on bottom right if environment is not cloud console
   if (isCloudConsole(envVars)) {

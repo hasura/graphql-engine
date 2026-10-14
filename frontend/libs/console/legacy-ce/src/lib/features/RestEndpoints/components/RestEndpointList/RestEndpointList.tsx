@@ -51,8 +51,11 @@ export const RestEndpointList: React.FC = () => {
   const { deleteRestEndpoints } = useDeleteRestEndpoints();
   const [selectedMethods, setSelectedMethods] = React.useState<string[]>([]);
 
-  const highlighted =
-    new URLSearchParams(location.search).get('highlight')?.split(',') || [];
+  const highlighted = React.useMemo(
+    () =>
+      new URLSearchParams(location.search).get('highlight')?.split(',') || [],
+    [location.search],
+  );
 
   const [search, setSearch] = React.useState('');
 

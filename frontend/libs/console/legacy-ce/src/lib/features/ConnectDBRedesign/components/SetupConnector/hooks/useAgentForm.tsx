@@ -34,7 +34,11 @@ export const useAgentForm = () => {
   const agentPath = `http://${path}:${port}`;
 
   const AgentForm = () => (
-    <Form onSubmit={(data) => {}}>
+    <Form
+      onSubmit={() => {
+        /* noop */
+      }}
+    >
       <div>
         <Flex className="mb-4" gap="2" align="center">
           <MdOutlineTipsAndUpdates />

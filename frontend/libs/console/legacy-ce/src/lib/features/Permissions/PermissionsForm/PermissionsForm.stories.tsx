@@ -26,7 +26,9 @@ export const GDCSelect: StoryObj<PermissionsFormProps> = {
       table: ['Artist'],
     } as MetadataTable,
     roleName,
-    handleClose: () => {},
+    handleClose: () => {
+      /* noop */
+    },
   },
 };
 
@@ -41,7 +43,9 @@ export const GDCInsert: StoryObj<PermissionsFormProps> = {
       table: ['Artist'],
     } as MetadataTable,
     roleName,
-    handleClose: () => {},
+    handleClose: () => {
+      /* noop */
+    },
   },
 };
 
@@ -56,6 +60,8 @@ export const GDCUpdate: StoryObj<PermissionsFormProps> = {
       table: ['Artist'],
     } as MetadataTable,
     roleName,
-    handleClose: () => {},
+    handleClose: () => {
+      /* noop */
+    },
   },
 };

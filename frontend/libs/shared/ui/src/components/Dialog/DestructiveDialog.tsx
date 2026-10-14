@@ -88,7 +88,7 @@ export const DestructiveDialogCascade = ({
       <div className="mt-4">
         <Checkbox
           value={cascade}
-          onChange={(value) => setCascade!(value === true)}
+          onChange={(value) => setCascade(value === true)}
         >
           Enable cascade?{' '}
           <IconTooltip message="When set to true, the effect (if possible) is cascaded to any Metadata dependent objects (relationships, permissions, templates)." />

@@ -56,7 +56,11 @@ const ConnectedDatabaseManage: React.FC = () => {
       navigate(dataRoutes.connectDatabase());
       autoRedirectedToConnectPage = true;
     }
-  }, [sourcesFromMetadata?.length, isFetching]);
+    // `navigate` is stable (react-router) and the redirect body is idempotent
+    // (guarded by the module-level `autoRedirectedToConnectPage`), so including
+    // the full `sourcesFromMetadata` object is safe — it fires at most one
+    // navigation regardless of metadata re-fetches.
+  }, [sourcesFromMetadata, isFetching, navigate]);
 
   const { show: shouldShowVPCBanner, dismiss: dismissVPCBanner } =
     useVPCBannerVisibility();

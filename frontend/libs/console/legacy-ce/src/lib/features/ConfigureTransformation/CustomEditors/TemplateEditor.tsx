@@ -29,17 +29,21 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
     requestBodyError,
   );
 
-  useEffect(() => {
+  // Reset the local editing buffer / error whenever the upstream props change.
+  // Done during render (the React "adjust state when a prop changes" pattern)
+  // instead of in an effect, so no extra render pass is committed.
+  const [prevRequestBody, setPrevRequestBody] = useState(requestBody);
+  if (requestBody !== prevRequestBody) {
+    setPrevRequestBody(requestBody);
     setLocalValue(requestBody.template ?? '');
-  }, [requestBody]);
+  }
 
-  useEffect(() => {
-    if (requestBodyError) {
-      setLocalError(requestBodyError);
-    } else {
-      setLocalError(null);
-    }
-  }, [requestBodyError]);
+  const [prevRequestBodyError, setPrevRequestBodyError] =
+    useState(requestBodyError);
+  if (requestBodyError !== prevRequestBodyError) {
+    setPrevRequestBodyError(requestBodyError);
+    setLocalError(requestBodyError ? requestBodyError : null);
+  }
 
   useEffect(() => {
     const sampleInputWordCompleter = getAceCompleterFromString(

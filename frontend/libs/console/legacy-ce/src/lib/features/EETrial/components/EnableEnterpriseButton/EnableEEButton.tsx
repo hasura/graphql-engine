@@ -25,7 +25,9 @@ export function EnableEEButtonWrapper(props: Props) {
   const {
     children,
     showBenefitsView = false,
-    onFormClose = () => {},
+    onFormClose = () => {
+      /* noop */
+    },
     disabled,
   } = props;
   const [showForm, setShowForm] = useState(false);

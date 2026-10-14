@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer } from 'react';
+import React, { useEffect, useReducer, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { Analytics, REDACT_EVERYTHING } from '@hasura/shared/analytics';
 import {
@@ -102,27 +102,6 @@ const ModifyEventTrigger: React.FC = () => {
       ? 'active'
       : eeLiteAccess;
 
-  useEffect(() => {
-    if (eventTrigger.request_transform) {
-      const sampleInput = getEventRequestSampleInput(
-        eventTrigger.name,
-        currentTable,
-        eventTrigger.retry_conf?.num_retries,
-        columns,
-        state.operations,
-      );
-      transformDispatch(
-        setRequestTransformState(
-          getTransformState(eventTrigger.request_transform, sampleInput),
-        ),
-      );
-    } else {
-      transformDispatch(
-        setRequestTransformState(getEventRequestTransformDefaultState()),
-      );
-    }
-  }, [state.name]);
-
   const resetSampleInput = () => {
     const value = getEventRequestSampleInput(
       eventTrigger.name,
@@ -134,8 +113,58 @@ const ModifyEventTrigger: React.FC = () => {
     transformDispatch(setRequestSampleInput(value));
   };
 
+  // The two effects below must fire only on their keyed change: the trigger
+  // identity (`state.name`) for (re)initialising the transform state, and the
+  // webhook value for resetting the sample input. They read the server trigger,
+  // table, columns, operations and the latest `resetSampleInput` through this
+  // ref so they do NOT re-run — and clobber in-progress edits — whenever those
+  // values change. Updated in an effect to avoid writing the ref during render.
+  const latestRef = useRef({
+    eventTrigger,
+    currentTable,
+    columns,
+    operations: state.operations,
+    resetSampleInput,
+  });
   useEffect(() => {
-    resetSampleInput();
+    latestRef.current = {
+      eventTrigger,
+      currentTable,
+      columns,
+      operations: state.operations,
+      resetSampleInput,
+    };
+  });
+
+  useEffect(() => {
+    const {
+      eventTrigger: trigger,
+      currentTable: table,
+      columns: triggerColumns,
+      operations,
+    } = latestRef.current;
+    if (trigger.request_transform) {
+      const sampleInput = getEventRequestSampleInput(
+        trigger.name,
+        table,
+        trigger.retry_conf?.num_retries,
+        triggerColumns,
+        operations,
+      );
+      transformDispatch(
+        setRequestTransformState(
+          getTransformState(trigger.request_transform, sampleInput),
+        ),
+      );
+    } else {
+      transformDispatch(
+        setRequestTransformState(getEventRequestTransformDefaultState()),
+      );
+    }
+  }, [state.name]);
+
+  useEffect(() => {
+    latestRef.current.resetSampleInput();
   }, [state.webhook?.value]);
 
   const envVarsOnChange = (envVars: NameValue[]) => {

@@ -164,7 +164,11 @@ export const ComputedFieldDialog = ({
     >
       {() => (
         <div onSubmit={(e) => e.stopPropagation()}>
-          <Form onSubmit={() => {}}>
+          <Form
+            onSubmit={() => {
+              /* noop */
+            }}
+          >
             <InputField
               label="Computed Field Name"
               name="name"

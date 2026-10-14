@@ -41,7 +41,9 @@ const renderMapSelector = (mapping: TypeMap[]) => {
             types={['id', 'name', 'email']}
             columns={['id', 'full_name', 'email_address']}
             mapping={mapping}
-            setMapping={() => {}}
+            setMapping={() => {
+              /* noop */
+            }}
           />
         </FormProvider>
       </AppTheme>
@@ -57,7 +59,7 @@ const renderMapSelector = (mapping: TypeMap[]) => {
     // screen (testIdAttribute is set to `data-test` for this suite) rather than
     // reaching into the render container.
     removeIcon: (index: number) =>
-      screen.queryByTestId(`remove-type-map-${index}`),
+      screen.getByTestId(`remove-type-map-${index}`),
   };
 };
 
@@ -95,7 +97,7 @@ describe('MapSelector', () => {
     ]);
 
     act(() => {
-      removeIcon(1)!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      removeIcon(1).dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
     const updatedMaps = getMapping();

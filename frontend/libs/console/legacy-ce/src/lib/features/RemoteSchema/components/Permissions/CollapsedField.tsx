@@ -10,7 +10,9 @@ interface CollapsedFieldProps {
 export const CollapsedField: React.FC<CollapsedFieldProps> = ({
   field: i,
   onClick,
-  onExpand = () => {},
+  onExpand = () => {
+    /* noop */
+  },
   expanded,
 }) => (
   <>

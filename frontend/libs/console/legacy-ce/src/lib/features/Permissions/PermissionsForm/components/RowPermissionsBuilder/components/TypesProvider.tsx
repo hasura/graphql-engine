@@ -1,20 +1,17 @@
 import { TypesContext, PermissionType } from './types';
-import {
-  useState,
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-} from 'react';
+import { useState, createContext, useCallback, useContext } from 'react';
 import { rowPermissionsContext } from './RowPermissionsProvider';
 import set from 'lodash/set';
 import unset from 'lodash/unset';
 import { getPermissionTypes } from './utils/typeProviderHelpers';
 import { rootTableContext } from './RootTableProvider';
+import { getTableDisplayName } from '@hasura/shared/utils';
 
 export const typesContext = createContext<TypesContext>({
   types: {},
-  setType: () => {},
+  setType: () => {
+    /* noop */
+  },
 });
 
 // Provides types for permissions
@@ -47,16 +44,21 @@ export const TypesProvider = ({ children }: { children: React.ReactNode }) => {
     },
     [],
   );
-  //  Stringify values to get a stable value for useEffect
+  //  Stringify values to get a stable key for the derived-state sync below
   const jsonPermissions = JSON.stringify(permissions);
-  const stringifiedTable = JSON.stringify(table);
-  const stringifiedTables = JSON.stringify(tables);
-  // Recursively set types
-  useEffect(() => {
-    const newTypes = getPermissionTypes(tables, table, permissions);
-
-    setTypes(newTypes);
-  }, [jsonPermissions, setTypes, stringifiedTable, stringifiedTables]);
+  const stringifiedTable = table ? getTableDisplayName(table) : '';
+  const stringifiedTables = `[${tables.map((t) => getTableDisplayName(t)).join(',')}]`;
+  const typesKey = `${jsonPermissions}|${stringifiedTable}|${stringifiedTables}`;
+  // Recursively (re)compute types while rendering when permissions/table/tables
+  // change. This is the React "adjusting state during render" pattern: it fully
+  // recomputes types from the inputs (as the effect did) without the cascading
+  // renders of setting state in an effect, while `setType` still supports
+  // incremental updates.
+  const [prevTypesKey, setPrevTypesKey] = useState<string | null>(null);
+  if (typesKey !== prevTypesKey) {
+    setPrevTypesKey(typesKey);
+    setTypes(getPermissionTypes(tables, table, permissions));
+  }
 
   return (
     <typesContext.Provider value={{ types, setType }}>

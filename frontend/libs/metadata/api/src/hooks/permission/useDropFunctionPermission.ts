@@ -36,7 +36,7 @@ export const useDropFunctionPermission = (
     return mutate(
       {
         query: {
-          type: `${getDriverPrefix(source.kind!)}_drop_function_permission` as const,
+          type: `${getDriverPrefix(source.kind)}_drop_function_permission` as const,
           args: {
             source: source.name,
             function: qualifiedFunction,

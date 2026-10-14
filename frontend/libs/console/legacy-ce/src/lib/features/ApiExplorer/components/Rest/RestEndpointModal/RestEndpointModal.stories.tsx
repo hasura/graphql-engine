@@ -23,6 +23,8 @@ export const Base = () => (
     tableName="user"
     dataSourceName="default"
     table={{ name: 'test', schema: 'test-schema' }}
-    onClose={() => {}}
+    onClose={() => {
+      /* noop */
+    }}
   />
 );

@@ -74,7 +74,7 @@ const useCreateLogicalModelsPermissions = ({
         });
       }
     },
-    [logicalModels, source],
+    [logicalModels, source, mutate, refetchMetadata],
   );
 
   return {

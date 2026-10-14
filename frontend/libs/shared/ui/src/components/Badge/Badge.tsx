@@ -7,7 +7,7 @@ import {
 
 export type BadgeColor = Exclude<ThemeBadgeProps['color'], undefined>;
 
-interface BadgeProps extends ThemeBadgeProps {}
+type BadgeProps = ThemeBadgeProps;
 
 const badgeColorMap = {
   green: { color: 'green', variant: 'soft' },

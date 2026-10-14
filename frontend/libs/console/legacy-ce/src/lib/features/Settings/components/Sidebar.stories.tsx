@@ -18,7 +18,7 @@ const queryClient = new QueryClient({
 });
 const baseUrl = 'http://localhost:8080';
 
-const generateArgs: (metadataOk?: boolean) => {} = (metadataOk = true) => ({
+const generateArgs: (metadataOk?: boolean) => object = (metadataOk = true) => ({
   location: {
     action: 'POP',
     hash: '',

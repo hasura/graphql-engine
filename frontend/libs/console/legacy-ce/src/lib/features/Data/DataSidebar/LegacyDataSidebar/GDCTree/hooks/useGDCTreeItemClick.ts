@@ -50,7 +50,7 @@ export const useGDCTreeItemClick = () => {
         navigate(dataRoutes.manageDatabaseSource(database));
       }
     },
-    [metadataData, isUnmounted],
+    [metadataData, isUnmounted, endpoints, fetchJson, navigate],
   );
 
   return { handleClick };

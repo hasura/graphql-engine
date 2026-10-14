@@ -162,8 +162,11 @@ export async function getValidOAS3(
       );
       return openapi;
     } catch (error) {
-      throw new Error(
-        `Could not convert Swagger '${spec.info.title}' to OpenAPI Specification. ${error.message}`,
+      throw Object.assign(
+        new Error(
+          `Could not convert Swagger '${spec.info.title}' to OpenAPI Specification. ${error.message}`,
+        ),
+        { cause: error },
       );
     }
     // CASE: validate

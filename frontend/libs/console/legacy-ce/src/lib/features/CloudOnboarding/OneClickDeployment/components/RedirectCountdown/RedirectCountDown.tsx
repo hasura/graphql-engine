@@ -20,12 +20,21 @@ export const RedirectCountDown: React.FC<Props> = (props) => {
     }
   };
 
+  // The countdown timer must be set up exactly once on mount. `initiateRedirect`
+  // closes over `loading`/`redirect` and is re-created every render, so we keep
+  // the latest version in a ref and call it from the (mount-only) interval to
+  // avoid re-creating the timer on every render.
+  const initiateRedirectRef = React.useRef(initiateRedirect);
+  React.useEffect(() => {
+    initiateRedirectRef.current = initiateRedirect;
+  });
+
   React.useEffect(() => {
     const timer = setInterval(() => {
       setCount((c) => {
         if (c === 1) {
           clearInterval(timer);
-          initiateRedirect();
+          initiateRedirectRef.current();
           return c;
         }
         return c - 1;

@@ -65,8 +65,8 @@ async function fetchApi<T = unknown, V = T>(
   }
 }
 
-export namespace Api {
-  export function get<T = unknown, V = T>(
+export const Api = {
+  get<T = unknown, V = T>(
     args: Omit<IApiArgs, 'body' | 'method'>,
     dataTransform?: (data: T) => V,
     errorTransform?: (error: unknown) => unknown,
@@ -76,8 +76,8 @@ export namespace Api {
       dataTransform,
       errorTransform,
     );
-  }
-  export function post<T = unknown, V = T>(
+  },
+  post<T = unknown, V = T>(
     args: Omit<IApiArgs, 'method'>,
     dataTransform?: (data: T) => V,
     errorTransform?: (error: unknown) => unknown,
@@ -87,8 +87,8 @@ export namespace Api {
       dataTransform,
       errorTransform,
     );
-  }
-  export function put<T = unknown, V = T>(
+  },
+  put<T = unknown, V = T>(
     args: Omit<IApiArgs, 'method'>,
     dataTransform?: (data: T) => V,
     errorTransform?: (error: unknown) => unknown,
@@ -98,8 +98,8 @@ export namespace Api {
       dataTransform,
       errorTransform,
     );
-  }
-  export function del<T = unknown, V = T>(
+  },
+  del<T = unknown, V = T>(
     args: Omit<IApiArgs, 'method'>,
     dataTransform?: (data: T) => V,
     errorTransform?: (error: unknown) => unknown,
@@ -109,12 +109,12 @@ export namespace Api {
       dataTransform,
       errorTransform,
     );
-  }
-  export function base<T = unknown, V = T>(
+  },
+  base<T = unknown, V = T>(
     args: IApiArgs,
     dataTransform?: (data: T) => V,
     errorTransform?: (error: unknown) => unknown,
   ) {
     return fetchApi<T, V>(args, dataTransform, errorTransform);
-  }
-}
+  },
+};

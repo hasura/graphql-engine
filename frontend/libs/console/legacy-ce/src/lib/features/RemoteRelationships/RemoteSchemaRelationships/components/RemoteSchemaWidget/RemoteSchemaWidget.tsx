@@ -50,13 +50,22 @@ export const RemoteSchemaWidget = ({
 
   const [relationshipFields, setRelationshipFields] = useState<
     RelationshipFields[]
-  >([]);
+  >(() =>
+    serverRelationship ? parseServerRelationship(serverRelationship) : [],
+  );
 
-  useEffect(() => {
+  // Seed the fields from an existing server relationship. Lazy initial state
+  // handles the mount case, and the "adjust state during render" pattern handles
+  // a later `serverRelationship` change — both without a cascading set-state
+  // effect. The final rendered state is unchanged from the previous effect.
+  const [prevServerRelationship, setPrevServerRelationship] =
+    useState(serverRelationship);
+  if (serverRelationship !== prevServerRelationship) {
+    setPrevServerRelationship(serverRelationship);
     if (serverRelationship) {
       setRelationshipFields(parseServerRelationship(serverRelationship));
     }
-  }, [serverRelationship, setValue]);
+  }
 
   useEffect(() => {
     const value = buildServerRemoteFieldObject(relationshipFields);

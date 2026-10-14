@@ -59,6 +59,6 @@ export const useConnectNeonPostgresSource = () => {
         },
       );
     },
-    [mutation],
+    [mutation, endpoints, fetchJson],
   );
 };

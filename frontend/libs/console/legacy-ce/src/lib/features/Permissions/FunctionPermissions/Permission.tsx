@@ -75,7 +75,11 @@ const FunctionPermissions = ({
     }
 
     return !serverConfig?.is_function_permissions_inferred;
-  }, [functionDefinition, serverConfig]);
+  }, [
+    functionDefinition,
+    serverConfig,
+    currentFunction.configuration?.exposed_as,
+  ]);
 
   const permissionTableURL = getRefTablePermissionsRoute(
     source.name,
