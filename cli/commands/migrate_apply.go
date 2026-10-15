@@ -286,50 +286,6 @@ func (o *MigrateApplyOptions) Apply() (chan MigrateApplyResult, error) {
 
 	resultChan := make(chan MigrateApplyResult)
 
-	handleError := func(err error) (string, error) {
-		var op herrors.Op = "commands.MigrateApplyOptions.Apply.handleError"
-
-		if err == nil {
-			return "", nil
-		}
-
-		var (
-			errPath     *os.PathError
-			errNotFound *errDatabaseMigrationDirectoryNotFound
-		)
-
-		switch {
-		case errors.Is(err, migrate.ErrNoChange):
-			return "nothing to apply on database: " + o.Source.Name, nil
-		case errors.As(err, &errPath):
-			// If Op is first, then log No migrations to apply
-			if errPath.Op == "first" {
-				return "nothing to apply on database: " + o.Source.Name, nil
-			}
-		case errors.As(err, &errNotFound):
-			// check if the returned error is a directory not found error
-			// ie might be because  a migrations/<source_name> directory is not found
-			// if so skip this
-			return "", herrors.E(
-				op,
-				fmt.Errorf(
-					"skipping applying migrations on database '%s', encountered: \n%s",
-					o.Source.Name,
-					errNotFound.Error(),
-				),
-			)
-		}
-
-		return "", herrors.E(
-			op,
-			fmt.Errorf(
-				"skipping applying migrations on database '%s', encountered: \n%w",
-				o.Source.Name,
-				err,
-			),
-		)
-	}
-
 	if len(o.Source.Name) == 0 && !o.EC.AllDatabases {
 		o.Source = o.EC.Source
 	}
@@ -364,7 +320,7 @@ func (o *MigrateApplyOptions) Apply() (chan MigrateApplyResult, error) {
 
 				err := o.Exec()
 				if err != nil {
-					result.Message, result.Error = handleError(err)
+					result.Message, result.Error = o.handleApplyError(err)
 				} else {
 					result.Message = "migrations applied on database: " + o.Source.Name
 				}
@@ -384,7 +340,7 @@ func (o *MigrateApplyOptions) Apply() (chan MigrateApplyResult, error) {
 
 			err := o.Exec()
 			if err != nil {
-				result.Message, result.Error = handleError(err)
+				result.Message, result.Error = o.handleApplyError(err)
 			} else {
 				result.Message = "migrations applied"
 			}
@@ -394,6 +350,61 @@ func (o *MigrateApplyOptions) Apply() (chan MigrateApplyResult, error) {
 	}
 
 	return resultChan, nil
+}
+
+// handleApplyError turns the error from applying migrations on a database into
+// the message and error reported for that database.
+func (o *MigrateApplyOptions) handleApplyError(err error) (string, error) {
+	var op herrors.Op = "commands.MigrateApplyOptions.handleApplyError"
+
+	if err == nil {
+		return "", nil
+	}
+
+	var (
+		errPath     *os.PathError
+		errNotFound *errDatabaseMigrationDirectoryNotFound
+	)
+
+	switch {
+	case errors.Is(err, migrate.ErrNoChange):
+		return "nothing to apply on database: " + o.Source.Name, nil
+	case errors.As(err, &errPath):
+		// If Op is first, then log No migrations to apply
+		if errPath.Op == "first" {
+			return "nothing to apply on database: " + o.Source.Name, nil
+		}
+	case errors.As(err, &errNotFound):
+		// check if the returned error is a directory not found error
+		// ie might be because  a migrations/<source_name> directory is not found
+		// if so skip this
+		if o.EC.AllDatabases {
+			// a database with no migrations directory has nothing to apply,
+			// it should not fail the run for every other database
+			return fmt.Sprintf(
+				"skipping applying migrations on database '%s': %s",
+				o.Source.Name,
+				errNotFound.Error(),
+			), nil
+		}
+		return "", herrors.E(
+			op,
+			fmt.Errorf(
+				"skipping applying migrations on database '%s', encountered: \n%s",
+				o.Source.Name,
+				errNotFound.Error(),
+			),
+		)
+	}
+
+	return "", herrors.E(
+		op,
+		fmt.Errorf(
+			"skipping applying migrations on database '%s', encountered: \n%w",
+			o.Source.Name,
+			err,
+		),
+	)
 }
 
 func (o *MigrateApplyOptions) Exec() error {
