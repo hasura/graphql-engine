@@ -22,7 +22,7 @@
     "@types/node": "24.1.0",
     "ava": "7.0.0",
     "glob": "^13.0.6",
-    "js-yaml": "5.2.2",
+    "js-yaml": "5.4.3",
     "quicktype": "26.0.0",
     "quicktype-core": "26.0.0",
     "quicktype-typescript-input": "26.0.0",
@@ -37,5 +37,10 @@
     "require": [
       "ts-node/register"
     ]
+  },
+  "overrides": {
+    "quicktype": {
+      "stream-json": "3.7.0"
+    }
   }
 }
