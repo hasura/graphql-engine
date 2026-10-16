@@ -64,6 +64,9 @@ data ConfigSchemaResponse = ConfigSchemaResponse
   }
   deriving stock (Show, Eq)
 
+-- TODO maybe: the agent's ordering of schema 'properties' is lost here (aeson's 'Object' is unordered),
+-- so the console's connection form renders config fields in hash order. Fixing it would mean decoding
+-- the raw response with an order-preserving parser (e.g. aeson-ordered); insert-ordered-containers 0.3 won't help.
 instance FromJSON ConfigSchemaResponse where
   parseJSON = withObject "ConfigSchemaResponse" $ \obj -> do
     configSchemaValue <- obj .: "config_schema"

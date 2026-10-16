@@ -292,3 +292,10 @@ source-repository-package
   location: https://github.com/testcontainers/testcontainers-hs
   tag: fe0d6bbce6ce74d5843a964ac231929ea37025e8
 
+-- 0.2.7 with an O(n log n) traverseWithKey (upstream is quadratic in the
+-- number of entries). We can't take 0.3 which changes the aeson instances.
+source-repository-package
+  type: git
+  location: https://github.com/hasura/insert-ordered-containers.git
+  tag: cdf4f82bc74b9950cb7e69ef2d0add9a8f397a71
+

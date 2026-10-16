@@ -8,4 +8,6 @@ We select it for inclusion because the memory requirements to serve such a
 large schema are currently high.
 
 We also test a small and a big query (returning no data) to see if schema size
-affects latency and (for the latter case) to time SQL generation.
+affects latency and (for the latter case) to time SQL generation. A "wide"
+query selecting all 420 columns of the widest table times parsing of a single
+large selection set.
