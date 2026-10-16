@@ -197,6 +197,112 @@ queries:
     query: *huge_query
 
   ############################################################################
+  # A single selection set with many fields: every column (420) of the widest
+  # table. There's no row data, and 'limit: 0' keeps it that way regardless, so
+  # this mostly times parsing/validating a wide selection set (which was
+  # quadratic in the number of fields when traversing an InsOrdHashMap).
+  - name: wide_query_low_load
+    <<: *k6_custom
+    options:
+      k6:
+        # See note on Chinook.simple_query_low_load
+        discardResponseBodies: true
+        scenarios:
+          main:
+            <<: *settings
+            rate: *low_load
+            preAllocatedVUs: 20
+    query: |
+        query MyQuery {
+          skbiqqttzfffqcd(limit: 0) {
+            cyrlhtypoybobdx mhkvquoaamyzqjl fyissprrsjnzrpg fobrcgbxongznnx nberubufbedgzjz
+            rsbzhkiczegecjm yokokoqdpqifowf mlcqebdvmrhikbu suyvoqwvufxocgw tjqopewagudaujk
+            rpdtysnnkiqvkbf mxoljdozywuoksw ejcwukuljwcdpiz rmauxditggeisui egksvnzmnfihkgl
+            gkmngrpjprbxygb wfapjpbujqasocz xgdyoohcgvegdkv zoxfodijilgemxs wflghffldehcvoa
+            dctpibgwyukxfiw yupqjxrglpmedcz ttypgjrdwirmxoq fzrgihytuvbtjlh ubvtcewjmuqiswc
+            lehbtcsngdhdeob ufrorwjgwrqzuzb bnmkbcshzytpgts mixoucldnzncscy scxwdrlmladonjj
+            xonygztiryxqhpw wclczekdkoskzpm ogabrtislwcpuxs gtktugcuviydtbc ulplkbcsobgrimw
+            cskdrjdtauzpinv gpmhpwhpxdnshhz qwsmidwaeaucyno mqomhgywlgcddal tabipcjsntkanif
+            vahjmclzjfuaqvf fdaufkdgffxhwjt zumnaedagekkesu jwmojwuqzddcsdt yijhhmmkdppvwmb
+            nfhdbhfewcrhkvl hezquehmpbalqzq fyjlpsotliukzaj tifvzozknleyagv dbyqvyrxkqwyyro
+            qdpvwkeqiepfqmt zidhtttokwacunv fzzumwthzpuxgfk bywlcxjgtmlqkit tgylnwcxyfqtmgj
+            bdolzycftmobmvq mnkwbfmywfguixg pkftnybsyksrulg uzcqrhiymgmgiiv bzffminyqbhsgcg
+            vrmtiyizncvckhr hhhrkhyctpneyst dcrnperpwvopojt jnlogzzmmgkgkyq gyqkxsmpahxbmcb
+            hwubmiurqtjcnfy sipwgvdecfawskc rrfvdfzwqwjwrcj liipagicbynqtuj ffbchbhljwdlqua
+            lsibqzytyoevwmd mothxslfatnimmf mrutlscozybvcoe ctlouaveisqjlrx lueczsqidqlllsy
+            xkrqkjkvzvmvykf kwljovtfqqvscfy fwqqxwlqdsxjdls yfmnnnrzmcjiwes moqmkvekhfzntix
+            ylwkhfqzcvehhxx iuldjkqkfcqaafq ckawvpoangmkfoc ucguvkezraoykwn mafzmjbamdunmct
+            yxvcbipqgpchotd ndolmetjvrzegjb xwohvqbklucjoxc xycmtltwysjcsnt eyvvcyzzaxzzpvd
+            lcvykkiobttsdyg ivvuawaovmqeirb hawdlbckhjuahjs rcihyxksvhbxcmv jdvslbovdnhvznv
+            racosqssxvkeacd hgkossvflpqdswb glfbhqdqhikepda ptkmgiqsedsmvjp zkrfejqxrvmeyim
+            ntxvyrpeaccahkl npenbevatkjqonf felwkqkopgppqvg zoitgxwokbnaadv veohjdhhndhckdr
+            aexebdouvkvvckg eppngrekbneegci ybxdkhmfaqbfpex dwvtcupekucecvj hojqvynzinstitw
+            uvkldmmculckexq myyabtdbxpfqtpv vkrncsqqgudipiy cgppshgmsnlupaf yaybixtlbbmdmeg
+            swparxaeaxgjjhu jnzerzemobazggz swsysepvpqsgplz iznbnqlrrjlfsvy xvutkmugzqwtkzf
+            ydgnoadbdwxewln utvqrkxvojkjbhu nzfflwmwmtxmext mpmdtotlkkzwune nckxybnzsncujbp
+            fcrginqwnzchcku xkbtvjmhpmseexn fhklbxwlrspjoro vovwxebdleavkwj mxfwkpclpsjtllf
+            ozuetrsjannrguj kwolcfurovpshko zuqosjdzxqswjhr bwjehzdmlswlejz irwcilcvtlbsfrv
+            bwnxshnelevbxwg mlkaymyyzmcqsgu nqrhalplxmxswpz ytrxvuizkzqmpll fgihhstbuxlkcgs
+            bytrugaiewczpfn nvtefcjrfuhvmdx wlycvmxiyviywls iwwzweiajdgljyh mobltqhwdrxgrcu
+            boshmbvyfyiiivp zgmtknrcuobkirq dgkrsopyycgioef lincibuiokdnjsh mvjaqacdikrvtrp
+            zupykeuzsfirjxu tyweegbahqfowte yjqqvziaohpsacm yxmsodcnjpkgvym kotbzplrafcwxvs
+            bshudebsqrderav tiyrjkxumvcctdg kbfknikezyiwevx hobimpnexdmrpmy ioouqmhayeoamdt
+            nawzmsgjilhlthb rzkrfngshlphsdr xgkgnhdpyduddlx kqoaijrtkylzqkc hnfzlvwpzrwquxf
+            fiunpxundzonses hemazpqjnxwmhia bhblgfhuqgzawbf jsfnyzqenplcvum jwjzgmmlgiqlzhd
+            copaibhkymvsfsm pjardnagkuoeluj tclfojlkjtvsdxo efrpwvdcziftsih lamrmxfhuwnwfin
+            zetnsnhcepzgqrm aiupoygvoabxerx rlqypqscnmqnjxe ksedvprrkbamtbb zglwfrmddanvxbh
+            kczsmvkfpnwixkr eroabqnqspdcxxw cnzsmptflgzfaof xsreqpoglifeiff xhvnaoxygdutowi
+            cviruitxsrujzgk hprvuoslvygfpyz cmxgzwqhachyyzl tsmdkneykbksdpw xtcqiatgjdaeufd
+            kgoiafqgirtynox ktoaahgbrzmrcuu zjclnfilbishput wvrogjswwucefgm jsucjwseqnawqfs
+            zymyzzpsowdjigs qasekvydsviszgl daofmvaolgztvzp ptuauijuelfnnum vbczwnepxfgxpqs
+            ryfalojuhdtoaai tapxpnzegowhmra kltcilomusrxkky tbrthksxtowogxs tlmfgqdwfdqmgjx
+            vfvnwdgoldhsbwf ptsyixwifonwkgw rycllpjnyhnuvxv mbgnandxodwcunj epuresowjruhumg
+            ntumcdrcudhcpob lewedbtltksxdsp ljcmchzqnkpsmwr ukehyqbjpzoguzs kbymuqbbqqufnzq
+            wgpxwsmuqzdbqik fyqeexoepwaclia brbqlkuzuimbnve eeydcpwrlyploik stwnzpdfsmbrfky
+            svtgemkiqqgtacj xfehgrghhdgzbqk hooqwqdlfevasji melakrfwpfognrw zuuqxarczmrjirl
+            hwbxdqyqhisoqqy swacqeipeeutsbg djvuxyrrcxjztev tmkxhnwgqqnnpqi kdzhwxoyskroxzb
+            ynipzaizghyaelb hxxmwiaxokmuuzm qdbhvqxrfjxcgmm malfjsjbiqmmcib aadpyymjeehmanz
+            wifijzplpcbyufm twysuheesarqoht azdildprewgmtxg pekljfbjzjdeloc tgccbvpiphmaokp
+            mvtqkrqtztlfxeo ujghqqeqdaszehm yhcvksrxkxfygpt svnzpnojerfqzql mwcqrkrrnikroms
+            rkkaupzqghdeijv ygygfmvmudqoxhe cpuaranrveseozg yzrpujrwlccszbb jqfdzoixaehuaal
+            qxrojyhxmwhmdek wvinqcxwupkhlek jcdfnacsxtdadvx rddrybrojrddtkx waazbgfvivehuvc
+            eluxuhyvclcwyko plortiarpzqehpg xizgvrnnhkklrzk hazehuwfxyslumh qabcsgvtcdwucdp
+            umsfnxstmxvrsoc ekcwgorivggymre bwakqpvmxssucsj mwncfprfwsxzrkt fwlznvujipngdlr
+            zhemcvrhgoppcby nibwuclnxjuqgiz uipsezewwscaqja aueflyvbzdwjglq nwlfscsbkqwnsbz
+            zvqgjeqracnjsjb xhyfyslfhgqglej zysfhmbpszlatnx jkeyfvegdmdqvcg covhxwntwzgwxqh
+            judoeikxxzudfhz ejiudktqkegqjyg unqydplawbqtkhq jcsmboqbkrpcgmo vewxssgnlxozwjy
+            ysvkscibzeicskd pjxhvqfndwaqkeu owvkblfdnynhksm ozsngpmwjejezda mydbbrspwhabodh
+            nmxbjejscqyxlcw yzkutpywvxogdiz sizrsrbaowgpizy zbcdbtdgryuayai kunuyurzkyhujun
+            aahqtavnukeltob ddfbavlwpepgaab dbkghpzcvticdfu hfrasnelncluwum lvqkhsajukqiaiq
+            nmvztvqlcmsexdz lfebhpxlhsuumhn ochzziugrcxmand qwywudmgcjhohyh yryaafvgxuteppp
+            hrmheyqbmrvmlfv znhfvhdkaqsxudu fjnacnivinehspv sqgxzzedikvbcod rrzlrgbbbmpnvhd
+            jgjbtvhhkpvbzcd ckeptfajdeixwxq bvwhlilpebwtswk mypjlymncgqugkl whuletubtiuumwc
+            pepnjvmypudfjsb ypvsrxfvxwfzsuu oblmqujjjqfqwct bztddvjoubitgmy gtmvbzotyrxwwqj
+            tqqcohxnjyrlsbn iofsqmkdhikdhft zbhoqsrusoizofl kolusdjjmenyhvt uboaprmozfqkusf
+            bcjmskbbjrnwcsy ocmudhdaagofxcu ugrvsymhzunvmpt tuwbzqtvbvjmzsv iwcrwhvjadjfhts
+            gzkgjxxipbsrnij ckrgmrcqhiylcrr zisbdmzcrqmwdjv mwvfbiaatyaxyrm snknhmtgoexnbhs
+            vzcansxwcepddgs lqngwrhafosnaxk bnmyftoraedaezs aydwwcqpqzjzyoj yuooizzutkiauec
+            bdsughlbnjzctqx ziiqukefoykajkw pnlsrgnaqvzzsjp qqssfvsuzccqyze xyzspqrkawvwdrb
+            eaknbexttfnmwux nwyjtekgpkukoil iabxrtltudwrolf tkltpczxcddwows rdykwrrjrztqnol
+            ztqnevkecdpbkny bmzwgytqwdcneyy lvoymsowntpdmmc skzrimczcytydbe jedubrbalcgbmxp
+            xriayjccrxqysil spjeppunhwaqeam zqzghgyufqfygad rsbyreppadeptjb uumfycayprdauim
+            bcsbcipmhxhbtgc ykjhemvnjtdlvrr yueqitssqnyxalu wrldcyfbhziwurg rjbjtgwuvoetrxx
+            yampfqxolasrtmx mkftlmolccdvsip wfqboespgclrcax otnlervzhxyqhnb tovzbsayotgixht
+            bhhbyyqedyplomr ilujxymdflcaydx dtuugponzygpffo jdnchkeaclettjh tqqpxkbzicdkxvf
+            xobdcycxbueswkp qjxtaicpteupfjp hmlfitsiupmyxcp eiodlqvwlrzkrpi plevmzsgnzwbixf
+            uuwmeheskadmzgh pwxyysqroiqterf ybmzysopbmwiygh yolhejasdomsicr lnurjgnzgdylzvm
+            vmiakxxahseaohn erlpxpbpxfsootn vdvqgmryzvhogsv sbtusejkitoigyl rwhowptvjowqnlt
+            uukcjkyjvlmrvyh itqnrpcnlfhwsji fihbhjafykwimsc ewfoxkuwppfonby zzymvimbosfggmh
+            jfncjicihwoknij ikwiixkfmiwjkqn acqjtmxywtgjjvf vnidvoqtbcmptyt kajohunlsahzeyx
+            bjiicyoupnhldfw asivsjtkaogufas egqfmnxahjzbzsr bkxzqrrgzyatnrp dzmcsldicghibof
+            nydmuxalalnxgqs jcewqcsfazhgoxl ulkakwurhbtwyag pvuvkcjnlqqxnph vkuumcdcjkjlllc
+            njhgeutuycrxxja cmtirsfxofdtytp qfhrfpcgvstomug ncvmadzoouvdlms uappsunxqxlowqm
+            xmdpverjajljyla olhykstoytduvpw uybwcosbiixdyyz uuqxvmcphzcbttw puxvpazvjhkmyim
+            pmjhpgtfvrrcian avntgzxpdcgotvl vleptqioqxljcif mhommrvdbqthuje deuvfwfaondubjt
+          }
+        }
+
+  ############################################################################
   # The standard introspection query from server/src-rsr/introspection.json
   # We don't expect a server to be hammered with these, but they are crucial
   # for clients (like graphiql):
