@@ -1,7 +1,6 @@
 import { useCallback } from 'react';
 import { useMetadataMigration } from '../metadata/useMetadataMigration';
-import { hasuraToast } from '@hasura/shared/ui';
-import { getConfirmation } from '@hasura/shared/utils';
+import { hasuraToast, useDestructiveConfirm } from '@hasura/shared/ui';
 import { useErrorNotification } from '../notification';
 
 export const getDropRemoteSchemaPermissionQuery = (
@@ -24,6 +23,7 @@ type DropRemoteSchemaPermissionsArgs = {
 export const useDropRemoteSchemaPermissions = () => {
   const mutation = useMetadataMigration();
   const showErrorNotification = useErrorNotification();
+  const destructiveConfirm = useDestructiveConfirm();
 
   const mutate = useCallback(
     async (
@@ -31,41 +31,47 @@ export const useDropRemoteSchemaPermissions = () => {
       onSuccess?: () => void,
       onError?: (err: unknown) => void,
     ) => {
-      const isOk = getConfirmation(
-        'This will remove the permission for this role',
-      );
-      if (!isOk) return;
+      destructiveConfirm({
+        resourceName: args.role,
+        resourceType: 'remote schema permission',
+        destroyTerm: 'remove',
+        appendTerm: `This removes the permission set for role "${args.role}".`,
+        onConfirm: () =>
+          new Promise<boolean>((resolve) => {
+            const query = getDropRemoteSchemaPermissionQuery(
+              args.role,
+              args.remoteSchemaName,
+            );
 
-      const query = getDropRemoteSchemaPermissionQuery(
-        args.role,
-        args.remoteSchemaName,
-      );
+            mutation.mutate(
+              {
+                query,
+              },
+              {
+                onError: (error) => {
+                  showErrorNotification({
+                    title: 'Removing permission failed',
+                    error,
+                  });
+                  onError?.(error);
+                  resolve(false);
+                },
+                onSuccess: () => {
+                  hasuraToast({
+                    type: 'success',
+                    title: 'Success!',
+                    message: 'Permission removed successfully',
+                  });
 
-      return mutation.mutate(
-        {
-          query,
-        },
-        {
-          onError: (error) => {
-            showErrorNotification({
-              title: 'Removing permission failed',
-              error,
-            });
-            onError?.(error);
-          },
-          onSuccess: () => {
-            hasuraToast({
-              type: 'success',
-              title: 'Success!',
-              message: 'Permission removed successfully',
-            });
-
-            if (onSuccess) onSuccess();
-          },
-        },
-      );
+                  if (onSuccess) onSuccess();
+                  resolve(true);
+                },
+              },
+            );
+          }),
+      });
     },
-    [mutation, showErrorNotification],
+    [mutation, showErrorNotification, destructiveConfirm],
   );
 
   return {

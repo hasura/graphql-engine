@@ -8,6 +8,7 @@ export interface JSONEditorProps {
   onChange: (v: string) => void;
   data: string;
   minLines?: number;
+  disabled?: boolean;
 }
 
 export const JSONEditor: React.FC<JSONEditorProps> = ({
@@ -15,6 +16,7 @@ export const JSONEditor: React.FC<JSONEditorProps> = ({
   onChange,
   data,
   minLines,
+  disabled,
 }) => {
   const [value, setValue] = useState(initData || data || '');
   const prevDataRef = useRef(data);
@@ -70,6 +72,7 @@ export const JSONEditor: React.FC<JSONEditorProps> = ({
       showPrintMargin={false}
       value={value}
       annotations={annotations}
+      disabled={disabled}
       setOptions={{ useWorker: false }}
     />
   );

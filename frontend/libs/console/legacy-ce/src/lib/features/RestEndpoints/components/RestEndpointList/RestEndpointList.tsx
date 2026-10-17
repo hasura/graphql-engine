@@ -9,7 +9,6 @@ import {
   DropdownButton,
   BadgeColor,
   CardedTable,
-  hasuraToast,
   Collapsible,
   Text,
   DropdownMenu,
@@ -19,12 +18,12 @@ import {
   Badge,
   GraphqlCodeBlock,
   RelativeLink,
+  useDestructivePrompt,
 } from '@hasura/shared/ui';
 import { badgeSort } from './utils';
 import URLPreview from './URLPreview';
 import debounce from 'lodash/debounce';
 import { useDeleteRestEndpoints, useMetadata } from '@hasura/metadata/api';
-import { getConfirmation } from '@hasura/shared/utils';
 import Landing from './Landing';
 import { ExportOpenApiButton } from '../Form/ExportOpenAPI';
 
@@ -48,7 +47,8 @@ export const RestEndpointList: React.FC = () => {
     queryCollections: m.metadata?.query_collections,
   }));
 
-  const { deleteRestEndpoints } = useDeleteRestEndpoints();
+  const { mutateAsync: deleteRestEndpoints } = useDeleteRestEndpoints();
+  const destructivePrompt = useDestructivePrompt();
   const [selectedMethods, setSelectedMethods] = React.useState<string[]>([]);
 
   const highlighted = React.useMemo(
@@ -123,25 +123,14 @@ export const RestEndpointList: React.FC = () => {
   };
 
   const onClickDelete = (name: string, request: string) => () => {
-    const confirmMessage = `This will delete the REST endpoint "${name}". Are you sure?`;
-    const isOk = getConfirmation(confirmMessage, true, name);
-    if (!isOk) {
-      return;
-    }
-
-    deleteRestEndpoints([name], {
-      onSuccess: () => {
-        hasuraToast({
-          type: 'success',
-          message: `Successfully deleted ${name} REST endpoint`,
-        });
-      },
-      onError: (error) => {
-        hasuraToast({
-          type: 'error',
-          message: `Error deleting ${name} REST endpoint: ${error}`,
-        });
-      },
+    destructivePrompt({
+      resourceName: name,
+      resourceType: 'REST endpoint',
+      destroyTerm: 'delete',
+      onConfirm: () =>
+        deleteRestEndpoints([name])
+          .then(() => true)
+          .catch(() => false),
     });
   };
 

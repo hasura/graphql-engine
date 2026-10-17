@@ -2,6 +2,7 @@ import { Metadata, MetadataTableConfig } from '@hasura/shared/types';
 import { useAuthFetchJson } from '@hasura/shared/hooks';
 import { useAppContext } from '@hasura/shared/context';
 import {
+  confirmCliServerUnavailable,
   getDownQueryComments,
   getTrackFunctionQuery,
   getTrackTableArgs,
@@ -21,18 +22,18 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { HttpError } from '@hasura/shared/types';
-import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
+import {
+  hasuraToast,
+  showErrorNotification,
+  useHasuraAlert,
+} from '@hasura/shared/ui';
 import {
   escapeTableColumnsMap,
   escapeTableName,
   getDatabaseMethods,
   TableColumn,
 } from '@hasura/metadata/data-source';
-import {
-  getConfirmation,
-  getErrorMessage,
-  isEmpty,
-} from '@hasura/shared/utils';
+import { getErrorMessage, isEmpty } from '@hasura/shared/utils';
 
 type RunSQLProps = RunSqlArgs & {
   isTableTracked: boolean;
@@ -61,6 +62,10 @@ export const useRunRawSQL = (
   const { refetch: refetchMigrationStatus } = useMigrationStatus({
     enabled: false,
   });
+  // Invoked at render; the captured `hasuraPrompt` callback is only called later
+  // inside `runEitherMigrationSQL` (the mutationFn), which the Rules of Hooks
+  // allow.
+  const { hasuraPrompt } = useHasuraAlert();
 
   const runEitherMigrationSQL = async ({
     statementTimeout,
@@ -104,10 +109,7 @@ export const useRunRawSQL = (
   */
     const cliServerStatus = await refetchMigrationStatus();
     if (cliServerStatus.data !== 'healthy') {
-      const isOk = getConfirmation(
-        'The CLI server is unable to access. Do you want to continue?',
-        true,
-      );
+      const isOk = await confirmCliServerUnavailable(hasuraPrompt);
       if (!isOk) {
         return null;
       }

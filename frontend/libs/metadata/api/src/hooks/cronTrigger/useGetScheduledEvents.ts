@@ -3,7 +3,7 @@ import { useAuthFetchJson } from '@hasura/shared/hooks';
 import type { CronTriggerStatus, ScheduledEvent } from '@hasura/shared/types';
 import { HttpError, OrderBy } from '@hasura/shared/types';
 import { useAppContext } from '@hasura/shared/context';
-import { runMetadataQuery } from '@hasura/metadata/api';
+import { runMetadataQuery } from '../../api';
 
 export type GetScheduledEventsArgs = {
   limit?: number;
@@ -23,20 +23,20 @@ export type GetScheduledEventsArgs = {
 
 export const GET_SCHEDULED_EVENTS_QUERY_KEY = 'GET_SCHEDULED_EVENTS';
 
-export type Options<FinalResult> = {
+type Options<FinalResult> = {
   select?: (m: ScheduledEvent[]) => FinalResult;
   staleTime?: number;
   enabled?: boolean;
 };
 
-const useGetScheduledEvents = <FinalResult = ScheduledEvent[]>(
+export const useGetScheduledEvents = <FinalResult = ScheduledEvent[]>(
   args: GetScheduledEventsArgs,
   options?: Options<FinalResult>,
 ) => {
   const { endpoints } = useAppContext();
   const fetchJson = useAuthFetchJson();
 
-  const queryReturn = useQuery<ScheduledEvent[], HttpError, FinalResult>({
+  return useQuery<ScheduledEvent[], HttpError, FinalResult>({
     queryKey: [GET_SCHEDULED_EVENTS_QUERY_KEY, args],
     queryFn: async () => {
       return runMetadataQuery<{ events: ScheduledEvent[] }>({
@@ -48,10 +48,7 @@ const useGetScheduledEvents = <FinalResult = ScheduledEvent[]>(
         },
       }).then((result) => result.events);
     },
+    staleTime: 3000,
     ...options,
   });
-
-  return queryReturn;
 };
-
-export default useGetScheduledEvents;

@@ -1,7 +1,6 @@
 import { useCallback } from 'react';
 import { useMetadataMigration } from '../metadata/useMetadataMigration';
-import { hasuraToast } from '@hasura/shared/ui';
-import { getConfirmation } from '@hasura/shared/utils';
+import { hasuraToast, useDestructiveConfirm } from '@hasura/shared/ui';
 import { RemoteSchema } from '@hasura/shared/types';
 import { getDropRemoteSchemaPermissionQuery } from './useDropRemoteSchemaPermissions';
 import { TMigrationSingleQuery } from '../../api';
@@ -15,6 +14,7 @@ type DropRemoteSchemaPermissionMultipleRolesArgs = {
 export const useDropRemoteSchemaPermissionMultipleRoles = () => {
   const mutation = useMetadataMigration();
   const showErrorNotification = useErrorNotification();
+  const destructiveConfirm = useDestructiveConfirm();
 
   const mutate = useCallback(
     async (
@@ -33,56 +33,63 @@ export const useDropRemoteSchemaPermissionMultipleRoles = () => {
         return;
       }
 
-      const isOk = getConfirmation(
-        `This will remove permissions for these roles: ${args.roles.join(', ')}`,
-      );
-      if (!isOk) return;
+      destructiveConfirm({
+        resourceName: args.roles.join(', '),
+        resourceType: 'remote schema permissions',
+        destroyTerm: 'remove',
+        appendTerm:
+          'This removes the permissions set for the selected role(s).',
+        onConfirm: () =>
+          new Promise<boolean>((resolve) => {
+            const queries: TMigrationSingleQuery[] = [];
 
-      const queries: TMigrationSingleQuery[] = [];
+            args.roles.forEach((role) => {
+              const currentRolePermission = currentPermissions.find((el) => {
+                return el.role === role;
+              });
+              if (!currentRolePermission) {
+                return;
+              }
 
-      args.roles.forEach((role) => {
-        const currentRolePermission = currentPermissions.find((el) => {
-          return el.role === role;
-        });
-        if (!currentRolePermission) {
-          return;
-        }
+              const upQuery = getDropRemoteSchemaPermissionQuery(
+                role,
+                args.currentRemoteSchema.name,
+              );
+              queries.push(upQuery);
+            });
 
-        const upQuery = getDropRemoteSchemaPermissionQuery(
-          role,
-          args.currentRemoteSchema.name,
-        );
-        queries.push(upQuery);
+            mutation.mutate(
+              {
+                query: {
+                  type: 'bulk',
+                  args: queries,
+                },
+              },
+              {
+                onError: (error) => {
+                  showErrorNotification({
+                    title: 'Removing permission failed',
+                    error,
+                  });
+                  onError?.(error);
+                  resolve(false);
+                },
+                onSuccess: () => {
+                  hasuraToast({
+                    type: 'success',
+                    title: 'Success!',
+                    message: 'Permission removed successfully',
+                  });
+
+                  if (onSuccess) onSuccess();
+                  resolve(true);
+                },
+              },
+            );
+          }),
       });
-
-      return mutation.mutate(
-        {
-          query: {
-            type: 'bulk',
-            args: queries,
-          },
-        },
-        {
-          onError: (error) => {
-            showErrorNotification({
-              title: 'Removing permission failed',
-              error,
-            });
-            onError?.(error);
-          },
-          onSuccess: () => {
-            hasuraToast({
-              type: 'success',
-              title: 'Success!',
-              message: 'Permission removed successfully',
-            });
-
-            if (onSuccess) onSuccess();
-          },
-        },
-      );
     },
-    [mutation, showErrorNotification],
+    [mutation, showErrorNotification, destructiveConfirm],
   );
 
   return {

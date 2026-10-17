@@ -8,6 +8,7 @@ interface KeyValueInputProps {
   pairs: NameValue[];
   setPairs: (h: NameValue[]) => void;
   testId?: string;
+  disabled?: boolean;
 }
 
 // Stable React key per row, keyed by the NameValue OBJECT's identity. The pair
@@ -32,6 +33,7 @@ const KeyValueInput: React.FC<KeyValueInputProps> = ({
   pairs,
   setPairs,
   testId,
+  disabled,
 }) => {
   return (
     <>
@@ -72,6 +74,7 @@ const KeyValueInput: React.FC<KeyValueInputProps> = ({
               type="text"
               placeholder="Key..."
               data-test={`transform-${testId}-kv-key-${i.toString()}`}
+              disabled={disabled}
               full
             />
             <Input
@@ -80,6 +83,7 @@ const KeyValueInput: React.FC<KeyValueInputProps> = ({
               type="text"
               placeholder="Value..."
               data-test={`transform-${testId}-kv-value-${i.toString()}`}
+              disabled={disabled}
               full
             />
             {i < pairs.length - 1 ? (
@@ -89,6 +93,7 @@ const KeyValueInput: React.FC<KeyValueInputProps> = ({
                   size="sm"
                   mode="destructive"
                   onClick={removePair}
+                  disabled={disabled}
                   data-test={`transform-${testId}-kv-remove-button-${i.toString()}`}
                 >
                   Remove

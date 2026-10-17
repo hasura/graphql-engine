@@ -35,6 +35,7 @@ type ActionEditorProps = ActionState & {
   timeoutOnChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   setHeaders: (hs: ClientHeader[]) => void;
   toggleForwardClientHeaders: (value: boolean) => void;
+  disabled?: boolean;
   actionDefinitionOnChange: (
     value: string | null,
     error: GraphQLError | null,
@@ -68,6 +69,7 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
   toggleForwardClientHeaders,
   actionDefinitionOnChange,
   typeDefinitionOnChange,
+  disabled,
 }) => {
   const {
     sdl: typesDefinitionSdl,
@@ -84,6 +86,8 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
   const [isTypesGeneratorOpen, setIsTypesGeneratorOpen] = React.useState(false);
   const [isImportTypesOpen, setIsImportTypesOpen] = React.useState(false);
 
+  const isDisabled = disabled || readOnlyMode;
+
   return (
     <>
       <Heading size="3">Action Configuration</Heading>
@@ -91,7 +95,7 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
         <FieldLabel label="Comment / Description" />
         <Input
           className="mt-2"
-          disabled={readOnlyMode}
+          disabled={isDisabled}
           value={comment}
           placeholder="This is the comment which acts as a description for the action."
           onChange={commentOnChange}
@@ -122,7 +126,7 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
           error={actionDefinitionError ?? null}
           onChange={actionDefinitionOnChange}
           timer={actionParseTimer ?? null}
-          readOnlyMode={readOnlyMode}
+          readOnlyMode={isDisabled}
           width="100%"
           fontSize="12px"
         />
@@ -143,7 +147,7 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
               error={typesDefinitionError ?? null}
               timer={typedefParseTimer ?? null}
               onChange={typeDefinitionOnChange}
-              readOnlyMode={readOnlyMode}
+              readOnlyMode={isDisabled}
               width="100%"
               height="224px"
               fontSize="12px"
@@ -175,6 +179,7 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
           <DropdownButton
             mode="default"
             leftIcon={FaMagic}
+            disabled={disabled}
             items={[
               <Analytics
                 key="actions-tab-btn-type-generator-from-json"
@@ -237,7 +242,7 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
       <HandlerEditor
         value={handler}
         onChange={handlerOnChange}
-        disabled={readOnlyMode}
+        disabled={isDisabled}
       />
 
       <div className="mb-6 w-8/12">
@@ -245,7 +250,7 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
           <ExecutionEditor
             value={kind}
             onChange={executionOnChange}
-            disabled={readOnlyMode}
+            disabled={isDisabled}
           />
         )}
       </div>
@@ -256,7 +261,7 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
           toggleForwardClientHeaders={toggleForwardClientHeaders}
           headers={headers}
           setHeaders={setHeaders}
-          disabled={readOnlyMode}
+          disabled={isDisabled}
         />
       </div>
 
@@ -276,7 +281,7 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
               data-key="timeoutConf"
               data-test="action-timeout-seconds"
               onChange={timeoutOnChange}
-              disabled={readOnlyMode}
+              disabled={isDisabled}
               pattern="^\d+$"
               title="Only non negative integers are allowed"
             />

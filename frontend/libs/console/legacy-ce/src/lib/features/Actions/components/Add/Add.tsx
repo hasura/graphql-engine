@@ -20,7 +20,7 @@ import { Heading } from '@radix-ui/themes';
 
 const AddAction: React.FC = () => {
   useDocumentTitle('Add Action - Actions | Hasura');
-  const createAction = useCreateAction();
+  const { createAction, isPending: isCreating } = useCreateAction();
   const { metadata } = useCurrentActionContext();
   const [searchParams] = useSearchParams();
   const {
@@ -71,6 +71,8 @@ const AddAction: React.FC = () => {
       rawState: state,
       requestTransform,
       responseTransform,
+    }).catch(() => {
+      //
     });
   };
 
@@ -94,6 +96,7 @@ const AddAction: React.FC = () => {
             toggleForwardClientHeaders={toggleForwardClientHeaders}
             actionDefinitionOnChange={actionDefinitionOnChange}
             typeDefinitionOnChange={typeDefinitionOnChange}
+            disabled={isCreating}
           />
 
           <ConfigureTransformation
@@ -114,6 +117,7 @@ const AddAction: React.FC = () => {
             requestPayloadTransformOnChange={requestPayloadTransformOnChange}
             responsePayloadTransformOnChange={responsePayloadTransformOnChange}
             responseBodyOnChange={responseBodyOnChange}
+            disabled={isCreating}
           />
 
           <div>
@@ -126,6 +130,8 @@ const AddAction: React.FC = () => {
                 size="md"
                 type="submit"
                 disabled={!allowSave}
+                loading={isCreating}
+                loadingText="Creating..."
                 onClick={onSubmit}
                 data-test="create-action-btn"
               >

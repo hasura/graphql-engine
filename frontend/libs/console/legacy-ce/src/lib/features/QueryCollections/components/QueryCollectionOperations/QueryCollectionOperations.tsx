@@ -5,9 +5,8 @@ import {
   IndicatorCard,
   Text,
   Tooltip,
-  hasuraToast,
+  useDestructivePrompt,
 } from '@hasura/shared/ui';
-import { getConfirmation } from '@hasura/shared/utils';
 import { QueryCollectionsOperationsHeader } from './QueryCollectionOperationsHeader';
 import { QueryCollectionOperationsEmptyState } from './QueryCollectionOperationsEmptyState';
 import { QueryCollectionOperationEdit } from '../QueryCollectionOperationDialog/QueryCollectionOperationEdit';
@@ -41,8 +40,11 @@ export const QueryCollectionsOperations: React.FC<
       metadata,
     );
 
-  const { removeOperationsFromQueryCollection, isPending: deleteLoading } =
-    useRemoveOperationsFromQueryCollection();
+  const {
+    mutateAsync: removeOperationsFromQueryCollection,
+    isPending: deleteLoading,
+  } = useRemoveOperationsFromQueryCollection();
+  const destructivePrompt = useDestructivePrompt();
 
   const [search, setSearch] = React.useState('');
 
@@ -122,26 +124,20 @@ export const QueryCollectionsOperations: React.FC<
 
       <Button
         onClick={() => {
-          const confirmMessage = `This will permanently delete the operation "${operation.name}" from the collection and related restified endpoint if exists.`;
-          const isOk = getConfirmation(confirmMessage, true, operation.name);
-          if (isOk) {
-            removeOperationsFromQueryCollection(collectionName, [operation], {
-              onSuccess: () => {
-                hasuraToast({
-                  type: 'success',
-                  title: 'Operation deleted',
-                  message: `Operation "${operation.name}" was deleted successfully`,
-                });
-              },
-              onError: (e) => {
-                hasuraToast({
-                  type: 'error',
-                  title: 'Failed to delete operation',
-                  message: `Failed to delete operation "${operation.name}": ${e.message}`,
-                });
-              },
-            });
-          }
+          destructivePrompt({
+            resourceName: operation.name,
+            resourceType: 'operation',
+            destroyTerm: 'delete',
+            appendTerm:
+              'This also deletes the related REST endpoint if one exists.',
+            onConfirm: () =>
+              removeOperationsFromQueryCollection({
+                queryCollection: collectionName,
+                queries: [operation],
+              })
+                .then(() => true)
+                .catch(() => false),
+          });
         }}
         size="1"
         mode="destructive"

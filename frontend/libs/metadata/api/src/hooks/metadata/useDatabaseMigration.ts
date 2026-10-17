@@ -1,8 +1,10 @@
 import { useMutation, UseMutationOptions } from '@tanstack/react-query';
 import { useAuthFetchJson } from '@hasura/shared/hooks';
-import { FetchJson, getConfirmation } from '@hasura/shared/utils';
+import { FetchJson } from '@hasura/shared/utils';
+import { useHasuraAlert } from '@hasura/shared/ui';
 import sanitize from 'sanitize-filename';
 import { MAX_ALLOWED_MIGRATION_LENGTH } from '../constants';
+import { confirmCliServerUnavailable } from './confirmCliServerUnavailable';
 import { Endpoints, useAppContext } from '@hasura/shared/context';
 import {
   getMigrationStatus,
@@ -86,6 +88,10 @@ export function useDatabaseMigration(
 ) {
   const { endpoints, envVars } = useAppContext();
   const fetchJson = useAuthFetchJson();
+  // `useHasuraAlert` is invoked here at render; its `hasuraPrompt` callback is
+  // captured and only invoked later inside `mutationFn` (allowed by the Rules
+  // of Hooks).
+  const { hasuraPrompt } = useHasuraAlert();
 
   return useMutation({
     mutationFn: async (props) => {
@@ -98,10 +104,7 @@ export function useDatabaseMigration(
           endpoints.hasuraCliServerMigrateSettings,
         );
         if (cliServerStatus !== 'healthy') {
-          const isOk = getConfirmation(
-            'The CLI server is unable to access. Do you want to continue?',
-            true,
-          );
+          const isOk = await confirmCliServerUnavailable(hasuraPrompt);
           if (!isOk) {
             return null;
           }

@@ -99,8 +99,9 @@ d.resource_version)`.
   - `useReplaceMetadataFromFile.ts` — JSON-parses a file string then calls
     `useReplaceMetadata`; toasts a parse error and calls `onError` without
     ever calling `replaceMetadata` if parsing fails.
-  - `useResetMetadata.ts` — `useResetMetadata()`: `clear_metadata`; always
-    invalidates in a `.finally()` even on error.
+  - `useResetMetadata.ts` — `useResetMetadata()`: `clear_metadata` via
+    `useMetadataMigrationMutation`; invalidates on error too (a failed reset
+    may have partially cleared metadata).
   - `useDropInconsistentMetadata.ts` — thin wrapper issuing
     `drop_inconsistent_metadata`.
 - **hooks/graphql/** — `useGraphQLMutation` (generic named GraphQL mutation

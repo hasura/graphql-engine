@@ -9,7 +9,6 @@ export * from './protocol';
 export * from './url';
 export * from './data';
 export * from './export';
-export * from './browser';
 export * from './date';
 export * from './file';
 export * from './request';

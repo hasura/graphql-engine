@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { Fragment, ReactNode, useCallback } from 'react';
 import {
   FlattenCustomType,
   flattenCustomTypes,
@@ -7,8 +7,12 @@ import {
   reconstructCustomTypes,
 } from '../../../shared/utils/hasuraCustomTypeUtils';
 import { useMetadataMigration } from '@hasura/metadata/api';
-import { getErrorMessage, getConfirmation } from '@hasura/shared/utils';
-import { hasuraToast } from '@hasura/shared/ui';
+import {
+  hasuraToast,
+  showErrorNotification,
+  Text,
+  useHasuraAlert,
+} from '@hasura/shared/ui';
 import {
   Action,
   ActionDefinition,
@@ -29,6 +33,7 @@ import {
 import { generateSetCustomTypesQuery } from './useSetCustomGraphQLTypes';
 import { persistDerivedAction } from '../utils';
 import { ActionState } from '../types';
+import { Code } from '@radix-ui/themes';
 
 type CreateActionArgs = {
   metadata: Metadata['metadata'];
@@ -147,9 +152,15 @@ export const prepareSaveActionData = ({
 };
 
 const useCreateAction = () => {
-  const mutation = useMetadataMigration();
+  const { mutateAsync, ...mutation } = useMetadataMigration();
+  const { hasuraConfirm } = useHasuraAlert();
 
-  return useCallback(
+  const createAction = useCallback(
+    // When overlapping types exist, returns a promise that settles when the
+    // confirmation dialog closes (after the mutation is dispatched on confirm,
+    // or immediately on cancel); otherwise it dispatches the mutation directly.
+    // Either way callers can chain `.finally()` and keep their loading state
+    // active while the confirmation is pending.
     async (
       {
         metadata,
@@ -162,8 +173,9 @@ const useCreateAction = () => {
     ) => {
       const preparedData = prepareSaveActionData({ metadata, rawState });
       if (!preparedData) {
-        return;
+        return false;
       }
+
       const {
         state,
         allActions,
@@ -173,35 +185,22 @@ const useCreateAction = () => {
         actionComment,
       } = preparedData;
 
-      if (overlappingTypeNames) {
-        const isOk = getOverlappingTypeConfirmation(
+      const runMutation = () => {
+        const customFieldsQueryUp = generateSetCustomTypesQuery(mergedTypes);
+
+        const actionQueryUp = generateCreateActionQuery(
           state.name,
-          allActions,
-          existingTypesList,
-          overlappingTypeNames,
+          generateActionDefinition(state, requestTransform, responseTransform),
+          actionComment,
         );
-        if (!isOk) {
-          return;
-        }
-      }
 
-      const customFieldsQueryUp = generateSetCustomTypesQuery(mergedTypes);
-
-      const actionQueryUp = generateCreateActionQuery(
-        state.name,
-        generateActionDefinition(state, requestTransform, responseTransform),
-        actionComment,
-      );
-
-      return mutation.mutate(
-        {
+        return mutateAsync({
           query: {
             type: 'bulk',
             args: [customFieldsQueryUp, actionQueryUp],
           },
-        },
-        {
-          onSuccess: () => {
+        })
+          .then(() => {
             onSuccess?.();
 
             hasuraToast({
@@ -212,31 +211,69 @@ const useCreateAction = () => {
             if (rawState.derive?.operation) {
               persistDerivedAction(state.name, rawState.derive.operation);
             }
-          },
-          onError: (err) => {
-            hasuraToast({
+
+            return true;
+          })
+          .catch((error) => {
+            showErrorNotification({
               title: 'Creating action failed!',
-              message: getErrorMessage(err),
-              type: 'error',
+              error,
             });
-            onError?.(err);
-          },
-        },
+            onError?.(error);
+
+            return false;
+          });
+      };
+
+      const overlappingTypeWarning = getOverlappingTypeWarning(
+        state.name,
+        allActions,
+        existingTypesList,
+        overlappingTypeNames,
       );
+
+      if (overlappingTypeWarning) {
+        return new Promise<boolean>((resolve) => {
+          hasuraConfirm({
+            title: 'Overlapping types',
+            message: overlappingTypeWarning,
+            confirmText: 'Continue',
+            onClose: ({ confirmed }) => {
+              if (!confirmed) {
+                resolve(false);
+                return;
+              }
+
+              runMutation().then(resolve);
+            },
+          });
+        });
+      }
+
+      return runMutation();
     },
-    [mutation],
+    [mutateAsync, hasuraConfirm],
   );
+
+  return {
+    ...mutation,
+    createAction,
+  };
 };
 
-const getOverlappingTypeConfirmation = (
+// Returns a human-readable warning message when some of the action's custom
+// types are also used by other actions, or `null` when there is no collision.
+// Kept synchronous and side-effect free so the caller can decide how to surface
+// the confirmation (previously this called `getConfirmation` directly).
+const getOverlappingTypeWarning = (
   currentActionName: string,
   allActions: Action[],
   allTypes: FlattenCustomType[],
   overlappingTypeNames: string[],
-) => {
+): ReactNode => {
   const otherActions = allActions.filter((a) => a.name !== currentActionName);
 
-  const typeCollisionMap = {};
+  const typeCollisionMap: Record<string, boolean> = {};
 
   for (let i = otherActions.length - 1; i >= 0; i--) {
     const action = otherActions[i];
@@ -251,20 +288,29 @@ const getOverlappingTypeConfirmation = (
     });
   }
 
-  let isOk = true;
   const collidingTypes = Object.keys(typeCollisionMap);
   const numCollidingTypes = collidingTypes.length;
 
-  if (numCollidingTypes) {
-    const types = `${collidingTypes.join(', ')}`;
-    const typeLabel = numCollidingTypes === 1 ? 'type' : 'types';
-    const verb = numCollidingTypes === 1 ? 'is' : 'are';
-    isOk = getConfirmation(
-      `The ${typeLabel} "${types}" ${verb} also used by other actions. Your current type definition will replace the existing type definition. This will impact existing actions`,
-    );
+  if (!numCollidingTypes) {
+    return null;
   }
 
-  return isOk;
+  const types = collidingTypes.map((t, i) => (
+    <Fragment key={t}>
+      <Code>{t}</Code>
+      {i < collidingTypes.length - 1 ? ', ' : null}
+    </Fragment>
+  ));
+  const typeLabel = numCollidingTypes === 1 ? 'type' : 'types';
+  const verb = numCollidingTypes === 1 ? 'is' : 'are';
+
+  return (
+    <Text>
+      The {typeLabel} {types} {verb} also used by other actions. Your current
+      type definition will replace the existing type definition. This will
+      impact existing actions
+    </Text>
+  );
 };
 
 export default useCreateAction;

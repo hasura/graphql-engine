@@ -1,8 +1,11 @@
 import { useCallback } from 'react';
 import { hydrateTypeRelationships } from '../../../shared/utils/hasuraCustomTypeUtils';
 import { useMetadataMigration } from '@hasura/metadata/api';
-import { getErrorMessage, getConfirmation } from '@hasura/shared/utils';
-import { hasuraToast } from '@hasura/shared/ui';
+import {
+  hasuraToast,
+  showErrorNotification,
+  useHasuraAlert,
+} from '@hasura/shared/ui';
 import { CustomTypes } from '@hasura/shared/types';
 
 export const generateSetCustomTypesQuery = (customTypes: CustomTypes) => {
@@ -13,51 +16,69 @@ export const generateSetCustomTypesQuery = (customTypes: CustomTypes) => {
 };
 
 const useSetCustomGraphQLTypes = () => {
-  const mutation = useMetadataMigration();
+  const { mutateAsync, ...mutation } = useMetadataMigration();
+  const { hasuraConfirm } = useHasuraAlert();
 
-  return useCallback(
-    async (
+  const setCustomGraphQLTypes = useCallback(
+    // Resolves `false` on cancel, otherwise with the mutation's outcome once it
+    // completes. Callers that chain `.finally()` therefore keep their loading
+    // state active until the whole flow is done.
+    (
       {
         newTypes,
         existingTypes,
       }: { newTypes: CustomTypes; existingTypes: CustomTypes },
       onSuccess?: () => unknown,
-    ) => {
-      const isOk = getConfirmation(
-        'This could have an effect on the dependent actions.',
-      );
-      if (!isOk) {
-        return;
-      }
+    ) =>
+      new Promise<boolean>((resolve) => {
+        hasuraConfirm({
+          title: 'Set custom types',
+          message: 'This could have an effect on the dependent actions.',
+          confirmText: 'Continue',
+          onClose: ({ confirmed }) => {
+            if (!confirmed) {
+              resolve(false);
+              return;
+            }
 
-      const hydratedTypes = hydrateTypeRelationships(newTypes, existingTypes);
-      const query = generateSetCustomTypesQuery(hydratedTypes);
+            const hydratedTypes = hydrateTypeRelationships(
+              newTypes,
+              existingTypes,
+            );
+            const query = generateSetCustomTypesQuery(hydratedTypes);
 
-      return mutation.mutate(
-        {
-          query,
-        },
-        {
-          onSuccess: () => {
-            onSuccess?.();
+            mutateAsync({
+              query,
+            })
+              .then(() => {
+                onSuccess?.();
 
-            hasuraToast({
-              title: 'Successfully set custom types!',
-              type: 'success',
-            });
+                hasuraToast({
+                  title: 'Successfully set custom types!',
+                  type: 'success',
+                });
+
+                return true;
+              })
+              .catch((error) => {
+                showErrorNotification({
+                  title: 'Setting custom types failed!',
+                  error,
+                });
+
+                return false;
+              })
+              .then(resolve);
           },
-          onError: (err) => {
-            hasuraToast({
-              title: 'Setting custom types failed!',
-              message: getErrorMessage(err),
-              type: 'error',
-            });
-          },
-        },
-      );
-    },
-    [mutation],
+        });
+      }),
+    [mutateAsync, hasuraConfirm],
   );
+
+  return {
+    setCustomGraphQLTypes,
+    ...mutation,
+  };
 };
 
 export default useSetCustomGraphQLTypes;

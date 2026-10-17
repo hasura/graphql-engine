@@ -6,7 +6,11 @@ import { checkMetadataPayload } from '../../utils/checkMetadataPayload';
 import { Metadata } from '@hasura/shared/types';
 
 describe('Actions with Transform', () => {
-  before(() => {
+  // Runs before every attempt (including CI retries): removes any leftover
+  // `login` action via the metadata API and returns to the actions listing, so a
+  // failed attempt that left the app on the action modify route (or the action
+  // in metadata) cannot break the retry on `data-create-actions`.
+  beforeEach(() => {
     loginActionMustNotExist();
     logMetadataRequests();
 
@@ -336,15 +340,18 @@ describe('Actions with Transform', () => {
     });
 
     // --------------------
-    cy.log('**--- Set the prompt value**');
-    cy.window().then((win) => cy.stub(win, 'prompt').returns('login'));
-
     cy.log('**--- Click the Delete button**');
     cy.get('[data-test=delete-action]').click();
 
     // --------------------
-    cy.log('**--- Check the prompt has been called**');
-    cy.window().its('prompt').should('be.called');
+    // The delete now goes through the in-app destructive prompt
+    // (useDeleteAction -> useDestructivePrompt): the action name must be typed to
+    // confirm. Scope to the dialog so the confirm button is unambiguous.
+    cy.log('**--- Confirm the in-app delete dialog (type the action name)**');
+    cy.findByRole('alertdialog').within(() => {
+      cy.get('input[name="prompt_value"]').type('login');
+      cy.findByTestId('alert-confirm-button').click();
+    });
 
     // --------------------
     cy.log('**--- Check if the success notification is visible**');

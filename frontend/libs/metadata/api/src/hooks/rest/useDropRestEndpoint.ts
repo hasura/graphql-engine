@@ -1,5 +1,4 @@
-import { hasuraToast } from '@hasura/shared/ui';
-import { getConfirmation } from '@hasura/shared/utils';
+import { hasuraToast, useDestructiveConfirm } from '@hasura/shared/ui';
 import { allowedQueriesCollection } from '@hasura/shared/types';
 import {
   MetadataMigrationOptions,
@@ -35,6 +34,7 @@ export const useDropRestEndpoint = () => {
   const { mutate, ...rest } = useMetadataMigration();
   const { data: meta } = useMetadata();
   const showErrorNotification = useErrorNotification();
+  const destructiveConfirm = useDestructiveConfirm();
 
   const dropRestEndpoint = async (
     { name, request }: PropsRESTEndpointDrops,
@@ -61,41 +61,46 @@ export const useDropRestEndpoint = () => {
       return;
     }
 
-    const confirmation = getConfirmation(
-      `You want to delete the endpoint: ${name}`,
-    );
+    destructiveConfirm({
+      resourceName: name,
+      resourceType: 'REST endpoint',
+      destroyTerm: 'delete',
+      onConfirm: () =>
+        new Promise<boolean>((resolve) => {
+          mutate(
+            {
+              query: {
+                type: 'bulk',
+                args: [
+                  dropRESTEndpointQuery(name),
+                  deleteAllowedQueryQuery(request),
+                ],
+              },
+            },
+            {
+              ...options,
+              onSuccess: (data, variables, onMutateResult, context) => {
+                hasuraToast({
+                  title: 'Successfully dropped REST endpoint!',
+                  type: 'success',
+                });
 
-    if (!confirmation) {
-      return;
-    }
+                options?.onSuccess?.(data, variables, onMutateResult, context);
+                resolve(true);
+              },
+              onError: (err, variables, onMutateResult, context) => {
+                showErrorNotification({
+                  title: 'Error dropping REST endpoint!',
+                  error: err,
+                });
 
-    return mutate(
-      {
-        query: {
-          type: 'bulk',
-          args: [dropRESTEndpointQuery(name), deleteAllowedQueryQuery(request)],
-        },
-      },
-      {
-        ...options,
-        onSuccess: (data, variables, onMutateResult, context) => {
-          hasuraToast({
-            title: 'Successfully dropped REST endpoint!',
-            type: 'success',
-          });
-
-          options?.onSuccess?.(data, variables, onMutateResult, context);
-        },
-        onError: (err, variables, onMutateResult, context) => {
-          showErrorNotification({
-            title: 'Error dropping REST endpoint!',
-            error: err,
-          });
-
-          options?.onError?.(err, variables, onMutateResult, context);
-        },
-      },
-    );
+                options?.onError?.(err, variables, onMutateResult, context);
+                resolve(false);
+              },
+            },
+          );
+        }),
+    });
   };
 
   return {

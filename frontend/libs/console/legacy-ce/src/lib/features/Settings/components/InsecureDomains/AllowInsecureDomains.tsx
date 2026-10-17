@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import { Flex, Heading, Link } from '@radix-ui/themes';
-import { Button, CardedTable, Text } from '@hasura/shared/ui';
+import {
+  Button,
+  CardedTable,
+  Text,
+  useDestructiveConfirm,
+} from '@hasura/shared/ui';
 import { Analytics, REDACT_EVERYTHING } from '@hasura/shared/analytics';
 import AddDomain from './AddDomain';
-import { getConfirmation } from '@hasura/shared/utils';
 import { useMetadata, useDeleteInsecureDomain } from '@hasura/metadata/api';
 
 const InsecureDomains: React.FC = () => {
@@ -11,14 +15,19 @@ const InsecureDomains: React.FC = () => {
   const { data: insecureDomains } = useMetadata(
     (m) => m.metadata.network?.tls_allowlist,
   );
-  const deleteInsecureDomain = useDeleteInsecureDomain();
+  const { mutateAsync: deleteInsecureDomain } = useDeleteInsecureDomain();
+  const destructiveConfirm = useDestructiveConfirm();
 
   const handleDeleteDomain = (host: string, port?: string) => {
-    const confirmMessage = `This will permanently delete the domain.`;
-    const isOk = getConfirmation(confirmMessage);
-    if (isOk) {
-      deleteInsecureDomain(host, port);
-    }
+    destructiveConfirm({
+      resourceName: port ? `${host}:${port}` : host,
+      resourceType: 'insecure domain',
+      destroyTerm: 'delete',
+      onConfirm: () =>
+        deleteInsecureDomain({ host, port })
+          .then(() => true)
+          .catch(() => false),
+    });
   };
 
   return (

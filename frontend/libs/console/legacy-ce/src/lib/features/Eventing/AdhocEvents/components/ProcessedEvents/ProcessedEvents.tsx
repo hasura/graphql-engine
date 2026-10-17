@@ -2,8 +2,8 @@ import EventsTable from '../../../components/EventsTable';
 import { usePagination } from '@hasura/shared/hooks';
 import { Analytics, REDACT_EVERYTHING } from '@hasura/shared/analytics';
 import CronEventSubTable from '../../../CronTriggers/components/CronEventSubTable';
-import useGetScheduledEvents from '../../../CronTriggers/hooks/useGetScheduledEvents';
 import { ScheduledEvent } from '@hasura/shared/types';
+import { useGetScheduledEvents } from '@hasura/metadata/api';
 
 const ProcessedEvents: React.FC = () => {
   const { paginationState, setPaginationState } = usePagination({

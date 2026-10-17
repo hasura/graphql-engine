@@ -19,6 +19,7 @@ type RequestUrlEditorProps = {
   requestQueryParams: QueryParams;
   requestUrlOnChange: (requestUrl: string) => void;
   requestQueryParamsOnChange: (requestQueryParams: QueryParams) => void;
+  disabled?: boolean;
 };
 
 type QueryParmsOptions = {
@@ -44,6 +45,7 @@ const RequestUrlEditor: React.FC<RequestUrlEditorProps> = ({
   requestQueryParams,
   requestUrlOnChange,
   requestQueryParamsOnChange,
+  disabled,
 }) => {
   const [localUrl, setLocalUrl] = useState<string>(requestUrl);
   const [queryParamsType, setQueryParamstype] = useState<
@@ -129,6 +131,7 @@ const RequestUrlEditor: React.FC<RequestUrlEditorProps> = ({
     maxLines: 10,
     showLineNumbers: true,
     useSoftTabs: true,
+    readOnly: disabled,
   };
 
   return (
@@ -142,6 +145,7 @@ const RequestUrlEditor: React.FC<RequestUrlEditorProps> = ({
         value={localUrl}
         onChange={(e) => urlOnChangeHandler(e.target.value)}
         data-test="transform-requestUrl"
+        disabled={disabled}
         full
       />
       <Flex direction="column" gap="2">
@@ -150,6 +154,7 @@ const RequestUrlEditor: React.FC<RequestUrlEditorProps> = ({
           orientation="horizontal"
           options={executionOptions}
           value={queryParamsType}
+          disabled={disabled}
           onChange={(value) => {
             setQueryParamstype(value as 'key-value' | 'url-string');
             queryParamsOnChangeHandler(
@@ -167,6 +172,7 @@ const RequestUrlEditor: React.FC<RequestUrlEditorProps> = ({
               setKeyValueQueryParams(pairs);
             }}
             testId="query-params"
+            disabled={disabled}
           />
         ) : (
           <AceEditor
@@ -194,9 +200,10 @@ e.g. {{concat(["userId=", $session_variables["x-hasura-user-id"]])}}`}
           type="text"
           name="request_url_preview"
           id="request_url_preview"
-          className="w-full block cursor-not-allowed rounded border-gray-200 bg-gray-200"
+          className="block cursor-not-allowed"
           data-test="transform-requestUrl-preview"
           value={requestUrlPreview}
+          full
         />
       </Flex>
       {localError ? (

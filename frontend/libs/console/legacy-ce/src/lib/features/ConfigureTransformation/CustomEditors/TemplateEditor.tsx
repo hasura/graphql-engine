@@ -11,6 +11,7 @@ type TemplateEditorProps = {
   requestBodyOnChange: (requestBody: RequestTransformStateBody) => void;
   height?: string;
   width?: string;
+  disabled?: boolean;
 };
 
 const TemplateEditor: React.FC<TemplateEditorProps> = ({
@@ -20,6 +21,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
   requestBodyOnChange,
   height,
   width,
+  disabled,
 }) => {
   const editorRef = useRef<AceEditorRef>(undefined);
   const [localValue, setLocalValue] = useState<string>(
@@ -91,11 +93,11 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
         showPrintMargin={false}
         height={height || '200px'}
         width={width || '100%'}
-        fontSize="12px"
         setOptions={{
           enableBasicAutocompletion: true,
           enableLiveAutocompletion: true,
           useWorker: false,
+          readOnly: disabled,
         }}
       />
     </>

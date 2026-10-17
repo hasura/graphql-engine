@@ -1,6 +1,7 @@
 import type { QueryCollectionQuery } from '@hasura/shared/types';
-import { useMetadata, useMetadataMigration } from '../metadata';
+import { useMetadataHelpers, useMetadataMigrationMutation } from '../metadata';
 import { TMigrationSingleQuery } from '../../api';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 
 export const removeOperationsFromQueryCollectionMetadataArgs = (
   queryCollection: string,
@@ -16,61 +17,72 @@ export const removeOperationsFromQueryCollectionMetadataArgs = (
 ];
 
 export const useRemoveOperationsFromQueryCollection = () => {
-  const { mutate, ...rest } = useMetadataMigration();
-  const { data: metadata } = useMetadata();
+  const { fetchMetadata } = useMetadataHelpers();
 
-  const removeOperationsFromQueryCollection = (
-    queryCollection: string,
-    queries: QueryCollectionQuery[],
-    options?: Parameters<typeof mutate>[1],
-  ) => {
-    if (!queryCollection || !queries)
-      throw Error(
-        `useRemoveOperationsFromQueryCollection: Invalid input - ${
-          queryCollection && 'queryCollection'
-        } ${queries && 'queries'}`,
+  return useMetadataMigrationMutation(
+    async ({
+      queryCollection,
+      queries,
+    }: {
+      queryCollection: string;
+      queries: QueryCollectionQuery[];
+    }) => {
+      if (!queryCollection || !queries) {
+        throw Error(
+          `useRemoveOperationsFromQueryCollection: Invalid input - ${
+            queryCollection && 'queryCollection'
+          } ${queries && 'queries'}`,
+        );
+      }
+
+      const meta = await fetchMetadata();
+      const restEndpoints = meta.metadata.rest_endpoints || [];
+      const args: TMigrationSingleQuery[] = [];
+
+      queries.forEach((endpoint) => {
+        if (
+          restEndpoints.some(
+            (e) =>
+              e.name === endpoint.name &&
+              e.definition.query.collection_name === queryCollection,
+          )
+        ) {
+          args.push({
+            type: 'drop_rest_endpoint',
+            args: {
+              name: endpoint.name,
+            },
+          });
+        }
+      });
+
+      args.push(
+        ...removeOperationsFromQueryCollectionMetadataArgs(
+          queryCollection,
+          queries.map((query) => query.name),
+        ),
       );
 
-    const restEndpoints = metadata?.metadata?.rest_endpoints || [];
-    const args: TMigrationSingleQuery[] = [];
-
-    queries.forEach((endpoint) => {
-      if (
-        restEndpoints.some(
-          (e) =>
-            e.name === endpoint.name &&
-            e.definition.query.collection_name === queryCollection,
-        )
-      ) {
-        args.push({
-          type: 'drop_rest_endpoint',
-          args: {
-            name: endpoint.name,
-          },
+      return {
+        type: 'bulk',
+        resource_version: meta.resource_version,
+        args,
+      };
+    },
+    {
+      onSuccess: () => {
+        hasuraToast({
+          type: 'success',
+          title: 'Operation deleted',
+          message: 'Operation deleted successfully!',
         });
-      }
-    });
-
-    args.push(
-      ...removeOperationsFromQueryCollectionMetadataArgs(
-        queryCollection,
-        queries.map((query) => query.name),
-      ),
-    );
-
-    return mutate(
-      {
-        query: {
-          type: 'bulk',
-          resource_version: metadata?.resource_version,
-          args,
-        },
       },
-      {
-        ...options,
+      onError: (error) => {
+        showErrorNotification({
+          title: 'Failed to delete operation',
+          error,
+        });
       },
-    );
-  };
-
-  return { removeOperationsFromQueryCollection, ...rest };
+    },
+  );
 };

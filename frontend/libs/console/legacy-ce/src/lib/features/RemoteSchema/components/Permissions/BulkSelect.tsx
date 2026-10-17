@@ -1,6 +1,6 @@
 import React from 'react';
-import { getConfirmation } from '@hasura/shared/utils';
-import { Button } from '@hasura/shared/ui';
+import { Button, Card, Text } from '@hasura/shared/ui';
+import { Flex } from '@radix-ui/themes';
 
 export type BulkSelectProps = {
   bulkSelect: string[];
@@ -14,35 +14,33 @@ const BulkSelect: React.FC<BulkSelectProps> = ({
   const getSelectedRoles = () => {
     return bulkSelect.map((role: string) => {
       return (
-        <span key={role} className="pr-2">
-          <b>{role}</b>{' '}
-        </span>
+        <Text key={role} weight="medium">
+          {role}
+        </Text>
       );
     });
   };
 
   const handleBulkRemoveClick = () => {
-    const confirmMessage =
-      'This will remove all currently set permissions for the selected role(s)';
-    const isOk = getConfirmation(confirmMessage);
-    if (isOk) {
-      permRemoveMultipleRoles();
-    }
+    // Confirmation is handled by useDropRemoteSchemaPermissionMultipleRoles.
+    permRemoveMultipleRoles();
   };
 
   return (
-    <div id="bulk-section" className="bg-white border border-gray-300 p-2">
-      <div className="text-lg font-bold mb-4">Apply Bulk Actions</div>
-      <div>
-        <span className="pr-2">Selected Roles</span>
+    <Card id="bulk-section" size="2">
+      <Text weight="bold" size="3">
+        Apply Bulk Actions
+      </Text>
+      <Flex align="center" gap="2" className="mt-4">
+        <Text>Selected Roles</Text>
         {getSelectedRoles()}
-      </div>
+      </Flex>
       <div className="mt-2 mb-2">
         <Button onClick={handleBulkRemoveClick} mode="destructive" size="sm">
           Remove All Permissions
         </Button>
       </div>
-    </div>
+    </Card>
   );
 };
 

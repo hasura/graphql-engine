@@ -1,10 +1,10 @@
 import React from 'react';
 import { usePagination } from '@hasura/shared/hooks';
-import useGetScheduledEvents from '../../hooks/useGetScheduledEvents';
 import { Analytics, REDACT_EVERYTHING } from '@hasura/shared/analytics';
 import EventsTable from '../../../components/EventsTable';
 import CronEventSubTable from '../CronEventSubTable';
 import { CronTrigger, ScheduledEvent } from '@hasura/shared/types';
+import { useGetScheduledEvents } from '@hasura/metadata/api';
 
 type Props = {
   currentTrigger: CronTrigger;

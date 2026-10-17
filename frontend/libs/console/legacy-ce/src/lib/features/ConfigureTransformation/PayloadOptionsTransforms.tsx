@@ -5,18 +5,22 @@ import {
   Button,
   IndicatorCard,
   JsonCodeBlock,
+  JSONEditor,
   Select,
   Text,
 } from '@hasura/shared/ui';
 import CrossIcon from '../../components/Common/Icons/Cross';
 import TemplateEditor from './CustomEditors/TemplateEditor';
-import JsonEditor from './CustomEditors/JsonEditor';
 import ResetIcon from '../../components/Common/Icons/Reset';
 import { editorDebounceTime } from './utils';
 import NumberedSidebar from './CustomEditors/NumberedSidebar';
 import { RequestTransformStateBody, TransformationType } from './stateDefaults';
 import KeyValueInput from './CustomEditors/KeyValueInput';
-import { capitalizeFirstLetter, isEmpty } from '@hasura/shared/utils';
+import {
+  capitalizeFirstLetter,
+  isEmpty,
+  isJsonString,
+} from '@hasura/shared/utils';
 import { requestBodyActionState } from './requestTransformState';
 import { Code, Flex } from '@radix-ui/themes';
 import { NameValue } from '@hasura/shared/types';
@@ -31,7 +35,12 @@ type PayloadOptionsTransformsProps = {
   resetSampleInput: () => void;
   requestBodyOnChange: (requestBody: RequestTransformStateBody) => void;
   requestSampleInputOnChange: (requestSampleInput: string) => void;
+  disabled?: boolean;
 };
+
+// Matches the previous local JsonEditor: long, because each change triggers
+// the request-body autocompleter and the validate API.
+const sampleInputDebounceTime = 3500;
 
 const requestBodyTypeOptions = [
   {
@@ -57,6 +66,7 @@ const PayloadOptionsTransforms: React.FC<PayloadOptionsTransformsProps> = ({
   resetSampleInput,
   requestBodyOnChange,
   requestSampleInputOnChange,
+  disabled,
 }) => {
   const [localFormElements, setLocalFormElements] = React.useState<NameValue[]>(
     requestBody.form_template ?? [{ name: '', value: '' }],
@@ -81,6 +91,30 @@ const PayloadOptionsTransforms: React.FC<PayloadOptionsTransformsProps> = ({
     [localFormElements],
   );
 
+  // Buffer sample-input edits locally and only propagate valid JSON after a
+  // pause: every upstream change re-runs the transform validate API.
+  const [localSampleInput, setLocalSampleInput] =
+    React.useState(requestSampleInput);
+  const [prevSampleInput, setPrevSampleInput] =
+    React.useState(requestSampleInput);
+  if (requestSampleInput !== prevSampleInput) {
+    setPrevSampleInput(requestSampleInput);
+    setLocalSampleInput(requestSampleInput);
+  }
+
+  useDebouncedEffect(
+    () => {
+      if (
+        localSampleInput !== requestSampleInput &&
+        isJsonString(localSampleInput)
+      ) {
+        requestSampleInputOnChange(localSampleInput);
+      }
+    },
+    sampleInputDebounceTime,
+    [localSampleInput],
+  );
+
   return (
     <div
       className="my-4 ml-6 pl-10 border-l border-l-(--gray-a7)"
@@ -100,6 +134,7 @@ const PayloadOptionsTransforms: React.FC<PayloadOptionsTransformsProps> = ({
             mode="default"
             leftIcon={ResetIcon}
             className="ml-2"
+            disabled={disabled}
             onClick={() => {
               resetSampleInput();
             }}
@@ -107,9 +142,10 @@ const PayloadOptionsTransforms: React.FC<PayloadOptionsTransformsProps> = ({
             Reset
           </Button>
         </NumberedSidebar>
-        <JsonEditor
-          value={requestSampleInput}
-          onChange={requestSampleInputOnChange}
+        <JSONEditor
+          data={requestSampleInput}
+          onChange={setLocalSampleInput}
+          disabled={disabled}
         />
       </div>
 

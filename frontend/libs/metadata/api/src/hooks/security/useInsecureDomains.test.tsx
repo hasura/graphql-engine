@@ -55,7 +55,7 @@ describe('useAddInsecureDomain / useDeleteInsecureDomain (HTTP boundary)', () =>
       wrapper: testWrapper,
     });
 
-    await result.current('example.com', '8080');
+    await result.current.mutateAsync({ host: 'example.com', port: '8080' });
 
     await waitFor(() => expect(capturedBodies.length).toBe(1));
     expect(capturedBodies[0]).toEqual({

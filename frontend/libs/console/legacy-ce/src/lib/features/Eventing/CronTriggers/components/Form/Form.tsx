@@ -1,7 +1,14 @@
 import { useState } from 'react';
-import { SimpleForm, InputField, Button, Separator } from '@hasura/shared/ui';
+import {
+  SimpleForm,
+  InputField,
+  Button,
+  Separator,
+  hasuraToast,
+  useDestructivePrompt,
+  useHasuraAlert,
+} from '@hasura/shared/ui';
 import { Analytics } from '@hasura/shared/analytics';
-import { getConfirmation } from '@hasura/shared/utils';
 import { useFormContext } from 'react-hook-form';
 import { schema, Schema } from './schema';
 import {
@@ -9,18 +16,19 @@ import {
   AdvancedSettings,
   CronScheduleSelector,
 } from './components';
-import {
-  getCronTriggerCreateQuery,
-  getCronTriggerDeleteQuery,
-  getCronTriggerUpdateQuery,
-} from './utils';
-import { useCronMetadataMigration, useDefaultValues } from './hooks';
+import { useDefaultValues } from './hooks';
 import { CronRequestTransformation } from './components/CronRequestTransformation';
 import { FaShieldAlt } from 'react-icons/fa';
 import { Flex } from '@radix-ui/themes';
 import { useAppContext } from '@hasura/shared/context';
 import { EventRequestTransform } from '@hasura/shared/types';
 import type { CronTrigger } from '@hasura/shared/types';
+import {
+  useCreateCronTrigger,
+  useDeleteCronTrigger,
+  useUpdateCronTrigger,
+} from '@hasura/metadata/api';
+import { transformFormData } from './utils';
 
 type Props = {
   /**
@@ -93,79 +101,102 @@ const CronTriggersForm = (props: Props) => {
   });
 
   const { readOnlyMode } = useAppContext();
+  const destructivePrompt = useDestructivePrompt();
+  const { hasuraPrompt } = useHasuraAlert();
   const [transform, setTransform] = useState<
     EventRequestTransform | undefined
   >();
 
-  const { mutation: deleteMutation } = useCronMetadataMigration({
-    onSuccess: onDeleteSuccess,
-    successMessage: 'Cron trigger deleted successfully',
-    errorMessage: 'Something went wrong while deleting cron trigger',
-  });
+  const { mutateAsync: deleteMutation, isPending: isDeleting } =
+    useDeleteCronTrigger();
 
-  const { mutation: updateMutation } = useCronMetadataMigration({
-    successMessage: 'Cron trigger updated successfully',
-    errorMessage: 'Something went wrong while updating cron trigger',
-  });
+  const { mutateAsync: updateMutation, isPending: isUpdating } =
+    useUpdateCronTrigger();
 
-  const { mutation: createMutation } = useCronMetadataMigration({
-    successMessage: 'Cron trigger created successfully',
-    errorMessage: 'Something went wrong while creating cron trigger',
-  });
+  const { mutateAsync: createMutation, isPending: isCreating } =
+    useCreateCronTrigger();
 
   const onDelete = () => {
-    if (!currentTrigger) {
+    if (!currentTrigger?.name) {
       return;
     }
 
-    const isOk = getConfirmation(
-      'Are you sure you want to delete this cron trigger?',
-      true,
-      currentTrigger.name,
-    );
-    if (isOk && currentTrigger?.name) {
-      deleteMutation.mutate({
-        query: getCronTriggerDeleteQuery(currentTrigger.name),
-      });
-    }
+    const triggerName = currentTrigger.name;
+
+    destructivePrompt({
+      resourceName: triggerName,
+      resourceType: 'cron trigger',
+      destroyTerm: 'delete',
+      appendTerm: 'This also deletes the associated metadata.',
+      onConfirm: () =>
+        deleteMutation(triggerName)
+          .then(() => {
+            onDeleteSuccess?.();
+            return true;
+          })
+          .catch(() => false),
+    });
   };
 
   const onSubmit = (values: Record<string, unknown>) => {
-    if (currentTrigger) {
-      const isOk =
-        currentTrigger.name === values?.name ||
-        getConfirmation(
-          'Renaming a trigger deletes the current trigger and creates a new trigger with this configuration. All the events of the current trigger will be dropped. Are you sure you want to continue?',
-          true,
-          'RENAME',
-        );
-      if (isOk) {
-        updateMutation.mutate(
-          {
-            query: getCronTriggerUpdateQuery(
-              currentTrigger.name,
-              values as Schema,
-              transform,
-            ),
-          },
-          {
-            onSuccess: () => {
-              onSuccess?.(values?.name as string);
-            },
-          },
-        );
+    const runUpdate = async () => {
+      if (!currentTrigger) {
+        return false;
       }
+
+      return updateMutation({
+        name: currentTrigger.name,
+        args: transformFormData(values as Schema, false, transform),
+      })
+        .then(() => {
+          onSuccess?.(values?.name as string);
+          return true;
+        })
+        .catch(() => false);
+    };
+
+    if (currentTrigger) {
+      if (currentTrigger.name === values?.name) {
+        runUpdate();
+        return;
+      }
+
+      // Renaming a cron trigger drops the current trigger (and all of its
+      // scheduled events) and recreates it with the new configuration, so keep
+      // the original typed-"RENAME" confirmation as a hard safeguard.
+      hasuraPrompt({
+        title: 'Rename cron trigger',
+        message:
+          'Renaming a trigger deletes the current trigger and creates a new trigger with this configuration. All the events of the current trigger will be dropped. Are you sure you want to continue?',
+        destructive: true,
+        confirmText: 'Continue',
+        promptLabel: 'Type RENAME to confirm this action.',
+        onCloseAsync: async (result) => {
+          if (!result.confirmed) {
+            return { withSuccess: false };
+          }
+
+          if (result.promptValue !== 'RENAME') {
+            hasuraToast({
+              type: 'error',
+              title: 'Entry Not Matching',
+              message: `Your entry "${result.promptValue}" does not match "RENAME".`,
+            });
+            return { withSuccess: false };
+          }
+
+          return runUpdate().then((withSuccess) => ({ withSuccess }));
+        },
+      });
     } else {
-      createMutation.mutate(
-        {
-          query: getCronTriggerCreateQuery(values as Schema, transform),
-        },
-        {
-          onSuccess: () => {
-            onSuccess?.(values?.name as string);
-          },
-        },
-      );
+      return createMutation(
+        transformFormData(values as Schema, false, transform),
+      )
+        .then(() => {
+          onSuccess?.(values?.name as string);
+          return true;
+        })
+        .catch(() => false);
     }
   };
 
@@ -189,7 +220,7 @@ const CronTriggersForm = (props: Props) => {
             <Button
               type="submit"
               mode="primary"
-              loading={updateMutation.isPending}
+              loading={isUpdating}
               disabled={readOnlyMode}
             >
               Update Cron Trigger
@@ -203,7 +234,7 @@ const CronTriggersForm = (props: Props) => {
             <Button
               type="submit"
               mode="primary"
-              loading={createMutation.isPending}
+              loading={isCreating}
               disabled={readOnlyMode}
             >
               Add Cron Trigger
@@ -219,8 +250,7 @@ const CronTriggersForm = (props: Props) => {
             <Button
               onClick={onDelete}
               mode="destructive"
-              loading={deleteMutation.isPending}
-              disabled={readOnlyMode}
+              disabled={readOnlyMode || isDeleting}
             >
               Delete trigger
             </Button>

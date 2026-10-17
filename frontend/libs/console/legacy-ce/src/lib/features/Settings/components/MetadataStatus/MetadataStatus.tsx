@@ -6,9 +6,9 @@ import {
   DataTableFeatures,
   IndicatorCard,
   Text,
+  useDestructiveConfirm,
 } from '@hasura/shared/ui';
 import { Analytics, REDACT_EVERYTHING } from '@hasura/shared/analytics';
-import { getConfirmation } from '@hasura/shared/utils';
 import { useNavigate } from 'react-router';
 import ReloadMetadata from '../MetadataOptions/ReloadMetadata';
 import {
@@ -70,7 +70,9 @@ const columnHelper = createColumnHelper<
 
 const MetadataStatus = () => {
   const navigate = useNavigate();
-  const dropInconsistentMetadata = useDropInconsistentMetadata();
+  const { mutateAsync: dropInconsistentMetadata } =
+    useDropInconsistentMetadata();
+  const destructiveConfirm = useDestructiveConfirm();
   const { data: inconsistentMetadata, refetch: refreshInconsistentMetadata } =
     useInconsistentMetadata();
   const { data: metadataData, refetch: refreshMetadata } = useMetadata();
@@ -142,19 +144,27 @@ const MetadataStatus = () => {
   );
 
   const verifyAndDropAll = () => {
-    const confirmMessage = `This will drop all the inconsistent objects in your metadata. This includes all inconsistent sources - databases, remote schemas, actions etc. and any Hasura features related to these objects. This action is irreversible.`;
-    const isOk = getConfirmation(confirmMessage);
-    if (isOk) {
-      setIsLoading(true);
-      return dropInconsistentMetadata()
-        .then(() => {
+    destructiveConfirm({
+      resourceName: 'all inconsistent objects',
+      resourceType: 'metadata',
+      destroyTerm: 'delete',
+      appendTerm:
+        'This includes all inconsistent sources - databases, remote schemas, actions etc. and any Hasura features related to these objects. This action is irreversible.',
+      onConfirm: async () => {
+        setIsLoading(true);
+        try {
+          await dropInconsistentMetadata();
           refreshMetadata();
           refreshInconsistentMetadata();
-        })
-        .finally(() => {
+          return true;
+        } catch {
+          // The mutation's onError already notified the user.
+          return false;
+        } finally {
           setIsLoading(false);
-        });
-    }
+        }
+      },
+    });
   };
 
   const content = () => {
