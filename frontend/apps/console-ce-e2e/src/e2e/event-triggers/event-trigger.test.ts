@@ -207,7 +207,17 @@ describe('Create event trigger with shortest possible path', () => {
       }
     });
     cy.findByRole('button', { name: 'Delete Event Trigger' }).click();
+
+    // The delete now goes through the in-app destructive prompt
+    // (useDeleteEventTrigger -> useDestructivePrompt): the trigger name must be
+    // typed to confirm. Scope to the dialog and confirm, then assert the real
+    // request + success.
+    cy.findByRole('alertdialog').within(() => {
+      cy.get('input[name="prompt_value"]').type(EVENT_TRIGGER_NAME);
+      cy.findByTestId('alert-confirm-button').click();
+    });
     cy.wait('@deleteTrigger');
+    cy.expectSuccessNotification();
   });
 });
 

@@ -11,11 +11,13 @@ import { Code } from '@radix-ui/themes';
 type PayloadOptionsTransformsProps = {
   responseBody: ResponseTransformStateBody;
   responseBodyOnChange: (responseBody: ResponseTransformStateBody) => void;
+  disabled?: boolean;
 };
 
 const ResponseTransforms: React.FC<PayloadOptionsTransformsProps> = ({
   responseBody,
   responseBodyOnChange,
+  disabled,
 }) => {
   const [localFormElements, setLocalFormElements] = React.useState<NameValue[]>(
     responseBody.form_template ?? [{ name: '', value: '' }],
@@ -66,6 +68,7 @@ const ResponseTransforms: React.FC<PayloadOptionsTransformsProps> = ({
           <TemplateEditor
             requestBody={responseBody}
             requestBodyOnChange={responseBodyOnChange}
+            disabled={disabled}
           />
         ) : null}
       </div>

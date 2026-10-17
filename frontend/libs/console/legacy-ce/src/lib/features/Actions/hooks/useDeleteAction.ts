@@ -1,7 +1,10 @@
 import { useCallback } from 'react';
 import { useMetadataMigration } from '@hasura/metadata/api';
-import { getErrorMessage, getConfirmation } from '@hasura/shared/utils';
-import { hasuraToast } from '@hasura/shared/ui';
+import {
+  hasuraToast,
+  showErrorNotification,
+  useDestructivePrompt,
+} from '@hasura/shared/ui';
 import { removePersistedDerivedAction } from '../utils';
 
 export const generateDropActionQuery = (actionName: string) => ({
@@ -12,42 +15,51 @@ export const generateDropActionQuery = (actionName: string) => ({
 });
 
 const useDeleteAction = () => {
-  const mutation = useMetadataMigration();
+  const { mutateAsync, ...mutation } = useMetadataMigration();
+  const destructivePrompt = useDestructivePrompt();
 
-  return useCallback(
-    async (actionName: string, onSuccess?: () => unknown) => {
-      const confirmMessage = `This will permanently delete the action "${actionName}" from this table`;
-      const isOk = getConfirmation(confirmMessage, true, actionName);
-      if (!isOk) {
-        return;
-      }
+  const deleteAction = useCallback(
+    // Returns the dialog's promise, which settles when the dialog closes
+    // (cancel/mismatch) or once the deletion has completed. Existing callers
+    // (e.g. OASGeneratorPage) chain `.finally()` on it for their loading state,
+    // so loading stays active while the confirmation is pending.
+    async (actionName: string, onSuccess?: () => unknown) =>
+      destructivePrompt({
+        resourceName: actionName,
+        resourceType: 'action',
+        destroyTerm: 'delete',
+        appendTerm: 'This also deletes its associated metadata.',
+        onConfirm: () =>
+          mutateAsync({
+            query: generateDropActionQuery(actionName),
+          })
+            .then(() => {
+              onSuccess?.();
+              removePersistedDerivedAction(actionName);
 
-      return mutation.mutate(
-        {
-          query: generateDropActionQuery(actionName),
-        },
-        {
-          onSuccess: () => {
-            onSuccess?.();
-            removePersistedDerivedAction(actionName);
+              hasuraToast({
+                title: 'Action deleted successfully!',
+                type: 'success',
+              });
 
-            hasuraToast({
-              title: 'Action deleted successfully!',
-              type: 'success',
-            });
-          },
-          onError: (err) => {
-            hasuraToast({
-              title: 'Deleting action failed!',
-              message: getErrorMessage(err),
-              type: 'error',
-            });
-          },
-        },
-      );
-    },
-    [mutation],
+              return true;
+            })
+            .catch((error) => {
+              showErrorNotification({
+                title: 'Deleting action failed!',
+                error,
+              });
+
+              return false;
+            }),
+      }),
+    [mutateAsync, destructivePrompt],
   );
+
+  return {
+    deleteAction,
+    ...mutation,
+  };
 };
 
 export default useDeleteAction;

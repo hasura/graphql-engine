@@ -5,6 +5,7 @@ export * from './useMetadataHelpers';
 export * from './useMetadataVersion';
 export * from './useMetadataMigration';
 export * from './useDatabaseMigration';
+export * from './confirmCliServerUnavailable';
 export * from './useReloadMetadata';
 export * from './useReplaceMetadata';
 export * from './useReplaceMetadataFromFile';

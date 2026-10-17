@@ -2,7 +2,62 @@ import { HasuraMetadataV3 } from '@hasura/shared/types';
 import { cliUrl, hgeUrl } from '../../../support/endpoints';
 import { readMetadata } from '../../actions/withTransform/utils/services/readMetadata';
 
+const REMOTE_SCHEMA_NAME = 'remote_schema_name';
+
+// Deterministic cleanup: remove the remote schema (whatever state a previous
+// attempt/suite left it in) via the metadata API so each test — including the
+// `retries.runMode` retry and the second describe — starts from a clean slate.
+// `failOnStatusCode:false` because it is a no-op when the schema is absent.
+const deleteRemoteSchemaIfExists = () => {
+  cy.request({
+    method: 'POST',
+    url: hgeUrl('/v1/metadata'),
+    failOnStatusCode: false,
+    body: {
+      type: 'remove_remote_schema',
+      args: { name: REMOTE_SCHEMA_NAME, cascade: true },
+    },
+  });
+};
+
+// Drives the real in-app delete dialog (useRemoteSchemaDeletePrompt): it requires
+// the schema name typed to confirm and exposes a cascade checkbox that must stay
+// unchecked by default. We assert the default-unchecked cascade, type the name,
+// confirm, and wait for the actual remove request + success.
+const deleteRemoteSchemaViaUi = () => {
+  cy.intercept('POST', hgeUrl('/v1/metadata'), (req) => {
+    if (JSON.stringify(req.body).includes('remove_remote_schema')) {
+      req.alias = 'removeRs';
+    }
+    req.continue();
+  });
+  cy.intercept('POST', cliUrl('/apis/migrate'), (req) => {
+    if (JSON.stringify(req.body).includes('remove_remote_schema')) {
+      req.alias = 'removeRs';
+    }
+  });
+
+  cy.findByRole('button', { name: 'Delete' }).click();
+
+  // Scope to the dialog: the RS modify form behind it also has a checkbox.
+  cy.findByRole('alertdialog').within(() => {
+    // the cascade opt-in must default to unchecked (no silent cascade)
+    cy.findByRole('checkbox').should('not.be.checked');
+
+    // typed-name confirmation
+    cy.get('input[name="prompt_value"]').type(REMOTE_SCHEMA_NAME);
+    cy.findByTestId('alert-confirm-button').click();
+  });
+
+  cy.wait('@removeRs');
+  cy.expectSuccessNotification();
+};
+
 describe('Create RS with shortest possible path', () => {
+  beforeEach(() => {
+    deleteRemoteSchemaIfExists();
+  });
+
   it('When the users create, modify and delete a RS, everything should work', () => {
     cy.log('**------------------------------**');
     cy.log('**------------------------------**');
@@ -14,9 +69,6 @@ describe('Create RS with shortest possible path', () => {
 
     cy.visit('/remote-schemas/manage/schemas', {
       timeout: 10000,
-      onBeforeLoad(win) {
-        cy.stub(win, 'prompt').returns('remote_schema_name');
-      },
     });
 
     // --------------------
@@ -58,9 +110,6 @@ describe('Create RS with shortest possible path', () => {
     // go to modify tab of RS
     cy.visit('/remote-schemas/manage/remote_schema_name/modify', {
       timeout: 10000,
-      onBeforeLoad(win) {
-        cy.stub(win, 'prompt').returns('remote_schema_name');
-      },
     });
 
     const interceptUpdateRs = () => {
@@ -136,9 +185,6 @@ describe('Create RS with shortest possible path', () => {
     // go again to modify tab
     cy.visit('/remote-schemas/manage/remote_schema_name/modify', {
       timeout: 10000,
-      onBeforeLoad(win) {
-        cy.stub(win, 'prompt').returns('remote_schema_name');
-      },
     });
 
     // add gql customization
@@ -157,9 +203,6 @@ describe('Create RS with shortest possible path', () => {
 
     cy.visit('/remote-schemas/manage/remote_schema_name/modify', {
       timeout: 10000,
-      onBeforeLoad(win) {
-        cy.stub(win, 'prompt').returns('remote_schema_name');
-      },
     });
 
     readMetadata().then((md: { body: HasuraMetadataV3 }) => {
@@ -172,23 +215,15 @@ describe('Create RS with shortest possible path', () => {
 
     // delete RS
     cy.log('**--- Click on Delete to delete the RS');
-    cy.intercept('POST', hgeUrl('/v1/metadata'), (req) => {
-      if (JSON.stringify(req.body).includes('remove_remote_schema')) {
-        req.alias = 'removeRs';
-      }
-      req.continue();
-    });
-    cy.intercept('POST', cliUrl('/apis/migrate'), (req) => {
-      if (JSON.stringify(req.body).includes('remove_remote_schema')) {
-        req.alias = 'removeRs';
-      }
-    });
-    cy.findByRole('button', { name: 'Delete' }).click();
-    cy.wait('@removeRs');
+    deleteRemoteSchemaViaUi();
   });
 });
 
 describe('Create RS with longest possible path', () => {
+  beforeEach(() => {
+    deleteRemoteSchemaIfExists();
+  });
+
   it('When the users create, modify and delete a RS, everything should work', () => {
     cy.log('**------------------------------**');
     cy.log('**------------------------------**');
@@ -200,9 +235,6 @@ describe('Create RS with longest possible path', () => {
 
     cy.visit('/remote-schemas/manage/schemas', {
       timeout: 10000,
-      onBeforeLoad(win) {
-        cy.stub(win, 'prompt').returns('remote_schema_name');
-      },
     });
 
     // --------------------
@@ -288,9 +320,6 @@ describe('Create RS with longest possible path', () => {
     // go to modify tab of RS
     cy.visit('/remote-schemas/manage/remote_schema_name/modify', {
       timeout: 10000,
-      onBeforeLoad(win) {
-        cy.stub(win, 'prompt').returns('remote_schema_name');
-      },
     });
 
     // edit RS webhook url
@@ -328,9 +357,6 @@ describe('Create RS with longest possible path', () => {
 
     cy.visit('/remote-schemas/manage/remote_schema_name/modify', {
       timeout: 10000,
-      onBeforeLoad(win) {
-        cy.stub(win, 'prompt').returns('remote_schema_name');
-      },
     });
 
     readMetadata().then((md: { body: HasuraMetadataV3 }) => {
@@ -343,18 +369,6 @@ describe('Create RS with longest possible path', () => {
 
     // delete RS
     cy.log('**--- Click on Delete to delete the RS');
-    cy.intercept('POST', hgeUrl('/v1/metadata'), (req) => {
-      if (JSON.stringify(req.body).includes('remove_remote_schema')) {
-        req.alias = 'removeRs';
-      }
-      req.continue();
-    });
-    cy.intercept('POST', cliUrl('/apis/migrate'), (req) => {
-      if (JSON.stringify(req.body).includes('remove_remote_schema')) {
-        req.alias = 'removeRs';
-      }
-    });
-    cy.findByRole('button', { name: 'Delete' }).click();
-    cy.wait('@removeRs');
+    deleteRemoteSchemaViaUi();
   });
 });

@@ -1,5 +1,4 @@
 import React from 'react';
-import { useGetAllCronTriggers } from '../hooks/useGetAllCronTriggers';
 import { dataRoutes } from '@hasura/shared/utils';
 import { FaCalendarAlt } from 'react-icons/fa';
 import { CRON_EVENTS_HEADING } from '@hasura/shared/types';
@@ -9,6 +8,7 @@ import {
   useLeftSidebarSection,
 } from '@hasura/shared/ui';
 import { Flex, Skeleton } from '@radix-ui/themes';
+import { useGetAllCronTriggers } from '@hasura/metadata/api';
 
 interface Props {
   triggerName: string | undefined;

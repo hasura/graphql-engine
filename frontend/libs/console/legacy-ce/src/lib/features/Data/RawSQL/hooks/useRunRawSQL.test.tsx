@@ -21,6 +21,9 @@ vi.mock('@hasura/metadata/api', () => ({
   toastMetadataOutOfDateError: vi.fn(),
   useInvalidateMetadata: vi.fn(() => vi.fn()),
   useMigrationStatus: vi.fn(() => ({ refetch: vi.fn() })),
+  // The CLI-server gate helper; these tests exercise the healthy-server path so
+  // it is never invoked, but it must exist on the mock since it is imported.
+  confirmCliServerUnavailable: vi.fn(() => Promise.resolve(true)),
 }));
 
 vi.mock('@hasura/shared/context', () => ({
@@ -34,6 +37,11 @@ vi.mock('@hasura/shared/hooks', () => ({
 vi.mock('@hasura/shared/ui', () => ({
   hasuraToast: vi.fn(),
   showErrorNotification: vi.fn(),
+  useHasuraAlert: vi.fn(() => ({
+    hasuraAlert: vi.fn(),
+    hasuraConfirm: vi.fn(),
+    hasuraPrompt: vi.fn(),
+  })),
 }));
 
 vi.mock('@hasura/metadata/data-source', () => ({

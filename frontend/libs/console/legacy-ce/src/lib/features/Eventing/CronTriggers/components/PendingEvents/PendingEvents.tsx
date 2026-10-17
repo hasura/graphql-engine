@@ -1,12 +1,14 @@
 import React from 'react';
-import { getConfirmation } from '@hasura/shared/utils';
-import useDeleteScheduledEvent from '../../hooks/useDeleteScheduledEvent';
+import { useDestructiveConfirm } from '@hasura/shared/ui';
 import { usePagination } from '@hasura/shared/hooks';
-import useGetScheduledEvents from '../../hooks/useGetScheduledEvents';
 import EventsTable from '../../../components/EventsTable';
 import { Analytics, REDACT_EVERYTHING } from '@hasura/shared/analytics';
 import type { CronTrigger, ScheduledEvent } from '@hasura/shared/types';
 import CronEventSubTable from '../CronEventSubTable';
+import {
+  useGetScheduledEvents,
+  useDeleteScheduledEvent,
+} from '@hasura/metadata/api';
 
 type Props = {
   currentTrigger: CronTrigger;
@@ -32,24 +34,31 @@ const PendingEvents: React.FC<Props> = ({ currentTrigger }) => {
     order_by: paginationState.sorts,
   });
 
-  const cancelEvent = useDeleteScheduledEvent();
+  const { mutateAsync: cancelEvent } = useDeleteScheduledEvent();
+  const destructiveConfirm = useDestructiveConfirm();
 
   const onCancelCronTrigger = (
     id: string,
     scheduledAt: string | Date | number,
     onSuccess?: () => void,
   ) => {
-    const shouldCancelEvent = getConfirmation(
-      `This will delete the "${id}" of cron trigger "${currentTrigger.name}" scheduled for "${scheduledAt}"`,
-    );
-    if (shouldCancelEvent) {
-      cancelEvent({
-        event_id: id,
-        type: 'cron',
-      }).then(() => {
-        onSuccess?.();
-      });
-    }
+    destructiveConfirm({
+      resourceName: id,
+      resourceType: 'scheduled event',
+      destroyTerm: 'delete',
+      appendTerm: `This cron event of "${currentTrigger.name}" is scheduled for "${scheduledAt}".`,
+      onConfirm: () => {
+        return cancelEvent({
+          event_id: id,
+          type: 'cron',
+        })
+          .then(() => {
+            onSuccess?.();
+            return true;
+          })
+          .catch(() => false);
+      },
+    });
   };
 
   return (

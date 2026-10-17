@@ -1,7 +1,12 @@
 import React from 'react';
 import { FaRegCopy, FaRegFolder, FaRegTrashAlt } from 'react-icons/fa';
-import { Button, DropdownMenu, hasuraToast, Text } from '@hasura/shared/ui';
-import { getConfirmation } from '@hasura/shared/utils';
+import {
+  Button,
+  DropdownMenu,
+  hasuraToast,
+  Text,
+  useDestructivePrompt,
+} from '@hasura/shared/ui';
 import { QueryCollectionsOperationsSearchForm } from './QueryCollectionOperationsSearchForm';
 import { useQueryCollections } from '../../hooks/useQueryCollections';
 import { QueryCollectionQuery } from '@hasura/shared/types';
@@ -34,8 +39,11 @@ export const QueryCollectionsOperationsHeader: React.FC<
     useAddOperationsToQueryCollection();
   const { moveOperationToQueryCollection, isPending: moveLoading } =
     useMoveOperationsToQueryCollection();
-  const { removeOperationsFromQueryCollection, isPending: deleteLoading } =
-    useRemoveOperationsFromQueryCollection();
+  const {
+    mutateAsync: removeOperationsFromQueryCollection,
+    isPending: deleteLoading,
+  } = useRemoveOperationsFromQueryCollection();
+  const destructivePrompt = useDestructivePrompt();
 
   const otherCollections = (queryCollections || []).filter(
     (c) => c.name !== collectionName,
@@ -134,31 +142,26 @@ export const QueryCollectionsOperationsHeader: React.FC<
             )}
             <Button
               onClick={() => {
-                const confirmMessage = `This will permanently delete the selected operations and related restified endpoints if exists.`;
-                const isOk = getConfirmation(confirmMessage, true, 'delete');
-                if (isOk) {
-                  removeOperationsFromQueryCollection(
-                    collectionName,
-                    selectedOperations,
-                    {
-                      onError: (e) => {
-                        hasuraToast({
-                          type: 'error',
-                          title: 'Failed to delete operations',
-                          message: `Failed to delete operations from collection ${collectionName}: ${e.message}`,
-                        });
-                      },
-                      onSuccess: () => {
-                        hasuraToast({
-                          type: 'success',
-                          title: 'Operations deleted',
-                          message: `Successfully deleted ${selectedOperations.length} operations from ${collectionName}`,
-                        });
+                const count = selectedOperations.length;
+                destructivePrompt({
+                  resourceName: collectionName,
+                  resourceType: `${count} operation${
+                    count === 1 ? '' : 's'
+                  } from collection`,
+                  destroyTerm: 'delete',
+                  appendTerm:
+                    'The related REST endpoints will also be deleted if any exist.',
+                  onConfirm: () =>
+                    removeOperationsFromQueryCollection({
+                      queryCollection: collectionName,
+                      queries: selectedOperations,
+                    })
+                      .then(() => {
                         setSelectedOperations([]);
-                      },
-                    },
-                  );
-                }
+                        return true;
+                      })
+                      .catch(() => false),
+                });
               }}
               size="1"
               mode="destructive"

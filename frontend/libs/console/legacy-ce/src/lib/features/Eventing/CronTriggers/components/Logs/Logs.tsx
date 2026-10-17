@@ -1,7 +1,7 @@
 import InvocationLogsTable from '../../../components/InvocationLogsTable';
 import { usePagination } from '@hasura/shared/hooks';
 import { Analytics, REDACT_EVERYTHING } from '@hasura/shared/analytics';
-import useGetScheduledEventInvocations from '../../hooks/useGetScheduledEventInvocations';
+import { useGetScheduledEventInvocations } from '@hasura/metadata/api';
 
 type Props = {
   triggerName: string;

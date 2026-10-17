@@ -9,15 +9,22 @@ export const useRemoveRemoteSchema = () => {
 
   const mutate = useCallback(
     async (
-      name: string,
+      args: string | { name: string; cascade?: boolean },
       onSuccess?: () => void,
       onError?: (err: unknown) => void,
     ) => {
+      // Backwards compatible: callers may pass just the remote schema name, or
+      // an object opting into `cascade` (drops dependent objects server-side).
+      const { name, cascade } =
+        typeof args === 'string' ? { name: args, cascade: undefined } : args;
+
       return mutation.mutate(
         {
           query: {
             type: 'remove_remote_schema',
-            args: { name },
+            // `cascade` is only sent when explicitly requested so the server
+            // keeps reporting dependent objects by default.
+            args: cascade ? { name, cascade: true } : { name },
           },
         },
         {

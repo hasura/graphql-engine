@@ -17,14 +17,17 @@ import { useCurrentActionContext } from '../../context';
 import useActionForm from '../Form/useActionForm';
 import { ActionState } from '../../types';
 import { Flex } from '@radix-ui/themes';
+import { useNavigate } from 'react-router';
+import { dataRoutes } from '@hasura/shared/utils';
 
 type Props = {
   initialState: ActionState;
 };
 
 const ModifyActionForm = ({ initialState }: Props) => {
-  const deleteAction = useDeleteAction();
-  const saveAction = useSaveAction();
+  const navigate = useNavigate();
+  const { deleteAction, isPending: isDeleting } = useDeleteAction();
+  const { saveAction, isPending: isSaving } = useSaveAction();
   const { currentAction, metadata } = useCurrentActionContext();
 
   useDocumentTitle(`Modify Action - ${currentAction.name} - Actions | Hasura`);
@@ -81,8 +84,16 @@ const ModifyActionForm = ({ initialState }: Props) => {
   };
 
   const onDelete = () => {
-    deleteAction(currentAction.name);
+    deleteAction(currentAction.name).then((deleted) => {
+      if (deleted) {
+        navigate(dataRoutes.manageActions, {
+          replace: true,
+        });
+      }
+    });
   };
+
+  const disabled = isSaving || isDeleting;
 
   return (
     <Analytics name="ModifyAction" {...REDACT_EVERYTHING}>
@@ -100,6 +111,7 @@ const ModifyActionForm = ({ initialState }: Props) => {
             toggleForwardClientHeaders={toggleForwardClientHeaders}
             actionDefinitionOnChange={actionDefinitionOnChange}
             typeDefinitionOnChange={typeDefinitionOnChange}
+            disabled={disabled}
           />
 
           <ConfigureTransformation
@@ -120,6 +132,7 @@ const ModifyActionForm = ({ initialState }: Props) => {
             requestPayloadTransformOnChange={requestPayloadTransformOnChange}
             responsePayloadTransformOnChange={responsePayloadTransformOnChange}
             responseBodyOnChange={responseBodyOnChange}
+            disabled={disabled}
           />
 
           <Flex align="start" className="mb-6">
@@ -129,8 +142,10 @@ const ModifyActionForm = ({ initialState }: Props) => {
                   <Button
                     mode="primary"
                     onClick={onSave}
-                    disabled={!allowSave}
+                    disabled={!allowSave || isDeleting}
                     data-test="save-modify-action-changes"
+                    loading={isSaving}
+                    loadingText="Saving..."
                   >
                     Save Action
                   </Button>
@@ -141,6 +156,7 @@ const ModifyActionForm = ({ initialState }: Props) => {
                   onClick={onDelete}
                   disabled={isFetching}
                   data-test="delete-action"
+                  loading={isDeleting}
                 >
                   Delete Action
                 </Button>

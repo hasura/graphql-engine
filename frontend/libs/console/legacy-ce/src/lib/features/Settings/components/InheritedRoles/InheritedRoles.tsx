@@ -3,7 +3,6 @@ import { Analytics, REDACT_EVERYTHING } from '@hasura/shared/analytics';
 import InheritedRolesTable from './InheritedRolesTable';
 import { RoleActionsInterface } from './types';
 import InheritedRolesEditor from './InheritedRolesEditor';
-import { getConfirmation } from '@hasura/shared/utils';
 import {
   useInconsistentMetadata,
   useMetadata,
@@ -17,7 +16,7 @@ import {
   InconsistentObjectInheritedRole,
   InheritedRole,
 } from '@hasura/shared/types';
-import { SkeletonList, Text } from '@hasura/shared/ui';
+import { SkeletonList, Text, useDestructiveConfirm } from '@hasura/shared/ui';
 import { MetadataSelectors } from '@hasura/metadata/helpers';
 import { Flex, Heading } from '@radix-ui/themes';
 
@@ -27,9 +26,10 @@ export const ActionContext = React.createContext<RoleActionsInterface>(
 
 const InheritedRoles: React.FC = () => {
   const navigate = useNavigate();
-  const deleteInheritedRole = useDropInheritedRole();
+  const { mutateAsync: deleteInheritedRole } = useDropInheritedRole();
   const addInheritedRole = useAddInheritedRole();
   const updateInheritedRole = useUpdateInheritedRole();
+  const destructiveConfirm = useDestructiveConfirm();
 
   const { data: meta, isLoading: metadataLoading } = useMetadata();
   const {
@@ -73,13 +73,18 @@ const InheritedRoles: React.FC = () => {
   };
 
   const onDelete = (role: InheritedRole) => {
-    const confirmMessage = `This will delete the inherited role "${role?.role_name}"`;
-    const isOk = getConfirmation(confirmMessage);
-    if (isOk) {
-      deleteInheritedRole(role.role_name).finally(() => {
-        refetchInconsistentMetadata();
-      });
-    }
+    destructiveConfirm({
+      resourceName: role?.role_name,
+      resourceType: 'inherited role',
+      destroyTerm: 'delete',
+      onConfirm: async () =>
+        deleteInheritedRole(role.role_name)
+          .then(() => true)
+          .catch(() => false)
+          .finally(() => {
+            refetchInconsistentMetadata();
+          }),
+    });
   };
 
   const onSave = async (role: InheritedRole) => {

@@ -22,6 +22,7 @@ import {
 import { Heading } from '@radix-ui/themes';
 
 type ConfigureTransformationProps = {
+  disabled?: boolean;
   transformationType: TransformationType;
   requestTransformState: RequestTransformState;
   responseTransformState?: ResponseTransformState;
@@ -60,6 +61,7 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
   requestPayloadTransformOnChange,
   responsePayloadTransformOnChange,
   responseBodyOnChange,
+  disabled,
 }) => {
   const {
     envVars,
@@ -122,6 +124,7 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
               toggleContextArea(!isContextAreaActive);
             }}
             leftIcon={!isContextAreaActive ? AddIcon : undefined}
+            disabled={disabled}
           >
             {contextAreaText}
           </Button>
@@ -134,6 +137,7 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
             sessionVars={sessionVars}
             envVarsOnChange={envVarsOnChange}
             sessionVarsOnChange={sessionVarsOnChange}
+            disabled={disabled}
           />
         ) : null}
       </div>
@@ -158,6 +162,7 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
           <Button
             mode="default"
             size="1"
+            disabled={disabled}
             leftIcon={!isRequestUrlTransform ? AddIcon : undefined}
             onClick={() => {
               requestUrlTransformOnChange(!isRequestUrlTransform);
@@ -179,6 +184,7 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
             requestUrlOnChange={requestUrlOnChange}
             requestQueryParamsOnChange={requestQueryParamsOnChange}
             requestAddHeadersOnChange={requestAddHeadersOnChange}
+            disabled={disabled}
           />
         ) : null}
       </div>
@@ -208,6 +214,7 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
               resetSampleInput();
             }}
             leftIcon={!isRequestPayloadTransform ? AddIcon : null}
+            disabled={disabled}
           >
             {requestPayloadTransformText}
           </Button>
@@ -222,6 +229,7 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
             resetSampleInput={resetSampleInput}
             requestBodyOnChange={requestBodyOnChange}
             requestSampleInputOnChange={requestSampleInputOnChange}
+            disabled={disabled}
           />
         ) : null}
       </div>
@@ -246,6 +254,7 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
             <Button
               mode="default"
               size="sm"
+              disabled={disabled}
               onClick={() => {
                 responsePayloadTransformOnChange(
                   !responseTransformState.isResponsePayloadTransform,
@@ -266,6 +275,7 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
             <ResponseTransforms
               responseBody={responseTransformState.responseBody}
               responseBodyOnChange={responseBodyOnChange}
+              disabled={disabled}
             />
           ) : null}
         </div>

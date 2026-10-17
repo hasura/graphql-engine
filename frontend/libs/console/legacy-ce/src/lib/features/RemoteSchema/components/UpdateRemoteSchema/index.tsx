@@ -7,20 +7,19 @@ import { createRemoteSchemaFormValues } from '../Form/Form/utils';
 import { useDocumentTitle } from '@hasura/shared/hooks';
 import {
   useInconsistentMetadata,
-  useRemoveRemoteSchema,
   useUpdateRemoteSchema,
 } from '@hasura/metadata/api';
 
-import { getConfirmation } from '@hasura/shared/utils';
 import { Tabs } from '../Tabs';
 import { InconsistentBadge } from '../InconsistentBadge';
+import { useRemoteSchemaDeletePrompt } from './useRemoteSchemaDeletePrompt';
 
 const UpdateRemoteSchema = () => {
   const navigate = useNavigate();
   const { currentRemoteSchema } = useCurrentRemoteSchemaContext();
   const { data: inconsistentMetadata } = useInconsistentMetadata();
 
-  const { mutate: remove, isPending: isRemoving } = useRemoveRemoteSchema();
+  const { promptDelete, isRemoving } = useRemoteSchemaDeletePrompt();
   const { mutate: update, isPending: isUpdating } = useUpdateRemoteSchema();
 
   useDocumentTitle(`Edit ${pageTitle} - ${currentRemoteSchema.name} | Hasura`);
@@ -32,14 +31,7 @@ const UpdateRemoteSchema = () => {
   const onDelete: React.MouseEventHandler<HTMLButtonElement> = (e) => {
     e.preventDefault();
 
-    const remoteSchemaName = currentRemoteSchema.name;
-    const confirmMessage = `This will remove the remote GraphQL schema "${remoteSchemaName}" from your GraphQL schema`;
-    const isOk = getConfirmation(confirmMessage, true, remoteSchemaName);
-    if (!isOk) {
-      return;
-    }
-
-    return remove(currentRemoteSchema.name, () => {
+    promptDelete(currentRemoteSchema.name, () => {
       navigate(appPrefix);
     });
   };

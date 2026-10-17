@@ -3,8 +3,11 @@ import {
   TMigrationSingleQuery,
   useMetadataMigration,
 } from '@hasura/metadata/api';
-import { getErrorMessage, getConfirmation } from '@hasura/shared/utils';
-import { hasuraToast } from '@hasura/shared/ui';
+import {
+  hasuraToast,
+  showErrorNotification,
+  useHasuraAlert,
+} from '@hasura/shared/ui';
 import {
   Action,
   ActionDefinition,
@@ -49,10 +52,11 @@ const getUpdateActionQuery = (
 };
 
 const useSaveAction = () => {
-  const mutation = useMetadataMigration();
   const navigate = useNavigate();
+  const { mutateAsync, ...mutation } = useMetadataMigration();
+  const { hasuraConfirm } = useHasuraAlert();
 
-  return useCallback(
+  const saveAction = useCallback(
     async (
       {
         metadata,
@@ -65,7 +69,7 @@ const useSaveAction = () => {
     ) => {
       const preparedData = prepareSaveActionData({ metadata, rawState });
       if (!preparedData) {
-        return;
+        return false;
       }
 
       const { state, mergedTypes, actionComment } = preparedData;
@@ -88,32 +92,14 @@ const useSaveAction = () => {
         actionComment,
       );
 
-      const upArgs: TMigrationSingleQuery[] = [];
-      // Migration queries start
-      if (!isActionNameChange) {
-        upArgs.push(customFieldsQueryUp, updateCurrentActionQuery);
-      } else {
-        const isOk = getConfirmation(
-          'You seem to have changed the action name. This will cause the permissions to be dropped.',
-        );
-
-        if (!isOk) return;
-        upArgs.push(
-          dropCurrentActionQuery,
-          customFieldsQueryUp,
-          createNewActionQuery,
-        );
-      }
-
-      return mutation.mutate(
-        {
+      const runMutation = (upArgs: TMigrationSingleQuery[]) => {
+        return mutateAsync({
           query: {
             type: 'bulk',
             args: upArgs,
           },
-        },
-        {
-          onSuccess: () => {
+        })
+          .then(() => {
             onSuccess?.();
 
             hasuraToast({
@@ -126,19 +112,56 @@ const useSaveAction = () => {
               const newHref = `/manage/${state.name}/modify`;
               navigate(newHref);
             }
-          },
-          onError: (err) => {
-            hasuraToast({
+
+            return true;
+          })
+          .catch((error) => {
+            showErrorNotification({
               title: 'Saving action failed!',
-              message: getErrorMessage(err),
-              type: 'error',
+              error,
             });
+
+            return false;
+          });
+      };
+
+      // Migration queries start
+      if (!isActionNameChange) {
+        return runMutation([customFieldsQueryUp, updateCurrentActionQuery]);
+      }
+
+      // Renaming an action drops and recreates it, which drops its permissions.
+      // Resolves `false` on cancel, otherwise with the mutation's outcome once
+      // it completes, so callers tracking loading stay active until then.
+      return new Promise<boolean>((resolve) => {
+        hasuraConfirm({
+          title: 'Rename action',
+          message:
+            'You seem to have changed the action name. This will cause the permissions to be dropped.',
+          destructive: true,
+          confirmText: 'Save',
+          onClose: ({ confirmed }) => {
+            if (!confirmed) {
+              resolve(false);
+              return;
+            }
+
+            runMutation([
+              dropCurrentActionQuery,
+              customFieldsQueryUp,
+              createNewActionQuery,
+            ]).then(resolve);
           },
-        },
-      );
+        });
+      });
     },
-    [mutation, navigate],
+    [mutateAsync, navigate, hasuraConfirm],
   );
+
+  return {
+    saveAction,
+    ...mutation,
+  };
 };
 
 export default useSaveAction;

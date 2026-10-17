@@ -1,6 +1,5 @@
 import { generatedActionToHasuraAction } from '../OASGenerator/utils';
 import { GeneratedAction } from './types';
-import React from 'react';
 import { FaFileImport, FaHome } from 'react-icons/fa';
 import { z } from 'zod';
 import { useLocalStorage } from '@hasura/shared/hooks';
@@ -24,12 +23,10 @@ export const formSchema = z.object({
 
 export const OASGeneratorPage = () => {
   const { data: meta } = useMetadata();
-  const createActionMigration = useCreateActionMigration();
-  const deleteAction = useDeleteAction();
+  const { createAction, isPending: isCreating } = useCreateActionMigration();
+  const { deleteAction, isPending: isDeleting } = useDeleteAction();
 
   const [savedOas, setSavedOas] = useLocalStorage<string>('oas', '');
-
-  const [busy, setBusy] = React.useState(false);
 
   const onGenerate = (action: GeneratedAction) => {
     if (!meta?.metadata) {
@@ -37,13 +34,13 @@ export const OASGeneratorPage = () => {
     }
     const { state, requestTransform, responseTransform } =
       generatedActionToHasuraAction(action);
-    createActionMigration({
+    createAction({
       metadata: meta.metadata,
       rawState: state,
       requestTransform,
       responseTransform,
-    }).finally(() => {
-      setBusy(false);
+    }).catch(() => {
+      //
     });
   };
 
@@ -52,11 +49,7 @@ export const OASGeneratorPage = () => {
       (a) => a.name.toLowerCase() === actionName.toLowerCase(),
     );
     if (action) {
-      setBusy(true);
-
-      deleteAction(action.name).finally(() => {
-        setBusy(false);
-      });
+      deleteAction(action.name);
     }
   };
 
@@ -99,7 +92,7 @@ export const OASGeneratorPage = () => {
         <OasGeneratorForm
           onGenerate={onGenerate}
           onDelete={onDelete}
-          disabled={busy}
+          disabled={isCreating || isDeleting}
           saveOas={setSavedOas}
         />
       </SimpleForm>

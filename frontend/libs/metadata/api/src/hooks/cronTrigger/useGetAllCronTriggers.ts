@@ -3,7 +3,8 @@ import { useAuthFetchJson } from '@hasura/shared/hooks';
 import { CronTrigger } from '@hasura/shared/types';
 import { HttpError } from '@hasura/shared/types';
 import { useAppContext } from '@hasura/shared/context';
-import { runMetadataQuery } from '@hasura/metadata/api';
+import { runMetadataQuery } from '../../api';
+import { defaultQueryOptions } from '../constants';
 
 interface GetCronTriggersResponse {
   cron_triggers: CronTrigger[];
@@ -15,7 +16,7 @@ const body = {
   args: {},
 };
 
-export type Options<FinalResult> = {
+type Options<FinalResult> = {
   select?: (m: CronTrigger[]) => FinalResult;
   staleTime?: number;
   enabled?: boolean;
@@ -38,6 +39,7 @@ export const useGetAllCronTriggers = <FinalResult = CronTrigger[]>(
         body,
       }).then((result) => result.cron_triggers);
     },
+    ...defaultQueryOptions,
     ...options,
   });
 
