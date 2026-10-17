@@ -3,7 +3,7 @@ import type { ScheduledEventInvocation } from '@hasura/shared/types';
 import { HttpError } from '@hasura/shared/types';
 import { useAuthFetchJson } from '@hasura/shared/hooks';
 import { useAppContext } from '@hasura/shared/context';
-import { runMetadataQuery } from '@hasura/metadata/api';
+import { runMetadataQuery } from '../../api';
 
 export type GetScheduledEventInvocationsArgs = {
   limit?: number;
@@ -23,13 +23,13 @@ export type GetScheduledEventInvocationsArgs = {
 export const GET_SCHEDULED_EVENT_INVOCATIONS_QUERY_KEY =
   'GET_SCHEDULED_EVENT_INVOCATIONS';
 
-export type Options<FinalResult> = {
+type Options<FinalResult> = {
   select?: (m: ScheduledEventInvocation[]) => FinalResult;
   staleTime?: number;
   enabled?: boolean;
 };
 
-const useGetScheduledEventInvocations = <
+export const useGetScheduledEventInvocations = <
   FinalResult = ScheduledEventInvocation[],
 >(
   args: GetScheduledEventInvocationsArgs,
@@ -38,11 +38,7 @@ const useGetScheduledEventInvocations = <
   const { endpoints } = useAppContext();
   const fetchJson = useAuthFetchJson();
 
-  const queryReturn = useQuery<
-    ScheduledEventInvocation[],
-    HttpError,
-    FinalResult
-  >({
+  return useQuery<ScheduledEventInvocation[], HttpError, FinalResult>({
     queryKey: [GET_SCHEDULED_EVENT_INVOCATIONS_QUERY_KEY, args],
     queryFn: async () => {
       return runMetadataQuery<{ invocations: ScheduledEventInvocation[] }>({
@@ -54,10 +50,7 @@ const useGetScheduledEventInvocations = <
         },
       }).then((result) => result.invocations);
     },
+    staleTime: 3000,
     ...options,
   });
-
-  return queryReturn;
 };
-
-export default useGetScheduledEventInvocations;

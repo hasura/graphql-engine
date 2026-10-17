@@ -5,11 +5,11 @@ import { dataRoutes } from '@hasura/shared/utils';
 import tabInfo, { STTab } from '../constants';
 import './Events.module.scss';
 import { useDocumentTitle } from '@hasura/shared/hooks';
-import { useGetAllCronTriggers } from '../hooks/useGetAllCronTriggers';
 import type { CronTrigger } from '@hasura/shared/types';
 import { EVENTS_SERVICE_HEADING } from '@hasura/shared/types';
 import { Breadcrumbs, IndicatorCard, Tabs } from '@hasura/shared/ui';
 import { Heading, Skeleton } from '@radix-ui/themes';
+import { useGetAllCronTriggers } from '@hasura/metadata/api';
 
 interface Props {
   triggerName: string;

@@ -2,7 +2,7 @@ import React from 'react';
 import RequestUrlEditor from './CustomEditors/RequestUrlEditor';
 import KeyValueInput from './CustomEditors/KeyValueInput';
 import NumberedSidebar from './CustomEditors/NumberedSidebar';
-import { RadioGroup } from '@hasura/shared/ui';
+import { RadioGroup, Text } from '@hasura/shared/ui';
 import { NameValue } from '@hasura/shared/types';
 import { QueryParams } from './stateDefaults';
 import { RequestTransformMethod } from '@hasura/shared/types';
@@ -18,6 +18,7 @@ type RequestOptionsTransformsProps = {
   requestUrlOnChange: (requestUrl: string) => void;
   requestQueryParamsOnChange: (requestQueryParams: QueryParams) => void;
   requestAddHeadersOnChange: (requestAddHeaders: NameValue[]) => void;
+  disabled?: boolean;
 };
 
 const showRequestHeaders = false;
@@ -39,6 +40,7 @@ const RequestOptionsTransforms: React.FC<RequestOptionsTransformsProps> = ({
   requestUrlOnChange,
   requestQueryParamsOnChange,
   requestAddHeadersOnChange,
+  disabled,
 }) => {
   return (
     <div
@@ -58,6 +60,7 @@ const RequestOptionsTransforms: React.FC<RequestOptionsTransformsProps> = ({
           onChange={(value) =>
             requestMethodOnChange(value as RequestTransformMethod)
           }
+          disabled={disabled}
         />
       </div>
 
@@ -74,6 +77,7 @@ const RequestOptionsTransforms: React.FC<RequestOptionsTransformsProps> = ({
           requestQueryParams={requestQueryParams}
           requestUrlOnChange={requestUrlOnChange}
           requestQueryParamsOnChange={requestQueryParamsOnChange}
+          disabled={disabled}
         />
       </div>
 
@@ -87,14 +91,10 @@ const RequestOptionsTransforms: React.FC<RequestOptionsTransformsProps> = ({
           />
           <div className="grid gap-3 grid-cols-3">
             <div>
-              <label className="block text-gray-600 font-medium mb-1">
-                Add or Transform Header Key
-              </label>
+              <Text weight="medium">Add or Transform Header Key</Text>
             </div>
             <div>
-              <label className="block text-gray-600 font-medium mb-1">
-                Value
-              </label>
+              <Text weight="medium">Value</Text>
             </div>
           </div>
           <div className="grid gap-3 grid-cols-3 mb-2">

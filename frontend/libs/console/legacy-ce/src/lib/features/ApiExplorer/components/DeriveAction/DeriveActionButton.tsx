@@ -4,17 +4,13 @@ import {
   OperationTypeNode,
   GraphQLSchema,
 } from 'graphql';
-import { hasuraToast, DropdownMenu } from '@hasura/shared/ui';
+import { hasuraToast, DropdownMenu, useHasuraAlert } from '@hasura/shared/ui';
 import { ToolbarButton } from '@graphiql/react';
 import { CiShare1 } from 'react-icons/ci';
 import { useNavigate } from 'react-router';
 import { trackGraphiQlToolbarButtonClick } from '../customAnalyticsEvents';
 import deriveAction from './utils';
-import {
-  getErrorMessage,
-  getConfirmation,
-  dataRoutes,
-} from '@hasura/shared/utils';
+import { getErrorMessage, dataRoutes } from '@hasura/shared/utils';
 import {
   getActionDefinitionSdl,
   getTypesSdl,
@@ -30,6 +26,7 @@ const label = 'Derive action for the given mutation';
 
 const DeriveActionButton = ({ operations, schema }: Props) => {
   const navigate = useNavigate();
+  const { hasuraConfirm } = useHasuraAlert();
   const [optionsOpen, setOptionsOpen] = useState(false);
 
   const onRun = (operation: OperationDefinitionNode) => {
@@ -54,27 +51,39 @@ const DeriveActionButton = ({ operations, schema }: Props) => {
       types,
       variables: derivedVariables,
     } = derivedOperationMetadata;
-    if (derivedVariables && !derivedVariables.length) {
-      const ok = getConfirmation(
-        `Looks like your ${action.type} does not have variables. This means that the derived action will have no arguments.`,
+
+    const navigateToCreateAction = () => {
+      const typesSdl = getTypesSdl(types);
+
+      const actionsSdl = getActionDefinitionSdl(
+        action.name,
+        action.type,
+        action.arguments,
+        action.output_type,
       );
-      if (!ok) return;
+      navigate({
+        pathname: dataRoutes.createAction,
+        search: `?action_sdl=${encodeURIComponent(
+          actionsSdl,
+        )}&types_sdl=${encodeURIComponent(typesSdl)}`,
+      });
+    };
+
+    if (derivedVariables && !derivedVariables.length) {
+      hasuraConfirm({
+        title: 'Derive action',
+        message: `Looks like your ${action.type} does not have variables. This means that the derived action will have no arguments.`,
+        confirmText: 'Continue',
+        onClose: ({ confirmed }) => {
+          if (confirmed) {
+            navigateToCreateAction();
+          }
+        },
+      });
+      return;
     }
 
-    const typesSdl = getTypesSdl(types);
-
-    const actionsSdl = getActionDefinitionSdl(
-      action.name,
-      action.type,
-      action.arguments,
-      action.output_type,
-    );
-    navigate({
-      pathname: dataRoutes.createAction,
-      search: `?action_sdl=${encodeURIComponent(
-        actionsSdl,
-      )}&types_sdl=${encodeURIComponent(typesSdl)}`,
-    });
+    navigateToCreateAction();
   };
 
   const handleClick = () => {

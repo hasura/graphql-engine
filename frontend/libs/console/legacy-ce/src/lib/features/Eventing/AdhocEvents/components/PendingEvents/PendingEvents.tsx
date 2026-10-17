@@ -1,11 +1,14 @@
-import { convertDateTimeToLocale, getConfirmation } from '@hasura/shared/utils';
+import { convertDateTimeToLocale } from '@hasura/shared/utils';
+import { useDestructiveConfirm } from '@hasura/shared/ui';
 import EventsTable from '../../../components/EventsTable';
 import { usePagination } from '@hasura/shared/hooks';
 import { Analytics, REDACT_EVERYTHING } from '@hasura/shared/analytics';
 import CronEventSubTable from '../../../CronTriggers/components/CronEventSubTable';
-import useDeleteScheduledEvent from '../../../CronTriggers/hooks/useDeleteScheduledEvent';
-import useGetScheduledEvents from '../../../CronTriggers/hooks/useGetScheduledEvents';
 import { ScheduledEvent } from '@hasura/shared/types';
+import {
+  useGetScheduledEvents,
+  useDeleteScheduledEvent,
+} from '@hasura/metadata/api';
 
 const PendingEvents: React.FC = () => {
   const { paginationState, setPaginationState } = usePagination({
@@ -26,7 +29,8 @@ const PendingEvents: React.FC = () => {
     order_by: paginationState.sorts,
   });
 
-  const cancelEvent = useDeleteScheduledEvent();
+  const { mutateAsync: cancelEvent } = useDeleteScheduledEvent();
+  const destructiveConfirm = useDestructiveConfirm();
 
   const onCancelOneOffScheduledEvent = (
     id: string,
@@ -34,17 +38,23 @@ const PendingEvents: React.FC = () => {
     onSuccess?: () => void,
   ) => {
     const localeTime = convertDateTimeToLocale(scheduledAt);
-    const shouldCancelEvent = getConfirmation(
-      `This will delete the one-off event "${id}" scheduled for "${localeTime}"`,
-    );
-    if (shouldCancelEvent) {
-      cancelEvent({
-        event_id: id,
-        type: 'one_off',
-      }).then(() => {
-        onSuccess?.();
-      });
-    }
+    destructiveConfirm({
+      resourceName: id,
+      resourceType: 'one-off scheduled event',
+      destroyTerm: 'delete',
+      appendTerm: `This one-off event is scheduled for "${localeTime}".`,
+      onConfirm: () => {
+        return cancelEvent({
+          event_id: id,
+          type: 'one_off',
+        })
+          .then(() => {
+            onSuccess?.();
+            return true;
+          })
+          .catch(() => false);
+      },
+    });
   };
 
   return (

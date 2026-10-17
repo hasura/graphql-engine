@@ -1,6 +1,6 @@
 import { capitalize } from 'inflection';
 import React, { createContext } from 'react';
-import { hasuraToast } from '../Toasts';
+import { hasuraToast, showErrorNotification } from '../Toasts';
 import { Alert } from './Alert';
 import { AlertComponentProps } from './component-types';
 import {
@@ -85,10 +85,9 @@ export const AlertProvider = ({ children }: { children: React.ReactNode }) => {
     (e: unknown, mode: AlertMode) => {
       setLoading(false);
       closeAndCleanup();
-      hasuraToast({
-        type: 'error',
+      showErrorNotification({
         title: `Unhandled error occurred while executing ${mode} dialog.`,
-        message: e?.toString() ?? JSON.stringify(e),
+        error: e,
       });
     },
     [closeAndCleanup],
@@ -215,6 +214,10 @@ export type DestructiveConfirmArgs = {
 
 export const useDestructiveConfirm = () => {
   const { hasuraConfirm } = useHasuraAlert();
+  // Returns a promise that settles when the dialog closes: `true` once the
+  // destructive `onConfirm` has run and reported success, `false` on cancel,
+  // on `onConfirm` returning falsy, or if `onConfirm` throws. Callers that only
+  // want to fire-and-forget can ignore the returned promise.
   return React.useCallback(
     ({
       resourceName,
@@ -223,43 +226,53 @@ export const useDestructiveConfirm = () => {
       appendTerm = '',
       onConfirm,
       children,
-    }: DestructiveConfirmArgs) => {
-      hasuraConfirm({
-        title: `${capitalize(destroyTerm)} ${resourceType}`,
-        message: (
-          <div className="py-4">
-            <Text>
-              Are you sure you want to {destroyTerm} {resourceType}:{' '}
-              <Strong>{resourceName}</Strong>?
-              {appendTerm ? ` ${appendTerm}` : ''}
-            </Text>
-            {children}
-          </div>
-        ),
-        confirmText: 'Remove',
-        destructive: true,
-        onCloseAsync: async ({ confirmed }) => {
-          if (!confirmed) {
-            return {
-              withSuccess: false,
-            };
-          }
+    }: DestructiveConfirmArgs): Promise<boolean> =>
+      new Promise<boolean>((resolve) => {
+        hasuraConfirm({
+          title: `${capitalize(destroyTerm)} ${resourceType}`,
+          message: (
+            <div className="py-4">
+              <Text>
+                Are you sure you want to {destroyTerm} {resourceType}:{' '}
+                <Strong>{resourceName}</Strong>?
+                {appendTerm ? ` ${appendTerm}` : ''}
+              </Text>
+              {children}
+            </div>
+          ),
+          confirmText: 'Remove',
+          destructive: true,
+          onCloseAsync: async ({ confirmed }) => {
+            if (!confirmed) {
+              resolve(false);
+              return {
+                withSuccess: false,
+              };
+            }
 
-          const success = await onConfirm();
+            try {
+              const success = await onConfirm();
+              resolve(success);
 
-          if (success) {
-            return {
-              withSuccess: success,
-              successText: `${capitalize(destroyTerm)}d ${resourceName}`,
-            };
-          }
+              if (success) {
+                return {
+                  withSuccess: success,
+                  successText: `${capitalize(destroyTerm)}d ${resourceName}`,
+                };
+              }
 
-          return {
-            withSuccess: false,
-          };
-        },
-      });
-    },
+              return {
+                withSuccess: false,
+              };
+            } catch (e) {
+              // settle the returned promise, then let AlertProvider surface the
+              // error (its failsafe toast) instead of leaving the alert frozen.
+              resolve(false);
+              throw e;
+            }
+          },
+        });
+      }),
     [hasuraConfirm],
   );
 };
@@ -267,6 +280,10 @@ export const useDestructiveConfirm = () => {
 export const useDestructivePrompt = () => {
   const { hasuraPrompt } = useHasuraAlert();
 
+  // Returns a promise that settles when the dialog closes: `true` once the
+  // typed name matched and `onConfirm` reported success, `false` on cancel, on
+  // a non-matching typed name, on `onConfirm` returning falsy, or if `onConfirm`
+  // throws. Callers that only want to fire-and-forget can ignore the promise.
   return React.useCallback(
     ({
       resourceName,
@@ -280,55 +297,65 @@ export const useDestructivePrompt = () => {
       destroyTerm?: 'delete' | 'remove';
       appendTerm?: string;
       onConfirm: () => Promise<boolean>;
-    }) => {
-      hasuraPrompt({
-        title: `${capitalize(destroyTerm)} ${resourceType}`,
-        message: (
-          <div className="py-4">
-            Are you sure you want to {destroyTerm} {resourceType}:{' '}
-            <strong>{resourceName}</strong>?{appendTerm ? ` ${appendTerm}` : ''}
-          </div>
-        ),
-        confirmText: 'Remove',
-        destructive: true,
-        promptLabel: (
-          <div className="py-4">
-            Type <strong>{resourceName}</strong> to confirm this action.
-          </div>
-        ),
-        onCloseAsync: async (result) => {
-          if (!result.confirmed) {
-            return {
-              withSuccess: false,
-            };
-          }
+    }): Promise<boolean> =>
+      new Promise<boolean>((resolve) => {
+        hasuraPrompt({
+          title: `${capitalize(destroyTerm)} ${resourceType}`,
+          message: (
+            <div className="py-4">
+              Are you sure you want to {destroyTerm} {resourceType}:{' '}
+              <strong>{resourceName}</strong>?
+              {appendTerm ? ` ${appendTerm}` : ''}
+            </div>
+          ),
+          confirmText: 'Remove',
+          destructive: true,
+          promptLabel: (
+            <div className="py-4">
+              Type <strong>{resourceName}</strong> to confirm this action.
+            </div>
+          ),
+          onCloseAsync: async (result) => {
+            if (!result.confirmed) {
+              resolve(false);
+              return {
+                withSuccess: false,
+              };
+            }
 
-          if (result.promptValue !== resourceName) {
-            hasuraToast({
-              type: 'error',
-              title: `Entry Not Matching`,
-              message: `Your entry "${result.promptValue}" does not match "${resourceName}".`,
-            });
-            return {
-              withSuccess: false,
-            };
-          }
+            if (result.promptValue !== resourceName) {
+              hasuraToast({
+                type: 'error',
+                title: `Entry Not Matching`,
+                message: `Your entry "${result.promptValue}" does not match "${resourceName}".`,
+              });
+              resolve(false);
+              return {
+                withSuccess: false,
+              };
+            }
 
-          const success = await onConfirm();
+            try {
+              const success = await onConfirm();
+              resolve(success);
 
-          if (success) {
-            return {
-              withSuccess: success,
-              successText: `${capitalize(destroyTerm)}d ${resourceName}`,
-            };
-          }
+              if (success) {
+                return {
+                  withSuccess: success,
+                  successText: `${capitalize(destroyTerm)}d ${resourceName}`,
+                };
+              }
 
-          return {
-            withSuccess: false,
-          };
-        },
-      });
-    },
+              return {
+                withSuccess: false,
+              };
+            } catch (e) {
+              resolve(false);
+              throw e;
+            }
+          },
+        });
+      }),
     [hasuraPrompt],
   );
 };

@@ -1,10 +1,10 @@
 import React from 'react';
-import useGetScheduledEventInvocations from '../../hooks/useGetScheduledEventInvocations';
 import EventSubTable from './EventSubTable';
 import { sanitiseRow } from '../../../utils';
 import { IndicatorCard, SkeletonList, Text } from '@hasura/shared/ui';
 import { Em } from '@radix-ui/themes';
 import { ScheduledEventInvocation } from '@hasura/shared/types';
+import { useGetScheduledEventInvocations } from '@hasura/metadata/api';
 
 type Props = {
   webhookConf?: string;

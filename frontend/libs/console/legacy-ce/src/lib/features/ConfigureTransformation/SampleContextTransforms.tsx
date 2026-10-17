@@ -14,6 +14,7 @@ type SampleContextTransformsProps = {
   sessionVars: NameValue[];
   envVarsOnChange: (envVars: NameValue[]) => void;
   sessionVarsOnChange: (sessionVars: NameValue[]) => void;
+  disabled?: boolean;
 };
 
 const SampleContextTransforms: React.FC<SampleContextTransformsProps> = ({
@@ -22,6 +23,7 @@ const SampleContextTransforms: React.FC<SampleContextTransformsProps> = ({
   sessionVars,
   envVarsOnChange,
   sessionVarsOnChange,
+  disabled,
 }) => {
   const [localEnvVars, setLocalEnvVars] = useState<NameValue[]>(envVars);
   const [localSessionVars, setLocalSessionVars] =
@@ -87,6 +89,7 @@ const SampleContextTransforms: React.FC<SampleContextTransformsProps> = ({
           setPairs={(ev) => {
             setLocalEnvVars(ev);
           }}
+          disabled={disabled}
           testId="env-vars"
         />
       </div>
@@ -117,6 +120,7 @@ const SampleContextTransforms: React.FC<SampleContextTransformsProps> = ({
             setPairs={(sv) => {
               setLocalSessionVars(sv);
             }}
+            disabled={disabled}
             testId="session-vars"
           />
         </div>

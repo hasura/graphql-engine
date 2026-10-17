@@ -76,11 +76,14 @@ export const DestructiveDialog = ({
 export const DestructiveDialogCascade = ({
   onConfirm,
   children,
+  defaultCascade = false,
   ...props
 }: Omit<DestructiveDialogArgs, 'onConfirm'> & {
   onConfirm: (cascade: boolean) => void;
+  // Initial state of the cascade checkbox.
+  defaultCascade?: boolean;
 }) => {
-  const [cascade, setCascade] = useState(false);
+  const [cascade, setCascade] = useState(defaultCascade);
 
   return (
     <DestructiveDialog {...props} onConfirm={() => onConfirm(cascade)}>

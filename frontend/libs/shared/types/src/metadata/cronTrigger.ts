@@ -1,10 +1,15 @@
-import { ActionRequestTransform, WebhookURL } from './actions';
+import {
+  ActionRequestTransform,
+  ResponseTransform,
+  WebhookURL,
+} from './actions';
 import { HeaderConfig } from './header';
 import { HeaderFromValue } from './metadata/v2';
 
 export type CronTriggerName = string;
 
 type CronTriggerRequestTransform = ActionRequestTransform;
+type CronTriggerResponseTransform = ResponseTransform;
 
 export interface CronTrigger {
   /**	Name of the cron trigger */
@@ -23,8 +28,10 @@ export interface CronTrigger {
   include_in_metadata: boolean;
   /**	Custom comment. */
   comment?: string;
-  /** Rest connectors. */
+  // Attaches a Request Transformation to the cron trigger.
   request_transform?: CronTriggerRequestTransform;
+  // Attaches a Response Transformation to the cron trigger.
+  response_transform?: CronTriggerResponseTransform;
 }
 
 /**

@@ -27,8 +27,8 @@ const NOT_SEEDED = Symbol('types-manage-not-seeded');
 const TypesManage = () => {
   const { readOnlyMode } = useAppContext();
   const { data: allTypes } = useMetadata((m) => m.metadata.custom_types);
-  const setCustomGraphQLTypes = useSetCustomGraphQLTypes();
-  const [isFetching, setIsFetching] = useState(false);
+  const { setCustomGraphQLTypes, isPending: isSettingCustomTypes } =
+    useSetCustomGraphQLTypes();
   const [definition, setDefinition] = useState<DefinitionState>({
     sdl: '',
     error: null,
@@ -88,14 +88,11 @@ const TypesManage = () => {
       return;
     }
 
-    setIsFetching(true);
-    setCustomGraphQLTypes({ existingTypes: allTypes, newTypes }).finally(() => {
-      setIsFetching(false);
-    });
+    setCustomGraphQLTypes({ existingTypes: allTypes, newTypes });
   };
 
   // TODO handling error elegantly
-  const allowSave = !isFetching && !definition.error && !readOnlyMode;
+  const allowSave = !isSettingCustomTypes && !definition.error && !readOnlyMode;
   const editorTooltip = 'All GraphQL types used in actions';
   const editorLabel = 'All custom types';
 
@@ -122,7 +119,11 @@ const TypesManage = () => {
               Save
             </Button>
           </div>
-          <Button onClick={init} mode="default" disabled={readOnlyMode}>
+          <Button
+            onClick={init}
+            mode="default"
+            disabled={readOnlyMode || isSettingCustomTypes}
+          >
             Reset
           </Button>
         </Flex>

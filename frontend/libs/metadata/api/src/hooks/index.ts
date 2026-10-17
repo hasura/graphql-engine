@@ -11,6 +11,7 @@ export * from './source';
 export * from './security';
 export * from './queryCollections';
 export * from './migration/useMigrationStatus';
+export * from './cronTrigger';
 
 export * from './server/useServerConfig';
 export * from './server/useServerVersion';
