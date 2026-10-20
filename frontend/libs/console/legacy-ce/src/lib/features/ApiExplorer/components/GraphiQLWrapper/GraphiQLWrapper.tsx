@@ -1,8 +1,9 @@
 // GraphiQL 5 uses the Monaco editor, which needs its web workers wired up before
 // any editor is created, hence this top import. GraphiQL's official webpack
 // setup spawns them as classic workers; the console's webpack build strips the
-// `import.meta` token from worker chunks (MonacoWorkerPublicPathPlugin) so those
-// classic workers parse and run — see that plugin for the full rationale.
+// `import.meta` token from worker chunks (MonacoWorkerPublicPathPlugin) and
+// bootstraps CDN-hosted workers through a same-origin blob. This keeps Monaco's
+// language services off the UI thread, including on custom console domains.
 import 'graphiql/setup-workers/webpack';
 import { useMemo, useState } from 'react';
 import { Flex } from '@radix-ui/themes';

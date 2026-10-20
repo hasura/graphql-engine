@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Forces WORKER chunks to use webpack's classic (self.location) public-path
 // detection instead of `import.meta.url`.
 //
@@ -19,13 +18,15 @@
 //   "Cannot use 'import.meta' outside a module"
 // after which Monaco silently drops its language services to the main thread.
 //
-// This plugin rewrites ONLY the public-path runtime of worker chunks to the
-// `self.location`-based detection webpack already uses for non-module output.
-// That keeps the worker auto-detecting its own URL (so nested / sub-path
-// deployments and the worker's own lazy chunk loads keep working) with no
-// `import.meta` token. Main-thread chunks are left untouched.
+// This plugin rewrites ONLY worker public-path runtimes to classic detection.
+// For CDN deployments it also substitutes GraphiQL's Worker constructor with a
+// same-origin blob bootstrap: browsers reject direct cross-origin classic
+// workers, regardless of CORS. The bootstrap records the CDN entry URL so lazy
+// chunks still resolve from that versioned directory. Same-origin workers keep
+// their native URL. No global Worker override or main-thread runtime change.
 const RuntimeGlobals = require('webpack/lib/RuntimeGlobals');
 const Template = require('webpack/lib/Template');
+const ProvidedDependency = require('webpack/lib/dependencies/ProvidedDependency');
 
 const PLUGIN = 'MonacoWorkerPublicPathPlugin';
 
@@ -53,7 +54,9 @@ function classicPublicPathSource(compilation, chunk) {
 
   return Template.asString([
     `${lt} scriptUrl;`,
-    'if (typeof self !== "undefined" && self.location) scriptUrl = self.location.href;',
+    // A cross-origin worker starts in a blob. Its location is not the CDN URL;
+    // the bootstrap records the original entry URL before importing the bundle.
+    'if (typeof self !== "undefined") scriptUrl = self.__HASURA_MONACO_WORKER_URL__ || (self.location && self.location.href);',
     'if (!scriptUrl) throw new Error("Automatic publicPath is not supported in this worker");',
     'scriptUrl = scriptUrl.replace(/^blob:|[?#].*$/g, "").replace(/\\/[^/]+$/, "/");',
     !undoPath
@@ -64,15 +67,52 @@ function classicPublicPathSource(compilation, chunk) {
 
 class MonacoWorkerPublicPathPlugin {
   apply(compiler) {
-    compiler.hooks.compilation.tap(PLUGIN, (compilation) => {
-      compilation.hooks.runtimeModule.tap(PLUGIN, (module, chunk) => {
-        if (module.name !== 'publicPath') return;
-        if (!isWorkerChunk(chunk)) return;
-        // Replace the generated source with the classic detection. `generate()`
-        // runs later (at code-generation), so overriding it here wins.
-        module.generate = () => classicPublicPathSource(compilation, chunk);
-      });
-    });
+    compiler.hooks.compilation.tap(
+      PLUGIN,
+      (compilation, { normalModuleFactory }) => {
+        // Keep GraphiQL's statically analyzable `new Worker(new URL(...))`
+        // calls, so webpack still emits real worker entries. Substitute only
+        // their constructor, not the global Worker or any other dependency.
+        compilation.dependencyFactories.set(
+          ProvidedDependency,
+          normalModuleFactory,
+        );
+        compilation.dependencyTemplates.set(
+          ProvidedDependency,
+          new ProvidedDependency.Template(),
+        );
+        for (const type of ['javascript/auto', 'javascript/esm']) {
+          normalModuleFactory.hooks.parser.for(type).tap(PLUGIN, (parser) => {
+            parser.hooks.expression.for('Worker').tap(PLUGIN, (expression) => {
+              if (
+                !/[\\/]@graphiql[\\/]react[\\/]dist[\\/]setup-workers[\\/]webpack\.js$/.test(
+                  parser.state.module.resource ?? '',
+                )
+              ) {
+                return;
+              }
+              const dependency = new ProvidedDependency(
+                require.resolve('./monaco-cdn-worker'),
+                '__hasuraMonacoWorker',
+                ['MonacoCdnWorker'],
+                expression.range,
+              );
+              dependency.loc = parser.getLocation(expression);
+              parser.state.module.addDependency(dependency);
+              return true;
+            });
+          });
+        }
+
+        compilation.hooks.runtimeModule.tap(PLUGIN, (module, chunk) => {
+          if (module.name !== 'publicPath') return;
+          if (!isWorkerChunk(chunk)) return;
+          // Replace the generated source with the classic detection. `generate()`
+          // runs later (at code-generation), so overriding it here wins.
+          module.generate = () => classicPublicPathSource(compilation, chunk);
+        });
+      },
+    );
   }
 }
 
