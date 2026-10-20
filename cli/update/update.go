@@ -76,7 +76,10 @@ func downloadAsset(url, fileName, filePath string) (*os.File, error) {
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		return nil, errors.E(op, errors.E("could not find the release asset"))
+		return nil, errors.E(op, fmt.Errorf(
+			"could not download release asset from %s: unexpected HTTP status %s",
+			url, res.Status,
+		))
 	}
 
 	asset, err := os.OpenFile(
