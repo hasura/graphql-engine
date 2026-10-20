@@ -5,6 +5,7 @@
   "scripts": {
     "chromatic": "npx chromatic",
     "test:unit": "nx run-many --target=test --outputStyle static",
+    "test:monaco-workers": "node --test tools/webpack/monaco-cdn-worker.test.cjs tools/webpack/monaco-workers.browser.test.cjs",
     "test:e2e": "nx run-many --target=e2e --outputStyle static",
     "lint": "nx run-many --target=lint",
     "lint:fix": "nx run-many --target=lint-fix",
