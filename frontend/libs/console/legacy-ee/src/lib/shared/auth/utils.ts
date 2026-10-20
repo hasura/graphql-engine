@@ -163,7 +163,11 @@ export const initiateOAuthRequest = (
 export const getCurrentSsoIdentityProvider = (envVars: EnvVars) => {
   const clientId = getKeyFromLS('client_id');
 
-  if (!clientId || clientId === envVars.consoleId) {
+  if (
+    envVars.consoleType === 'cloud' ||
+    !clientId ||
+    clientId === envVars.consoleId
+  ) {
     return getHasuraSsoIdentityProvider(envVars);
   }
 

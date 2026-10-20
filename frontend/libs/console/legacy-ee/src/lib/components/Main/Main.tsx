@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import { FaChartLine, FaServer } from 'react-icons/fa';
-import clsx from 'clsx';
 import {
   EnterpriseNavbarButton,
   WithEELiteAccess,
@@ -154,15 +153,17 @@ const Main = () => {
   const renderProjectInfo = () => {
     const detailsPath = `${window.location.protocol}//${window.location.host}/project/${envVars.projectID}/details`;
     return envVars.consoleType === 'cloud' ? (
-      <div className={clsx('ml-0')}>
-        <a href={detailsPath} target="_blank" rel="noopener noreferrer">
-          <Badge>
-            <FaServer />
-            &nbsp;
-            <span>{envVars.projectName}</span>
-          </Badge>
-        </a>
-      </div>
+      <a
+        href={detailsPath}
+        target="_blank"
+        rel="noopener noreferrer"
+        title={envVars.projectName}
+      >
+        <Badge color="gray" variant="solid" highContrast>
+          <FaServer aria-hidden="true" />
+          <span>{envVars.projectName}</span>
+        </Badge>
+      </a>
     ) : null;
   };
 
