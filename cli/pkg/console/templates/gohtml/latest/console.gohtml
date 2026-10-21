@@ -104,16 +104,15 @@
 
     // if cdnAssets is set to false, load assets from server instead of cdn
     if (window.__env.cdnAssets === false) {
-        window.__env.assetsPath =
-            window.location.pathname.slice(
-                0,
-                window.location.pathname.lastIndexOf(window.__env.consolePath)
-            ) + "/console/assets";
+        // the server serves its assets from the root /console/assets path,
+        // independent of the console route currently open in the browser
+        window.__env.assetsPath = "/console/assets";
 
         if (window.__env.dataApiUrl) {
             const serverAddress = window.__env.dataApiUrl
                 .toString()
-                .replace("v1/graphql");
+                .replace(/\/+$/, "")
+                .replace(/\/v1\/graphql$/, "");
             window.__env.assetsPath = serverAddress + window.__env.assetsPath;
         }
         // set the path to get versioned assets from server
