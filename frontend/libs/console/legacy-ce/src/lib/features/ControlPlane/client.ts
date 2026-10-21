@@ -38,6 +38,8 @@ export const createControlPlaneClient = (
     queryDoc: DocumentNode,
     variables: VariablesType,
   ): Promise<ResponseType> => {
+    // Resolves to the raw GraphQL response (`{ data, errors }`); callers type
+    // `ResponseType` as that envelope and handle `errors` themselves.
     return requestJson<ResponseType>(endpoint, {
       method: 'POST',
       headers,

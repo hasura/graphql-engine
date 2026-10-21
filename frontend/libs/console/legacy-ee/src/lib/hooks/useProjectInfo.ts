@@ -1,6 +1,7 @@
 import { ControlPlane } from '@hasura/console-legacy-ce';
 import { useAppContext } from '@hasura/shared/context';
 import { useQuery } from '@tanstack/react-query';
+import type { GraphQLError } from 'graphql';
 import { getHasuraMetricsUrl } from '../Globals';
 
 // 1 hour
@@ -48,12 +49,17 @@ export const useProjectInfo = <T = CloudProjectInfo | null>(
           : null;
       }
 
-      const projectQuery = await ControlPlane.controlPlaneClient.query<
-        ControlPlane.FetchProjectInfoQuery,
+      const response = await ControlPlane.controlPlaneClient.query<
+        { data?: ControlPlane.FetchProjectInfoQuery; errors?: GraphQLError[] },
         ControlPlane.FetchProjectInfoQueryVariables
       >(ControlPlane.FETCH_PROJECT_INFO, { id: envVars.projectID });
 
-      if (!projectQuery.projects_by_pk) {
+      if (response.errors?.length) {
+        throw new Error(response.errors[0].message);
+      }
+
+      const projectQuery = response.data;
+      if (!projectQuery?.projects_by_pk) {
         throw new Error('Project not found');
       }
 

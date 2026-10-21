@@ -81,7 +81,7 @@ const TopNav = () => {
             }}
           >
             <Link to={section.link} data-test={section.dataTestVal}>
-              <Text weight="bold">{section.title}</Text>
+              <Text weight="bold">{section.title} </Text>
               {section.key === 'schema-registry' && <SchemaRegistryBadge />}
             </Link>
           </TabNav.Link>
