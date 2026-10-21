@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   loadConsoleAuthState: vi.fn(),
   clearConsoleAuthState: vi.fn(),
   saveConsoleAuthState: vi.fn(),
+  saveAdminSecretState: vi.fn(),
   fetchMetadata: vi.fn(),
   navigateAuth: vi.fn(),
   clearQueries: vi.fn(),
@@ -19,7 +20,7 @@ vi.mock('@hasura/console-legacy-ce', () => ({
   loadConsoleAuthState: mocks.loadConsoleAuthState,
   clearConsoleAuthState: mocks.clearConsoleAuthState,
   saveConsoleAuthState: mocks.saveConsoleAuthState,
-  saveAdminSecretState: vi.fn(),
+  saveAdminSecretState: mocks.saveAdminSecretState,
 }));
 vi.mock('@hasura/shared/context', () => ({
   useAppContext: () => ({ envVars: mocks.envVars }),
@@ -31,9 +32,8 @@ vi.mock('@hasura/metadata/api', () => ({
   useFetchInconsistentMetadata: () => mocks.fetchMetadata,
 }));
 vi.mock('./useNavigateAuth', () => ({ default: () => mocks.navigateAuth }));
-vi.mock('./utils', () => ({
-  buildEnterpriseAuthHeaders: () => ({}),
-  buildMetricsAuthHeaders: () => ({}),
+vi.mock('./utils', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('./utils')>()),
   shouldRefreshAuthState: () => false,
 }));
 
@@ -46,6 +46,9 @@ const cloudState: EnterpriseAuthState = {
 
 beforeEach(() => {
   mocks.envVars.consoleType = 'cloud';
+  mocks.envVars.consoleMode = 'server';
+  mocks.globals.adminSecret = 'global-secret';
+  mocks.globals.isAdminSecretSet = true;
   mocks.loadConsoleAuthState.mockReturnValue(null);
   mocks.fetchMetadata.mockResolvedValue({});
 });
@@ -108,5 +111,102 @@ describe('Cloud session initialization', () => {
     expect(mocks.fetchMetadata).toHaveBeenCalledOnce();
     expect(mocks.navigateAuth).toHaveBeenCalledWith(saved);
     expect(mocks.clearConsoleAuthState).not.toHaveBeenCalled();
+  });
+});
+
+describe('Self-hosted session initialization', () => {
+  beforeEach(() => {
+    mocks.envVars.consoleType = 'pro-lite';
+  });
+
+  it('uses the CLI-injected secret even when isAdminSecretSet is true', async () => {
+    mocks.envVars.consoleMode = 'cli';
+    const { result } = mount();
+
+    await act(() => result.current.initialize());
+
+    expect(mocks.fetchMetadata).toHaveBeenCalledWith(
+      expect.objectContaining({ 'x-hasura-admin-secret': 'global-secret' }),
+    );
+    expect(await result.current.getHeaders()).toEqual(
+      expect.objectContaining({ 'x-hasura-admin-secret': 'global-secret' }),
+    );
+    expect(mocks.navigateAuth).toHaveBeenCalledWith({
+      type: 'admin-secret',
+      adminSecret: 'global-secret',
+      shouldPersist: false,
+    });
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(mocks.saveAdminSecretState).not.toHaveBeenCalled();
+    expect(mocks.saveConsoleAuthState).not.toHaveBeenCalled();
+  });
+
+  it('requires login when the engine needs a secret but none is supplied', async () => {
+    mocks.globals.adminSecret = '';
+    const { result } = mount();
+
+    await act(() => result.current.initialize());
+
+    expect(mocks.navigateAuth).toHaveBeenCalledWith(null);
+    expect(mocks.fetchMetadata).not.toHaveBeenCalled();
+    expect(result.current.isAuthenticated).toBe(false);
+  });
+
+  it('validates a no-auth engine without inventing a secret', async () => {
+    mocks.globals.adminSecret = '';
+    mocks.globals.isAdminSecretSet = false;
+    const { result } = mount();
+
+    await act(() => result.current.initialize());
+
+    expect(mocks.fetchMetadata).toHaveBeenCalledOnce();
+    expect(await result.current.getHeaders()).not.toHaveProperty(
+      'x-hasura-admin-secret',
+    );
+    expect(mocks.navigateAuth).toHaveBeenCalledWith({ type: 'none' });
+    expect(result.current.isAuthenticated).toBe(true);
+  });
+
+  it.each([
+    { type: 'pat', pat: 'saved-pat' },
+    {
+      type: 'sso',
+      clientId: 'other',
+      idToken: 'saved-id',
+      accessToken: 'saved-access',
+    },
+  ] as EnterpriseAuthState[])(
+    'preserves a saved $type session',
+    async (saved) => {
+      mocks.loadConsoleAuthState.mockReturnValue(saved);
+      const { result } = mount();
+
+      await act(() => result.current.initialize());
+
+      expect(mocks.fetchMetadata).toHaveBeenCalledOnce();
+      expect(mocks.navigateAuth).toHaveBeenCalledWith(saved);
+      expect(result.current.authType).toBe(saved.type);
+      expect(await result.current.getHeaders()).not.toHaveProperty(
+        'x-hasura-admin-secret',
+      );
+    },
+  );
+
+  it('rejects an invalid CLI secret without retaining authentication', async () => {
+    mocks.envVars.consoleMode = 'cli';
+    mocks.fetchMetadata.mockRejectedValue(new Error('unauthorized'));
+    const { result } = mount();
+
+    await act(() => result.current.initialize());
+
+    expect(mocks.fetchMetadata).toHaveBeenCalledWith(
+      expect.objectContaining({ 'x-hasura-admin-secret': 'global-secret' }),
+    );
+    expect(mocks.clearConsoleAuthState).toHaveBeenCalledOnce();
+    expect(mocks.navigateAuth).toHaveBeenCalledWith(null);
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(await result.current.getHeaders()).not.toHaveProperty(
+      'x-hasura-admin-secret',
+    );
   });
 });

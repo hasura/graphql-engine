@@ -1,4 +1,5 @@
-import { ConsoleType } from '@hasura/shared/types';
+import { ConsoleType, EnvVars } from '@hasura/shared/types';
+import { isEmpty } from './data';
 
 export function parseConsoleType(envConsoleType: unknown): ConsoleType {
   switch (envConsoleType) {
@@ -23,3 +24,12 @@ export const getEnvVarAsBoolean = (value: string | boolean) => {
 
   return value === 'true';
 };
+
+/**
+ * Whether the engine is protected by an admin secret. The server sets
+ * `isAdminSecretSet`, but the CLI only injects `adminSecret`, so either one
+ * counts.
+ */
+export const hasAdminSecret = (
+  envVars: Pick<EnvVars, 'isAdminSecretSet' | 'adminSecret'>,
+) => Boolean(envVars.isAdminSecretSet) || !isEmpty(envVars.adminSecret);
