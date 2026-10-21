@@ -5,37 +5,37 @@ import { FeatureRequest } from './FeatureRequest';
 import globals from '../../../Globals';
 import { SCHEMA_REGISTRY_FEATURE_NAME } from '../constants';
 import { FaBell } from 'react-icons/fa';
-import { IconTooltip } from '@hasura/shared/ui';
+import { Button } from '@hasura/shared/ui';
 import { AlertsDialog } from './AlertsDialog';
 import { Analytics, InitializeTelemetry } from '@hasura/shared/analytics';
 import { useGetV2Info } from '../hooks/useGetV2Info';
 import { telemetryUserEventsTracker } from '../../../telemetry';
 import { useParams } from 'react-router';
 
-const SchemaRegistryHeader: React.FC = () => {
+export const SchemaRegistryHeader: React.FC = () => {
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
 
   return (
-    <Flex direction="column" className="w-full pl-12 mb-2">
-      <Flex className="mb-1 mt-4 w-full">
-        <h1 className="inline-block text-xl font-semibold mr-2 text-slate-900">
-          GraphQL Schema Registry
-        </h1>
-        <Analytics name="data-schema-registry-alerts-btn">
-          <Flex
-            className="text-lg mt-2 mx-2 cursor-pointer"
-            role="button"
+    <Flex direction="column" className="w-full mb-6">
+      <Flex align="center" wrap="wrap" gap="3" className="mb-2 w-full">
+        <h1 className="text-xl font-semibold">GraphQL Schema Registry</h1>
+        <Analytics
+          name="data-schema-registry-alerts-btn"
+          passHtmlAttributesToChildren
+        >
+          <Button
+            variant="outline"
+            color="gray"
+            leftIcon={FaBell}
             onClick={() => setIsAlertModalOpen(true)}
           >
-            <IconTooltip
-              message="Alerts on GraphQL schema changes"
-              icon={<FaBell />}
-            />
-          </Flex>
+            Configure alerts
+          </Button>
         </Analytics>
       </Flex>
-      <span className="text-muted text-md mb-2 italic">
-        GraphQL Schema Registry changes will only be retained for 14 days.
+      <span className="text-sm" style={{ color: 'var(--gray-11)' }}>
+        Explore published schemas and compare role-based changes. History is
+        retained for 14 days.
       </span>
       {isAlertModalOpen && (
         <AlertsDialog onClose={() => setIsAlertModalOpen(false)} />
@@ -79,7 +79,11 @@ export const SchemaRegistryContainer: React.FC = () => {
   );
 
   return (
-    <Flex direction="column" justify="center" className="w-[80%] pl-10 ml-10">
+    <Flex
+      direction="column"
+      justify="center"
+      className="w-full min-w-0 p-4 md:p-8"
+    >
       <SchemaRegistryHeader />
       <InitializeTelemetry tracker={telemetryUserEventsTracker} skip={false} />
       <SchemaRegistryBody

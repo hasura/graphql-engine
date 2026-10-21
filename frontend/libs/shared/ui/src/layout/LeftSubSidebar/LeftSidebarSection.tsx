@@ -1,7 +1,7 @@
 import { useState, ReactElement } from 'react';
 import { Input, Text } from '../../components';
 import { FaSearch } from 'react-icons/fa';
-import { Em, Flex } from '@radix-ui/themes';
+import { Flex } from '@radix-ui/themes';
 import { RelativeLink } from '../../components/link';
 
 interface LeftSidebarItem {
@@ -67,8 +67,8 @@ export const useLeftSidebarSection = <
   const getChildList = () => {
     if (itemList.length === 0) {
       return (
-        <Text as="div" data-test="sidebar-no-services">
-          <Em>No {service} available</Em>
+        <Text className="italic" as="div" data-test="sidebar-no-services">
+          No {service} available
         </Text>
       );
     }
@@ -77,13 +77,17 @@ export const useLeftSidebarSection = <
       return (
         <RelativeLink
           color={currentItem?.name === a.name ? 'indigo' : 'gray'}
+          weight={currentItem?.name === a.name ? 'medium' : 'regular'}
           to={getServiceEntityLink(a.name)}
           key={a.name}
           data-test={`action-sidebar-links-${a.name}`}
+          className="block min-w-0"
         >
-          <Flex align="center" gap="2">
-            {sidebarIcon}
-            {a.name}
+          <Flex align="center" gap="2" className="min-w-0">
+            <span className="flex shrink-0">{sidebarIcon}</span>
+            <span className="truncate" title={a.name}>
+              {a.name}
+            </span>
           </Flex>
         </RelativeLink>
       );

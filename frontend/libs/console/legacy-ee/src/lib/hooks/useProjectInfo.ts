@@ -77,6 +77,11 @@ export const useProjectInfo = <T = CloudProjectInfo | null>(
     },
     staleTime: staleTime || DEFAULT_STALE_TIME,
     refetchOnWindowFocus: false,
+    // Route guards block rendering until this settles. Don't retry with
+    // backoff, and don't re-run a failed lookup every time a guard mounts,
+    // otherwise each navigation into a guarded route stalls for seconds.
+    retry: 1,
+    retryOnMount: false,
     select: selector,
   });
 

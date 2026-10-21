@@ -1,6 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import omit from 'lodash/omit';
-import { Button, Dialog, DialogFooter, Input, Text } from '@hasura/shared/ui';
+import {
+  Button,
+  Dialog,
+  DialogFooter,
+  Text,
+  TextArea,
+} from '@hasura/shared/ui';
 import { FaEdit } from 'react-icons/fa';
 import { MetadataFunction, QualifiedDataSource } from '@hasura/shared/types';
 import { Flex } from '@radix-ui/themes';
@@ -87,7 +93,8 @@ const FunctionCommentDialog: React.FC<
     const trimmed = comment.trim();
     setFunctionConfiguration({
       qualifiedFunction: func.function,
-      configuration: trimmed ? { ...rest, comment: trimmed } : rest,
+      configuration: rest,
+      comment: trimmed,
       onSuccess: () => {
         onSuccess?.();
         onCancel();
@@ -112,13 +119,13 @@ const FunctionCommentDialog: React.FC<
           commentEditSave();
         }}
       >
-        <Input
+        <TextArea
           autoFocus
           onChange={(event) => setComment(event.target.value)}
-          type="text"
           value={comment}
           placeholder="Function comment..."
           aria-label="Function comment"
+          rows={5}
         />
         <Flex justify="end" className="mt-2">
           <LoadDatabaseCommentButton

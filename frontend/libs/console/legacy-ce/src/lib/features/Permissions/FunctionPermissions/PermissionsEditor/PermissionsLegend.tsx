@@ -1,20 +1,20 @@
 import React from 'react';
 import { Flex } from '@radix-ui/themes';
-import { PermissionsIcon } from '@hasura/shared/ui';
+import { PermissionsIcon, Text } from '@hasura/shared/ui';
 
 export const PermissionsLegend: React.FC = () => (
   <Flex gap="4" className="mb-4">
-    <span>
+    <Flex gap="1" align="center">
       <PermissionsIcon type="fullAccess" />
-      &nbsp;-&nbsp;full access
-    </span>
-    <span>
+      <Text>-&nbsp;full access</Text>
+    </Flex>
+    <Flex gap="1" align="center">
       <PermissionsIcon type="noAccess" />
-      &nbsp;-&nbsp;no access
-    </span>
-    <span>
+      <Text>-&nbsp;no access</Text>
+    </Flex>
+    <Flex gap="1" align="center">
       <PermissionsIcon type="partialAccess" />
-      &nbsp;-&nbsp;partial access (needs SELECT permissions on table)
-    </span>
+      <Text>-&nbsp;partial access (needs SELECT permissions on table)</Text>
+    </Flex>
   </Flex>
 );

@@ -1,7 +1,7 @@
 import React, { ReactElement, useMemo, useState } from 'react';
-import { Link } from 'react-router';
 import { FaDatabase } from 'react-icons/fa';
 import { Em, Flex, Text } from '@radix-ui/themes';
+import { RelativeLink } from '@hasura/shared/ui';
 
 type CollapsibleItemsProps = {
   source: string;
@@ -30,7 +30,7 @@ const CollapsibleItems: React.FC<CollapsibleItemsProps> = ({
     setIsOpen(defaultOpen);
   }
   return (
-    <div className="max-h-[360px] overflow-y-auto">
+    <div className="max-h-90 overflow-y-auto">
       <Flex
         onClick={() => setIsOpen((prev) => !prev)}
         onKeyDown={() => setIsOpen((prev) => !prev)}
@@ -39,25 +39,34 @@ const CollapsibleItems: React.FC<CollapsibleItemsProps> = ({
         className="cursor-pointer"
         gap="2"
       >
-        <FaDatabase /> <Text weight="medium">{source}</Text>
+        <FaDatabase className="shrink-0" />{' '}
+        <Text weight="medium" className="truncate" title={source}>
+          {source}
+        </Text>
       </Flex>
       {isOpen ? (
         <Flex direction="column" gap="1" className="pl-6">
           {items.map(({ name }) => (
-            <Link key={name} to={getServiceEntityLink(name)} data-test={name}>
-              <Text
-                size="2"
-                color={
-                  currentItem && currentItem.name === name ? 'indigo' : 'gray'
-                }
-                data-test={`action-sidebar-links-${name}`}
-              >
-                <Flex align="center" gap="2">
-                  {icon}
+            <RelativeLink
+              key={name}
+              to={getServiceEntityLink(name)}
+              data-test={name}
+              className="block min-w-0"
+              size="2"
+              color={
+                currentItem && currentItem.name === name ? 'indigo' : 'gray'
+              }
+              weight={
+                currentItem && currentItem.name === name ? 'medium' : 'regular'
+              }
+            >
+              <Flex align="center" gap="2" className="min-w-0">
+                <span className="flex shrink-0">{icon}</span>
+                <span className="truncate" title={name}>
                   {name}
-                </Flex>
-              </Text>
-            </Link>
+                </span>
+              </Flex>
+            </RelativeLink>
           ))}
         </Flex>
       ) : null}

@@ -45,35 +45,31 @@ export const useSetFunctionConfiguration = ({
     ({
       qualifiedFunction,
       configuration,
+      comment,
       ...mutationOptions
     }: {
       qualifiedFunction: TableFunction;
       configuration: MetadataFunction['configuration'];
+      comment?: string;
     } & MetadataMigrationOptions) => {
       const metadataFunction = functions.find((fn) =>
         areTablesEqual(fn.function, qualifiedFunction),
       );
 
-      const payload = {
-        type: `${getDriverPrefix(driver ?? 'postgres')}_set_function_customization` as const,
-        args: {
-          source: dataSourceName,
-          function: metadataFunction?.function,
-          configuration,
-        },
-      };
-
       mutate(
         {
           query: {
-            type: 'bulk',
+            type: `${getDriverPrefix(driver ?? 'postgres')}_set_function_customization` as const,
+            args: {
+              source: dataSourceName,
+              function: metadataFunction?.function,
+              configuration,
+              comment: comment || undefined,
+            },
             resource_version,
-            args: [payload],
           },
         },
-        {
-          ...mutationOptions,
-        },
+        mutationOptions,
       );
     },
     [functions, driver, dataSourceName, mutate, resource_version],

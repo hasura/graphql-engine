@@ -7,6 +7,7 @@ import {
   checkAccess,
   restrictedPathsMetadata,
 } from '@hasura/console-legacy-ce';
+import RouteGuardLoading from './RouteGuardLoading';
 
 const DataRouteGuard = () => {
   const navigate = useNavigate();
@@ -52,7 +53,7 @@ const DataRouteGuard = () => {
     setLoading(false);
   }, [projectInfoLoading]);
 
-  if (loading) return null;
+  if (loading) return <RouteGuardLoading />;
   return <Outlet />;
 };
 
