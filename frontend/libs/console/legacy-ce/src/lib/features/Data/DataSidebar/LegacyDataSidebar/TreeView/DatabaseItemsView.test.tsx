@@ -26,7 +26,12 @@ const setup = (source: string | undefined) =>
     <MemoryRouter>
       <DatabaseItemsView
         sourceName="default"
-        params={{ source, schema: null, tableName: undefined }}
+        params={{
+          source,
+          schema: null,
+          tableName: undefined,
+          isFunction: false,
+        }}
         items={items}
         databaseLoading={false}
         schemaLoading={false}

@@ -242,10 +242,11 @@ export const RelativeLink = ({
   to,
   mask,
   children,
+  size = '2',
   ...linkProps
 }: RelativeLinkProps) => {
   return (
-    <Link asChild {...linkProps}>
+    <Link asChild {...linkProps} size={size}>
       <RouterLink
         discover={discover}
         prefetch={prefetch}

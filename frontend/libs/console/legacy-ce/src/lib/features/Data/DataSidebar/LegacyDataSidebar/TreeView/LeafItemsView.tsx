@@ -23,26 +23,38 @@ const LeafItemsView: React.FC<LeafItemsViewProps> = ({ item, isActive }) => {
             isActive={isActive}
             to={dataRoutes.manageFunction(item.source, item.table)}
           >
-            <Flex gap="2" align="center">
-              <TbMathFunction />
-              {item.tableName}
+            <Flex gap="2" align="center" className="min-w-0">
+              <TbMathFunction className="shrink-0" />
+              <span className="truncate" title={item.tableName}>
+                {item.tableName}
+              </span>
             </Flex>
           </LeftSidebarLeafNavItem>
         ) : (
           <Flex align="center" gap="2">
-            <LeftSidebarLeafNavItem
-              isActive={isActive}
-              to={dataRoutes.manageTable(item.source, item.table)}
-            >
-              <Flex align="center" gap="2">
-                {item.type === 'enum' ? <FaListUl /> : <FaTable />}
-                {item.type === 'view' ? (
-                  <Em>{item.tableName}</Em>
-                ) : (
-                  item.tableName
-                )}
-              </Flex>
-            </LeftSidebarLeafNavItem>
+            <div className="min-w-0 flex-1">
+              <LeftSidebarLeafNavItem
+                isActive={isActive}
+                to={dataRoutes.manageTable(item.source, item.table)}
+              >
+                <Flex align="center" gap="2" className="min-w-0">
+                  {item.type === 'enum' ? (
+                    <FaListUl className="shrink-0" />
+                  ) : (
+                    <FaTable className="shrink-0" />
+                  )}
+                  {item.type === 'view' ? (
+                    <Em className="truncate" title={item.tableName}>
+                      {item.tableName}
+                    </Em>
+                  ) : (
+                    <span className="truncate" title={item.tableName}>
+                      {item.tableName}
+                    </span>
+                  )}
+                </Flex>
+              </LeftSidebarLeafNavItem>
+            </div>
             <GqlCompatibilityWarning
               identifier={item.tableName}
               ifWarningCanBeFixed

@@ -81,6 +81,7 @@ const SchemaRegistryBadge = () => {
 
   return (
     <IconTooltip
+      className="ml-2"
       icon={color ? <FaExclamationCircle style={{ color }} /> : <FaRegMap />}
       message={tooltipMessage}
     />

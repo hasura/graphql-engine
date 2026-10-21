@@ -25,10 +25,9 @@ import {
   EMPTY_UUID_STRING,
   SCHEMA_LIST_FETCH_BATCH_SIZE,
 } from '../constants';
-import { IconTooltip } from '@hasura/shared/ui';
+import { Button } from '@hasura/shared/ui';
 import { useGetURLSchema } from '../hooks/useGetURLSchema';
 import { useNavigate } from 'react-router';
-import { Flex } from '@radix-ui/themes';
 
 interface SchemaRegistryHomeProps {
   schemaId: string | undefined;
@@ -42,9 +41,11 @@ export const SchemaRegistryHome: React.FC<SchemaRegistryHomeProps> = (
   const { schemaId, v2Cursor, v2Count } = props;
   const projectID = globals.hasuraCloudProjectId || '';
   const navigate = useNavigate();
-  const [pageNo, setPageno] = useState(
-    parseInt(getSearchParam(window.location.search, 'page') || '0'),
-  );
+  const [pageNo, setPageno] = useState(() => {
+    const page = Number(getSearchParam(window.location.search, 'page') ?? 0);
+    return Number.isInteger(page) && page >= 0 ? page : 0;
+  });
+  const pendingPageChange = useRef(false);
   const schemaRoleID = schemaId ? schemaId : EMPTY_UUID_STRING;
 
   const fetchSchemasResponse = useGetSchemaRegistryList(
@@ -68,9 +69,11 @@ export const SchemaRegistryHome: React.FC<SchemaRegistryHomeProps> = (
       null;
   }
   const handleNext = (i: number) => {
+    pendingPageChange.current = true;
     setPageno(pageNo + i);
   };
   const handlePrev = () => {
+    pendingPageChange.current = true;
     setPageno(pageNo - 1);
   };
 
@@ -88,51 +91,40 @@ export const SchemaRegistryHome: React.FC<SchemaRegistryHomeProps> = (
     navigateRef.current = navigate;
   });
 
-  //setting the selected role ID as admin role ID by default
-  // When the page lands without a specific role selected, default to the latest
-  // admin role by reflecting it in the URL.
+  // Preserve direct links and the user's selected role during background refreshes.
+  // Only a deliberate page change (or an empty URL) selects the page's default role.
   useEffect(() => {
-    if (schemaRoleID === EMPTY_UUID_STRING && latestAdminRoleID) {
-      navigateRef.current(`/api/schema-registry/${latestAdminRoleID}`);
-    }
-  }, [schemaRoleID, latestAdminRoleID]);
-
-  // On page changes, jump to the latest admin role of the newly loaded list and
-  // keep the page number in the URL search params.
-  useEffect(() => {
-    if (latestAdminRoleID) {
+    if (kind !== 'success') return;
+    if (
+      latestAdminRoleID &&
+      (schemaRoleID === EMPTY_UUID_STRING || pendingPageChange.current)
+    ) {
+      pendingPageChange.current = false;
       navigateRef.current(`/api/schema-registry/${latestAdminRoleID}`);
     }
     setSearchParam(pageNo);
-  }, [latestAdminRoleID, pageNo]);
+  }, [kind, schemaRoleID, latestAdminRoleID, pageNo]);
 
   switch (kind) {
     case 'loading':
-      return <p>Loading...</p>;
+      return <p role="status">Loading published schemas…</p>;
     case 'error':
-      return <p>Error: {fetchSchemasResponse.message}</p>;
+      return (
+        <p role="alert">
+          Unable to load published schemas: {fetchSchemasResponse.message}
+        </p>
+      );
     case 'success': {
-      let URLSchemaCard: SchemaChangeCard[] = [];
-      if (
-        fetchURLSchemaResponse.kind === 'success' &&
-        fetchURLSchemaResponse.response[0]
-      ) {
-        const URLAdminRoleID = URLSchemaCard[0]?.roles.find(
-          (item) => item.role === ADMIN_ROLE,
-        )?.id;
-
-        if (URLAdminRoleID !== latestAdminRoleID) {
-          URLSchemaCard = schemaChangeListTransformFn(
-            fetchURLSchemaResponse.response,
-          );
-        }
-      }
+      const URLSchemaCard =
+        fetchURLSchemaResponse.kind === 'success'
+          ? schemaChangeListTransformFn(fetchURLSchemaResponse.response)
+          : [];
       const schemaList = schemaChangeListTransformFn(
         fetchSchemasResponse.response,
       );
       return (
-        <Flex justify="center" className="w-[80%]">
-          <div className="w-[20%]">
+        <SchemaRegistryLayout
+          sidebar={
             <SchemaChangeList
               schemas={schemaList}
               urlSchemaCard={URLSchemaCard}
@@ -142,17 +134,31 @@ export const SchemaRegistryHome: React.FC<SchemaRegistryHomeProps> = (
               handlePrev={handlePrev}
               handleNext={handleNext}
             />
-          </div>
-          <div className="w-3/4">
-            {selectedRoleID && (
-              <SchemaChangeDetails schemaId={selectedRoleID} />
-            )}
-          </div>
-        </Flex>
+          }
+        >
+          {selectedRoleID && <SchemaChangeDetails schemaId={selectedRoleID} />}
+        </SchemaRegistryLayout>
       );
     }
   }
 };
+
+export const SchemaRegistryLayout = ({
+  sidebar,
+  children,
+}: {
+  sidebar: React.ReactNode;
+  children: React.ReactNode;
+}) => (
+  <div className="@container w-full min-w-0">
+    <div className="grid min-w-0 grid-cols-1 items-start gap-5 @min-[56rem]:grid-cols-[18rem_minmax(0,1fr)]">
+      <aside aria-label="Published schemas" className="min-w-0">
+        {sidebar}
+      </aside>
+      <div className="min-w-0">{children}</div>
+    </div>
+  </div>
+);
 
 export const SchemaChangeList: React.FC<{
   schemas: SchemaChangeCard[];
@@ -162,116 +168,106 @@ export const SchemaChangeList: React.FC<{
   selectedRoleID: string | null;
   handlePrev: () => void;
   handleNext: (i: number) => void;
-}> = (props) => {
-  const {
-    schemas,
-    urlSchemaCard,
-    pageNumber,
-    totalCount,
-    selectedRoleID,
-    handlePrev,
-    handleNext,
-  } = props;
+}> = ({
+  schemas,
+  urlSchemaCard,
+  pageNumber,
+  totalCount,
+  selectedRoleID,
+  handlePrev,
+  handleNext,
+}) => {
   const [openSchemaCardIndex, setIsOpenSchemaCardIndex] =
     useState<React.Key>(0);
-  const isLastPage =
-    totalCount <= (pageNumber + 1) * SCHEMA_LIST_FETCH_BATCH_SIZE;
-  const isSecondLastPage =
-    totalCount <= (pageNumber + 2) * SCHEMA_LIST_FETCH_BATCH_SIZE;
-  const schemaList: SchemaChangeCard[] = [...urlSchemaCard, ...schemas];
+  const pageCount = Math.max(
+    1,
+    Math.ceil(totalCount / SCHEMA_LIST_FETCH_BATCH_SIZE),
+  );
+  const isLastPage = pageNumber + 1 >= pageCount;
+  // A deep-linked schema can also be present on the current page.
+  const schemaList = [...urlSchemaCard, ...schemas].filter(
+    (schema, index, all) =>
+      all.findIndex((item) => item.id === schema.id) === index,
+  );
 
   return (
-    <div className="overflow-x-auto rounded-md border-neutral-200 bg-white border mr-2">
-      <Flex className="w-full bg-gray-100 px-4 py-2">
-        <Flex justify="start" className="text-base w-[50%]">
-          <span className="text-sm font-bold">PUBLISHED SCHEMA</span>
-        </Flex>
-      </Flex>
-
-      <Flex direction="column" className="w-full">
-        {schemas.length ? (
-          <div className="mb-4">
-            <div
-              style={{ maxHeight: '80vh' }}
-              className={`flex flex-col w-full max-h-400px overflow-y-scroll`}
+    <section
+      className="rounded-lg border"
+      style={{
+        background: 'var(--color-panel-solid)',
+        borderColor: 'var(--gray-6)',
+        color: 'var(--gray-12)',
+      }}
+    >
+      <h2
+        className="border-b px-4 py-3 text-sm font-semibold"
+        style={{ borderColor: 'var(--gray-6)' }}
+      >
+        Published schemas
+      </h2>
+      {schemaList.length ? (
+        <>
+          <div className="max-h-[60vh] overflow-y-auto p-2">
+            {schemaList.map((schema, index) => (
+              <SchemaCard
+                key={schema.id}
+                cardKey={index}
+                openSchemaCardIndex={openSchemaCardIndex}
+                selectedRoleID={selectedRoleID}
+                createdAt={schema.created_at}
+                roles={schema.roles}
+                entryHash={schema.entry_hash}
+                tags={schema.tags}
+                handleClick={() => setIsOpenSchemaCardIndex(index)}
+              />
+            ))}
+          </div>
+          <nav
+            aria-label="Schema history pagination"
+            className="flex flex-wrap items-center justify-between gap-2 border-t p-3"
+            style={{ borderColor: 'var(--gray-6)' }}
+          >
+            <Button
+              size="sm"
+              variant="outline"
+              color="gray"
+              leftIcon={FaArrowLeft}
+              disabled={pageNumber === 0}
+              onClick={() => {
+                handlePrev();
+                setIsOpenSchemaCardIndex(0);
+              }}
             >
-              {schemaList.map((schema, index) => (
-                <SchemaCard
-                  key={index}
-                  cardKey={index}
-                  openSchemaCardIndex={openSchemaCardIndex}
-                  selectedRoleID={selectedRoleID}
-                  createdAt={schema.created_at}
-                  roles={schema.roles}
-                  entryHash={schema.entry_hash}
-                  tags={schema.tags}
-                  handleClick={() => setIsOpenSchemaCardIndex(index)}
-                />
-              ))}
-            </div>
-            <Flex justify="center" align="center" className="w-full mt-2">
-              <button
-                className="btn btn-primary items-center max-w-full justify-center inline-flex text-sm font-sans font-semibold border rounded shadow-sm focus-visible:outline-none h-btn px-sm mx-1 disabled:border-gray-300  disabled:opacity-60 disabled:cursor-not-allowed"
-                disabled={pageNumber === 0}
-                onClick={() => {
-                  handlePrev();
-                  setIsOpenSchemaCardIndex(0);
-                }}
-              >
-                <Flex align="center">
-                  <FaArrowLeft />
-                  <span className="ml-1">Prev</span>
-                </Flex>
-              </button>
-              <div className="btn btn-primary items-center max-w-full justify-center inline-flex text-sm text-white font-sans font-semibold bg-[#36A7E6] border rounded shadow-sm focus-visible:outline-none h-btn px-sm mx-1">
-                {pageNumber + 1}
-              </div>
-              {!isLastPage && (
-                <button
-                  className="btn btn-primary items-center max-w-full justify-center inline-flex text-sm font-sans font-semibold border rounded shadow-sm focus-visible:outline-none h-btn px-sm mx-2 disabled:border-gray-300  disabled:opacity-60 disabled:cursor-not-allowed"
-                  onClick={() => {
-                    handleNext(1);
-                    setIsOpenSchemaCardIndex(0);
-                  }}
-                >
-                  {pageNumber + 2}
-                </button>
-              )}
-              {!(isLastPage || isSecondLastPage) && (
-                <button
-                  className="btn btn-primary items-center max-w-full justify-center inline-flex text-sm font-sans font-semibold border rounded shadow-sm focus-visible:outline-none h-btn px-sm mx-1 disabled:border-gray-300  disabled:opacity-60 disabled:cursor-not-allowed"
-                  onClick={() => {
-                    handleNext(2);
-                    setIsOpenSchemaCardIndex(0);
-                  }}
-                >
-                  {pageNumber + 3}
-                </button>
-              )}
-              <button
-                className="btn btn-primary items-center max-w-full justify-center inline-flex text-sm font-sans font-semibold border rounded shadow-sm focus-visible:outline-none h-btn px-sm mx-1 disabled:border-gray-300  disabled:opacity-60 disabled:cursor-not-allowed"
-                disabled={isLastPage}
-                onClick={() => {
-                  handleNext(1);
-                  setIsOpenSchemaCardIndex(0);
-                }}
-              >
-                <Flex align="center">
-                  <span className="mr-1">Next</span>
-                  <FaArrowRight />
-                </Flex>
-              </button>
-            </Flex>
-          </div>
-        ) : (
-          <div className="white border-t border-neutral-200">
-            <div className="p-xs" data-test="label-no-domain-found">
-              No schemas published to the schema registry yet
-            </div>
-          </div>
-        )}
-      </Flex>
-    </div>
+              Prev
+            </Button>
+            <span className="text-xs" aria-current="page">
+              Page {pageNumber + 1} of {pageCount}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              color="gray"
+              rightIcon={FaArrowRight}
+              disabled={isLastPage}
+              onClick={() => {
+                handleNext(1);
+                setIsOpenSchemaCardIndex(0);
+              }}
+            >
+              Next
+            </Button>
+          </nav>
+        </>
+      ) : (
+        <p
+          className="p-4 text-sm"
+          data-test="label-no-domain-found"
+          style={{ color: 'var(--gray-11)' }}
+        >
+          No schemas published to the schema registry yet.
+        </p>
+      )}
+    </section>
   );
 };
 
@@ -284,165 +280,135 @@ const SchemaCard: React.FC<{
   openSchemaCardIndex: React.Key;
   selectedRoleID: string | null;
   handleClick: () => void;
-}> = (props) => {
-  const {
-    cardKey,
-    createdAt,
-    roles,
-    entryHash,
-    tags,
-    openSchemaCardIndex,
-    selectedRoleID,
-    handleClick,
-  } = props;
+}> = ({
+  cardKey,
+  createdAt,
+  roles,
+  entryHash,
+  tags,
+  openSchemaCardIndex,
+  selectedRoleID,
+  handleClick,
+}) => {
   const navigate = useNavigate();
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
-  // Purely derived from props: this card is "open" when its key matches the
-  // currently opened card index.
-  const isCurrentCardOpen = cardKey === openSchemaCardIndex;
-
-  const [tagsList, setTagsList] = React.useState<SchemaRegistryTag[]>(tags);
-  // Re-sync the editable tags list whenever the tags prop changes. Doing this
-  // during render (guarded by the previous prop value) avoids an extra render
-  // pass while preserving local edits (add/remove) between prop changes.
-  const [prevTags, setPrevTags] = React.useState(tags);
+  const isSelected = roles.some((role) => role.id === selectedRoleID);
+  const isCurrentCardOpen = cardKey === openSchemaCardIndex || isSelected;
+  const [tagsList, setTagsList] = useState(tags);
+  const [prevTags, setPrevTags] = useState(tags);
   if (tags !== prevTags) {
     setPrevTags(tags);
     setTagsList(tags);
   }
-  const onRemoveTag = (id: string) => {
-    const filteredTags = tagsList.filter(
-      (schemaRegistryTag) => schemaRegistryTag.id !== id,
-    );
-    setTagsList(filteredTags);
-  };
-  const adminIndex = roles.findIndex((role) => role.role === 'admin');
+  const onRemoveTag = (id: string) =>
+    setTagsList((list) => list.filter((tag) => tag.id !== id));
+  // Never mutate the cached response when placing the admin role first.
+  const sortedRoles = [...roles].sort(
+    (a, b) => Number(b.role === ADMIN_ROLE) - Number(a.role === ADMIN_ROLE),
+  );
+  const showAllRoles = isCurrentCardOpen || roles.length <= 3;
+  const visibleRoles = showAllRoles ? sortedRoles : sortedRoles.slice(0, 3);
 
-  // If "admin" is not at the 0 index, move it there
-  if (adminIndex !== 0 && adminIndex !== -1) {
-    const adminRole = roles.splice(adminIndex, 1)[0];
-    roles.unshift(adminRole);
-  }
-
-  const handleRoleClick = (roleBasedChange: Role) => {
-    navigate(`/api/schema-registry/${roleBasedChange.id}`);
-  };
-
-  const defaultShowAllRoles = isCurrentCardOpen || roles.length <= 3;
-  const RolesList = defaultShowAllRoles ? roles : roles.slice(0, 3);
   return (
-    <div
-      className={`w-full flex flex-col px-4 bg-white rounded mb-1`}
-      onClick={() => {
-        if (!roles.some((role) => role.id === selectedRoleID)) {
-          navigate(`/api/schema-registry/${roles[0].id}`);
-        }
-        handleClick();
-      }}
+    <article
+      className="rounded-md p-2 mb-2"
+      style={{ background: isCurrentCardOpen ? 'var(--gray-3)' : undefined }}
     >
-      <div
-        className={`mt-2 ${
-          isCurrentCardOpen ? 'bg-gray-100' : ' bg-white'
-        } hover:bg-gray-100 `}
+      <button
+        type="button"
+        className="w-full text-left text-sm font-medium py-1 rounded focus-visible:outline-2"
+        aria-label={`View schema published ${getPublishTime(createdAt)}`}
+        onClick={() => {
+          if (!isSelected && sortedRoles[0]) {
+            navigate(`/api/schema-registry/${sortedRoles[0].id}`);
+          }
+          handleClick();
+        }}
       >
-        <Flex
-          align="center"
-          justify="start"
-          className="mt-1 mb-2 text-gray-600 text-sm h-full px-2"
+        <time dateTime={createdAt}>{getPublishTime(createdAt)}</time>
+      </button>
+      <div className="flex flex-wrap items-center gap-2 py-2">
+        {tagsList.map((tag) => (
+          <SchemaTag
+            key={tag.id}
+            schemaRegistryTag={tag}
+            onRemove={onRemoveTag}
+          />
+        ))}
+        <Analytics
+          name="schema-registry-add-tag-btn"
+          passHtmlAttributesToChildren
         >
-          <span>{getPublishTime(createdAt)}</span>
-          <span>
-            <Analytics name="schema-registry-add-tag-btn">
-              {isTagModalOpen && (
-                <AddSchemaRegistryTagDialog
-                  tagsList={tagsList}
-                  setTagsList={setTagsList}
-                  entryHash={entryHash}
-                  onClose={() => {
-                    setIsTagModalOpen(false);
-                  }}
-                />
-              )}
-              <Flex align="center">
-                <Flex wrap="nowrap" align="center" justify="start">
-                  {tagsList &&
-                    tagsList.map((schemaRegistryTag) => (
-                      <div key={schemaRegistryTag.id} className="mx-1 ">
-                        <SchemaTag
-                          schemaRegistryTag={schemaRegistryTag}
-                          onRemove={onRemoveTag}
-                        />
-                      </div>
-                    ))}
-                  <div className="ml-1" onClick={() => setIsTagModalOpen(true)}>
-                    <span>
-                      <IconTooltip
-                        message="Add a Tag"
-                        icon={<FaPlusCircle />}
-                      />
-                    </span>
-                  </div>
-                </Flex>
-              </Flex>
-            </Analytics>
-          </span>
-        </Flex>
-        <div
-          className={`flex flex-col justify-start w-full pt-auto ${
-            isCurrentCardOpen ? 'bg-gray-100' : ''
-          } rounded `}
-        >
-          <div className="text-sm text-gray-500 font-bold mb-1 px-2">
-            {roles.length} {roles.length === 1 ? 'ROLE' : 'ROLES'}
-          </div>
-          <div>
-            {RolesList.map((roleBasedChange, index) => (
-              <Analytics key={index} name="schema-registry-schema-change-card">
-                <div
-                  className={`flex w-full px-2 py-1 ${
-                    isCurrentCardOpen && roleBasedChange.id === selectedRoleID
-                      ? 'bg-gray-200'
-                      : ''
-                  } rounded hover:bg-gray-200`}
-                  onClick={() => {
-                    handleRoleClick(roleBasedChange);
-                  }}
-                  key={index}
-                >
-                  <Flex
-                    align="center"
-                    justify="between"
-                    className="w-full rounded"
-                  >
-                    <div className="text-base rounded cursor-pointer">
-                      <p className="text-sm text-teal-800 font-bold bg-gray-200 px-1 rounded">
-                        {CapitalizeFirstLetter(roleBasedChange.role)}
-                      </p>
-                    </div>
-                    <FaChevronRight />
-                  </Flex>
-                </div>
-              </Analytics>
-            ))}
-            {!defaultShowAllRoles && (
-              <Analytics name="schema-registry-see-more-roles-btn">
-                <Flex
-                  justify="center"
-                  align="center"
-                  className="cursor-pointer text-base hover:bg-gray-200 pt-1"
-                  //here there is no need for onClick as clicking anywhere on a schemaCard sets the schemaCard as open and defaultShowAllRoles will be set to true
-                >
-                  <span className="text-gray font-semibold">
-                    See More Roles
-                  </span>
-                  <FaChevronDown />
-                </Flex>
-              </Analytics>
-            )}
-          </div>
-        </div>
+          <button
+            type="button"
+            aria-label={`Add tag to schema published ${getPublishTime(createdAt)}`}
+            title="Add a tag"
+            className="p-1 rounded focus-visible:outline-2"
+            onClick={() => setIsTagModalOpen(true)}
+          >
+            <FaPlusCircle aria-hidden="true" />
+          </button>
+        </Analytics>
       </div>
-      <Flex className="w-full border-b border-gray-300 my-1"></Flex>
-    </div>
+      {isTagModalOpen && (
+        <AddSchemaRegistryTagDialog
+          tagsList={tagsList}
+          setTagsList={setTagsList}
+          entryHash={entryHash}
+          onClose={() => setIsTagModalOpen(false)}
+        />
+      )}
+      <p className="text-xs mb-2" style={{ color: 'var(--gray-11)' }}>
+        {roles.length} {roles.length === 1 ? 'role' : 'roles'}
+      </p>
+      <div className="flex flex-col gap-1">
+        {visibleRoles.map((item) => (
+          <Analytics
+            key={item.id}
+            name="schema-registry-schema-change-card"
+            passHtmlAttributesToChildren
+          >
+            <button
+              type="button"
+              aria-current={item.id === selectedRoleID ? 'true' : undefined}
+              className="flex w-full min-w-0 items-center justify-between gap-2 rounded px-2 py-2 text-left text-sm focus-visible:outline-2"
+              style={{
+                background:
+                  item.id === selectedRoleID ? 'var(--accent-4)' : undefined,
+                color:
+                  item.id === selectedRoleID
+                    ? 'var(--accent-12)'
+                    : 'var(--gray-12)',
+                fontWeight: item.id === selectedRoleID ? 600 : undefined,
+              }}
+              onClick={() => {
+                handleClick();
+                navigate(`/api/schema-registry/${item.id}`);
+              }}
+            >
+              <span className="break-all">
+                {CapitalizeFirstLetter(item.role)}
+              </span>
+              <FaChevronRight className="shrink-0" aria-hidden="true" />
+            </button>
+          </Analytics>
+        ))}
+        {!showAllRoles && (
+          <Analytics
+            name="schema-registry-see-more-roles-btn"
+            passHtmlAttributesToChildren
+          >
+            <button
+              type="button"
+              className="flex items-center gap-2 px-2 py-2 text-sm"
+              onClick={handleClick}
+            >
+              Show {roles.length - visibleRoles.length} more roles{' '}
+              <FaChevronDown aria-hidden="true" />
+            </button>
+          </Analytics>
+        )}
+      </div>
+    </article>
   );
 };

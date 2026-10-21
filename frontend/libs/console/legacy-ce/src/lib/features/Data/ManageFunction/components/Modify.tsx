@@ -57,7 +57,7 @@ export const Modify = ({
         <FunctionCommentEditor
           source={source}
           func={currentFunction}
-          defaultValue={currentFunction.configuration?.comment ?? ''}
+          defaultValue={currentFunction.comment ?? ''}
           readOnly={readOnlyMode}
         />
       </div>
@@ -79,6 +79,7 @@ export const Modify = ({
             <SqlCodeBlock
               language={source.kind}
               text={functionDefinition.definition}
+              scrollable
             />
           </div>
         </div>

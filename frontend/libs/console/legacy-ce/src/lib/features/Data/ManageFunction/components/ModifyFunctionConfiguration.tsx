@@ -70,8 +70,8 @@ export const ModifyFunctionConfiguration = ({
       qualifiedFunction: currentFunction.function,
       // the comment is edited separately; don't drop it when saving the rest
       configuration: {
-        ...(currentFunction.configuration?.comment
-          ? { comment: currentFunction.configuration.comment }
+        ...(currentFunction?.comment
+          ? { comment: currentFunction.comment }
           : {}),
         ...cleanEmpty(data),
       },
