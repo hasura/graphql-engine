@@ -30,7 +30,9 @@ export const useNoAuth = (): AuthService<any> => {
   }, [fetchInconsistentMetadata]);
 
   const initialize = async () => {
-    await authenticate().then(navigateAuth);
+    await authenticate()
+      .then(navigateAuth)
+      .catch(() => navigateAuth(false));
   };
 
   const logout = () => {

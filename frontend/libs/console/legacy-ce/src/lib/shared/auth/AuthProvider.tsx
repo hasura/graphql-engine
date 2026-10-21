@@ -7,6 +7,7 @@ import { useAdminSecretAuth } from './useAdminSecretAuth';
 import { useNoAuth } from './useNoAuth';
 import { useEffect, useState } from 'react';
 import { LoadingScreen, LoadingScreenTitle } from '@hasura/shared/ui';
+import { hasAdminSecret } from '@hasura/shared/utils';
 
 /**
  * Shared gate: initializes the provided auth service exactly once and renders a
@@ -56,10 +57,10 @@ const NoAuthProvider = ({ children }: { children: React.ReactNode }) => (
 const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { envVars } = useAppContext();
 
-  // `isAdminSecretSet` is fixed for the lifetime of the app, so the selected
+  // The env vars are fixed for the lifetime of the app, so the selected
   // provider never swaps and the chosen auth hook mounts once. Each provider
   // calls exactly one auth hook unconditionally.
-  return envVars.isAdminSecretSet ? (
+  return hasAdminSecret(envVars) ? (
     <AdminSecretAuthProvider>{children}</AdminSecretAuthProvider>
   ) : (
     <NoAuthProvider>{children}</NoAuthProvider>

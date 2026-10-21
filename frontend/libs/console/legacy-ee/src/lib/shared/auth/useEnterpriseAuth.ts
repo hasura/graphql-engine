@@ -154,7 +154,9 @@ const useEnterpriseAuth = (): EnterpriseAuthService => {
     }
 
     if (!authState) {
-      if (globals.isAdminSecretSet || !globals.adminSecret) {
+      // A CLI-injected secret also sets isAdminSecretSet. Only prompt for
+      // credentials when the engine requires a secret and none is available.
+      if (globals.isAdminSecretSet && !globals.adminSecret) {
         navigateAuth(null);
         return;
       }
