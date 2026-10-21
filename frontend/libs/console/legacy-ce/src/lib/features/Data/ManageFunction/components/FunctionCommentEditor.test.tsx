@@ -71,21 +71,22 @@ describe('FunctionCommentEditor', () => {
     expect(input).toHaveValue('existing comment');
   });
 
-  it('saves the edited comment into the function configuration and closes on success', async () => {
+  it('saves the trimmed comment separately, preserves the configuration, and closes on success', async () => {
     const { onSuccess } = setup();
     await userEvent.click(
       screen.getByRole('button', { name: /edit comment/i }),
     );
     const input = await screen.findByLabelText('Function comment');
     await userEvent.clear(input);
-    await userEvent.type(input, 'updated comment');
+    await userEvent.type(input, '  updated comment  ');
     await userEvent.click(screen.getByRole('button', { name: /save/i }));
 
-    // other configuration fields are kept
+    // Comments are separate from configuration; existing customization is kept.
     expect(mutate).toHaveBeenCalledWith(
       expect.objectContaining({
         qualifiedFunction: func.function,
-        configuration: { custom_name: 'myFunc', comment: 'updated comment' },
+        configuration: { custom_name: 'myFunc' },
+        comment: 'updated comment',
       }),
     );
     expect(onSuccess).toHaveBeenCalledTimes(1);
@@ -96,19 +97,29 @@ describe('FunctionCommentEditor', () => {
     );
   });
 
-  it('supports clearing the comment (comment is removed from the configuration)', async () => {
-    setup();
-    await userEvent.click(
-      screen.getByRole('button', { name: /edit comment/i }),
-    );
-    const input = await screen.findByLabelText('Function comment');
-    await userEvent.clear(input);
-    await userEvent.click(screen.getByRole('button', { name: /save/i }));
+  it.each(['', '   '])(
+    'submits an empty comment when the draft is %j without changing the configuration',
+    async (draft) => {
+      setup();
+      await userEvent.click(
+        screen.getByRole('button', { name: /edit comment/i }),
+      );
+      const input = await screen.findByLabelText('Function comment');
+      await userEvent.clear(input);
+      if (draft) {
+        await userEvent.type(input, draft);
+      }
+      await userEvent.click(screen.getByRole('button', { name: /save/i }));
 
-    expect(mutate).toHaveBeenCalledWith(
-      expect.objectContaining({ configuration: { custom_name: 'myFunc' } }),
-    );
-  });
+      expect(mutate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          qualifiedFunction: func.function,
+          configuration: { custom_name: 'myFunc' },
+          comment: '',
+        }),
+      );
+    },
+  );
 
   it('cancel closes the dialog without persisting', async () => {
     setup();
@@ -210,7 +221,8 @@ describe('FunctionCommentEditor', () => {
     expect(mutate).toHaveBeenCalledWith(
       expect.objectContaining({
         qualifiedFunction: funcB.function,
-        configuration: { comment: 'shared comment' },
+        configuration: {},
+        comment: 'shared comment',
       }),
     );
   });

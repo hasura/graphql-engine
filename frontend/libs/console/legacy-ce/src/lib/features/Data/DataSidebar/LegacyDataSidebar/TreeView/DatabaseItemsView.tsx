@@ -19,11 +19,11 @@ type DatabaseItemsViewProps = {
 };
 
 const sourceItemsTypesToIcons: Record<SourceItemsTypes, ReactNode> = {
-  enum: <FaListUl />,
-  database: <FaDatabase />,
-  function: <FaDatabase />,
+  enum: <FaListUl className="shrink-0" />,
+  database: <FaDatabase className="shrink-0" />,
+  function: <FaDatabase className="shrink-0" />,
   schema: null,
-  table: <FaTable />,
+  table: <FaTable className="shrink-0" />,
   view: null,
 };
 
@@ -64,9 +64,14 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
           className="justify-start! text-left!"
           full
         >
-          <Flex align="center" gap="2">
-            {isActive ? <AiOutlineDown /> : <AiOutlineRight />}
-            {sourceItemsTypesToIcons['database']} <Strong>{sourceName}</Strong>
+          <Flex align="center" gap="2" className="min-w-0">
+            {isActive ? (
+              <AiOutlineDown className="shrink-0" />
+            ) : (
+              <AiOutlineRight className="shrink-0" />
+            )}
+            {sourceItemsTypesToIcons['database']}{' '}
+            <Strong className="truncate">{sourceName}</Strong>
           </Flex>
         </Button>
       </div>
@@ -76,6 +81,7 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
               key={schemaName}
               items={schemaItems}
               currentTable={params.tableName}
+              isCurrentFunction={params.isFunction}
               isActive={schemaName === params.schema}
               setActiveSchema={handleSelectSchema}
               schemaName={schemaName}

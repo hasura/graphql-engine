@@ -129,11 +129,25 @@ const useEnterpriseAuth = (): EnterpriseAuthService => {
   };
 
   const initialize = async () => {
-    // Admin secret is set globally by the CLI.
-    let authState = loadConsoleAuthState<EnterpriseAuthState>();
+    // Admin secret is set globally by the CLI. In CLI mode it always wins over
+    // a credential saved in local storage (e.g. from an earlier session on the
+    // same origin).
+    const cliAdminSecret =
+      envVars.consoleMode === CLI_CONSOLE_MODE ? envVars.adminSecret : '';
+    let authState: EnterpriseAuthState | null = cliAdminSecret
+      ? {
+          type: 'admin-secret',
+          adminSecret: cliAdminSecret,
+          shouldPersist: false,
+        }
+      : loadConsoleAuthState<EnterpriseAuthState>();
     // A saved admin secret, PAT, or third-party SSO session must not bypass
     // Hasura OAuth in a cloud console.
-    if (envVars.consoleType === 'cloud' && authState?.type !== 'hasura-sso') {
+    if (
+      !cliAdminSecret &&
+      envVars.consoleType === 'cloud' &&
+      authState?.type !== 'hasura-sso'
+    ) {
       clearConsoleAuthState();
       navigateAuth(null);
       return;

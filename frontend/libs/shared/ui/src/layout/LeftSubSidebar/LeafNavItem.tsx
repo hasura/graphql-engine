@@ -19,6 +19,7 @@ export const LeftSidebarLeafNavItem = ({
       className="block! w-full!"
       color={isActive ? 'indigo' : 'gray'}
       size="2"
+      weight={isActive ? 'medium' : 'regular'}
     >
       {children}
     </RelativeLink>

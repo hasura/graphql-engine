@@ -66,7 +66,6 @@ export type TableFunction = Table;
 
 export type FunctionConfiguration = {
   custom_name?: string;
-  comment?: string;
   custom_root_fields?: {
     function?: string;
     function_aggregate?: string;
@@ -83,6 +82,7 @@ export type MetadataFunction = {
   function: TableFunction;
   configuration?: FunctionConfiguration;
   permissions?: FunctionPermission[];
+  comment?: string;
 };
 
 export type FunctionPermission = {

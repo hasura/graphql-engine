@@ -10,6 +10,7 @@ type SchemaItemsViewProps = {
   schemaName: string;
   items: SourceItem[];
   currentTable: string | null | undefined;
+  isCurrentFunction: boolean;
   isActive: boolean;
   setActiveSchema: (value: string) => void;
   databaseLoading: boolean;
@@ -20,13 +21,14 @@ const SchemaItemsView: React.FC<SchemaItemsViewProps> = ({
   schemaName,
   items,
   currentTable,
+  isCurrentFunction,
   isActive,
   setActiveSchema,
   databaseLoading,
   schemaLoading,
 }) => {
   return (
-    <div className="pl-3 pb-2">
+    <div className="pl-3">
       <div
         onClick={() => {
           setActiveSchema(schemaName);
@@ -54,7 +56,11 @@ const SchemaItemsView: React.FC<SchemaItemsViewProps> = ({
               {items.map((child, key) => (
                 <LeafItemsView
                   item={child}
-                  isActive={isActive && currentTable === child.tableName}
+                  isActive={
+                    isActive &&
+                    currentTable === child.tableName &&
+                    isCurrentFunction === (child.type === 'function')
+                  }
                   key={key}
                 />
               ))}

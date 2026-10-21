@@ -22,7 +22,7 @@ import { moduleName } from '../Services/Metrics/constants';
 import { shouldRedirectToMetadataStatus } from './metadataStatusRedirect';
 import { useAppContext } from '@hasura/shared/context';
 import { useProjectInfo } from '../../hooks/useProjectInfo';
-import { METADATA_STATUS_PATH } from '@hasura/shared/types';
+import { CLI_CONSOLE_MODE, METADATA_STATUS_PATH } from '@hasura/shared/types';
 import useEnterpriseAuth from '../../shared/auth/useEnterpriseAuth';
 import { useInconsistentMetadata, useMetadata } from '@hasura/metadata/api';
 import { Badge, DropdownMenu, hasuraToast } from '@hasura/shared/ui';
@@ -199,7 +199,10 @@ const Main = () => {
           }
           accesses={accessState}
           moreUserMenuItems={
-            envVars.consoleType !== 'cloud'
+            // Cloud signs in via Hasura OAuth and the CLI supplies its own
+            // credentials, so there's no console session to log out of.
+            envVars.consoleType !== 'cloud' &&
+            envVars.consoleMode !== CLI_CONSOLE_MODE
               ? [
                   <DropdownMenu.Item onSelect={logout}>
                     <CiLogout />
