@@ -7,7 +7,6 @@ import {
   telemetryUserEventsTracker,
   Onboarding,
   CloudOnboarding,
-  ControlPlane,
   useCatalogState,
   useTelemetryStore,
   UpdateVersion,
@@ -21,15 +20,12 @@ import './NotificationOverrides.css';
 import { moduleName } from '../Services/Metrics/constants';
 import { shouldRedirectToMetadataStatus } from './metadataStatusRedirect';
 import { useAppContext } from '@hasura/shared/context';
-import { useProjectInfo } from '../../hooks/useProjectInfo';
 import { CLI_CONSOLE_MODE, METADATA_STATUS_PATH } from '@hasura/shared/types';
 import useEnterpriseAuth from '../../shared/auth/useEnterpriseAuth';
 import { useInconsistentMetadata, useMetadata } from '@hasura/metadata/api';
 import { Badge, DropdownMenu, hasuraToast } from '@hasura/shared/ui';
 import { InitializeTelemetry } from '@hasura/shared/analytics';
 import { CiLogout } from 'react-icons/ci';
-
-const { Plan, Project_Entitlement_Types_Enum } = ControlPlane;
 
 const Main = () => {
   const location = useLocation();
@@ -41,7 +37,6 @@ const Main = () => {
   const { data: meta } = useMetadata();
   const { data: inconsistentMetadata, isLoading: inconsistentLoading } =
     useInconsistentMetadata();
-  const { data: projectInfo } = useProjectInfo();
   const accessState = checkAccess(privileges);
 
   useEffect(() => {
@@ -93,48 +88,11 @@ const Main = () => {
     }
   };
 
-  /**
-   * if a project is on the new cloud_free_v2 plan
-   * metrics are probably not enabled
-   * check if entitlement is enabled for such plans
-   */
-  const hasMetricsEntitlement = () => {
-    // get the plan name and entitlements array from the project
-    const plan_name = projectInfo?.plan_name ?? '';
-
-    // entitlements are added only for projects on the
-    //  new cloud_free_v2 and cloud_shared plans
-    // so if the plan is not one of these, return true
-    if (
-      plan_name === Plan.CloudFree ||
-      plan_name === Plan.CloudPayg ||
-      plan_name === Plan.Pro ||
-      plan_name === Plan.CloudDedicatedVPC
-    ) {
-      return true;
-    }
-
-    // if the plan is one of the new plans, check if the
-    // metrics entitlement is enabled
-    const { entitlement: { config_is_enabled } = {} } =
-      (projectInfo?.entitlements ?? []).find(
-        ({ entitlement: { type } }) =>
-          type === Project_Entitlement_Types_Enum.ConsoleMetricsTab,
-      ) || {};
-
-    // if the entitlement is enabled, return true
-    return !!config_is_enabled;
-  };
-
   const renderMetricsTab = () => {
-    if (!isMonitoringTabSupportedEnvironment(envVars)) {
-      return null;
-    }
-
     // still show the monitoring tab if the user login with admin secret
     if (
-      !accessState.hasMetricAccess ||
-      (envVars.consoleType !== 'pro' && !hasMetricsEntitlement())
+      !isMonitoringTabSupportedEnvironment(envVars) ||
+      !accessState.hasMetricAccess
     ) {
       return null;
     }

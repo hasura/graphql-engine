@@ -287,14 +287,16 @@ export const ListConnectedDatabases = (props?: { className?: string }) => {
 
   return (
     <div className={props?.className}>
-      {rowData.length ? (
-        <CardedTable columns={[...columns, null]} data={rowData} />
-      ) : (
-        <IndicatorCard headline="No databases connected">
-          You don&apos;t have any data sources connected, please connect one to
-          continue.
-        </IndicatorCard>
-      )}
+      <div className="mb-4">
+        {rowData.length ? (
+          <CardedTable columns={[...columns, null]} data={rowData} />
+        ) : (
+          <IndicatorCard headline="No databases connected">
+            You don&apos;t have any data sources connected, please connect one
+            to continue.
+          </IndicatorCard>
+        )}
+      </div>
 
       {showAccelerateProjectSection ? (
         <AccelerateProject

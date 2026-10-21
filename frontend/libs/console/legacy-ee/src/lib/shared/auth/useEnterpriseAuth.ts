@@ -129,22 +129,25 @@ const useEnterpriseAuth = (): EnterpriseAuthService => {
   };
 
   const initialize = async () => {
-    // Admin secret is set globally by the CLI. In CLI mode it always wins over
-    // a credential saved in local storage (e.g. from an earlier session on the
-    // same origin).
-    const cliAdminSecret =
-      envVars.consoleMode === CLI_CONSOLE_MODE ? envVars.adminSecret : '';
-    let authState: EnterpriseAuthState | null = cliAdminSecret
+    // Cloud and CLI consoles can inject an admin secret through window.__env.
+    // Prefer it over a credential saved in local storage (e.g. from an earlier
+    // session on the same origin).
+    const injectedAdminSecret =
+      envVars.consoleMode === CLI_CONSOLE_MODE ||
+      envVars.consoleType === 'cloud'
+        ? envVars.adminSecret
+        : '';
+    let authState: EnterpriseAuthState | null = injectedAdminSecret
       ? {
           type: 'admin-secret',
-          adminSecret: cliAdminSecret,
+          adminSecret: injectedAdminSecret,
           shouldPersist: false,
         }
       : loadConsoleAuthState<EnterpriseAuthState>();
-    // A saved admin secret, PAT, or third-party SSO session must not bypass
-    // Hasura OAuth in a cloud console.
+    // Without an injected secret, a saved admin secret, PAT, or third-party
+    // SSO session must not bypass Hasura OAuth in a cloud console.
     if (
-      !cliAdminSecret &&
+      !injectedAdminSecret &&
       envVars.consoleType === 'cloud' &&
       authState?.type !== 'hasura-sso'
     ) {
@@ -154,7 +157,7 @@ const useEnterpriseAuth = (): EnterpriseAuthService => {
     }
 
     if (!authState) {
-      // A CLI-injected secret also sets isAdminSecretSet. Only prompt for
+      // An injected secret also sets isAdminSecretSet. Only prompt for
       // credentials when the engine requires a secret and none is available.
       if (globals.isAdminSecretSet && !globals.adminSecret) {
         navigateAuth(null);
