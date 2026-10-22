@@ -76,7 +76,13 @@ export const ColumnRow = ({
     checkValueRadio();
   };
 
+  const previousResetToken = useRef(resetToken);
   useEffect(() => {
+    // This effect also runs on mount (and is replayed in StrictMode).
+    // Only an explicit Reset should clear the prefilled row values.
+    if (previousResetToken.current === resetToken) return;
+    previousResetToken.current = resetToken;
+
     if (valueInputRef.current && !!valueInputRef.current.value) {
       valueInputRef.current.value = '';
       onChangeRef.current({
