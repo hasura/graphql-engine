@@ -73,6 +73,12 @@ Further reading:
 		"skip TLS verification and disable cert checking (default: false)",
 	)
 	f.String("certificate-authority", "", "path to a cert file for the certificate authority")
+	f.StringArrayVar(
+		&ec.HGEHeaderFlags,
+		"header",
+		nil,
+		`custom HTTP header to send with every request to Hasura GraphQL Engine, in "Name: value" form; repeatable. e.g. --header "Authorization: Bearer <token>"`,
+	)
 	f.Bool("disable-interactive", false, "disables interactive prompts (default: false)")
 
 	util.BindPFlag(v, "endpoint", f.Lookup("endpoint"))
