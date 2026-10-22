@@ -1,7 +1,6 @@
 import {
   TableColumn,
   UseTableColumnsResult,
-  columnDataType,
 } from '@hasura/metadata/data-source';
 import {
   Dialog,
@@ -37,7 +36,14 @@ interface QueryDialogProps {
 
 export type FilterClause = { column: string; operator: string; value?: any };
 
-const transformFilterValues = (
+// Only these console data types carry a numeric filter value.
+const NUMERIC_CONSOLE_DATA_TYPES: TableColumn['consoleDataType'][] = [
+  'integer',
+  'number',
+  'float',
+];
+
+export const transformFilterValues = (
   columns: TableColumn[],
   filter: FilterClause,
 ) => {
@@ -47,13 +53,25 @@ const transformFilterValues = (
 
   if (!column) return filter;
 
-  const dataType = column?.graphQLProperties?.scalarType ?? column.dataType;
+  // Coerce to a number only for numeric columns. Every other scalar type must
+  // be forwarded untouched: `parseInt` truncates or replaces the value for
+  // uuid/timestamptz/date/json/custom scalars (e.g. the uuid
+  // `31b789b0-acfe-43a8-bdaf-561313e8f82e` became `31`), which silently
+  // filtered on the wrong rows. It also truncated float values (`1.5` -> `1`).
+  if (!NUMERIC_CONSOLE_DATA_TYPES.includes(column.consoleDataType)) {
+    return filter;
+  }
 
-  if (['boolean', 'Boolean'].includes(columnDataType(dataType))) return filter;
+  if (
+    filter.value === '' ||
+    filter.value === null ||
+    filter.value === undefined
+  ) {
+    return filter;
+  }
 
-  if (['String', 'string'].includes(columnDataType(dataType))) return filter;
-
-  return { ...filter, value: parseInt(filter.value, 10) };
+  // `Number` (not `parseInt`) preserves the fractional part of float columns.
+  return { ...filter, value: Number(filter.value) };
 };
 
 const schema = z.object({

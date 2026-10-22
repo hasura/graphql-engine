@@ -25,6 +25,24 @@ describe('ColumnRow reset effect', () => {
     expect(screen.getByRole('textbox')).toBeInTheDocument();
   });
 
+  it.each([
+    ['uuid', '31b789b0-acfe-43a8-bdaf-561313e8f82e'],
+    ['float8', '1.5'],
+    ['timestamptz', '2026-10-21T06:58:34Z'],
+  ])(
+    'keeps the initial value for a %s column on mount',
+    (dataType, initialValue) => {
+      const onChange = vi.fn();
+      render(
+        <ColumnRow {...baseProps({ dataType, initialValue, onChange })} />,
+      );
+
+      const input = screen.getByRole('textbox') as HTMLInputElement;
+      expect(input).toHaveValue(initialValue);
+      expect(onChange).not.toHaveBeenCalled();
+    },
+  );
+
   it('clears the input and notifies the parent when resetToken changes', () => {
     const onChange = vi.fn();
     const props = baseProps({ onChange });

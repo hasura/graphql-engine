@@ -76,7 +76,19 @@ export const ColumnRow = ({
     checkValueRadio();
   };
 
+  // The reset effect below must not run on the initial mount. Edit Row seeds
+  // the inputs with the row's current value through `initialValue`, so clearing
+  // them on mount shows empty fields and marks each column as "default" — saving
+  // the form would then overwrite the real data. Only an explicit reset (a new
+  // `resetToken`) should clear the input.
+  const isInitialMount = useRef(true);
+
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
     if (valueInputRef.current && !!valueInputRef.current.value) {
       valueInputRef.current.value = '';
       onChangeRef.current({
