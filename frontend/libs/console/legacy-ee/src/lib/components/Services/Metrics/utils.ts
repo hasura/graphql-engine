@@ -230,7 +230,7 @@ const getTimeIntervalFromRange = (start: string, end?: string, len = 6) => {
 };
 
 const getMetricsUrl = (metricsFQDN: string) => {
-  if (metricsFQDN) {
+  if (!metricsFQDN) {
     return Endpoints.metricsGraphQLUrl;
   }
 
