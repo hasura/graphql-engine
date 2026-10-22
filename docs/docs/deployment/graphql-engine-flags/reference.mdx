@@ -385,7 +385,8 @@ Used to set the default [naming convention](/schema/postgres/naming-convention.m
 
 By default, even when `graphql-default` is selected, the following names keep using `hasura-default`-style (snake_case)
 casing, to preserve backward compatibility with schemas generated before September 2023. Enable this flag to opt in to
-the full `graphql-default`.
+the full `graphql-default`. The flag also applies a source's type name prefix and suffix to the input types of
+aggregation predicates, whatever the naming convention.
 
 |                     |                                        |
 | ------------------- | -------------------------------------- |
