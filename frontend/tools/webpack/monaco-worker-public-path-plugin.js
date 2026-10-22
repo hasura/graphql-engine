@@ -24,9 +24,9 @@
 // workers, regardless of CORS. The bootstrap records the CDN entry URL so lazy
 // chunks still resolve from that versioned directory. Same-origin workers keep
 // their native URL. No global Worker override or main-thread runtime change.
-const RuntimeGlobals = require('webpack/lib/RuntimeGlobals');
-const Template = require('webpack/lib/Template');
-const ProvidedDependency = require('webpack/lib/dependencies/ProvidedDependency');
+const { RuntimeGlobals, Template } = require('webpack');
+// Not part of webpack's public API.
+const ProvidedDependency = require('webpack/lib/provide/ProvidedDependency');
 
 const PLUGIN = 'MonacoWorkerPublicPathPlugin';
 

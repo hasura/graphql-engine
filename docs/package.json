@@ -50,22 +50,24 @@
     "@tsconfig/docusaurus": "1.0.7",
     "prettier": "3.9.6",
     "swc-loader": "0.2.7",
-    "typescript": "4.9.5"
+    "typescript": "4.9.5",
+    "webpack": "5.104.1"
   },
   "resolutions": {
-    "axios": "0.33.0",
-    "brace-expansion": "2.1.2",
+    "axios": "0.34.0",
+    "brace-expansion": "2.1.7",
     "dompurify": "3.4.12",
-    "follow-redirects": "1.16.0",
+    "follow-redirects": "1.16.1",
     "immutable": "4.3.9",
     "lodash": "4.18.1",
     "node-forge": "1.4.0",
     "postcss": "8.5.18",
     "serialize-javascript": "6.0.2",
     "sharp": "0.35.0",
-    "shell-quote": "1.9.0",
-    "svgo": "2.8.3",
-    "tar": "7.5.21"
+    "shell-quote": "1.11.0",
+    "svgo": "2.8.4",
+    "tar": "7.5.21",
+    "webpack": "5.104.1"
   },
   "browserslist": {
     "production": [
