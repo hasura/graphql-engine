@@ -15,7 +15,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"maps"
 	"net/http"
 	"net/url"
 	"os"
@@ -398,7 +397,12 @@ type ExecutionContext struct {
 	SeedsDirectory string
 	// ConfigFile is the file where endpoint etc. are stored.
 	ConfigFile string
-	// HGE Headers, are the custom headers which can be passed to HGE API
+	// HGEHeaderFlags holds the raw, repeatable `--header "Name: value"` flag inputs
+	// before they are parsed. These are supplied on the command line only and are
+	// never persisted to the project config file.
+	HGEHeaderFlags []string
+	// HGE Headers, are the custom headers which can be passed to HGE API. It is
+	// populated from HGEHeaderFlags during readConfig via ParseHGEHeaders.
 	HGEHeaders map[string]string
 
 	// Config is the configuration object storing the endpoint and admin secret
@@ -490,7 +494,36 @@ func (ec *ExecutionContext) AddRequestHeaders(headers map[string]string) {
 		ec.requestHeaders = map[string]string{}
 	}
 
-	maps.Copy(ec.requestHeaders, headers)
+	// Store header names in their canonical (http.CanonicalHeaderKey) form. HTTP header
+	// names are case-insensitive and net/http canonicalizes them when the request is
+	// built, so this does not change what is sent on the wire. It does, however, ensure
+	// that adding a header which differs only in case from one already present (for
+	// example a custom "x-hasura-admin-secret" after the admin secret's
+	// "X-Hasura-Admin-Secret") deterministically overrides the earlier value instead of
+	// producing two map keys whose effective precedence depends on map iteration order.
+	for name, value := range headers {
+		ec.requestHeaders[http.CanonicalHeaderKey(name)] = value
+	}
+}
+
+// adminSecretRequestHeaders returns the admin-secret (or, for older servers, legacy
+// access-key) header that should be sent to HGE, keyed by the correct header name for
+// the server version. When no admin secret is configured it returns an empty map so
+// that NO admin-secret header is added to requests -- sending an empty-valued
+// X-Hasura-Admin-Secret header would otherwise be treated by the server as an
+// admin-secret attempt and short-circuit auth before any configured webhook/JWT (and
+// before a custom --header such as x-api-key) is consulted.
+//
+// This only governs the built-in admin secret. Custom headers supplied via --header are
+// handled separately (see ec.HGEHeaders) and are intentionally sent as-is, including any
+// the user deliberately sets to an empty value.
+func (ec *ExecutionContext) adminSecretRequestHeaders() map[string]string {
+	secret := ec.Config.GetAdminSecret()
+	if secret == "" {
+		return nil
+	}
+
+	return map[string]string{GetAdminSecretHeaderName(ec.Version): secret}
 }
 
 type Source struct {
@@ -726,9 +759,22 @@ func (ec *ExecutionContext) Validate() error {
 		return errors.E(op, fmt.Errorf("error in getting server feature flags %w", err))
 	}
 
-	ec.AddRequestHeaders(
-		map[string]string{GetAdminSecretHeaderName(ec.Version): ec.Config.GetAdminSecret()},
-	)
+	// Only send the built-in admin-secret / legacy access-key header when a secret is
+	// actually configured. Sending an empty "X-Hasura-Admin-Secret:" header (which is
+	// what happened when no secret was set) makes a server with an admin secret treat
+	// the request as an admin-secret attempt, reject it on mismatch, and never fall
+	// through to the configured auth webhook/JWT -- so a custom auth header such as
+	// x-api-key or Authorization would never be honoured. adminSecretRequestHeaders
+	// returns an empty map when nothing is configured, so no header is added.
+	ec.AddRequestHeaders(ec.adminSecretRequestHeaders())
+
+	// Custom headers supplied via --header are applied after the admin secret header so
+	// that they take precedence when they target the same header name. This lets a
+	// custom auth header (e.g. "Authorization: Bearer <JWT>") be used instead of, or
+	// alongside, the admin secret. They were also passed to httpc.New above, so the
+	// preflight probes (version/status/config) carry them too; re-applying them here is
+	// required because SetHeaders replaces the client's header set.
+	ec.AddRequestHeaders(ec.HGEHeaders)
 
 	ec.Config.HTTPClient.SetHeaders(ec.requestHeaders)
 
@@ -1033,6 +1079,40 @@ func (ec *ExecutionContext) readConfig() error {
 	err = ec.Config.ParseEndpoint()
 	if err != nil {
 		return errors.E(op, fmt.Errorf("unable to parse server endpoint: %w", err))
+	}
+
+	// Parse custom headers supplied via the repeatable --header flag. These are kept
+	// only in memory (ec.HGEHeaders) and are deliberately not part of the Config struct
+	// so that they are never written back to the project config file.
+	parsedHeaders, err := ParseHGEHeaders(ec.HGEHeaderFlags)
+	if err != nil {
+		return errors.E(op, err)
+	}
+
+	// ec.HGEHeaders is a public field that embedders of this package may pre-populate
+	// programmatically before calling Validate. Merge the flag-supplied headers into it
+	// rather than overwriting: when no --header flags are given the pre-populated map is
+	// left untouched; when both are present the flag values take precedence on a name
+	// conflict. HTTP header names are case-insensitive, so for each flag header we first
+	// drop any pre-populated key that differs only in case (e.g. a programmatic
+	// "authorization" when the flag is "Authorization"). Otherwise both keys would
+	// linger in the map and, since httpc.New / AddRequestHeaders iterate it and
+	// http.Header.Set canonicalizes names, which value is sent would depend on map
+	// iteration order.
+	if len(parsedHeaders) > 0 {
+		if ec.HGEHeaders == nil {
+			ec.HGEHeaders = make(map[string]string, len(parsedHeaders))
+		}
+
+		for name, value := range parsedHeaders {
+			for existing := range ec.HGEHeaders {
+				if existing != name && strings.EqualFold(existing, name) {
+					delete(ec.HGEHeaders, existing)
+				}
+			}
+
+			ec.HGEHeaders[name] = value
+		}
 	}
 
 	return nil

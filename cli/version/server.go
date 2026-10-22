@@ -17,7 +17,10 @@ type serverVersionResponse struct {
 func FetchServerVersion(endpoint string, client *httpc.Client) (version string, err error) {
 	var op errors.Op = "version.FetchServerVersion"
 
-	req, err := http.NewRequest(http.MethodGet, endpoint, nil)
+	// Build the request through the shared httpc client so that any custom headers
+	// configured on it (e.g. a --header "x-api-key: ..." auth header) are applied to the
+	// version probe too. http.NewRequest would bypass the client's headers.
+	req, err := client.NewRequest(http.MethodGet, endpoint, nil)
 	if err != nil {
 		return "", errors.E(op, fmt.Errorf("error while making http request to %s", endpoint))
 	}
