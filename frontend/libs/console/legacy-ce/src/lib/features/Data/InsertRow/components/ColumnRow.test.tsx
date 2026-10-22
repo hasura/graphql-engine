@@ -1,3 +1,4 @@
+import { StrictMode } from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
 import { ColumnRow, ColumnRowProps } from './ColumnRow';
@@ -90,5 +91,47 @@ describe('ColumnRow reset effect', () => {
       selectionType: 'default',
       value: '',
     });
+  });
+});
+
+describe('ColumnRow initial values', () => {
+  it.each([
+    ['uuid', '31b789b0-acfe-43a8-bdaf-561313e8f82e'],
+    ['float8', 1.5],
+    ['integer', 0],
+    ['date', '2026-10-22'],
+    ['timestamp with time zone', '2026-10-22T10:48:04+00:00'],
+    ['time without time zone', '10:48:04'],
+    ['custom_scalar', '123-custom'],
+    ['text', 'x'],
+  ])('keeps the existing %s value on mount', (dataType, initialValue) => {
+    const onChange = vi.fn();
+    render(
+      <ColumnRow
+        {...baseProps({ dataType: dataType as string, initialValue, onChange })}
+      />,
+    );
+    expect(screen.getByRole('textbox')).toHaveValue(String(initialValue));
+    expect(screen.getByRole('radio', { name: 'id' })).toBeChecked();
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('does not clear initial values when effects are replayed in StrictMode', () => {
+    const onChange = vi.fn();
+    render(
+      <StrictMode>
+        <ColumnRow
+          {...baseProps({
+            dataType: 'uuid',
+            initialValue: '31b789b0-acfe-43a8-bdaf-561313e8f82e',
+            onChange,
+          })}
+        />
+      </StrictMode>,
+    );
+    expect(screen.getByRole('textbox')).toHaveValue(
+      '31b789b0-acfe-43a8-bdaf-561313e8f82e',
+    );
+    expect(onChange).not.toHaveBeenCalled();
   });
 });

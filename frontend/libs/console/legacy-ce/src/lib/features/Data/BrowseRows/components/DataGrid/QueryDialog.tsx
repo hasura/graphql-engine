@@ -1,8 +1,4 @@
-import {
-  TableColumn,
-  UseTableColumnsResult,
-  columnDataType,
-} from '@hasura/metadata/data-source';
+import { UseTableColumnsResult } from '@hasura/metadata/data-source';
 import {
   Dialog,
   useConsoleForm,
@@ -15,6 +11,11 @@ import { RiPlayFill } from 'react-icons/ri';
 import { FilterRows } from '../RunQuery/Filter';
 import { SortRows } from '../RunQuery/Sort';
 import { OrderBy } from '@hasura/shared/types';
+import {
+  FilterClause,
+  isIgnoredFilter,
+  transformFilterValues,
+} from './QueryDialog.utils';
 
 interface QueryDialogProps {
   onClose: () => void;
@@ -34,27 +35,6 @@ interface QueryDialogProps {
   sorts?: OrderBy[];
   tableColumns: UseTableColumnsResult | undefined;
 }
-
-export type FilterClause = { column: string; operator: string; value?: any };
-
-const transformFilterValues = (
-  columns: TableColumn[],
-  filter: FilterClause,
-) => {
-  const column = columns.find(
-    (x) => x.graphQLProperties?.name === filter.column,
-  );
-
-  if (!column) return filter;
-
-  const dataType = column?.graphQLProperties?.scalarType ?? column.dataType;
-
-  if (['boolean', 'Boolean'].includes(columnDataType(dataType))) return filter;
-
-  if (['String', 'string'].includes(columnDataType(dataType))) return filter;
-
-  return { ...filter, value: parseInt(filter.value, 10) };
-};
 
 const schema = z.object({
   filters: z.array(
@@ -104,9 +84,9 @@ export const QueryDialog = ({
   ) => {
     if (await triggerValidation()) {
       onSubmit({
-        filters: (filters ?? []).map((f) =>
-          transformFilterValues(columns, f as FilterClause),
-        ),
+        filters: (filters ?? [])
+          .filter((f) => !isIgnoredFilter(columns, f as FilterClause))
+          .map((f) => transformFilterValues(columns, f as FilterClause)),
         sorts: (sorts as OrderBy[]) ?? [],
       });
     }
