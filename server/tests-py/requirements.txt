@@ -3,7 +3,7 @@
 
 aniso8601==7.0.0
 attrs==25.4.0
-certifi==2026.1.4
+certifi==2026.10.19
 cffi==2.0.0
 charset-normalizer==3.4.4
 croniter==6.0.0
@@ -22,20 +22,20 @@ promise==2.3
 psycopg2-binary==2.9.11
 py==1.11.0
 pycparser==3.0
-PyJWT==2.3.0
+pyjwt==2.3.0
 pytest==6.2.5
 pytest-durations==1.6.1
 pytest-fixture-order==0.1.5
 pytest-xdist==3.5.0
 python-dateutil==2.9.0.post0
 pytz==2025.2
-PyYAML==6.0.3
+pyyaml==6.0.3
 redis==7.1.0
 requests==2.32.5
-ruamel.yaml==0.19.1
-Rx==1.6.3
+ruamel-yaml==0.19.1
+rx==1.6.3
 six==1.17.0
-SQLAlchemy==1.4.54
+sqlalchemy==1.4.54
 toml==0.10.2
-urllib3==2.6.3
+urllib3==2.8.0
 websocket-client==0.56.0

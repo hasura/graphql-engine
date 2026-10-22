@@ -1,6 +1,6 @@
 module github.com/hasura/graphql-engine/cli/v2
 
-go 1.26.5
+go 1.26.10
 
 require (
 	cuelang.org/go v0.17.1
@@ -18,7 +18,7 @@ require (
 	github.com/gin-contrib/static v1.1.6
 	github.com/gin-gonic/contrib v0.0.0-20260101091603-d12f07a9136b
 	github.com/gin-gonic/gin v1.12.0
-	github.com/go-git/go-git/v5 v5.19.1
+	github.com/go-git/go-git/v5 v5.19.2
 	github.com/goccy/go-yaml v1.19.2
 	github.com/gonvenience/ytbx v1.5.0
 	github.com/google/uuid v1.6.0
@@ -42,7 +42,7 @@ require (
 	github.com/subosito/gotenv v1.6.0
 	github.com/vektah/gqlparser/v2 v2.5.36
 	go.yaml.in/yaml/v3 v3.0.4
-	golang.org/x/term v0.45.0
+	golang.org/x/term v0.46.0
 )
 
 require (
@@ -153,11 +153,11 @@ require (
 	go.opentelemetry.io/otel/trace v1.44.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	golang.org/x/arch v0.29.0 // indirect
-	golang.org/x/crypto v0.54.0 // indirect
-	golang.org/x/net v0.57.0 // indirect
-	golang.org/x/sync v0.22.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/text v0.40.0 // indirect
+	golang.org/x/crypto v0.57.0 // indirect
+	golang.org/x/net v0.60.0 // indirect
+	golang.org/x/sync v0.23.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/text v0.42.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
