@@ -200,6 +200,14 @@ allow-newer: entropy:Cabal
 -- https://github.com/mokus0/th-extras/pull/20
 allow-newer: th-extras:template-haskell
 
+-- DO NOT lift without checking https://github.com/basvandijk/scientific/issues/120
+-- 0.3.9.0 makes Eq/Ord on Scientific read out of bounds (SIGSEGV) for exponents
+-- near the Int bounds. aeson's decoder wraps exponents silently, so any client can
+-- send such values, and we compare them before auth (e.g. field merging in
+-- schema-parsers Collect.hs). 0.3.8.1 is affected only in (+)/(-), which we don't
+-- apply to input-derived values (audited 2026-10-21).
+constraints: scientific <0.3.9
+
 package *
   -- NOTE: this gets applied to both local (hasura) packages and dependencies,
   -- but optimizations for local hasura packages are overridden/controlled

@@ -195,6 +195,17 @@ parsePGValue ty val = case (ty, val) of
     parseBoundedFloat :: forall a. (RealFloat a) => Value -> AT.Parser a
     parseBoundedFloat = withScientific ("Float expected for input type: " ++ show ty) scientificToFloat
 
+    -- 'txtEncodedVal' renders money with 'formatScientific' 'Fixed', which is
+    -- linear in the exponent; so reject exponents that could never fit a
+    -- Postgres money value anyway (as aeson's own @withBoundedScientific@ does)
+    parseMoney :: Value -> AT.Parser Scientific
+    parseMoney v = do
+      m <- parseJSON v
+      let e = base10Exponent m
+      when (e < -1024 || e > 1024)
+        $ fail ("The value " ++ show m ++ " has an exponent out of range for type " ++ show ty)
+      pure m
+
     parseTyped = case ty of
       PGSmallInt -> PGValSmallInt <$> parseBoundedInt val
       PGInteger -> PGValInteger <$> parseBoundedInt val
@@ -204,7 +215,7 @@ parsePGValue ty val = case (ty, val) of
       PGFloat -> PGValFloat <$> parseBoundedFloat val
       PGDouble -> PGValDouble <$> parseBoundedFloat val
       PGNumeric -> PGValNumeric <$> parseJSON val
-      PGMoney -> PGValMoney <$> parseJSON val
+      PGMoney -> PGValMoney <$> parseMoney val
       PGBoolean -> PGValBoolean <$> parseJSON val
       PGChar -> PGValChar <$> parseJSON val
       PGVarchar -> PGValVarchar <$> parseJSON val
