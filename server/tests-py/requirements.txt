@@ -3,7 +3,7 @@
 
 aniso8601==7.0.0
 attrs==25.4.0
-certifi==2026.1.4
+certifi==2026.10.19
 cffi==2.0.0
 charset-normalizer==3.4.4
 croniter==6.0.0
@@ -37,6 +37,6 @@ Rx==1.6.3
 six==1.17.0
 SQLAlchemy==1.4.54
 toml==0.10.2
-urllib3==2.6.3
+urllib3==2.8.0
 websocket-client==0.56.0
 wheel==0.46.3

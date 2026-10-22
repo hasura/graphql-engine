@@ -1,6 +1,9 @@
 # Direct dependencies go here.
 # Regenerate requirements.txt by running `make server/tests-py/requirements.txt`.
 
+# Transitive security floors (pulled in via requests); pinned here so regeneration keeps the fix.
+certifi >= 2026.10.19  # GHSA-6q48-6c7w-9gw2 (compromised CA in bundled root store)
+urllib3 >= 2.8.0  # CVE-2026-44431, CVE-2026-44432, CVE-2026-97687, CVE-2026-97689
 croniter
 cryptography == 3.*  # later versions require Rust support
 graphene == 2.*  # v3 has changed the API
