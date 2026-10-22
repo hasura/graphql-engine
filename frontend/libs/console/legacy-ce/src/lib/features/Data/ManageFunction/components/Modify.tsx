@@ -54,12 +54,7 @@ export const Modify = ({
         />
       )}
       <div className="w-full md:w-8/12">
-        <FunctionCommentEditor
-          source={source}
-          func={currentFunction}
-          defaultValue={currentFunction.comment ?? ''}
-          readOnly={readOnlyMode}
-        />
+        <FunctionCommentEditor comment={currentFunction.comment} />
       </div>
       {functionDefinition?.definition ? (
         <div className="w-full md:w-8/12">
