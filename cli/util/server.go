@@ -123,7 +123,10 @@ func GetServerState(
 func GetServerStatus(versionEndpoint string, httpClient *httpc.Client) (err error) {
 	var op errors.Op = "util.GetServerStatus"
 
-	req, err := http.NewRequest(http.MethodGet, versionEndpoint, nil)
+	// Build the request through the shared httpc client so that any custom headers
+	// configured on it (e.g. a --header "x-api-key: ..." auth header) are applied to the
+	// version probe too. http.NewRequest would bypass the client's headers.
+	req, err := httpClient.NewRequest(http.MethodGet, versionEndpoint, nil)
 	if err != nil {
 		return errors.E(
 			op,
