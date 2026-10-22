@@ -37,7 +37,7 @@
     "immutable": "^4.3.9"
   },
   "devDependencies": {
-    "@babel/cli": "8.0.4",
+    "@babel/cli": "^7.29.7",
     "@babel/core": "7.29.7",
     "@babel/plugin-transform-async-to-generator": "7.29.7",
     "@babel/preset-env": "7.29.7",
