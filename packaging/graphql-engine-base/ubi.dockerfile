@@ -1,4 +1,4 @@
-# DATE VERSION: 2026-09-09
+# DATE VERSION: 2026-10-22
 # Modify the above date version (YYYY-MM-DD) if you want to rebuild the image
 
 FROM registry.access.redhat.com/ubi9-minimal:9.8-1788939036 as pg_dump_source
@@ -18,6 +18,26 @@ FROM registry.access.redhat.com/ubi9-minimal:9.8-1788939036
 ARG TARGETPLATFORM
 
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+
+# eMudhra compromised intermediates can chain through either of these roots.
+# UBI does not have a confirmed fixed package floor, so persist explicit distrust
+# and regenerate the PEM bundles used by HGE and native clients.
+# This also distrusts otherwise legitimate chains relying solely on these roots.
+RUN set -ex; \
+  microdnf update -y ca-certificates; \
+  microdnf install -y ca-certificates p11-kit-trust; \
+  blocklist=/etc/pki/ca-trust/source/blocklist; \
+  mkdir -p "$blocklist"; \
+  trust extract --overwrite --format=pem-bundle \
+    --filter='pkcs11:object=Comodo%20AAA%20Services%20root;type=cert' \
+    "$blocklist/Comodo_AAA_Services_root.pem"; \
+  test -s "$blocklist/Comodo_AAA_Services_root.pem"; \
+  trust extract --overwrite --format=pem-bundle \
+    --filter='pkcs11:object=emSign%20ECC%20Root%20CA%20-%20G3;type=cert' \
+    "$blocklist/emSign_ECC_Root_CA_-_G3.pem"; \
+  test -s "$blocklist/emSign_ECC_Root_CA_-_G3.pem"; \
+  update-ca-trust extract; \
+  microdnf clean all
 
 RUN set -ex; \
     microdnf install -y shadow-utils; \

@@ -37,6 +37,12 @@ RUN set -ex; \
     apt-get upgrade -y; \
     # basic deps
     apt-get install -y apt-transport-https ca-certificates curl gnupg2 lsb-release;  \
+    # Fail closed if the mirror has not received the eMudhra trust-store fix. \
+    # Includes the AAA Certificate Services cross-signs; a rebuild alone is not a guarantee. \
+    # 20260816 drops "emSign ECC Root CA - G3" (LP: #2171507); the "~" floor accepts \
+    # any Ubuntu release's build of it (e.g. 20260816ubuntu0.22.04.1 on jammy). \
+    dpkg --compare-versions "$(dpkg-query -W -f='${Version}' ca-certificates)" ge "20260816~"; \
+    update-ca-certificates --fresh; \
     # deps needed for graphql-engine
     apt-get install -y libkrb5-3 libpq5 libnuma1 unixodbc-dev; \
     # deps needed for cli-migrations
