@@ -2,6 +2,7 @@ import { Route, Routes, Navigate } from 'react-router';
 import { Main } from './components';
 import { OAUTH_CALLBACK_URL } from '@hasura/shared/types';
 import {
+  AuthenticatedRoute,
   PageNotFound,
   getActionsRouter,
   getRemoteSchemaRoutes,
@@ -52,7 +53,14 @@ const Router = () => {
       >
         <Route path="login" element={<Login />} />
         <Route path={OAUTH_CALLBACK_URL} element={<OAuthCallback />} />
-        <Route path="" element={<Main />}>
+        <Route
+          path=""
+          element={
+            <AuthenticatedRoute>
+              <Main />
+            </AuthenticatedRoute>
+          }
+        >
           <Route index element={<Navigate to="api/api-explorer" replace />} />
           <Route path="api" element={<ApiContainer />}>
             <Route index element={<Navigate to="api-explorer" replace />} />

@@ -4,6 +4,7 @@ import Login from './components/Login/Login';
 import { NeonCallbackHandler } from './features/CloudOnboarding/NeonOnboardingWizard/components/TempCallback';
 import { SlackCallbackHandler } from './features/SchemaRegistry/components/TempSlackCallback';
 import AuthProvider from './shared/auth/AuthProvider';
+import { AuthenticatedRoute } from './shared/auth';
 import getEventRoutes from './features/Eventing/routes';
 import getActionRoutes from './features/Actions/routes';
 import { ApiContainer, ApiExplorer } from './features/ApiExplorer';
@@ -44,7 +45,14 @@ const Router = () => {
           element={<SlackCallbackHandler />}
         />
 
-        <Route path="" element={<Main />}>
+        <Route
+          path=""
+          element={
+            <AuthenticatedRoute>
+              <Main />
+            </AuthenticatedRoute>
+          }
+        >
           <Route index element={<Navigate to="api/api-explorer" replace />} />
           <Route path="api" element={<ApiContainer />}>
             <Route index element={<Navigate to="api-explorer" replace />} />

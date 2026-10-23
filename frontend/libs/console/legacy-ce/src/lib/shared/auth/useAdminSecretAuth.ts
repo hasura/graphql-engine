@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { CLI_CONSOLE_MODE, UnauthorizedError } from '@hasura/shared/types';
 import {
   clearConsoleAuthState,
@@ -16,6 +17,7 @@ import { useFetchInconsistentMetadata } from '@hasura/metadata/api';
 
 export const useAdminSecretAuth = (): AuthService<AdminSecretState> => {
   const navigateAuth = useNavigateAuth();
+  const queryClient = useQueryClient();
   const fetchInconsistentMetadata = useFetchInconsistentMetadata();
   const [authState, setAuthState] = useState<AdminSecretState | null>(null);
   const { envVars } = useAppContext();
@@ -63,6 +65,8 @@ export const useAdminSecretAuth = (): AuthService<AdminSecretState> => {
 
   const logout = () => {
     clearConsoleAuthState();
+    setAuthState(null);
+    queryClient.clear();
   };
 
   const getHeaders = useCallback(
