@@ -1,14 +1,16 @@
 import React from 'react';
-import { Button, TopicDescription } from '@hasura/shared/ui';
+import {
+  Button,
+  TopicDescription,
+  CronTriggerIllustration,
+} from '@hasura/shared/ui';
 import { Analytics, REDACT_EVERYTHING } from '@hasura/shared/analytics';
 import { dataRoutes } from '@hasura/shared/utils';
 import { useNavigate } from 'react-router';
 import { Flex } from '@radix-ui/themes';
 import { CRON_TRIGGER } from '@hasura/shared/types';
-import { useAppContext } from '@hasura/shared/context';
 
 const ScheduledTriggerLanding: React.FC = () => {
-  const { envVars } = useAppContext();
   const navigate = useNavigate();
 
   const topicDescription = (
@@ -47,8 +49,8 @@ const ScheduledTriggerLanding: React.FC = () => {
           <div>
             <TopicDescription
               title="What are Cron Triggers?"
-              imgUrl={`${envVars.assetsPath}/common/img/cron-trigger.png`}
               imgAlt={CRON_TRIGGER}
+              imgElement={<CronTriggerIllustration className="w-200" />}
               description={topicDescription}
             />
             <hr className="clear-both my-6" />

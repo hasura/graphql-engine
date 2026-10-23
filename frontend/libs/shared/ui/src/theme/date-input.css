@@ -346,3 +346,149 @@
 .react-datepicker__portal .react-datepicker__navigation--next:hover {
   border-left-color: theme(colors.slate.600);
 }
+
+/*
+ * Dark mode. react-datepicker ships light-only colors, so re-skin it with the
+ * Radix gray scale (which flips under `.dark`) when the ThemeProvider sets the
+ * `.dark` class on <html>. The amber selection accent is kept in both themes.
+ */
+.dark .react-datepicker {
+  background-color: var(--gray-2);
+  color: var(--gray-12);
+  border: 1px solid var(--gray-6);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 60%);
+}
+
+.dark .react-datepicker__header,
+.dark .react-datepicker__today-button,
+.dark .react-datepicker__time-container .react-datepicker__time,
+.dark .react-datepicker__year-dropdown,
+.dark .react-datepicker__month-dropdown,
+.dark .react-datepicker__month-year-dropdown {
+  background-color: var(--gray-2);
+  color: var(--gray-12);
+}
+
+.dark .react-datepicker__header--time {
+  background-color: var(--gray-3);
+  border-bottom-color: var(--gray-6);
+}
+
+.dark .react-datepicker__current-month,
+.dark .react-datepicker-time__header,
+.dark .react-datepicker-year-header {
+  color: var(--gray-11);
+}
+
+.dark .react-datepicker__day-name,
+.dark .react-datepicker__day,
+.dark .react-datepicker__time-name,
+.dark .react-datepicker__month-text,
+.dark .react-datepicker__quarter-text,
+.dark
+  .react-datepicker__time-container
+  .react-datepicker__time
+  .react-datepicker__time-box
+  ul.react-datepicker__time-list
+  li.react-datepicker__time-list-item {
+  color: var(--gray-12);
+}
+
+.dark .react-datepicker__day--outside-month {
+  color: var(--gray-9);
+}
+
+.dark .react-datepicker__day:not(.react-datepicker__day--selected):hover,
+.dark .react-datepicker__month-text:hover,
+.dark .react-datepicker__quarter-text:hover,
+.dark .react-datepicker__year-option:hover,
+.dark .react-datepicker__month-option:hover,
+.dark .react-datepicker__month-year-option:hover,
+.dark
+  .react-datepicker__time-container
+  .react-datepicker__time
+  .react-datepicker__time-box
+  ul.react-datepicker__time-list
+  li.react-datepicker__time-list-item:not(
+    .react-datepicker__time-list-item--selected
+  ):hover {
+  background-color: var(--gray-5);
+}
+
+.dark .react-datepicker__day--disabled,
+.dark .react-datepicker__month-text--disabled,
+.dark .react-datepicker__quarter-text--disabled,
+.dark .react-datepicker__month--disabled,
+.dark .react-datepicker__quarter--disabled,
+.dark .react-datepicker__week-number,
+.dark
+  .react-datepicker__time-container
+  .react-datepicker__time
+  .react-datepicker__time-box
+  ul.react-datepicker__time-list
+  li.react-datepicker__time-list-item--disabled {
+  color: var(--gray-8);
+}
+
+.dark
+  .react-datepicker__month--selecting-range
+  .react-datepicker__day--in-range,
+.dark
+  .react-datepicker__month--selecting-range
+  .react-datepicker__month-text--in-range,
+.dark
+  .react-datepicker__month--selecting-range
+  .react-datepicker__quarter-text--in-range {
+  background-color: var(--gray-2);
+  color: var(--gray-11);
+}
+
+.dark .react-datepicker__time-container,
+.dark .react-datepicker__time-container--with-today-button,
+.dark .react-datepicker__today-button,
+.dark .react-datepicker__year-dropdown,
+.dark .react-datepicker__month-dropdown,
+.dark .react-datepicker__month-year-dropdown {
+  border-color: var(--gray-6);
+}
+
+.dark .react-datepicker__navigation-icon::before,
+.dark .react-datepicker__year-read-view--down-arrow,
+.dark .react-datepicker__month-read-view--down-arrow,
+.dark .react-datepicker__month-year-read-view--down-arrow {
+  border-color: var(--gray-10);
+}
+
+.dark
+  .react-datepicker__navigation:hover
+  .react-datepicker__navigation-icon::before {
+  border-color: var(--gray-12);
+}
+
+.dark
+  .react-datepicker-popper[data-placement^='bottom']
+  .react-datepicker__triangle,
+.dark
+  .react-datepicker-popper[data-placement^='bottom']
+  .react-datepicker__triangle::before,
+.dark
+  .react-datepicker-popper[data-placement^='bottom']
+  .react-datepicker__triangle::after {
+  border-bottom-color: var(--gray-2);
+  fill: var(--gray-2);
+  color: var(--gray-2);
+}
+
+.dark
+  .react-datepicker-popper[data-placement^='top']
+  .react-datepicker__triangle,
+.dark
+  .react-datepicker-popper[data-placement^='top']
+  .react-datepicker__triangle::before,
+.dark
+  .react-datepicker-popper[data-placement^='top']
+  .react-datepicker__triangle::after {
+  border-top-color: var(--gray-2);
+  fill: var(--gray-2);
+  color: var(--gray-2);
+}

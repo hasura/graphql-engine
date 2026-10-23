@@ -24,6 +24,7 @@ export const RemoteSchemaDeleteWarning = ({
       </p>
       <div className="mt-3">
         <Checkbox
+          align="start"
           value={cascade}
           onChange={(checked) => {
             const next = checked === true;

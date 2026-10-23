@@ -47,7 +47,7 @@ export const LoadingScreen = ({
         justify="center"
         align="center"
         gap="4"
-        className={'max-w-[500px]'}
+        className={'sm:mx-w-2/3 md:max-w-1/2'}
       >
         <div>
           {isError ? (

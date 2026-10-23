@@ -1,11 +1,13 @@
 import React from 'react';
 import { dataRoutes } from '@hasura/shared/utils';
 import { ADHOC_EVENTS_HEADING } from '@hasura/shared/types';
-import { useAppContext } from '@hasura/shared/context';
-import { RelativeLink, TopicDescription } from '@hasura/shared/ui';
+import {
+  RelativeLink,
+  TopicDescription,
+  ScheduledEventIllustration,
+} from '@hasura/shared/ui';
 
 const Info: React.FC = () => {
-  const { envVars } = useAppContext();
   const topicDescription = (
     <div>
       <p>
@@ -36,8 +38,8 @@ const Info: React.FC = () => {
       <div className="pl-5">
         <TopicDescription
           title="What are Scheduled events?"
-          imgUrl={`${envVars.assetsPath}/common/img/scheduled-event.png`}
           imgAlt={ADHOC_EVENTS_HEADING}
+          imgElement={<ScheduledEventIllustration className="w-200" />}
           description={topicDescription}
         />
         <hr className="my-6" />

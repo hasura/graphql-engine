@@ -1,6 +1,7 @@
 import React, { Ref } from 'react';
 import {
   Flex,
+  FlexProps,
   Text,
   TextProps,
   Checkbox as ThemeCheckbox,
@@ -24,6 +25,8 @@ export type CheckboxProps = Omit<
   value: CheckedState;
 
   labelProps?: Omit<TextProps, 'as'>;
+  align?: FlexProps['align'];
+  justify?: FlexProps['justify'];
 };
 
 export const Checkbox = React.forwardRef<HTMLButtonElement, CheckboxProps>(
@@ -36,6 +39,8 @@ export const Checkbox = React.forwardRef<HTMLButtonElement, CheckboxProps>(
       onChange,
       labelProps = {},
       value,
+      align = 'center',
+      justify,
       ...rest
     },
     ref,
@@ -57,7 +62,7 @@ export const Checkbox = React.forwardRef<HTMLButtonElement, CheckboxProps>(
         size={size ?? '2'}
         {...(labelRest as TextProps)}
       >
-        <Flex gap="2" align="center">
+        <Flex gap="2" align={align} justify={justify}>
           <ThemeCheckbox
             {...rest}
             ref={ref as Ref<HTMLButtonElement>}

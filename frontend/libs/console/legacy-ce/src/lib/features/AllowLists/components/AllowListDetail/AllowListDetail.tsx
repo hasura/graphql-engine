@@ -20,7 +20,7 @@ export const AllowListDetail: React.FC = () => {
   const params = useParams<{ name: string; section: string }>();
   const navigate = useNavigate();
   const name = params.name ?? '';
-  const section = params.section ?? '';
+  const section = params.section ?? 'operations';
   const { envVars } = useAppContext();
   const { access: eeLiteAccess } = useEELiteAccess();
   const {
