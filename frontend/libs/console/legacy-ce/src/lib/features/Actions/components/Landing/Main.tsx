@@ -1,6 +1,12 @@
 import { Analytics, REDACT_EVERYTHING } from '@hasura/shared/analytics';
 import { pageTitle } from '../../constants';
-import { Button, Badge, TopicDescription, Separator } from '@hasura/shared/ui';
+import {
+  Button,
+  Badge,
+  TopicDescription,
+  Separator,
+  ActionsIllustration,
+} from '@hasura/shared/ui';
 import { FaEdit, FaFileImport } from 'react-icons/fa';
 import { useNavigate } from 'react-router';
 import { useDocumentTitle } from '@hasura/shared/hooks';
@@ -12,15 +18,15 @@ const Landing = () => {
   useDocumentTitle(`${pageTitle} | Hasura`);
 
   const navigate = useNavigate();
-  const { readOnlyMode, envVars } = useAppContext();
+  const { readOnlyMode } = useAppContext();
 
   const getIntroSection = () => {
     return (
       <div>
         <TopicDescription
           title="What are Actions?"
-          imgUrl={`${envVars.assetsPath}/common/img/actions.png`}
           imgAlt="Actions"
+          imgElement={<ActionsIllustration className="w-200" />}
           description="Actions are custom queries or mutations that are resolved via HTTP handlers. Actions can be used to carry out complex data validations, data enrichment from external sources or execute just about any custom business logic."
           learnMoreHref="https://hasura.io/docs/latest/graphql/core/actions/index.html"
         />

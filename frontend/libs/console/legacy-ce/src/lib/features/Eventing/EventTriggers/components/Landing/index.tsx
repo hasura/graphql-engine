@@ -5,20 +5,19 @@ import {
   Separator,
   TopicDescription,
   TryItOut,
+  EventTriggerIllustration,
 } from '@hasura/shared/ui';
 import { dataRoutes } from '@hasura/shared/utils';
 import { EVENTS_SERVICE_HEADING, EVENT_TRIGGER } from '@hasura/shared/types';
 import { useNavigate } from 'react-router';
 import { useDocumentTitle } from '@hasura/shared/hooks';
 import { Flex, Heading } from '@radix-ui/themes';
-import { useAppContext } from '@hasura/shared/context';
 
 const EventTriggerLanding: React.FC = () => {
   useDocumentTitle(
     dataRoutes.getReactHelmetTitle(EVENT_TRIGGER, EVENTS_SERVICE_HEADING),
   );
   const navigate = useNavigate();
-  const { envVars } = useAppContext();
 
   const queryDefinition = `mutation {
 insert_user(objects: [{name: "testuser"}] ){
@@ -30,8 +29,8 @@ insert_user(objects: [{name: "testuser"}] ){
       <div>
         <TopicDescription
           title={`What are ${EVENT_TRIGGER}s?`}
-          imgUrl={`${envVars.assetsPath}/common/img/event-trigger.png`}
           imgAlt={`${EVENT_TRIGGER}s`}
+          imgElement={<EventTriggerIllustration className="w-200" />}
           description={`An ${EVENT_TRIGGER} atomically captures events (insert, update, delete) on a specified table and then reliably calls a HTTP webhook to run some custom business logic.`}
           learnMoreHref="https://hasura.io/docs/latest/graphql/core/event-triggers/index.html"
         />

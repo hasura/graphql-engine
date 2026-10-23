@@ -1,7 +1,7 @@
 import { useMetadata } from '@hasura/metadata/api';
 import React from 'react';
 import { Flex, Heading } from '@radix-ui/themes';
-import DbConnectSVG from '../graphics/database-connect.svg';
+import { DatabaseConnectIllustration } from './DatabaseConnectIllustration';
 import { Separator, Text } from '@hasura/shared/ui';
 
 export const ConnectDatabaseWrapper: React.FC<{
@@ -34,11 +34,7 @@ export const ConnectDatabaseWrapper: React.FC<{
       <Separator size="4" className="mb-6" />
       <div className="max-w-3xl py-4 w-full">
         <Flex direction="column">
-          <img
-            src={DbConnectSVG}
-            className={`mb-4 w-full`}
-            alt="Database Connection Diagram"
-          />
+          <DatabaseConnectIllustration className="mb-4 w-full" />
           {children}
         </Flex>
       </div>

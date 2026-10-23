@@ -18,9 +18,14 @@ export const PrometheusSettings: React.FC<Record<string, never>> = () => {
   const eeLiteAccess = useEELiteAccess();
   const { data: configData, isLoading } = useServerConfig();
 
-  if (eeLiteAccess.access === 'forbidden') {
-    return null;
-  }
+  const isFeatureForbidden =
+    eeLiteAccess.consoleType !== 'pro' &&
+    !(
+      eeLiteAccess.consoleType === 'pro-lite' &&
+      eeLiteAccess.access === 'forbidden'
+    );
+
+  if (isFeatureForbidden) return null;
 
   const prometheusUrlExtract = extractPrometheusUrl(endpoints.prometheusUrl);
   return (

@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { getKeyFromLS, modifyKey } from './localStorage';
 import { parseQueryString } from '../../helpers/parseQueryString';
 import { Location } from 'react-router';
-import { requestJson } from '@hasura/shared/utils';
+import { requestJson, stripTrailingSlash } from '@hasura/shared/utils';
 import type { Privilege } from '@hasura/console-legacy-ce';
 import { EnterpriseAuthState } from './types';
 import {
@@ -123,12 +123,14 @@ export const getHasuraSsoIdentityProvider = (envVars: EnvVars) => {
     return null;
   }
 
+  const oauthUrl = stripTrailingSlash(envVars.hasuraOAuthUrl ?? '');
+
   return {
     client_id: envVars.consoleId,
     name: 'Hasura Cloud Login',
     scope: HASURA_OAUTH_SCOPES,
-    authorization_url: envVars.hasuraOAuthUrl + '/oauth2/auth',
-    request_token_url: envVars.hasuraOAuthUrl + RELATIVE_OAUTH_TOKEN_URL,
+    authorization_url: oauthUrl + '/oauth2/auth',
+    request_token_url: oauthUrl + RELATIVE_OAUTH_TOKEN_URL,
   };
 };
 
