@@ -244,6 +244,9 @@ updateJwkCtx ::
   m ()
 updateJwkCtx contextAdvice authMode httpManager logger = do
   case authMode of
+    -- JWT-only mode still needs initial JWK loading and subsequent refreshes.
+    -- Disabling admin-secret authentication must not disable the JWK poller.
+    AMJWT jwtCtxs _ -> for_ jwtCtxs updateJwkFromUrl_
     AMAdminSecretAndJWT _ jwtCtxs _ -> for_ jwtCtxs updateJwkFromUrl_
     _ -> pure ()
   where
