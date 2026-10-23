@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { FaPlusCircle } from 'react-icons/fa';
 
-import { Button } from '@hasura/shared/ui';
+import { Button, Text } from '@hasura/shared/ui';
 
 import { QueryCollectionRenameDialog } from './QueryCollectionRenameDialog';
 import { QueryCollectionHeaderMenu } from './QueryCollectionHeaderMenu';
 import { QueryCollectionOperationAdd } from '../QueryCollectionOperationDialog/QueryCollectionOperationAdd';
 import type { QueryCollection } from '@hasura/shared/types';
-import { Flex } from '@radix-ui/themes';
+import { Flex, Heading } from '@radix-ui/themes';
 
 interface QueryCollectionHeaderProps {
   queryCollection: QueryCollection;
@@ -44,11 +44,11 @@ export const QueryCollectionHeader: React.FC<QueryCollectionHeaderProps> = (
       )}
       <Flex align="center" className="mb-2">
         <div>
-          <h1 className="text-xl font-semibold">{queryCollection.name}</h1>
-          <p className="text-muted m-0">
+          <Heading size="4">{queryCollection.name}</Heading>
+          <Text as="p" className="text-muted m-0">
             Add queries to the collection to create a safe list of operations
             which can be run against your GraphQL API.
-          </p>
+          </Text>
         </div>
         <div className="relative ml-auto mr-2">
           <QueryCollectionHeaderMenu

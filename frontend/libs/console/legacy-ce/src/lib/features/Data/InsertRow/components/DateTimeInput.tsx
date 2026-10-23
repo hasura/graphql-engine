@@ -9,7 +9,7 @@ const CustomPickerContainer: React.FC<{
   className: string;
   children?: React.ReactNode;
 }> = ({ className, children }) => (
-  <div className="absolute top-10 left-0 z-50 min-w-[300px]">
+  <div className="absolute top-10 left-0 z-50 min-w-75">
     <CalendarContainer className={className}>
       <div style={{ position: 'relative' }}>{children}</div>
     </CalendarContainer>

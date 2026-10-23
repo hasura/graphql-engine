@@ -6,12 +6,14 @@ import { Code, Flex, Heading } from '@radix-ui/themes';
 import { LearnMoreLink, Text } from '@hasura/shared/ui';
 
 export const MultipleJWTSecretsPage = () => {
-  const { access } = useEELiteAccess();
-  const isFeatureForbidden = access === 'forbidden';
-
-  const isFeatureActive = access === 'active';
+  const { access, consoleType } = useEELiteAccess();
+  const isFeatureForbidden =
+    consoleType === 'oss' ||
+    (consoleType === 'pro-lite' && access === 'forbidden');
 
   if (isFeatureForbidden) return null;
+
+  const isFeatureActive = consoleType !== 'pro-lite' || access === 'active';
 
   return (
     <Flex className="max-w-(--breakpoint-lg) p-4">
@@ -21,13 +23,15 @@ export const MultipleJWTSecretsPage = () => {
           <Text>
             Enable access to your Hasura instance using multiple JSON web token
             secrets
-          </Text>
+          </Text>{' '}
           <LearnMoreLink
             href="https://hasura.io/docs/latest/security/multiple-jwt-secrets/"
             text="(Know More)"
           />
         </div>
-        <MultipleJWTSecretsSvg />
+        <div className="mb-4">
+          <MultipleJWTSecretsSvg />
+        </div>
         {isFeatureActive ? (
           <p className="mt-4">
             <Text weight="bold">Setup Multiple JWT Secrets</Text>

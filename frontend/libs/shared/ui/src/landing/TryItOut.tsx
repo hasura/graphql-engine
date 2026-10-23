@@ -5,11 +5,11 @@ import styles from './RemoteSchema.module.scss';
 import glitch from './images/glitch.png';
 import googleCloud from './images/google_cloud.svg';
 import MicrosoftAzure from './images/Microsoft_Azure_Logo.svg';
-import AWS from './images/AWS.png';
 import { Button, Card, Link, Separator, Text } from '../components';
 import { Flex, Strong } from '@radix-ui/themes';
 import { FaExternalLinkAlt } from 'react-icons/fa';
 import { BsCaretRightFill } from 'react-icons/bs';
+import { AwsLogo } from './logo/AwsLogo';
 
 type Props = {
   title: string;
@@ -119,11 +119,7 @@ export const TryItOut = ({
         >
           <Card className={styles.boxSmall}>
             <div className={styles.logoIcon}>
-              <img
-                className={'img-responsive ' + styles.imgAws}
-                src={AWS}
-                alt={'AWS'}
-              />
+              <AwsLogo className={'inline-block ' + styles.imgAws} />
             </div>
           </Card>
         </a>
@@ -134,7 +130,9 @@ export const TryItOut = ({
           rel="noopener noreferrer"
           color="gray"
         >
-          <Strong>And many more</Strong> <BsCaretRightFill />
+          <Flex align="center" gap="1">
+            <Strong>And many more</Strong> <BsCaretRightFill />
+          </Flex>
         </Link>
       </Flex>
     </div>
