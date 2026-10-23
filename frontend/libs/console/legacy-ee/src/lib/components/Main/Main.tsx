@@ -21,7 +21,7 @@ import { moduleName } from '../Services/Metrics/constants';
 import { shouldRedirectToMetadataStatus } from './metadataStatusRedirect';
 import { useAppContext } from '@hasura/shared/context';
 import { CLI_CONSOLE_MODE, METADATA_STATUS_PATH } from '@hasura/shared/types';
-import useEnterpriseAuth from '../../shared/auth/useEnterpriseAuth';
+import { useAuthContext } from '../../shared/auth/context';
 import { useInconsistentMetadata, useMetadata } from '@hasura/metadata/api';
 import { Badge, DropdownMenu, hasuraToast } from '@hasura/shared/ui';
 import { InitializeTelemetry } from '@hasura/shared/analytics';
@@ -30,7 +30,7 @@ import { CiLogout } from 'react-icons/ci';
 const Main = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout, privileges } = useEnterpriseAuth();
+  const { logout, privileges } = useAuthContext();
   const { refreshCatalogState } = useCatalogState();
   const { serverVersion, envVars } = useAppContext();
   const { consoleState } = useTelemetryStore();
