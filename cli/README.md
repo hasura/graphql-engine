@@ -32,6 +32,11 @@
 go get github.com/hasura/graphql-engine/cli/cmd/hasura
 ```
 
+### Download using asdf
+* [asdf-vm](https://asdf-vm.com) is a tool version manager that allows your team to store and use the same version for each project or very sub-directories if you want to.
+* [Install] asdf (required only once) and then follow instructions at https://github.com/gurukulkarni/asdf-hasura#install
+* Create a `.tool-versions` file in you repo where you would like to use hasura-cli and add `hasura-cli 2.29.0` or which ever version you want to use and commit the file
+
 ### Build from source
 
 ```bash
