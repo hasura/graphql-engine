@@ -43,7 +43,10 @@ export const SortRows = ({
     }
   }, [initialSorts, update]);
 
-  const columnOptions = columns
+  // See FilterRows: `columns` is the shared introspection cache array, so it
+  // must not be sorted in place or the browse grid's column order follows the
+  // alphabetical order of this dropdown.
+  const columnOptions = [...columns]
     .sort((a, b) => (a.name > b.name ? 1 : -1))
     .map((column) => {
       return {

@@ -53,7 +53,12 @@ export const FilterRows = ({
     onRemove?.();
   };
 
-  const columnOptions: ReactSelectOptionType[] = columns
+  // Copy before sorting: `columns` is the array held in the introspection
+  // query cache, and `Array.prototype.sort` sorts in place. Sorting it here
+  // used to leave the cached columns alphabetically ordered, so the next
+  // browse query selected (and therefore displayed) them alphabetically
+  // instead of in table order.
+  const columnOptions: ReactSelectOptionType[] = [...columns]
     .sort((a, b) => (a.name > b.name ? 1 : -1))
     .map((column) => {
       return {
