@@ -16,8 +16,10 @@ const operators = [
 
 const Harness = ({
   initialFilters,
+  tableColumns = columns,
 }: {
   initialFilters?: { column: string; operator: string; value: string }[];
+  tableColumns?: TableColumn[];
 }) => {
   const { Form } = useConsoleForm({
     schema: z.object({ filters: z.array(z.any()).optional() }),
@@ -32,7 +34,7 @@ const Harness = ({
     <Form onSubmit={() => undefined}>
       <FilterRows
         name="filters"
-        columns={columns}
+        columns={tableColumns}
         operators={operators}
         initialFilters={initialFilters}
       />
@@ -61,5 +63,26 @@ describe('FilterRows initial filters effect', () => {
     ).not.toThrow();
 
     expect(screen.getByTestId('filters-filter-rows')).toBeInTheDocument();
+  });
+});
+
+describe('FilterRows column options', () => {
+  it('does not mutate the columns array it is given', () => {
+    const tableColumns = [
+      { name: 'Zeta', dataType: 'string', consoleDataType: 'string' },
+      { name: 'Alpha', dataType: 'string', consoleDataType: 'string' },
+      { name: 'Mike', dataType: 'string', consoleDataType: 'string' },
+    ] as unknown as TableColumn[];
+
+    render(<Harness tableColumns={tableColumns} />);
+
+    // The dropdown lists the columns alphabetically, but the caller's array
+    // must keep its introspection (table) order: it is the array held in the
+    // introspection query cache and reused for the browse-rows selection.
+    expect(tableColumns.map((column) => column.name)).toEqual([
+      'Zeta',
+      'Alpha',
+      'Mike',
+    ]);
   });
 });
