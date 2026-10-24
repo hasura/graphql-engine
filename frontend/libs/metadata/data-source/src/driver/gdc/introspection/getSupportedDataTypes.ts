@@ -1,5 +1,6 @@
 import { GetSupportedDataTypesProps, TableColumnTypeMap } from '../../types';
 import { getDriverCapabilities } from './getDriverCapabilities';
+import { getScalarConsoleDataType } from './utils';
 
 const getDefaultDataTypes = (): TableColumnTypeMap => {
   return {
@@ -29,21 +30,7 @@ export async function getSupportedDataTypes(
   }
 
   Object.entries(capabilities.scalar_types).forEach(([key, cap]) => {
-    switch (cap.graphql_type) {
-      case 'Boolean':
-        result.boolean.push(key);
-        break;
-      case 'Float':
-        result.float.push(key);
-        break;
-      case 'ID':
-      case 'String':
-        result.string.push(key);
-        break;
-      case 'Int':
-        result.integer.push(key);
-        break;
-    }
+    result[getScalarConsoleDataType(key, cap)].push(key);
   });
 
   return result;

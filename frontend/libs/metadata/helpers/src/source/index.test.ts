@@ -31,14 +31,15 @@ describe('isPostgresFlavour', () => {
 });
 
 describe('getDriverPrefix', () => {
-  it('returns "pg" for any postgres-flavoured driver', () => {
+  it('returns "pg" for postgres and alloy', () => {
     expect(getDriverPrefix('postgres')).toBe('pg');
-    expect(getDriverPrefix('citus')).toBe('pg');
-    expect(getDriverPrefix('cockroach')).toBe('pg');
     expect(getDriverPrefix('alloy')).toBe('pg');
   });
 
-  it('returns the driver name itself for non-postgres drivers', () => {
+  it('returns the driver name itself for every other driver', () => {
+    // citus and cockroach have their own metadata API commands
+    expect(getDriverPrefix('citus')).toBe('citus');
+    expect(getDriverPrefix('cockroach')).toBe('cockroach');
     expect(getDriverPrefix('mssql')).toBe('mssql');
     expect(getDriverPrefix('bigquery')).toBe('bigquery');
   });

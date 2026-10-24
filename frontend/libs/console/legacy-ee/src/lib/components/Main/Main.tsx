@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import { FaChartLine, FaServer } from 'react-icons/fa';
 import {
@@ -63,17 +63,28 @@ const Main = () => {
   // was truthy and it redirected unconditionally, then never re-evaluated. Guard
   // on the loading/defined state and depend on it so it reacts to the resolved
   // (or re-fetched) result. Access policy (admin/admin-collaborator) is preserved.
+  //
+  // `navigate` changes identity on every location change (non-data router), so
+  // read it from a ref: the redirect must only fire when the metadata
+  // consistency changes, not on every navigation, or the console is locked on
+  // the metadata status page.
+  const navigateRef = useRef(navigate);
+  useEffect(() => {
+    navigateRef.current = navigate;
+  });
+  const canAccessData = hasDataAccess(privileges);
+
   useEffect(() => {
     if (
       shouldRedirectToMetadataStatus({
-        hasDataAccess: hasDataAccess(privileges),
+        hasDataAccess: canAccessData,
         isLoading: inconsistentLoading,
         inconsistentMetadata,
       })
     ) {
-      navigate(METADATA_STATUS_PATH);
+      navigateRef.current(METADATA_STATUS_PATH);
     }
-  }, [inconsistentLoading, inconsistentMetadata, privileges, navigate]);
+  }, [inconsistentLoading, inconsistentMetadata, canAccessData]);
 
   const handleBodyClick = (e) => {
     const heartDropDownOpen = document.querySelectorAll(

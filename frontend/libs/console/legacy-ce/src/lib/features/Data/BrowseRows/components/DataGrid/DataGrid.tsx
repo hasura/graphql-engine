@@ -8,11 +8,18 @@ import {
   TableRow,
   useDeleteRows,
   useExportRows,
+  useColumnOperators,
+  useEnumColumnValues,
   useRows,
   useTableColumns,
 } from '@hasura/metadata/data-source';
+import uniqBy from 'lodash/uniqBy';
 import { Source, Table, WhereClause, OrderBy } from '@hasura/shared/types';
-import { IndicatorCard, SkeletonList } from '@hasura/shared/ui';
+import {
+  ErrorCard,
+  SkeletonList,
+  useDestructiveConfirm,
+} from '@hasura/shared/ui';
 import { ColumnSort, RowSelectionState } from '@tanstack/react-table';
 import React, { useEffect, useState } from 'react';
 import {
@@ -123,12 +130,22 @@ export const DataGrid = (props: DataGridProps) => {
     table,
     source,
   });
+  // filters only offer the operators the column type supports
+  const { data: columnOperators } = useColumnOperators({ source, table });
+  const { data: enumColumnValues } = useEnumColumnValues({ source, table });
+  const allOperators = uniqBy(
+    [
+      ...(tableColumnQueryResult?.supportedOperators ?? []),
+      ...Object.values(columnOperators ?? {}).flat(),
+    ],
+    (operator) => operator.value,
+  );
 
+  // rows are keyed by the table column names
   const primaryKeys =
     tableColumnQueryResult?.columns
       .filter((column) => column.isPrimaryKey)
-      .map((column) => column.graphQLProperties?.name)
-      .filter((columnName) => columnName !== undefined) ?? [];
+      .map((column) => column.name) ?? [];
 
   /**
    * React query hook wrapper to get the rows for
@@ -138,6 +155,7 @@ export const DataGrid = (props: DataGridProps) => {
     data: rows,
     isLoading,
     isError,
+    error: rowsError,
     refetch: refetchRows,
   } = useRows({
     table,
@@ -146,7 +164,8 @@ export const DataGrid = (props: DataGridProps) => {
     columns: tableColumnQueryResult?.columns,
   });
 
-  const { mutate: deleteRow, isPending: isDeleting } = useDeleteRows();
+  const { mutateAsync: deleteRow, isPending: isDeleting } = useDeleteRows();
+  const destructiveConfirm = useDestructiveConfirm();
 
   const { data: relationships, isFetching } = useListAllDatabaseRelationships({
     table,
@@ -301,56 +320,62 @@ export const DataGrid = (props: DataGridProps) => {
     });
   };
 
-  const handleDeleteRow = (row: Record<string, any>) => {
+  /**
+   * Runs a delete once confirmed. The mutation already notifies the error, so
+   * a failure only keeps the rows.
+   */
+  const deleteAfterConfirm = (
+    resourceName: string,
+    where: Record<string, unknown>,
+    onDeleted?: () => void,
+  ) => {
     const pks = (tableColumnQueryResult?.columns ?? []).filter(
       (col) => col.isPrimaryKey,
     );
 
-    deleteRow(
-      {
-        source,
-        table,
-        columns: pks,
-        where: pks.reduce(
-          (acc, col) => {
-            acc[col.name] = row[col.name];
-            return acc;
-          },
-          {} as Record<string, unknown>,
-        ),
+    return destructiveConfirm({
+      resourceName,
+      resourceType: 'Row',
+      destroyTerm: 'delete',
+      appendTerm: 'This action cannot be undone.',
+      onConfirm: async () => {
+        try {
+          await deleteRow({ source, table, columns: pks, where });
+        } catch {
+          return false;
+        }
+        refetchRows();
+        onDeleted?.();
+        return true;
       },
-      {
-        onSuccess: () => {
-          refetchRows();
-        },
-      },
-    );
+    });
+  };
+
+  const handleDeleteRow = (row: Record<string, any>) => {
+    const pkNames = (tableColumnQueryResult?.columns ?? [])
+      .filter((col) => col.isPrimaryKey)
+      .map((col) => col.name);
+    const where = Object.fromEntries(pkNames.map((name) => [name, row[name]]));
+
+    // e.g. `id: 1, code: "a"`
+    const resourceName = pkNames
+      .map((name) => `${name}: ${JSON.stringify(row[name])}`)
+      .join(', ');
+
+    return deleteAfterConfirm(resourceName, where);
   };
 
   const handleDeleteRows = () => {
-    const pks = (tableColumnQueryResult?.columns ?? []).filter(
-      (col) => col.isPrimaryKey,
-    );
-
     const whereClause = adaptSelectedRowIdsToWhereClause({
       rowsId: selectedRows,
       rows,
       primaryKeys,
     });
 
-    deleteRow(
-      {
-        source,
-        table,
-        columns: pks,
-        where: { _or: whereClause },
-      },
-      {
-        onSuccess: () => {
-          refetchRows();
-          setSelectedRows({});
-        },
-      },
+    return deleteAfterConfirm(
+      `${whereClause.length} selected ${whereClause.length === 1 ? 'row' : 'rows'}`,
+      { _or: whereClause },
+      () => setSelectedRows({}),
     );
   };
 
@@ -378,7 +403,7 @@ export const DataGrid = (props: DataGridProps) => {
           onRefreshQueryOptions: refreshAllOptions,
           orderByClauses,
           whereClauses,
-          supportedOperators: tableColumnQueryResult?.supportedOperators ?? [],
+          supportedOperators: allOperators,
           removeWhereClause: (id) => {
             const newWhereClauses = whereClauses.filter((_, i) => i !== id);
             setWhereClauses(whereClauses.filter((_, i) => i !== id));
@@ -413,13 +438,11 @@ export const DataGrid = (props: DataGridProps) => {
         </div>
       ) : isError ? (
         <div className="my-4">
-          <IndicatorCard
-            status="negative"
-            headline="Something went wrong"
-            showIcon
-          >
-            Unable to fetch GraphQL response for table
-          </IndicatorCard>
+          <ErrorCard
+            headline="Unable to fetch rows"
+            error={rowsError}
+            collapsible={false}
+          />
         </div>
       ) : (
         <ReactTableWrapper
@@ -441,6 +464,8 @@ export const DataGrid = (props: DataGridProps) => {
           selectedRows={selectedRows}
           onRowsSelect={setSelectedRows}
           onRowDelete={handleDeleteRow}
+          // reload the rows to show the saved row
+          onRowEdited={() => refetchRows()}
           isRowsSelectionEnabled={primaryKeys.length > 0}
           tableColumns={tableColumnQueryResult?.columns ?? []}
           disabled={isDeleting}
@@ -453,6 +478,8 @@ export const DataGrid = (props: DataGridProps) => {
             setQueryDialogVisibility(false);
           }}
           tableColumns={tableColumnQueryResult}
+          columnOperators={columnOperators}
+          enumColumnValues={enumColumnValues}
           onSubmit={(data) => {
             const { filters, sorts } = data;
             setWhereClauses(

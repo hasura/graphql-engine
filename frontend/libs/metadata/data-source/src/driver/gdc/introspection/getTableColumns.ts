@@ -1,11 +1,39 @@
 import { isObjectType } from 'graphql';
 import { GDCTable } from '@hasura/shared/types';
 import { GetTableColumnsProps, TableColumn } from '../../types';
-import { adaptAgentDataType } from './utils';
+import {
+  adaptAgentDataType,
+  getScalarConsoleDataType,
+  ScalarTypeCapabilities,
+} from './utils';
 import { GetTableInfoResponse } from './types';
-import { runMetadataQuery } from '@hasura/metadata/api';
+import { exportMetadata, runMetadataQuery } from '@hasura/metadata/api';
 import { getTableDisplayName } from '@hasura/shared/utils';
 import { introspectTableScalarTypes } from '../../common/utils';
+import { getDriverCapabilities } from './getDriverCapabilities';
+
+/**
+ * Returns the capabilities of the scalar types of the source's agent, which
+ * tell the GraphQL type of each column type.
+ */
+const getScalarTypesCapabilities = async (
+  { dataSourceName, endpoints, fetchJson }: GetTableColumnsProps,
+  sourceKind?: string,
+): Promise<Record<string, ScalarTypeCapabilities>> => {
+  const driver =
+    sourceKind ??
+    (
+      await exportMetadata({ fetchJson, url: endpoints.metadata })
+    ).metadata.sources.find(({ name }) => name === dataSourceName)?.kind;
+  if (!driver) return {};
+
+  const capabilities = await getDriverCapabilities({
+    driver,
+    endpoints,
+    fetchJson,
+  });
+  return capabilities?.scalar_types ?? {};
+};
 
 export const getTableInfo = async (props: GetTableColumnsProps) => {
   const { fetchJson, dataSourceName, table, endpoints } = props;
@@ -25,16 +53,19 @@ export const getTableInfo = async (props: GetTableColumnsProps) => {
 export const getTableColumnInfos = async (
   props: GetTableColumnsProps,
 ): Promise<TableColumn[]> => {
-  const tableInfo = await getTableInfo(props);
+  const [tableInfo, scalarTypesCapabilities] = await Promise.all([
+    getTableInfo(props),
+    getScalarTypesCapabilities(props),
+  ]);
 
   return tableInfo.columns.map((column) => {
     return {
       name: column.name,
       dataType: adaptAgentDataType(column.type),
-      /**
-        Will be updated once GDC supports mutations
-      */
-      consoleDataType: 'string',
+      consoleDataType: getScalarConsoleDataType(
+        column.type,
+        scalarTypesCapabilities[column.type],
+      ),
       nullable: column.nullable,
       value_generated: column.value_generated,
     };
@@ -47,11 +78,15 @@ export const getTableColumns = async (
   try {
     const tableInfo = await getTableInfo(props);
 
-    const { scalarTypes, schema, metadataTable } =
+    const { scalarTypes, schema, metadataSource, metadataTable } =
       await introspectTableScalarTypes({
         ...props,
         defaultQueryRoot: (props.table as GDCTable).join('_'),
       });
+    const scalarTypesCapabilities = await getScalarTypesCapabilities(
+      props,
+      metadataSource?.kind,
+    );
 
     const primaryKeys = tableInfo?.primary_key ? tableInfo.primary_key : [];
     const tableName = getTableDisplayName(tableInfo.name);
@@ -73,10 +108,10 @@ export const getTableColumns = async (
         return {
           name: column.name,
           dataType: adaptAgentDataType(column.type),
-          /**
-          Will be updated once GDC supports mutations
-        */
-          consoleDataType: 'string',
+          consoleDataType: getScalarConsoleDataType(
+            column.type,
+            scalarTypesCapabilities[column.type],
+          ),
           nullable: column.nullable,
           isPrimaryKey: primaryKeys.includes(column.name),
           graphQLProperties: {

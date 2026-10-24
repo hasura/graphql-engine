@@ -103,7 +103,7 @@ export const IndicatorCard = ({
         </Callout.Icon>
       ) : null}
       <Callout.Text size={size}>
-        <Flex justify="between">
+        <Flex justify="between" gap="4">
           {collapsible ? collapsibleContent() : nonCollapsibleContent()}
           {onDismiss ? (
             <IconButton {...calloutProps} size={size} variant="ghost">

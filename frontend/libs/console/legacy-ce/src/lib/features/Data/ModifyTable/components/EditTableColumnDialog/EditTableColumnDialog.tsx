@@ -170,8 +170,10 @@ export const EditTableColumnDialog = ({
                 <ReactSelectField
                   name="type"
                   label="Type"
-                  placeholder="Select a type"
+                  placeholder="Select or type a type"
                   options={typeOptions}
+                  // custom types, e.g. `text[]` or a domain, can be typed
+                  creatable
                   selectProps={{
                     ...REACT_SELECT_FILTER_PROPS,
                     menuPortalTarget: getDialogPortalTarget(),

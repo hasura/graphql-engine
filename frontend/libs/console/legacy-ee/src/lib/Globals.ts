@@ -29,8 +29,7 @@ export const getHasuraMetricsUrl = (envVars: EnvVars): string => {
     envVars.consoleMode !== 'server' ||
     !envVars.consoleType ||
     envVars.consoleType === 'oss' ||
-    envVars.consoleType === 'cloud' ||
-    !envVars.projectID
+    envVars.consoleType === 'cloud'
   ) {
     return '';
   }

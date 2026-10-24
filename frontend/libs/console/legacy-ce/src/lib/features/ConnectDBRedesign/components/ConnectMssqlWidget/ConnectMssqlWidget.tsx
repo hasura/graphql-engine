@@ -10,7 +10,6 @@ import {
   Button,
   Collapsible,
   Tabs,
-  DisplayToastErrorMessage,
   Text,
 } from '@hasura/shared/ui';
 import { useMetadata } from '@hasura/metadata/api';
@@ -35,23 +34,7 @@ export const ConnectMssqlWidget = (props: ConnectMssqlWidgetProps) => {
   );
 
   const { createConnection, editConnection, isPending } =
-    useManageDatabaseConnection({
-      onSuccess: () => {
-        hasuraToast({
-          type: 'success',
-          title: isEditMode
-            ? 'Database updated successful!'
-            : 'Database added successfully!',
-        });
-      },
-      onError: (err) => {
-        hasuraToast({
-          type: 'error',
-          title: err.name,
-          children: <DisplayToastErrorMessage message={err.message} />,
-        });
-      },
-    });
+    useManageDatabaseConnection({});
 
   const handleSubmit = (formValues: MssqlConnectionSchema) => {
     const payload = generateMssqlRequestPayload({

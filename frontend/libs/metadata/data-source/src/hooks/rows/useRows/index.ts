@@ -6,7 +6,7 @@ import { useAuthFetchJson } from '@hasura/shared/hooks';
 import { useAppContext } from '@hasura/shared/context';
 import { getDatabaseMethods, TableColumn, TableRow } from '../../../driver';
 
-const DEFAULT_STALE_TIME = 5000;
+const DEFAULT_STALE_TIME = 1000;
 
 export type UseRowsPropType = {
   source: QualifiedDataSource | undefined;
@@ -44,6 +44,7 @@ export function useRows<T = TableRow[]>(
   return useQuery<TableRow[], unknown, T>({
     refetchOnWindowFocus: false,
     staleTime: DEFAULT_STALE_TIME,
+    gcTime: DEFAULT_STALE_TIME,
     ...options,
     queryKey,
     queryFn: () => {

@@ -1,6 +1,6 @@
 import { Badge, IconButton, Text } from '@hasura/shared/ui';
 import React from 'react';
-import { FaEdit, FaKey, FaRegComment, FaTrash } from 'react-icons/fa';
+import { FaEdit, FaKey, FaTrash } from 'react-icons/fa';
 import { ModifyTableColumn } from '../types';
 import { columnDataType } from '@hasura/metadata/data-source';
 import { Flex } from '@radix-ui/themes';
@@ -12,61 +12,64 @@ export const TableColumnDescription: React.FC<{
   onRemove?: (column: ModifyTableColumn) => void;
 }> = ({ column, onEdit, onRemove }) => {
   return (
-    <Flex gap="2" align="center" className="mb-2">
-      <IconButton
-        color="gray"
-        variant="outline"
-        title="Edit"
-        size="1"
-        icon={FaEdit}
-        onClick={() => {
-          onEdit(column);
-        }}
-      />
-      {onRemove && (
-        <IconButton
-          type="button"
-          color="red"
-          variant="outline"
-          title="Remove"
-          size="1"
-          aria-label={`Remove column ${column.name}`}
-          onClick={() => onRemove(column)}
-          icon={FaTrash}
-        />
-      )}
-
-      <div>
-        <Text weight="bold">
+    <tr>
+      <td className="align-top py-2">
+        <Flex gap="1" align="start">
+          <IconButton
+            color="gray"
+            variant="outline"
+            title="Edit"
+            size="1"
+            icon={FaEdit}
+            onClick={() => {
+              onEdit(column);
+            }}
+          />
+          {onRemove && (
+            <IconButton
+              type="button"
+              color="red"
+              variant="outline"
+              title="Remove"
+              size="1"
+              aria-label={`Remove column ${column.name}`}
+              onClick={() => onRemove(column)}
+              icon={FaTrash}
+            />
+          )}
+        </Flex>
+      </td>
+      <td className="pl-2 pr-4 min-w-50 py-2">
+        <Text weight="bold" as="div">
           {column.name}
           {column.config?.custom_name && (
             <>
               <span className="mx-2">→</span>
-              <span className="font-normal">{column.config.custom_name}</span>
+              <span>{column.config.custom_name}</span>
             </>
           )}
         </Text>
         {!!column.config?.comment && (
-          <Text className="italic">
-            <FaRegComment className="opacity-50" /> {column.config?.comment}
+          <Text className="italic" size="1" as="div">
+            {column.config?.comment}
           </Text>
         )}
-      </div>
-      <div>
-        <Badge color="gray">
-          <span data-testid={`${column.name}-ui-data-type`}>
+      </td>
+      <td className="align-top py-2">
+        <Flex className="h-full" align="start" gap="2">
+          <Badge color="gray" data-testid={`${column.name}-ui-data-type`}>
             {columnDataType(column.dataType || 'Unknown')}
-          </span>
-        </Badge>
-      </div>
+          </Badge>
 
-      {column.nullable && <Badge color="yellow">nullable</Badge>}
+          {column.nullable && <Badge color="yellow">nullable</Badge>}
 
-      {column.isPrimaryKey && (
-        <Badge color="indigo">
-          <FaKey className="mr-2 h-3" /> Primary Key
-        </Badge>
-      )}
-    </Flex>
+          {column.isPrimaryKey && (
+            <Badge color="indigo">
+              <FaKey className="mr-2 h-3" /> Primary Key
+            </Badge>
+          )}
+        </Flex>
+      </td>
+    </tr>
   );
 };

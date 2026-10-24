@@ -17,10 +17,6 @@ class ResizeObserverStub {
 globalThis.ResizeObserver =
   globalThis.ResizeObserver ?? (ResizeObserverStub as never);
 
-vi.mock('@hasura/metadata/data-source', () => ({
-  useSupportedDataTypes: () => ({ data: undefined }),
-}));
-
 const setup = (props: Partial<InsertRowFormProps> = {}) =>
   render(
     <Theme>
@@ -29,7 +25,6 @@ const setup = (props: Partial<InsertRowFormProps> = {}) =>
         isInserting={false}
         isLoading={false}
         onInsertRow={vi.fn()}
-        driver="postgres"
         {...props}
       />
     </Theme>,

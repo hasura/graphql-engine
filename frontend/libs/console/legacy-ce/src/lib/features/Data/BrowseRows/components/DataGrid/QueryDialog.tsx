@@ -1,4 +1,4 @@
-import { UseTableColumnsResult } from '@hasura/metadata/data-source';
+import { Operator, UseTableColumnsResult } from '@hasura/metadata/data-source';
 import {
   Dialog,
   useConsoleForm,
@@ -9,6 +9,10 @@ import { FieldValues, UseFormTrigger } from 'react-hook-form';
 import { z } from 'zod';
 import { RiPlayFill } from 'react-icons/ri';
 import { FilterRows } from '../RunQuery/Filter';
+import {
+  getFilterValueKind,
+  toFilterValue,
+} from '../RunQuery/Filter/FilterRow';
 import { SortRows } from '../RunQuery/Sort';
 import { OrderBy } from '@hasura/shared/types';
 import {
@@ -34,6 +38,10 @@ interface QueryDialogProps {
   }[];
   sorts?: OrderBy[];
   tableColumns: UseTableColumnsResult | undefined;
+  /** the filter operators each column supports, by column name */
+  columnOperators?: Record<string, Operator[]>;
+  /** the allowed values of the columns that reference an enum table */
+  enumColumnValues?: Record<string, string[]>;
 }
 
 const schema = z.object({
@@ -60,6 +68,8 @@ export const QueryDialog = ({
   filters: existingFilters,
   sorts: existingSorts,
   tableColumns,
+  columnOperators,
+  enumColumnValues,
 }: QueryDialogProps) => {
   const {
     methods: { trigger, watch },
@@ -85,6 +95,21 @@ export const QueryDialog = ({
     if (await triggerValidation()) {
       onSubmit({
         filters: (filters ?? [])
+          .map((filter) => {
+            // e.g. parse a JSON document, or format a date for the column
+            const column = columns.find((c) => c.name === filter.column);
+            const operator = (
+              columnOperators?.[filter.column] ?? supportedOperators
+            ).find((op) => op.value === filter.operator);
+            const kind = getFilterValueKind(filter.operator, {
+              operator,
+              column,
+            });
+            return {
+              ...filter,
+              value: toFilterValue(filter.value, kind, column),
+            };
+          })
           .filter((f) => !isIgnoredFilter(columns, f as FilterClause))
           .map((f) => transformFilterValues(columns, f as FilterClause)),
         sorts: (sorts as OrderBy[]) ?? [],
@@ -111,6 +136,8 @@ export const QueryDialog = ({
               name="filters"
               columns={columns}
               operators={supportedOperators}
+              columnOperators={columnOperators}
+              enumColumnValues={enumColumnValues}
             />
             <Separator size="4" className="my-4" />
             <SortRows name="sorts" columns={columns} />

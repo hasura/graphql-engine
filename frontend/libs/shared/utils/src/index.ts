@@ -8,6 +8,7 @@ export * from './version';
 export * from './protocol';
 export * from './url';
 export * from './data';
+export * from './postgresArray';
 export * from './export';
 export * from './date';
 export * from './file';

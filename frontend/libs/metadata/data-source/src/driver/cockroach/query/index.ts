@@ -1,1 +1,0 @@
-export { getTableRows } from './getTableRows';

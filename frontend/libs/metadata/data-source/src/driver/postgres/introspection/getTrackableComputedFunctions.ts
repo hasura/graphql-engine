@@ -1,4 +1,4 @@
-import { RunSQLResponse } from '@hasura/shared/types';
+import { PostgresFamilyDriver, RunSQLResponse } from '@hasura/shared/types';
 import { GetTrackableFunctionProps } from '../../types';
 import { runSQL } from '@hasura/metadata/api';
 import { ArgType, TrackableComputedFunction } from '../types';
@@ -54,23 +54,25 @@ const adaptIntrospectedFunctions = (
   }));
 };
 
-export const getTrackableComputedFunctions = async ({
-  dataSourceName,
-  endpoints,
-  fetchJson,
-}: GetTrackableFunctionProps) => {
-  const sqlResult = await runSQL({
-    args: {
-      source: {
-        name: dataSourceName,
-        kind: 'postgres',
-      },
-      sql: functionDefinitionSql,
-      readOnly: true,
-    },
+export const getTrackableComputedFunctionsCurry =
+  (driver: PostgresFamilyDriver) =>
+  async ({
+    dataSourceName,
+    endpoints,
     fetchJson,
-    url: endpoints.queryV2,
-  });
+  }: GetTrackableFunctionProps) => {
+    const sqlResult = await runSQL({
+      args: {
+        source: {
+          name: dataSourceName,
+          kind: driver,
+        },
+        sql: functionDefinitionSql,
+        readOnly: true,
+      },
+      fetchJson,
+      url: endpoints.queryV2,
+    });
 
-  return adaptIntrospectedFunctions(sqlResult);
-};
+    return adaptIntrospectedFunctions(sqlResult);
+  };

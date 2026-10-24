@@ -70,20 +70,9 @@ export const TableRow = React.memo(
         },
         {
           onSuccess: () => {
-            hasuraToast({
-              type: 'success',
-              title: 'Success!',
-              message: 'Object tracked successfully.',
-            });
             reset();
             setShowCustomModal(false);
             onTableTrack?.(table);
-          },
-          onError: (err) => {
-            showErrorNotification({
-              title: 'Unable to perform operation',
-              error: err,
-            });
           },
         },
       );

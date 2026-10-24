@@ -10,6 +10,8 @@ export type SourceItem = {
   table: Table;
   source: string;
   type: SourceItemsTypes;
+  /** why the table, view or function is inconsistent with the database */
+  inconsistency?: string;
   children?: SourceItem[];
 };
 

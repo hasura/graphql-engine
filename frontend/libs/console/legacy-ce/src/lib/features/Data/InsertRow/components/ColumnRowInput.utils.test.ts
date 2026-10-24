@@ -1,65 +1,43 @@
-import { SupportedDriver } from '@hasura/shared/types';
-import { getFormatDateFn } from './ColumnRowInput.utils';
+import { getFormatDateFn, hasTimeZone } from './ColumnRowInput.utils';
 
-describe('postgres format dates', () => {
+describe('hasTimeZone', () => {
   it.each`
     dataType                         | expected
-    ${'datetime'}                    | ${'2022-04-12 12:01:01'}
-    ${'timestamp without time zone'} | ${'2022-04-12 12:01:01'}
-    ${'timestamp with time zone'}    | ${'2022-04-12 12:01:01+00'}
-    ${'timestamp'}                   | ${'2022-04-12 12:01:01+00'}
-    ${'time'}                        | ${'12:01:01'}
-    ${'time without time zone'}      | ${'12:01:01'}
-    ${'time with time zone'}         | ${'12:01:01+00'}
-  `(
-    'Given a "$dataType" path, then returns $expected',
-    ({ dataType, expected }) => {
-      expect(
-        getFormatDateFn(dataType, 'postgres')(new Date('2022-04-12T12:01:01')),
-      ).toBe(expected);
-    },
-  );
+    ${'timestamp with time zone'}    | ${true}
+    ${'timestamptz'}                 | ${true}
+    ${'time with time zone'}         | ${true}
+    ${'timetz'}                      | ${true}
+    ${'datetimeoffset'}              | ${true}
+    ${'timestamp_tz'}                | ${true}
+    ${'timestamp_ltz'}               | ${true}
+    ${'datetime_with_timezone'}      | ${true}
+    ${'time_with_timezone'}          | ${true}
+    ${'timestamp_ntz'}               | ${false}
+    ${'timestamp without time zone'} | ${false}
+    ${'timestamp'}                   | ${false}
+    ${'datetime'}                    | ${false}
+    ${'datetime2'}                   | ${false}
+    ${'time'}                        | ${false}
+  `('$dataType keeps a time zone: $expected', ({ dataType, expected }) => {
+    expect(hasTimeZone(dataType)).toBe(expected);
+  });
 });
 
-describe('mysql gdc format dates', () => {
-  it.each`
-    dataType                         | expected
-    ${'datetime'}                    | ${'2022-04-12 12:01:01'}
-    ${'timestamp without time zone'} | ${'2022-04-12 12:01:01'}
-    ${'timestamp with time zone'}    | ${'2022-04-12 12:01:01+00'}
-    ${'timestamp'}                   | ${'2022-04-12 12:01:01+00'}
-    ${'time'}                        | ${'12:01:01'}
-    ${'time without time zone'}      | ${'12:01:01'}
-    ${'time with time zone'}         | ${'12:01:01+00'}
-  `(
-    'Given a "$dataType" path, then returns $expected',
-    ({ dataType, expected }) => {
-      expect(
-        getFormatDateFn(dataType, 'mysql')(new Date('2022-04-12T12:01:01')),
-      ).toBe(expected);
-    },
-  );
-});
+describe('getFormatDateFn', () => {
+  const date = new Date('2022-04-12T12:01:01');
 
-describe('unknown driver format dates', () => {
   it.each`
-    dataType                         | expected
-    ${'datetime'}                    | ${'2022-04-12 12:01:01'}
-    ${'timestamp without time zone'} | ${'2022-04-12 12:01:01'}
-    ${'timestamp with time zone'}    | ${'2022-04-12 12:01:01+00'}
-    ${'timestamp'}                   | ${'2022-04-12 12:01:01+00'}
-    ${'time'}                        | ${'12:01:01'}
-    ${'time without time zone'}      | ${'12:01:01'}
-    ${'time with time zone'}         | ${'12:01:01+00'}
+    consoleDataType | withTimeZone | expected
+    ${'timestamp'}  | ${false}     | ${'2022-04-12 12:01:01'}
+    ${'timestamp'}  | ${true}      | ${'2022-04-12 12:01:01+00'}
+    ${'time'}       | ${false}     | ${'12:01:01'}
+    ${'time'}       | ${true}      | ${'12:01:01+00'}
   `(
-    'Given a "$dataType" path, then returns $expected',
-    ({ dataType, expected }) => {
-      expect(
-        getFormatDateFn(
-          dataType,
-          'a-brand-new-driver' as SupportedDriver,
-        )(new Date('2022-04-12T12:01:01')),
-      ).toBe(expected);
+    'formats a $consoleDataType (time zone: $withTimeZone) as $expected',
+    ({ consoleDataType, withTimeZone, expected }) => {
+      expect(getFormatDateFn(consoleDataType, withTimeZone)(date)).toBe(
+        expected,
+      );
     },
   );
 });

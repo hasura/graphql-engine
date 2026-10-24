@@ -2,6 +2,7 @@ import { TableRow, TableColumn } from '@hasura/metadata/data-source';
 import { RowSelectionState } from '@tanstack/react-table';
 import { DataGridOptions } from './DataGrid';
 import { WhereClause } from '@hasura/shared/types';
+import { isArrayString, isJsonString } from '@hasura/shared/utils';
 
 export type AdaptSelectedRowIdsToWhereClauseArgs = {
   rowsId: RowSelectionState;
@@ -31,6 +32,34 @@ export const adaptSelectedRowIdsToWhereClause = ({
   return whereClause;
 };
 
+/**
+ * Filters are GraphQL boolean expressions, but links and saved queries from
+ * older consoles use the RQL operators (`$eq`). `$ne` is the only one that
+ * isn't a plain rename.
+ */
+export const fromLegacyOperator = (operator: string) => {
+  if (operator === '$ne') return '_neq';
+  return operator.startsWith('$') ? `_${operator.slice(1)}` : operator;
+};
+
+/** Renames the legacy RQL operators of saved filters, e.g. `$eq` -> `_eq`. */
+export const fromLegacyWhere = (
+  where: DataGridOptions['where'],
+): DataGridOptions['where'] =>
+  where?.map((condition) =>
+    Object.fromEntries(
+      Object.entries(condition).map(([column, comparison]) => [
+        column,
+        Object.fromEntries(
+          Object.entries(comparison).map(([operator, value]) => [
+            fromLegacyOperator(operator),
+            value,
+          ]),
+        ),
+      ]),
+    ),
+  );
+
 export type FilterConditions = ({ filter: string } | { sort: string })[];
 
 export const mapWhereAndSortConditions = (
@@ -42,8 +71,10 @@ export const mapWhereAndSortConditions = (
     const columnName = Object.keys(whereCondition)[0];
     const operator = Object.keys(whereCondition[columnName])[0];
     const value = whereCondition[columnName][operator];
+    // a list (`_in`) is kept as JSON, so it reads back as a list
+    const valueText = typeof value === 'string' ? value : JSON.stringify(value);
 
-    const filterQueryString = `${columnName};${operator};${value}`;
+    const filterQueryString = `${columnName};${operator};${valueText}`;
 
     return { filter: filterQueryString };
   });
@@ -154,12 +185,22 @@ export const convertUrlToDataGridOptions = (
 
     if (key === 'filter') {
       const where = acc?.where || [];
-      const [columnName, operator, filterValue] = value[1].split(';');
+      const [columnName, legacyOperator, filterValue] = value[1].split(';');
+      const operator = fromLegacyOperator(legacyOperator);
 
       const column = columns.find((_column) => _column.name === columnName);
-      const convertedValue = column
-        ? convertValueToGraphQL(filterValue, column)
-        : filterValue;
+      // a JSON list, e.g. the value of `_in`, and a JSON document of a JSON
+      // column, e.g. the value of `_contains`, are used as-is
+      const isJsonDocument =
+        column?.consoleDataType === 'json' &&
+        filterValue.trim().startsWith('{') &&
+        isJsonString(filterValue);
+      const convertedValue =
+        isArrayString(filterValue) || isJsonDocument
+          ? JSON.parse(filterValue)
+          : column
+            ? convertValueToGraphQL(filterValue, column)
+            : filterValue;
 
       return {
         ...acc,

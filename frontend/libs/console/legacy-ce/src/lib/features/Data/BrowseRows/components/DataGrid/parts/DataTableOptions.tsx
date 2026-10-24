@@ -17,6 +17,7 @@ import {
   FaTimes,
 } from 'react-icons/fa';
 import { OrderBy, WhereClause } from '@hasura/shared/types';
+import { isArrayString } from '@hasura/shared/utils';
 import {
   ExportFileFormat,
   Operator,
@@ -54,6 +55,24 @@ interface DataTableOptionsProps {
   };
 }
 
+const quote = (value: unknown) =>
+  `"${typeof value === 'string' ? value : JSON.stringify(value)}"`;
+
+/**
+ * Formats a filter value for its tag: a list (e.g. of `_in`) as
+ * `("a", "b")`, a boolean (e.g. of `_is_null`) as-is, anything else quoted.
+ */
+export const formatFilterValue = (value: unknown): string => {
+  const list =
+    typeof value === 'string' && isArrayString(value)
+      ? (JSON.parse(value) as unknown[])
+      : value;
+
+  if (Array.isArray(list)) return `(${list.map(quote).join(', ')})`;
+  if (typeof list === 'boolean') return String(list);
+  return quote(list ?? '');
+};
+
 const DisplayWhereClauses = ({
   whereClauses,
   operatorMap,
@@ -76,7 +95,8 @@ const DisplayWhereClauses = ({
                 <FaFilter />
               </span>
               <span className={twFlexCenter}>
-                {columnName} {operatorMap[operator]} &quot;{value}&quot;
+                {columnName} {operatorMap[operator] ?? operator}{' '}
+                {formatFilterValue(value)}
               </span>
               <span className={`min-h-3 ${twFlexCenter}`}>
                 <FaTimesCircle
