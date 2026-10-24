@@ -23,30 +23,43 @@ const Metrics = () => {
   const { data: projectInfo, isFetching: projectInfoLoading } =
     useProjectInfo();
   const { logout, authType, getMetricsHeaders } = useAuthContext();
+  // The Cloud browser session already authenticates metrics requests through
+  // cookies (the Apollo HTTP link includes credentials). It does not need a
+  // second Hasura OAuth login or the engine's admin secret.
+  const useCloudSession =
+    envVars.consoleType === 'cloud' && envVars.consoleMode === 'server';
+  const canConnect =
+    useCloudSession || authType === 'hasura-sso' || authType === 'pat';
   const [connection, setConnection] = React.useState<{
     client: ApolloClientOutput;
     projectInfo: typeof projectInfo;
     getHeaders: typeof getMetricsHeaders;
     authType: typeof authType;
+    useCloudSession: boolean;
   } | null>(null);
   const [clientError, setClientError] = React.useState(false);
   // Never render a client made for an earlier project or session.
   const persistedClient =
     connection?.projectInfo === projectInfo &&
     connection?.getHeaders === getMetricsHeaders &&
-    connection?.authType === authType
+    connection?.authType === authType &&
+    connection?.useCloudSession === useCloudSession
       ? connection.client
       : null;
 
   React.useEffect(() => {
     setClientError(false);
-    if (!projectInfo || (authType !== 'hasura-sso' && authType !== 'pat')) {
+    if (!projectInfo || !canConnect) {
       return;
     }
 
     let cancelled = false;
     let client: ApolloClientOutput | undefined;
-    getMetricsHeaders()
+    // Never forward HGE credentials or unrelated SSO tokens to Cloud metrics.
+    const metricsHeaders = useCloudSession
+      ? Promise.resolve({})
+      : getMetricsHeaders();
+    metricsHeaders
       .then((metricsHeaders) => {
         if (cancelled) return;
         client = makeApolloClient(
@@ -58,6 +71,7 @@ const Metrics = () => {
           projectInfo,
           getHeaders: getMetricsHeaders,
           authType,
+          useCloudSession,
         });
       })
       .catch(() => {
@@ -72,7 +86,7 @@ const Metrics = () => {
         });
       }
     };
-  }, [projectInfo, authType, getMetricsHeaders]);
+  }, [projectInfo, authType, getMetricsHeaders, useCloudSession, canConnect]);
 
   if (projectInfoLoading) {
     return (
@@ -82,9 +96,6 @@ const Metrics = () => {
     );
   }
 
-  /*
-   * if access token is not available, redirect or redo auth
-   * */
   const proMode =
     envVars.consoleType === 'pro' ||
     envVars.consoleType === 'cloud' ||
@@ -92,7 +103,10 @@ const Metrics = () => {
 
   const renderMetrics = () => {
     if (envVars.consoleMode === 'server') {
-      if (authType === 'admin-secret' || authType === 'sso') {
+      if (
+        !useCloudSession &&
+        (authType === 'admin-secret' || authType === 'sso')
+      ) {
         return (
           <div className="p-6">
             <Text>
@@ -158,7 +172,7 @@ const Metrics = () => {
         );
       }
 
-      if (!clientError && (authType === 'hasura-sso' || authType === 'pat')) {
+      if (!clientError && canConnect) {
         return (
           <div className="p-6">
             <Skeleton width="100%" height="20px" />

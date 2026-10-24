@@ -392,3 +392,122 @@ describe('self-hosted metrics URL configuration', () => {
     },
   );
 });
+
+describe('Cloud browser monitoring', () => {
+  beforeEach(() => {
+    state.envVars.consoleType = 'cloud';
+    state.envVars.projectID = PROJECT;
+    state.envVars.adminSecret = 'engine-only-secret';
+    state.controlPlaneQuery.mockResolvedValue({
+      data: {
+        projects_by_pk: {
+          id: PROJECT,
+          owner: { id: 'user-1' },
+          tenant: {
+            region_info: { metrics_fqdn: 'cloud-metrics.example.com' },
+          },
+          plan_name: 'cloud',
+          entitlements: [],
+        },
+        users: [{ id: 'user-1' }],
+      },
+    });
+  });
+
+  it.each(['admin-secret', 'sso', 'hasura-sso', 'pat', 'none'])(
+    'uses the existing Cloud browser session for %s without a separate SSO login',
+    async (authType) => {
+      state.auth.authType = authType;
+      state.auth.idToken = undefined;
+      state.auth.getMetricsHeaders.mockRejectedValue(
+        new Error('No separate metrics token'),
+      );
+      render(<Metrics />, { wrapper });
+      await waitFor(() =>
+        expect(screen.queryByText('Metrics panel')).not.toBeNull(),
+      );
+      expect(screen.queryByText('Hasura login')).toBeNull();
+      expect(state.auth.getMetricsHeaders).not.toHaveBeenCalled();
+      expect(state.makeApolloClient).toHaveBeenCalledWith(
+        'https://cloud-metrics.example.com/v1/graphql',
+        {},
+      );
+      expect(state.controlPlaneQuery).toHaveBeenCalledWith(undefined, {
+        id: PROJECT,
+      });
+    },
+  );
+
+  it('still renders after a remount with injected admin-secret auth', async () => {
+    state.auth.authType = 'admin-secret';
+    const first = render(<Metrics />, { wrapper });
+    await waitFor(() => expect(state.makeApolloClient).toHaveBeenCalledOnce());
+    first.unmount();
+    render(<Metrics />, { wrapper });
+    await waitFor(() =>
+      expect(state.makeApolloClient).toHaveBeenCalledTimes(2),
+    );
+    expect(screen.queryByText('Hasura login')).toBeNull();
+    expect(state.auth.getMetricsHeaders).not.toHaveBeenCalled();
+    expect(state.disposeApolloClient).toHaveBeenCalledOnce();
+  });
+
+  it('does not create a metrics client when the Cloud project lookup fails', async () => {
+    state.auth.authType = 'admin-secret';
+    state.controlPlaneQuery.mockResolvedValue({
+      errors: [{ message: 'access denied' }],
+    });
+    render(<Metrics />, { wrapper });
+    await waitFor(
+      () => expect(screen.queryByText(/HASURA_GRAPHQL_PRO_KEY/)).not.toBeNull(),
+      { timeout: 3000 },
+    );
+    expect(state.makeApolloClient).not.toHaveBeenCalled();
+    expect(state.auth.getMetricsHeaders).not.toHaveBeenCalled();
+  });
+
+  it('keeps the CLI PAT requirement even when consoleType is cloud', async () => {
+    state.envVars.consoleMode = 'cli';
+    state.auth.authType = 'admin-secret';
+    render(<Metrics />, { wrapper });
+    await waitFor(() =>
+      expect(screen.queryByText('Login with PAT')).not.toBeNull(),
+    );
+    expect(state.makeApolloClient).not.toHaveBeenCalled();
+    expect(state.auth.getMetricsHeaders).not.toHaveBeenCalled();
+  });
+
+  it('drops a Cloud cookie client when switching to self-hosted admin-secret auth', async () => {
+    state.auth.authType = 'admin-secret';
+    const { rerender } = render(<Metrics />, { wrapper });
+    await waitFor(() => expect(state.makeApolloClient).toHaveBeenCalledOnce());
+    state.envVars.consoleType = 'pro';
+    rerender(<Metrics />);
+    expect(screen.queryByText('Metrics panel')).toBeNull();
+    await waitFor(() =>
+      expect(screen.queryByText('Hasura login')).not.toBeNull(),
+    );
+    expect(state.disposeApolloClient).toHaveBeenCalledOnce();
+    expect(state.makeApolloClient).toHaveBeenCalledOnce();
+  });
+
+  it('rebuilds token-authenticated clients when switching to the Cloud browser session', async () => {
+    state.envVars.consoleType = 'pro';
+    const { rerender } = render(<Metrics />, { wrapper });
+    await waitFor(() => expect(state.makeApolloClient).toHaveBeenCalledOnce());
+    expect(state.makeApolloClient).toHaveBeenLastCalledWith(
+      'https://metrics.example.com/v1/graphql',
+      { Authorization: 'Bearer test-only' },
+    );
+    state.envVars.consoleType = 'cloud';
+    rerender(<Metrics />);
+    await waitFor(() =>
+      expect(state.makeApolloClient).toHaveBeenCalledTimes(2),
+    );
+    expect(state.makeApolloClient).toHaveBeenLastCalledWith(
+      'https://cloud-metrics.example.com/v1/graphql',
+      {},
+    );
+    expect(state.disposeApolloClient).toHaveBeenCalledOnce();
+  });
+});
