@@ -278,6 +278,7 @@ const useEnterpriseAuth = (): EnterpriseAuthService => {
     authType: authState?.type ?? 'none',
     hasuraUserId: getHasuraUserId(authState),
     privileges,
+    idToken: authState?.type === 'hasura-sso' ? authState.idToken : undefined,
     initialize,
     logout,
   };

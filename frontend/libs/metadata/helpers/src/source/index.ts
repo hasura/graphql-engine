@@ -21,10 +21,14 @@ export const isPostgresFlavour = (
   driver === 'cockroach' ||
   driver === 'alloy';
 
+// Only Postgres (and AlloyDB, which is added as a Postgres source) use the
+// `pg_` metadata API. Citus and CockroachDB have their own `citus_` and
+// `cockroach_` commands; `pg_` ones fail on those sources with a misleading
+// "source ... is inconsistent" error.
 export const getDriverPrefix = (driver: string) =>
-  isPostgresFlavour(driver)
+  driver === 'postgres' || driver === 'alloy'
     ? 'pg'
-    : (driver as Exclude<SupportedDriver, PostgresFamilyDriver>);
+    : (driver as Exclude<SupportedDriver, 'postgres' | 'alloy'>);
 
 export function isPostgresSource(source: Source): source is PostgresSource {
   return source.kind === 'postgres';

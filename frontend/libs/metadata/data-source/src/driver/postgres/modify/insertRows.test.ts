@@ -1,5 +1,6 @@
 import { runDatabaseMigration } from '@hasura/metadata/api';
 import type { TableColumn } from '../../types';
+import { runRowMutationFromGraphQL } from '../../common/modify/runRowMutation';
 import {
   getDeleteRowSQL,
   getInsertRowSQL,
@@ -9,6 +10,10 @@ import {
 
 vi.mock('@hasura/metadata/api', () => ({
   runDatabaseMigration: vi.fn(() => Promise.resolve([])),
+}));
+
+vi.mock('../../common/modify/runRowMutation', () => ({
+  runRowMutationFromGraphQL: vi.fn(),
 }));
 
 const table = { schema: 'public', name: 'orders' };
@@ -23,7 +28,7 @@ const columns: TableColumn[] = [
   { name: 'note', dataType: 'text', consoleDataType: 'text' },
 ];
 
-const endpoints = { queryV2: '/v2/query' } as never;
+const endpoints = { graphQLUrl: '/v1/graphql' } as never;
 
 describe('toSQLLiteral', () => {
   it.each`
@@ -69,34 +74,40 @@ describe('insert migration SQL', () => {
 describe('insertRows', () => {
   const source = { name: 'default', kind: 'postgres' } as never;
 
-  beforeEach(() => vi.mocked(runDatabaseMigration).mockClear());
+  const fetchJson = vi.fn();
+  const insertedRow = { affectedRows: 1, returning: [{ id: 7, note: 'x' }] };
 
-  it('does not request the inserted rows nor create a migration by default', async () => {
-    const fetchJson = vi.fn().mockResolvedValue({ affected_rows: 1 });
+  beforeEach(() => {
+    vi.mocked(runDatabaseMigration).mockClear();
+    vi.mocked(runRowMutationFromGraphQL).mockReset();
+  });
+
+  it('inserts through GraphQL without returning rows nor creating a migration by default', async () => {
+    vi.mocked(runRowMutationFromGraphQL).mockResolvedValue({
+      affectedRows: 1,
+      returning: [],
+    });
 
     const affectedRows = await insertRows({
       endpoints,
       fetchJson,
-      args: {
-        source,
-        table,
-        objects: [{ note: 'x' }],
-        columns,
-        defaultColumns: [],
-      },
+      args: { source, table, objects: [{ note: 'x' }], columns },
     });
 
     expect(affectedRows).toBe(1);
-    const body = JSON.parse(fetchJson.mock.calls[0][1].body);
-    expect(body.args.returning).toBeUndefined();
+    expect(runRowMutationFromGraphQL).toHaveBeenCalledWith(
+      expect.objectContaining({
+        operation: 'insert',
+        table,
+        objects: [{ note: 'x' }],
+        returning: undefined,
+      }),
+    );
     expect(runDatabaseMigration).not.toHaveBeenCalled();
   });
 
   it('writes a migration for the inserted row without executing it again', async () => {
-    const fetchJson = vi.fn().mockResolvedValue({
-      affected_rows: 1,
-      returning: [{ id: 7, note: 'x' }],
-    });
+    vi.mocked(runRowMutationFromGraphQL).mockResolvedValue(insertedRow);
 
     await insertRows({
       endpoints,
@@ -106,13 +117,13 @@ describe('insertRows', () => {
         table,
         objects: [{ note: 'x' }],
         columns,
-        defaultColumns: [],
         isMigration: true,
       },
     });
 
-    const body = JSON.parse(fetchJson.mock.calls[0][1].body);
-    expect(body.args.returning).toEqual(['id', 'note']);
+    expect(runRowMutationFromGraphQL).toHaveBeenCalledWith(
+      expect.objectContaining({ returning: ['id', 'note'] }),
+    );
     expect(runDatabaseMigration).toHaveBeenCalledWith({
       endpoints,
       fetchJson,
@@ -135,10 +146,7 @@ describe('insertRows', () => {
     vi.mocked(runDatabaseMigration).mockRejectedValueOnce(
       new Error('CLI server unreachable'),
     );
-    const fetchJson = vi.fn().mockResolvedValue({
-      affected_rows: 1,
-      returning: [{ id: 7, note: 'x' }],
-    });
+    vi.mocked(runRowMutationFromGraphQL).mockResolvedValue(insertedRow);
 
     await expect(
       insertRows({
@@ -149,7 +157,6 @@ describe('insertRows', () => {
           table,
           objects: [{ note: 'x' }],
           columns,
-          defaultColumns: [],
           isMigration: true,
         },
       }),

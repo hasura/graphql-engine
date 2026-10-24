@@ -31,7 +31,10 @@ export const Cloud = ({
           </IndicatorCard>
         </div>
       ) : (
-        <ConnectButton selectedDriver={selectedDriver} />
+        <ConnectButton
+          selectedDriver={selectedDriver}
+          isDriverAvailable={isDriverAvailable}
+        />
       )}
     </>
   );

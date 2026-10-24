@@ -1,8 +1,12 @@
 import { PostgresTable } from '../types';
 import { runSQL } from '@hasura/metadata/api';
 import { GetTableColumnsProps, TableColumn } from '../../types';
-import { adaptSQLDataType, adaptStringForPostgres } from '../utils';
-import { RunSQLResponse } from '@hasura/shared/types';
+import {
+  adaptSQLArrayItemType,
+  adaptSQLDataType,
+  adaptStringForPostgres,
+} from '../utils';
+import { PostgresFamilyDriver, RunSQLResponse } from '@hasura/shared/types';
 import { introspectTableScalarTypes } from '../../common/utils';
 
 const adaptPkResult = (runSQLResult: RunSQLResponse) => {
@@ -20,21 +24,29 @@ const adaptTableColumns = (result: RunSQLResponse['result']): TableColumn[] => {
     name: row[0],
     dataType: row[1],
     consoleDataType: adaptSQLDataType(row[1]),
+    arrayItemType: adaptSQLArrayItemType(row[1]),
     nullable: row[2] === 'YES',
     sqlType: row[3],
-    defaultValue: row[4] ?? null,
+    // CockroachDB reports a column without a default as `NULL`
+    defaultValue: row[4] && row[4] !== 'NULL' ? row[4] : null,
   }));
 };
 
-export const getTableColumnInfos = async ({
-  dataSourceName,
-  table,
-  endpoints,
-  fetchJson,
-}: GetTableColumnsProps) => {
-  const { schema, name } = table as PostgresTable;
+/**
+ * The pg_catalog queries also work on the Postgres-compatible drivers (Citus,
+ * CockroachDB, AlloyDB); `driver` picks the matching `run_sql` API.
+ */
+export const getTableColumnInfosCurry =
+  (driver: PostgresFamilyDriver) =>
+  async ({
+    dataSourceName,
+    table,
+    endpoints,
+    fetchJson,
+  }: GetTableColumnsProps) => {
+    const { schema, name } = table as PostgresTable;
 
-  const sql = `
+    const sql = `
   SELECT a.attname as column_name,
        pg_catalog.format_type(a.atttypid, NULL) as data_type,
        case
@@ -53,35 +65,35 @@ WHERE a.attnum > 0
   AND s.nspname = '${schema}' 
 `;
 
-  const tables = await runSQL({
-    args: {
-      source: {
-        name: dataSourceName,
-        kind: 'postgres',
+    const tables = await runSQL({
+      args: {
+        source: {
+          name: dataSourceName,
+          kind: driver,
+        },
+        sql,
+        readOnly: true,
       },
-      sql,
-      readOnly: true,
-    },
-    fetchJson,
-    url: endpoints.queryV2,
-  });
+      fetchJson,
+      url: endpoints.queryV2,
+    });
 
-  return adaptTableColumns(tables.result);
-};
+    return adaptTableColumns(tables.result);
+  };
 
-export const getTableColumns = async (
-  props: GetTableColumnsProps,
-): Promise<TableColumn[]> => {
-  const sqlResult = await getTableColumnInfos(props);
-  const { dataSourceName, table, endpoints, fetchJson } = props;
-  const { schema, name } = table as PostgresTable;
+export const getTableColumnsCurry =
+  (driver: PostgresFamilyDriver) =>
+  async (props: GetTableColumnsProps): Promise<TableColumn[]> => {
+    const sqlResult = await getTableColumnInfosCurry(driver)(props);
+    const { dataSourceName, table, endpoints, fetchJson } = props;
+    const { schema, name } = table as PostgresTable;
 
-  const { scalarTypes, metadataTable } = await introspectTableScalarTypes({
-    ...props,
-    defaultQueryRoot: schema === 'public' ? name : `${schema}_${name}`,
-  });
+    const { scalarTypes, metadataTable } = await introspectTableScalarTypes({
+      ...props,
+      defaultQueryRoot: schema === 'public' ? name : `${schema}_${name}`,
+    });
 
-  const primaryKeySql = `SELECT a.attname
+    const primaryKeySql = `SELECT a.attname
   FROM   pg_index i
   JOIN   pg_attribute a ON a.attrelid = i.indrelid
                        AND a.attnum = ANY(i.indkey)
@@ -90,70 +102,74 @@ export const getTableColumns = async (
   )}.${adaptStringForPostgres(name)}'::regclass
   AND    i.indisprimary;`;
 
-  const primaryKeysSQLResult = await runSQL({
-    args: {
-      source: {
-        name: dataSourceName,
-        kind: 'postgres',
+    const primaryKeysSQLResult = await runSQL({
+      args: {
+        source: {
+          name: dataSourceName,
+          kind: driver,
+        },
+        sql: primaryKeySql,
+        readOnly: true,
       },
-      sql: primaryKeySql,
-      readOnly: true,
-    },
-    fetchJson,
-    url: endpoints.queryV2,
-  });
+      fetchJson,
+      url: endpoints.queryV2,
+    });
 
-  const primaryKeys = adaptPkResult(primaryKeysSQLResult) ?? [];
+    const primaryKeys = adaptPkResult(primaryKeysSQLResult) ?? [];
 
-  const sequencesSQL = `
+    const sequencesSQL = `
   SELECT column_name FROM information_schema.columns WHERE column_default LIKE 'nextval%' and table_schema = '${schema}' and table_name = '${name}';
   `;
 
-  const sequencesSQLResult = await runSQL({
-    args: {
-      source: {
-        name: dataSourceName,
-        kind: 'postgres',
-      },
-      sql: sequencesSQL,
-      readOnly: true,
-    },
-    fetchJson,
-    url: endpoints.queryV2,
-  });
-
-  const serialColumns = adaptSequencesResult(sequencesSQLResult) ?? [];
-
-  const result = sqlResult
-    .map((column) => {
-      const graphqlFieldName =
-        metadataTable.configuration?.column_config?.[column.name]
-          ?.custom_name ?? column.name;
-
-      const scalarType = scalarTypes.find(
-        (st) => st?.name === graphqlFieldName,
-      );
-
-      return {
-        name: column.name,
-        dataType: column.dataType,
-        consoleDataType: column.consoleDataType,
-        nullable: column.nullable,
-        sqlType: column.sqlType,
-        defaultValue: column.defaultValue,
-        isPrimaryKey: primaryKeys.includes(column.name),
-        graphQLProperties: {
-          name: graphqlFieldName,
-          scalarType: scalarType?.type,
+    const sequencesSQLResult = await runSQL({
+      args: {
+        source: {
+          name: dataSourceName,
+          kind: driver,
         },
-        ...(serialColumns.includes(column.name) && {
-          value_generated: {
-            type: 'auto_increment',
-          },
-        }),
-      };
-    })
-    .filter(Boolean) as TableColumn[];
+        sql: sequencesSQL,
+        readOnly: true,
+      },
+      fetchJson,
+      url: endpoints.queryV2,
+    });
 
-  return result;
-};
+    const serialColumns = adaptSequencesResult(sequencesSQLResult) ?? [];
+
+    const result = sqlResult
+      .map((column) => {
+        const graphqlFieldName =
+          metadataTable.configuration?.column_config?.[column.name]
+            ?.custom_name ?? column.name;
+
+        const scalarType = scalarTypes.find(
+          (st) => st?.name === graphqlFieldName,
+        );
+
+        return {
+          name: column.name,
+          dataType: column.dataType,
+          consoleDataType: column.consoleDataType,
+          arrayItemType: column.arrayItemType,
+          nullable: column.nullable,
+          sqlType: column.sqlType,
+          defaultValue: column.defaultValue,
+          isPrimaryKey: primaryKeys.includes(column.name),
+          graphQLProperties: {
+            name: graphqlFieldName,
+            scalarType: scalarType?.type,
+          },
+          ...(serialColumns.includes(column.name) && {
+            value_generated: {
+              type: 'auto_increment',
+            },
+          }),
+        };
+      })
+      .filter(Boolean) as TableColumn[];
+
+    return result;
+  };
+
+export const getTableColumnInfos = getTableColumnInfosCurry('postgres');
+export const getTableColumns = getTableColumnsCurry('postgres');

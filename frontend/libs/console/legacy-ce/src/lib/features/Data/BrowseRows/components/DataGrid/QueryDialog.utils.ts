@@ -102,7 +102,6 @@ export const transformFilterValues = (
   if (
     !column ||
     typeof filter.value !== 'string' ||
-    filter.operator === '$is_null' ||
     filter.operator === '_is_null'
   )
     return filter;

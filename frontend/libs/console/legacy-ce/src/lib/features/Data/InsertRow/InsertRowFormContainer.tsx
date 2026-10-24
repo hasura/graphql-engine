@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { Source, Table } from '@hasura/shared/types';
 import { useAppContext } from '@hasura/shared/context';
 import { useMigrationStatus } from '@hasura/metadata/api';
-import { isPostgresFlavour } from '@hasura/metadata/helpers';
+import { areTablesEqual, isPostgresFlavour } from '@hasura/metadata/helpers';
 import { InsertRowForm, InsertRowFormProps } from './InsertRowForm';
-import { SupportedDriver } from '@hasura/shared/types';
+import { ReloadEnumValuesButton } from './components/ReloadEnumValuesButton';
 import {
   getTableColumnDataTypePlaceholder,
+  useEnumColumnValues,
   useInsertRows,
   useTableColumns,
 } from '@hasura/metadata/data-source';
@@ -30,12 +31,16 @@ export const InsertRowFormContainer = ({
     source,
     table,
   });
-  const driver = source.kind;
 
   const { data: tableInfo, isLoading: isLoadingTableInfo } = useTableColumns({
     source,
     table,
   });
+  const { data: enumColumnValues } = useEnumColumnValues({ source, table });
+  // the GraphQL enum type only reflects new rows after a metadata reload
+  const isEnumTable = source.tables.some(
+    (t) => t.is_enum && areTablesEqual(t.table, table),
+  );
 
   const { envVars } = useAppContext();
   const { data: migrationStatus } = useMigrationStatus();
@@ -60,7 +65,6 @@ export const InsertRowFormContainer = ({
         source,
         objects: [formData],
         columns,
-        defaultColumns: [],
         isMigration: canCreateMigration && isMigration,
       },
       { onSuccess },
@@ -82,6 +86,7 @@ export const InsertRowFormContainer = ({
         placeholder: columnInfo?.consoleDataType
           ? getTableColumnDataTypePlaceholder(columnInfo.consoleDataType)
           : '',
+        enumValues: enumColumnValues?.[column.name],
       };
     }) ?? [];
 
@@ -91,9 +96,13 @@ export const InsertRowFormContainer = ({
       isInserting={isInserting}
       isLoading={isLoading}
       onInsertRow={onInsertRow}
-      driver={driver as SupportedDriver}
       initialValues={initialValues}
       submitLabel={submitLabel}
+      actions={
+        isEnumTable ? (
+          <ReloadEnumValuesButton sourceName={source.name} />
+        ) : undefined
+      }
       migration={
         canCreateMigration
           ? { checked: isMigration, onChange: setIsMigration }

@@ -8,6 +8,8 @@ import {
   replaceFiltersInUrl,
   applyWhereAndSortConditionsToQueryString,
   convertUrlToDataGridOptions,
+  fromLegacyOperator,
+  fromLegacyWhere,
   convertValueToGraphQL,
 } from './DataGrid.utils';
 import { WhereClause } from '@hasura/shared/types';
@@ -469,5 +471,56 @@ describe('convertValueToGraphQL', () => {
       },
     };
     expect(convertValueToGraphQL(value, tableColumn)).toBe('[1.1,2.2,3.3,4.4]');
+  });
+});
+
+describe('legacy RQL operators', () => {
+  it.each([
+    ['$eq', '_eq'],
+    ['$ne', '_neq'],
+    ['$ilike', '_ilike'],
+    ['$is_null', '_is_null'],
+    ['_gt', '_gt'],
+  ])('renames %s to %s', (operator, expected) => {
+    expect(fromLegacyOperator(operator)).toBe(expected);
+  });
+
+  it('reads the operators of an old filter link as GraphQL ones', () => {
+    expect(
+      convertUrlToDataGridOptions('?filter=title;$ne;a&filter=id;_gt;1').where,
+    ).toEqual([{ title: { _neq: 'a' } }, { id: { _gt: '1' } }]);
+  });
+
+  it('renames the operators of a saved query', () => {
+    expect(
+      fromLegacyWhere([{ title: { $eq: 'a' } }, { id: { _lt: 2 } }]),
+    ).toEqual([{ title: { _eq: 'a' } }, { id: { _lt: 2 } }]);
+  });
+});
+
+describe('filter values in the URL', () => {
+  it('round-trips list and boolean values', () => {
+    const where = [
+      { name: { _in: ['a b', 'c,d'] } },
+      { note: { _is_null: true } },
+      { title: { _eq: 'x' } },
+    ] as unknown as WhereClause[];
+
+    const search = applyWhereAndSortConditionsToQueryString({
+      options: { where },
+      search: '',
+    });
+
+    expect(new URLSearchParams(search).getAll('filter')).toEqual([
+      'name;_in;["a b","c,d"]',
+      'note;_is_null;true',
+      'title;_eq;x',
+    ]);
+    expect(convertUrlToDataGridOptions(search).where).toEqual([
+      { name: { _in: ['a b', 'c,d'] } },
+      // read back as text, and parsed for the Boolean input of the operator
+      { note: { _is_null: 'true' } },
+      { title: { _eq: 'x' } },
+    ]);
   });
 });

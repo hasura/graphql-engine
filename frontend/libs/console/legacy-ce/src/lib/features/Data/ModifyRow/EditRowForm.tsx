@@ -2,11 +2,7 @@ import { Button, SkeletonList } from '@hasura/shared/ui';
 import { useState } from 'react';
 import { ColumnRow } from '../InsertRow/components/ColumnRow';
 import { convertTableValue } from '../InsertRow/InsertRowForm.utils';
-import { SupportedDriver } from '@hasura/shared/types';
-import {
-  TableColumn,
-  useSupportedDataTypes,
-} from '@hasura/metadata/data-source';
+import { TableColumn } from '@hasura/metadata/data-source';
 import { Flex } from '@radix-ui/themes';
 import useDataRowForm from './hooks/useDataRowForm';
 
@@ -16,11 +12,14 @@ export type EditRowFormProps = {
     placeholder: string;
     editable: boolean;
     description: string;
+    /** allowed values when the column references an enum table */
+    enumValues?: string[];
   })[];
   isSubmitting: boolean;
   isLoading: boolean;
   onEditRow: (formData: Record<string, unknown>) => void;
-  driver: SupportedDriver;
+  /** extra actions shown next to the form buttons */
+  actions?: React.ReactNode;
 };
 
 export const EditRowForm: React.FC<EditRowFormProps> = ({
@@ -29,9 +28,8 @@ export const EditRowForm: React.FC<EditRowFormProps> = ({
   isSubmitting = false,
   isLoading = false,
   onEditRow,
-  driver,
+  actions,
 }) => {
-  const { data: supportedDataTypes } = useSupportedDataTypes(driver);
   const {
     onColumnUpdate,
     handleDefaultValueColumns,
@@ -62,7 +60,7 @@ export const EditRowForm: React.FC<EditRowFormProps> = ({
     );
     onColumnUpdate(
       e.columnName,
-      convertTableValue(e.value, columnDefinition?.dataType),
+      convertTableValue(e.value, columnDefinition?.consoleDataType),
     );
   };
 
@@ -93,7 +91,6 @@ export const EditRowForm: React.FC<EditRowFormProps> = ({
             key={column.name}
             label={column.name}
             name={column.name}
-            supportedDataTypes={supportedDataTypes}
             onChange={onChange}
             placeholder={column.placeholder}
             isDisabled={
@@ -108,12 +105,15 @@ export const EditRowForm: React.FC<EditRowFormProps> = ({
                 ? `${column.dataType} Auto Increment`
                 : column.dataType
             }
-            driver={driver}
+            consoleDataType={column.consoleDataType}
+            arrayItemType={column.arrayItemType}
             initialValue={row[column.name]}
+            enumValues={column.enumValues}
           />
         ))}
       </Flex>
       <Flex gap="3" justify="end" className="mt-6">
+        {actions}
         <Button mode="default" onClick={() => onResetForm()}>
           Reset
         </Button>

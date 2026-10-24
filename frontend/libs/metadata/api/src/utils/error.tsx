@@ -2,6 +2,7 @@ import { FiRefreshCw } from 'react-icons/fi';
 import { hasuraToast } from '@hasura/shared/ui';
 import { HttpError } from '@hasura/shared/types';
 import { ADMIN_SECRET_HEADER_KEY } from '@hasura/shared/types';
+import { Flex } from '@radix-ui/themes';
 
 const doesConflictCodeExist = (error: unknown) =>
   error &&
@@ -35,9 +36,9 @@ export const toastMetadataOutOfDateError = (
     ),
     button: {
       label: (
-        <>
+        <Flex align="center" gap="2">
           <FiRefreshCw aria-hidden="true" /> Fetch metadata
-        </>
+        </Flex>
       ),
       onClick: () => {
         invalidateMetadata();

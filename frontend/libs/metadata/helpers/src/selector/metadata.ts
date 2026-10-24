@@ -1,5 +1,9 @@
 import { extractTableInfo } from '@hasura/shared/utils';
-import { adaptFunction, areTablesEqual } from '@hasura/metadata/helpers';
+import {
+  adaptFunction,
+  areTablesEqual,
+  isPostgresFlavour,
+} from '@hasura/metadata/helpers';
 import {
   type Metadata,
   type Source,
@@ -436,5 +440,5 @@ export const findMetadataFunction = (
     areTablesEqual(fn.function, qualifiedFunction),
   );
 
-export const getSupportsForeignKeys = (source: Source | undefined) =>
-  source?.kind !== 'bigquery';
+export const getSupportsForeignKeys = (source: Source | undefined): boolean =>
+  !!source?.kind && isPostgresFlavour(source.kind);

@@ -161,6 +161,7 @@ describe('Cloud session initialization', () => {
     expect(mocks.fetchMetadata).toHaveBeenCalledOnce();
     expect(mocks.navigateAuth).toHaveBeenCalledWith(cloudState);
     expect(result.current.authType).toBe('hasura-sso');
+    expect(result.current.idToken).toBe(cloudState.idToken);
   });
 
   it('clears a rejected Hasura session and sends the user back to OAuth', async () => {
@@ -185,6 +186,7 @@ describe('Cloud session initialization', () => {
     await act(() => result.current.initialize());
     expect(mocks.fetchMetadata).toHaveBeenCalledOnce();
     expect(mocks.navigateAuth).toHaveBeenCalledWith(saved);
+    expect(result.current.idToken).toBeUndefined();
     expect(mocks.clearConsoleAuthState).not.toHaveBeenCalled();
   });
 });

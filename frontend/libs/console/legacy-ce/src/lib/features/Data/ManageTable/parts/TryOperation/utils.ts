@@ -1,7 +1,6 @@
 import {
   getNamedType,
   GraphQLField,
-  GraphQLObjectType,
   GraphQLSchema,
   isLeafType,
   isObjectType,
@@ -13,15 +12,15 @@ import type { TableColumn } from '@hasura/metadata/data-source';
 import type { MetadataTable, Source } from '@hasura/shared/types';
 import {
   capitalizeFirstLetter,
+  findRootField,
   formatGraphQL,
   getMutationRoot,
   getQueryRoot,
+  getRootFieldMap,
 } from '@hasura/shared/utils';
 
 export type OperationType =
   'query' | 'mutation' | 'subscription' | 'streaming_subscription';
-
-type RootFieldMap = Record<string, GraphQLField<unknown, unknown>>;
 
 export type TableRootFields = {
   namespace?: string;
@@ -30,25 +29,6 @@ export type TableRootFields = {
   subscription?: GraphQLField<unknown, unknown>;
   stream?: GraphQLField<unknown, unknown>;
 };
-
-const getRootFieldMap = (
-  rootType: GraphQLObjectType | null | undefined,
-  namespace: string | undefined,
-): RootFieldMap => {
-  if (!rootType) return {};
-  const fields = rootType.getFields();
-  if (!namespace) return fields;
-
-  const namespaceType = fields[namespace]
-    ? getNamedType(fields[namespace].type)
-    : undefined;
-  return isObjectType(namespaceType) ? namespaceType.getFields() : {};
-};
-
-// `graphql-default` naming convention camel-cases the generated root fields,
-// e.g. `insert_album` -> `insertAlbum`.
-const findField = (fields: RootFieldMap, name: string) =>
-  fields[name] ?? fields[camelize(name, true)];
 
 const getStreamRoot = ({
   defaultQueryRoot,
@@ -111,10 +91,10 @@ export const getTableRootFields = ({
 
   return {
     namespace,
-    query: findField(queryFields, selectRoot),
-    insert: findField(mutationFields, insertRoot),
-    subscription: findField(subscriptionFields, selectRoot),
-    stream: findField(subscriptionFields, streamRoot),
+    query: findRootField(queryFields, selectRoot),
+    insert: findRootField(mutationFields, insertRoot),
+    subscription: findRootField(subscriptionFields, selectRoot),
+    stream: findRootField(subscriptionFields, streamRoot),
   };
 };
 

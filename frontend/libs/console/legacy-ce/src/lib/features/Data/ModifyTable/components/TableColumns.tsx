@@ -123,17 +123,23 @@ export const TableColumns: React.FC<TableColumnProps> = (props) => {
 
   return (
     <>
-      {(columns ?? []).map((c: TableColumn) => (
-        <TableColumnDescription
-          column={{ ...c, config: columnConfig?.[c.name] }}
-          key={c.name}
-          onEdit={(column) => {
-            setIsEditColumnFormActive(true);
-            setSelectedColumn(column);
-          }}
-          onRemove={canDropColumn ? removeColumn : undefined}
-        />
-      ))}
+      {columns?.length ? (
+        <table>
+          <tbody>
+            {columns.map((c: TableColumn) => (
+              <TableColumnDescription
+                column={{ ...c, config: columnConfig?.[c.name] }}
+                key={c.name}
+                onEdit={(column) => {
+                  setIsEditColumnFormActive(true);
+                  setSelectedColumn(column);
+                }}
+                onRemove={canDropColumn ? removeColumn : undefined}
+              />
+            ))}
+          </tbody>
+        </table>
+      ) : null}
       {isEditColumnFormActive && selectedColumn && (
         <EditTableColumnDialog
           {...props}

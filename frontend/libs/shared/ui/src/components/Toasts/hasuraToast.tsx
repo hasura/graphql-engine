@@ -125,7 +125,7 @@ export const hasuraToast = ({
         justify="between"
         align="start"
         className={clsx(
-          'w-full',
+          'w-full mb-2',
           t.visible ? 'animate-notificationOpen' : 'animate-notificationClose',
         )}
         style={t.style}

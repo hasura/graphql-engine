@@ -1,7 +1,7 @@
 import { ReactQueryDecorator } from '@hasura/shared/testing';
 import { StoryObj, StoryFn, Meta } from '@storybook/react-webpack5';
 import { Relationship } from '../../../../../DatabaseRelationships';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { action } from 'storybook/actions';
 import { ReactTableWrapper } from './ReactTableWrapper';
 import { handlers } from '../../../__mocks__/handlers.mock';
@@ -104,6 +104,51 @@ export const SelectionDisabled: StoryFn<typeof ReactTableWrapper> = () => {
       table={mockTable}
     />
   );
+};
+
+export const OpenRowFromPrimaryKey: StoryObj<typeof ReactTableWrapper> = {
+  render: () => {
+    return (
+      <ReactTableWrapper
+        rows={mockDataForRows}
+        isRowsSelectionEnabled
+        onRowsSelect={action('onRowsSelect')}
+        onRowDelete={action('onRowDelete')}
+        tableColumns={[
+          {
+            name: 'AlbumId',
+            dataType: 'integer',
+            consoleDataType: 'integer',
+            isPrimaryKey: true,
+          },
+          { name: 'Title', dataType: 'text', consoleDataType: 'string' },
+          { name: 'ArtistId', dataType: 'integer', consoleDataType: 'integer' },
+        ]}
+        source={mockSource}
+        table={mockTable}
+        disabled={false}
+        selectedRows={{}}
+      />
+    );
+  },
+
+  name: '🧪 Test - Open row from primary key',
+
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // only primary key cells are links
+    const primaryKeyLinks = await canvas.findAllByTestId('@open-row-AlbumId');
+    await expect(primaryKeyLinks).toHaveLength(10);
+    await expect(canvas.queryByTestId('@open-row-Title')).toBeNull();
+
+    await userEvent.click(primaryKeyLinks[1]);
+
+    // the dialog renders in a portal outside the canvas
+    const dialog = within(document.body);
+    await expect(await dialog.findByText('Table Row')).toBeVisible();
+    await expect(dialog.getByDisplayValue('Balls to the Wall')).toBeVisible();
+  },
 };
 
 export const WithRelationships: StoryObj<typeof ReactTableWrapper> = {

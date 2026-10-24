@@ -1,9 +1,12 @@
 import { useAuthFetchJson } from '@hasura/shared/hooks';
 import { useQuery, UseQueryOptions } from '@tanstack/react-query';
 import { useAppContext } from '@hasura/shared/context';
-import { QualifiedDataSource } from '@hasura/shared/types';
-import { getTrackableComputedFunctions } from '../../driver/postgres/introspection/getTrackableComputedFunctions';
+import {
+  PostgresFamilyDriver,
+  QualifiedDataSource,
+} from '@hasura/shared/types';
 import { TrackableComputedFunction } from '../../driver';
+import { getTrackableComputedFunctionsCurry } from '../../driver/postgres/introspection/getTrackableComputedFunctions';
 
 const GET_TRACKABLE_COMPUTED_FUNCTIONS_QUERY_KEY =
   'GET_TRACKABLE_COMPUTED_FUNCTIONS';
@@ -34,7 +37,9 @@ export const useTrackableComputedFunctions = (
         return [];
       }
 
-      return getTrackableComputedFunctions({
+      return getTrackableComputedFunctionsCurry(
+        source.kind as PostgresFamilyDriver,
+      )({
         dataSourceName: source.name,
         endpoints,
         fetchJson,

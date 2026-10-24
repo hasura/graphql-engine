@@ -1,5 +1,5 @@
 import React, { type JSX } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useLocation, useNavigate, useParams } from 'react-router';
 import {
   TypedObjectValidator,
   isObject,
@@ -14,6 +14,7 @@ import {
 } from '@hasura/metadata/data-source';
 import { DatabaseRelationships } from '../../DatabaseRelationships';
 import { InsertRowFormContainer } from '../InsertRow/InsertRowFormContainer';
+import { getCloneRow } from '../InsertRow/cloneRow';
 import { PermissionsTab } from '../../Permissions';
 import { MetadataTable, Source, Table } from '@hasura/shared/types';
 import { ModifyTable } from '../ModifyTable/ModifyTable';
@@ -38,12 +39,21 @@ const isTabValidator: TypedObjectValidator = (_item) => {
   return 'value' in _item && 'label' in _item && 'content' in _item;
 };
 
+type InsertRowOptions = {
+  /** the row to prefill the form with, when cloning one */
+  cloneRow?: Record<string, unknown>;
+  /** remounts the form when another row is cloned */
+  key: string;
+  onCloned: () => void;
+};
+
 const availableTabs = (
   source: Source,
   table: MetadataTable,
   areMutationsSupported: boolean,
   enabledTabs: EnabledTabs,
   isView: boolean,
+  insertRow: InsertRowOptions,
 ): Tab[] => {
   return [
     {
@@ -58,8 +68,13 @@ const availableTabs = (
           content: (
             <InsertRowFormContainer
               source={source}
-              key={JSON.stringify(table)}
+              key={`${JSON.stringify(table)}-${insertRow.key}`}
               table={table.table}
+              {...(insertRow.cloneRow && {
+                initialValues: insertRow.cloneRow,
+                submitLabel: 'Clone row',
+                onSuccess: insertRow.onCloned,
+              })}
             />
           ),
         }
@@ -112,18 +127,17 @@ const ManageTableUI = ({
   table: Table;
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { operation } = useParams<{ operation: ManageTableTabs }>();
   const {
     data: source,
-    isFetching: isFetchingSource,
+    isLoading: isLoadingSource,
     isError: isSourceError,
   } = useMetadata(MetadataSelectors.findSource(dataSourceName));
-  const { data: isTableView, isFetching: isTableViewFetching } = useIsTableView(
-    {
-      source,
-      table,
-    },
-  );
+  const { data: isTableView, isLoading: isLoadingTableView } = useIsTableView({
+    source,
+    table,
+  });
 
   const { data: capabilities, isLoading: isLoadingCapabilities } =
     useDriverCapabilities({
@@ -135,8 +149,11 @@ const ManageTableUI = ({
 
   const enabledTabs = useEnabledTabs(dataSourceName);
 
+  // Only block on the first load. Background refetches (e.g. after a column
+  // change invalidates the source) must not unmount the tabs, or any open
+  // dialog is torn down mid-submit and every section remounts and refetches.
   const isLoading =
-    isFetchingSource || isLoadingCapabilities || isTableViewFetching;
+    isLoadingSource || isLoadingCapabilities || isLoadingTableView;
 
   const metadataTable = table
     ? source?.tables.find((t) => areTablesEqual(t.table, table))
@@ -156,6 +173,15 @@ const ManageTableUI = ({
     areInsertMutationsSupported,
     enabledTabs,
     isTableView ?? false,
+    {
+      // the row menu's "Clone row" opens the Insert Row tab with the row
+      cloneRow: getCloneRow(location.state),
+      key: location.key,
+      onCloned: () =>
+        navigate(
+          dataRoutes.manageTable(dataSourceName, metadataTable.table, 'browse'),
+        ),
+    },
   );
 
   const tableName = getTableDisplayName(table);
@@ -170,7 +196,7 @@ const ManageTableUI = ({
           tableName={tableName}
         />
         <Tabs
-          value={operation}
+          value={operation ?? 'tables'}
           onValueChange={(_operation) => {
             navigate(
               dataRoutes.manageTable(

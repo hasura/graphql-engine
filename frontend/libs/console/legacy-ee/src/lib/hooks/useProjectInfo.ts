@@ -1,8 +1,11 @@
 import { ControlPlane } from '@hasura/console-legacy-ce';
 import { useAppContext } from '@hasura/shared/context';
 import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import type { GraphQLError } from 'graphql';
 import { getHasuraMetricsUrl } from '../Globals';
+import { useAuthContext } from '../shared/auth/context';
+import { decodeToken } from '../shared/auth/utils';
 
 // 1 hour
 const DEFAULT_STALE_TIME = 60 * 60 * 1000;
@@ -28,14 +31,54 @@ export const useProjectInfo = <T = CloudProjectInfo | null>(
   staleTime: number = DEFAULT_STALE_TIME,
 ) => {
   const { envVars } = useAppContext();
+  const { authType, idToken } = useAuthContext();
+  // Self-hosted Pro consoles signed in with Hasura get the project and the
+  // user's collaborator privileges from the Hasura OAuth id token.
+  const tokenClaims = useMemo(() => {
+    if (
+      (envVars.consoleType !== 'pro' && envVars.consoleType !== 'pro-lite') ||
+      authType !== 'hasura-sso' ||
+      !idToken
+    ) {
+      return null;
+    }
+    try {
+      return decodeToken(idToken);
+    } catch {
+      return null;
+    }
+  }, [envVars.consoleType, authType, idToken]);
   const queryReturn = useQuery({
-    queryKey: [CLOUD_PROJECT_INFO_QUERY_KEY],
+    queryKey: [
+      CLOUD_PROJECT_INFO_QUERY_KEY,
+      tokenClaims?.sub,
+      tokenClaims?.project?.id,
+      tokenClaims?.collaborator_privileges,
+    ],
     queryFn: async () => {
-      if (
-        envVars.consoleType === 'oss' ||
-        envVars.consoleMode === 'cli' ||
-        !envVars.projectID
-      ) {
+      if (envVars.consoleType === 'oss' || envVars.consoleMode === 'cli') {
+        return null;
+      }
+
+      if (tokenClaims) {
+        const projectId: string | undefined = tokenClaims.project?.id;
+        const metricsFQDN = getHasuraMetricsUrl({
+          ...envVars,
+          hasuraMetricsUrl:
+            envVars.hasuraMetricsUrl || tokenClaims.metrics_fqdn,
+        });
+        return projectId && metricsFQDN
+          ? ({
+              id: projectId,
+              metricsFQDN,
+              privileges: tokenClaims.collaborator_privileges ?? [],
+              plan_name: tokenClaims.project?.plan_name ?? null,
+              entitlements: tokenClaims.project?.entitlements ?? [],
+            } as CloudProjectInfo)
+          : null;
+      }
+
+      if (!envVars.projectID) {
         return null;
       }
 
@@ -44,7 +87,7 @@ export const useProjectInfo = <T = CloudProjectInfo | null>(
         return hasuraMetricsUrl
           ? ({
               id: envVars.projectID,
-              metricsFQDN: envVars.hasuraMetricsUrl,
+              metricsFQDN: hasuraMetricsUrl,
             } as CloudProjectInfo)
           : null;
       }

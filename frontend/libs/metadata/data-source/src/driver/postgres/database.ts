@@ -3,7 +3,6 @@ import {
   postgresSupportedFeatures,
 } from '../common/capabilities';
 import {
-  getDatabaseSchemas,
   getFKRelationships,
   getSupportedOperators,
   getTrackableFunctions,
@@ -62,7 +61,6 @@ export const postgres: Database = {
     getFKRelationships,
     getTablesListAsTree,
     getSupportedOperators,
-    getDatabaseSchemas,
     getSupportedDataTypes: async () => consoleDataTypeToSQLTypeMap,
     getSupportedScalars: async () => consoleScalars,
     getFunctionDefinition: getPostgresFunctionDefinition,

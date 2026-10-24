@@ -142,7 +142,8 @@ export const CodeBlock = ({
           scrollable && 'overflow-auto',
         )}
         style={{
-          height: height || (scrollable ? '200px' : undefined),
+          height: height,
+          maxHeight: height || (scrollable ? '200px' : undefined),
         }}
       >
         {highlightedHtml !== undefined ? (

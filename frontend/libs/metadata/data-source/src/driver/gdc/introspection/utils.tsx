@@ -77,3 +77,39 @@ export function adaptAgentDataType(
     ? sqlDataType.toLowerCase()
     : sqlDataType.type.toLowerCase();
 }
+
+/** The capabilities an agent declares for one of its scalar types. */
+export type ScalarTypeCapabilities = { graphql_type?: string };
+
+// The temporal scalar types of the Data Connector agents are `String`s in
+// GraphQL, so only their names tell them apart.
+const temporalScalarTypes: Record<string, TableColumn['consoleDataType']> = {
+  date: 'date',
+  time: 'time',
+  time_with_timezone: 'time',
+  datetime: 'timestamp',
+  datetime_with_timezone: 'timestamp',
+  timestamp: 'timestamp',
+};
+
+/**
+ * Maps a Data Connector scalar type to the generic console data type, from
+ * the GraphQL type the agent declares for it in its capabilities.
+ */
+export function getScalarConsoleDataType(
+  scalarType: TableColumn['dataType'],
+  capabilities: ScalarTypeCapabilities | undefined,
+): TableColumn['consoleDataType'] {
+  switch (capabilities?.graphql_type) {
+    case 'Int':
+      return 'integer';
+    case 'Float':
+      return 'float';
+    case 'Boolean':
+      return 'boolean';
+    default:
+      return (
+        temporalScalarTypes[String(adaptAgentDataType(scalarType))] ?? 'string'
+      );
+  }
+}

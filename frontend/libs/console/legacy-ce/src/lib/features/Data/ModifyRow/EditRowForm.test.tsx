@@ -35,7 +35,6 @@ describe('EditRowForm existing Postgres values', () => {
       <EditRowForm
         row={row}
         columns={columns}
-        driver="postgres"
         isSubmitting={false}
         isLoading={false}
         onEditRow={onEditRow}
@@ -56,7 +55,6 @@ describe('EditRowForm existing Postgres values', () => {
       <EditRowForm
         row={row}
         columns={columns}
-        driver="postgres"
         isSubmitting={false}
         isLoading={false}
         onEditRow={onEditRow}

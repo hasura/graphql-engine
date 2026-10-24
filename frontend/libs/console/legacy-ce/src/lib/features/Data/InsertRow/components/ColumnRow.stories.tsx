@@ -27,7 +27,8 @@ export const Base = {
     isDefaultDisabled: false,
     resetToken: '',
     placeholder: 'placeholder...',
-    dataType: 'number',
+    dataType: 'integer',
+    consoleDataType: 'integer',
   },
 };
 
@@ -63,7 +64,8 @@ export const StringColumn = {
 
   args: {
     ...Base.args,
-    dataType: 'string',
+    dataType: 'text',
+    consoleDataType: 'string',
     placeholder: 'string...',
   },
 };
@@ -73,7 +75,8 @@ export const JsonColumn = {
 
   args: {
     ...Base.args,
-    dataType: 'json',
+    dataType: 'jsonb',
+    consoleDataType: 'json',
     placeholder: 'json...',
   },
 };

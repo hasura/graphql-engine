@@ -1,6 +1,7 @@
 import { Input, InputProps } from '@hasura/shared/ui';
 
-export type InputCustomEvent = { target?: { value?: string } };
+/** `value` is a string, or the items of an array input */
+export type InputCustomEvent = { target?: { value?: unknown } };
 
 export type CustomEventHandler = (event: InputCustomEvent) => void;
 

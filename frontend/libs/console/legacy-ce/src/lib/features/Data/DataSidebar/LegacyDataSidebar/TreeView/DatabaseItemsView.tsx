@@ -40,7 +40,7 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
   const handleSelectSchema = (value: string) => {
     navigate({
       pathname: dataRoutes.manageDatabaseSource(sourceName),
-      search: `?schema=${encodeURIComponent(value)}&tab=schemas`,
+      search: `?schema=${encodeURIComponent(value)}&tab=tables`,
     });
   };
 

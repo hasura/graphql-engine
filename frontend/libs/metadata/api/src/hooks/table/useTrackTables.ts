@@ -103,7 +103,10 @@ export const useTrackTables = () => {
       {
         allow_warnings: args.allow_warnings,
         tables: args.tables.map((table) => ({
-          ...table,
+          table: table.table,
+          logical_model: table.logical_model,
+          apollo_federation_config: table.apollo_federation_config,
+          configuration: table.configuration,
           source: args.source,
         })),
       },

@@ -7,6 +7,7 @@ import ReactSelect, {
   PropsValue,
   Props as ReactSelectProps,
 } from 'react-select';
+import CreatableSelect from 'react-select/creatable';
 import isEqual from 'lodash/isEqual';
 import { defaultReactSelectClassNames } from '../../base/react-select/utils';
 import FormatReactSelectOptionLabel from '../../base/react-select/FormatReactSelectOptionLabel';
@@ -14,6 +15,14 @@ import FormatReactSelectOptionLabel from '../../base/react-select/FormatReactSel
 const includesObject = (arr: any[], obj: any) => {
   return arr?.some && arr.some((item) => isEqual(item, obj));
 };
+
+// Only an array value (multi select) can match several options. A string
+// value must match exactly: `'jsonb'.includes('json')` is a substring match.
+const isOptionValueSelected = (rawValue: any, optionValue: any) =>
+  rawValue === optionValue ||
+  isEqual(rawValue, optionValue) ||
+  (Array.isArray(rawValue) &&
+    (rawValue.includes(optionValue) || includesObject(rawValue, optionValue)));
 
 export type ReactSelectFieldProps<
   Option extends ReactSelectOptionType = ReactSelectOptionType,
@@ -41,6 +50,10 @@ export type ReactSelectFieldProps<
    */
   multi?: boolean;
   /**
+   * Flag to also accept a typed value that isn't one of the options
+   */
+  creatable?: boolean;
+  /**
    * The value of the field
    */
   value?: PropsValue<ReactSelectOptionType['value']> | undefined;
@@ -66,6 +79,7 @@ export function ReactSelectField<
   dataTest,
   disabled = false,
   multi = false,
+  creatable = false,
   selectProps,
   value: propValue,
   ...props
@@ -100,13 +114,8 @@ export function ReactSelectField<
                   if ((option as GroupBase<Option>)?.options) {
                     return (
                       (option as GroupBase<Option>).options as Option[]
-                    ).filter(
-                      (innerOption) =>
-                        rawValue === innerOption?.value ||
-                        isEqual(rawValue, innerOption?.value) ||
-                        (rawValue?.includes &&
-                          rawValue?.includes(innerOption.value)) ||
-                        includesObject(rawValue, innerOption.value),
+                    ).filter((innerOption) =>
+                      isOptionValueSelected(rawValue, innerOption?.value),
                     );
                   } else {
                     return option;
@@ -122,28 +131,41 @@ export function ReactSelectField<
                       return true;
                     } else {
                       const simpleOption = option as ReactSelectOptionType;
-                      return (
-                        rawValue === simpleOption.value ||
-                        isEqual(rawValue, simpleOption.value) ||
-                        (rawValue?.includes &&
-                          rawValue?.includes(simpleOption.value)) ||
-                        includesObject(rawValue, simpleOption.value)
+                      return isOptionValueSelected(
+                        rawValue,
+                        simpleOption.value,
                       );
                     }
                   },
                 );
             };
 
+            // a typed value isn't one of the options: add it so it stays
+            // selected
+            const allOptions =
+              creatable &&
+              !multi &&
+              typeof value === 'string' &&
+              value &&
+              !extractValue(value, options)?.length
+                ? [...(options ?? []), { value, label: value } as Option]
+                : options;
+
+            const Select = creatable ? CreatableSelect : ReactSelect;
+
             return (
-              <ReactSelect
+              <Select
                 {...selectProps}
                 aria-labelledby={name}
                 name={controllerName}
                 placeholder={placeholder}
                 isDisabled={disabled}
                 isMulti={multi}
-                options={options}
-                value={extractValue(value, options)}
+                options={allOptions}
+                value={extractValue(value, allOptions)}
+                formatCreateLabel={(inputValue: string) =>
+                  `Use "${inputValue}"`
+                }
                 data-test={dataTest}
                 data-testid={name}
                 onChange={handleChange}

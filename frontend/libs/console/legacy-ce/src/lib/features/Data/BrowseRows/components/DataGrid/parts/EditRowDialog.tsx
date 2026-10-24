@@ -7,6 +7,8 @@ interface EditRowDialogProps {
   table: Table;
   row: Record<string, any>;
   onClose: () => void;
+  /** called once the row is saved, e.g. to reload the rows */
+  onSaved?: () => void;
 }
 
 export const EditRowDialog = ({
@@ -14,13 +16,17 @@ export const EditRowDialog = ({
   table,
   row,
   onClose,
+  onSaved,
 }: EditRowDialogProps) => (
   <Dialog title="Edit Row" onClose={onClose} size="xxxl">
     <EditRowFormContainer
       source={source}
       table={table}
       row={row}
-      onSuccess={onClose}
+      onSuccess={() => {
+        onSaved?.();
+        onClose();
+      }}
     />
   </Dialog>
 );

@@ -1,10 +1,9 @@
 import { FaFolder, FaTable } from 'react-icons/fa';
-import { MetadataTable, RunSQLResponse, Table } from '@hasura/shared/types';
+import { RunSQLResponse, Table } from '@hasura/shared/types';
 import {
   GetTableColumnsProps,
   IntrospectedTable,
   TableFkRelationships,
-  TableRow,
 } from '../types';
 import { areTablesEqual } from '@hasura/metadata/helpers';
 import { exportMetadata, runIntrospectionQuery } from '@hasura/metadata/api';
@@ -84,32 +83,6 @@ export const convertToTreeData = (
       };
     }),
   ];
-};
-
-export const transformGraphqlResponse = ({
-  data,
-  tableCustomization,
-}: {
-  data: Record<string, string>[];
-  tableCustomization: MetadataTable['configuration'];
-}): TableRow[] => {
-  return data.map((row) => {
-    const transformedRow = Object.entries(row).reduce((acc, [key, value]) => {
-      const columnName =
-        Object.entries(tableCustomization?.column_config ?? {}).find(
-          ([, columnConfig]) => {
-            return columnConfig.custom_name === key;
-          },
-        )?.[0] ?? key;
-
-      return {
-        ...acc,
-        [columnName]: value,
-      };
-    }, {});
-
-    return transformedRow;
-  });
 };
 
 export function generateForeignKeyLabel(foreignKey: TableFkRelationships) {
@@ -198,6 +171,7 @@ export async function introspectTableScalarTypes({
   return {
     schema,
     scalarTypes,
+    metadataSource,
     metadataTable,
   };
 }

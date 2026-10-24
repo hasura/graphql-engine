@@ -1,6 +1,5 @@
 import { Table } from '@hasura/shared/types';
 
-const GET_TABLE_ENUMS_QUERY_KEY = 'GET_TABLE_ENUMS';
 const GET_TABLE_COMMENT_QUERY_KEY = 'GET_TABLE_COMMENT';
 const GET_TABLE_FOREIGN_KEYS_QUERY_KEY = 'GET_TABLE_FOREIGN_KEYS';
 const GET_TABLE_CHECK_CONSTRAINTS_QUERY_KEY = 'GET_TABLE_CHECK_CONSTRAINTS';
@@ -17,11 +16,6 @@ export const getTrackableTablesQueryKey = (dataSourceName: string) => [
   dataSourceName,
   GET_TRACKABLE_TABLES_QUERY_KEY,
 ];
-
-export const getTableEnumsQueryKey = (
-  dataSourceName: string,
-  tables: Table[],
-) => [dataSourceName, GET_TABLE_ENUMS_QUERY_KEY, tables];
 
 export const getTableCommentQueryKey = (
   dataSourceName: string,

@@ -35,13 +35,13 @@ describe('isIgnoredFilter', () => {
 
       it.each([null, undefined, '', '   '])('ignores %j values', (value) => {
         expect(
-          isIgnoredFilter(columns, { column: 'value', operator: '$eq', value }),
+          isIgnoredFilter(columns, { column: 'value', operator: '_eq', value }),
         ).toBe(true);
       });
 
       it.each(['0', 'false', 0, false])('keeps %j values', (value) => {
         expect(
-          isIgnoredFilter(columns, { column: 'value', operator: '$eq', value }),
+          isIgnoredFilter(columns, { column: 'value', operator: '_eq', value }),
         ).toBe(false);
       });
     },
@@ -58,7 +58,7 @@ describe('isIgnoredFilter', () => {
       expect(
         isIgnoredFilter(columns, {
           column: 'value',
-          operator: '$eq',
+          operator: '_eq',
           value: '',
         }),
       ).toBe(false);
@@ -69,7 +69,7 @@ describe('isIgnoredFilter', () => {
     expect(
       isIgnoredFilter([column('uuid', 'uuid')], {
         column: 'unknown',
-        operator: '$eq',
+        operator: '_eq',
         value: '',
       }),
     ).toBe(false);
@@ -87,7 +87,7 @@ describe('transformFilterValues', () => {
     ['boolean', 'boolean', 'false'],
     ['integer[]', 'array', '[1,2]'],
   ] as const)('preserves %s filters', (dataType, consoleDataType, value) => {
-    const filter = { column: 'value', operator: '$eq', value };
+    const filter = { column: 'value', operator: '_eq', value };
     expect(
       transformFilterValues(
         [column(dataType, consoleDataType, dataType)],
@@ -109,7 +109,7 @@ describe('transformFilterValues', () => {
       expect(
         transformFilterValues([column(dataType, consoleDataType, scalarType)], {
           column: 'value',
-          operator: '$eq',
+          operator: '_eq',
           value,
         }).value,
       ).toBe(expected);
@@ -132,7 +132,7 @@ describe('transformFilterValues', () => {
       expect(
         transformFilterValues([column(dataType, consoleDataType, scalarType)], {
           column: 'value',
-          operator: '$eq',
+          operator: '_eq',
           value,
         }).value,
       ).toBe(expected);
@@ -147,7 +147,7 @@ describe('transformFilterValues', () => {
   ] as const)(
     'keeps %s filters as strings',
     (dataType, consoleDataType, scalarType) => {
-      const filter = { column: 'value', operator: '$eq', value: '101' };
+      const filter = { column: 'value', operator: '_eq', value: '101' };
       expect(
         transformFilterValues(
           [column(dataType, consoleDataType, scalarType)],
@@ -160,7 +160,7 @@ describe('transformFilterValues', () => {
   it('keeps a uuid that starts with digits intact', () => {
     const filter = {
       column: 'value',
-      operator: '$eq',
+      operator: '_eq',
       value: '86d9aaba-f58b-4107-bfce-15e52f2d9fb8',
     };
     expect(
@@ -179,7 +179,7 @@ describe('transformFilterValues', () => {
       name: 'id',
       graphQLProperties: { name: 'uuid_id', scalarType: 'uuid' },
     };
-    const filter = { column: 'id', operator: '$eq', value: '123' };
+    const filter = { column: 'id', operator: '_eq', value: '123' };
     expect(transformFilterValues([renamedNumber, uuidColumn], filter)).toEqual(
       filter,
     );
@@ -193,7 +193,7 @@ describe('transformFilterValues', () => {
     expect(
       transformFilterValues([renamedColumn], {
         column: 'value',
-        operator: '$eq',
+        operator: '_eq',
         value: '1.5',
       }).value,
     ).toBe(1.5);
@@ -207,7 +207,7 @@ describe('transformFilterValues', () => {
     expect(
       transformFilterValues([dbColumn], {
         column: 'value',
-        operator: '$eq',
+        operator: '_eq',
         value: '1.5',
       }).value,
     ).toBe(1.5);
@@ -225,7 +225,7 @@ describe('transformFilterValues', () => {
     expect(
       transformFilterValues([column('integer', 'integer', 'Int')], {
         column: 'value',
-        operator: '$eq',
+        operator: '_eq',
         value,
       }).value,
     ).toBe(value);
@@ -237,14 +237,14 @@ describe('transformFilterValues', () => {
       expect(
         transformFilterValues([column('integer', 'integer', 'Int')], {
           column: 'value',
-          operator: '$eq',
+          operator: '_eq',
           value,
         }).value,
       ).toEqual(value);
     },
   );
 
-  it.each(['$is_null', '_is_null'])(
+  it.each(['_is_null'])(
     'does not numerically coerce %s operands',
     (operator) => {
       const filter = { column: 'value', operator, value: 'true' };
@@ -255,7 +255,7 @@ describe('transformFilterValues', () => {
   );
 
   it('leaves an unknown column unchanged', () => {
-    const filter = { column: 'unknown', operator: '$eq', value: '1.5' };
+    const filter = { column: 'unknown', operator: '_eq', value: '1.5' };
     expect(
       transformFilterValues([column('integer', 'integer')], filter),
     ).toEqual(filter);
@@ -270,7 +270,7 @@ describe('transformFilterValues', () => {
       const columns = [column(dataType, consoleDataType, dataType)];
       const filter = transformFilterValues(columns, {
         column: 'value',
-        operator: '$eq',
+        operator: '_eq',
         value,
       });
       const where = [{ value: { [filter.operator]: filter.value } }];
@@ -279,12 +279,12 @@ describe('transformFilterValues', () => {
         search: '',
       });
       expect(new URLSearchParams(search).get('filter')).toBe(
-        `value;$eq;${value}`,
+        `value;_eq;${value}`,
       );
       // URL reload must retain the same value, even for custom GraphQL scalars.
       expect(
         String(
-          convertUrlToDataGridOptions(search, columns).where?.[0].value.$eq,
+          convertUrlToDataGridOptions(search, columns).where?.[0].value._eq,
         ),
       ).toBe(value);
     },

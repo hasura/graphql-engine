@@ -50,7 +50,7 @@ const PopupLink = ({
   if (videoId) {
     return (
       <li>
-        <Flex align="center" gap="2" p="4">
+        <Flex align="center" gap="2" className="px-4 py-2">
           <StepNumber index={index} />
           <Text size="3">{title}</Text>
         </Flex>
@@ -73,12 +73,15 @@ const PopupLink = ({
           color="gray"
           highContrast
           underline="hover"
-          className="flex items-center gap-2 p-4"
         >
-          <span className={`${badgeClassName} bg-(--gray-12) text-(--gray-1)`}>
-            <FaDatabase />
-          </span>
-          {title}
+          <Flex align="center" gap="2" className="px-4 py-2">
+            <span
+              className={`${badgeClassName} bg-(--gray-12) text-(--gray-1)`}
+            >
+              <FaDatabase />
+            </span>
+            {title}
+          </Flex>
         </RelativeLink>
       ) : (
         <Link
@@ -89,11 +92,12 @@ const PopupLink = ({
           color="gray"
           highContrast
           underline="hover"
-          className="flex items-center gap-2 p-4"
         >
-          <StepNumber index={index} />
-          <span className="flex-1">{title}</span>
-          <FaExternalLinkAlt className="text-xs text-(--gray-a9)" />
+          <Flex align="center" gap="2" className="px-4 py-2">
+            <StepNumber index={index} />
+            <span className="flex-1">{title}</span>
+            <FaExternalLinkAlt className="text-xs text-(--gray-a9)" />
+          </Flex>
         </Link>
       )}
     </li>
@@ -196,7 +200,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ console_opts, metadata }) => {
   return (
     <Card
       size="1"
-      className="fixed bottom-8 right-8 z-10 w-90 p-0! overflow-hidden shadow-(--shadow-4)"
+      className="fixed! bottom-2 right-2 z-10 w-90 p-0! overflow-hidden shadow-(--shadow-4)"
       data-test="onboarding-popup"
     >
       {/* Brand yellow in both appearances; amber-contrast keeps text legible. */}
