@@ -7,7 +7,12 @@ import { LeftSubSidebar, useLeftSidebarSection } from '@hasura/shared/ui';
 import { useGDCTreeItemClick } from './GDCTree/hooks/useGDCTreeItemClick';
 import { SourceItem } from './types';
 import { Metadata } from '@hasura/shared/types';
-import { adaptFunction, functionDisplayName } from '@hasura/metadata/helpers';
+import {
+  adaptFunction,
+  findInconsistentSourceObject,
+  functionDisplayName,
+} from '@hasura/metadata/helpers';
+import { useInconsistentMetadata } from '@hasura/metadata/api';
 import { FaTable } from 'react-icons/fa6';
 import TreeView from './TreeView';
 
@@ -19,6 +24,9 @@ type Props = {
 const DataSubSidebar = ({ metadata, metadataLoading }: Props) => {
   const { handleClick } = useGDCTreeItemClick();
   const sources = metadata?.sources ?? [];
+  const { data: inconsistentObjects } = useInconsistentMetadata(
+    (result) => result.inconsistent_objects,
+  );
 
   const tableItems: SourceItem[] = sources.flatMap((source) =>
     source.tables
@@ -33,6 +41,11 @@ const DataSubSidebar = ({ metadata, metadataLoading }: Props) => {
           table: t.table,
           source: source.name,
           type: t.is_enum ? 'enum' : 'table',
+          inconsistency: findInconsistentSourceObject(inconsistentObjects, {
+            source: source.name,
+            type: 'table',
+            definition: t.table,
+          })?.reason,
         };
       })
       .concat(
@@ -49,6 +62,11 @@ const DataSubSidebar = ({ metadata, metadataLoading }: Props) => {
             table: fn.function,
             source: source.name,
             type: 'function',
+            inconsistency: findInconsistentSourceObject(inconsistentObjects, {
+              source: source.name,
+              type: 'function',
+              definition: fn.function,
+            })?.reason,
           };
         }) ?? [],
       ),

@@ -88,6 +88,8 @@ export type TableColumn = {
     | 'date'
     | 'time'
     | 'array';
+  /** console data type of the elements, when `consoleDataType` is `array` */
+  arrayItemType?: Exclude<TableColumn['consoleDataType'], 'array'>;
   nullable?: boolean;
   /**
    * Full SQL type including modifiers (e.g. `character varying(255)`), when
@@ -188,6 +190,10 @@ export type Operator = {
   name: string;
   value: string;
   defaultValue?: string;
+  /** the GraphQL type name of the operand, when known, e.g. `jsonb` */
+  valueType?: string;
+  /** whether the operand is a list, when known, e.g. for `_in` */
+  isListValue?: boolean;
 };
 
 export type Version = string;
@@ -278,7 +284,6 @@ export type InsertRowArgs = {
   table: Table;
   objects: Record<string, unknown>[];
   columns: TableColumn[];
-  defaultColumns: string[];
   /**
    * Also write a CLI migration file for the inserted rows (console CLI mode).
    * Ignored by drivers that don't support it.
@@ -296,7 +301,6 @@ export type UpdateRowArgs = {
   set: Record<string, unknown>;
   where: Record<string, unknown>;
   columns: TableColumn[];
-  defaultColumns: string[];
 };
 
 export type UpdateRowProps = DataSourceNetworkArgs & {

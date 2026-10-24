@@ -1,18 +1,23 @@
-import { TableColumn, columnDataType } from '@hasura/metadata/data-source';
+import { TableColumn } from '@hasura/metadata/data-source';
 
-const numericDataTypes = ['number', 'float', 'integer', 'int', 'Int'];
+const numericDataTypes: TableColumn['consoleDataType'][] = [
+  'integer',
+  'number',
+  'float',
+];
 
+/** Converts a value typed in the form to the column's generic data type. */
 export const convertTableValue = (
   value: unknown,
-  dataType: TableColumn['dataType'] | undefined,
+  consoleDataType: TableColumn['consoleDataType'] | undefined,
 ): string | number | boolean | unknown => {
-  if (typeof value === 'string') {
-    if (dataType && numericDataTypes.includes(columnDataType(dataType))) {
+  if (typeof value === 'string' && consoleDataType) {
+    if (numericDataTypes.includes(consoleDataType)) {
       return parseFloat(value);
     }
 
-    if (dataType === 'boolean' || dataType === 'bool') {
-      return value === 'true' ? true : false;
+    if (consoleDataType === 'boolean') {
+      return value === 'true';
     }
   }
 

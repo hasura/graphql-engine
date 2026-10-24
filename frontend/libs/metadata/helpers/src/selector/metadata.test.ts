@@ -650,7 +650,7 @@ describe('event trigger selectors — tables without an event_triggers array', (
 });
 
 describe('getSupportsForeignKeys', () => {
-  it('is false only for bigquery', () => {
+  it('is false for bigquery', () => {
     const bq = requireSource('bq');
     expect(getSupportsForeignKeys(bq)).toBe(false);
   });
@@ -660,7 +660,18 @@ describe('getSupportsForeignKeys', () => {
     expect(getSupportsForeignKeys(pg)).toBe(true);
   });
 
-  it('is true (assumed) for an undefined source', () => {
-    expect(getSupportsForeignKeys(undefined)).toBe(true);
+  it('is false for an undefined source', () => {
+    expect(getSupportsForeignKeys(undefined)).toBe(false);
+  });
+
+  it('is false for a non-Postgres source', () => {
+    expect(
+      getSupportsForeignKeys({
+        name: 'mysql',
+        kind: 'mysql',
+        tables: [],
+        configuration: {},
+      }),
+    ).toBe(false);
   });
 });

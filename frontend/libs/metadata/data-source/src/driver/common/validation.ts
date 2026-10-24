@@ -43,6 +43,7 @@ function validateInputValue(
         ? Number.parseInt(rawValue)
         : rawValue;
     case 'number':
+    case 'float':
       return typeof rawValue === 'string'
         ? Number.parseFloat(rawValue)
         : rawValue;
@@ -72,27 +73,62 @@ export const validateInputRowValues = getValidateInputRowValuesFunction({
   array: (_, value) => value,
 });
 
+/**
+ * Transforms `{ column: value }` into `{ column: { _eq: value } }`.
+ *
+ * `_and`/`_or` take a list of boolean expressions whose column values are
+ * already comparisons, e.g. `{ _or: [{ id: { _eq: 1 } }, { id: { _eq: 2 } }] }`
+ * to delete the selected rows. Unknown columns are ignored, as are branches
+ * left empty by that.
+ */
 export const transformWhereBoolExp = (
   where: Record<string, unknown>,
   columns: TableColumn[],
   graphqlMode: boolean,
 ) => {
+  const getColumnKey = (key: string) => {
+    const columnInfo = columns.find((col) => col.name === key);
+    if (!columnInfo) return undefined;
+
+    return graphqlMode && columnInfo.graphQLProperties?.name
+      ? columnInfo.graphQLProperties.name
+      : key;
+  };
+
+  const transformComparisons = (exp: Record<string, unknown>) =>
+    Object.entries(exp).reduce(
+      (acc, [key, comparison]) => {
+        const columnKey = getColumnKey(key);
+        // a comparison with an undefined operand is dropped by JSON and
+        // would match every row
+        const isComplete =
+          comparison !== undefined &&
+          !(
+            comparison &&
+            typeof comparison === 'object' &&
+            Object.values(comparison).includes(undefined)
+          );
+        if (columnKey && isComplete) acc[columnKey] = comparison;
+        return acc;
+      },
+      {} as Record<string, any>,
+    );
+
   return Object.entries(where).reduce(
     (acc, [key, value]) => {
-      const columnInfo = columns.find((col) => col.name === key);
-      if (!columnInfo) {
-        // ignore unknown fields.
+      if ((key === '_and' || key === '_or') && Array.isArray(value)) {
+        const expressions = value
+          .map(transformComparisons)
+          .filter((exp) => Object.keys(exp).length);
+        if (expressions.length) acc[key] = expressions;
         return acc;
       }
 
-      // only support the equal boolean expression.
-      const columnKey =
-        graphqlMode && columnInfo.graphQLProperties?.name
-          ? columnInfo.graphQLProperties.name
-          : key;
-      acc[columnKey] = {
-        _eq: value,
-      };
+      const columnKey = getColumnKey(key);
+      // only support the equal boolean expression. An undefined value, e.g. a
+      // key column missing from the row, would be dropped by JSON and match
+      // every row, so leave it out.
+      if (columnKey && value !== undefined) acc[columnKey] = { _eq: value };
 
       return acc;
     },

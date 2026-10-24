@@ -100,9 +100,15 @@ fetchJson, driver }`, returns `{ introspectTables }`. Re-exports
     - `getAllSourceKinds/` — fetches server-reported source kinds.
     - `getTableName/` — `getTableName` (also re-exported at
       `driver/index.ts`).
-    - `graphqlUtil.ts` — GraphQL name/type helpers.
-    - `modify/{deleteRows,insertRows,updateRows}.ts` — generic REST/SQL
-      row-mutation builders shared by SQL-ish drivers.
+    - `getTableGraphQLContext.ts` — metadata lookup of a tracked table plus
+      the introspected GraphQL schema (cached per resource version), shared
+      by `getTableRowsFromGraphQL` and the row mutations.
+    - `modify/runRowMutation.ts` — `runRowMutationFromGraphQL`: inserts,
+      updates or deletes rows through the GraphQL API for every driver
+      (refuses an update/delete with an empty filter).
+      `modify/{deleteRows,insertRows,updateRows}.ts` are thin curries over
+      it, taking the driver's validator and `getDefaultQueryRoot`. Row CRUD
+      no longer goes through `/v2/query`.
     - `sqlQueries.ts`, `sqlUtils.ts`, `utils.tsx`, `validation.ts` — shared
       SQL string builders and validators.
   - **driver/types/** — cross-driver prop/result types.
@@ -115,7 +121,7 @@ fetchJson, driver }`, returns `{ introspectTables }`. Re-exports
     `useDatabaseConfiguration`, `useDatabaseVersion`, `useStoredProcedures`,
     `useSupportedDataTypes`, `useSupportedScalars`, `useTableColumns`,
     `useTreeData`.
-  - `hooks/table/` — `useTableComment`, `useTableEnums`,
+  - `hooks/table/` — `useTableComment`,
     `useTableForeignKeys`/`useTablesForeignKeys`, `useTableInfos`,
     `useTrackableTables`, `useTrackedAndUntrackedTables`, `useIsTableView`.
   - `hooks/function/` — `useFunctionDefinition`, `useTrackableFunctions`,
@@ -134,8 +140,7 @@ fetchJson, driver }`, returns `{ introspectTables }`. Re-exports
     creation hook with its own `types.ts`/`typeGuards.ts`/`utils.ts`.
 - **types/** — `types/table.ts`, `types/queryKey.ts` (centralized React
   Query key builders: `getTrackableFunctionsQueryKey`,
-  `getTrackableTablesQueryKey`, `getTableEnumsQueryKey`,
-  `getTableCommentQueryKey`, `getTableForeignKeysQueryKey`,
+  `getTrackableTablesQueryKey`, `getTableCommentQueryKey`, `getTableForeignKeysQueryKey`,
   `getTablesForeignKeysQueryKey`, `getTableColumnInfosQueryKey`).
 - **utils/** — `utils/capabilities.ts` (`supportsSchemaLessTables`),
   `utils/table/` (`foreignKey.ts`, `selectors.ts`, `table.ts`) — generic

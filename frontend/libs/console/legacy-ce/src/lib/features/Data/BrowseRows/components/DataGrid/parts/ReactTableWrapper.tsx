@@ -27,9 +27,11 @@ import React, { useMemo, useState } from 'react';
 import clsx from 'clsx';
 import { Relationship } from '../../../../../DatabaseRelationships';
 import { RowOptionsButton } from './RowOptionsButton';
+import { useNavigate } from 'react-router';
+import { dataRoutes } from '@hasura/shared/utils';
 import { RowDialog } from './RowDialog';
-import { CloneRowDialog } from './CloneRowDialog';
 import { EditRowDialog } from './EditRowDialog';
+import { toCloneRowState } from '../../../../InsertRow/cloneRow';
 
 interface ReactTableWrapperProps {
   disabled: boolean;
@@ -37,6 +39,8 @@ interface ReactTableWrapperProps {
   selectedRows: RowSelectionState;
   onRowsSelect: OnChangeFn<RowSelectionState>;
   onRowDelete: (row: Record<string, any>) => void;
+  /** called once a row is edited, e.g. to reload the rows */
+  onRowEdited?: () => void;
   relationships?: {
     allRelationships: Relationship[];
     onClick: (props: { relationship: Relationship; rowData: TableRow }) => void;
@@ -68,6 +72,7 @@ export const ReactTableWrapper: React.FC<ReactTableWrapperProps> = ({
   isRowsSelectionEnabled,
   onRowsSelect,
   onRowDelete,
+  onRowEdited,
   relationships,
   rows,
   sort,
@@ -81,12 +86,39 @@ export const ReactTableWrapper: React.FC<ReactTableWrapperProps> = ({
     string,
     any
   > | null>(null);
-  const [rowToClone, setRowToClone] = useState<Record<string, any> | null>(
-    null,
-  );
+  const navigate = useNavigate();
+  // a row is cloned in the Insert Row tab, prefilled through the router state
+  const cloneRow = (row: Record<string, unknown>) =>
+    navigate(dataRoutes.manageTable(source.name, table, 'insert'), {
+      state: toCloneRowState(row),
+    });
   const [rowToEdit, setRowToEdit] = useState<Record<string, any> | null>(null);
 
-  const columns = Object.keys(rows?.[0] ?? []);
+  // keep primary keys first (in table definition order), then sort the rest
+  // by name so the column order is stable across queries
+  const primaryKeyNames = _tableColumns
+    .filter((column) => column.isPrimaryKey)
+    .flatMap((column) => [column.name, column.graphQLProperties?.name]);
+  const rowKeys = Object.keys(rows?.[0] ?? []);
+  // a key column missing from the rows (e.g. CockroachDB's hidden `rowid` of
+  // a table without a primary key) can't be used to target a row
+  const primaryKeyColumns = _tableColumns
+    .filter((column) => column.isPrimaryKey)
+    .map((column) => column.name);
+  const hasPrimaryKey =
+    primaryKeyColumns.length > 0 &&
+    primaryKeyColumns.every((name) => rowKeys.includes(name));
+  const columns = [
+    ...primaryKeyNames.filter(
+      (name, index): name is string =>
+        !!name &&
+        rowKeys.includes(name) &&
+        primaryKeyNames.indexOf(name) === index,
+    ),
+    ...rowKeys
+      .filter((key) => !primaryKeyNames.includes(key))
+      .sort((a, b) => a.localeCompare(b)),
+  ];
 
   const tableColumns = columns.map((column) =>
     columnHelper.accessor((row) => row[column], {
@@ -94,7 +126,21 @@ export const ReactTableWrapper: React.FC<ReactTableWrapperProps> = ({
       header: () => <span key={column}>{column}</span>,
       enableSorting: true,
       enableMultiSort: true,
-      cell: (info: any) => <>{renderColumnData(info.getValue()) ?? ''}</>,
+      cell: (info: any) => {
+        const value = renderColumnData(info.getValue()) ?? '';
+        // primary key values open the row dialog, same as the "Open" row option
+        return primaryKeyNames.includes(column) ? (
+          <Link
+            onClick={() => setCurrentActiveRow(info.row.original)}
+            className="cursor-pointer!"
+            data-testid={`@open-row-${column}`}
+          >
+            {value}
+          </Link>
+        ) : (
+          <>{value}</>
+        );
+      },
     }),
   );
 
@@ -167,7 +213,7 @@ export const ReactTableWrapper: React.FC<ReactTableWrapperProps> = ({
                   : table.getIsAllRowsSelected()
               }
               onClick={table.getToggleAllRowsSelectedHandler()}
-              disabled={!isRowsSelectionEnabled || disabled}
+              disabled={!isRowsSelectionEnabled || !hasPrimaryKey || disabled}
             />
           </Flex>
         ),
@@ -180,14 +226,15 @@ export const ReactTableWrapper: React.FC<ReactTableWrapperProps> = ({
             <RowOptionsButton
               row={row.original}
               onOpen={(r: any) => setCurrentActiveRow(r)}
-              onClone={(r: any) => setRowToClone(r)}
-              onEdit={(r: any) => setRowToEdit(r)}
-              onDelete={onRowDelete}
+              onClone={cloneRow}
+              // without a primary key, the row can't be targeted
+              onEdit={hasPrimaryKey ? (r: any) => setRowToEdit(r) : undefined}
+              onDelete={hasPrimaryKey ? onRowDelete : undefined}
             />
             <Checkbox
               checked={row.getIsSelected()}
               onClick={row.getToggleSelectedHandler()}
-              disabled={!isRowsSelectionEnabled || disabled}
+              disabled={!isRowsSelectionEnabled || !hasPrimaryKey || disabled}
             />
           </Flex>
         ),
@@ -290,20 +337,13 @@ export const ReactTableWrapper: React.FC<ReactTableWrapperProps> = ({
           columns={_tableColumns}
         />
       )}
-      {rowToClone && (
-        <CloneRowDialog
-          source={source}
-          table={table}
-          row={rowToClone}
-          onClose={() => setRowToClone(null)}
-        />
-      )}
       {rowToEdit && (
         <EditRowDialog
           source={source}
           table={table}
           row={rowToEdit}
           onClose={() => setRowToEdit(null)}
+          onSaved={onRowEdited}
         />
       )}
     </>

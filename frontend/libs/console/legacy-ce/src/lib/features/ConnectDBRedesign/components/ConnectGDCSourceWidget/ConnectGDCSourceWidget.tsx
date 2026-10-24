@@ -7,11 +7,9 @@ import {
   Collapsible,
   InputField,
   useConsoleForm,
-  hasuraToast,
   IndicatorCard,
   Tabs,
   OpenApi3Form,
-  DisplayToastErrorMessage,
   SkeletonList,
 } from '@hasura/shared/ui';
 import { useAvailableDrivers } from '@hasura/metadata/data-source';
@@ -96,23 +94,7 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
     createConnection,
     editConnection,
     isPending: isLoadingCreateConnection,
-  } = useManageDatabaseConnection({
-    onSuccess: () => {
-      hasuraToast({
-        type: 'success',
-        title: isEditMode
-          ? 'Database updated successfully!'
-          : 'Database added successfully!',
-      });
-    },
-    onError: (err) => {
-      hasuraToast({
-        type: 'error',
-        title: err.name,
-        children: <DisplayToastErrorMessage message={err.message} />,
-      });
-    },
-  });
+  } = useManageDatabaseConnection({});
 
   const {
     data,

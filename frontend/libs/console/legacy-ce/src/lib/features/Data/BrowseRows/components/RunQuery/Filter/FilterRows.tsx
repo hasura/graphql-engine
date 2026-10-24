@@ -5,12 +5,16 @@ import { Operator, TableColumn } from '@hasura/metadata/data-source';
 import { RiAddBoxLine } from 'react-icons/ri';
 import { useFieldArray } from 'react-hook-form';
 import { FilterRow } from './FilterRow';
-import { FiltersAndSortFormValues } from '../types';
-import { WhereClause } from '@hasura/shared/types';
+import { FilterFormValues, FiltersAndSortFormValues } from '../types';
 
 export type FilterRowsProps = {
   columns: TableColumn[];
+  /** operators of a column whose operators aren't known */
   operators: Operator[];
+  /** the operators each column supports, by column name */
+  columnOperators?: Record<string, Operator[]>;
+  /** the allowed values of the columns that reference an enum table */
+  enumColumnValues?: Record<string, string[]>;
   name: string;
   initialFilters?: FiltersAndSortFormValues['filters'];
   onRemove?: () => void;
@@ -20,32 +24,21 @@ export const FilterRows = ({
   name,
   columns,
   operators,
+  columnOperators,
+  enumColumnValues,
   initialFilters = [],
   onRemove,
 }: FilterRowsProps) => {
   const { fields, append, remove, update } = useFieldArray<
-    Record<string, WhereClause[]>
+    Record<string, FilterFormValues[]>
   >({
     name,
   });
 
   useEffect(() => {
-    if (initialFilters.length > 0) {
-      initialFilters.forEach((filter, index) => {
-        // TODO-NEXT: find a way to fix the types below
-        update(index, {
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          column: filter.column,
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          operator: filter.operator,
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          value: filter.value,
-        });
-      });
-    }
+    initialFilters.forEach(({ column, operator, value }, index) => {
+      update(index, { column, operator, value });
+    });
   }, [initialFilters, update]);
 
   const removeEntry = (index: number) => {
@@ -67,14 +60,10 @@ export const FilterRows = ({
       };
     });
 
-  const operatorOptions: ReactSelectOptionType[] = operators.map(
-    (operator) => ({
-      label: `[${operator.value}] ${operator.name}`,
-      value: operator.value,
-    }),
-  );
-
-  const defaultValues = operators
+  const defaultValues = [
+    ...operators,
+    ...Object.values(columnOperators ?? {}).flat(),
+  ]
     .filter((operator) => !!operator.defaultValue)
     .reduce((acc, operator) => {
       return {
@@ -98,7 +87,10 @@ export const FilterRows = ({
           <FilterRow
             key={index}
             columnOptions={columnOptions}
-            operatorOptions={operatorOptions}
+            columns={columns}
+            operators={operators}
+            columnOperators={columnOperators}
+            enumColumnValues={enumColumnValues}
             onRemove={() => removeEntry(index)}
             name={`${name}.${index}`}
             defaultValues={defaultValues}
@@ -110,7 +102,7 @@ export const FilterRows = ({
           type="button"
           size="sm"
           mode="default"
-          onClick={() => append({})}
+          onClick={() => append({ column: '', operator: '', value: '' })}
           leftIcon={RiAddBoxLine}
           data-testid={`${name}.add`}
         >

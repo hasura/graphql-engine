@@ -270,7 +270,7 @@ export const manageTable = (
   table: Table,
   operation?: string | null,
 ): To => ({
-  pathname: `${dataManageDatabaseRoutePrefix}/${database}/table${operation ? '/' + operation : ''}`,
+  pathname: `${dataManageDatabaseRoutePrefix}/${database}/table/${operation || 'browse'}`,
   search: `?table=${encodeURIComponent(JSON.stringify(table))}`,
 });
 export const permissionSummary = (database: string) =>

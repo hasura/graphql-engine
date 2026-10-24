@@ -1,8 +1,10 @@
-import { SupportedDriver } from '@hasura/shared/types';
+import { TableColumn } from '@hasura/metadata/data-source';
+import { ArrayInput } from './ArrayInput';
 import { BooleanInput } from './BooleanInput';
-import { getFormatDateFn } from './ColumnRowInput.utils';
+import { getFormatDateFn, hasTimeZone } from './ColumnRowInput.utils';
 import { DateInput } from './DateInput';
 import { DateTimeInput } from './DateTimeInput';
+import { EnumInput } from './EnumInput';
 import {
   ExpandableTextInput,
   ExpandableTextInputProps,
@@ -12,98 +14,117 @@ import { TimeInput } from './TimeInput';
 import { TextInput } from './TextInput';
 
 type ColumnRowInputProps = Omit<ExpandableTextInputProps, 'initialValue'> & {
-  dataType: string;
-  onValueChange: (e: { target: { value: string } }) => void;
+  /** the generic data type, which picks the input */
+  consoleDataType: TableColumn['consoleDataType'];
+  /** the database type, which tells whether a date keeps a time zone */
+  dataType: TableColumn['dataType'];
+  /** the element data type of an array column */
+  arrayItemType?: TableColumn['arrayItemType'];
+  onValueChange: (e: { target: { value: unknown } }) => void;
   onCheckValueRadio: () => void;
-  driver: SupportedDriver;
   initialValue?: unknown;
+  /** allowed values when the column references an enum table */
+  enumValues?: string[];
 };
 
 export const ColumnRowInput: React.FC<ColumnRowInputProps> = ({
+  consoleDataType,
   dataType,
+  arrayItemType,
   onValueChange,
   onCheckValueRadio,
-  driver,
   initialValue,
+  enumValues,
   ...props
 }) => {
-  if (dataType === 'string' || dataType === 'text') {
+  if (enumValues) {
     return (
-      <ExpandableTextInput
+      <EnumInput
         {...props}
-        initialValue={initialValue as string | undefined}
+        values={enumValues}
+        initialValue={initialValue}
+        onValueChange={onValueChange}
+        onCheckValueRadio={onCheckValueRadio}
       />
     );
   }
 
-  if (dataType === 'date') {
-    return (
-      <DateInput {...props} defaultValue={initialValue as string | number} />
-    );
-  }
+  switch (consoleDataType) {
+    case 'array':
+      return (
+        <ArrayInput
+          {...props}
+          itemType={arrayItemType}
+          initialValue={initialValue}
+          onValueChange={onValueChange}
+          onCheckValueRadio={onCheckValueRadio}
+        />
+      );
 
-  if (
-    dataType === 'datetime' ||
-    dataType === 'timestamp without time zone' ||
-    dataType === 'timestamp with time zone'
-  ) {
-    const formatDate = getFormatDateFn(dataType, driver);
-    return (
-      <DateTimeInput
-        {...props}
-        formatDate={formatDate}
-        defaultValue={initialValue as string | number}
-      />
-    );
-  }
+    case 'string':
+    case 'text':
+      return (
+        <ExpandableTextInput
+          {...props}
+          initialValue={initialValue as string | undefined}
+        />
+      );
 
-  if (
-    dataType === 'time' ||
-    dataType === 'time without time zone' ||
-    dataType === 'time with time zone'
-  ) {
-    const formatDate = getFormatDateFn(dataType, driver);
-    return (
-      <TimeInput
-        {...props}
-        formatDate={formatDate}
-        defaultValue={initialValue as string | number}
-      />
-    );
-  }
+    case 'date':
+      return (
+        <DateInput {...props} defaultValue={initialValue as string | number} />
+      );
 
-  if (dataType === 'jsondtype' || dataType === 'jsonb' || dataType === 'json') {
-    return (
-      <JsonInput
-        {...props}
-        initialValue={
-          typeof initialValue === 'string'
-            ? initialValue
-            : initialValue !== undefined
-              ? JSON.stringify(initialValue)
-              : undefined
-        }
-      />
-    );
-  }
+    case 'timestamp':
+      return (
+        <DateTimeInput
+          {...props}
+          formatDate={getFormatDateFn('timestamp', hasTimeZone(dataType))}
+          defaultValue={initialValue as string | number}
+        />
+      );
 
-  if (dataType === 'boolean' || dataType === 'bool') {
-    return (
-      <BooleanInput
-        checked={false}
-        initialValue={
-          typeof initialValue === 'boolean' ? initialValue : undefined
-        }
-        onCheckedChange={(isChecked: boolean) => {
-          const value = isChecked ? 'true' : 'false';
-          onValueChange({ target: { value } });
-          onCheckValueRadio();
-        }}
-      />
-    );
-  }
+    case 'time':
+      return (
+        <TimeInput
+          {...props}
+          formatDate={getFormatDateFn('time', hasTimeZone(dataType))}
+          defaultValue={initialValue as string | number}
+        />
+      );
 
-  return (
-    <TextInput {...props} defaultValue={initialValue as string | number} />
-  );
+    case 'json':
+      return (
+        <JsonInput
+          {...props}
+          initialValue={
+            typeof initialValue === 'string'
+              ? initialValue
+              : initialValue !== undefined
+                ? JSON.stringify(initialValue)
+                : undefined
+          }
+        />
+      );
+
+    case 'boolean':
+      return (
+        <BooleanInput
+          checked={false}
+          initialValue={
+            typeof initialValue === 'boolean' ? initialValue : undefined
+          }
+          onCheckedChange={(isChecked: boolean) => {
+            const value = isChecked ? 'true' : 'false';
+            onValueChange({ target: { value } });
+            onCheckValueRadio();
+          }}
+        />
+      );
+
+    default:
+      return (
+        <TextInput {...props} defaultValue={initialValue as string | number} />
+      );
+  }
 };

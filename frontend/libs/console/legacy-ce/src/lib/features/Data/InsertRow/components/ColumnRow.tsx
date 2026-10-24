@@ -2,13 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Code, Flex } from '@radix-ui/themes';
 import { InputCustomEvent } from './TextInput';
 import { ColumnRowInput } from './ColumnRowInput';
-import { SupportedDriver } from '@hasura/shared/types';
-import {
-  columnDataType,
-  isDataType,
-  TableColumn,
-  TableColumnTypeMap,
-} from '@hasura/metadata/data-source';
+import { TableColumn } from '@hasura/metadata/data-source';
 import { Text, Radio } from '@hasura/shared/ui';
 
 type RowValue = {
@@ -23,13 +17,18 @@ export type ColumnRowProps = {
   isDefaultDisabled: boolean;
   label: string;
   name: string;
+  /** the database type, shown next to the input */
   dataType: TableColumn['dataType'];
+  /** the generic data type, which picks the input */
+  consoleDataType: TableColumn['consoleDataType'];
+  /** the element data type of an array column */
+  arrayItemType?: TableColumn['arrayItemType'];
   onChange: ({ columnName, selectionType, value }: RowValue) => void;
   resetToken: string;
   placeholder: string;
-  driver: SupportedDriver;
-  supportedDataTypes: TableColumnTypeMap | undefined;
   initialValue?: unknown;
+  /** allowed values when the column references an enum table */
+  enumValues?: string[];
 };
 
 export const ColumnRow = ({
@@ -42,9 +41,10 @@ export const ColumnRow = ({
   resetToken,
   placeholder,
   dataType,
-  driver,
-  supportedDataTypes,
+  consoleDataType,
+  arrayItemType,
   initialValue,
+  enumValues,
 }: ColumnRowProps) => {
   const hasInitialValue = initialValue !== undefined && initialValue !== null;
   const valueId = `${name}-value`;
@@ -116,10 +116,7 @@ export const ColumnRow = ({
       valueInputRef.current.value = '';
     }
 
-    const value =
-      supportedDataTypes && isDataType(supportedDataTypes, dataType, 'boolean')
-        ? false
-        : undefined;
+    const value = consoleDataType === 'boolean' ? false : undefined;
 
     onChange({
       columnName: name,
@@ -150,7 +147,9 @@ export const ColumnRow = ({
       </Flex>
       <div className="w-5/12">
         <ColumnRowInput
-          dataType={columnDataType(dataType)}
+          consoleDataType={consoleDataType}
+          arrayItemType={arrayItemType}
+          dataType={dataType}
           name={name}
           onChange={onValueChange}
           onInput={checkValueRadio}
@@ -159,8 +158,8 @@ export const ColumnRow = ({
           placeholder={placeholder}
           onValueChange={onValueChange}
           onCheckValueRadio={onCheckValueRadio}
-          driver={driver}
           initialValue={initialValue}
+          enumValues={enumValues}
         />
       </div>
       <Flex align="center" gap="3" className="w-4/12">

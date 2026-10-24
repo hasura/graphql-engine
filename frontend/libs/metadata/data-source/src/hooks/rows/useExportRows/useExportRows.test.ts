@@ -12,11 +12,10 @@ import { TableRow } from '../../../driver';
 import { testWrapper } from '@hasura/shared/testing';
 import { useExportRows } from './index';
 
-// `getTableColumns` always calls `introspectTableScalarTypes`, which runs
-// `buildClientSchema` on the full GraphQL introspection payload. That
-// requires a structurally complete introspection result (all built-in
-// scalar/meta types included), not just the hand-picked `Album` type, so we
-// generate it from a real schema instead of hand-writing a partial one.
+// `getTableRows` runs `buildClientSchema` on the full GraphQL introspection
+// payload. That requires a structurally complete introspection result (all
+// built-in scalar/meta types included), not just the hand-picked `Album` type,
+// so we generate it from a real schema instead of hand-writing a partial one.
 const mockGraphQLSchema = buildSchema(`
   type Album {
     AlbumId: Int!
@@ -24,8 +23,30 @@ const mockGraphQLSchema = buildSchema(`
     Title: String!
   }
 
+  input Int_comparison_exp {
+    _gt: Int
+  }
+
+  input Album_bool_exp {
+    AlbumId: Int_comparison_exp
+  }
+
+  enum order_by {
+    asc
+    desc
+  }
+
+  input Album_order_by {
+    Title: order_by
+  }
+
   type query_root {
-    Album: [Album!]!
+    Album(
+      where: Album_bool_exp
+      order_by: [Album_order_by!]
+      limit: Int
+      offset: Int
+    ): [Album!]!
   }
 
   schema {
@@ -50,10 +71,14 @@ vi.mock('@hasura/shared/utils', async (importOriginal) => {
 const baseUseExportRowsPros: UseRowsPropType = {
   source: { name: 'chinook', kind: 'postgres' },
   table: { name: 'Album', schema: 'public' },
-  columns: [],
+  columns: [
+    { name: 'AlbumId', dataType: 'integer', consoleDataType: 'integer' },
+    { name: 'Title', dataType: 'text', consoleDataType: 'string' },
+    { name: 'ArtistId', dataType: 'integer', consoleDataType: 'integer' },
+  ],
   options: {
     limit: 10,
-    where: [{ AlbumId: { $gt: 4 } }],
+    where: [{ AlbumId: { _gt: 4 } }],
     order_by: [{ column: 'Title', type: 'desc' }],
     offset: 15,
   },
@@ -106,13 +131,17 @@ describe('useExportRows', () => {
     http.post('http://localhost/v1/metadata', () => {
       return HttpResponse.json(mockMetadata, { status: 200 });
     }),
-    http.post('http://localhost/v2/query', () => {
-      return HttpResponse.json(expectedResult, { status: 200 });
-    }),
-    http.post('/v1/graphql', () => {
+    http.post('/v1/graphql', async ({ request }) => {
+      const { operationName } = (await request.json()) as {
+        operationName: string;
+      };
+
       return HttpResponse.json(
         {
-          data: mockIntrospectionResult,
+          data:
+            operationName === 'IntrospectionQuery'
+              ? mockIntrospectionResult
+              : { Album: expectedResult },
         },
         { status: 200 },
       );

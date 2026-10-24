@@ -25,7 +25,6 @@ export type TrackableComputedFunction = {
 };
 
 export const postgresColumnDataTypes = {
-  ARRAY: 'ARRAY',
   BIGINT: 'bigint',
   BIGSERIAL: 'bigserial',
   BOOLEAN: 'boolean',
@@ -103,19 +102,18 @@ export const consoleDataTypeToSQLTypeMap: Record<
     'float8',
   ],
   timestamp: [
-    'timetz',
     'timestamptz',
     'timestamp',
     'timestamp with time zone',
     'timestamp without time zone',
-    'time with time zone',
-    'time without time zone',
   ],
   date: ['date'],
-  time: ['time'],
+  time: ['time', 'timetz', 'time with time zone', 'time without time zone'],
   geography: ['geography'],
   uuid: ['uuid'],
-  array: ['ARRAY'],
+  // array types are named after their element type (e.g. `text[]`), which
+  // can be typed as a custom type
+  array: [],
 };
 
 export const consoleScalars = Object.values(consoleDataTypeToSQLTypeMap).flat();

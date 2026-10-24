@@ -26,7 +26,6 @@ import { dropColumnCurry } from './dropColumn';
 
 export * from './createDatabaseSchema';
 export * from './deleteDatabaseSchema';
-export * from './updateRow';
 export * from './insertRows';
 export * from './alterForeignKey';
 export * from './checkConstraint';
@@ -40,9 +39,10 @@ export * from './addColumn';
 export * from './dropColumn';
 
 import { insertRows } from './insertRows';
-import { updateRows } from './updateRow';
-import { deleteRows } from './deleteRows';
 import { createTableCurry } from './createTable';
+import { deleteRowsCurry, updateRowsCurry } from '../../common/modify';
+import { getDefaultQueryRoot } from '../config';
+import { validatePostgresInputRowValues } from '../utils';
 
 export const createPostgresModifyMethods = (
   driver: PostgresFamilyDriver,
@@ -71,6 +71,9 @@ export const createPostgresModifyMethods = (
   dropColumn: dropColumnCurry(driver),
   createTable: createTableCurry(driver),
   insertRows,
-  updateRows,
-  deleteRows,
+  updateRows: updateRowsCurry(
+    validatePostgresInputRowValues,
+    getDefaultQueryRoot,
+  ),
+  deleteRows: deleteRowsCurry(getDefaultQueryRoot),
 });

@@ -6,11 +6,10 @@ import {
   getSupportedOperators,
   getTableColumnInfos,
 } from './introspection';
-import { getTableRows } from './query';
+import { getDefaultQueryRoot, getTableRows } from './query';
 import { isBigQueryTable } from './utils';
 import {
   bigquerySupportedFeatures,
-  BigQueryTable,
   DataTypeScalars,
   DataTypeToSQLTypeMap,
   bigQueryCapabilities,
@@ -55,15 +54,12 @@ export const bigquery: Database = {
     getTableRows,
   },
   modify: {
-    insertRows: insertRowsCurry(validateInputRowValues, ''),
-    updateRows: updateRowsCurry(validateInputRowValues, ''),
-    deleteRows: deleteRowsCurry(''),
+    insertRows: insertRowsCurry(validateInputRowValues, getDefaultQueryRoot),
+    updateRows: updateRowsCurry(validateInputRowValues, getDefaultQueryRoot),
+    deleteRows: deleteRowsCurry(getDefaultQueryRoot),
   },
   config: {
-    getDefaultQueryRoot: ({ table }) => {
-      const { name, dataset } = table as BigQueryTable;
-      return `${dataset}_${name}`;
-    },
+    getDefaultQueryRoot,
     getSupportedQueryTypes: () => {
       return ['select'];
     },

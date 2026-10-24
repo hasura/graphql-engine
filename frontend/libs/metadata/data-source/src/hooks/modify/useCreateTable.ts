@@ -32,7 +32,7 @@ export function useCreateTable(options?: UseCreateTableOptions) {
   const { endpoints, envVars } = useAppContext();
   const fetchJson = useAuthFetchJson();
   const queryClient = useQueryClient();
-  const { mutate } = useMetadataMigration();
+  const { mutateAsync } = useMetadataMigration();
   const showErrorNotification = useErrorNotification();
 
   return useMutation<boolean, unknown, CreateTableProps>({
@@ -55,7 +55,7 @@ export function useCreateTable(options?: UseCreateTableOptions) {
       });
 
       if (result) {
-        await mutate({
+        await mutateAsync({
           query: getTrackTableArgs(
             {
               source: source.name,
