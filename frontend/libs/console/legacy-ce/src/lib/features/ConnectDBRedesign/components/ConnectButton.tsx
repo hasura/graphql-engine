@@ -1,8 +1,13 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { Button, useHasuraAlert, hasuraToast, Text } from '@hasura/shared/ui';
+import {
+  Button,
+  useHasuraAlert,
+  Text,
+  showErrorNotification,
+} from '@hasura/shared/ui';
 import { useReloadMetadata } from '@hasura/metadata/api';
 import { DriverInfo } from '@hasura/metadata/data-source';
-import { dataRoutes, getErrorMessage } from '@hasura/shared/utils';
+import { dataRoutes } from '@hasura/shared/utils';
 import { useNavigate } from 'react-router';
 import { Code } from '@radix-ui/themes';
 
@@ -54,10 +59,9 @@ export const ConnectButton = ({
             client.invalidateQueries();
             return { withSuccess: true, successText: 'Metadata Reloaded' };
           } catch (err) {
-            hasuraToast({
-              message: getErrorMessage(err),
+            showErrorNotification({
+              error: err,
               title: 'There was an error reloading your metadata.',
-              type: 'error',
             });
 
             return {

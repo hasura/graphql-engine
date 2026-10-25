@@ -120,12 +120,12 @@ export const updateKey = ({
   const path = getKeyPath({ permissionsState: clone, keyPath, newKey, type });
   const value = getInitialValue(newKey, type);
 
+  // removing an item of an array (e.g. of `_and`) strips the empty items
   const parentKey = path[path.length - 1];
-  const parentIsArray = parseInt(parentKey);
-  if (parentIsArray) {
-    const prevPath = path.slice(0, -1);
-    const obj = get(clone, prevPath);
-    const filtered = obj.filter((o: Record<string, string>) => !isEmpty(o));
+  const prevPath = path.slice(0, -1);
+  const parent = get(clone, prevPath);
+  if (/^\d+$/.test(parentKey) && Array.isArray(parent)) {
+    const filtered = parent.filter((o: Record<string, string>) => !isEmpty(o));
     return set(clone, prevPath, filtered.length ? filtered : [{}]);
   }
 
@@ -145,9 +145,9 @@ export function isColumnComparator(comparator: string) {
     comparator === '_ceq' ||
     comparator === '_cne' ||
     comparator === '_cgt' ||
-    comparator === '_cge' ||
+    comparator === '_cgte' ||
     comparator === '_clt' ||
-    comparator === '_cle'
+    comparator === '_clte'
   );
 }
 

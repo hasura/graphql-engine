@@ -1,6 +1,5 @@
 @import 'graphiql/style.css';
 @import '@graphiql/plugin-explorer/style.css';
-@import '@graphiql/plugin-code-exporter/style.css';
 
 /* Hasura Analyse modal css */
 .wd25 {
@@ -241,8 +240,6 @@
  * editors (wired via GraphiQLThemeSync). These rules cover the surfaces
  * GraphiQL's theme does NOT own, all scoped under the `.dark` document class:
  *  - our custom Hasura toolbar buttons (REST / Derive / Analyze / Cache …);
- *  - the code-exporter's CodeMirror-5 panel, which keeps its own 'default'
- *    (light) theme — recolored here instead of recreating the plugin;
  *  - the Analyze modal (hardcoded light surfaces).
  * ------------------------------------------------------------------ */
 .dark .graphiql-container .hasura-toolbar-button {
@@ -266,51 +263,6 @@
   background: #b88a1f;
   border: 1px solid #8a6a18;
   color: #0f172a;
-}
-
-/* Code-exporter CodeMirror 5 panel (otherwise the light 'default' theme). */
-.dark .graphiql-container .CodeMirror {
-  background: #1e1e20;
-  color: #e4e4e7;
-}
-
-.dark .graphiql-container .CodeMirror-gutters {
-  background: #1a1a1c;
-  border-right-color: #333;
-}
-
-.dark .graphiql-container .CodeMirror-linenumber {
-  color: #6b7280;
-}
-
-.dark .graphiql-container .CodeMirror-cursor {
-  border-left-color: #e4e4e7;
-}
-
-.dark .graphiql-container .cm-s-default .cm-keyword {
-  color: #c586c0;
-}
-
-.dark .graphiql-container .cm-s-default .cm-string {
-  color: #ce9178;
-}
-
-.dark .graphiql-container .cm-s-default .cm-number {
-  color: #b5cea8;
-}
-
-.dark .graphiql-container .cm-s-default .cm-property,
-.dark .graphiql-container .cm-s-default .cm-variable,
-.dark .graphiql-container .cm-s-default .cm-def {
-  color: #9cdcfe;
-}
-
-.dark .graphiql-container .cm-s-default .cm-comment {
-  color: #6a9955;
-}
-
-.dark .graphiql-container .cm-s-default .cm-atom {
-  color: #569cd6;
 }
 
 /* Analyze modal (opened from the toolbar) — hardcoded light surfaces. */

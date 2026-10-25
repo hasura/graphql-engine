@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Flex, Heading } from '@radix-ui/themes';
-import { hasuraToast, useConsoleForm, Tabs, Button } from '@hasura/shared/ui';
+import {
+  useConsoleForm,
+  Tabs,
+  Button,
+  showErrorNotification,
+} from '@hasura/shared/ui';
 import { useMetadata } from '@hasura/metadata/api';
 import { PostgresSource, Source } from '@hasura/shared/types';
 import { useManageDatabaseConnection } from '../../hooks/useManageDatabaseConnection';
@@ -78,10 +83,10 @@ export const ConnectPostgresWidget = (props: ConnectPostgresWidgetProps) => {
     try {
       reset(getDefaultValues(metadataSource));
     } catch (err) {
-      hasuraToast({
-        type: 'error',
+      showErrorNotification({
         title:
           'Error while retriving database. Please check if the database is of type postgres',
+        error: err,
       });
     }
   }, [metadataSource, reset]);

@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Flex } from '@radix-ui/themes';
-import { Dialog, hasuraToast, JsonCodeBlock, Spinner } from '@hasura/shared/ui';
+import {
+  Dialog,
+  JsonCodeBlock,
+  showErrorNotification,
+  Spinner,
+} from '@hasura/shared/ui';
 import useInvokeManualTrigger, {
   InvokeManualTriggerArgs,
 } from '../hooks/useInvokeManualTrigger';
@@ -72,10 +77,9 @@ const InvokeManualTrigger = ({ onClose, sourceKind, ...invokeArgs }: Props) => {
         setEventId(data.event_id);
       })
       .catch((err) => {
-        hasuraToast({
-          type: 'error',
+        showErrorNotification({
           title: 'Error invoking trigger',
-          message: getErrorMessage(err),
+          error: err,
         });
       })
       .finally(() => {

@@ -126,10 +126,11 @@ export const DataGrid = (props: DataGridProps) => {
     where: { _and: whereClauses },
   };
 
-  const { data: tableColumnQueryResult } = useTableColumns({
-    table,
-    source,
-  });
+  const { data: tableColumnQueryResult, isPending: isColumnsPending } =
+    useTableColumns({
+      table,
+      source,
+    });
   // filters only offer the operators the column type supports
   const { data: columnOperators } = useColumnOperators({ source, table });
   const { data: enumColumnValues } = useEnumColumnValues({ source, table });
@@ -153,7 +154,7 @@ export const DataGrid = (props: DataGridProps) => {
    */
   const {
     data: rows,
-    isLoading,
+    isPending: isRowsPending,
     isError,
     error: rowsError,
     refetch: refetchRows,
@@ -163,6 +164,12 @@ export const DataGrid = (props: DataGridProps) => {
     options: rowOptions,
     columns: tableColumnQueryResult?.columns,
   });
+
+  // the rows query waits for the columns, and a disabled query isn't
+  // `isLoading` in React Query v5. A table without columns never fetches rows.
+  const isRowsLoading =
+    isColumnsPending ||
+    (isRowsPending && !!tableColumnQueryResult?.columns.length);
 
   const { mutateAsync: deleteRow, isPending: isDeleting } = useDeleteRows();
   const destructiveConfirm = useDestructiveConfirm();
@@ -432,7 +439,7 @@ export const DataGrid = (props: DataGridProps) => {
         }}
       />
 
-      {isLoading || isFetching ? (
+      {isRowsLoading || isFetching ? (
         <div className="my-4">
           <SkeletonList height="20px" count={8} className="my-2" />
         </div>

@@ -1,50 +1,6 @@
 import { SupportedDriver } from '@hasura/shared/types';
-import { TableColumn, TableColumnTypeMap } from './types';
+import { TableColumn } from './types';
 import { capitalize } from 'inflection';
-
-export function isDataType(
-  typeMap: TableColumnTypeMap,
-  columnDataType: TableColumn['dataType'],
-  expectedType: TableColumn['consoleDataType'],
-): boolean {
-  const dataType =
-    typeof columnDataType === 'string' ? columnDataType : columnDataType.type;
-  switch (expectedType) {
-    case 'boolean':
-      return typeMap.boolean.includes(dataType);
-    case 'array':
-      return typeMap.array.includes(dataType);
-    case 'date':
-      return typeMap.date.includes(dataType);
-    case 'float':
-      return typeMap.float.includes(dataType);
-    case 'geography':
-      return typeMap.geography.includes(dataType);
-    case 'integer':
-      return typeMap.integer.includes(dataType);
-    case 'number':
-      return (
-        typeMap.number.includes(dataType) ||
-        typeMap.float.includes(dataType) ||
-        typeMap.integer.includes(dataType)
-      );
-    case 'time':
-      return typeMap.time.includes(dataType);
-    case 'uuid':
-      return typeMap.uuid.includes(dataType);
-    case 'json':
-      return typeMap.json.includes(dataType);
-    case 'timestamp':
-      return typeMap.timestamp.includes(dataType);
-    case 'text':
-    case 'string':
-      return (
-        typeMap.string.includes(dataType) || typeMap.text.includes(dataType)
-      );
-    default:
-      return false;
-  }
-}
 
 export function columnDataType(dataType: TableColumn['dataType']): string {
   if (typeof dataType === 'string') {
@@ -53,16 +9,6 @@ export function columnDataType(dataType: TableColumn['dataType']): string {
 
   return dataType.type;
 }
-
-export const sqlEscapeText = (rawText: string) => {
-  let text = rawText;
-
-  if (text) {
-    text = text.replace(/'/g, "\\'");
-  }
-
-  return `E'${text}'`;
-};
 
 const MIGRATION_NAME_REGEX = /[^\w]/g;
 

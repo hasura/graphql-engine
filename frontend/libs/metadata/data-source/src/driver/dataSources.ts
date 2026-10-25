@@ -37,14 +37,6 @@ export const getDatabaseMethods = (driver: string) => {
   return drivers.gdc;
 };
 
-export const getDatabaseKind = (kind: string): SupportedDatabase => {
-  if (isNativeDriver(kind)) {
-    return kind as SupportedDatabase;
-  }
-
-  return 'gdc';
-};
-
 export async function getAllSourceKinds(
   args: DataSourceNetworkArgs,
 ): Promise<DriverInfo[]> {

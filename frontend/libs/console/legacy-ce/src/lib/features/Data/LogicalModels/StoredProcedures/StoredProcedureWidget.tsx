@@ -5,9 +5,9 @@ import {
   Button,
   hasuraToast,
   IndicatorCard,
-  DisplayToastErrorMessage,
   SkeletonList,
   SelectField,
+  showErrorNotification,
 } from '@hasura/shared/ui';
 import { useMetadata } from '@hasura/metadata/api';
 import {
@@ -134,10 +134,9 @@ export const StoredProcedureWidget = () => {
         pushRoute(Routes.StoredProcedures);
       },
       onError: (err) => {
-        hasuraToast({
-          type: 'error',
+        showErrorNotification({
           title: STORED_PROCEDURE_TRACK_ERROR,
-          children: <DisplayToastErrorMessage message={err.message} />,
+          error: err,
         });
       },
     });

@@ -1,14 +1,9 @@
 /**
- * Regression coverage that the GraphiQL 5 plugin factories still produce valid
- * plugin objects for the console's Explorer + Code Exporter, using the real
- * installed @graphiql/plugin-explorer and @graphiql/plugin-code-exporter
- * packages (not mocks).
+ * Regression coverage that the GraphiQL 5 plugin factory still produces a valid
+ * plugin object for the console's Explorer, using the real installed
+ * @graphiql/plugin-explorer package (not mocks).
  */
-// The code-exporter wraps the legacy (babel-regenerator-built)
-// `graphiql-code-exporter`; webpack provides regenerator-runtime at build time,
-// so polyfill it here for the Vitest environment.
-import 'regenerator-runtime/runtime';
-import { explorer, codeExplorer } from './plugins';
+import { explorer } from './plugins';
 
 const isGraphiQLPlugin = (p: unknown) => {
   const plugin = p as { title?: unknown; content?: unknown; icon?: unknown };
@@ -25,15 +20,5 @@ const isGraphiQLPlugin = (p: unknown) => {
 describe('GraphiQL 5 plugins', () => {
   it('explorerPlugin() returns a valid GraphiQLPlugin', () => {
     expect(isGraphiQLPlugin(explorer)).toBe(true);
-  });
-
-  it('codeExporterPlugin({ snippets, codeMirrorTheme }) returns a valid GraphiQLPlugin', () => {
-    expect(isGraphiQLPlugin(codeExplorer)).toBe(true);
-  });
-
-  it('the two plugins have distinct titles', () => {
-    expect((explorer as { title: string }).title).not.toBe(
-      (codeExplorer as { title: string }).title,
-    );
   });
 });

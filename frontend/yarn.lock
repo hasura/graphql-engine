@@ -2458,20 +2458,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphiql/plugin-code-exporter@npm:5.1.4":
-  version: 5.1.4
-  resolution: "@graphiql/plugin-code-exporter@npm:5.1.4"
-  dependencies:
-    graphiql-code-exporter: "npm:^3.0.3"
-  peerDependencies:
-    "@graphiql/react": ^0.39.0
-    graphql: ^15.5.0 || ^16.0.0 || ^17.0.0-alpha.2
-    react: ^18 || ^19
-    react-dom: ^18 || ^19
-  checksum: 10/c645e5740e6dee5fc923a7f74f7403e55c2c63f38f01b02d77cc5adb10cf2a7f5cc5c2ee17af1a942c0c8e1ff019d4ff4820e61a989f68f3eb7eb371dc8345c6
-  languageName: node
-  linkType: hard
-
 "@graphiql/plugin-doc-explorer@npm:^0.4.4":
   version: 0.4.4
   resolution: "@graphiql/plugin-doc-explorer@npm:0.4.4"
@@ -3259,9 +3245,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hookform/resolvers@npm:5.9.1":
-  version: 5.9.1
-  resolution: "@hookform/resolvers@npm:5.9.1"
+"@hookform/resolvers@npm:6.0.0":
+  version: 6.0.0
+  resolution: "@hookform/resolvers@npm:6.0.0"
   dependencies:
     "@standard-schema/utils": "npm:^0.3.0"
   peerDependencies:
@@ -3273,11 +3259,11 @@ __metadata:
     ajv-errors: ^3.0.0
     ajv-formats: ^2.1.1
     arktype: ^2.0.0
-    ata-validator: ^1.2.0
+    ata-validator: ^1.23.0
     class-transformer: ">=0.4.0"
     class-validator: ">=0.12.0"
     computed-types: ^1.0.0
-    effect: ^3.10.3
+    effect: ^4.0.0
     fluentvalidation-ts: ^3.0.0
     fp-ts: ^2.7.0
     io-ts: ^2.0.0
@@ -3339,7 +3325,7 @@ __metadata:
       optional: true
     zod:
       optional: true
-  checksum: 10/b334b50a9d6d915ae52e6a636aabe1f800d41889856f1978c34528d0871332a9a59a19ef666a60b59ffd4cd515aceac84155595ecda0ba79f4357a04c002e363
+  checksum: 10/1b3e5f6c7aec3a2795c8b786cbee4a6db308ef58a6907d8f72f0d9f36502e23eea46d44ce3b055d4a7a27362e97884934661f42fef509b914e246b6dac9ac9c3
   languageName: node
   linkType: hard
 
@@ -8258,9 +8244,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@readme/openapi-parser@npm:9.1.0":
-  version: 9.1.0
-  resolution: "@readme/openapi-parser@npm:9.1.0"
+"@readme/openapi-parser@npm:10.0.0":
+  version: 10.0.0
+  resolution: "@readme/openapi-parser@npm:10.0.0"
   dependencies:
     "@apidevtools/json-schema-ref-parser": "npm:^15.5.1"
     "@readme/better-ajv-errors": "npm:^2.3.2"
@@ -8270,7 +8256,7 @@ __metadata:
     ajv-draft-04: "npm:^1.0.0"
   peerDependencies:
     openapi-types: ">=7"
-  checksum: 10/c311c7d43ce95b40f0725ec2d279b2e549dddf61463770e902b471a41a1a57c4491b85c2127799056e4274ef3d852ba62044b427915d3718b13311e6ecef37b8
+  checksum: 10/755d47f964fecb8d6e703313159c6f97c6e1e49c86976d95b35e3c4688102cd50f9b926baede4bd6fa36a05de7dcba055b6c954379177b8f32cab91d3ad6d373
   languageName: node
   linkType: hard
 
@@ -13350,13 +13336,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"codemirror@npm:^5.65.21":
-  version: 5.65.21
-  resolution: "codemirror@npm:5.65.21"
-  checksum: 10/c488eacf0dc351c6ff2b579982515380710b5b2170891ffbbc1246d51f42b05fd0c5adaee5e36675ca6edabef2f233e4204ccf0be4027cc3cc98b5833679b69d
-  languageName: node
-  linkType: hard
-
 "collect-v8-coverage@npm:^1.0.2":
   version: 1.0.3
   resolution: "collect-v8-coverage@npm:1.0.3"
@@ -13683,7 +13662,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"copy-to-clipboard@npm:^3.0.8, copy-to-clipboard@npm:^3.3.3":
+"copy-to-clipboard@npm:^3.3.3":
   version: 3.3.3
   resolution: "copy-to-clipboard@npm:3.3.3"
   dependencies:
@@ -14291,13 +14270,6 @@ __metadata:
   version: 10.6.0
   resolution: "decimal.js@npm:10.6.0"
   checksum: 10/c0d45842d47c311d11b38ce7ccc911121953d4df3ebb1465d92b31970eb4f6738a065426a06094af59bee4b0d64e42e7c8984abd57b6767c64ea90cf90bb4a69
-  languageName: node
-  linkType: hard
-
-"decode-uri-component@npm:^0.5.0":
-  version: 0.5.0
-  resolution: "decode-uri-component@npm:0.5.0"
-  checksum: 10/7bd7ed31824ea982a54c1e3ab6284a4541a09125ad6b419d3c5db976ceb700334f15bd5f82af5fe9925e2f9f78b750b6dd60fc80a8fc0498ae2b55da8177e49b
   languageName: node
   linkType: hard
 
@@ -16226,10 +16198,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"filter-obj@npm:^5.1.0":
-  version: 5.1.0
-  resolution: "filter-obj@npm:5.1.0"
-  checksum: 10/8f6dab6d8d8855f686e8cc6be289bbbd64a80be52c660124e36e982f78017cf5dae7de95f79ec167fbf62101d6aab93067a3105ae8f56251785a721e678d6b07
+"filter-obj@npm:^6.1.0":
+  version: 6.1.0
+  resolution: "filter-obj@npm:6.1.0"
+  checksum: 10/6d70508c5c2126fccae0e1d79a99eb3e3dc442b20e6ab0b8c0b0c801de73901b187f3ec8bec62c3d9fd4b1b4cfc67561469f3354a7369d2f1141217e08f0c56f
   languageName: node
   linkType: hard
 
@@ -16524,7 +16496,6 @@ __metadata:
     "@eslint/eslintrc": "npm:3.3.7"
     "@eslint/js": "npm:^10.0.1"
     "@faker-js/faker": "npm:10.6.0"
-    "@graphiql/plugin-code-exporter": "npm:5.1.4"
     "@graphiql/plugin-explorer": "npm:5.1.5"
     "@graphiql/react": "npm:0.39.1"
     "@graphiql/toolkit": "npm:0.12.1"
@@ -16533,7 +16504,7 @@ __metadata:
     "@graphql-codegen/typescript-operations": "npm:6.1.10"
     "@hasura/dc-api-types": "npm:0.46.0"
     "@hookform/devtools": "npm:4.4.0"
-    "@hookform/resolvers": "npm:5.9.1"
+    "@hookform/resolvers": "npm:6.0.0"
     "@hyperjump/json-pointer": "npm:1.1.3"
     "@jsonhero/schema-infer": "npm:^0.1.5"
     "@nx/cypress": "npm:23.3.0"
@@ -16553,7 +16524,7 @@ __metadata:
     "@pmmmwh/react-refresh-webpack-plugin": "npm:0.6.3"
     "@radix-ui/react-collapsible": "npm:^1.2.1"
     "@radix-ui/themes": "npm:^3.3.0"
-    "@readme/openapi-parser": "npm:9.1.0"
+    "@readme/openapi-parser": "npm:10.0.0"
     "@sentry/react": "npm:11.8.0"
     "@storybook/addon-a11y": "npm:10.6.3"
     "@storybook/addon-docs": "npm:10.6.3"
@@ -16594,7 +16565,6 @@ __metadata:
     chart.js: "npm:^4.5.1"
     chromatic: "npm:18.13.2"
     clsx: "npm:2.1.1"
-    codemirror: "npm:^5.65.21"
     cookie-parser: "npm:1.4.7"
     core-js: "npm:3.51.0"
     crypto-browserify: "npm:3.12.1"
@@ -16616,7 +16586,6 @@ __metadata:
     form-urlencoded: "npm:6.1.8"
     glob: "npm:13.0.6"
     graphiql: "npm:5.4.0"
-    graphiql-code-exporter: "npm:^3.0.3"
     graphql: "npm:16.14.2"
     graphql-subscriptions: "npm:3.0.0"
     graphql-tag: "npm:2.12.7"
@@ -16646,7 +16615,7 @@ __metadata:
     pluralize: "npm:^8.0.0"
     postcss: "npm:8.5.31"
     prettier: "npm:3.9.10"
-    query-string: "npm:9.5.1"
+    query-string: "npm:10.0.0"
     react: "npm:19.3.1"
     react-ace: "npm:15.0.0"
     react-chartjs-2: "npm:^5.3.1"
@@ -17119,20 +17088,6 @@ __metadata:
   version: 4.2.11
   resolution: "graceful-fs@npm:4.2.11"
   checksum: 10/bf152d0ed1dc159239db1ba1f74fdbc40cb02f626770dcd5815c427ce0688c2635a06ed69af364396da4636d0408fcf7d4afdf7881724c3307e46aff30ca49e2
-  languageName: node
-  linkType: hard
-
-"graphiql-code-exporter@npm:^3.0.3":
-  version: 3.0.3
-  resolution: "graphiql-code-exporter@npm:3.0.3"
-  dependencies:
-    copy-to-clipboard: "npm:^3.0.8"
-  peerDependencies:
-    codemirror: ^5.26.0
-    graphql: ^14.1.1
-    react: ^15.6.0 || ^16.0.0
-    react-dom: ^16.2.0
-  checksum: 10/23b64d1a3b973a7e5595d21ced4d6b322ea3dfc4318f20eed9b55017270342622f4e991ffbb7ef12a817399bcbe2e69624f39b9ee36aa2203d6fe4d418d15b70
   languageName: node
   linkType: hard
 
@@ -23082,14 +23037,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"query-string@npm:9.5.1":
-  version: 9.5.1
-  resolution: "query-string@npm:9.5.1"
+"query-string@npm:10.0.0":
+  version: 10.0.0
+  resolution: "query-string@npm:10.0.0"
   dependencies:
-    decode-uri-component: "npm:^0.5.0"
-    filter-obj: "npm:^5.1.0"
-    split-on-first: "npm:^3.0.0"
-  checksum: 10/579a03bd71fe481fad6a3db2fadf325e0ad9b4185050c889f3501fd2f5a485711462366d1840d245fe0d093062ee71a877c896683e19f1873fafb46e266354d8
+    filter-obj: "npm:^6.1.0"
+    split-on-first: "npm:^4.0.0"
+  checksum: 10/a6737d03f27233a67024a373a7602feefafebff0485d9b76485bbc535f3b9e9ec2bd7e2ea953156546da091d3adc67ddce29c30d02ac7338760fa19fa851930b
   languageName: node
   linkType: hard
 
@@ -25174,10 +25128,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"split-on-first@npm:^3.0.0":
-  version: 3.0.0
-  resolution: "split-on-first@npm:3.0.0"
-  checksum: 10/75dc27ecbac65cfbeab9a3b90cf046307220192d3d7a30e46aa0f19571cc9b4802aac813f3de2cc9b16f2e46aae72f275659b5d2614bb5369c77724d739e5f73
+"split-on-first@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "split-on-first@npm:4.0.0"
+  checksum: 10/c87761a8c50f55b0a3b317a50679b3c9e27b8ecaa751552a3a7e92eb46315f79d699dcf6ab3b07aee9b9d786bf590776ca594248ea7a5d6d9616b8d3e5d969be
   languageName: node
   linkType: hard
 

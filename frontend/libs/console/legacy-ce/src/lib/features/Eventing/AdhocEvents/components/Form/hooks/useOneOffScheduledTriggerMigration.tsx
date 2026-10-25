@@ -1,6 +1,5 @@
 import { useMetadataMigration } from '@hasura/metadata/api';
-import { hasuraToast } from '@hasura/shared/ui';
-import { getErrorMessage } from '@hasura/shared/utils';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 
 interface Props {
   onSuccess?: () => void;
@@ -10,10 +9,9 @@ export const useOneOffScheduledTriggerMigration = (props: Props) => {
   const { onSuccess } = props;
   const mutation = useMetadataMigration({
     onError: (error: unknown) => {
-      hasuraToast({
-        type: 'error',
-        title: 'Error',
-        message: getErrorMessage(error) ?? 'Unable to schedule Event',
+      showErrorNotification({
+        title: 'Unable to schedule Event',
+        error,
       });
     },
     onSuccess: () => {

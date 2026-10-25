@@ -1,4 +1,4 @@
-import { MetadataError, Table } from '@hasura/shared/types';
+import { Table } from '@hasura/shared/types';
 import zipObject from 'lodash/zipObject';
 import { CreateTableRelationshipRequestBodyProps } from './types';
 import {
@@ -242,12 +242,4 @@ export const createTableRelationshipRequestBody = (
   }
 
   return 'Not implemented';
-};
-
-export const safeParseErrors = (errors: MetadataError[]) => {
-  try {
-    return errors.map((err) => err.error).join('\n');
-  } catch (err) {
-    return JSON.stringify(errors);
-  }
 };

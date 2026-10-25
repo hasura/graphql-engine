@@ -17,7 +17,7 @@ import { createGraphiQLFetcher } from '@graphiql/toolkit';
 import { useGraphqlWsClient } from './graphiqlLifecycle';
 import { ExternalQuerySync } from './ExternalQuerySync';
 import { GraphiQLThemeSync } from './GraphiQLThemeSync';
-import { codeExplorer, explorer } from './plugins';
+import { explorer } from './plugins';
 import { GraphiQLPlugin } from '@graphiql/react';
 import {
   IconTooltip,
@@ -195,7 +195,7 @@ const GraphiQLWrapper = ({
           initialQuery={query}
           onEditQuery={(q) => setQuery(q ?? '')}
           defaultTheme={appearance}
-          plugins={[codeExplorer, explorer]}
+          plugins={[explorer]}
           isHeadersEditorEnabled={false}
           visiblePlugin={visiblePlugin ?? undefined}
           onTogglePluginVisibility={setVisiblePlugin}

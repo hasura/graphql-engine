@@ -1,7 +1,11 @@
 import React from 'react';
 import z from 'zod';
 
-import { useConsoleForm, hasuraToast } from '@hasura/shared/ui';
+import {
+  useConsoleForm,
+  hasuraToast,
+  showErrorNotification,
+} from '@hasura/shared/ui';
 import { ConnectPostgresModal } from './ConnectPostgresModal';
 import { DynamicDBRoutingForm } from './DynamicDBRoutingForm';
 import { generatePostgresRequestPayload } from '../../utils/generateRequests';
@@ -161,10 +165,9 @@ export const DynamicDBRouting = (props: DynamicDBRoutingProps) => {
                 });
               },
               onError: (e) => {
-                hasuraToast({
-                  type: 'error',
+                showErrorNotification({
                   title: 'Failed to add connection',
-                  message: e.message,
+                  error: e,
                 });
               },
             });
@@ -199,10 +202,9 @@ export const DynamicDBRouting = (props: DynamicDBRoutingProps) => {
                   });
                 },
                 onError: (e) => {
-                  hasuraToast({
-                    type: 'error',
+                  showErrorNotification({
                     title: 'Failed to update connection',
-                    message: e.message,
+                    error: e,
                   });
                 },
               },
@@ -223,10 +225,9 @@ export const DynamicDBRouting = (props: DynamicDBRoutingProps) => {
               });
             },
             onError: (e) => {
-              hasuraToast({
-                type: 'error',
+              showErrorNotification({
                 title: 'Failed to update connection template',
-                message: e.message,
+                error: e,
               });
             },
           });
@@ -254,10 +255,9 @@ export const DynamicDBRouting = (props: DynamicDBRoutingProps) => {
                 });
               },
               onError: (e) => {
-                hasuraToast({
-                  type: 'error',
+                showErrorNotification({
                   title: 'Failed to remove connection',
-                  message: e.message,
+                  error: e,
                 });
               },
             });

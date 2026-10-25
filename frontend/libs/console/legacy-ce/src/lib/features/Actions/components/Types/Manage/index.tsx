@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import CustomTypesContainer from '../CustomTypesContainer';
-import { Button, IconTooltip, Separator } from '@hasura/shared/ui';
+import {
+  Button,
+  IconTooltip,
+  Separator,
+  showErrorNotification,
+} from '@hasura/shared/ui';
 import {
   buildCustomTypesFromSDL,
   buildTypeSDL,
 } from '../../../../../shared/utils/sdlUtils';
-import { hasuraToast } from '@hasura/shared/ui';
 import { useAppContext } from '@hasura/shared/context';
 import useSetCustomGraphQLTypes from '../../../hooks/useSetCustomGraphQLTypes';
 import { GraphQLError } from 'graphql';
@@ -80,10 +84,9 @@ const TypesManage = () => {
       definition.sdl,
     );
     if (_error) {
-      hasuraToast({
-        type: 'error',
+      showErrorNotification({
         title: 'Invalid Types Definition',
-        message: _error,
+        error: _error,
       });
       return;
     }

@@ -1,9 +1,8 @@
-import * as React from 'react';
-import { useMutation /*useQueryClient*/ } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { DELETE_SCHEMA_TAG } from '../queries';
 import { schemaRegsitryControlPlaneClient } from '../utils';
 import { DeleteSchemaRegistryTagResponseWithError } from '../types';
-import { hasuraToast } from '@hasura/shared/ui';
+import { showErrorNotification } from '@hasura/shared/ui';
 
 type DeleteSchemaRegistryTagMutationFnArgs = {
   ID: string;
@@ -23,12 +22,10 @@ export const useDeleteSchemaTag = (onDelete: (id: string) => void) => {
     onSuccess: (data) => {
       if (data.data) onDelete(data.data?.delete_schema_registry_tags_by_pk.id);
     },
-    onError: () => {
-      hasuraToast({
-        type: 'error',
-        title: 'Error!',
-        message:
-          'Something went wrong while deleting the tag for Schema Registry',
+    onError: (error) => {
+      showErrorNotification({
+        error,
+        title: 'Deleting the tag for Schema Registry failed',
       });
     },
   });

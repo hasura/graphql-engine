@@ -10,6 +10,7 @@ import {
   BadgeColor,
   DialogFooter,
   RelativeLink,
+  showErrorNotification,
 } from '@hasura/shared/ui';
 import { useNavigate } from 'react-router';
 import { FaExclamation, FaExternalLinkAlt } from 'react-icons/fa';
@@ -99,10 +100,9 @@ export const RestEndpointModal = (props: RestEndpointModalProps) => {
                 );
               },
               onError: (error) => {
-                hasuraToast({
-                  type: 'error',
+                showErrorNotification({
                   title: 'Failed to generate endpoints',
-                  message: error.message,
+                  error,
                 });
               },
             });

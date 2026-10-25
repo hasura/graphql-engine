@@ -74,6 +74,8 @@ export type TypesContext = {
 
 export type TableContext = {
   table: Table;
+  /** the source of the table */
+  source?: string;
   setTable: (table: Table) => void;
   comparator?: string | undefined;
   setComparator: (comparator: string | undefined) => void;

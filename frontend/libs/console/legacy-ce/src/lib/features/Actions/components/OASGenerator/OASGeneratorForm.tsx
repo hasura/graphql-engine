@@ -6,7 +6,12 @@ import { trackCustomEvent } from '@hasura/shared/analytics';
 import { useDebouncedEffect, useIsUnmounted } from '@hasura/shared/hooks';
 import { Oas3 } from '@hasura/open-api-to-graphql';
 import { useFormContext } from 'react-hook-form';
-import { DropdownMenu, hasuraToast, Text } from '@hasura/shared/ui';
+import {
+  DropdownMenu,
+  hasuraToast,
+  showErrorNotification,
+  Text,
+} from '@hasura/shared/ui';
 import { OasGeneratorActions } from './OASGeneratorActions';
 import { GeneratedAction, Operation } from '../OASGenerator/types';
 import uniq from 'lodash/uniq';
@@ -245,10 +250,9 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
           object: 'error',
         });
         // send notification
-        hasuraToast({
-          type: 'error',
+        showErrorNotification({
           title: 'Failed to generate action',
-          message: (e as Error).message,
+          error: e,
         });
         console.error('ImportOAS/CREATE_ACTION_ERROR/', e);
       }

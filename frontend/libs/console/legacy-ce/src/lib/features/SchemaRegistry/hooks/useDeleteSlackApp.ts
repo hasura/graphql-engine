@@ -1,9 +1,8 @@
-import * as React from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { DELETE_SLACK_APP } from '../queries';
 import { DeleteSlackAppMutationResponseWithError } from '../types';
 import { FETCH_SLACK_STATE_QUERY_NAME } from '../constants';
-import { hasuraToast } from '@hasura/shared/ui';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 import { controlPlaneClient } from '../../ControlPlane';
 
 type DeleteSlackAppMutationFnArgs = {
@@ -45,12 +44,10 @@ export const useDeleteSlackApp = (onClose: () => void) => {
         }
       }
     },
-    onError: () => {
-      hasuraToast({
-        type: 'error',
-        title: 'Error!',
-        message:
-          'Something went wrong while deleting the tag for Schema Registry',
+    onError: (error) => {
+      showErrorNotification({
+        title: 'Deleting the tag for Schema Registry failed',
+        error,
       });
     },
   });
