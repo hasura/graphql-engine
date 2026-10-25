@@ -31,23 +31,26 @@ const getColCellContent = (rowColumnValue: React.ReactNode) => {
 };
 
 const getTableConfig = (headers: string[], rows: Array<string[]>) => {
-  const dataMap: Record<string, any>[] = [];
+  // cells are keyed by column position, not by column name: a result can
+  // contain several columns with the same name (e.g. `select a.id, b.id`)
   const data = rows.map((i) => {
     const result: Record<string, any> = {};
-    const resultMap: Record<string, any> = {};
-    headers.forEach((hdr, hIndex) => {
-      result[hdr] = getColCellContent(i[hIndex]);
-      resultMap[hdr] = i[hIndex];
+    headers.forEach((_, hIndex) => {
+      result[hIndex] = getColCellContent(i[hIndex]);
     });
-    dataMap.push(resultMap);
     return result;
   });
   const columns: ColumnDef<DataTableFeatures, Record<string, any>>[] =
-    headers.map((header) => ({
-      id: header,
-      accessorKey: header,
+    headers.map((header, hIndex) => ({
+      id: String(hIndex),
+      accessorKey: String(hIndex),
       header,
-      size: Math.ceil(getColWidth(header, dataMap)),
+      size: Math.ceil(
+        getColWidth(
+          header,
+          rows.map((i) => ({ [header]: i[hIndex] })),
+        ),
+      ),
       cell: (info) => <div>{info.getValue() as React.ReactNode}</div>,
     }));
 
