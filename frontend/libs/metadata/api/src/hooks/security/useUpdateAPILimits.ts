@@ -1,6 +1,6 @@
-import { hasuraToast } from '@hasura/shared/ui';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 import { useCallback } from 'react';
-import { getErrorMessage, isEmpty } from '@hasura/shared/utils';
+import { isEmpty } from '@hasura/shared/utils';
 import type { ApiLimits, RateLimit } from '@hasura/shared/types';
 import { useMetadataMigration } from '../metadata';
 
@@ -142,10 +142,9 @@ export const useUpdateAPILimits = () => {
             });
           },
           onError: (err) => {
-            hasuraToast({
+            showErrorNotification({
               title: 'Updating API limits failed!',
-              message: getErrorMessage(err),
-              type: 'error',
+              error: err,
             });
           },
         },

@@ -3,12 +3,12 @@ import { createColumnHelper, useTable } from '@tanstack/react-table';
 import { useCallback, useState } from 'react';
 import {
   Button,
-  DisplayToastErrorMessage,
   hasuraToast,
   useDestructiveAlert,
   coreTableFeatures,
   CoreTableFeatures,
   CardedTableFromReactTable,
+  showErrorNotification,
 } from '@hasura/shared/ui';
 import { StoredProcedure } from '@hasura/shared/types';
 
@@ -73,10 +73,9 @@ export const ListStoredProcedures = () => {
               resolve(true);
             },
             onError: (err) => {
-              hasuraToast({
-                type: 'error',
+              showErrorNotification({
                 title: STORED_PROCEDURE_UNTRACK_ERROR,
-                children: <DisplayToastErrorMessage message={err.message} />,
+                error: err,
               });
               resolve(false);
             },

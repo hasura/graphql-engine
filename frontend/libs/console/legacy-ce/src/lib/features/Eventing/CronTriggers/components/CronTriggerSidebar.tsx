@@ -5,6 +5,7 @@ import { CRON_EVENTS_HEADING } from '@hasura/shared/types';
 import {
   IndicatorCard,
   LeftSubSidebar,
+  Text,
   useLeftSidebarSection,
 } from '@hasura/shared/ui';
 import { Flex, Skeleton } from '@radix-ui/themes';
@@ -43,9 +44,11 @@ const CronTriggerSidebar: React.FC<Props> = ({ triggerName }) => {
 
   if (!triggers?.length && !isLoading) {
     return (
-      <IndicatorCard status="negative">
-        Could not find any cron triggers
-      </IndicatorCard>
+      <div className="py-4">
+        <Text className="italic" as="div" align="center">
+          Could not find any cron triggers
+        </Text>
+      </div>
     );
   }
 

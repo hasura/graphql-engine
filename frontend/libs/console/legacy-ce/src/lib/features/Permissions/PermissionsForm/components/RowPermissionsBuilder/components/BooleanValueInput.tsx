@@ -20,7 +20,8 @@ export function BooleanValueInput({
         data-testid={componentLevelId}
         value={JSON.stringify(value)}
         onChange={(value) => {
-          setValue(path, JSON.stringify(value));
+          // the options are the JSON of the booleans
+          setValue(path, JSON.parse(value));
         }}
         options={['false', 'true'].map((v) => ({
           value: v,

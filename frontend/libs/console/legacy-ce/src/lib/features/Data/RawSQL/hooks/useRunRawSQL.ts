@@ -21,7 +21,6 @@ import {
   UseMutationResult,
   useQueryClient,
 } from '@tanstack/react-query';
-import { HttpError } from '@hasura/shared/types';
 import {
   hasuraToast,
   showErrorNotification,
@@ -33,7 +32,7 @@ import {
   getDatabaseMethods,
   TableColumn,
 } from '@hasura/metadata/data-source';
-import { getErrorMessage, isEmpty } from '@hasura/shared/utils';
+import { isEmpty } from '@hasura/shared/utils';
 
 type RunSQLProps = RunSqlArgs & {
   isTableTracked: boolean;
@@ -234,14 +233,10 @@ export const useRunRawSQL = (
         });
       } catch (error) {
         if (!toastMetadataOutOfDateError(error, invalidateMetadata)) {
-          hasuraToast({
-            type: 'error',
+          showErrorNotification({
             title: 'Tracking metadata failed!',
             message: 'Something is wrong. Received an invalid response json.',
-            children:
-              error instanceof HttpError && error.data
-                ? JSON.stringify(error.data)
-                : getErrorMessage(error),
+            error,
           });
         }
       }

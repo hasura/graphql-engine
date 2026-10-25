@@ -10,7 +10,7 @@ import {
   getQualifiedTableForCustomFieldNames,
   getTrackTableType,
 } from './utils';
-import { hasuraToast } from '@hasura/shared/ui';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 import { useNavigate } from 'react-router';
 import { SupportedDriver } from '@hasura/shared/types';
 
@@ -43,10 +43,9 @@ export const LegacyWrapper: React.FC<LegacyWrapperProps> = (props) => {
       // dispatch(setSidebarLoading(false));
     },
     onError: (error: Error) => {
-      hasuraToast({
-        title: 'Error',
-        message: error?.message ?? 'Error while adding table/view',
-        type: 'error',
+      showErrorNotification({
+        title: 'Error while adding table/view',
+        error,
       });
     },
   });

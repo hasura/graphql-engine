@@ -1,11 +1,7 @@
-import { RunSQLResponse, Table } from '@hasura/shared/types';
+import { RunSQLResponse } from '@hasura/shared/types';
 import { IntrospectedTable, TableColumn } from '../types';
 import { parseCreateSQL } from '../common/sqlUtils';
-import {
-  consoleDataTypeToSQLTypeMap,
-  PostgresTable,
-  TrackableComputedFunction,
-} from './types';
+import { consoleDataTypeToSQLTypeMap } from './types';
 import {
   formatPostgresArrayLiteral,
   isArrayString,
@@ -115,37 +111,3 @@ export const validatePostgresInputRowValues = getValidateInputRowValuesFunction(
     },
   },
 );
-
-const isComputedFieldFunctionCompatible = (
-  pgFunction: TrackableComputedFunction,
-  table: PostgresTable,
-) => {
-  const inputArgTypes = pgFunction?.input_arg_types || [];
-
-  let hasTableRowInArguments = false;
-  let hasUnsupportedArguments = false;
-
-  inputArgTypes.forEach((inputArgType) => {
-    if (!hasTableRowInArguments) {
-      hasTableRowInArguments =
-        inputArgType.name === table.name &&
-        inputArgType.schema === table.schema;
-    }
-
-    if (!hasUnsupportedArguments) {
-      hasUnsupportedArguments =
-        inputArgType.type !== 'c' && inputArgType.type !== 'b';
-    }
-  });
-
-  return hasTableRowInArguments && !hasUnsupportedArguments;
-};
-
-export const getCompatibleComputedFunctions = (
-  allFunctions: TrackableComputedFunction[],
-  table: Table,
-) => {
-  return allFunctions.filter((fn) =>
-    isComputedFieldFunctionCompatible(fn, table as PostgresTable),
-  );
-};

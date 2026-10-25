@@ -18,9 +18,13 @@ export function SelectTable({
   value: Table;
 }) {
   const comparatorName = path[path.length - 1];
-  const { table, setTable, setComparator } = useContext(tableContext);
+  const { table, source, setTable, setComparator } = useContext(tableContext);
   const { setValue } = useContext(rowPermissionsContext);
   const { tables } = useContext(rootTableContext);
+  // `_exists` can only query a table of the same source
+  const sourceTables = source
+    ? tables.filter((t) => t.dataSource?.name === source)
+    : tables;
   const stringifiedTable = JSON.stringify(table);
   // Sync table name with ColumnsContext table value
   useEffect(() => {
@@ -38,7 +42,7 @@ export function SelectTable({
           onChange={(value) => {
             setValue(path, JSON.parse(value) as Table);
           }}
-          options={tables.map((t) => {
+          options={sourceTables.map((t) => {
             const tableDisplayName = getTableDisplayName(t.table);
             return {
               label: tableDisplayName,

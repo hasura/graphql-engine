@@ -183,9 +183,6 @@ export type GetTableRowsProps = {
 } & DataSourceNetworkArgs;
 export type TableRow = Record<string, string | number | boolean>;
 
-export type validOperators = string;
-export type SelectColumn = string | { name: string; columns: SelectColumn[] };
-
 export type Operator = {
   name: string;
   value: string;

@@ -7,7 +7,7 @@ import {
   Button,
   RelativeLink,
   Tabs,
-  hasuraToast,
+  showErrorNotification,
 } from '@hasura/shared/ui';
 
 import { useEnvironmentState } from '../../../ConnectDBRedesign/hooks';
@@ -101,9 +101,8 @@ export const LandingPageUI = ({
         )
           .then(() => true)
           .catch((err) => {
-            hasuraToast({
-              type: 'error',
-              title: 'Error',
+            showErrorNotification({
+              title: 'Untracking native query failed',
               message: err.message,
             });
 
@@ -149,10 +148,9 @@ export const LandingPageUI = ({
               resolve(true);
             },
             onError: (err) => {
-              hasuraToast({
-                type: 'error',
-                title: 'Error',
-                message: err.message,
+              showErrorNotification({
+                title: 'Untracking logical model failed',
+                error: err,
               });
               resolve(false);
             },

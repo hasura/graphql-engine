@@ -1,6 +1,6 @@
 import React, { ReactElement, useMemo, useState } from 'react';
 import { FaDatabase } from 'react-icons/fa';
-import { Em, Flex, Text } from '@radix-ui/themes';
+import { Flex, Text } from '@radix-ui/themes';
 import { RelativeLink } from '@hasura/shared/ui';
 
 type CollapsibleItemsProps = {
@@ -111,8 +111,13 @@ export const TreeView: React.FC<TreeViewProps> = ({
 
   if (items.length === 0) {
     return (
-      <Text as="div" data-test="sidebar-no-services">
-        <Em>No {service} available</Em>
+      <Text
+        className="italic"
+        align="center"
+        as="div"
+        data-test="sidebar-no-services"
+      >
+        No {service} available
       </Text>
     );
   }

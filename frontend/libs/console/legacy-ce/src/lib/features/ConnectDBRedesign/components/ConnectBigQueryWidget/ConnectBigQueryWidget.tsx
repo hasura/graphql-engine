@@ -5,7 +5,7 @@ import {
   useConsoleForm,
   Collapsible,
   Tabs,
-  hasuraToast,
+  showErrorNotification,
 } from '@hasura/shared/ui';
 import { GraphQLCustomization } from '../GraphQLCustomization/GraphQLCustomization';
 import { Configuration } from './parts/Configuration';
@@ -57,11 +57,10 @@ export const ConnectBigQueryWidget = (props: ConnectBigQueryWidgetProps) => {
     try {
       reset(getDefaultValues(metadataSource));
     } catch (err) {
-      console.log(err);
-      hasuraToast({
-        type: 'error',
+      showErrorNotification({
         title:
           'Error while retrieving database. Please check if the database is of type bigquery.',
+        error: err,
       });
     }
   }, [metadataSource, reset]);

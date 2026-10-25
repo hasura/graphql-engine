@@ -21,7 +21,7 @@ export const TypesProvider = ({ children }: { children: React.ReactNode }) => {
     {},
   );
   const { permissions } = useContext(rowPermissionsContext);
-  const { table, tables } = useContext(rootTableContext);
+  const { table, tables, source } = useContext(rootTableContext);
   const setType = useCallback(
     ({
       type,
@@ -48,7 +48,7 @@ export const TypesProvider = ({ children }: { children: React.ReactNode }) => {
   const jsonPermissions = JSON.stringify(permissions);
   const stringifiedTable = table ? getTableDisplayName(table) : '';
   const stringifiedTables = `[${tables.map((t) => getTableDisplayName(t)).join(',')}]`;
-  const typesKey = `${jsonPermissions}|${stringifiedTable}|${stringifiedTables}`;
+  const typesKey = `${jsonPermissions}|${stringifiedTable}|${source ?? ''}|${stringifiedTables}`;
   // Recursively (re)compute types while rendering when permissions/table/tables
   // change. This is the React "adjusting state during render" pattern: it fully
   // recomputes types from the inputs (as the effect did) without the cascading
@@ -57,7 +57,7 @@ export const TypesProvider = ({ children }: { children: React.ReactNode }) => {
   const [prevTypesKey, setPrevTypesKey] = useState<string | null>(null);
   if (typesKey !== prevTypesKey) {
     setPrevTypesKey(typesKey);
-    setTypes(getPermissionTypes(tables, table, permissions));
+    setTypes(getPermissionTypes(tables, table, permissions, source));
   }
 
   return (

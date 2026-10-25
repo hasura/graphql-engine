@@ -4,13 +4,13 @@ import { getDefaultValues, MssqlConnectionSchema, schema } from './schema';
 import { ReadReplicas } from './parts/ReadReplicas';
 import { useManageDatabaseConnection } from '../../hooks/useManageDatabaseConnection';
 import {
-  hasuraToast,
   InputField,
   useConsoleForm,
   Button,
   Collapsible,
   Tabs,
   Text,
+  showErrorNotification,
 } from '@hasura/shared/ui';
 import { useMetadata } from '@hasura/metadata/api';
 import { generateMssqlRequestPayload } from './utils/generateRequests';
@@ -60,10 +60,10 @@ export const ConnectMssqlWidget = (props: ConnectMssqlWidgetProps) => {
     try {
       reset(getDefaultValues(metadataSource));
     } catch (err) {
-      hasuraToast({
-        type: 'error',
+      showErrorNotification({
         title:
           'Error while retriving database. Please check if the database is of type mssql',
+        error: err,
       });
     }
   }, [metadataSource, reset]);

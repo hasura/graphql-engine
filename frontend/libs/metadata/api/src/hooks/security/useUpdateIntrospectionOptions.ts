@@ -1,6 +1,5 @@
-import { hasuraToast } from '@hasura/shared/ui';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 import { useCallback } from 'react';
-import { getErrorMessage } from '@hasura/shared/utils';
 import { useMetadataMigration } from '../metadata';
 
 export type UpdateIntrospectionOptionsArgs = {
@@ -50,10 +49,9 @@ export const useUpdateIntrospectionOptions = () => {
             });
           },
           onError: (err) => {
-            hasuraToast({
+            showErrorNotification({
               title: 'Updating Introspection options failed!',
-              message: getErrorMessage(err),
-              type: 'error',
+              error: err,
             });
           },
         },

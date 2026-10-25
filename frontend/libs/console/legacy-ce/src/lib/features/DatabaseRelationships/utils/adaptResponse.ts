@@ -27,6 +27,10 @@ const getKeyValuePair = (arr1: string[], arr2: string[]) => {
   return result;
 };
 
+// constraint columns are compared regardless of their order
+const areColumnsEqual = (columns1: string[], columns2: string[]) =>
+  isEqual([...columns1].sort(), [...columns2].sort());
+
 type FkDefinition = {
   fromColumns?: string[];
   fromTable: Table | undefined;
@@ -54,7 +58,7 @@ const getFkDefinition = (
     const matchingFkConstraint = suggestedRelationships.find(
       (suggestedRelationship) =>
         areTablesEqual(fromTable, suggestedRelationship.from.table) &&
-        isEqual(fromColumns.sort(), suggestedRelationship.from.columns),
+        areColumnsEqual(fromColumns, suggestedRelationship.from.columns),
     );
 
     return {
@@ -83,8 +87,8 @@ const getFkDefinition = (
         suggestedRelationship.from.table,
       );
 
-      const sameToColumns = isEqual(
-        toColumn.sort(),
+      const sameToColumns = areColumnsEqual(
+        toColumn,
         suggestedRelationship.to.columns,
       );
       const sameToTable = areTablesEqual(
@@ -95,6 +99,17 @@ const getFkDefinition = (
       return sameFromTable && sameToColumns && sameToTable;
     },
   );
+
+  // the metadata names the table holding the foreign key, so the target is
+  // known even without a matching constraint
+  if (!matchingFkConstraint) {
+    return {
+      toTable: relationship.using.foreign_key_constraint_on.table,
+      toColumns: toColumn,
+      fromTable: table,
+      mapping: {},
+    };
+  }
 
   return {
     toTable: matchingFkConstraint?.to.table,

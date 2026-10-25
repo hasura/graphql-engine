@@ -1,11 +1,13 @@
 import { createContext } from 'react';
 import { Table } from '@hasura/shared/types';
 import { Tables } from './types';
-import { areTablesEqual } from '@hasura/metadata/helpers';
+import { findTable } from './utils/tables';
 
 type RootTableState = {
   tables: Tables;
   table: Table | undefined;
+  /** the source of the root table */
+  source?: string;
   rootTable: Tables[number] | undefined;
 };
 
@@ -27,17 +29,17 @@ export const RootTableProvider = ({
   children,
   table,
   tables,
+  source,
 }: Omit<RootTableState, 'rootTable'> & {
   children?: React.ReactNode | undefined;
 }) => {
-  const rootTable = table
-    ? tables.find((t) => areTablesEqual(t.table, table))
-    : undefined;
+  const rootTable = table ? findTable(tables, table, source) : undefined;
   return (
     <rootTableContext.Provider
       value={{
         table,
         tables,
+        source: source ?? rootTable?.dataSource?.name,
         rootTable,
       }}
     >

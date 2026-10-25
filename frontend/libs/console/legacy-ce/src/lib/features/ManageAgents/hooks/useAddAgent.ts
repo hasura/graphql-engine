@@ -1,7 +1,7 @@
 import { useMetadataMigration } from '@hasura/metadata/api';
 import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { hasuraToast } from '@hasura/shared/ui';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 
 type AddAgentServerResponse = {
   // this comes from the server
@@ -145,10 +145,7 @@ const agentAlreadyExistsToast = (name: string) =>
   });
 
 const agentErrorToast = (error: Error | null) =>
-  hasuraToast({
-    title: 'Error',
-    type: 'error',
-    message:
-      error?.message ??
-      `Error adding Data Connector Agent.\n\n${error?.toString()}`,
+  showErrorNotification({
+    title: 'Error adding Data Connector Agent',
+    error,
   });

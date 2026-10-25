@@ -1,6 +1,6 @@
 import { useAuthFetchJson } from '@hasura/shared/hooks';
 import { useInvalidateMetadata } from '../metadata/useInvalidateMetadata';
-import { hasuraToast } from '@hasura/shared/ui';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 import { useAppContext } from '@hasura/shared/context';
 
 export const useReloadRemoteSchema = () => {
@@ -26,10 +26,9 @@ export const useReloadRemoteSchema = () => {
         });
       })
       .catch((e) => {
-        hasuraToast({
-          type: 'error',
+        showErrorNotification({
+          error: e,
           title: 'Error reloading remote schema cache',
-          message: `Error reloading remote schema cache for ${name}: ${e.message}`,
         });
       })
       .finally(() => {

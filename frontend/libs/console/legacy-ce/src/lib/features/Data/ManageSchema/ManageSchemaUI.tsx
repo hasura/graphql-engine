@@ -3,11 +3,11 @@ import {
   Badge,
   Button,
   CardedTable,
-  DisplayToastErrorMessage,
   DropdownMenu,
   hasuraToast,
   IconButton,
   SearchInput,
+  showErrorNotification,
   useDestructiveConfirm,
   useHasuraAlert,
 } from '@hasura/shared/ui';
@@ -19,7 +19,7 @@ import {
   useCreateDatabaseSchema,
   useDeleteDatabaseSchema,
 } from '@hasura/metadata/data-source';
-import { dataRoutes, getErrorContent } from '@hasura/shared/utils';
+import { dataRoutes } from '@hasura/shared/utils';
 import { MdOutlineCreateNewFolder } from 'react-icons/md';
 import { useNavigate } from 'react-router';
 
@@ -70,12 +70,9 @@ const ManageSchemaUI = ({
             return true;
           })
           .catch((err) => {
-            hasuraToast({
-              type: 'error',
+            showErrorNotification({
               title: 'Dropping schema failed',
-              children: (
-                <DisplayToastErrorMessage message={getErrorContent(err)} />
-              ),
+              error: err,
             });
 
             return false;
@@ -110,12 +107,9 @@ const ManageSchemaUI = ({
             return { withSuccess: true, successText: 'Schema Created' };
           })
           .catch((err) => {
-            hasuraToast({
+            showErrorNotification({
               title: 'Error while creating the schema',
-              type: 'error',
-              children: (
-                <DisplayToastErrorMessage message={getErrorContent(err)} />
-              ),
+              error: err,
             });
             return { withSuccess: false };
           });

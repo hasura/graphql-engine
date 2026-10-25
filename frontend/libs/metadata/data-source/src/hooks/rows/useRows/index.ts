@@ -1,6 +1,5 @@
 import type { QualifiedDataSource, Table, Where } from '@hasura/shared/types';
 import { useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { isScalarGraphQLType } from '@hasura/shared/utils';
 import { OrderBy } from '@hasura/shared/types';
 import { useAuthFetchJson } from '@hasura/shared/hooks';
 import { useAppContext } from '@hasura/shared/context';
@@ -67,14 +66,4 @@ export function useRows<T = TableRow[]>(
       Boolean(props.table) &&
       options?.enabled !== false,
   });
-}
-
-export function getRowsColumns(columns: TableColumn[] | undefined): string[] {
-  return (
-    columns
-      ?.filter((column) => {
-        return isScalarGraphQLType(column.graphQLProperties?.graphQLType);
-      })
-      .map((column) => column.name) ?? []
-  );
 }

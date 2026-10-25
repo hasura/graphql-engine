@@ -293,13 +293,36 @@ export const makeHasuraSsoAuthState = (
 // so in-flight requests don't race the expiry
 const TOKEN_REFRESH_LEEWAY_MS = 60 * 1000;
 
-export const shouldRefreshAuthState = (state: EnterpriseAuthState | null) => {
+// the exp claim of a JWT in milliseconds, or undefined if the token isn't a JWT
+const getJwtExpiry = (token: string): number | undefined => {
+  try {
+    const exp = decodeToken(token)?.exp;
+    return typeof exp === 'number' ? exp * 1000 : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+// the earliest of the token response expiry (expires_in describes the access token)
+// and the exp claim of the id token, which is the one sent in the request headers.
+// Also covers identity providers that don't return expires_in.
+export const getAuthStateExpiry = (
+  state: EnterpriseAuthState | null,
+): number | undefined => {
   if (state?.type !== 'sso' && state?.type !== 'hasura-sso') {
-    return false;
+    return undefined;
   }
 
-  const expiry = Number(state.expiry);
-  if (!state.expiry || Number.isNaN(expiry)) {
+  const expiries = [Number(state.expiry), getJwtExpiry(state.idToken)].filter(
+    (expiry): expiry is number => !!expiry && !Number.isNaN(expiry),
+  );
+
+  return expiries.length ? Math.min(...expiries) : undefined;
+};
+
+export const shouldRefreshAuthState = (state: EnterpriseAuthState | null) => {
+  const expiry = getAuthStateExpiry(state);
+  if (!expiry) {
     return false;
   }
 

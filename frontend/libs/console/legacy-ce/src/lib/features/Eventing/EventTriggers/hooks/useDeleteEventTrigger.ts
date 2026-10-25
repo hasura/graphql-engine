@@ -1,8 +1,11 @@
 import { useCallback } from 'react';
 import { useMetadataMigration } from '@hasura/metadata/api';
 import { SupportedDriver } from '@hasura/shared/types';
-import { hasuraToast, useDestructivePrompt } from '@hasura/shared/ui';
-import { getErrorMessage } from '@hasura/shared/utils';
+import {
+  hasuraToast,
+  showErrorNotification,
+  useDestructivePrompt,
+} from '@hasura/shared/ui';
 import { getDriverPrefix } from '@hasura/metadata/helpers';
 
 export type DeleteEventTriggerArgs = {
@@ -46,10 +49,9 @@ const useDeleteEventTrigger = () => {
                   resolve(true);
                 },
                 onError: (err) => {
-                  hasuraToast({
+                  showErrorNotification({
                     title: 'Deleting event trigger failed!',
-                    message: getErrorMessage(err),
-                    type: 'error',
+                    error: err,
                   });
                   resolve(false);
                 },

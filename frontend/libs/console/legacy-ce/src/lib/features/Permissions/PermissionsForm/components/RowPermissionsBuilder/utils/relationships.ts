@@ -11,7 +11,10 @@ export function getNewTablesToLoad({
   relationships: Relationships;
   tablesToLoad: TableToLoad;
 }): TableToLoad {
-  const relatedTables = relationships.filter(isNotRemoteSchemaRelationship);
+  // a relationship on a foreign key has no target until its table is loaded
+  const relatedTables = relationships
+    .filter(isNotRemoteSchemaRelationship)
+    .filter((relationship) => !!relationship.definition.toTable);
 
   // Create a Set of existing tables for faster lookups
   const existingTablesSet = new Set<string>(

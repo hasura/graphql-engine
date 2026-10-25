@@ -18,7 +18,11 @@ import {
   Feature,
 } from './ForbiddenFeaturesProvider';
 import { LogicalModelWithSource } from '@hasura/metadata/helpers';
-import { Flex } from '@radix-ui/themes';
+import { Flex, SegmentedControl } from '@radix-ui/themes';
+import { useState } from 'react';
+
+/** the permissions are edited either with the builder or as JSON */
+type EditorMode = 'builder' | 'json';
 
 const operators: Operators = {
   boolean: {
@@ -39,6 +43,7 @@ export const RowPermissionsInput = ({
   permissions,
   tables,
   table,
+  source,
   logicalModel,
   logicalModels,
   onPermissionsChange,
@@ -50,6 +55,8 @@ export const RowPermissionsInput = ({
   permissions: Permissions;
   tables: Tables;
   table: Table | undefined;
+  /** the source of the table, as sources can track tables with the same name */
+  source?: string;
   logicalModels: LogicalModelWithSource[];
   logicalModel: LogicalModel['name'] | undefined;
   onPermissionsChange?: (permissions: Permissions) => void;
@@ -58,13 +65,15 @@ export const RowPermissionsInput = ({
   forbidden?: Feature[];
   isLoading?: boolean;
 }) => {
+  const [editorMode, setEditorMode] = useState<EditorMode>('builder');
+
   return (
     <ForbiddenFeaturesProvider forbidden={forbidden}>
       <RootLogicalModelProvider
         logicalModel={logicalModel}
         logicalModels={logicalModels}
       >
-        <RootTableProvider table={table} tables={tables}>
+        <RootTableProvider table={table} tables={tables} source={source}>
           <RowPermissionsProvider
             operators={operators}
             permissions={permissions}
@@ -75,9 +84,25 @@ export const RowPermissionsInput = ({
           >
             <TypesProvider>
               <TableProvider table={table}>
-                <Flex direction="column" className="space-y-4 w-full">
-                  <JsonEditor />
-                  <RootInput />
+                <Flex direction="column" gap="2" className="w-full">
+                  <Flex justify="end">
+                    <SegmentedControl.Root
+                      size="1"
+                      value={editorMode}
+                      onValueChange={(value) =>
+                        setEditorMode(value as EditorMode)
+                      }
+                      aria-label="Permissions editor"
+                    >
+                      <SegmentedControl.Item value="builder">
+                        Builder
+                      </SegmentedControl.Item>
+                      <SegmentedControl.Item value="json">
+                        JSON
+                      </SegmentedControl.Item>
+                    </SegmentedControl.Root>
+                  </Flex>
+                  {editorMode === 'json' ? <JsonEditor /> : <RootInput />}
                 </Flex>
               </TableProvider>
             </TypesProvider>

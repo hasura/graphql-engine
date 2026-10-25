@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { hasuraToast } from '@hasura/shared/ui';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 import { useMetadataMigration } from '@hasura/metadata/api';
 
 export const useReloadSource = () => {
@@ -7,10 +7,11 @@ export const useReloadSource = () => {
     onSuccess: () => {
       hasuraToast({ type: 'success', title: 'Reload successful!' });
     },
-    onError: () => {
-      hasuraToast({ type: 'error', title: 'Failed to reload source.' });
+    onError: (error) => {
+      showErrorNotification({ error, title: 'Failed to reload source.' });
     },
   });
+
   const reloadSource = useCallback(
     async (dataSourceName: string) => {
       mutate({
