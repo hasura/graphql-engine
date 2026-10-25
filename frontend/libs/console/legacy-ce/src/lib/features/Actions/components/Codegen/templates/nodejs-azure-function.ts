@@ -130,22 +130,35 @@ export const templater = (
   //    field1: "",
   //    field2: ""
   // }
+  // The output type can be wrapped (e.g. `ActionResult!` or `[ActionResult]`)
+  // and can also be a scalar (e.g. `String!`), which has no fields: then the
+  // handler responds with a single placeholder value.
+  let actionOutputNamedType = actionDef.type;
+  while (actionOutputNamedType.kind !== 'NamedType') {
+    actionOutputNamedType = actionOutputNamedType.type;
+  }
   const actionOutputType = ast.definitions.find(
-    (def: any) => def.name.value === actionDef.type.name.value,
-  );
-  const outputTypeFieldNames = actionOutputType.fields.map(
-    (f: any) => f.name.value,
+    (def: any) =>
+      def.kind === 'ObjectTypeDefinition' &&
+      def.name.value === actionOutputNamedType.name.value,
   );
 
-  let outputTypeSpread = '{\n      ';
-  outputTypeFieldNames.forEach((n: string, i: number) => {
-    outputTypeSpread += n + ': ""';
-    if (i === outputTypeFieldNames.length - 1) {
-      outputTypeSpread += '\n    }';
-    } else {
-      outputTypeSpread += ',\n      ';
-    }
-  });
+  let outputTypeSpread = '""';
+  if (actionOutputType) {
+    const outputTypeFieldNames = actionOutputType.fields.map(
+      (f: any) => f.name.value,
+    );
+
+    outputTypeSpread = '{\n      ';
+    outputTypeFieldNames.forEach((n: string, i: number) => {
+      outputTypeSpread += n + ': ""';
+      if (i === outputTypeFieldNames.length - 1) {
+        outputTypeSpread += '\n    }';
+      } else {
+        outputTypeSpread += ',\n      ';
+      }
+    });
+  }
 
   const basicHandlerCode = generateHandler(
     extractArgsFromBody,

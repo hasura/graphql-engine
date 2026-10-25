@@ -38,7 +38,11 @@ export const templater = (
     );
   });
 
-  const outputTypeFields = outputType.fields.map((f: any) => f.name.value);
+  // the output of an action can also be a scalar (e.g. `String!`), which is
+  // not an object type and has no fields
+  const outputTypeFields: string[] | null = outputType
+    ? outputType.fields.map((f: any) => f.name.value)
+    : null;
 
   let graphqlClientCode = '';
   let operationCodegen = '';
@@ -111,10 +115,13 @@ const execute = async (variables) => {
   }
 
   if (!successSnippet) {
-    successSnippet = `  // success
+    successSnippet = outputTypeFields
+      ? `  // success
   return res.json({
 ${outputTypeFields.map((f: string) => `    ${f}: "<value>"`).join(',\n')}
-  })`;
+  })`
+      : `  // success
+  return res.json("<value>")`;
   }
 
   const handlerContent = `
