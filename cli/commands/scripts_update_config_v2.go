@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/cliext"
@@ -179,7 +180,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command { //no
 						}
 
 						sqlUp.WriteString("\n")
-						sqlUp.WriteString(to.SQL)
+						sqlUp.WriteString(terminateSQL(to.SQL))
 					}
 				}
 				// check if up.sql file exists
@@ -218,7 +219,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command { //no
 							return errors.E(op, fmt.Errorf("error in reading up.sql: %w", err))
 						}
 
-						upByt = append(upByt, sqlUp.Bytes()...)
+						upByt = append([]byte(terminateSQL(string(upByt))), sqlUp.Bytes()...)
 
 						err = os.WriteFile(filePath, upByt, os.ModePerm)
 						if err != nil {
@@ -297,7 +298,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command { //no
 						}
 
 						sqlDown.WriteString("\n")
-						sqlDown.WriteString(to.SQL)
+						sqlDown.WriteString(terminateSQL(to.SQL))
 					}
 				}
 				// check if up.sql file exists
@@ -336,7 +337,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command { //no
 							return errors.E(op, fmt.Errorf("error in reading down.sql: %w", err))
 						}
 
-						downByt = append(sqlDown.Bytes(), downByt...)
+						downByt = append(append(sqlDown.Bytes(), '\n'), downByt...)
 
 						err = os.WriteFile(filePath, downByt, os.ModePerm)
 						if err != nil {
@@ -521,4 +522,20 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command { //no
 	util.BindPFlag(v, "certificate_authority", f.Lookup("certificate-authority"))
 
 	return scriptsUpdateConfigV2Cmd
+}
+
+// terminateSQL makes sure the given SQL ends with a semicolon, so that it can
+// be concatenated with other statements when the run_sql steps of up.yaml /
+// down.yaml are merged into up.sql / down.sql.
+func terminateSQL(sql string) string {
+	trimmed := strings.TrimRight(sql, " \t\r\n")
+	if trimmed == "" || strings.HasSuffix(trimmed, ";") {
+		return sql
+	}
+	lines := strings.Split(trimmed, "\n")
+	if strings.HasPrefix(strings.TrimSpace(lines[len(lines)-1]), "--") {
+		// a trailing line comment would swallow the semicolon
+		return trimmed + "\n;"
+	}
+	return trimmed + ";"
 }
