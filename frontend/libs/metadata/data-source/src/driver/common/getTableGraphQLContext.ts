@@ -1,37 +1,7 @@
-import { buildClientSchema, GraphQLSchema } from 'graphql';
 import { areTablesEqual } from '@hasura/metadata/helpers';
-import { exportMetadata, runIntrospectionQuery } from '@hasura/metadata/api';
 import { Table } from '@hasura/shared/types';
 import { DataSourceNetworkArgs } from '../types';
-
-/**
- * The GraphQL schema only changes along with the metadata resource version
- * (schema-changing `run_sql` bumps it too), so it is introspected once per
- * version instead of on every request.
- */
-let cachedSchema: { key: string; schema: Promise<GraphQLSchema> } | undefined;
-
-const getGraphQLSchema = ({
-  endpoints,
-  fetchJson,
-  resourceVersion,
-}: DataSourceNetworkArgs & { resourceVersion: number }) => {
-  const key = `${endpoints.graphQLUrl}#${resourceVersion}`;
-  if (cachedSchema?.key === key) return cachedSchema.schema;
-
-  const schema = runIntrospectionQuery({
-    url: endpoints.graphQLUrl,
-    fetchJson,
-  }).then(buildClientSchema);
-  cachedSchema = { key, schema };
-
-  // don't keep a failed introspection around
-  schema.catch(() => {
-    if (cachedSchema?.schema === schema) cachedSchema = undefined;
-  });
-
-  return schema;
-};
+import { exportMetadataShared, getGraphQLSchema } from './sharedRequests';
 
 /**
  * Returns what's needed to build GraphQL operations on a tracked table: the
@@ -49,9 +19,9 @@ export const getTableGraphQLContext = async ({
   /** prefixes the error messages */
   caller: string;
 }) => {
-  const { resource_version, metadata } = await exportMetadata({
+  const { resource_version, metadata } = await exportMetadataShared({
+    endpoints,
     fetchJson,
-    url: endpoints.metadata,
   });
 
   const source = metadata.sources.find(({ name }) => name === dataSourceName);

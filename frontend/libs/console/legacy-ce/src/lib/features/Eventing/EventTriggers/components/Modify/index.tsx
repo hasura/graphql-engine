@@ -59,7 +59,7 @@ import {
 } from '@hasura/shared/types';
 import { NameValue } from '@hasura/shared/types';
 import { useTestWebhookTransform } from '../../../../ConfigureTransformation';
-import { useTableColumns } from '@hasura/metadata/data-source';
+import { useTableColumnInfos } from '@hasura/metadata/data-source';
 import { Flex, Heading } from '@radix-ui/themes';
 
 const ModifyEventTrigger: React.FC = () => {
@@ -72,15 +72,10 @@ const ModifyEventTrigger: React.FC = () => {
     data: columns = [],
     isFetching: areColumnsFetching,
     error: columnsFetchingError,
-  } = useTableColumns(
-    {
-      source: currentSource,
-      table: currentTable,
-    },
-    {
-      select: (data) => data.columns,
-    },
-  );
+  } = useTableColumnInfos({
+    source: currentSource,
+    table: currentTable,
+  });
 
   const { state, setState } = useEventTriggerForm(
     parseServerETDefinition({

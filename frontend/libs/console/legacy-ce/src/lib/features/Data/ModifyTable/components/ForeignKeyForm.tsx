@@ -20,6 +20,7 @@ import {
   createTableSelectOption,
   getDatabaseMethods,
   TableFkRelationships,
+  useTableColumnInfos,
   useTableColumns,
   ViolationAction,
 } from '@hasura/metadata/data-source';
@@ -133,11 +134,12 @@ export const ForeignKeyForm = ({
     }));
 
   const referenceTable = watch('referenceTable') as HasuraTable;
-  const { data: refColumns } = useTableColumns({
+  // only the names of the reference table's columns are needed
+  const { data: refColumns } = useTableColumnInfos({
     source,
     table: referenceTable,
   });
-  const refColumnOptions = (refColumns?.columns ?? []).map((c) => ({
+  const refColumnOptions = (refColumns ?? []).map((c) => ({
     value: c.name,
     label: c.name,
   }));

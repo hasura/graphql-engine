@@ -1,7 +1,7 @@
 import { useContext } from 'react';
 import { render, screen } from '@testing-library/react';
 import { TableProvider, tableContext } from './TableProvider';
-import { rootTableContext } from './RootTableProvider';
+import { getTablesKey, rootTableContext } from './RootTableProvider';
 import { rowPermissionsContext } from './RowPermissionsProvider';
 import { Tables } from './types';
 
@@ -38,7 +38,14 @@ const Consumer = () => {
 const wrapper = (tables: Tables, loadRelationships = vi.fn()) => {
   const rootTable = tables.find((t) => JSON.stringify(t.table) === '["Album"]');
   return (
-    <rootTableContext.Provider value={{ table: ['Album'], tables, rootTable }}>
+    <rootTableContext.Provider
+      value={{
+        table: ['Album'],
+        tables,
+        tablesKey: getTablesKey(tables),
+        rootTable,
+      }}
+    >
       <rowPermissionsContext.Provider
         value={
           {

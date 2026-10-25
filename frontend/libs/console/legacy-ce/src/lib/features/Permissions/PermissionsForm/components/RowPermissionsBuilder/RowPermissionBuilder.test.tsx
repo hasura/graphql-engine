@@ -1,4 +1,10 @@
-import { act, renderHook, waitFor } from '@testing-library/react';
+import {
+  act,
+  fireEvent,
+  renderHook,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import { Theme } from '@radix-ui/themes';
 import { FormProvider, useForm } from 'react-hook-form';
 import { testRenderWithClient, testWrapper } from '@hasura/shared/testing';
@@ -44,12 +50,16 @@ const getFKRelationships = vi.fn(
     foreignKeys[t.name] ?? [],
 );
 
+const getTableColumns = vi.fn(
+  async ({ table: t }: { table: { name: string } }) => columns[t.name] ?? [],
+);
+
 vi.mock('@hasura/metadata/data-source', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@hasura/metadata/data-source')>()),
   getDatabaseMethods: () => ({
     introspection: {
-      getTableColumns: async ({ table: t }: { table: { name: string } }) =>
-        columns[t.name] ?? [],
+      getTableColumns,
+      getSupportedOperators: () => [],
       getFKRelationships,
     },
   }),
@@ -129,8 +139,11 @@ const permissions = {
   ],
 };
 
+const formRenderSpy = vi.fn();
+
 const Form = () => {
   const methods = useForm({ defaultValues: { filter: permissions } });
+  formRenderSpy();
   return (
     <Theme>
       <FormProvider {...methods}>
@@ -177,6 +190,27 @@ describe('RowPermissionBuilder', () => {
       new Set(['orders', 'ddns']),
     );
   });
+
+  it("doesn't re-render the whole form on an edit", async () => {
+    testRenderWithClient(<Form />);
+    // once the relationships are loaded, as the entries remount meanwhile
+    await waitFor(() => expect(selectedKeys()).toHaveLength(10));
+
+    formRenderSpy.mockClear();
+    fireEvent.change(
+      screen.getByTestId('_or.0.contract.owner_id._eq-value-input'),
+      { target: { value: 'X-Hasura-Org-Id' } },
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId('row-permission-builder')).toHaveAttribute(
+        'data-state',
+        expect.stringContaining('X-Hasura-Org-Id'),
+      ),
+    );
+    // the builder watches its value on its own
+    expect(formRenderSpy).not.toHaveBeenCalled();
+  });
 });
 
 describe('usePermissionTables', () => {
@@ -210,5 +244,38 @@ describe('usePermissionTables', () => {
         )?.columns,
       ).toHaveLength(2),
     );
+  });
+
+  it("doesn't introspect the loaded tables again", async () => {
+    getTableColumns.mockClear();
+    const { result } = renderHook(
+      () =>
+        usePermissionTables({
+          source: source as never,
+          table: table('orders'),
+          metadata,
+        }),
+      { wrapper: testWrapper },
+    );
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    act(() =>
+      result.current.setTablesToLoad((tablesToLoad) => [
+        ...tablesToLoad,
+        { table: table('contracts'), source: 'default' },
+      ]),
+    );
+    await waitFor(() =>
+      expect(
+        result.current.tables.find((t) =>
+          areTablesEqual(t.table, table('contracts')),
+        )?.columns,
+      ).toHaveLength(2),
+    );
+
+    const introspectedTables = getTableColumns.mock.calls.map(
+      ([props]) => props.table.name,
+    );
+    expect(introspectedTables).toEqual(['orders', 'contracts']);
   });
 });

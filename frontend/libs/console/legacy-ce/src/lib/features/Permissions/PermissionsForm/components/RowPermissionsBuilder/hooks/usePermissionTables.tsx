@@ -4,7 +4,7 @@ import { TableToLoad } from '../components';
 import { SuggestedRelationshipWithName } from '../../../../../DatabaseRelationships/components/SuggestedRelationships/hooks/useSuggestedRelationships';
 import { TableFkRelationships } from '@hasura/metadata/data-source';
 import { Metadata, Source, Table } from '@hasura/shared/types';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 /**
  * The relationships are read from the metadata; only the target of an object
@@ -44,14 +44,10 @@ export const usePermissionTables = ({
     metadata,
   });
 
-  if (isLoadingTables)
-    return { isLoading: true, tablesToLoad, setTablesToLoad, tables: [] };
-
-  return {
-    isLoading: false,
-    tablesToLoad,
-    setTablesToLoad,
-    tables:
+  // the tables are the same array until they change: the builder renders on
+  // every keystroke, and each of its tables reloads relationships when they change
+  const permissionTables = useMemo(
+    () =>
       tables?.map(({ metadataTable, columns, foreignKeys, sourceName }) => {
         return {
           table: metadataTable.table,
@@ -67,5 +63,16 @@ export const usePermissionTables = ({
           computedFields: metadataTable.computed_fields ?? [],
         };
       }) ?? [],
+    [tables, metadata],
+  );
+
+  if (isLoadingTables)
+    return { isLoading: true, tablesToLoad, setTablesToLoad, tables: [] };
+
+  return {
+    isLoading: false,
+    tablesToLoad,
+    setTablesToLoad,
+    tables: permissionTables,
   };
 };

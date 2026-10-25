@@ -1,10 +1,16 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import {
   getDatabaseMethods,
   isSameTableObjectRelationship,
   TableColumn,
   TableFkRelationships,
+  UseTableColumnsResult,
 } from '@hasura/metadata/data-source';
+import { defaultQueryOptions } from '@hasura/metadata/api';
 import { Metadata, MetadataTable } from '@hasura/shared/types';
 import { TableToLoad } from '../components';
 import { useAuthFetchJson } from '@hasura/shared/hooks';
@@ -37,21 +43,28 @@ export const useTablesWithColumns = ({
 }) => {
   const { endpoints } = useAppContext();
   const fetchJson = useAuthFetchJson();
+  const queryClient = useQueryClient();
 
   return useQuery<TableWithColumns[], Error>({
     queryKey: [USE_TABLE_WITH_COLUMNS_QUERY_KEY, tablesToLoad],
-    queryFn: async () => {
-      const result: TableWithColumns[] = [];
-
-      for (const source of metadata.sources) {
-        for (const metadataTable of source.tables) {
-          if (
-            tablesToLoad.find(
+    queryFn: () =>
+      Promise.all(
+        metadata.sources.flatMap((source) =>
+          source.tables.map(async (metadataTable) => {
+            const isTableToLoad = tablesToLoad.some(
               (t) =>
                 areTablesEqual(metadataTable.table, t.table) &&
                 source.name === t?.source,
-            )
-          ) {
+            );
+            if (!isTableToLoad) {
+              return {
+                metadataTable,
+                columns: [],
+                foreignKeys: [],
+                sourceName: source.name,
+              };
+            }
+
             const databaseMethods = getDatabaseMethods(source.kind);
             const props = {
               dataSourceName: source.name,
@@ -62,34 +75,42 @@ export const useTablesWithColumns = ({
 
             const getFKRelationships =
               databaseMethods.introspection.getFKRelationships;
-            const [columns, foreignKeys] = await Promise.all([
-              databaseMethods.introspection.getTableColumns(props),
+            // each table is cached on its own, so loading the tables of a new
+            // relationship doesn't introspect the already loaded ones again
+            const [{ columns }, foreignKeys] = await Promise.all([
+              queryClient.fetchQuery<UseTableColumnsResult>({
+                // shared with `useTableColumns`
+                queryKey: [source.name, 'column-introspection', props.table],
+                queryFn: async () => ({
+                  columns:
+                    await databaseMethods.introspection.getTableColumns(props),
+                  supportedOperators:
+                    databaseMethods.introspection.getSupportedOperators(),
+                }),
+                staleTime: defaultQueryOptions.staleTime,
+              }),
               getFKRelationships && hasSameTableFkRelationships(metadataTable)
-                ? // without the foreign keys only these relationships are
-                  // missing, so the rest of the builder still works
-                  getFKRelationships(props).catch(() => [])
+                ? queryClient
+                    .fetchQuery({
+                      queryKey: [source.name, 'fk-relationships', props.table],
+                      queryFn: () => getFKRelationships(props),
+                      staleTime: defaultQueryOptions.staleTime,
+                    })
+                    // without the foreign keys only these relationships are
+                    // missing, so the rest of the builder still works
+                    .catch(() => [])
                 : [],
             ]);
 
-            result.push({
+            return {
               metadataTable,
               columns,
               foreignKeys,
               sourceName: source.name,
-            });
-          } else {
-            result.push({
-              metadataTable,
-              columns: [],
-              foreignKeys: [],
-              sourceName: source.name,
-            });
-          }
-        }
-      }
-
-      return result;
-    },
+            };
+          }),
+        ),
+      ),
     refetchOnWindowFocus: false,
     // the tables stay usable while the ones of a new relationship load
     placeholderData: keepPreviousData,
