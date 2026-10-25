@@ -1,6 +1,4 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api';
-import { permissionsTableKey } from '../../../PermissionsTable/hooks';
 import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 import { useMetadataHelpers, useMetadataMigration } from '@hasura/metadata/api';
 import type { DataQueryType, Table } from '@hasura/shared/types';
@@ -17,7 +15,6 @@ export const useDeletePermission = ({
   roleName,
 }: UseDeletePermissionArgs) => {
   const mutate = useMetadataMigration();
-  const queryClient = useQueryClient();
   const { fetchSource } = useMetadataHelpers();
 
   const submit = async (queries: DataQueryType[]) => {
@@ -50,14 +47,6 @@ export const useDeletePermission = ({
           showErrorNotification({
             title: 'Error!',
             error: err,
-          });
-        },
-        onSettled: async () => {
-          await queryClient.invalidateQueries({
-            queryKey: permissionsTableKey({
-              dataSourceName,
-              table,
-            }),
           });
         },
       },

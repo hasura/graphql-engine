@@ -1,6 +1,7 @@
 import isEqual from 'lodash/isEqual';
 import { getDatabaseMethods } from '@hasura/metadata/data-source';
 import type { TableColumn } from '@hasura/metadata/data-source';
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   type Metadata,
@@ -9,7 +10,7 @@ import {
   type AccessType,
   keyToPermission,
 } from '@hasura/shared/types';
-import { useMetadataHelpers } from '@hasura/metadata/api';
+import { useMetadata } from '@hasura/metadata/api';
 import { useAuthFetchJson } from '@hasura/shared/hooks';
 import { useAppContext } from '@hasura/shared/context';
 import { MetadataSelectors } from '@hasura/metadata/helpers';
@@ -268,53 +269,59 @@ export const useRolePermissions = ({
 }: UseRolePermissionsArgs) => {
   const { endpoints } = useAppContext();
   const fetchJson = useAuthFetchJson();
-  const { fetchMetadata } = useMetadataHelpers();
+  // the permissions are read from the cached metadata, which every metadata
+  // migration invalidates, so they don't need a metadata fetch of their own
+  const { data: meta, isLoading: isLoadingMetadata } = useMetadata();
+  const sourceKind = meta?.metadata.sources.find(
+    (s) => s.name === dataSourceName,
+  )?.kind;
 
-  return useQuery<
-    { supportedQueries: DataQueryType[]; rolePermissions: RolePermission[] },
+  // only the table columns come from db introspection
+  const { data: tableColumns, isLoading: isLoadingColumns } = useQuery<
+    TableColumn[],
     Error
   >({
     queryKey: permissionsTableKey({
       dataSourceName,
       table,
     }),
-    queryFn: async () => {
-      const meta = await fetchMetadata();
-      const source = meta.metadata.sources.find(
-        (s) => s.name === dataSourceName,
-      );
-      if (!source) {
+    queryFn: () => {
+      if (!sourceKind) {
         throw new Error('Source not found');
       }
 
-      const databaseMethods = getDatabaseMethods(source.kind);
-
-      // get table columns for metadata table from db introspection
-      const tableColumns =
-        await databaseMethods.introspection.getTableColumnInfos({
-          dataSourceName: dataSourceName,
-          table,
-          endpoints,
-          fetchJson,
-        });
-      const roles = MetadataSelectors.getRoles(meta.metadata);
-
-      // find the specific metadata table
-      const metadataTable = getMetadataTable({
-        metadata: meta,
-        dataSourceName,
+      return getDatabaseMethods(sourceKind).introspection.getTableColumnInfos({
+        dataSourceName: dataSourceName,
         table,
+        endpoints,
+        fetchJson,
       });
-
-      // // extract the permissions data in the format required for the table
-      const rolePermissions = createRoleTableData({
-        metadataTable,
-        tableColumns,
-        allRoles: roles,
-      });
-
-      return { rolePermissions, supportedQueries };
     },
+    enabled: Boolean(sourceKind),
     refetchOnWindowFocus: false,
   });
+
+  const data = useMemo(() => {
+    if (!meta || !sourceKind || !tableColumns) return undefined;
+
+    const roles = MetadataSelectors.getRoles(meta.metadata);
+
+    // find the specific metadata table
+    const metadataTable = getMetadataTable({
+      metadata: meta,
+      dataSourceName,
+      table,
+    });
+
+    // extract the permissions data in the format required for the table
+    const rolePermissions = createRoleTableData({
+      metadataTable,
+      tableColumns,
+      allRoles: roles,
+    });
+
+    return { rolePermissions, supportedQueries };
+  }, [meta, sourceKind, tableColumns, dataSourceName, table]);
+
+  return { data, isLoading: isLoadingMetadata || isLoadingColumns };
 };

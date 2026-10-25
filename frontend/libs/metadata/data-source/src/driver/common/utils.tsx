@@ -6,14 +6,13 @@ import {
   TableFkRelationships,
 } from '../types';
 import { areTablesEqual } from '@hasura/metadata/helpers';
-import { exportMetadata, runIntrospectionQuery } from '@hasura/metadata/api';
 import {
-  getScalarType,
   getTypeName,
   extractTableInfo,
   getTableDisplayName,
 } from '@hasura/shared/utils';
-import { buildClientSchema } from 'graphql';
+import { getNamedType, isObjectType, isScalarType } from 'graphql';
+import { exportMetadataShared, getGraphQLSchema } from './sharedRequests';
 
 export const adaptIntrospectedTables = (
   runSqlResponse: RunSQLResponse,
@@ -122,9 +121,9 @@ export async function introspectTableScalarTypes({
 }: GetTableColumnsProps & {
   defaultQueryRoot: string;
 }) {
-  const { metadata } = await exportMetadata({
+  const { metadata, resource_version } = await exportMetadataShared({
+    endpoints,
     fetchJson,
-    url: endpoints.metadata,
   });
 
   if (!metadata) throw Error('Metadata could not be retrieved');
@@ -146,25 +145,21 @@ export async function introspectTableScalarTypes({
     configuration: metadataTable.configuration,
   });
 
-  const introspectionResult = await runIntrospectionQuery({
+  const schema = await getGraphQLSchema({
+    endpoints,
     fetchJson,
-    url: endpoints.graphQLUrl,
+    resourceVersion: resource_version,
   });
-  const schemaType = introspectionResult.__schema.types.find(
-    (t) => t.name === queryRoot,
-  );
+  const schemaType = schema.getType(queryRoot);
 
-  const graphQLFields =
-    schemaType && 'fields' in schemaType ? schemaType.fields : [];
-  const schema = buildClientSchema(introspectionResult);
+  const graphQLFields = isObjectType(schemaType)
+    ? Object.values(schemaType.getFields())
+    : [];
 
   const scalarTypes = graphQLFields
     .map(({ name, type }) => {
-      try {
-        return { name, type: getScalarType(type) };
-      } catch {
-        return null;
-      }
+      const namedType = getNamedType(type);
+      return isScalarType(namedType) ? { name, type: namedType.name } : null;
     })
     .filter(Boolean);
 

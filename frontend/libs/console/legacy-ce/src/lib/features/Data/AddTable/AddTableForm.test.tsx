@@ -28,6 +28,7 @@ vi.mock('@hasura/metadata/data-source', () => ({
   }),
   useGetTableSchemas: () => ({ data: ['public'] }),
   useTableColumns: () => ({ data: { columns: [] } }),
+  useTableColumnInfos: () => ({ data: [] }),
   getDatabaseMethods: () => ({
     config: { getViolationActions: () => ['restrict', 'cascade'] },
   }),

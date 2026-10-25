@@ -3,7 +3,7 @@ import { Theme } from '@radix-ui/themes';
 import { SelectTable } from './SelectTable';
 import { tableContext } from './TableProvider';
 import { rowPermissionsContext } from './RowPermissionsProvider';
-import { rootTableContext } from './RootTableProvider';
+import { getTablesKey, rootTableContext } from './RootTableProvider';
 import { Tables } from './types';
 
 class ResizeObserverStub {
@@ -48,7 +48,12 @@ const renderSelect = (path: string[], value: any) =>
   render(
     <Theme>
       <rootTableContext.Provider
-        value={{ table: ['Album'], tables, rootTable: undefined }}
+        value={{
+          table: ['Album'],
+          tables,
+          tablesKey: getTablesKey(tables),
+          rootTable: undefined,
+        }}
       >
         <rowPermissionsContext.Provider
           value={

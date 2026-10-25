@@ -99,8 +99,12 @@ relationships.
     - `getTableName/` — `getTableName` (also re-exported at
       `driver/index.ts`).
     - `getTableGraphQLContext.ts` — metadata lookup of a tracked table plus
-      the introspected GraphQL schema (cached per resource version), shared
-      by `getTableRowsFromGraphQL` and the row mutations.
+      the introspected GraphQL schema, shared by `getTableRowsFromGraphQL`
+      and the row mutations.
+    - `sharedRequests.ts` — `getGraphQLSchema` (introspection cached per
+      metadata resource version) and `exportMetadataShared` (concurrent
+      metadata exports share one request). Use these in driver code instead
+      of calling `exportMetadata`/`runIntrospectionQuery` per table.
     - `modify/runRowMutation.ts` — `runRowMutationFromGraphQL`: inserts,
       updates or deletes rows through the GraphQL API for every driver
       (refuses an update/delete with an empty filter).

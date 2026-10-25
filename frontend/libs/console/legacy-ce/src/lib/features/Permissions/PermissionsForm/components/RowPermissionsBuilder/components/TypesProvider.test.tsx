@@ -30,7 +30,12 @@ const Consumer = () => {
 
 const wrapper = (permissions: Record<string, any>) => (
   <rootTableContext.Provider
-    value={{ table: ['Album'], tables: [], rootTable: undefined }}
+    value={{
+      table: ['Album'],
+      tables: [],
+      tablesKey: '[]',
+      rootTable: undefined,
+    }}
   >
     <rowPermissionsContext.Provider
       value={

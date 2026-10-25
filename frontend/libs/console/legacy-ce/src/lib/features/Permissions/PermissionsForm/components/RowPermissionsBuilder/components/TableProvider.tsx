@@ -49,24 +49,18 @@ export const TableProvider = ({
   const [relationships, setRelationships] = useState<Relationships>([]);
   const {
     tables,
+    tablesKey,
     rootTable,
     source: rootSource,
   } = useContext(rootTableContext);
   const { loadRelationships } = useContext(rowPermissionsContext);
   const { table: closestTableName, source: closestSource } =
     useContext(tableContext);
-  const closestTable = findTable(tables, closestTableName, closestSource);
   const source = sourceProp ?? closestSource ?? rootSource;
-
-  const supportedSources = tables
-    .map((i) => i.dataSource)
-    .filter((s) => s?.kind === 'postgres')
-    .map((s) => s?.name);
 
   //  Stringify values to get a stable key for the derived-state sync below
   const stringifiedTable = getTableDisplayName(table);
-  const stringifiedTables = `[${tables.map((t) => getTableDisplayName(t)).join(',')}]`;
-  const syncKey = `${stringifiedTable}|${source ?? ''}|${stringifiedTables}|${
+  const syncKey = `${stringifiedTable}|${source ?? ''}|${tablesKey}|${
     objectPath ?? ''
   }|${closestTableName ? getTableDisplayName(closestTableName) : ''}|${
     rootTable?.dataSource?.name ?? ''
@@ -81,6 +75,11 @@ export const TableProvider = ({
   const [prevSyncKey, setPrevSyncKey] = useState<string | null>(null);
   if (syncKey !== prevSyncKey) {
     setPrevSyncKey(syncKey);
+    const closestTable = findTable(tables, closestTableName, closestSource);
+    const supportedSources = tables
+      .map((i) => i.dataSource)
+      .filter((s) => s?.kind === 'postgres')
+      .map((s) => s?.name);
     const foundTable = findTable(tables, table, source);
     let skipObjectPath = false;
     if (foundTable) {

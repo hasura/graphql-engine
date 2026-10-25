@@ -1,5 +1,5 @@
 import set from 'lodash/set';
-import { useCallback, useState, createContext } from 'react';
+import { useCallback, useMemo, useState, createContext } from 'react';
 import { Permissions, RowPermissionsState } from './types';
 import { updateKey } from './utils/helpers';
 import cloneDeep from 'lodash/cloneDeep';
@@ -93,18 +93,31 @@ export const RowPermissionsProvider = ({
       setPermissionsState((prev) => ({ ...prev, permissions }));
     }
   }
+
+  // every entry of the builder reads this context
+  const value = useMemo(
+    () => ({
+      ...permissionsState,
+      setValue,
+      setKey,
+      setPermissions,
+      comparators,
+      loadRelationships,
+      isLoading,
+    }),
+    [
+      permissionsState,
+      setValue,
+      setKey,
+      setPermissions,
+      comparators,
+      loadRelationships,
+      isLoading,
+    ],
+  );
+
   return (
-    <rowPermissionsContext.Provider
-      value={{
-        ...permissionsState,
-        setValue,
-        setKey,
-        setPermissions,
-        comparators,
-        loadRelationships,
-        isLoading,
-      }}
-    >
+    <rowPermissionsContext.Provider value={value}>
       {children}
     </rowPermissionsContext.Provider>
   );
