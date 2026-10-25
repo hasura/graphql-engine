@@ -9,6 +9,7 @@ import (
 	"maps"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/hasura/graphql-engine/cli/v2"
 	internalerrors "github.com/hasura/graphql-engine/cli/v2/internal/errors"
@@ -58,9 +59,18 @@ func (h *Handler) SetMetadataObjects(objects metadataobject.Objects) {
 func (h *Handler) WriteMetadata(files map[string][]byte) error {
 	var op internalerrors.Op = "projectmetadata.Handler.WriteMetadata"
 
+	written := make(map[string]struct{}, len(files))
+	for name := range files {
+		written[filepath.Clean(name)] = struct{}{}
+	}
+
 	for name, content := range files {
 		fs := afero.NewOsFs()
 		if err := fs.MkdirAll(filepath.Dir(name), os.ModePerm); err != nil {
+			return internalerrors.E(op, err)
+		}
+
+		if err := removeCaseVariants(name, written); err != nil {
 			return internalerrors.E(op, err)
 		}
 
@@ -70,6 +80,40 @@ func (h *Handler) WriteMetadata(files map[string][]byte) error {
 				op,
 				fmt.Errorf("creating metadata file %s failed: %w", name, err),
 			)
+		}
+	}
+
+	return nil
+}
+
+// removeCaseVariants deletes files next to name whose names differ from it
+// only in letter case, unless they are written in the same batch. On case
+// insensitive file systems (Windows, macOS) writing public_user.yaml would
+// otherwise reuse an existing public_User.yaml and keep the stale casing,
+// which breaks the project on case sensitive file systems.
+func removeCaseVariants(name string, written map[string]struct{}) error {
+	dir, base := filepath.Split(filepath.Clean(name))
+	if dir == "" {
+		dir = "."
+	}
+
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() || entry.Name() == base || !strings.EqualFold(entry.Name(), base) {
+			continue
+		}
+
+		variant := filepath.Join(dir, entry.Name())
+		if _, ok := written[variant]; ok {
+			continue
+		}
+
+		if err := os.Remove(variant); err != nil {
+			return fmt.Errorf("removing stale metadata file %s failed: %w", variant, err)
 		}
 	}
 
