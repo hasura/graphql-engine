@@ -1,4 +1,3 @@
-import { useQueryClient } from '@tanstack/react-query';
 import {
   type DataQueryType,
   type Metadata,
@@ -9,7 +8,6 @@ import {
 import { PermissionsSchema } from '../../../schema';
 import { isPermission } from '../../../utils';
 import { api } from '../../api';
-import { permissionsTableKey } from '../../../PermissionsTable/hooks';
 import { hasuraToast } from '@hasura/shared/ui';
 import {
   MetadataMigrationOptions,
@@ -67,7 +65,6 @@ const getAllPermissions = async (
 export const useSubmitForm = (args: UseSubmitFormArgs) => {
   const { dataSourceName, table, roleName, queryType, accessType } = args;
 
-  const queryClient = useQueryClient();
   const { mutate, ...mutation } = useMetadataMigration();
   const { fetchMetadata } = useMetadataHelpers();
   const showErrorNotification = useErrorNotification();
@@ -111,13 +108,6 @@ export const useSubmitForm = (args: UseSubmitFormArgs) => {
       {
         ...options,
         onSuccess: (data, variables, onMutateResult, context) => {
-          queryClient.invalidateQueries({
-            queryKey: permissionsTableKey({
-              dataSourceName,
-              table,
-            }),
-          });
-
           hasuraToast({
             type: 'success',
             title: 'Success!',

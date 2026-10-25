@@ -27,7 +27,10 @@ import { schema, Schema } from './schema';
 import { SourceOption } from './parts/SourceSelect';
 import { useHandleSubmit } from './utils';
 import { useIntrospectRemoteSchema } from '@hasura/metadata/api';
-import { useTableColumns } from '@hasura/metadata/data-source';
+import {
+  useTableColumnInfos,
+  useTableColumns,
+} from '@hasura/metadata/data-source';
 import { getTableLabel } from '@hasura/shared/utils';
 import { createFilter } from 'react-select';
 
@@ -174,8 +177,10 @@ export const Widget = ({
       ? adaptDataSourceKind(sourceOptions, toSource.dataSourceName)
       : undefined;
 
+  // only the names of the target table's columns are mapped, whereas the
+  // source table's full columns are loaded by the table page anyway
   const { data: targetTableColumns, isLoading: isColumnDataLoading } =
-    useTableColumns({
+    useTableColumnInfos({
       source:
         toSource?.type === 'table' && toSourceKind
           ? {
@@ -317,7 +322,7 @@ export const Widget = ({
 
                       <MapColumns
                         name="details.columnMap"
-                        targetTableColumns={targetTableColumns?.columns ?? []}
+                        targetTableColumns={targetTableColumns ?? []}
                         sourceTableColumns={sourceTableColumns?.columns ?? []}
                       />
                     </div>

@@ -62,7 +62,7 @@ export function comparatorsFromSchema(schema: GraphQLSchema): Comparators {
   const inputObjectTypes = Object.values(schema.getTypeMap()).filter(
     (type) => isInputObjectType(type) && type.name.endsWith('_comparison_exp'),
   );
-  return inputObjectTypes.reduce((acc, inputType) => {
+  return inputObjectTypes.reduce<Record<string, unknown>>((acc, inputType) => {
     if (!isInputObjectType(inputType)) {
       return acc;
     }
@@ -81,17 +81,30 @@ export function comparatorsFromSchema(schema: GraphQLSchema): Comparators {
       },
     );
     const key = inputType.name.replace('_comparison_exp', '');
-    return {
-      ...acc,
-      [key]: {
-        operators: [
-          ...operators,
-          ...columnComparators, // Add column comparators because they are not reflected on the graphql schema
-        ],
-      },
+    // assigned rather than spread, as a schema has many comparison types
+    acc[key] = {
+      operators: [
+        ...operators,
+        ...columnComparators, // Add column comparators because they are not reflected on the graphql schema
+      ],
     };
-  }, {});
+    return acc;
+  }, {}) as Comparators;
 }
+
+// the comparators by lowercase data type, built once per comparators object
+const lowerCaseComparatorsCache = new WeakMap<Comparators, Comparators>();
+
+const getLowerCaseComparators = (comparators: Comparators) => {
+  let lowerCaseComparators = lowerCaseComparatorsCache.get(comparators);
+  if (!lowerCaseComparators) {
+    lowerCaseComparators = Object.fromEntries(
+      Object.entries(comparators).map(([k, v]) => [k.toLowerCase(), v]),
+    );
+    lowerCaseComparatorsCache.set(comparators, lowerCaseComparators);
+  }
+  return lowerCaseComparators;
+};
 
 const commonOperators = [
   '_eq',
@@ -211,9 +224,7 @@ export const getDataTypeOperators = ({
     const fallbackComparatorKey = column
       ? `${dataType}${comparatorSuffix}`
       : '';
-    const lowerCaseComparators = Object.fromEntries(
-      Object.entries(comparators).map(([k, v]) => [k.toLowerCase(), v]),
-    );
+    const lowerCaseComparators = getLowerCaseComparators(comparators);
     const backupOperators =
       lowerCaseComparators[fallbackComparatorKey]?.operators;
     return backupOperators || allOperators;
