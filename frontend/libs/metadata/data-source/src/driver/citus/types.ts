@@ -1,7 +1,5 @@
 import { postgresSupportedFeatures } from '../common/capabilities';
 
-export type CitusTable = { name: string; schema: string };
-
 export const citusSupportedFeatures = {
   ...postgresSupportedFeatures,
   tables: {

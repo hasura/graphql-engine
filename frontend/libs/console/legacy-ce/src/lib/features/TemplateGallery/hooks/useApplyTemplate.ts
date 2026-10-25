@@ -14,7 +14,7 @@ import { useMutation, UseMutationOptions } from '@tanstack/react-query';
 import { useAppContext } from '@hasura/shared/context';
 import { useAuthFetchJson } from '@hasura/shared/hooks';
 import { HasuraMetadataV3, QualifiedDataSource } from '@hasura/shared/types';
-import { hasuraToast } from '@hasura/shared/ui';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 
 export type ApplyTemplateProps = {
   source: QualifiedDataSource;
@@ -110,10 +110,9 @@ const useApplyTemplate = (options?: MutationOptions) => {
     },
     onError: (error, variables, onMutateResult, context) => {
       if (!toastMetadataOutOfDateError(error, () => postMetadata(variables))) {
-        hasuraToast({
-          type: 'error',
-          title: 'Error',
-          message: 'An error occurred while applying the template',
+        showErrorNotification({
+          error,
+          title: 'An error occurred while applying the template',
         });
       }
 

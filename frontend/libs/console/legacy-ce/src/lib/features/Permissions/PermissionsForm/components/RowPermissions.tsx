@@ -8,7 +8,7 @@ import {
   CollapsibleHeader,
   Radio,
   Text,
-  AceEditor,
+  JsonCodeBlock,
 } from '@hasura/shared/ui';
 import { getDatabaseMethods, Operator } from '@hasura/metadata/data-source';
 import { getTypeName, getIngForm } from '@hasura/shared/utils';
@@ -205,19 +205,9 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
                       : {},
                   )}
                   data-testid="external-check-json-editor"
-                  className="mt-4 p-6 min-h-32 w-full"
+                  className="mt-4 w-full"
                 >
-                  <AceEditor
-                    mode="json"
-                    minLines={1}
-                    fontSize={14}
-                    height="18px"
-                    width="100%"
-                    name={`${tableName}-json-editor`}
-                    value={JSON.stringify(data[getRowPermission(type)])}
-                    onChange={() => setValue(rowPermissionsCheckType, type)}
-                    editorProps={{ $blockScrolling: true }}
-                  />
+                  <JsonCodeBlock value={data[getRowPermission(type)] ?? {}} />
                 </div>
               )}
             </div>

@@ -4,9 +4,9 @@ import {
   CardedTable,
   IndicatorCard,
   hasuraToast,
-  DisplayToastErrorMessage,
   Checkbox,
   Button,
+  showErrorNotification,
 } from '@hasura/shared/ui';
 import { TrackableListMenu } from '../../components/TrackableListMenu';
 import { usePaginatedSearchableList } from '../../hooks';
@@ -91,10 +91,9 @@ export const UntrackedRelationships = ({
             onTrack?.();
           },
           onError: (err) => {
-            hasuraToast({
-              type: 'error',
+            showErrorNotification({
               title: 'Error while tracking relationships',
-              children: <DisplayToastErrorMessage message={err.message} />,
+              error: err,
             });
             resolve(false);
           },

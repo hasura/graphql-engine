@@ -116,6 +116,13 @@ const useApiExplorer = ({ numberOfTables }: Props) => {
         : headers.map((h, i) => (i === index ? header : h));
     setAndPersistHeaders(newHeaders);
 
+    // Key/value edits are applied on blur (handleHeaderUnfocus), but toggling
+    // the checkbox has no blur, so apply it immediately. A new headers object
+    // rebuilds GraphiQL's fetcher, which re-runs schema introspection.
+    if (headers[index]?.selected !== header.selected) {
+      diffAndSetObjectHeaders(newHeaders);
+    }
+
     if (index === newHeaders.length - 1 && header.key) {
       // Add a new empty header.
       setHeaders([...newHeaders, createGraphiqlHeader()]);

@@ -1,9 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { APIError } from '../../../hooks/error';
 import { useMetadataMigration, useMetadata } from '@hasura/metadata/api';
 import { SupportedDriver } from '@hasura/shared/types';
 import { useAvailableDrivers } from '@hasura/metadata/data-source';
-import { hasuraToast } from '@hasura/shared/ui';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 import { useNavigate } from 'react-router';
 import { getDriverPrefix } from '@hasura/metadata/helpers';
 
@@ -35,11 +34,10 @@ export const useSubmit = () => {
   const drivers = useAvailableDrivers();
   const redirect = useRedirect();
   const { mutate, ...rest } = useMetadataMigration({
-    onError: (error: APIError) => {
-      hasuraToast({
-        type: 'error',
-        title: 'Error',
-        message: error?.message ?? 'Unable to connect to database',
+    onError: (error) => {
+      showErrorNotification({
+        title: 'Unable to connect to database',
+        error,
       });
     },
     onSuccess: () => {
@@ -90,11 +88,10 @@ export const useEditDataSourceConnection = () => {
   const queryClient = useQueryClient();
 
   const { mutate, ...rest } = useMetadataMigration({
-    onError: (error: APIError) => {
-      hasuraToast({
-        type: 'error',
-        title: 'Error',
-        message: error?.message ?? 'Unable to connect to database',
+    onError: (error) => {
+      showErrorNotification({
+        title: 'Unable to connect to database',
+        error,
       });
     },
     onSuccess: () => {

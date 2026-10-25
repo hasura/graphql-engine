@@ -8,7 +8,7 @@ import { rowPermissionsContext } from '../RowPermissionsProvider';
 import { sourceDataTypes, SourceDataTypes } from './sourceDataTypes';
 import { rootTableContext } from '../RootTableProvider';
 import { columnDataType } from '@hasura/metadata/data-source';
-import { areTablesEqual } from '@hasura/metadata/helpers';
+import { findTable } from './tables';
 
 function columnOperators(): Array<Operator> {
   return Object.keys(columnOperatorsInfo).reduce((acc, key) => {
@@ -148,7 +148,7 @@ export const mapScalarDataType = (
 export function useOperators({ path }: { path: string[] }) {
   const { comparators } = useContext(rowPermissionsContext);
   const { tables } = useContext(rootTableContext);
-  const { columns, table, computedFields } = useContext(tableContext);
+  const { columns, table, source, computedFields } = useContext(tableContext);
 
   const columnName = path[path.length - 2];
   const column = columns.find((c) => c.name === columnName);
@@ -165,6 +165,7 @@ export function useOperators({ path }: { path: string[] }) {
     computedFields,
     tables,
     table,
+    source,
   });
   if (dataType && hasWhitelistedOperators(columnDataType(dataType))) {
     return operators.filter((o) =>
@@ -181,6 +182,8 @@ export type GetDataTypeOperatorsProps = {
   computedFields: ComputedField[];
   tables: Tables;
   table: Table;
+  /** the source of the table */
+  source?: string;
 };
 
 export const getDataTypeOperators = ({
@@ -189,20 +192,20 @@ export const getDataTypeOperators = ({
   columns,
   tables,
   table,
+  source,
 }: GetDataTypeOperatorsProps) => {
   const columnName = path[path.length - 2];
   const column = columns.find((c) => c.name === columnName);
-  const dataSourceKind = tables.find((t) => areTablesEqual(t.table, table))
-    ?.dataSource?.kind;
+  const dataSourceKind = findTable(tables, table, source)?.dataSource?.kind;
   // types associated to postgres don't have a suffix on the GraphQL Schema, whereas the other types have dataSource as suffix
   const comparatorSuffix =
     dataSourceKind === 'postgres' ? '' : `_${dataSourceKind}`;
   const comparatorKey = column ? `${column.dataType}${comparatorSuffix}` : '';
   const operators = comparators[comparatorKey]?.operators;
   if (!operators) {
-    const dataSource = tables?.[0]?.dataSource?.name;
+    // the data types are mapped per kind of source
     const dataType = mapScalarDataType(
-      dataSource,
+      dataSourceKind,
       column?.dataType as SourceDataTypes,
     );
     const fallbackComparatorKey = column

@@ -4,13 +4,18 @@ import {
   OperationTypeNode,
   GraphQLSchema,
 } from 'graphql';
-import { hasuraToast, DropdownMenu, useHasuraAlert } from '@hasura/shared/ui';
+import {
+  hasuraToast,
+  DropdownMenu,
+  useHasuraAlert,
+  showErrorNotification,
+} from '@hasura/shared/ui';
 import { ToolbarButton } from '@graphiql/react';
 import { CiShare1 } from 'react-icons/ci';
 import { useNavigate } from 'react-router';
 import { trackGraphiQlToolbarButtonClick } from '../customAnalyticsEvents';
 import deriveAction from './utils';
-import { getErrorMessage, dataRoutes } from '@hasura/shared/utils';
+import { dataRoutes } from '@hasura/shared/utils';
 import {
   getActionDefinitionSdl,
   getTypesSdl,
@@ -37,10 +42,9 @@ const DeriveActionButton = ({ operations, schema }: Props) => {
     try {
       derivedOperationMetadata = deriveAction(operation, schema);
     } catch (e) {
-      hasuraToast({
-        type: 'error',
+      showErrorNotification({
         title: errorTitle,
-        message: getErrorMessage(e),
+        error: e,
       });
 
       return;

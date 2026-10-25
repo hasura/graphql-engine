@@ -1,4 +1,3 @@
-import { WhereClause } from '@hasura/shared/types';
 import { TableColumn, ValidateInputRowValuesFunction } from '../types';
 
 type ValidationEncoders = {
@@ -129,21 +128,6 @@ export const transformWhereBoolExp = (
       // key column missing from the row, would be dropped by JSON and match
       // every row, so leave it out.
       if (columnKey && value !== undefined) acc[columnKey] = { _eq: value };
-
-      return acc;
-    },
-    {} as Record<string, any>,
-  );
-};
-
-export const transformSimpleWhereBoolExp = (
-  where: Record<string, unknown>,
-): WhereClause => {
-  return Object.entries(where).reduce(
-    (acc, [key, value]) => {
-      acc[key] = {
-        _eq: value,
-      };
 
       return acc;
     },

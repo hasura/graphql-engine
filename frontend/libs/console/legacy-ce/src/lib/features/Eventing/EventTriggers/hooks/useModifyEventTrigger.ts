@@ -1,8 +1,7 @@
 import { useCallback } from 'react';
 import { getRequestTransformObject } from '../../../ConfigureTransformation/utils';
-import { hasuraToast } from '@hasura/shared/ui';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 import {
-  getErrorMessage,
   isURLTemplated,
   isValidURL,
   transformHeaderConfigs,
@@ -143,10 +142,9 @@ const useModifyEventTrigger = () => {
           },
           onError: (err) => {
             onError?.(err);
-            hasuraToast({
+            showErrorNotification({
               title: errorTitle,
-              message: getErrorMessage(err),
-              type: 'error',
+              error: err,
             });
           },
         },

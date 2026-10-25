@@ -8,6 +8,7 @@ import {
   InputField,
   useConsoleForm,
   DialogFooter,
+  showErrorNotification,
 } from '@hasura/shared/ui';
 
 interface QueryCollectionCreateDialogProps {
@@ -76,10 +77,9 @@ export const QueryCollectionCreateDialog: React.FC<
                         type: 'manual',
                         message: (error as Error).message,
                       });
-                      hasuraToast({
-                        type: 'error',
+                      showErrorNotification({
                         title: 'Collection creation failed',
-                        message: (error as Error).message,
+                        error,
                       });
                     },
                   },

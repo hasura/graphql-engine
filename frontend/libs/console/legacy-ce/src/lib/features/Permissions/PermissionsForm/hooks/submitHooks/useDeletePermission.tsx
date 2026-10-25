@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api';
 import { permissionsTableKey } from '../../../PermissionsTable/hooks';
-import { DisplayToastErrorMessage, hasuraToast } from '@hasura/shared/ui';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 import { useMetadataHelpers, useMetadataMigration } from '@hasura/metadata/api';
 import type { DataQueryType, Table } from '@hasura/shared/types';
 
@@ -47,10 +47,9 @@ export const useDeletePermission = ({
           });
         },
         onError: (err) => {
-          hasuraToast({
-            type: 'error',
+          showErrorNotification({
             title: 'Error!',
-            children: <DisplayToastErrorMessage message={err.message} />,
+            error: err,
           });
         },
         onSettled: async () => {

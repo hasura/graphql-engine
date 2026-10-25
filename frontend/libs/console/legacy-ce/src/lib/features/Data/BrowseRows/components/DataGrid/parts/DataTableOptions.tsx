@@ -2,8 +2,8 @@ import {
   Badge,
   Button,
   DropdownMenu,
-  hasuraToast,
   Pagination,
+  showErrorNotification,
 } from '@hasura/shared/ui';
 import { Flex } from '@radix-ui/themes';
 import { useState } from 'react';
@@ -166,10 +166,9 @@ export const DataTableOptions = (props: DataTableOptionsProps) => {
     query
       .onExportRows(exportFileFormat)
       .catch((err) =>
-        hasuraToast({
+        showErrorNotification({
           title: 'An error occurred',
-          message: err?.toString() || err,
-          type: 'error',
+          error: err,
         }),
       )
       .finally(() => {
@@ -182,10 +181,9 @@ export const DataTableOptions = (props: DataTableOptionsProps) => {
     query
       .onExportSelectedRows(exportFileFormat)
       .catch((err) =>
-        hasuraToast({
+        showErrorNotification({
           title: 'An error occurred',
-          message: err?.toString() || err,
-          type: 'error',
+          error: err,
         }),
       )
       .finally(() => {

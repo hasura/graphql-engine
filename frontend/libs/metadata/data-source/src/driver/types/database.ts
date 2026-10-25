@@ -56,7 +56,6 @@ import {
   GetFKRelationshipProps,
   TableFkRelationships,
 } from './relationship';
-import { TableType } from '../../types';
 import {
   FrequentlyUsedColumn,
   GetCheckConstraintsProps,
@@ -221,16 +220,6 @@ export type Database = {
     statementTimeoutSQL?(statementTimeoutInSecs: number): string;
   };
 };
-
-export interface DatasourceSqlQueries {
-  statementTimeout?: (statementTimeoutInSecs: number) => string;
-  renameTableOrView?: (
-    tableType: TableType,
-    schemaName: string,
-    oldName: string,
-    newName: string,
-  ) => string;
-}
 
 // Re-exported so existing `@hasura/metadata/data-source` imports keep working.
 // It lives in `@hasura/shared/types` so that `@hasura/metadata/api` can use it

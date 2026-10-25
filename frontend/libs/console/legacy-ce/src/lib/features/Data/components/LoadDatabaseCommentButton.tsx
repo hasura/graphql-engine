@@ -1,5 +1,5 @@
 import { FaDatabase } from 'react-icons/fa';
-import { Button, hasuraToast } from '@hasura/shared/ui';
+import { Button, hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 import { QualifiedDataSource } from '@hasura/shared/types';
 import {
   DatabaseCommentTarget,
@@ -42,10 +42,9 @@ export const LoadDatabaseCommentButton = ({
         });
       }
     } catch (err) {
-      hasuraToast({
-        type: 'error',
+      showErrorNotification({
         title: 'Failed to load the database comment',
-        message: err instanceof Error ? err.message : String(err),
+        error: err,
       });
     }
   };

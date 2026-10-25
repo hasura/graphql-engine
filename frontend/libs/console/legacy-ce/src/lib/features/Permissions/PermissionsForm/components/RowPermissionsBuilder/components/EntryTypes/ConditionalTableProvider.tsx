@@ -2,6 +2,7 @@ import { Fragment, ReactNode, useContext } from 'react';
 import get from 'lodash/get';
 import { TableProvider, tableContext } from '../TableProvider';
 import { typesContext } from '../TypesProvider';
+import { getRelationshipTargetSource } from '../utils/tables';
 
 /**
  * Conditionally wraps children with TableProvider, based on the type of the field
@@ -36,8 +37,17 @@ export function ConditionalTableProvider({
         return null;
       }
       const relationshipTable = relationship.definition.toTable;
+      const relationshipSource = getRelationshipTargetSource(relationship);
+      // the target of a relationship on a foreign key is known once its table
+      // is loaded, so the provider restarts with the resolved table
       return (
-        <TableProvider table={relationshipTable}>{children}</TableProvider>
+        <TableProvider
+          key={JSON.stringify([relationshipSource, relationshipTable ?? null])}
+          table={relationshipTable}
+          source={relationshipSource}
+        >
+          {children}
+        </TableProvider>
       );
     }
   }

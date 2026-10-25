@@ -3,23 +3,23 @@ import set from 'lodash/set';
 import isObjectLike from 'lodash/isObjectLike';
 import { PermissionType, Permissions, Tables } from '../types';
 import { getNamedType, getNullableType, isObjectType } from 'graphql';
-import { areTablesEqual } from '@hasura/metadata/helpers';
+import { findTable, getRelationshipTargetSource } from './tables';
 
 export function getPermissionTypes(
   tables: Tables,
   rootTable: Table | undefined,
   permissions: Permissions,
+  rootSource?: string,
 ) {
   const newTypes: Record<string, { type: PermissionType }> = {};
   const setPermissionTypes = (
     value: any,
     path: string[],
     table: Table | undefined,
+    source: string | undefined,
     isRelationship: boolean,
   ) => {
-    const currentTable = table
-      ? tables.find((t) => areTablesEqual(t.table, table))
-      : undefined;
+    const currentTable = table ? findTable(tables, table, source) : undefined;
     const type = currentTable?.columns.find(
       (c) => c.name === path[path.length - 1],
     )?.graphQLProperties?.graphQLType;
@@ -33,7 +33,13 @@ export function getPermissionTypes(
     if (isObjectLike(value)) {
       if (Array.isArray(value)) {
         value.forEach((item, index) => {
-          setPermissionTypes(item, [...path, index.toString()], table, false);
+          setPermissionTypes(
+            item,
+            [...path, index.toString()],
+            table,
+            source,
+            false,
+          );
         });
       } else {
         Object.keys(value).forEach((key) => {
@@ -42,12 +48,13 @@ export function getPermissionTypes(
             value[key],
             [...path, key],
             rel && 'toTable' in rel.definition ? rel.definition.toTable : table,
+            rel ? getRelationshipTargetSource(rel) : source,
             !!rel,
           );
         });
       }
     }
   };
-  setPermissionTypes(permissions, [], rootTable, false);
+  setPermissionTypes(permissions, [], rootTable, rootSource, false);
   return newTypes;
 }

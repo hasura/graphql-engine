@@ -24,25 +24,6 @@ export type TrackableComputedFunction = {
   returns_set: boolean;
 };
 
-export const postgresColumnDataTypes = {
-  BIGINT: 'bigint',
-  BIGSERIAL: 'bigserial',
-  BOOLEAN: 'boolean',
-  BOOL: 'bool',
-  DATE: 'date',
-  DATETIME: 'datetime',
-  INTEGER: 'integer',
-  JSONB: 'jsonb',
-  JSONDTYPE: 'json',
-  NUMERIC: 'numeric',
-  SERIAL: 'serial',
-  TEXT: 'text',
-  TIME: 'time with time zone',
-  TIMESTAMP: 'timestamp with time zone',
-  TIMETZ: 'timetz',
-  UUID: 'uuid',
-};
-
 export const consoleDataTypeToSQLTypeMap: Record<
   TableColumn['consoleDataType'],
   string[]

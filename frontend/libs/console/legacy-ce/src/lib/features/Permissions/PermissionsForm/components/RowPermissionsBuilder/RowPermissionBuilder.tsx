@@ -59,6 +59,7 @@ export const RowPermissionBuilder = ({
             }
           }}
           table={table}
+          source={source.name}
           tables={tables ?? []}
           logicalModel={undefined}
           logicalModels={[]}

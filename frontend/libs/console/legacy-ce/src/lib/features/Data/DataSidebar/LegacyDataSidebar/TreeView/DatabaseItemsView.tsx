@@ -3,7 +3,9 @@ import { ReactNode } from 'react';
 import { SourceItem, SourceItemsTypes } from '../types';
 import { FaDatabase, FaFolder, FaListUl, FaTable } from 'react-icons/fa';
 import SchemaItemsView from './SchemaItemsView';
+import LeafItemsView from './LeafItemsView';
 import groupBy from 'lodash/groupBy';
+import partition from 'lodash/partition';
 import { Flex, Skeleton, Strong } from '@radix-ui/themes';
 import { Button } from '@hasura/shared/ui';
 import { useNavigate } from 'react-router';
@@ -48,7 +50,13 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
     navigate(dataRoutes.manageDatabaseSource(sourceName));
   };
 
-  const schemas = groupBy(items, 'schema');
+  // objects of databases without schemas (e.g. MongoDB collections) are listed
+  // under the database, not in an unnamed schema folder
+  const [schemaItems, schemalessItems] = partition(
+    items,
+    (item) => !!item.schema,
+  );
+  const schemas = groupBy(schemaItems, 'schema');
 
   return (
     <div>
@@ -90,6 +98,21 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
             />
           ))
         : null}
+      {isActive && schemalessItems.length ? (
+        <Flex direction="column" gap="1" className="mb-2">
+          {schemalessItems.map((item, key) => (
+            <LeafItemsView
+              item={item}
+              isActive={
+                !params.schema &&
+                params.tableName === item.tableName &&
+                params.isFunction === (item.type === 'function')
+              }
+              key={key}
+            />
+          ))}
+        </Flex>
+      ) : null}
       {databaseLoading && isActive ? (
         <Flex align="center" gap="2">
           <FaFolder />

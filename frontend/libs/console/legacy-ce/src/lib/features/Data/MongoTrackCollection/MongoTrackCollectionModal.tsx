@@ -4,12 +4,12 @@ import {
   useConsoleForm,
   Collapsible,
   CardedTable,
-  hasuraToast,
   SelectField,
   ErrorMessage,
   AceEditor,
   Text,
   DialogFooter,
+  showErrorNotification,
 } from '@hasura/shared/ui';
 import { LogicalModel, MetadataTableConfig } from '@hasura/shared/types';
 import { z } from 'zod';
@@ -230,11 +230,10 @@ export const MongoTrackCollectionModal = ({
           setView('validate');
         }
       }
-    } catch (err: any) {
-      hasuraToast({
-        type: 'error',
+    } catch (err) {
+      showErrorNotification({
         title: 'An error occurred',
-        message: err?.message || '',
+        error: err,
       });
     }
   };

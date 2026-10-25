@@ -5,6 +5,7 @@ import {
   IndicatorCard,
   SkeletonList,
   hasuraToast,
+  showErrorNotification,
   useDestructiveAlert,
 } from '@hasura/shared/ui';
 import { useMetadata } from '@hasura/metadata/api';
@@ -65,10 +66,9 @@ export const NativeQueryRelationships = (
         );
       }
     } catch {
-      hasuraToast({
-        type: 'error',
+      showErrorNotification({
         title: 'Failed to edit relationship',
-        children: <DisplayToastErrorMessage message={err.message} />,
+        error: err,
       });
     }
   }, []);
@@ -128,10 +128,9 @@ export const NativeQueryRelationships = (
             },
             onError: (err) => {
               resolve(false);
-              hasuraToast({
-                type: 'error',
+              showErrorNotification({
                 title: 'Failed to delete relationship',
-                children: <DisplayToastErrorMessage message={err.message} />,
+                error: err,
               });
             },
           });

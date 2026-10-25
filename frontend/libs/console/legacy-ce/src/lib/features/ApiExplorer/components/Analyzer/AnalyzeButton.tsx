@@ -4,10 +4,13 @@ import { print, OperationDefinitionNode } from 'graphql';
 import { isValidGraphQLOperation } from '../../utils';
 import { getGraphQLQueryPayload } from '@hasura/metadata/api';
 import { trackGraphiQlToolbarButtonClick } from '../customAnalyticsEvents';
-import { hasuraToast, DropdownMenu } from '@hasura/shared/ui';
+import {
+  hasuraToast,
+  DropdownMenu,
+  showErrorNotification,
+} from '@hasura/shared/ui';
 import { GraphQLRequestInput, GraphiqlMode } from '@hasura/shared/types';
 import { ToolbarButton } from '@graphiql/react';
-import { getErrorMessage } from '@hasura/shared/utils';
 import AnalyzerIcon from './AnalyzerIcon';
 
 type Props = {
@@ -70,10 +73,9 @@ const AnalyzeButton = ({
       jsonVariables =
         variables && variables.trim() !== '' ? JSON.parse(variables) : null;
     } catch (e) {
-      hasuraToast({
-        type: 'error',
+      showErrorNotification({
         title: errorTitle,
-        message: `Variables are invalid JSON: ${getErrorMessage(e)}`,
+        error: e,
       });
       return;
     }

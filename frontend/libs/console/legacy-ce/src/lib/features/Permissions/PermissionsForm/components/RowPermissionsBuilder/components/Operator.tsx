@@ -1,17 +1,34 @@
+import get from 'lodash/get';
 import isEmpty from 'lodash/isEmpty';
+import isPlainObject from 'lodash/isPlainObject';
 import { useContext, useMemo } from 'react';
 import { GroupBase } from 'react-select';
 import { ReactSelect, ReactSelectOptionType } from '@hasura/shared/ui';
 import { rowPermissionsContext } from './RowPermissionsProvider';
 import { tableContext } from './TableProvider';
-import { PermissionType } from './types';
+import { Permissions, PermissionType } from './types';
 import { logicalModelContext } from './RootLogicalModelProvider';
 import { useForbiddenFeatures } from './ForbiddenFeaturesProvider';
 import { rootTableContext } from './RootTableProvider';
-import { areTablesEqual } from '@hasura/metadata/helpers';
+import { findTable } from './utils/tables';
 
 type OperatorOption = ReactSelectOptionType<string> & {
   type: PermissionType;
+};
+
+/**
+ * The other keys of the object holding the key. Without a key, the path is
+ * the one of the (empty) object a key is added to.
+ */
+export const getSiblingKeys = (
+  permissions: Permissions,
+  path: string[],
+  operator: string,
+): string[] => {
+  const objectPath = operator ? path.slice(0, -1) : path;
+  const object = objectPath.length ? get(permissions, objectPath) : permissions;
+  if (!isPlainObject(object)) return [];
+  return Object.keys(object).filter((key) => key !== operator);
 };
 
 export const Operator = ({
@@ -23,11 +40,10 @@ export const Operator = ({
   path: string[];
   v: any;
 }) => {
-  const { operators, setKey, loadRelationships, isLoading } = useContext(
-    rowPermissionsContext,
-  );
+  const { operators, permissions, setKey, loadRelationships, isLoading } =
+    useContext(rowPermissionsContext);
   const { tables } = useContext(rootTableContext);
-  const { columns, table, relationships, computedFields } =
+  const { columns, table, source, relationships, computedFields } =
     useContext(tableContext);
   const { rootLogicalModel } = useContext(logicalModelContext);
 
@@ -107,8 +123,20 @@ export const Operator = ({
       });
     }
 
-    return groups;
+    // picking a key used next to this one would overwrite its condition
+    const siblingKeys = getSiblingKeys(permissions, path, operator);
+    return groups
+      .map((group) => ({
+        ...group,
+        options: group.options.filter(
+          (option) => !siblingKeys.includes(option.value),
+        ),
+      }))
+      .filter((group) => group.options.length > 0);
   }, [
+    permissions,
+    path,
+    operator,
     operators.boolean,
     operators.exist,
     columns,
@@ -151,9 +179,7 @@ export const Operator = ({
 
           const type = option.type;
           if (type === 'relationship') {
-            const foundTable = tables.find((t) =>
-              areTablesEqual(t.table, table),
-            );
+            const foundTable = findTable(tables, table, source);
             if (foundTable) {
               loadRelationships?.(foundTable.relationships);
             }
