@@ -16,9 +16,6 @@ const presets = z.optional(
     }),
   ),
 );
-
-export type Presets = z.infer<typeof presets>;
-
 export type PermissionsSchema = z.infer<typeof schema>;
 
 export const schema = z.discriminatedUnion('queryType', [

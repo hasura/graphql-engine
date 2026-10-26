@@ -25,7 +25,7 @@ import { Flex } from '@radix-ui/themes';
 import { RemoteRelationship } from '@hasura/shared/types';
 import { RsToRsSchema } from './schemas';
 
-export type RemoteSchemaToRemoteSchemaFormProps = {
+type RemoteSchemaToRemoteSchemaFormProps = {
   sourceRemoteSchema: string;
   existingRelationship?: RemoteRelationship;
 };

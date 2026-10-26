@@ -8,7 +8,7 @@ import { normalizeOperationId } from './utils';
 import { Flex } from '@radix-ui/themes';
 import { useAppContext } from '@hasura/shared/context';
 
-export interface OasGeneratorActionsProps {
+interface OasGeneratorActionsProps {
   operation: Operation;
   existing?: boolean;
   onCreate: () => void;

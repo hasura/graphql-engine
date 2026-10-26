@@ -95,5 +95,3 @@ export const CheckConstraintsSection = () => {
     </Section>
   );
 };
-
-export default CheckConstraintsSection;

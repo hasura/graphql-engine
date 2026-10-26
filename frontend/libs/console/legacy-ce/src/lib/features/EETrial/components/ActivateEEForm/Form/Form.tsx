@@ -88,7 +88,7 @@ export const Form: React.FC<Props> = (props) => {
   );
 };
 
-export const ActivationForm: React.FC<Props> = (props: Props) => {
+const ActivationForm: React.FC<Props> = (props: Props) => {
   const { onSuccess } = props;
 
   const { activateEETrial, isLoading, errorMessage } =
@@ -162,7 +162,7 @@ export const ActivationForm: React.FC<Props> = (props: Props) => {
   );
 };
 
-export const RegistrationForm: React.FC<Props> = (props: Props) => {
+const RegistrationForm: React.FC<Props> = (props: Props) => {
   const { onSuccess } = props;
 
   const { registerEETrial, isLoading, errorMessage } =

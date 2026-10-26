@@ -130,21 +130,19 @@ export const ReadReplicas = ({ name }: { name: string }) => {
                   setActiveRow(i);
                   setMode('edit');
                 }}
-              >
-                <FaEdit />
-              </IconButton>
+                icon={FaEdit}
+              />
               <IconButton
                 color="red"
                 variant="ghost"
+                icon={FaTrash}
                 onClick={() => {
                   setValue(
                     name,
                     readReplicas.filter((_, index) => index !== i),
                   );
                 }}
-              >
-                <FaTrash />
-              </IconButton>
+              />
             </Flex>,
           ])}
         />

@@ -9,7 +9,7 @@
 
 import { Operation, DataDefinition } from './operation';
 import { InternalOptions } from './options';
-import { SecuritySchemeObject, SchemaObject, Oas3, LinkObject } from './oas3';
+import { SecuritySchemeObject, SchemaObject, Oas3 } from './oas3';
 
 export type ProcessedSecurityScheme = {
   rawName: string;

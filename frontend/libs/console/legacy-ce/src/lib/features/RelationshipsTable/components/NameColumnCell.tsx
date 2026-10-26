@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from '@hasura/shared/ui';
 import { RelationshipType } from '../types';
 import { Strong } from '@radix-ui/themes';

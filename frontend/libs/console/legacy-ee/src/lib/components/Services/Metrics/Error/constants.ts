@@ -2,10 +2,6 @@ import {
   FILTER_TYPE_DROPDOWN,
   FILTER_TYPE_DROPDOWN_DEFAULT,
   FILTER_TYPE_INPUT,
-  TIME_RANGE_BY_HOUR,
-  TIME_RANGE_BY_DAY,
-  TIME_RANGE_BY_6_HOURS,
-  TIME_RANGE_BY_12_HOURS,
   OPERATION_ID_SYMBOL,
   OPERATION_NAME_SYMBOL,
   OPERATION_TYPE_SYMBOL,
@@ -60,12 +56,4 @@ export const actualTypeToAlias = {
 export const PERCENT_OF_ERROR_SYMBOL = '% of errors';
 
 export const customHeaders = [PERCENT_OF_ERROR_SYMBOL];
-
-export const timeRangeFilters = [
-  TIME_RANGE_BY_HOUR,
-  TIME_RANGE_BY_6_HOURS,
-  TIME_RANGE_BY_12_HOURS,
-  TIME_RANGE_BY_DAY,
-];
-
 export const singleSelectFilters = [TIME_RANGE_SYMBOL];

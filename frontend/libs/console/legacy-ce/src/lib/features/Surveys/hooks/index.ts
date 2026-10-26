@@ -1,1 +1,0 @@
-export { useSurveysData } from './useSurveysData';

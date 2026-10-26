@@ -3,16 +3,16 @@ import { ALL_FRAMEWORKS_FILE_PATH } from '../constants';
 import { HttpError } from '@hasura/shared/types';
 import { request } from '@hasura/shared/utils';
 
-export type Options<FinalResult> = {
+type Options<FinalResult> = {
   select?: (m: CodegenFramworkPath[]) => FinalResult;
   onSuccess?: (data: FinalResult) => void;
   staleTime?: number;
   enabled?: boolean;
 };
 
-export type CodegenFramworkPath = { name: string; hasStarterKit: boolean };
+type CodegenFramworkPath = { name: string; hasStarterKit: boolean };
 
-export const GET_ALL_CODEGEN_FRAMEWORK_PATHS_QUERY_KEY =
+const GET_ALL_CODEGEN_FRAMEWORK_PATHS_QUERY_KEY =
   'GET_ALL_CODEGEN_FRAMEWORK_PATHS';
 
 const useGetAllCodegenFrameworks = <FinalResult = CodegenFramworkPath[]>(

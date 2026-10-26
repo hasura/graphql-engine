@@ -60,25 +60,23 @@ export const ReadReplicas = ({
               <div key={`actions-${i}`} className="flex gap-3 justify-end">
                 <IconButton
                   variant="ghost"
+                  icon={FaEdit}
                   onClick={() => {
                     setActiveRow(i);
                     setMode('edit');
                   }}
-                >
-                  <FaEdit />
-                </IconButton>
+                />
                 <IconButton
                   variant="ghost"
                   color="red"
+                  icon={FaTrash}
                   onClick={() => {
                     setValue(
                       name,
                       readReplicas.filter((_, index) => index !== i),
                     );
                   }}
-                >
-                  <FaTrash />
-                </IconButton>
+                />
               </div>,
             ])}
           />

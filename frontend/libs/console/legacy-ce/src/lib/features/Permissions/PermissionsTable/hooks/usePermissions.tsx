@@ -36,7 +36,7 @@ const supportedQueries: DataQueryType[] = [
   'delete',
 ];
 
-export const getAllowedFilterKeys = (
+const getAllowedFilterKeys = (
   query: 'insert' | 'select' | 'update' | 'delete',
 ): ('check' | 'filter')[] => {
   switch (query) {
@@ -253,7 +253,7 @@ type UseRolePermissionsArgs = {
   table: Table;
 };
 
-export function permissionsTableKey({
+function permissionsTableKey({
   dataSourceName,
   table,
 }: {

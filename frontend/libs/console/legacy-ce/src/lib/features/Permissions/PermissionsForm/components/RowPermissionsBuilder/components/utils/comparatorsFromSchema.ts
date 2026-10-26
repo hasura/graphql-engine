@@ -188,7 +188,7 @@ export function useOperators({ path }: { path: string[] }) {
   return operators;
 }
 
-export type GetDataTypeOperatorsProps = {
+type GetDataTypeOperatorsProps = {
   comparators: Comparators;
   path: string[];
   columns: Columns;

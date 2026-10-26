@@ -6,7 +6,7 @@ import { NeonIcon } from './PgDatabaseField';
 import { getEnvVarFormSegments } from '../utils';
 import { DatabaseField } from './DatabaseField';
 
-export type EnvVarsFormFieldsProps = {
+type EnvVarsFormFieldsProps = {
   envVars: RequiredEnvVar[];
 };
 

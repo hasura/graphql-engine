@@ -41,7 +41,7 @@ input SampleInput {
 }
 `;
 
-export const defaultActionRequestBody = `{
+const defaultActionRequestBody = `{
   "users": {
     "name": {{$body.input.arg1.username}},
     "password": {{$body.input.arg1.password}}
@@ -79,7 +79,7 @@ export const getActionResponseTransformDefaultState =
     };
   };
 
-export const defaultActionResponseBody = `{
+const defaultActionResponseBody = `{
   "response": {{$body}}
 }`;
 

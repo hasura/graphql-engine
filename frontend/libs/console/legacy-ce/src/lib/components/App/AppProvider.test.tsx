@@ -1,10 +1,3 @@
-/**
- * Coverage for AppProvider after moving the server-version bootstrap off the
- * effect's (missing) dependency on `serverVersionProps` to a mount-capture ref.
- * `initServerVersion` must be invoked exactly once on mount and must NOT be
- * re-invoked when the provider re-renders.
- */
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
 

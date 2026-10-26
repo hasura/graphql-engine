@@ -58,22 +58,6 @@ const transformedHeaderVal = {
 };
 
 const filterByType = (filters, type) => filters.filter((f) => f.type === type);
-const indexOf = (list, predicateFn) => {
-  let elementIndex = -1;
-  list.forEach((l, index) => {
-    if (predicateFn(l)) {
-      elementIndex = index;
-    }
-  });
-  return elementIndex;
-};
-
-const getJson = (list, key) => {
-  const r = {};
-  list.forEach((l) => (r[l[key]] = true));
-  return r;
-};
-
 const stripUnderScore = (val) => {
   return val.split('_').join(' ');
 };
@@ -81,24 +65,6 @@ const stripUnderScore = (val) => {
 const capitalize = (val) => {
   return `${val.charAt(0).toUpperCase()}${val.slice(1)}`;
 };
-
-const curried = (sourceFn) => (type) => (value) => {
-  sourceFn(type, value);
-};
-
-const curriedInputElement = (sourceFn) => (type) => (e) => {
-  if (e.keyCode === 13) {
-    if (e.target.value.length > 0) {
-      sourceFn(type, e.target.value);
-    }
-  }
-};
-
-const curriedCheckboxElement = (sourceFn) => (type) => (e) => {
-  const getId = e.target.getAttribute('data-field-id');
-  sourceFn(type, getId);
-};
-
 /* Doing this to fix refreshing state on every miliseconds change */
 const removeSecondsMiliseconds = (d) => {
   d.setSeconds(0, 0);
@@ -149,17 +115,10 @@ const getTimeInterval = (symbol?: string) => {
 };
 export {
   getTimeRangeValue,
-  curried,
-  curriedInputElement,
-  curriedCheckboxElement,
-  indexOf,
-  getJson,
   capitalize,
   stripUnderScore,
   filterByType,
   transformedVals,
-  transformExecutionTime,
-  transformResponseTime,
   transformedHeaderVal,
   getTimeInterval,
   transformToTwoPlaces,

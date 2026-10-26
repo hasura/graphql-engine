@@ -34,7 +34,7 @@ interface MigrationPayloadBuilderParams<T extends SupportedTypes> {
  *
  * The other methods mutate the nativeQuery initially passed in that will get used in the track() command
  */
-export class MigrationPayloadBuilder<T extends SupportedTypes> {
+class MigrationPayloadBuilder<T extends SupportedTypes> {
   protected payloadSequence: TMigrationSingleQuery[] = [];
   protected source: string;
   protected driver: SupportedDriver;

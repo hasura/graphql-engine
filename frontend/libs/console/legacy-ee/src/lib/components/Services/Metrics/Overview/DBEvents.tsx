@@ -1,26 +1,9 @@
-import { FaArrowRight, FaCloud } from 'react-icons/fa';
-import { Link } from 'react-router';
+import { FaCloud } from 'react-icons/fa';
 import styles from '../MetricsV1.module.scss';
 import { PostgresSource } from '@hasura/shared/types';
 import { Flex } from '@radix-ui/themes';
+import { Text } from '@hasura/shared/ui';
 
-const EventNameItem = ({ event }) => {
-  return (
-    <Link to={`/events/data/${event.name}/modify`}>
-      <Flex
-        className={`${styles['actionLinkLayout']} ${styles['dagBody']} ${styles['sm']} ${styles['cardLink']}`}
-        align="center"
-        gap="1"
-      >
-        {event.name}
-        <FaArrowRight
-          className={`${styles['pull_right']} ${styles['hoverArrow']}`}
-          aria-hidden="true"
-        />
-      </Flex>
-    </Link>
-  );
-};
 const DBEvents = ({ source }: { source: PostgresSource }) => {
   const events = source.tables?.reduce((eventsInfo, tableInfo) => {
     if (
@@ -44,15 +27,14 @@ const DBEvents = ({ source }: { source: PostgresSource }) => {
               className={`${styles['dagHeaderOnly']} ${styles['flexMiddle']} `}
             >
               <Flex align="center" gap="1">
-                <FaCloud className={styles['mr_xxs']} aria-hidden="true" />
-                {eventsCount === 1
-                  ? `${eventsCount} Event`
-                  : `${eventsCount} Events`}
+                <FaCloud aria-hidden="true" />
+                <Text weight="bold">
+                  {eventsCount === 1
+                    ? `${eventsCount} Event`
+                    : `${eventsCount} Events`}
+                </Text>
               </Flex>
             </div>
-            {events.map((event) => (
-              <EventNameItem event={event} key={event.name} />
-            ))}
           </div>
         </li>
       </ul>

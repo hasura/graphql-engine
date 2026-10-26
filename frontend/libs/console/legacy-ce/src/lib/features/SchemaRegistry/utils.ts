@@ -28,7 +28,7 @@ export const findIfSubStringExists = (
   return originalString.toLowerCase().includes(subString.toLocaleLowerCase());
 };
 
-export const schemaRegsitryLuxDataEndpoint = endpoints.schemaRegistry;
+const schemaRegsitryLuxDataEndpoint = endpoints.schemaRegistry;
 
 export const schemaRegsitryControlPlaneClient = createControlPlaneClient(
   schemaRegsitryLuxDataEndpoint,

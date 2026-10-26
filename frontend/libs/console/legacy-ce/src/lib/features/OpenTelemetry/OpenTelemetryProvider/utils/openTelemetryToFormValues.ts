@@ -94,7 +94,7 @@ export function formValuesToOpenTelemetry(
 /**
  * Convert the OpenTelemetry status to form value.
  */
-export function openTelemetryStatusToFormValue(
+function openTelemetryStatusToFormValue(
   value: string,
 ): Pick<FormValues, 'status' | 'statusVariable'> {
   if (value === 'enabled' || value === 'disabled') {

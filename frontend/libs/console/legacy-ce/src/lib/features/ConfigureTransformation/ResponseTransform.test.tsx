@@ -1,13 +1,3 @@
-/**
- * Regression coverage for ResponseTransforms, whose responseBody->local form
- * sync (set-state-in-effect) was replaced with the React "adjust state when a
- * prop changes" during-render pattern. The local buffer isn't directly rendered
- * here, so this asserts the component renders its editor, reacts to a
- * responseBody change, and never loops on stable props.
- *
- * AceEditor (used by the nested TemplateEditor) is mocked to avoid ace-builds.
- */
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { Theme } from '@radix-ui/themes';
 import { vi } from 'vitest';

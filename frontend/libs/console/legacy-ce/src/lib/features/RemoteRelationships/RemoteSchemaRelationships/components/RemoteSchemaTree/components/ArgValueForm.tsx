@@ -23,7 +23,7 @@ import {
 import { RsToRsSchema } from '../../RemoteSchemaToRemoteSchemaForm/schemas';
 import { createFilter } from 'react-select';
 
-export interface ArgValueFormProps {
+interface ArgValueFormProps {
   argKey: string;
   relationshipFields: RelationshipFields[];
   setRelationshipFields: React.Dispatch<

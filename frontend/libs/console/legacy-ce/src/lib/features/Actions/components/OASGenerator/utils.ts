@@ -48,7 +48,7 @@ const lastOfArray = (arr: string[]): string => {
   return arr[arr.length - 1];
 };
 
-export const formatQuery = (query?: string): string => {
+const formatQuery = (query?: string): string => {
   try {
     return !query || query.trim() === '' ? '' : formatGraphQL(query);
   } catch (e) {
@@ -310,7 +310,7 @@ const createXWWWFormURLEncodedRequestTransform = (
   };
 };
 
-export const createRequestTransform = (
+const createRequestTransform = (
   operation: Operation,
 ): GeneratedAction['requestTransforms'] | null => {
   let inputName: string;
@@ -325,7 +325,7 @@ export const createRequestTransform = (
   return null;
 };
 
-export const createResponseTransform = (operation: Operation): string => {
+const createResponseTransform = (operation: Operation): string => {
   if (operation.responseDefinition?.targetGraphQLType === 'string') {
     return '{{$body}}';
   }
@@ -343,7 +343,7 @@ export const createResponseTransform = (operation: Operation): string => {
   return '';
 };
 
-export const translateAction = (
+const translateAction = (
   graphqlSchema: Result,
   operation: Operation,
 ): GeneratedAction => {

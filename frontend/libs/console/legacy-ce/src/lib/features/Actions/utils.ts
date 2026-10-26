@@ -17,22 +17,6 @@ export const findAction = (
 export const getActionOutputType = (action: Action) => {
   return action.definition.output_type;
 };
-
-export const getActionOutputFields = (
-  action: Action,
-  types: FlattenCustomType[],
-) => {
-  const outputTypeName = getActionOutputType(action);
-
-  const outputType = findType(types, outputTypeName);
-
-  if (outputType?.kind === 'objects') {
-    return outputType.definition.fields;
-  }
-
-  return null;
-};
-
 export const getActionArguments = (action: Action): InputArgument[] => {
   return action.definition.arguments || [];
 };
@@ -40,12 +24,7 @@ export const getActionArguments = (action: Action): InputArgument[] => {
 export const getActionType = (action: Action) => {
   return action.definition.type ?? 'query';
 };
-
-export const getActionPermissions = (action: Action) => {
-  return action.permissions;
-};
-
-export const persistAllDerivedActions = (allActions) => {
+const persistAllDerivedActions = (allActions) => {
   let stringified;
   try {
     stringified = JSON.stringify(allActions);
@@ -55,7 +34,7 @@ export const persistAllDerivedActions = (allActions) => {
   setLSItem(LS_KEYS.derivedActions, stringified);
 };
 
-export const getAllPersistedDerivedActions = () => {
+const getAllPersistedDerivedActions = () => {
   return getParsedLSItem(LS_KEYS.derivedActions, {});
 };
 

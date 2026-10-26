@@ -1,12 +1,4 @@
-import {
-  isWrappingType,
-  isListType,
-  isNonNullType,
-  TypeNode,
-  GraphQLObjectType,
-  GraphQLInputObjectType,
-  GraphQLType,
-} from 'graphql';
+import { TypeNode } from 'graphql';
 
 const unwrapNonNullable = (wrappedTypename: string) => {
   return wrappedTypename.substring(0, wrappedTypename.length - 1);
@@ -58,28 +50,6 @@ export const getAstTypeMetadata = (type: TypeNode) => {
     stack: typewraps,
   };
 };
-
-export const getSchemaTypeMetadata = (
-  type: GraphQLObjectType | GraphQLInputObjectType,
-) => {
-  let t: GraphQLType = type;
-  const typewraps: string[] = [];
-  while (isWrappingType(t)) {
-    if (isListType(t)) {
-      typewraps.push('l');
-    }
-    if (isNonNullType(t)) {
-      typewraps.push('n');
-    }
-    t = t.ofType;
-  }
-
-  return {
-    typename: t.name,
-    stack: typewraps,
-  };
-};
-
 export const wrapTypename = (name: string, wrapperStack: string[]) => {
   let wrappedTypename = name;
   wrapperStack.reverse().forEach((w) => {

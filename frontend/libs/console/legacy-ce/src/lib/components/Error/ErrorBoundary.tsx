@@ -6,7 +6,7 @@ import type { Location, NavigateFunction } from 'react-router';
 import { METADATA_STATUS_PATH } from '@hasura/shared/types';
 import type { UseReloadMetadata } from '@hasura/metadata/api';
 
-export interface ErrorBoundaryProps {
+interface ErrorBoundaryProps {
   location: Location;
   navigate: NavigateFunction;
   reloadMetadata: UseReloadMetadata['reloadMetadata'];

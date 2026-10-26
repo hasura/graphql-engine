@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import React, { Profiler } from 'react';
+import { Profiler } from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 
 // The @hasura/shared/ui barrel pulls LoadingScreen -> lottie-react -> lottie-web,

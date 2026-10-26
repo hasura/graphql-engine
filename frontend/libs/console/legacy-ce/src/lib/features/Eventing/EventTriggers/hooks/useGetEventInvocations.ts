@@ -6,16 +6,16 @@ import { runMetadataQuery } from '@hasura/metadata/api';
 import { useAppContext } from '@hasura/shared/context';
 import { getDriverPrefix } from '@hasura/metadata/helpers';
 
-export const GET_EVENT_TRIGGER_INVOCATIONS_QUERY_KEY = 'GET_EVENT_INVOCATIONS';
+const GET_EVENT_TRIGGER_INVOCATIONS_QUERY_KEY = 'GET_EVENT_INVOCATIONS';
 
-export type GetEventInvocationsArgs = {
+type GetEventInvocationsArgs = {
   name: string;
   source: QualifiedDataSource;
   limit?: number;
   offset?: number;
 };
 
-export type Options<FinalResult> = {
+type Options<FinalResult> = {
   select?: (m: EventInvocation[]) => FinalResult;
   staleTime?: number;
   enabled?: boolean;

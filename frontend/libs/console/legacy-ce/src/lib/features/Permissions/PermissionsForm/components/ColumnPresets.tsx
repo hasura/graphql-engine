@@ -111,7 +111,7 @@ export interface ColumnPresetsSectionProps {
   columns?: string[];
 }
 
-export interface Preset {
+interface Preset {
   id: number;
   columnName: string;
   presetType: string;

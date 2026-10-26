@@ -95,7 +95,7 @@ export const getEmptyTriggerFormValues = (
   newFunctionBody: DEFAULT_FUNCTION_BODY,
 });
 
-export type TriggerFormProps = {
+type TriggerFormProps = {
   defaultValues: TriggerFormValues;
   functions: TriggerFunction[];
   isPending?: boolean;
@@ -238,5 +238,3 @@ export const TriggerForm = ({
     </DelayedDialog>
   );
 };
-
-export default TriggerForm;

@@ -15,9 +15,7 @@ export type EnabledTabs = {
   permissions: boolean;
 };
 
-export function getEnabledTabs(
-  capabilities: Capabilities | undefined,
-): EnabledTabs {
+function getEnabledTabs(capabilities: Capabilities | undefined): EnabledTabs {
   return {
     browse: true,
     insert: true,

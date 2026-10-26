@@ -7,8 +7,7 @@
  * (data `undefined`), otherwise `!undefined?.is_consistent` redirects
  * unconditionally on first render. Access policy is respected via `hasDataAccess`.
  */
-export type InconsistentMetadataLike =
-  { is_consistent: boolean } | undefined | null;
+type InconsistentMetadataLike = { is_consistent: boolean } | undefined | null;
 
 export function shouldRedirectToMetadataStatus(args: {
   hasDataAccess: boolean;

@@ -44,7 +44,6 @@ import {
   ResponseTransformState,
   ResponseTransformEvents,
   SET_RESPONSE_TRANSFORM_STATE,
-  SetResponseTransformState,
   SetEnvVar,
   QueryParams,
 } from './stateDefaults';
@@ -173,14 +172,6 @@ export const setRequestTransformState = (
   type: SET_REQUEST_TRANSFORM_STATE,
   newState,
 });
-
-export const setResponseTransformState = (
-  newState: ResponseTransformState,
-): SetResponseTransformState => ({
-  type: SET_RESPONSE_TRANSFORM_STATE,
-  newState,
-});
-
 export const requestBodyActionState = {
   remove: 'remove' as const,
   transformApplicationJson: 'transform' as const,

@@ -104,5 +104,3 @@ export const UniqueKeysSection = () => {
     </Section>
   );
 };
-
-export default UniqueKeysSection;

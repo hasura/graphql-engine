@@ -1,7 +1,6 @@
 import { versionGT, getLSItem } from '@hasura/shared/utils';
 import {
   ConsoleState,
-  ConsoleNotification,
   ConsoleScope,
   NotificationDate,
   NotificationScope,
@@ -44,18 +43,6 @@ export const toShowNotification = (
 
   return false;
 };
-
-export const errorNotification: ConsoleNotification = {
-  subject: 'Error in Fetching Notifications',
-  created_at: Date.now(),
-  content:
-    'There was an error in fetching notifications. Try again in some time.',
-  type: 'error',
-  start_date: null,
-  priority: 1,
-  expiry_date: null,
-};
-
 export const checkIsRead = (prevRead?: string | string[], id?: number) => {
   if (prevRead === 'all' || prevRead === 'default' || prevRead === 'error') {
     return true;

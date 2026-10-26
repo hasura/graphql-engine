@@ -3,20 +3,11 @@ import { getTableDisplayName } from '@hasura/shared/utils';
 import { MetadataTable, Source } from '@hasura/shared/types';
 
 const boolOperators = ['_and', '_or', '_not'];
-export const getBoolOperators = () => {
-  const boolMap = boolOperators.map((boolOperator) => ({
-    name: boolOperator,
-    kind: 'boolOperator',
-    meta: null,
-  }));
-  return boolMap;
-};
-
 const getExistOperators = () => {
   return ['_exists'];
 };
 
-export const formatTableColumns = (columns: TableColumn[]) => {
+const formatTableColumns = (columns: TableColumn[]) => {
   if (!columns) return [];
   return columns?.map((column) => {
     return {
@@ -27,7 +18,7 @@ export const formatTableColumns = (columns: TableColumn[]) => {
   });
 };
 
-export const formatTableRelationships = (metadataTables: MetadataTable[]) => {
+const formatTableRelationships = (metadataTables: MetadataTable[]) => {
   if (!metadataTables) return [];
   const met = metadataTables.reduce(
     (tally, curr) => {
@@ -70,7 +61,7 @@ export const formatTableRelationships = (metadataTables: MetadataTable[]) => {
   return met;
 };
 
-export interface CreateOperatorsArgs {
+interface CreateOperatorsArgs {
   tableName: string;
   existingPermission?: Record<string, any>;
   tableColumns: TableColumn[];

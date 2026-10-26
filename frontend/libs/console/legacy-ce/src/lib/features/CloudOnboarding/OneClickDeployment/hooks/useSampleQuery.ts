@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { requestJson } from '@hasura/shared/utils';
 
-export function fetchSampleQuery(dataUrl: string) {
+function fetchSampleQuery(dataUrl: string) {
   return requestJson(dataUrl, {
     method: 'GET',
     headers: {},

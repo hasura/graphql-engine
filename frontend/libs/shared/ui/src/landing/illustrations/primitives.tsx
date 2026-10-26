@@ -103,7 +103,7 @@ export const OutputBox = ({
  * The central orange "Hasura events" node. Orange on both appearances, so no
  * `dark:` override is needed.
  */
-export const HasuraEventsBox = ({
+const HasuraEventsBox = ({
   x,
   y,
   width,

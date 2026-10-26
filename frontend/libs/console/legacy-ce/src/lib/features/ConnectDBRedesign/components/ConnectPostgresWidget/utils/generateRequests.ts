@@ -4,7 +4,7 @@ import { generateGraphQLCustomizationInfo } from '../../GraphQLCustomization/uti
 import { PostgresConnectionSchema } from '../schema';
 import { cleanEmpty } from './helpers';
 
-export const generateConnectionInfo = (
+const generateConnectionInfo = (
   values: PostgresConnectionSchema['configuration']['connectionInfo'],
 ) => ({
   database_url:

@@ -14,7 +14,7 @@ import {
 import { Theme } from '@radix-ui/themes';
 export * from './utils';
 
-export type DragFoldColumnDef<TData extends RowData> = ColumnDef<
+type DragFoldColumnDef<TData extends RowData> = ColumnDef<
   ResizableTableFeatures,
   TData
 > & {
@@ -38,7 +38,7 @@ const applyReorders = <TData extends RowData>(
   return reordered;
 };
 
-export type DragFoldTableProps<TData extends RowData> = {
+type DragFoldTableProps<TData extends RowData> = {
   data: TData[];
   columns: DragFoldColumnDef<TData>[];
   headerTitle?: string;

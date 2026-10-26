@@ -42,16 +42,18 @@ const SubscriptionRootFieldDescription = () => (
   </div>
 );
 
-export interface ColumnPermissionsSectionProps {
+interface ColumnPermissionsSectionProps {
   columns?: string[];
   filterType: string;
   table: Table;
   source: QualifiedDataSource;
 }
 
-export const ColumnRootFieldPermissions: React.FC<
-  ColumnPermissionsSectionProps
-> = ({ source, table, filterType }) => {
+const ColumnRootFieldPermissions: React.FC<ColumnPermissionsSectionProps> = ({
+  source,
+  table,
+  filterType,
+}) => {
   const { watch, setValue } = useFormContext<PermissionsSchema>();
 
   const [

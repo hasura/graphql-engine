@@ -15,7 +15,7 @@ import {
 import { Action, ActionDefinition } from '@hasura/shared/types';
 import { findType, getActionArguments, getActionOutputType } from '../../utils';
 
-export const isInbuiltType = (typename) => {
+const isInbuiltType = (typename) => {
   return !!inbuiltTypes[typename];
 };
 
