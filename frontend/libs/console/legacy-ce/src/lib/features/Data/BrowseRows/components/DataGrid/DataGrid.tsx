@@ -175,10 +175,11 @@ export const DataGrid = (props: DataGridProps) => {
   const { mutateAsync: deleteRow, isPending: isDeleting } = useDeleteRows();
   const destructiveConfirm = useDestructiveConfirm();
 
-  const { data: relationships, isFetching } = useListAllDatabaseRelationships({
-    table,
-    dataSourceName: source.name,
-  });
+  const { data: relationships, isLoading: isRelationshipsLoading } =
+    useListAllDatabaseRelationships({
+      table,
+      dataSourceName: source.name,
+    });
 
   useEffect(() => {
     if (!disableRunQuery)
@@ -442,7 +443,9 @@ export const DataGrid = (props: DataGridProps) => {
         }}
       />
 
-      {isRowsLoading || isFetching ? (
+      {/* Background relationship refetches must not unmount the table and
+          discard its open dialogs or unsaved edit state. */}
+      {isRowsLoading || isRelationshipsLoading ? (
         <div className="my-4">
           <SkeletonList height="20px" count={8} className="my-2" />
         </div>

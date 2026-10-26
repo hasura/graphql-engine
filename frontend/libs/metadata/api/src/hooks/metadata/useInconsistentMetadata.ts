@@ -45,6 +45,7 @@ export const useFetchInconsistentMetadata = () => {
 export const useInconsistentMetadata = <T = InconsistentMetadata>(
   selector?: (m: InconsistentMetadata) => T,
   staleTime: number = DEFAULT_STALE_TIME,
+  enabled = true,
 ) => {
   const { endpoints } = useAppContext();
   const fetchJson = useAuthFetchJson();
@@ -60,6 +61,7 @@ export const useInconsistentMetadata = <T = InconsistentMetadata>(
     staleTime: staleTime || DEFAULT_STALE_TIME,
     refetchOnWindowFocus: false,
     select: selector,
+    enabled,
   });
 
   return queryReturn;
