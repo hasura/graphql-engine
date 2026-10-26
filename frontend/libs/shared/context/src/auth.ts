@@ -10,6 +10,8 @@ export type AuthService<S, AT = 'none' | 'admin-secret'> = {
   isAuthenticated: boolean;
   authType: AT;
   hasuraUserId?: string;
+  // Hasura Cloud collaborator privileges. Undefined means full access.
+  privileges?: string[];
   getHeaders: () => Promise<Record<string, string>>;
   authenticate: (input: S) => Promise<boolean>;
   initialize: () => Promise<void>;
