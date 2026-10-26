@@ -31,5 +31,3 @@ export const getDatabaseSchemasCurry =
 
     return result;
   };
-
-export const getDatabaseSchemas = getDatabaseSchemasCurry('postgres');

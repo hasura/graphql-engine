@@ -17,7 +17,7 @@ import { useDriverCapabilities } from '@hasura/metadata/data-source';
 import { useErrorNotification } from '@hasura/metadata/api';
 import { Flex } from '@radix-ui/themes';
 
-export interface DatabaseRelationshipsProps {
+interface DatabaseRelationshipsProps {
   source: QualifiedDataSource;
   table: Table;
 }

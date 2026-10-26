@@ -1,4 +1,4 @@
-import React, { ReactElement } from 'react';
+import { ReactElement } from 'react';
 import { Analytics } from '@hasura/shared/analytics';
 import { Flex, Link } from '@radix-ui/themes';
 

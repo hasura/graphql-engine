@@ -24,8 +24,6 @@ export const SET_REQUEST_SAMPLE_INPUT =
   'RequestTransform/SET_REQUEST_SAMPLE_INPUT';
 export const SET_REQUEST_TRANSFORMED_BODY =
   'RequestTransform/SET_REQUEST_TRANSFORMED_BODY';
-export const SET_ENABLE_REQUEST_BODY =
-  'RequestTransform/SET_ENABLE_REQUEST_BODY';
 export const SET_REQUEST_CONTENT_TYPE =
   'RequestTransform/SET_REQUEST_CONTENT_TYPE';
 export const SET_REQUEST_URL_TRANSFORM =

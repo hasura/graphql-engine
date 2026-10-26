@@ -140,7 +140,7 @@ const createInsertObject = (input: PermissionsSchema) => {
   throw new Error('Case not handled');
 };
 
-export type DeletePermissionMetadata = {
+type DeletePermissionMetadata = {
   columns?: string[];
   set?: Record<string, any>;
   backend_only: boolean;

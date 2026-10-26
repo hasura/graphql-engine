@@ -9,6 +9,7 @@ interface Props extends React.ComponentProps<React.FC> {
 
 const ExpanderButton: React.FC<Props> = ({ isExpanded, onClick }) => (
   <IconButton
+    mode="default"
     variant="outline"
     title={isExpanded ? 'Collapse row' : 'Expand row'}
     data-test={isExpanded ? 'collapse-event' : 'expand-event'}

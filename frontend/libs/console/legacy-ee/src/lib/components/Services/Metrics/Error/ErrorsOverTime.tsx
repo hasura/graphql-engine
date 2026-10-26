@@ -1,4 +1,3 @@
-import React from 'react';
 import { useQuery } from '@apollo/client/react';
 import { searchErrorsOverTime } from './graphql.queries.js';
 import ErrorsOverTimeChart from './ErrorOverTimeChart.js';

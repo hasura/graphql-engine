@@ -14,6 +14,7 @@ import {
   FaSearch,
   FaSortAmountDownAlt,
   FaSortAmountUpAlt,
+  FaSyncAlt,
   FaTimes,
 } from 'react-icons/fa';
 import { OrderBy, WhereClause } from '@hasura/shared/types';
@@ -29,6 +30,8 @@ interface DataTableOptionsProps {
     onQuerySearch: () => void;
     onDeleteRows: () => void;
     onRefreshQueryOptions: () => void;
+    onRefreshRows: () => void;
+    isRefreshingRows: boolean;
     orderByClauses: OrderBy[];
     whereClauses: WhereClause[];
     supportedOperators: Operator[];
@@ -210,6 +213,19 @@ export const DataTableOptions = (props: DataTableOptionsProps) => {
             Delete {query.selectedRowsCount} rows
           </Button>
         )}
+        <Button
+          type="button"
+          mode="default"
+          leftIcon={FaSyncAlt}
+          onClick={query.onRefreshRows}
+          data-testid="@refreshRowsBtn"
+          title="Refresh rows"
+          loading={query.isRefreshingRows}
+          loadingText="Refreshing..."
+          disabled={disabled}
+        >
+          Refresh
+        </Button>
         <DropdownMenu.Root
           items={[
             <DropdownMenu.Label key="export-selected-label">

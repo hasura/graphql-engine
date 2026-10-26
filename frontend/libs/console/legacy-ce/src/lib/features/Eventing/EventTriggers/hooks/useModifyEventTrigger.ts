@@ -18,7 +18,7 @@ const errorTitle = 'Saving event trigger failed';
 
 export type EventTriggerProperty = 'webhook' | 'ops' | 'retry_conf' | 'headers';
 
-export type ModifyEventTriggerArgs = {
+type ModifyEventTriggerArgs = {
   source: QualifiedDataSource;
   state: LocalEventTriggerState;
   transformState: RequestTransformState;

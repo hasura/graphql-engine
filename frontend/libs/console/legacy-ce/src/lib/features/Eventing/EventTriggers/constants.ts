@@ -1,7 +1,4 @@
 import { EventTriggerOperation } from './types';
-
-export const pageTitle = 'Events';
-
 export const EVENT_TRIGGER_OPERATIONS: EventTriggerOperation[] = [
   'INSERT',
   'UPDATE',

@@ -32,7 +32,7 @@ import ColumnPresetsSection from '../ColumnPresets';
 import AggregationSection from '../Aggregation';
 import BackendOnlySection from '../BackendOnly';
 
-export interface ComponentProps {
+interface ComponentProps {
   metadata: Metadata['metadata'];
   dataSource: Source;
   table: MetadataTable;

@@ -1,11 +1,3 @@
-/**
- * Regression coverage for SampleContextTransforms, whose two prop->local-state
- * sync effects (set-state-in-effect) were replaced with the React "adjust state
- * when a prop changes" during-render pattern. Covers: initial values, resync on
- * envVars / sessionVars prop change, no clobbering of local edits, and no
- * runaway renders. Uses the real KeyValueInput.
- */
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Theme } from '@radix-ui/themes';
 import { vi } from 'vitest';

@@ -15,7 +15,7 @@ import {
 } from './utils';
 import { Tree, TreeProps } from '@hasura/shared/ui';
 
-export interface RemoteSchemaTreeProps extends Pick<
+interface RemoteSchemaTreeProps extends Pick<
   TreeProps<TreeNode>,
   'checkable' | 'className'
 > {

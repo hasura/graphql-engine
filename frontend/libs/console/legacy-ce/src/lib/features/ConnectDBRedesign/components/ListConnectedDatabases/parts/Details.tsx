@@ -6,7 +6,7 @@ import { InconsistentSourceDetails } from './InconsistentSourceDetails';
 import { InconsistentObject } from '@hasura/shared/types';
 import { findInconsistentSource } from '@hasura/metadata/helpers';
 
-export const DisplayDetails = ({
+const DisplayDetails = ({
   details,
   isSupported,
 }: {

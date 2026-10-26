@@ -5,7 +5,7 @@ import {
 } from '@hasura/console-legacy-ce';
 
 const metricsBaseUrl = globals.metricsApiUrl;
-export const { globalCookiePolicy, baseUrl } = EndpointNamedExps;
+export const { baseUrl } = EndpointNamedExps;
 
 const Endpoints = {
   ...endpointOSS,

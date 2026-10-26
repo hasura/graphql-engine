@@ -52,5 +52,3 @@ export const ForeignKeyEditForm = ({
     />
   );
 };
-
-export default ForeignKeyEditForm;

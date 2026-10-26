@@ -28,7 +28,7 @@ const filterOption = (
   return option.label.toLowerCase().includes(inputValue.toLowerCase());
 };
 
-export const formKey = 'clonePermissions';
+const formKey = 'clonePermissions';
 
 const ClonePermissionsRow: React.FC<ClonePermissionsRowProps> = ({
   id,

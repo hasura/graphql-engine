@@ -18,7 +18,7 @@ import { PermissionsForm } from './components/PermissionsForm';
 import { usePermissionsFormContext } from './hooks/usePermissionForm';
 import { LogicalModelPermissionsFormProvider } from './components/LogicalModelPermissionsFormProvider';
 
-export type LogicalModelPermissionsProps = {
+type LogicalModelPermissionsProps = {
   logicalModelName: string;
   logicalModels: LogicalModelWithPermissions[];
   onSave: OnSave;

@@ -23,7 +23,7 @@ import {
   adaptRemoteSchemaRelationship,
 } from '../utils/adaptResponse';
 
-export const getTableLocalRelationships = (
+const getTableLocalRelationships = (
   metadataTable: MetadataTable,
   dataSourceName: string,
   suggestedRelationships: SuggestedRelationshipWithName[],

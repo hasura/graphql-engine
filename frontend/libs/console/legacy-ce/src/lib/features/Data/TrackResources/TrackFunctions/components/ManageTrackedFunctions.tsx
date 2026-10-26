@@ -43,7 +43,7 @@ export const ManageTrackedFunctions = ({
   );
 };
 
-export const ManageTrackedFunctionsContent = ({
+const ManageTrackedFunctionsContent = ({
   source,
   trackedFunctions,
   untrackedFunctions,

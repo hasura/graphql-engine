@@ -1,5 +1,3 @@
-import React from 'react';
-
 import FilterInputComponent from './FilterInputComponent';
 
 const FilterTypeInput = ({ onChange, id, title }) => {

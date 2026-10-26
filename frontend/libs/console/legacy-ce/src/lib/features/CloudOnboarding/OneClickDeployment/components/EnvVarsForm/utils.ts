@@ -5,7 +5,7 @@ import { RequiredEnvVar } from '../../types';
 import { NeonIntegrationStatus } from '../../../NeonOnboardingWizard/hooks/useNeonIntegration';
 import { getProjectHealth } from '../../../utils/cloudDatasourceEnvVars';
 
-export const generateDefaultValues = (envVars: RequiredEnvVar[]) => {
+const generateDefaultValues = (envVars: RequiredEnvVar[]) => {
   const defaultValues: any = {};
   envVars.forEach((envVar) => {
     if (envVar.Default) defaultValues[envVar.Name] = String(envVar.Default);
@@ -13,7 +13,7 @@ export const generateDefaultValues = (envVars: RequiredEnvVar[]) => {
   return defaultValues;
 };
 
-export const generateEnvVarsFormSchema = (envVars: RequiredEnvVar[]) => {
+const generateEnvVarsFormSchema = (envVars: RequiredEnvVar[]) => {
   const dynamicSchemaObject: Record<string, ZodString> = {};
 
   envVars.forEach((envVar) => {

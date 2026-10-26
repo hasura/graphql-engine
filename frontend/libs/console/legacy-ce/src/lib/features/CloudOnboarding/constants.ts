@@ -127,7 +127,7 @@ export const oneClickDeploymentOnboardingShown = {
   kind: 'onboarded_through_one_click_deployment',
 };
 
-export const useCaseExperimentOnboarding = {
+const useCaseExperimentOnboarding = {
   ...mutationVariables,
   kind: 'onboarded_through_use_case_experiment',
 };

@@ -119,7 +119,7 @@ values with `z.infer<typeof schema>`. Reference implementation:
 
 - Vitest (`vite.config.mts`) with jsdom, globals, `TZ=UTC`. Setup file is
   `src/setupTests.ts`: it adds jest-dom matchers, mocks `lottie-react` and
-  stubs `window.__env`. `src/lib/setupTests.ts` is an unused leftover.
+  stubs `window.__env`.
   CSS, image and font imports resolve to `src/emptyModuleStub.ts`.
 - There are 132 test files (126 `*.test.ts(x)`, 6 `*.spec.ts`), co-located or
   under `__tests__/`.

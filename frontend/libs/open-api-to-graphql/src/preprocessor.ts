@@ -1329,61 +1329,6 @@ function addObjectPropertiesToDataDef<TSource, TContext, TArgs>(
   }
 }
 
-type MemberSchemaData = {
-  allTargetGraphQLTypes: TargetGraphQLType[];
-  allProperties: { [key: string]: SchemaObject | ReferenceObject }[];
-  allRequired: string[];
-};
-
-/**
- * In the context of schemas that use keywords that combine member schemas,
- * collect data on certain aspects so it is all in one place for processing.
- */
-function getMemberSchemaData<TSource, TContext, TArgs>(
-  schemas: (SchemaObject | ReferenceObject)[],
-  data: PreprocessingData<TSource, TContext, TArgs>,
-  oas: Oas3,
-): MemberSchemaData {
-  const result: MemberSchemaData = {
-    allTargetGraphQLTypes: [], // Contains the target GraphQL types of all the member schemas
-    allProperties: [], // Contains the properties of all the member schemas
-    allRequired: [], // Contains the required of all the member schemas
-  };
-
-  schemas.forEach((schemaOrRef) => {
-    // Dereference schemas
-    let schema: SchemaObject;
-    if ('$ref' in schemaOrRef && typeof schemaOrRef.$ref === 'string') {
-      schema = Oas3Tools.resolveRef(schemaOrRef.$ref, oas) as SchemaObject;
-    } else {
-      schema = schemaOrRef as SchemaObject;
-    }
-
-    // Consolidate target GraphQL type
-    const memberTargetGraphQLType = Oas3Tools.getSchemaTargetGraphQLType(
-      schema,
-      data,
-      oas,
-    );
-
-    if (memberTargetGraphQLType) {
-      result.allTargetGraphQLTypes.push(memberTargetGraphQLType);
-    }
-
-    // Consolidate properties
-    if (schema.properties) {
-      result.allProperties.push(schema.properties);
-    }
-
-    // Consolidate required
-    if (schema.required) {
-      result.allRequired = result.allRequired.concat(schema.required);
-    }
-  });
-
-  return result;
-}
-
 function createAnyOfObject<TSource, TContext, TArgs>(
   saneName: string,
   saneInputName: string,

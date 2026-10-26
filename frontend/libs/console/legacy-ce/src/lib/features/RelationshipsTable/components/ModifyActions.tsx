@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from '@hasura/shared/ui';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import { RelationshipType } from '../types';

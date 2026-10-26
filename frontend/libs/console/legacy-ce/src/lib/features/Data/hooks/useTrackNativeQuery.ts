@@ -7,11 +7,11 @@ import { NativeQuery } from '@hasura/shared/types';
 import { NativeQueryMigrationBuilder } from '../LogicalModels/MigrationBuilder';
 import { getDriverPrefix } from '@hasura/metadata/helpers';
 
-export type TrackNativeQuery = {
+type TrackNativeQuery = {
   source: string;
 } & NativeQuery;
 
-export type UntrackNativeQuery = {
+type UntrackNativeQuery = {
   sourceName: string;
   rootFieldName: string;
 };

@@ -3,12 +3,3 @@ export function roundNumber(input, precision = 0) {
 
   return Math.round(input * power) / power;
 }
-
-export function formatRoundNumber(input, precision = 0) {
-  return new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: precision,
-    maximumFractionDigits: precision,
-  }).format(input);
-}
-
-export const secondToMillisecs = (input) => input * 1000;

@@ -5,7 +5,7 @@ import { useGetScheduledEventInvocations } from '@hasura/metadata/api';
 
 const InvocationLogs: React.FC = () => {
   const { paginationState, setPaginationState } = usePagination();
-  const { data: rows } = useGetScheduledEventInvocations({
+  const { data: rows, isLoading } = useGetScheduledEventInvocations({
     type: 'one_off',
     limit: paginationState.limit,
     offset: paginationState.offset,
@@ -17,6 +17,7 @@ const InvocationLogs: React.FC = () => {
       <div className="mt-6" data-test="event-filter-table">
         <InvocationLogsTable
           rows={rows ?? []}
+          isLoading={isLoading}
           columns={['id', 'status', 'event_id', 'created_at']}
           paginationState={paginationState}
           setPaginationState={setPaginationState}

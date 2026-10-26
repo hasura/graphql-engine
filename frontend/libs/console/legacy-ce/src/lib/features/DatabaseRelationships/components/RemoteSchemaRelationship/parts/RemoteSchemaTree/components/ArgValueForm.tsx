@@ -13,7 +13,7 @@ import StaticArgValue from './StaticArgValue';
 
 const fieldStyle =
   'block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400';
-export interface ArgValueFormProps {
+interface ArgValueFormProps {
   argKey: string;
   relationshipFields: RelationshipFields[];
   setRelationshipFields: React.Dispatch<

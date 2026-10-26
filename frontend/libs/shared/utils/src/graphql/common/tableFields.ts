@@ -14,7 +14,7 @@ import {
 import { camelize } from 'inflection';
 import { MetadataTable, Where } from '@hasura/shared/types';
 
-export type BoolExp = Record<string, unknown>;
+type BoolExp = Record<string, unknown>;
 
 // a filter value typed as text, e.g. `true` for `_is_null` or `5` for `_gt`
 const toBuiltInScalarValue = (typeName: string, value: string): unknown => {

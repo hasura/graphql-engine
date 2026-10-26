@@ -17,7 +17,7 @@ import { useAuthFetchJson } from '@hasura/shared/hooks';
 import { useAppContext } from '@hasura/shared/context';
 import { areTablesEqual } from '@hasura/metadata/helpers';
 
-export type TableWithColumns = {
+type TableWithColumns = {
   metadataTable: MetadataTable;
   columns: TableColumn[];
   /** the foreign keys of a loaded table that has same-table FK relationships */

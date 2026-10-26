@@ -1,5 +1,5 @@
 import { ADMIN_SECRET_HEADER_KEY } from '@hasura/shared/types';
-import { setLSItem, getLSItem, removeLSItem } from '@hasura/shared/utils';
+import { setLSItem, getLSItem } from '@hasura/shared/utils';
 import type { DataHeader } from '@hasura/shared/types';
 import { JwtHeader, JwtPayload } from 'jwt-decode';
 import { LS_KEYS } from '@hasura/shared/types';
@@ -15,21 +15,6 @@ export const getHeadersSectionIsOpen = () => {
 
   return isOpen ? isOpen === 'true' : defaultIsOpen;
 };
-
-export const persistAdminSecretHeaderWasAdded = () => {
-  setLSItem(LS_KEYS.apiExplorerAdminSecretWasAdded, 'true');
-};
-
-export const removePersistedAdminSecretHeaderWasAdded = () => {
-  removeLSItem(LS_KEYS.apiExplorerAdminSecretWasAdded);
-};
-
-export const getPersistedAdminSecretHeaderWasAdded = () => {
-  const lsValue = getLSItem(LS_KEYS.apiExplorerAdminSecretWasAdded);
-
-  return lsValue ? lsValue === 'true' : false;
-};
-
 export const persistGraphiQLHeaders = (headers: DataHeader[]) => {
   // filter empty headers
   const validHeaders = headers.filter((h) => h.key);
@@ -124,19 +109,9 @@ export const parseAuthHeader = (header) => {
 export const persistGraphiQLMode = (mode) => {
   setLSItem(LS_KEYS.apiExplorerGraphiqlMode, mode);
 };
-
-export const getPersistedGraphiQLMode = () => {
-  return getLSItem(LS_KEYS.apiExplorerGraphiqlMode) || 'graphql';
-};
-
 export const getGraphiQLQueryFromLocalStorage = () => {
   return getLSItem(LS_KEYS.graphiqlQuery);
 };
-
-export const setGraphiQLQueryInLocalStorage = (query) => {
-  return setLSItem(LS_KEYS.graphiqlQuery, query);
-};
-
 export type TokenInfo = {
   header?: JwtHeader | null;
   payload?: JwtPayload | null;

@@ -74,104 +74,100 @@ export const PermissionSummary = () => {
           />
         </Skeleton>
       </div>
-      <Skeleton loading={isFetching}>
-        <CardedTable
-          columns={
-            roles.length
-              ? [
-                  '',
-                  ...roles.map((role) => {
-                    return (
-                      <Flex key={role} align="center" gap="2">
-                        <span>{role}</span>
-                        <IconButton
-                          mode="destructive"
-                          variant="ghost"
-                          radius="full"
-                          title="Delete Permissions"
-                          onClick={() => handleDelete(role)}
-                          disabled={isDeleting}
-                        >
-                          <FaTrash />
-                        </IconButton>
-                      </Flex>
-                    );
-                  }),
-                ]
-              : ['No Role found']
-          }
-          data={
-            dataSourceTables?.length
-              ? dataSourceTables.map(({ table }, rowIndex) => [
-                  <Text key={getTableDisplayName(table)} weight="bold">
-                    {getTableDisplayName(table)}
-                  </Text>,
-                  ...roles.map((role) => {
-                    const permission =
-                      dataSourceTables?.find((t) =>
-                        areTablesEqual(t.table, table),
-                      )?.[selectedPermissionType ?? 'select_permissions'] ?? [];
-
-                    const isChecked =
-                      permission?.some(
-                        (p: { role: string }) => p.role === role,
-                      ) ?? false;
-
-                    const key = `${rowIndex}-${role}`;
-
-                    return isChecked ? (
-                      <Flex
-                        key={key}
-                        align="center"
-                        gap="2"
-                        onClick={() =>
-                          navigate(
-                            dataRoutes.manageTable(
-                              database,
-                              table,
-                              'permissions',
-                            ),
-                          )
-                        }
-                        role="img"
-                        aria-label="crossmark"
-                        className="group transition-transform transform hover:scale-110 cursor-pointer"
-                      >
-                        <IconButton
-                          color="green"
-                          size="1"
-                          variant="ghost"
-                          radius="full"
-                        >
-                          <FaCheck />
-                        </IconButton>
-                        <IconButton
-                          color="gray"
-                          size="1"
-                          variant="ghost"
-                          radius="full"
-                        >
-                          <FaEdit />
-                        </IconButton>
-                      </Flex>
-                    ) : (
+      <CardedTable
+        loading={isFetching}
+        columns={
+          roles.length
+            ? [
+                '',
+                ...roles.map((role) => {
+                  return (
+                    <Flex key={role} align="center" gap="2">
+                      <span>{role}</span>
                       <IconButton
-                        key={key}
-                        color="red"
+                        mode="destructive"
+                        variant="ghost"
+                        radius="full"
+                        title="Delete Permissions"
+                        onClick={() => handleDelete(role)}
+                        disabled={isDeleting}
+                      >
+                        <FaTrash />
+                      </IconButton>
+                    </Flex>
+                  );
+                }),
+              ]
+            : ['No Role found']
+        }
+        data={
+          dataSourceTables?.length
+            ? dataSourceTables.map(({ table }, rowIndex) => [
+                <Text key={getTableDisplayName(table)} weight="bold">
+                  {getTableDisplayName(table)}
+                </Text>,
+                ...roles.map((role) => {
+                  const permission =
+                    dataSourceTables?.find((t) =>
+                      areTablesEqual(t.table, table),
+                    )?.[selectedPermissionType ?? 'select_permissions'] ?? [];
+
+                  const isChecked =
+                    permission?.some(
+                      (p: { role: string }) => p.role === role,
+                    ) ?? false;
+
+                  const key = `${rowIndex}-${role}`;
+
+                  return isChecked ? (
+                    <Flex
+                      key={key}
+                      align="center"
+                      gap="2"
+                      onClick={() =>
+                        navigate(
+                          dataRoutes.manageTable(
+                            database,
+                            table,
+                            'permissions',
+                          ),
+                        )
+                      }
+                      role="img"
+                      aria-label="crossmark"
+                      className="group transition-transform transform hover:scale-110 cursor-pointer"
+                    >
+                      <IconButton
+                        color="green"
                         size="1"
                         variant="ghost"
                         radius="full"
-                        className="cursor-none!"
-                      >
-                        <FaTimes />
-                      </IconButton>
-                    );
-                  }),
-                ])
-              : [['No table found']]
-          }
-        />
-      </Skeleton>
+                        icon={FaCheck}
+                      />
+                      <IconButton
+                        color="gray"
+                        size="1"
+                        variant="ghost"
+                        radius="full"
+                        icon={FaEdit}
+                      />
+                    </Flex>
+                  ) : (
+                    <IconButton
+                      key={key}
+                      color="red"
+                      size="1"
+                      variant="ghost"
+                      radius="full"
+                      className="cursor-none!"
+                      icon={FaTimes}
+                    />
+                  );
+                }),
+              ])
+            : [['No table found']]
+        }
+      />
     </div>
   );
 };

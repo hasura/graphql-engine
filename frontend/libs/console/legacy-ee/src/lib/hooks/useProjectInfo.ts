@@ -10,9 +10,9 @@ import { decodeToken } from '../shared/auth/utils';
 // 1 hour
 const DEFAULT_STALE_TIME = 60 * 60 * 1000;
 
-export const CLOUD_PROJECT_INFO_QUERY_KEY = 'GET_CLOUD_PROJECT_INFO';
+const CLOUD_PROJECT_INFO_QUERY_KEY = 'GET_CLOUD_PROJECT_INFO';
 
-export type CloudProjectInfo = {
+type CloudProjectInfo = {
   id: string;
   privileges: string[];
   metricsFQDN: string;

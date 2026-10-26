@@ -3,7 +3,7 @@ import { generateGraphQLCustomizationInfo } from '../../GraphQLCustomization/uti
 import { MssqlConnectionSchema } from '../schema';
 import { cleanEmpty } from '../../ConnectPostgresWidget/utils/helpers';
 
-export const generateConnectionInfo = (
+const generateConnectionInfo = (
   values: MssqlConnectionSchema['configuration']['connectionInfo'],
 ) => {
   return {

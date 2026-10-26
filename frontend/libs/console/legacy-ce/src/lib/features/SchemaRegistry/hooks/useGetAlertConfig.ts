@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { FETCH_ALERT_CONFIG } from '../queries';
 import { GetAlertConfigResponseWithError, AlertType } from '../types';

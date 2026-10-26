@@ -1,12 +1,3 @@
-/**
- * Regression coverage for PayloadOptionsTransforms, whose requestBody->local
- * form sync (set-state-in-effect) was replaced with the React "adjust state when
- * a prop changes" during-render pattern. Covers: initial form elements, resync
- * on requestBody change, no clobbering of local edits, and no runaway renders.
- *
- * AceEditor is mocked (ace-builds); the real KeyValueInput runs.
- */
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Theme } from '@radix-ui/themes';
 import { vi } from 'vitest';

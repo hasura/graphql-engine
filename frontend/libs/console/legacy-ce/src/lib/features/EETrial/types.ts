@@ -1,14 +1,4 @@
 export type EELicenseType = 'trial' | 'paid';
-
-export type EELicenseRegisterMutationResponse = {
-  registerEETrial: {
-    status: 'active' | 'expired' | 'deactivated';
-    type: EELicenseType;
-    expiry_at: string;
-    grace_at?: string;
-  };
-};
-
 export type EELiteAccess =
   | {
       access: 'forbidden';
@@ -47,9 +37,6 @@ export type EELicenseInfo =
       expiry_at?: Date;
       grace_at?: Date;
     };
-
-export type EELicenseStatus = EELicenseInfo['status'];
-
 export type EELiteAccessStatus = EELiteAccess['access'];
 
 export type EETrialRegistrationResponse = {

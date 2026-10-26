@@ -15,8 +15,6 @@ import { useGraphiQL } from '@graphiql/react';
 import { toggleCacheDirective } from './utils';
 import { Flex } from '@radix-ui/themes';
 import { useAppContext } from '@hasura/shared/context';
-
-export const RESPONSE_TIME_CACHE_WARNING = 1000;
 const DISMISS_TIME = 24 * 60 * 60 * 1000;
 type ResponseTimeWarningProps = Record<string, never>;
 

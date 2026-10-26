@@ -1,5 +1,4 @@
 import React from 'react';
-import { FaInfo } from 'react-icons/fa';
 import { IndicatorCard, SkeletonList } from '@hasura/shared/ui';
 import { useRolePermissions } from './hooks/usePermissions';
 import { PermissionsLegend } from './components/PermissionsLegend';
@@ -12,7 +11,6 @@ import { Capabilities } from '@hasura/dc-api-types';
 import { getDriversSupportedQueryTypes } from './utils/getDriversSupportedQueryTypes';
 import { isPermissionCheckboxDisabled } from './utils/isPermissionCheckboxDisabled';
 import {
-  DATA_QUERY_TYPES,
   DataQueryType,
   Source,
   Table as TableInfo,
@@ -36,35 +34,6 @@ const getIsColumnEditable = (
   if (driverSupportedQueries.includes(permissionType)) return true;
 
   return false;
-};
-
-interface ViewPermissionsNoteProps {
-  viewsSupported: boolean;
-  supportedQueryTypes: DataQueryType[];
-}
-
-export const ViewPermissionsNote: React.FC<ViewPermissionsNoteProps> = ({
-  viewsSupported,
-  supportedQueryTypes,
-}) => {
-  if (!viewsSupported) {
-    return null;
-  }
-
-  const unsupportedQueryTypes = DATA_QUERY_TYPES.filter(
-    (query) => !supportedQueryTypes.includes(query),
-  );
-
-  if (unsupportedQueryTypes.length) {
-    return (
-      <div className="">
-        <FaInfo aria-hidden="true" />
-        &nbsp; You cannot {unsupportedQueryTypes.join('/')} into this view
-      </div>
-    );
-  }
-
-  return null;
 };
 
 export interface PermissionsTableProps {

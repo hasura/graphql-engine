@@ -158,6 +158,7 @@ export const DataGrid = (props: DataGridProps) => {
     isError,
     error: rowsError,
     refetch: refetchRows,
+    isFetching: isRowsFetching,
   } = useRows({
     table,
     source,
@@ -408,6 +409,8 @@ export const DataGrid = (props: DataGridProps) => {
             setQueryDialogVisibility(true);
           },
           onRefreshQueryOptions: refreshAllOptions,
+          onRefreshRows: () => refetchRows(),
+          isRefreshingRows: isRowsFetching,
           orderByClauses,
           whereClauses,
           supportedOperators: allOperators,

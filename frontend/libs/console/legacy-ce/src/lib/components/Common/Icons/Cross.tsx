@@ -1,4 +1,3 @@
-import React from 'react';
 import { FaTimes } from 'react-icons/fa';
 
 const Cross = ({ className = '', title = '' }) => {

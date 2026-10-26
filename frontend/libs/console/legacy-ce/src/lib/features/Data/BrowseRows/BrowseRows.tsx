@@ -224,7 +224,17 @@ export const BrowseRows = ({
       parentValue: openTab.parentValue,
       content: (
         <DataGrid
-          key={JSON.stringify(openTab)}
+          /**
+           * The grid keeps its own page, filters and sorts, so the options it
+           * reports back don't remount it (and reload its relationships).
+           * Options set from outside it come with a new `options` prop or new
+           * active relationships.
+           */
+          key={JSON.stringify({
+            ...openTab,
+            details: { ...openTab.details, options: undefined },
+            options,
+          })}
           table={openTab.details.table}
           source={openTab.details.source}
           options={openTab.details.options}

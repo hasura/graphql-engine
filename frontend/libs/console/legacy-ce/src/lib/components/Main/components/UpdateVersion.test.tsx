@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import React, { Profiler } from 'react';
+import { Profiler } from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { LS_KEYS } from '@hasura/shared/types';
 import { getLSItem } from '@hasura/shared/utils';

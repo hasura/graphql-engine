@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { act, fireEvent, screen, render } from '@testing-library/react';
 import { RedirectCountDown } from './RedirectCountDown';
 

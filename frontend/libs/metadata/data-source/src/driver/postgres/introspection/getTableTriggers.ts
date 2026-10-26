@@ -55,5 +55,3 @@ export const getTriggerFunctionsCurry =
       name: row.function_name ?? '',
     }));
   };
-
-export const getTableTriggers = getTableTriggersCurry('postgres');

@@ -29,7 +29,7 @@ type ButtonProps = {
   accessInfo: EELiteAccess;
 };
 
-export const EnterpriseButton: React.FC<ButtonProps> = (props) => {
+const EnterpriseButton: React.FC<ButtonProps> = (props) => {
   const { accessInfo } = props;
 
   switch (accessInfo.access) {
@@ -107,7 +107,7 @@ type EEButtonProps =
       kind: 'loading';
       text: string;
     };
-export const EEButton: React.FC<EEButtonProps> = (props) => {
+const EEButton: React.FC<EEButtonProps> = (props) => {
   const { appearance } = useAppearance();
 
   switch (props.kind) {

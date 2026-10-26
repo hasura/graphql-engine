@@ -19,7 +19,7 @@ import {
 import useRemoteSchemaRelationshipForm from '../../hooks/useRemoteSchemaRelationshipForm';
 import { findInconsistentRemoteSchema } from '@hasura/metadata/helpers';
 
-export type PermissionsProps = {
+type PermissionsProps = {
   allRoles: string[];
   currentRemoteSchema: RemoteSchema;
 };
@@ -105,6 +105,7 @@ const Permissions: React.FC<PermissionsProps> = ({
     currentRemoteSchema.name,
   );
   const handleSaveRemoteSchemaPermission = (
+    definition: string,
     successCb?: () => void,
     errorCb?: () => void,
   ) => {
@@ -113,7 +114,7 @@ const Permissions: React.FC<PermissionsProps> = ({
         currentRemoteSchema,
         newRole: permissionEdit.newRole,
         role: permissionEdit.role,
-        schemaDefinition,
+        schemaDefinition: definition,
       },
       successCb,
       errorCb,

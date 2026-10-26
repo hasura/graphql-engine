@@ -43,7 +43,7 @@ import {
 } from '@hasura/metadata/data-source';
 import { Flex } from '@radix-ui/themes';
 
-export type AddLogicalModelDialogProps = {
+type AddLogicalModelDialogProps = {
   defaultValues?: Partial<AddLogicalModelFormData>;
   onCancel?: () => void;
   onSubmit?: (data: AddLogicalModelFormData) => void;

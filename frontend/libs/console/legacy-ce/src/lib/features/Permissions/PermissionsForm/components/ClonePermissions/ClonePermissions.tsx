@@ -146,5 +146,3 @@ export const ClonePermissionsSection: React.FC<
     </div>
   );
 };
-
-export default ClonePermissionsSection;

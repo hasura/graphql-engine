@@ -49,5 +49,3 @@ export const PermissionsTab: React.FC<PermissionsTabProps> = ({
     </div>
   );
 };
-
-export default PermissionsTab;

@@ -59,21 +59,3 @@ export const registerEETrialLicenseAlreadyAppliedMutation =
       { status: 200 },
     );
   });
-
-export const activateEETrialMutatationSuccess =
-  controlPlaneApi.mutation<EETrialRegistrationResponse>(
-    'registerEETrial',
-    () => {
-      return HttpResponse.json(
-        {
-          data: {
-            registerEETrial: {
-              client_id: 'id',
-              client_secret: 'secret',
-            },
-          },
-        },
-        { status: 200 },
-      );
-    },
-  );

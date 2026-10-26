@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import LZString from 'lz-string';
 import { useHref } from 'react-router';
 import { useGetSchema } from '../hooks/useGetSchema';
@@ -182,7 +182,7 @@ export const SchemaDetailsPanel = ({ schema }: { schema: Schema }) => {
   );
 };
 
-export const SchemaView = ({ schema }: { schema: string }) => (
+const SchemaView = ({ schema }: { schema: string }) => (
   <div className="min-w-0 py-4">
     <AceEditor
       mode="graphqlschema"
@@ -197,7 +197,7 @@ export const SchemaView = ({ schema }: { schema: string }) => (
   </div>
 );
 
-export const ChangesView = ({
+const ChangesView = ({
   changes,
   role,
 }: {

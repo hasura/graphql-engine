@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
 import type { Metadata, Source } from '@hasura/shared/types';
 
-export type DataSourceState = Metadata & {
+type DataSourceState = Metadata & {
   currentSource: Source;
 };
 

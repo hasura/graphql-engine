@@ -6,12 +6,6 @@ export type { Selection } from './PermissionsTable';
 
 export { PermissionsTableView } from './components/PermissionsTableView';
 
-export type {
-  PermissionsTableColumn,
-  PermissionsTableRow,
-  PermissionsTableRoleCell,
-  PermissionsTableCellData,
-  PermissionsTableViewProps,
-} from './components/PermissionsTableView';
+export type { PermissionsTableRow } from './components/PermissionsTableView';
 
 export { PermissionsLegend } from './components/PermissionsLegend';

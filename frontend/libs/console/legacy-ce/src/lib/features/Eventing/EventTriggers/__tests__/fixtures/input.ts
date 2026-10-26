@@ -50,12 +50,6 @@ export const eventTriggerStateWithoutHeaders: LocalEventTriggerState = {
     type: 'static',
   },
 };
-
-export const source = {
-  name: 'default',
-  driver: 'postgres',
-} as const;
-
 export const requestTransform: EventRequestTransform = {
   version: 2,
   template_engine: 'Kriti',
