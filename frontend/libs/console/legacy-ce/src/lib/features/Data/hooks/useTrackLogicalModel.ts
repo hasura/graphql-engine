@@ -112,11 +112,11 @@ export const getTrackLogicalModelPayload = ({
   return payload;
 };
 
-export type TrackLogicalModel = {
+type TrackLogicalModel = {
   dataSourceName: string;
 } & LogicalModel;
 
-export type TrackLogicalModelArgs = {
+type TrackLogicalModelArgs = {
   data: TrackLogicalModel;
   editDetails?: { originalName: string };
 } & MetadataMigrationOptions;

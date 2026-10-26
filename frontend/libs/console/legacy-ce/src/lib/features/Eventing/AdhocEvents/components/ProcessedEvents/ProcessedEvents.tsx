@@ -16,7 +16,7 @@ const ProcessedEvents: React.FC = () => {
     ],
   });
 
-  const { data: rows } = useGetScheduledEvents({
+  const { data: rows, isLoading } = useGetScheduledEvents({
     type: 'one_off',
     limit: paginationState.limit,
     offset: paginationState.offset,
@@ -30,6 +30,7 @@ const ProcessedEvents: React.FC = () => {
       <div className="mt-6" data-test="event-filter-table">
         <EventsTable
           rows={rows ?? []}
+          isLoading={isLoading}
           paginationState={paginationState}
           setPaginationState={setPaginationState}
           columns={['id', 'status', 'scheduled_time', 'created_at', 'tries']}

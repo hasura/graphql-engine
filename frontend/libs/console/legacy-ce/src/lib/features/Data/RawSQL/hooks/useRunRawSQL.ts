@@ -42,7 +42,7 @@ type RunSQLProps = RunSqlArgs & {
   };
 };
 
-export type UseRunRawSQLOptions = Omit<
+type UseRunRawSQLOptions = Omit<
   UseMutationOptions<string[][], unknown, RunSQLProps>,
   'mutationFn' | 'mutationKey'
 >;

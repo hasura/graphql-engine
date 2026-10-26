@@ -29,7 +29,7 @@ export const emptyUniqueKeyFormValues: UniqueKeyFormValues = {
   columns: [],
 };
 
-export type UniqueKeyFormProps = {
+type UniqueKeyFormProps = {
   title: string;
   submitLabel: string;
   defaultValues: UniqueKeyFormValues;
@@ -111,5 +111,3 @@ export const UniqueKeyForm = ({
     </DelayedDialog>
   );
 };
-
-export default UniqueKeyForm;

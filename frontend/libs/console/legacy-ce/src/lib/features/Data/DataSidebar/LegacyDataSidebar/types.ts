@@ -14,9 +14,3 @@ export type SourceItem = {
   inconsistency?: string;
   children?: SourceItem[];
 };
-
-export const activeStyle = {
-  color: '#fd9540',
-};
-
-export const legacyIconStyles = 'ml-2 mr-[15px]';

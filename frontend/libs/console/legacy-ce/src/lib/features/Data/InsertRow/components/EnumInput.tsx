@@ -1,7 +1,7 @@
 import { useImperativeHandle, useState } from 'react';
 import { Select } from '@hasura/shared/ui';
 
-export type EnumInputProps = {
+type EnumInputProps = {
   name?: string;
   /** the allowed values, from the referenced enum table */
   values: string[];

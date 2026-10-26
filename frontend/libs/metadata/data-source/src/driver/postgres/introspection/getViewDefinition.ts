@@ -3,7 +3,7 @@ import { PostgresTable } from '../types';
 import { runSQL } from '@hasura/metadata/api';
 import { PostgresFamilyDriver, RunSQLResponse } from '@hasura/shared/types';
 
-export const getViewDefinitionSql = (table: PostgresTable) => `
+const getViewDefinitionSql = (table: PostgresTable) => `
   SELECT
     CASE WHEN pg_has_role(c.relowner, 'USAGE') THEN pg_get_viewdef(c.oid)
     ELSE null

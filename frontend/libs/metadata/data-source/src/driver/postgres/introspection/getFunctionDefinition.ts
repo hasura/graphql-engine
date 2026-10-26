@@ -23,7 +23,7 @@ const adaptFunctionDefinitions = (
   }));
 };
 
-export const getPostgresFunctionDefinitionCurry =
+const getPostgresFunctionDefinitionCurry =
   (driver: PostgresFamilyDriver) =>
   async ({
     endpoints,

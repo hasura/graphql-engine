@@ -10,7 +10,7 @@ import { MetadataWrapper } from '../../../components';
 import { MetadataSelectors } from '@hasura/metadata/helpers';
 import { Flex } from '@radix-ui/themes';
 
-export type NativeQueryRelationshipWidgetProps = {
+type NativeQueryRelationshipWidgetProps = {
   fromNativeQuery: string;
   dataSourceName: string;
   defaultValues?: NativeQueryRelationshipFormSchema;

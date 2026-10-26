@@ -30,6 +30,16 @@ export const tableContext = createContext<TableContext>({
   },
 });
 
+/**
+ * The relationships a permission can use: the server accepts a remote database
+ * relationship to a source of any kind, but only on a single column join.
+ * Remote schema relationships aren't supported.
+ */
+export const isPermissionRelationship = (relationship: Relationships[number]) =>
+  relationship.type === 'localRelationship' ||
+  (relationship.type === 'remoteDatabaseRelationship' &&
+    Object.keys(relationship.definition.mapping).length === 1);
+
 export const TableProvider = ({
   children,
   table: defaultTable,
@@ -76,10 +86,6 @@ export const TableProvider = ({
   if (syncKey !== prevSyncKey) {
     setPrevSyncKey(syncKey);
     const closestTable = findTable(tables, closestTableName, closestSource);
-    const supportedSources = tables
-      .map((i) => i.dataSource)
-      .filter((s) => s?.kind === 'postgres')
-      .map((s) => s?.name);
     const foundTable = findTable(tables, table, source);
     let skipObjectPath = false;
     if (foundTable) {
@@ -89,13 +95,7 @@ export const TableProvider = ({
         skipObjectPath = true;
       } else {
         setRelationships(
-          foundTable.relationships.filter((rel) => {
-            return (
-              rel.type === 'localRelationship' ||
-              (rel.type !== 'remoteSchemaRelationship' &&
-                supportedSources?.includes(rel.definition.toSource))
-            );
-          }),
+          foundTable.relationships.filter(isPermissionRelationship),
         );
       }
     }

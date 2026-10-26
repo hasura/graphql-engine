@@ -1,5 +1,5 @@
 import { Flex } from '@radix-ui/themes';
-import { CardedTable, IndicatorCard, SkeletonList } from '@hasura/shared/ui';
+import { CardedTable, IndicatorCard } from '@hasura/shared/ui';
 import { Table } from '@hasura/shared/types';
 import { useListAllDatabaseRelationships } from '../../hooks/useListAllDatabaseRelationships';
 import { MODE, Relationship } from '../../types';
@@ -7,23 +7,42 @@ import { RelationshipMapping } from './parts/RelationshipMapping';
 import { RowActions } from './parts/RowActions';
 import { TargetName } from './parts/TargetName';
 
-export interface AvailableRelationshipsListProps {
+interface AvailableRelationshipsListProps {
   dataSourceName: string;
   onAction: (relationship: Relationship, mode: MODE) => void;
   table: Table;
 }
+
+const COLUMNS = ['NAME', 'SOURCE', 'TYPE', 'RELATIONSHIP', ''];
 
 export const AvailableRelationshipsList = ({
   dataSourceName,
   onAction,
   table,
 }: AvailableRelationshipsListProps) => {
-  const { data: relationships } = useListAllDatabaseRelationships({
+  const {
+    data: relationships,
+    isPending,
+    error,
+  } = useListAllDatabaseRelationships({
     dataSourceName,
     table,
   });
 
-  if (!relationships) return <SkeletonList count={7} />;
+  const fetchError = error.find(Boolean);
+
+  if (fetchError)
+    return (
+      <IndicatorCard
+        status="negative"
+        headline="Failed to load the relationships."
+        showIcon
+      >
+        {fetchError.message}
+      </IndicatorCard>
+    );
+
+  if (isPending) return <CardedTable columns={COLUMNS} data={[]} loading />;
 
   if (!relationships.length)
     return (
@@ -37,7 +56,7 @@ export const AvailableRelationshipsList = ({
   return (
     <div>
       <CardedTable
-        columns={['NAME', 'SOURCE', 'TYPE', 'RELATIONSHIP', '']}
+        columns={COLUMNS}
         data={relationships.map((relationship) => [
           relationship.name,
           <Flex align="center" gap="2" key={`${relationship.name}-target`}>

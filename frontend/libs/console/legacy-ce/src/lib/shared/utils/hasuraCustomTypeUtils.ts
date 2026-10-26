@@ -17,15 +17,6 @@ export const inbuiltTypes = {
 export const filterNameLessTypeLess = (arr) => {
   return arr.filter((item) => !!item.name && !!item.type);
 };
-
-export const filterNameless = (arr) => {
-  return arr.filter((item) => !!item.name);
-};
-
-export const filterValueLess = (arr) => {
-  return arr.filter((item) => !!item.value);
-};
-
 export const mergeFlatCustomTypes = (
   newTypes: FlattenCustomType[],
   existingTypes: FlattenCustomType[],

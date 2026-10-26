@@ -4,7 +4,7 @@ import { InheritedRole } from '@hasura/shared/types';
 import { ActionContext } from './InheritedRoles';
 import { Flex } from '@radix-ui/themes';
 
-export type InheritedRolesTableProps = {
+type InheritedRolesTableProps = {
   inheritedRoles: InheritedRole[];
 };
 

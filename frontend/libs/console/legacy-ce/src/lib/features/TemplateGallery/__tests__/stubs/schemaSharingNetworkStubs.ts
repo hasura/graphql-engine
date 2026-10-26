@@ -4,12 +4,10 @@ import {
   ROOT_CONFIG_PATH,
   ServerJsonRootConfig,
 } from '../../types';
-import { HasuraMetadataV3, MetadataTable } from '@hasura/shared/types';
+const CATEGORY_1 = 'AAAAAAAA';
+const CATEGORY_2 = 'BBBBBBBB';
 
-export const CATEGORY_1 = 'AAAAAAAA';
-export const CATEGORY_2 = 'BBBBBBBB';
-
-export const MOCK_ROOT_CONFIG: ServerJsonRootConfig = {
+const MOCK_ROOT_CONFIG: ServerJsonRootConfig = {
   'template-1': {
     template_version: '1',
     metadata_version: '3',
@@ -61,48 +59,7 @@ export const MOCK_ROOT_CONFIG: ServerJsonRootConfig = {
     category: CATEGORY_2,
   },
 };
-
-export const CURRENT_MOCK_METAe: HasuraMetadataV3 = {
-  version: 3,
-  inherited_roles: [],
-  actions: [],
-  allowlist: [],
-  cron_triggers: [],
-  query_collections: [],
-  remote_schemas: [],
-  rest_endpoints: [],
-  sources: [
-    {
-      name: 'default',
-      kind: 'postgres',
-      tables: [
-        {
-          table: {
-            schema: '_onetoone',
-            name: 'owner',
-          },
-        } as MetadataTable,
-      ],
-      configuration: {
-        connection_info: {
-          use_prepared_statements: true,
-          database_url: {
-            from_env: 'HASURA_GRAPHQL_DATABASE_URL',
-          },
-          isolation_level: 'read-committed',
-          pool_settings: {
-            connection_lifetime: 600,
-            retries: 1,
-            idle_timeout: 180,
-            max_connections: 50,
-          },
-        },
-      },
-    },
-  ],
-};
-
-export const MOCK_ONE_TO_ONE_METADATA = {
+const MOCK_ONE_TO_ONE_METADATA = {
   resource_version: 13,
   metadata: {
     version: 3,

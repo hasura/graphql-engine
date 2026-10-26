@@ -8,12 +8,6 @@ export type Permission = {
   columns: string[];
   isNew: boolean;
 };
-
-export type PermissionId = {
-  source: Permission['source'];
-  name: Permission['roleName'];
-};
-
 export type Action = 'select';
 
 export type LogicalModelWithPermissions = LogicalModelWithSource & {
@@ -25,12 +19,6 @@ export type LogicalModelWithPermissions = LogicalModelWithSource & {
     };
   }[];
 };
-
-export type Role = {
-  name: string;
-  isNew?: boolean;
-};
-
 export type OnSave = (permission: Permission) => Promise<void>;
 
 export type OnDelete = (permission: Permission) => Promise<void>;

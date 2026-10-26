@@ -5,7 +5,7 @@ import { getSchemasForDb } from './utils';
 import { modalOpenFn } from './types';
 import { useGlobalSchemaSharingConfiguration } from './hooks/useGlobalSchemaSharingConfiguration';
 import { CardedTable, IndicatorCard, Text } from '@hasura/shared/ui';
-import { Heading, Link, Skeleton } from '@radix-ui/themes';
+import { Heading, Link } from '@radix-ui/themes';
 
 export const TemplateGalleryBody: React.FC<{
   onModalOpen: modalOpenFn;
@@ -13,14 +13,6 @@ export const TemplateGalleryBody: React.FC<{
   source: Source;
 }> = ({ onModalOpen, showHeader = true, source }) => {
   const { data, isFetching, error } = useGlobalSchemaSharingConfiguration();
-
-  if (!data && isFetching) {
-    return (
-      <Text as="p" align="center">
-        Loading templates...
-      </Text>
-    );
-  }
 
   if (!data && error) {
     return (
@@ -32,7 +24,7 @@ export const TemplateGalleryBody: React.FC<{
 
   const templateForDb = getSchemasForDb(data ?? [], source.kind);
 
-  if (!templateForDb.length) {
+  if (!isFetching && !templateForDb.length) {
     return (
       <Text as="p" align="center">
         No templates
@@ -52,28 +44,27 @@ export const TemplateGalleryBody: React.FC<{
         with the functionality of the Hasura platform.
       </Text>
       <div className="my-4">
-        <Skeleton loading={isFetching}>
-          <CardedTable
-            columns={['Template Name', 'Description']}
-            data={templateForDb.flatMap((section) => [
-              [
-                <Text key={section.name} weight="bold">
-                  {section.name}
-                </Text>,
-              ],
-              ...section.templates.map((template) => [
-                <Link
-                  key={template.title}
-                  onClick={() => onModalOpen(template)}
-                  className="cursor-pointer!"
-                >
-                  {template.title}
-                </Link>,
-                template.description,
-              ]),
-            ])}
-          />
-        </Skeleton>
+        <CardedTable
+          columns={['Template Name', 'Description']}
+          loading={isFetching}
+          data={templateForDb.flatMap((section) => [
+            [
+              <Text key={section.name} weight="bold">
+                {section.name}
+              </Text>,
+            ],
+            ...section.templates.map((template) => [
+              <Link
+                key={template.title}
+                onClick={() => onModalOpen(template)}
+                className="cursor-pointer!"
+              >
+                {template.title}
+              </Link>,
+              template.description,
+            ]),
+          ])}
+        />
       </div>
       <Text as="p">
         Want to contribute to the official template gallery?{' '}

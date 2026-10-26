@@ -8,7 +8,6 @@ import {
   LearnMoreLink,
   useHasuraAlert,
   hasuraToast,
-  SkeletonList,
   showErrorNotification,
 } from '@hasura/shared/ui';
 import {
@@ -21,7 +20,7 @@ import {
   useTrackFunctions,
 } from '@hasura/metadata/api';
 import { FunctionDisplayName } from './FunctionDisplayName';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { TableFunction } from '@hasura/shared/types';
 import { TrackableListMenu } from '../../components/TrackableListMenu';
 import { usePaginatedSearchableList } from '../../hooks';
@@ -34,7 +33,7 @@ import {
   MetadataSelectors,
 } from '@hasura/metadata/helpers';
 
-export type UntrackedFunctionsProps = {
+type UntrackedFunctionsProps = {
   dataSourceName: string;
   isLoading?: boolean;
   untrackedFunctions: IntrospectedFunction[];
@@ -79,7 +78,8 @@ export const UntrackedFunctions = (props: UntrackedFunctionsProps) => {
     },
   });
 
-  if (isLoading) return <SkeletonList count={5} />;
+  if (isLoading)
+    return <CardedTable columns={['Function', '']} data={[]} loading />;
 
   if (!untrackedFunctions.length)
     return (

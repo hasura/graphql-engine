@@ -28,47 +28,6 @@ const fetchFiltersData = gql`
     }
   }
 `;
-
-const fetchOperationTypes = gql`
-  query fetchOperationTypesForErrors {
-    operations(distinct_on: type) {
-      operation_type: type
-    }
-  }
-`;
-
-const fetchRoles = gql`
-  query fetchRolesForErrors {
-    http_logs(distinct_on: user_role) {
-      user_role
-    }
-  }
-`;
-
-const fetchClientNames = gql`
-  query fetchClientNamesForErrors {
-    http_logs(distinct_on: client_name) {
-      client_name
-    }
-  }
-`;
-
-const fetchErrorCodes = gql`
-  query fetchErrorCodes {
-    http_logs(distinct_on: error_code) {
-      error_code
-    }
-  }
-`;
-
-const fetchErrorOperations = gql`
-  query fetchErrorOperations {
-    frequent_errors(distinct_on: operation_name) {
-      operation_name
-    }
-  }
-`;
-
 const getFetchErrorsWithGroupBy = () => {
   const fetchGroupedErrors = gql`
     query fetchGroupedErrors(
@@ -171,13 +130,4 @@ const searchErrorsOverTime = gql`
   }
 `;
 
-export {
-  fetchErrorOperations,
-  fetchErrorCodes,
-  fetchOperationTypes,
-  fetchRoles,
-  fetchClientNames,
-  searchErrorsOverTime,
-  getFetchErrorsWithGroupBy,
-  fetchFiltersData,
-};
+export { searchErrorsOverTime, getFetchErrorsWithGroupBy, fetchFiltersData };

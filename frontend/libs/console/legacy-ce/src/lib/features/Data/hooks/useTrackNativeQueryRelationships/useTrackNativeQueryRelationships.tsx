@@ -5,22 +5,12 @@ import {
 } from '@hasura/metadata/api';
 import { MetadataSelectors } from '@hasura/metadata/helpers';
 
-import {
-  NativeQuery,
-  NativeQueryRelationship,
-  Source,
-} from '@hasura/shared/types';
+import { NativeQueryRelationship } from '@hasura/shared/types';
 import { NativeQueryMigrationBuilder } from '../../LogicalModels/MigrationBuilder';
 
-export type TrackNativeQueryRelationshipsProps = NativeQueryRelationship & {
+type TrackNativeQueryRelationshipsProps = NativeQueryRelationship & {
   type: 'object' | 'array';
 };
-
-export type UntrackNativeQuery = { source: Source } & Pick<
-  NativeQuery,
-  'root_field_name'
->;
-
 export const useTrackNativeQueryRelationships = (
   dataSourceName: string,
   nativeQueryName: string,

@@ -2,8 +2,6 @@ import { Button, IndicatorCard, LearnMoreLink } from '@hasura/shared/ui';
 import { FaRedoAlt, FaExternalLinkAlt } from 'react-icons/fa';
 import { Flex } from '@radix-ui/themes';
 
-import React from 'react';
-
 export function AccelerateProject({
   isLoading,
   onReCheckClick,

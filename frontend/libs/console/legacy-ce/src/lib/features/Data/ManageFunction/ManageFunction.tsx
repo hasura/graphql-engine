@@ -94,7 +94,7 @@ export const ManageFunction: React.FC = () => {
   );
 };
 
-export const ManageFunctionTabs = ({
+const ManageFunctionTabs = ({
   source,
   currentFunction,
 }: {

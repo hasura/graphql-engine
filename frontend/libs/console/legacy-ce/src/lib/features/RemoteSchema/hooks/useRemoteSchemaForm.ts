@@ -4,7 +4,7 @@ import type {
   RemoteSchemaCustomization,
 } from '@hasura/shared/types';
 
-export type FormState = {
+type FormState = {
   manualUrl: string | null;
   envName: string | null;
   timeoutConf: string;
@@ -14,20 +14,6 @@ export type FormState = {
   comment?: string;
   customization?: RemoteSchemaCustomization;
 };
-
-export type EditState = {
-  id: number;
-  isModify: boolean;
-  originalName: string;
-  originalHeaders: any[];
-  originalUrl: string;
-  originalEnvUrl: string;
-  originalTimeoutConf: string;
-  originalForwardClientHeaders: boolean;
-  originalComment?: string;
-  originalCustomization?: RemoteSchemaCustomization;
-};
-
 const createFormState = (existingRemoteSchema?: RemoteSchema): FormState => ({
   name: existingRemoteSchema?.name ?? '',
   manualUrl:

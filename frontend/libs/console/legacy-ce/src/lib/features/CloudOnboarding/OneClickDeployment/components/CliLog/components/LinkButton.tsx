@@ -2,7 +2,7 @@ import { IconType } from 'react-icons';
 import { Button } from '@hasura/shared/ui';
 import { Link } from '@radix-ui/themes';
 
-export type LinkButtonProps = {
+type LinkButtonProps = {
   url: string;
   buttonText: string;
   icon?: IconType;

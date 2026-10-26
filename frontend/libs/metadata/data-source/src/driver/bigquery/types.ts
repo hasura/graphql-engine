@@ -25,19 +25,6 @@ export const DataTypeToSQLTypeMap: Record<
 };
 
 export const DataTypeScalars = Object.values(DataTypeToSQLTypeMap).flat();
-
-export const columnDataTypes = {
-  INTEGER: 'integer',
-  BIGINT: 'bigint',
-  GUID: 'guid',
-  JSONDTYPE: 'nvarchar',
-  DATETIMEOFFSET: 'timestamp with time zone',
-  NUMERIC: 'numeric',
-  DATE: 'date',
-  TIME: 'time',
-  TEXT: 'text',
-};
-
 export const bigQueryCapabilities: Capabilities = {
   queries: {
     foreach: {},

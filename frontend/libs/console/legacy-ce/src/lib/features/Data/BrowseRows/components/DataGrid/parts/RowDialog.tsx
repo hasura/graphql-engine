@@ -46,7 +46,7 @@ const ArrayValue = ({ items }: { items: unknown[] }) => {
 };
 
 /** Renders a column value with a component suited to its data type. */
-export const RowValue = ({
+const RowValue = ({
   value,
   column,
 }: {

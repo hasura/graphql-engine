@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Dialog } from '@hasura/shared/ui';
 import { BenefitsView } from '../BenefitsView';
 import { Form } from './Form';

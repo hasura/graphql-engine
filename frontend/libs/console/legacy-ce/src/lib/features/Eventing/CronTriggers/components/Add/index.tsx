@@ -7,7 +7,7 @@ import { CRON_TRIGGER, EVENTS_SERVICE_HEADING } from '@hasura/shared/types';
 import { Heading } from '@radix-ui/themes';
 import { dataRoutes } from '@hasura/shared/utils';
 
-export const AddScheduledTrigger: React.FC = () => {
+const AddScheduledTrigger: React.FC = () => {
   useDocumentTitle(
     dataRoutes.getReactHelmetTitle(
       `Create ${CRON_TRIGGER}`,

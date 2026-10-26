@@ -31,22 +31,6 @@ const fetchFiltersData = gql`
     }
   }
 `;
-
-const addToOperationGroup = gql`
-  mutation addToOperationGroup(
-    $insertObj: [operation_groups_operations_insert_input!]!
-  ) {
-    insert_operation_groups_operations(objects: $insertObj) {
-      affected_rows
-      returning {
-        operation_group_name
-        operation_name
-        query
-      }
-    }
-  }
-`;
-
 const fetchOperationById = gql`
   query fetchOperationById($projectId: uuid!, $requestId: String!) {
     operations: operation_logs(
@@ -79,128 +63,6 @@ const fetchOperationById = gql`
     }
   }
 `;
-
-const fetchHttpOperationById = gql`
-  query fetchHttpOperationById(
-    $projectId: uuid!
-    $requestId: String!
-    $time: timestamptz
-  ) {
-    operations: operation_logs(
-      where: {
-        project_id: { _eq: $projectId }
-        request_id: { _eq: $requestId }
-        time: { _eq: $time }
-      }
-      limit: 1
-    ) {
-      operation_id
-      time
-      operation_name
-      client_name
-      request_id
-      request_size
-      server_client_id
-      user_role
-      execution_time
-      response_size
-      error
-      query
-      user_vars
-      generated_sql
-      request_headers: http_info(path: "request_headers")
-      operation_type
-      null_response_logs(where: { transport: { _eq: "http" } }, limit: 1) {
-        nulls
-        empty_arrays
-      }
-    }
-  }
-`;
-
-const fetchWsOperationById = gql`
-  query fetcWsOperationById($projectId: uuid!, $requestId: String!) {
-    operations: operation_logs(
-      where: {
-        project_id: { _eq: $projectId }
-        request_id: { _eq: $requestId }
-      }
-      limit: 1
-    ) {
-      operation_id
-      time
-      operation_name
-      client_name
-      request_id
-      server_client_id
-      user_role
-      execution_time
-      response_size
-      request_size
-      error
-      query
-      user_vars
-      generated_sql
-      request_headers: headers
-      websocket_id
-      ws_operation_id
-      operation_type
-      status
-      null_response_logs(
-        where: { transport: { _eq: "ws" } }
-        limit: 1
-        order_by: { time: desc }
-      ) {
-        nulls
-        empty_arrays
-      }
-    }
-  }
-`;
-
-const fetchOperationType = gql`
-  query fetchOperationType {
-    operations(distinct_on: type) {
-      operation_type: type
-    }
-  }
-`;
-
-const fetchOperationId = gql`
-  query fetchOperationId {
-    operation_logs(
-      distinct_on: operation_id
-      where: { operation_id: { _neq: "" } }
-    ) {
-      operation_id
-    }
-  }
-`;
-
-const fetchRoles = gql`
-  query fetchRoles {
-    operation_logs(distinct_on: user_role) {
-      user_role
-    }
-  }
-`;
-
-const fetchOperationNames = gql`
-  query fetchOperations {
-    operations(distinct_on: operation_name) {
-      operation_name
-    }
-  }
-`;
-
-const fetchErrorCodes = gql`
-  query fetchErrorCodes {
-    operation_logs(distinct_on: error_code) {
-      error_code
-    }
-  }
-`;
-
 const fetchOperations = gql`
   query fetchOperations(
     $limit: Int!
@@ -274,16 +136,8 @@ const fetchSpansByRequestId = gql`
 `;
 export {
   fetchOperations,
-  fetchErrorCodes,
-  fetchOperationNames,
-  fetchRoles,
   fetchOperationById,
-  fetchOperationType,
-  fetchOperationId,
-  addToOperationGroup,
   fetchFiltersData,
-  fetchHttpOperationById,
-  fetchWsOperationById,
   getProjectConfigs,
   fetchSpansByRequestId,
 };

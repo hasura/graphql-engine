@@ -3,7 +3,7 @@ import { Source } from '@hasura/shared/types';
 import { Permission } from '../../components/types';
 import { TMigrationSingleQuery } from '@hasura/metadata/api';
 
-export interface DeleteLogicalModalBodyArgs {
+interface DeleteLogicalModalBodyArgs {
   logicalModelName: string;
   permission: Permission;
   source: Source;

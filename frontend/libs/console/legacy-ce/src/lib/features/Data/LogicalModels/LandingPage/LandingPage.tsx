@@ -63,7 +63,7 @@ const DataBoundLandingPage = ({ pathname }: { pathname: string }) => (
 // alias for exports
 export const LandingPage = DataBoundLandingPage;
 
-export const LandingPageUI = ({
+const LandingPageUI = ({
   pathname,
   data: { nativeQueries, logicalModels, storedProcedures, sources },
 }: {

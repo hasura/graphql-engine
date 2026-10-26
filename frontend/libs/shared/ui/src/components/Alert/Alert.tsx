@@ -1,6 +1,5 @@
 import { AlertDialog } from '@radix-ui/themes';
 import clsx from 'clsx';
-import React from 'react';
 import { BsCheckCircleFill } from 'react-icons/bs';
 import { z } from 'zod';
 import { reqString } from '@hasura/shared/utils';

@@ -9,7 +9,7 @@ import { Button, ErrorMessage } from '@hasura/shared/ui';
 import { NeonButtonIcons, NeonButtonProps } from '../../types';
 import { RequiredEnvVar } from '../../../../types';
 
-export type Props = {
+type Props = {
   dbEnvVar: RequiredEnvVar;
   neonButtonProps: NeonButtonProps;
 };

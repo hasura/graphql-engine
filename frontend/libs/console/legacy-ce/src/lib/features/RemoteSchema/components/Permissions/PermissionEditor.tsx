@@ -26,6 +26,7 @@ type PermissionEditorProps = {
   setSchemaDefinition: (data: string) => void;
   permCloseEdit: () => void;
   saveRemoteSchemaPermission: (
+    schemaDefinition: string,
     successCb?: () => void,
     errorCb?: () => void,
   ) => void;
@@ -120,13 +121,11 @@ const PermissionEditor: React.FC<PermissionEditorProps> = (props) => {
     permCloseEdit();
   };
 
-  const save = () => {
-    saveRemoteSchemaPermission(closeEditor);
-  };
-
   const saveFunc = () => {
+    // kept so that the selection persists if saving fails
     setSchemaDefinition(resultString);
-    save();
+    // passed as is: the state set above is only read on the next render
+    saveRemoteSchemaPermission(resultString, closeEditor);
   };
 
   const removeFunc = () => {

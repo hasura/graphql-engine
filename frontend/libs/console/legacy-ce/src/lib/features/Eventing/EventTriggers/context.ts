@@ -4,7 +4,7 @@ import { EventTrigger, Source, Table } from '@hasura/shared/types';
 
 type EventTriggerWithTableInfo = MetadataSelectors.EventTriggerWithTableInfo;
 
-export type EventTriggerDetailState = {
+type EventTriggerDetailState = {
   currentTable: Table;
   eventTrigger: EventTrigger;
   currentSource: Source;

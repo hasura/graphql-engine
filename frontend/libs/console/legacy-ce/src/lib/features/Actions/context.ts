@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
 import { Action, Metadata } from '@hasura/shared/types';
 
-export type CurrentActionState<A = Action | undefined> = Metadata & {
+type CurrentActionState<A = Action | undefined> = Metadata & {
   currentAction: A;
 };
 

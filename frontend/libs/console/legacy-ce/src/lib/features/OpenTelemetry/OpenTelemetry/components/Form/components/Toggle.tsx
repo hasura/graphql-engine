@@ -8,27 +8,26 @@ import { useFormContext, useWatch } from 'react-hook-form';
 
 type TFormValues = Record<string, unknown>;
 
-export type Schema = ZodType<TFormValues, TFormValues>;
+type Schema = ZodType<TFormValues, TFormValues>;
 
-export type ToggleProps<T extends z.infer<Schema>> =
-  FieldWrapperPassThroughProps & {
-    /**
-     * The input field name
-     */
-    name: FieldPath<T>;
-    /**
-     * The input field classes
-     */
-    className?: string;
-    /**
-     * Flag to indicate if the field is disabled
-     */
-    disabled?: boolean;
-    /**
-     * The written status can clarify to the user what the on/off statuses mean
-     */
-    writtenStatus?: { true: string; false: string };
-  };
+type ToggleProps<T extends z.infer<Schema>> = FieldWrapperPassThroughProps & {
+  /**
+   * The input field name
+   */
+  name: FieldPath<T>;
+  /**
+   * The input field classes
+   */
+  className?: string;
+  /**
+   * Flag to indicate if the field is disabled
+   */
+  disabled?: boolean;
+  /**
+   * The written status can clarify to the user what the on/off statuses mean
+   */
+  writtenStatus?: { true: string; false: string };
+};
 
 // TODO: Promote it to a shared component
 export const Toggle = <T extends z.infer<Schema>>({

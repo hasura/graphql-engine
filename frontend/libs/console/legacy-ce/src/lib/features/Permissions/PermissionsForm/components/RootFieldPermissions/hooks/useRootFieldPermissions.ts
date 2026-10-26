@@ -11,7 +11,7 @@ import {
   subscriptionRootPermissionFields,
 } from '@hasura/shared/types';
 
-export type RootFieldPermissionsType = {
+type RootFieldPermissionsType = {
   source: QualifiedDataSource;
   hasEnabledAggregations: boolean;
   hasSelectedPrimaryKeys: boolean;

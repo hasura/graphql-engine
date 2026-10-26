@@ -1,40 +1,4 @@
 import gql from 'graphql-tag';
-
-const fetchOperationType = gql`
-  query fetchOperationType {
-    operations(distinct_on: type, where: { type: { _neq: "" } }) {
-      type: operation_type
-    }
-  }
-`;
-
-const fetchOperationId = gql`
-  query fetchOperationId {
-    http_query_logs(
-      distinct_on: operation_id
-      where: { operation_id: { _neq: "" } }
-    ) {
-      operation_id
-    }
-  }
-`;
-
-const fetchRoles = gql`
-  query fetchRoles {
-    http_logs(distinct_on: user_role) {
-      user_role
-    }
-  }
-`;
-
-const fetchOperationName = gql`
-  query fetchOperations {
-    operations(distinct_on: operation_name) {
-      operation_name
-    }
-  }
-`;
-
 const fetchQueryList = gql`
   query fetchQueryList(
     $limit: Int!
@@ -124,12 +88,4 @@ const searchUsageOverTime = gql`
   }
 `;
 
-export {
-  fetchOperationName,
-  fetchQueryList,
-  searchUsageOverTime,
-  fetchOperationType,
-  fetchOperationId,
-  fetchRoles,
-  fetchQueryLogForOperation,
-};
+export { fetchQueryList, searchUsageOverTime, fetchQueryLogForOperation };

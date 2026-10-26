@@ -25,7 +25,6 @@ export { getTablesListAsTree } from './getTablesListAsTree';
 export { getSupportedOperators } from './getSupportedOperators';
 export { getTrackableFunctions } from './getTrackableFunctions';
 
-export * from './getIsTableView';
 export * from './getCheckConstraints';
 export * from './getVersion';
 export * from './getFunctionDefinition';
