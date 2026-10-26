@@ -28,7 +28,7 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Metadata.Class
 import Hasura.Prelude
-import Hasura.RQL.DDL.CustomTypes (ScalarParsingMap (..), lookupBackendScalar)
+import Hasura.RQL.DDL.CustomTypes (ScalarParsingMap (..), lookupBackendScalar, lookupBackendScalarWithAliases)
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
@@ -131,6 +131,8 @@ resolveAction env AnnotatedCustomTypes {..} ActionDefinition {..} allScalars = d
               pure $ NOCTScalar noCTScalar
           | Just nonObjectType <- HashMap.lookup argumentBaseType _actInputTypes ->
               pure nonObjectType
+          | Just scalar <- lookupBackendScalarWithAliases allScalars argumentBaseType ->
+              pure $ NOCTScalar scalar
           | otherwise ->
               throw400 InvalidParams
                 $ "the type: "
@@ -149,6 +151,8 @@ resolveAction env AnnotatedCustomTypes {..} ActionDefinition {..} allScalars = d
             pure $ AOTObject objectType
         | Just (NOCTScalar s) <- HashMap.lookup outputBaseType _actInputTypes ->
             pure (AOTScalar s)
+        | Just scalar <- lookupBackendScalarWithAliases allScalars outputBaseType ->
+            pure $ AOTScalar scalar
         | otherwise ->
             throw400 NotExists ("the type: " <> dquote outputBaseType <> " is not an object or scalar type defined in custom types")
     -- If the Action is sync:
