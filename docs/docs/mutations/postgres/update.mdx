@@ -387,12 +387,10 @@ You can increment/decrement an `int` column with a given value using the `_inc` 
   "data": {
     "update_article": {
       "affected_rows": 1,
-      "returning": [
-        {
-          "id": 1,
-          "likes": 3
-        }
-      ]
+      "returning": {
+        "id": 1,
+        "likes": 3
+      }
     }
   }
 }`}
@@ -417,12 +415,10 @@ You can increment/decrement an `int` column with a given value using the `_inc` 
   "data": {
     "update_article": {
       "affected_rows": 1,
-      "returning": [
-        {
-          "id": 1,
-          "likes": 1
-        }
-      ]
+      "returning": {
+        "id": 1,
+        "likes": 1
+      }
     }
   }
 }`}
@@ -476,15 +472,13 @@ Since the input is a json value, it should be provided through a variable.
   "data": {
     "update_article": {
       "affected_rows": 1,
-      "returning": [
-        {
-          "id": 1,
-          "extra_info": {
-            "key": "value",
-            "key1": "value1"
-          }
+      "returning": {
+        "id": 1,
+        "extra_info": {
+          "key": "value",
+          "key1": "value1"
         }
-      ]
+      }
     }
   }
 }`}
@@ -505,7 +499,7 @@ Since the input is a json value, it should be provided through a variable.
   query={`mutation update_extra_info($value: jsonb) {
   update_article(
     where: {id: {_eq: 1}},
-    _prepend: {extra_info: $value}  # initial value: {"key": "value", "key1": "value1"}
+    _prepend: {extra_info: $value}  # initial value "{"key": "value", "key1": "value1"}"
   ) {
     affected_rows
     returning {
@@ -518,16 +512,14 @@ Since the input is a json value, it should be provided through a variable.
   "data": {
     "update_article": {
       "affected_rows": 1,
-      "returning": [
-        {
-          "id": 1,
-          "extra_info": {
-            "key0": "value0",
-            "key": "value",
-            "key1": "value1"
-          }
+      "returning": {
+        "id": 1,
+        "extra_info": {
+          "key0": "value0",
+          "key": "value",
+          "key1": "value1"
         }
-      ]
+      }
     }
   }
 }`}
@@ -548,7 +540,7 @@ The input value should be a `String`.
   query={`mutation update_extra_info {
   update_article(
     where: {id: {_eq: 1}},
-    _delete_key: {extra_info: "key"}  # initial value: {"key0": "value0", "key": "value", "key1": "value1"}
+    _delete_key: {extra_info: "key"}  # initial value "{"key0": "value0, "key": "value", "key1": "value1"}"
   ) {
     affected_rows
     returning {
@@ -561,15 +553,13 @@ The input value should be a `String`.
   "data": {
     "update_article": {
       "affected_rows": 1,
-      "returning": [
-        {
-          "id": 1,
-          "extra_info": {
-            "key0": "value0",
-            "key1": "value1"
-          }
+      "returning": {
+        "id": 1,
+        "extra_info": {
+          "key0": "value0",
+          "key1": "value1"
         }
-      ]
+      }
     }
   }
 }`}
@@ -581,14 +571,14 @@ If a `jsonb` column is storing a json array, you can delete an element from the 
 
 The input value should be an `Int`.
 
-**Example:** Delete the element at zero-based index 2 (the third element) in the array value of the `jsonb` column
-`extra_info` of the `article` table:
+**Example:** Delete the element at position 2 in the array value of the `jsonb` column `extra_info` of the `article`
+table:
 
 <GraphiQLIDE
   query={`mutation update_extra_info {
   update_article(
     where: {id: {_eq: 1}},
-    _delete_elem: {extra_info: 2}  # initial value: ["a", "b", "c"]
+    _delete_elem: {extra_info: 2}  # initial value "["a", "b", "c"]"
   ) {
     affected_rows
     returning {
@@ -601,12 +591,10 @@ The input value should be an `Int`.
   "data": {
     "update_article": {
       "affected_rows": 1,
-      "returning": [
-        {
-          "id": 1,
-          "extra_info": ["a", "b"]
-        }
-      ]
+      "returning": {
+        "id": 1,
+        "extra_info": ["a", "b"]
+      }
     }
   }
 }`}
@@ -618,13 +606,13 @@ You can delete a field or element of a `jsonb` column at a specified path by usi
 
 The input value should be a `String Array`.
 
-**Example:** Delete element at json path `name.first` in the `jsonb` column `extra_info` of the author table:
+**Example:** Delete element at json path `name.last` in the `jsonb` column `extra_info` of the author table:
 
 <GraphiQLIDE
   query={`mutation update_extra_info {
   update_author(
     where: {id: {_eq: 1}},
-    _delete_at_path: {extra_info: ["name", "first"]}  # initial value: {"name": {"first": "first_name", "last": "last_name"}}
+    _delete_at_path: {extra_info: ["name", "first"]}  # initial value "{"name": {"first": "first_name", "last": "last_name"}}"
   ) {
     affected_rows
     returning {
@@ -637,16 +625,14 @@ The input value should be a `String Array`.
   "data": {
     "update_author": {
       "affected_rows": 1,
-      "returning": [
-        {
-          "id": 1,
-          "extra_info": {
-            "name": {
-              "last": "last_name"
-            }
+      "returning": {
+        "id": 1,
+        "extra_info": {
+          "name": {
+            "last": "last_name"
           }
         }
-      ]
+      }
     }
   }
 }`}
@@ -661,12 +647,12 @@ delete all the existing objects and one to add a list of new nested objects.
 
 <GraphiQLIDE
   query={`mutation updateAuthorArticles($author_id: Int!) {
-  delete_article(
+  delete_articles(
     where: {author_id: {_eq: $author_id}}
   ) {
     affected_rows
   }
-  insert_article(
+  insert_articles(
     objects: [
       {
         author_id: $author_id,
@@ -685,10 +671,10 @@ delete all the existing objects and one to add a list of new nested objects.
 }`}
   response={`{
   "data": {
-    "delete_article": {
+    "delete_article_tags": {
       "affected_rows": 3
     },
-    "insert_article": {
+    "insert_article_tags": {
       "affected_rows": 2
     }
   }

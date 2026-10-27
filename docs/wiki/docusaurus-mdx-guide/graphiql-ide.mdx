@@ -17,10 +17,6 @@ React component.
 - Nest query arguments for logical readability. Unfortunately, GraphiQL prettify does not do a good job of doing this by
   default.
 - Ensure that the order of fields in the responses is the same as in the requests for better readability.
-- Use valid GraphQL and JSON in the examples. Run `yarn validate:graphiql` to check rendered examples before opening a PR;
-  the docs build also runs this check.
-- JSON inside a JavaScript template literal needs double-escaped quotes (e.g. `\\"`) to preserve the JSON escape at
-  runtime.
 
 Use it as follows:
 
@@ -80,7 +76,7 @@ import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
             "city": "Bengaluru",
             "state": "Karnataka",
             "pincode": 560095,
-            "phone": "9090909090"
+            "phone": "9090909090",
           }
         }
       ]
@@ -121,7 +117,7 @@ Below is how it should look in UI.
             "city": "Bengaluru",
             "state": "Karnataka",
             "pincode": 560095,
-            "phone": "9090909090"
+            "phone": "9090909090",
           }
         }
       ]
