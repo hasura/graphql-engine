@@ -11,7 +11,7 @@ import { useAppContext } from '@hasura/shared/context';
 import { useInconsistentMetadata, useMetadata } from '@hasura/metadata/api';
 import { appPrefix } from '../../constants';
 import { useMemo, useState } from 'react';
-import { Em, Flex } from '@radix-ui/themes';
+import { Flex } from '@radix-ui/themes';
 
 const RemoteSchemaSubSidebar = () => {
   const location = useLocation();
@@ -41,8 +41,13 @@ const RemoteSchemaSubSidebar = () => {
   const getChildList = () => {
     if (filteredData.length === 0) {
       return (
-        <Text as="p" data-test="remote-schema-sidebar-no-schemas">
-          <Em>No remote schemas available</Em>
+        <Text
+          as="p"
+          align="center"
+          className="italic"
+          data-test="remote-schema-sidebar-no-schemas"
+        >
+          No remote schemas available
         </Text>
       );
     }

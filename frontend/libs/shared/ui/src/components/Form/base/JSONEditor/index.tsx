@@ -1,22 +1,32 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { isJsonString } from '@hasura/shared/utils';
-import { IAnnotation } from 'react-ace';
-import { AceEditor } from '../AceEditor';
+import { AceEditor, AceEditorProps } from '../AceEditor';
+import { getJsonAnnotations } from './getJsonErrorAnnotation';
 
-export interface JSONEditorProps {
+export {
+  getJsonAnnotations,
+  getJsonErrorAnnotation,
+} from './getJsonErrorAnnotation';
+
+export type JSONEditorProps = Omit<
+  AceEditorProps,
+  'mode' | 'value' | 'onChange' | 'annotations'
+> & {
   initData?: string;
   onChange: (v: string) => void;
   data: string;
-  minLines?: number;
-  disabled?: boolean;
-}
+  /** don't mark a blank editor as invalid */
+  allowEmpty?: boolean;
+};
 
 export const JSONEditor: React.FC<JSONEditorProps> = ({
   initData,
   onChange,
   data,
+  allowEmpty,
   minLines,
-  disabled,
+  invalid,
+  ...props
 }) => {
   const [value, setValue] = useState(initData || data || '');
   const prevDataRef = useRef(data);
@@ -42,12 +52,9 @@ export const JSONEditor: React.FC<JSONEditorProps> = ({
 
   // The error annotation is fully derived from the current value, so compute it
   // during render instead of mirroring it into state via an effect.
-  const annotations = React.useMemo<IAnnotation[]>(
-    () =>
-      isJsonString(value)
-        ? []
-        : [{ row: 0, column: 0, text: 'Invalid JSON', type: 'error' }],
-    [value],
+  const annotations = React.useMemo(
+    () => getJsonAnnotations(value, { allowEmpty }),
+    [value, allowEmpty],
   );
 
   // Sync the editor value when the `data` prop changes to a valid json string.
@@ -63,17 +70,18 @@ export const JSONEditor: React.FC<JSONEditorProps> = ({
 
   return (
     <AceEditor
-      mode="json"
-      onChange={setValue}
       height="5em"
-      minLines={minLines || 1}
       maxLines={15}
       width="100%"
       showPrintMargin={false}
+      setOptions={{ useWorker: false }}
+      {...props}
+      mode="json"
+      onChange={setValue}
+      minLines={minLines || 1}
       value={value}
       annotations={annotations}
-      disabled={disabled}
-      setOptions={{ useWorker: false }}
+      invalid={invalid ?? annotations.length > 0}
     />
   );
 };
