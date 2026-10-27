@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { Analytics, REDACT_EVERYTHING } from '@hasura/shared/analytics';
 import {
   AceEditor,
@@ -15,7 +15,7 @@ import StatementTimeout from './StatementTimeout';
 import {
   checkChangeLang,
   checkTextLength,
-  getSourceDriver,
+  parseStatementTimeout,
   unsupportedRawSQLDrivers,
 } from './utils';
 import { CLI_CONSOLE_MODE } from '@hasura/shared/types';
@@ -62,20 +62,26 @@ const RawSQL = () => {
     isPending: isLoading,
   } = useRunRawSQL();
 
-  const [statementTimeout, setStatementTimeout] = useState<number | null>(
-    Number(getLSItem(LS_KEYS.rawSqlStatementTimeout)) || 10,
-  );
+  // a cleared timeout is stored as 0 and stays cleared after a reload
+  const [statementTimeout, setStatementTimeout] = useState<number>(() => {
+    const stored = getLSItem(LS_KEYS.rawSqlStatementTimeout);
+    return stored ? parseStatementTimeout(stored) : 10;
+  });
 
   const nativeSources =
     meta?.metadata?.sources?.filter((source) => isNativeDriver(source.kind)) ??
     [];
 
-  const [selectedDatabase, setSelectedDatabase] = useState(
-    searchParams.get('source') || nativeSources?.[0]?.name,
+  // Metadata may still be loading on the first render, so the default source is
+  // resolved on every render instead of being captured in the initial state.
+  const [pickedDatabase, setPickedDatabase] = useState(
+    searchParams.get('source'),
   );
-  const selectedDriver = nativeSources.find(
-    (source) => source.name === selectedDatabase,
-  )?.kind;
+  const selectedSource =
+    nativeSources.find((source) => source.name === pickedDatabase) ??
+    nativeSources[0];
+  const selectedDatabase = selectedSource?.name;
+  const selectedDriver = selectedSource?.kind;
 
   // `suggestLangChange` is fully derived from the SQL text and the selected
   // driver, so compute it during render instead of mirroring it into state via
@@ -93,35 +99,43 @@ const RawSQL = () => {
     ? typeof dataSource.utilities.statementTimeoutSQL === 'function'
     : null;
 
-  // If the selected driver doesn't support a statement timeout, force the stored
-  // value to null. Done during render (the guard converges once the value is
-  // null) rather than in an effect, which would trigger an extra render pass.
-  if (isStatementTimeoutSupported === false && statementTimeout !== null) {
-    setStatementTimeout(null);
-  }
+  // Keep the entered timeout when switching to a driver without support for
+  // it, so it's still there when switching back; it's only left out of runs.
+  const effectiveStatementTimeout = isStatementTimeoutSupported
+    ? statementTimeout
+    : null;
 
-  const dropDownSelectorValueChange = (value: string) => {
-    const driver = getSourceDriver(nativeSources, value);
-    setSelectedDatabase(driver);
-  };
+  const isRawSQLSupported =
+    !!selectedDriver && !unsupportedRawSQLDrivers.includes(selectedDriver);
 
-  const submitSQL = () => {
-    if (!selectedDriver) {
+  // "Track this" is only sent while it's shown and enabled
+  const isTableTracked =
+    isTableTrackChecked &&
+    isRawSQLSupported &&
+    isTrackingSupported &&
+    !suggestLangChange;
+
+  const runSQL = (sql: string, migration?: { name: string }) => {
+    if (!selectedDriver || !selectedDatabase) {
       return;
     }
 
-    if (!isNativeDriver(selectedDriver)) {
-      fetchRunSQLResult({
-        source: {
-          name: selectedDatabase,
-          kind: selectedDriver,
-        },
-        sql,
-        isTableTracked: isTableTrackChecked,
-        cascade: isCascadeChecked,
-        readOnly: isReadOnlyChecked,
-        statementTimeout,
-      });
+    fetchRunSQLResult({
+      source: {
+        name: selectedDatabase,
+        kind: selectedDriver,
+      },
+      sql,
+      isTableTracked,
+      cascade: isCascadeChecked,
+      readOnly: isReadOnlyChecked,
+      statementTimeout: effectiveStatementTimeout,
+      migration,
+    });
+  };
+
+  const submitSQL = (sql: string) => {
+    if (!selectedDriver || !selectedDatabase) {
       return;
     }
 
@@ -143,31 +157,29 @@ const RawSQL = () => {
     if (migrationStatus === 'healthy') {
       if (!isMigrationChecked && isCLIMode) {
         // if migration is not checked, check if is schema modification
-        if (dataSource?.check.isSchemaModification(sql)) {
+        if (dataSource?.check.isSchemaModification(removeCommentsSQL(sql))) {
           setIsModalOpen(true);
           return;
         }
       }
 
-      migration = {
-        name: migrationName || 'run_sql_migration',
-      };
+      if (isMigrationChecked) {
+        migration = { name: migrationName || 'run_sql_migration' };
+      }
     }
 
-    fetchRunSQLResult({
-      source: {
-        name: selectedDatabase,
-        kind: selectedDriver,
-      },
-      sql,
-      isTableTracked: isTableTrackChecked,
-      cascade: isCascadeChecked,
-      readOnly: isReadOnlyChecked,
-      statementTimeout,
-      migration,
-    });
-    // navigate('/data/sql');
+    runSQL(sql, migration);
   };
+
+  const suggestedChecksRef = useRef<{
+    migration: boolean;
+    track: boolean;
+  } | null>(null);
+
+  const submitSQLRef = useRef(submitSQL);
+  useLayoutEffect(() => {
+    submitSQLRef.current = submitSQL;
+  });
 
   const getMigrationWarningModal = () => {
     const onModalClose = () => {
@@ -176,21 +188,7 @@ const RawSQL = () => {
 
     const onConfirmNoMigration = () => {
       setIsModalOpen(false);
-      if (!selectedDriver) {
-        return;
-      }
-
-      fetchRunSQLResult({
-        source: {
-          name: selectedDatabase,
-          kind: selectedDriver,
-        },
-        sql,
-        isTableTracked: isTableTrackChecked,
-        cascade: isCascadeChecked,
-        readOnly: isReadOnlyChecked,
-        statementTimeout,
-      });
+      runSQL(sql);
     };
 
     if (!isModalOpen) {
@@ -219,55 +217,55 @@ const RawSQL = () => {
   };
 
   const getSQLSection = () => {
-    const handleSQLChange = (val) => {
-      const cleanSql = removeCommentsSQL(val);
+    // What the SQL implies for "This is a migration" and "Track this".
+    const getSuggestedChecks = (cleanSql: string) => {
+      if (!dataSource?.check.isSchemaModification(cleanSql)) {
+        return { migration: false, track: false };
+      }
+
+      const objects = isTrackingSupported
+        ? (dataSource.utilities.parseCreateSchemaSQL?.(cleanSql) ?? [])
+        : [];
+      const trackedObjectNames = (
+        meta && selectedDatabase
+          ? MetadataSelectors.getTables(selectedDatabase)(meta)
+          : []
+      )
+        .map((t) => extractTableInfo(t.table))
+        .filter((info): info is NonNullable<typeof info> => Boolean(info))
+        .map((info) => [info.schema, info.name].join('.'));
+
+      // functions are left out: they may only be meant as computed fields
+      const allObjectsTrackable = objects.every(
+        (object) =>
+          object.type !== 'function' &&
+          !trackedObjectNames.includes([object.schema, object.name].join('.')),
+      );
+
+      return {
+        migration: true,
+        track: objects.length > 0 && allObjectsTrackable,
+      };
+    };
+
+    const handleSQLChange = (val: string) => {
       setSQL(val);
 
       if (!selectedDriver) {
         return;
       }
 
-      // set migration checkbox true
-      if (!dataSource?.check.isSchemaModification(cleanSql)) {
-        setIsMigrationChecked(false);
-        return;
+      // Only apply a suggestion when it changes, so a checkbox the user
+      // toggled isn't reset on every keystroke.
+      const suggested = getSuggestedChecks(removeCommentsSQL(val));
+      const previous = suggestedChecksRef.current;
+      if (suggested.migration !== previous?.migration) {
+        setIsMigrationChecked(suggested.migration);
       }
-
-      setIsMigrationChecked(true);
-      // set track this checkbox true if tracking is supported for the driver
-      if (isTrackingSupported) {
-        const objects = dataSource?.utilities.parseCreateSchemaSQL
-          ? dataSource?.utilities.parseCreateSchemaSQL(cleanSql)
-          : [];
-        if (objects?.length) {
-          const trackedTables = (
-            meta ? MetadataSelectors.getTables(selectedDatabase)(meta) : []
-          )
-            .map((t) => extractTableInfo(t.table))
-            .filter((info): info is NonNullable<typeof info> => Boolean(info));
-          const trackedObjectNames = trackedTables.map((schema) => {
-            return [schema.schema, schema.name].join('.');
-          });
-
-          const allObjectsTrackable = objects.every((object) => {
-            if (object.type === 'function') {
-              return false;
-            }
-
-            const objectName = [object.schema, object.name].join('.');
-
-            if (trackedObjectNames.includes(objectName)) {
-              return false;
-            }
-
-            return true;
-          });
-
-          setIsTableTrackChecked(allObjectsTrackable);
-        } else {
-          setIsTableTrackChecked(false);
-        }
+      if (suggested.track !== previous?.track) {
+        setIsTableTrackChecked(suggested.track);
       }
+      suggestedChecksRef.current = suggested;
     };
 
     return (
@@ -285,9 +283,14 @@ const RawSQL = () => {
             {
               name: 'submit',
               bindKey: { win: 'Ctrl-Enter', mac: 'Command-Enter' },
+              // react-ace registers commands only on mount, so this goes
+              // through a ref to reach the latest state. The editor text is
+              // read directly since `onChange` is debounced.
               exec: ((editor) => {
-                if (editor?.getValue()) {
-                  submitSQL();
+                const value = editor?.getValue();
+                if (value) {
+                  setSQL(value);
+                  submitSQLRef.current(value);
                 }
               }) as any,
             },
@@ -442,12 +445,10 @@ const RawSQL = () => {
     return null;
   };
 
-  const updateStatementTimeout = (value) => {
-    const timeoutInSeconds = Number(value.trim());
-    const isValidTimeout = timeoutInSeconds > 0 && !isNaN(timeoutInSeconds);
-
+  const updateStatementTimeout = (value: string) => {
+    const timeoutInSeconds = parseStatementTimeout(value);
     setLSItem(LS_KEYS.rawSqlStatementTimeout, timeoutInSeconds.toString());
-    setStatementTimeout(isValidTimeout ? timeoutInSeconds : 0);
+    setStatementTimeout(timeoutInSeconds);
   };
 
   return (
@@ -468,15 +469,14 @@ const RawSQL = () => {
                   name: source.name,
                   driver: source.kind,
                 }))}
-                defaultValue={selectedDatabase}
-                onChange={dropDownSelectorValueChange}
+                value={selectedDatabase}
+                onChange={setPickedDatabase}
               />
             </div>
           </div>
           <div className="my-4">{getSQLSection()}</div>
           <div>
-            {!selectedDriver ||
-            unsupportedRawSQLDrivers.includes(selectedDriver) ? null : (
+            {!isRawSQLSupported ? null : (
               <>
                 {isTrackingSupported ? getTrackThisSection() : null}
                 {getMetadataCascadeSection()}
@@ -485,7 +485,7 @@ const RawSQL = () => {
               </>
             )}
 
-            {statementTimeout !== null && isStatementTimeoutSupported && (
+            {isStatementTimeoutSupported && (
               <StatementTimeout
                 statementTimeout={statementTimeout}
                 isCliMode={isCLIMode}
@@ -496,15 +496,12 @@ const RawSQL = () => {
             <div className="mt-6">
               <Button
                 type="submit"
-                onClick={submitSQL}
-                mode="default"
+                onClick={() => submitSQL(sql)}
+                mode="primary"
                 data-test="run-sql"
-                disabled={
-                  !sql?.length ||
-                  !selectedDriver ||
-                  unsupportedRawSQLDrivers.includes(selectedDriver)
-                }
+                disabled={!sql?.length || !isRawSQLSupported}
                 loading={isLoading}
+                loadingText="Running..."
               >
                 Run!
               </Button>

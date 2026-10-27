@@ -1,15 +1,14 @@
 import { hasuraToast } from '@hasura/shared/ui';
-import type { NativeDriver } from '@hasura/shared/types';
 
 // NOTE: Raw SQL is disabled for Cockroach due to this https://github.com/hasura/graphql-engine/issues/8794
 export const unsupportedRawSQLDrivers = ['cockroach'];
 
-export const getSourceDriver = (
-  dataSources: { name: string; kind?: string }[],
-  source: string,
-): NativeDriver => {
-  const sourceObject = dataSources.find(({ name }) => name === source);
-  return (sourceObject?.kind as NativeDriver) || 'postgres';
+/** Seconds from the timeout input, where 0 means no timeout. */
+export const parseStatementTimeout = (value: string): number => {
+  const timeoutInSeconds = Number(value.trim());
+  return Number.isFinite(timeoutInSeconds) && timeoutInSeconds > 0
+    ? timeoutInSeconds
+    : 0;
 };
 
 export const checkChangeLang = (

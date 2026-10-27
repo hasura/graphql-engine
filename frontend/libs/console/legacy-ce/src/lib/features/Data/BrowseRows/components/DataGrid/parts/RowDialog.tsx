@@ -62,6 +62,8 @@ const RowValue = ({
     case 'json':
       return (
         <JsonCodeBlock
+          scrollable
+          className="w-full"
           value={
             typeof value === 'string' && isJsonString(value)
               ? JSON.parse(value)
@@ -114,7 +116,7 @@ const getRowColumns = (
 
 /** A read-only view of a table row. */
 export const RowDialog = ({ onClose, row, columns }: RowDialogProps) => (
-  <Dialog title="Table Row" onClose={onClose}>
+  <Dialog title="Table Row" onClose={onClose} size="xxxl">
     <DataList
       orientation={{ initial: 'vertical', sm: 'horizontal' }}
       size="2"
