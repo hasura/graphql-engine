@@ -141,9 +141,6 @@ export const useRunRawSQL = (
     hasuraToast({
       type: props.isTableTracked ? 'info' : 'success',
       title: 'SQL executed!',
-      message: props.isTableTracked
-        ? 'Continue to track resources...'
-        : undefined,
     });
 
     const result = queryResults?.[0] ?? null;
