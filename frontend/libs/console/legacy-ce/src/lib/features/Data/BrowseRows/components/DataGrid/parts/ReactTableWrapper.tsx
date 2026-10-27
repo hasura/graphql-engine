@@ -32,6 +32,7 @@ import { dataRoutes } from '@hasura/shared/utils';
 import { RowDialog } from './RowDialog';
 import { EditRowDialog } from './EditRowDialog';
 import { toCloneRowState } from '../../../../InsertRow/cloneRow';
+import { formatCellValue } from '../utils';
 
 interface ReactTableWrapperProps {
   disabled: boolean;
@@ -56,12 +57,6 @@ interface ReactTableWrapperProps {
   source: Source;
   table: HasuraTable;
 }
-
-const renderColumnData = (data: any) => {
-  if (['bigint', 'string', 'number'].includes(typeof data)) return data;
-
-  return JSON.stringify(data);
-};
 
 const columnHelper = createColumnHelper<
   SortableSelectableTableFeatures,
@@ -127,7 +122,7 @@ export const ReactTableWrapper: React.FC<ReactTableWrapperProps> = ({
       enableSorting: true,
       enableMultiSort: true,
       cell: (info: any) => {
-        const value = renderColumnData(info.getValue()) ?? '';
+        const value = formatCellValue(info.getValue()) ?? '';
         // primary key values open the row dialog, same as the "Open" row option
         return primaryKeyNames.includes(column) ? (
           <Link
