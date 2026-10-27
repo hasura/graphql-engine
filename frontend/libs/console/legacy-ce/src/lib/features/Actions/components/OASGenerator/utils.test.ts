@@ -135,4 +135,20 @@ describe('optimizer API', () => {
     );
     expect(action).toMatchSnapshot();
   });
+
+  it('reads array items through the range loop variable', async () => {
+    const action = await generateAction(
+      optimizer as unknown as Oas3,
+      'optimise_optimise_post',
+    );
+    const transform = JSON.stringify(action.responseTransforms);
+
+    // pre_optimisation_penalties is renamed to preOptimisationPenalties, and
+    // its items must be read through that loop variable
+    expect(transform).toContain(
+      "range _, preOptimisationPenalties := $body?['pre_optimisation_penalties']",
+    );
+    expect(transform).toContain("{{preOptimisationPenalties?['end']}}");
+    expect(transform).not.toContain("{{pre_optimisation_penalties?['end']}}");
+  });
 });

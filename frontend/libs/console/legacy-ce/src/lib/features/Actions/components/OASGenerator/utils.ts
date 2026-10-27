@@ -99,6 +99,9 @@ const createTransform = (
   definition: SubDefinition,
   prefix: string,
   inverse: boolean,
+  // name of the key this definition is generated under; for an array it is
+  // also the name of the `range` loop variable (see postProcessTransform)
+  key?: string,
 ): Transform => {
   try {
     if (Array.isArray(definition)) {
@@ -112,7 +115,9 @@ const createTransform = (
       typeof definition.preferredName === 'string'
     ) {
       const newPrefix =
-        prefix === '$body' ? 'item' : prefix.match(/\['(.*?)'\]/)?.[1] || '';
+        prefix === '$body'
+          ? 'item'
+          : key || prefix.match(/\['(.*?)'\]/)?.[1] || '';
       const { transform, needTransform } = createTransform(
         definition.subDefinitions,
         newPrefix,
@@ -151,6 +156,7 @@ const createTransform = (
           value.subDefinitions,
           `${prefix}?['${keyTo}']`,
           inverse,
+          keyFrom,
         );
         needTransform = needTransform || childrenNeedTransform;
         return {

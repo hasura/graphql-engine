@@ -37,19 +37,19 @@ exports[`optimizer API > should generate correctly 1`] = `
   "preOptimisationSequence": {{$body?['pre_optimisation_sequence']}},
   "postOptimisationSequence": {{$body?['post_optimisation_sequence']}},
   "preOptimisationPenalties": {{if inverse(empty($body?['pre_optimisation_penalties']))}} {{ range _, preOptimisationPenalties := $body?['pre_optimisation_penalties']}} {
-    "start": {{pre_optimisation_penalties?['start']}},
-    "end": {{pre_optimisation_penalties?['end']}},
-    "group": {{pre_optimisation_penalties?['group']}},
-    "score": {{pre_optimisation_penalties?['score']}},
-    "strand": {{pre_optimisation_penalties?['strand']}}
+    "start": {{preOptimisationPenalties?['start']}},
+    "end": {{preOptimisationPenalties?['end']}},
+    "group": {{preOptimisationPenalties?['group']}},
+    "score": {{preOptimisationPenalties?['score']}},
+    "strand": {{preOptimisationPenalties?['strand']}}
     } {{end}} {{else}} null {{end}},
   "preOptimisationScoreDetail": {{$body?['pre_optimisation_score_detail']}},
   "postOptimisationPenalties": {{if inverse(empty($body?['post_optimisation_penalties']))}} {{ range _, postOptimisationPenalties := $body?['post_optimisation_penalties']}} {
-    "start": {{post_optimisation_penalties?['start']}},
-    "end": {{post_optimisation_penalties?['end']}},
-    "group": {{post_optimisation_penalties?['group']}},
-    "score": {{post_optimisation_penalties?['score']}},
-    "strand": {{post_optimisation_penalties?['strand']}}
+    "start": {{postOptimisationPenalties?['start']}},
+    "end": {{postOptimisationPenalties?['end']}},
+    "group": {{postOptimisationPenalties?['group']}},
+    "score": {{postOptimisationPenalties?['score']}},
+    "strand": {{postOptimisationPenalties?['strand']}}
     } {{end}} {{else}} null {{end}},
   "postOptimisationScoreDetail": {{$body?['post_optimisation_score_detail']}}
 }",
