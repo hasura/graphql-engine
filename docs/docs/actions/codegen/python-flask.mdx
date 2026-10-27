@@ -361,7 +361,7 @@ Call the `Signup` action:
 }`}
   response={`{
   "data": {
-    "Signup": {
+    "signup": {
       "id": 2,
       "email": "newuser@test.com",
       "password": "$argon2id$v=19$m=102400,t=2,p=8$fSmC349hY74QoGRTD0w$OYQYd/PP9kYsy9gRnDF1oQ"
@@ -387,7 +387,7 @@ Call the `Signup` action with a duplicate:
         "path": "$",
         "code": "unexpected"
       },
-      "message": "Uniqueness violation. Duplicate key value violates unique constraint \"user_email_key\""
+      "message": "Uniqueness violation. Duplicate key value violates unique constraint \\"user_email_key\\""
     }
   ]
 }

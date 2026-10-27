@@ -335,10 +335,12 @@ You can increment/decrement an `int` column with a given value using the `_inc` 
   "data": {
     "update_article": {
       "affected_rows": 1,
-      "returning": {
-        "id": 1,
-        "likes": 3
-      }
+      "returning": [
+        {
+          "id": 1,
+          "likes": 3
+        }
+      ]
     }
   }
 }`}
@@ -364,10 +366,12 @@ You can increment/decrement an `int` column with a given value using the `_inc` 
   "data": {
     "update_article": {
       "affected_rows": 1,
-      "returning": {
-        "id": 1,
-        "likes": 1
-      }
+      "returning": [
+        {
+          "id": 1,
+          "likes": 1
+        }
+      ]
     }
   }
 }`}
@@ -382,12 +386,12 @@ delete all the existing objects and one to add a list of new nested objects.
 
 <GraphiQLIDE
   query={`mutation updateAuthorArticles($author_id: Int!) {
-  delete_articles(
+  delete_article(
     where: {author_id: {_eq: $author_id}}
   ) {
     affected_rows
   }
-  insert_articles(
+  insert_article(
     objects: [
       {
         author_id: $author_id,
@@ -406,10 +410,10 @@ delete all the existing objects and one to add a list of new nested objects.
 }`}
   response={`{
   "data": {
-    "delete_article_tags": {
+    "delete_article": {
       "affected_rows": 3
     },
-    "insert_article_tags": {
+    "insert_article": {
       "affected_rows": 2
     }
   }
