@@ -57,10 +57,12 @@ export const templater = (
       : 'http://localhost:8080/v1/graphql';
   if (shouldDerive && derive) {
     const operationDoc: any = parse(derive.operation);
-    const operationName =
+    // the response data is keyed by the alias of the root field, if any
+    const rootField =
       operationDoc.definitions[0].selectionSet.selections.filter(
         (s: any) => s.name.value.indexOf('__') !== 0,
-      )[0].name.value;
+      )[0];
+    const operationName = (rootField.alias ?? rootField.name).value;
 
     operationCodegen = `
 const HASURA_OPERATION = \`

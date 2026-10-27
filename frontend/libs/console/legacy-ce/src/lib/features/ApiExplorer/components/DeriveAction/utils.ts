@@ -3,6 +3,7 @@ import {
   isScalarType,
   isEnumType,
   isInputObjectType,
+  isObjectType,
   parse as sdlParse,
   validate,
   OperationDefinitionNode,
@@ -11,6 +12,7 @@ import {
   DocumentNode,
   Kind,
   FieldNode,
+  SelectionNode,
 } from 'graphql';
 import {
   wrapTypename,
@@ -61,6 +63,20 @@ const validateOperation = (
   return operationAst;
 };
 
+// Returns the fields of a selection set, including the ones selected through
+// inline fragments (`... on user { id }`). Named fragments cannot be resolved
+// because only the operation itself is derived.
+const collectFields = (selections: readonly SelectionNode[]): FieldNode[] =>
+  selections.flatMap((s) => {
+    if (s.kind === Kind.FIELD) {
+      return [s];
+    }
+    if (s.kind === Kind.INLINE_FRAGMENT) {
+      return collectFields(s.selectionSet.selections);
+    }
+    throw Error('named fragments are not supported, use inline fragments');
+  });
+
 const deriveAction = (
   operation: OperationDefinitionNode,
   clientSchema: GraphQLSchema,
@@ -80,9 +96,9 @@ const deriveAction = (
 
   // get operation name
   const rootSelection = operation.selectionSet.selections[0] as FieldNode;
-  const rootFields = rootSelection.selectionSet?.selections.filter((s) => {
-    return s.kind === Kind.FIELD && s.name.value.indexOf('__') !== 0;
-  }) as FieldNode[];
+  const rootFields = collectFields(
+    rootSelection.selectionSet?.selections ?? [],
+  ).filter((s) => s.name.value.indexOf('__') !== 0);
   const operationName = operation.name?.value;
   const selectedFields = rootFields.map((s) => {
     return (s as FieldNode).name.value;
@@ -209,7 +225,9 @@ const deriveAction = (
   const refOperationOutputType = getGraphQLUnderlyingType(
     fields[rfName].type,
   ).type;
-  if (isInputObjectType(refOperationOutputType)) {
+  // the root field returns an object type (e.g. `user`), whose scalar fields
+  // become the fields of the action output type
+  if (isObjectType(refOperationOutputType)) {
     Object.values(getTypeFields(refOperationOutputType)).forEach(
       (outputTypeField) => {
         const fieldTypeMetadata = getGraphQLUnderlyingType(
