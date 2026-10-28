@@ -1,27 +1,51 @@
-import { useCallback } from 'react';
 import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
-import { useMetadataMigration } from '@hasura/metadata/api';
+import {
+  getSourceFromInconsistentObjects,
+  useMetadataMigrationMutation,
+} from '@hasura/metadata/api';
+import type { InconsistentObject } from '@hasura/shared/types';
+
+type ReloadMetadataResponse = {
+  is_consistent?: boolean;
+  inconsistent_objects?: InconsistentObject[];
+};
+
+/**
+ * reload_metadata succeeds even when the source cannot be reached: the source
+ * (or any of its objects, e.g. a dropped table) is then reported in the
+ * inconsistent objects of the response. HGE only includes
+ * `inconsistent_objects` when the metadata is inconsistent.
+ */
+export const isSourceInconsistentAfterReload = (
+  response: ReloadMetadataResponse | undefined,
+  dataSourceName: string,
+) =>
+  getSourceFromInconsistentObjects(
+    response?.inconsistent_objects ?? [],
+  ).includes(dataSourceName);
 
 export const useReloadSource = () => {
-  const { mutate, ...rest } = useMetadataMigration({
-    onSuccess: () => {
-      hasuraToast({ type: 'success', title: 'Reload successful!' });
-    },
-    onError: (error) => {
-      showErrorNotification({ error, title: 'Failed to reload source.' });
-    },
-  });
+  return useMetadataMigrationMutation<ReloadMetadataResponse, string>(
+    async (dataSourceName) => ({
+      type: 'reload_metadata',
+      args: { reload_sources: [dataSourceName] },
+    }),
+    {
+      onSuccess: (data, dataSourceName) => {
+        if (isSourceInconsistentAfterReload(data, dataSourceName)) {
+          hasuraToast({
+            type: 'error',
+            title: 'Reloaded with inconsistencies',
+            message: `"${dataSourceName}" or some of its objects are inconsistent. Check Settings > Metadata Status for details.`,
+          });
+          return;
+        }
 
-  const reloadSource = useCallback(
-    async (dataSourceName: string) => {
-      mutate({
-        query: {
-          type: 'reload_metadata',
-          args: { reload_sources: [dataSourceName] },
-        },
-      });
+        hasuraToast({ type: 'success', title: 'Reload successful!' });
+      },
+      onError: (error) => {
+        showErrorNotification({ error, title: 'Failed to reload source.' });
+      },
     },
-    [mutate],
   );
-  return { reloadSource, ...rest };
 };
