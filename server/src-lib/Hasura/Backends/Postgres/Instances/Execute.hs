@@ -644,7 +644,7 @@ mkCurPlanTx userInfo ps@(PreparedSql q prepMap) traceQueryStatus =
         -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/database/#connection-level-attributes
         Tracing.attachMetadata [("db.system", "postgresql")]
         when (traceQueryStatus == TraceQueryEnabled)
-          $ Tracing.attachMetadata [("db.query", PG.getQueryText q)]
+          $ Tracing.attachMetadata [("db.query.text", PG.getQueryText q)]
         runIdentity
           . PG.getRow
           <$> PG.rawQE dmlTxErrorHandler q prepArgs True
