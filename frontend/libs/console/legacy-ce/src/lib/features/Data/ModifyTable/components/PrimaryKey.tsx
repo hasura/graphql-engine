@@ -168,5 +168,3 @@ export const PrimaryKey = ({ source, table }: ModifyTableProps) => {
     </>
   );
 };
-
-export default PrimaryKey;

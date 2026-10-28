@@ -1,5 +1,4 @@
 import { differenceInMinutes } from 'date-fns';
-import queryString from 'query-string';
 import Endpoints from '../../../Endpoints';
 import {
   CLIENT_NAME_SYMBOL,
@@ -17,10 +16,6 @@ import {
   transportFilters,
   WEBSOCKET_STATUS_SYMBOL,
 } from './constants';
-
-export const parseQueryString = (search) => {
-  return queryString.parse(search);
-};
 const updateQsHistory = (qs = window.encodeURI('?filters=[]')) => {
   window.history.pushState('', '', qs);
 };
@@ -40,10 +35,6 @@ const transformToTypeValueArr = (values) => {
     };
   });
 };
-
-const arrayToPostgresArray = (values) =>
-  '{' + (values ? values.join(', ') : '') + '}';
-
 const urlToPageHeaderMap = {
   [`${relativeModulePath}`]: 'Overview',
   [`${relativeModulePath}/error`]: 'Errors',
@@ -174,29 +165,6 @@ const onGroupByChangeCb = (nextGroupBys, filters) => {
 };
 
 // hide variable shape, for example: { key: '<..>' }
-const hideVariableValues = (variables) => {
-  if (variables === null || variables === undefined) {
-    return '<..>';
-  }
-
-  switch (typeof variables) {
-    case 'object':
-      if (Array.isArray(variables)) {
-        return variables.map(hideVariableValues);
-      }
-
-      return Object.keys(variables).reduce(
-        (acc, key) => ({
-          ...acc,
-          [key]: hideVariableValues(variables[key]),
-        }),
-        {},
-      );
-    default:
-      return '<..>';
-  }
-};
-
 const getTimeIntervalFromRange = (start: string, end?: string, len = 6) => {
   let duration = differenceInMinutes(
     end ? new Date(end) : new Date(),
@@ -240,50 +208,11 @@ const getMetricsUrl = (metricsFQDN: string) => {
 
   return `${metricsFQDN}/v1/graphql`;
 };
-
-/**
- * Utility to parse http and non HTTP URLs
- * @param  url : URL string/ postgres connection URL
- * @returns {
- *    protocol: string
- *    user: string
- *    password: string
- *    host: string
- *    hostname: string
- *    port: string
- *    segments: string
- *    params:  object,
- *  };
- */
-const parseURI = (url) => {
-  try {
-    const protocol = new URL(url).protocol;
-    const newUrl = url.replace(protocol, 'http://');
-    const parsed = new URL(newUrl);
-    return {
-      origin: parsed.origin.replace('http:', protocol),
-      hash: parsed.hash,
-      host: parsed.host,
-      hostname: parsed.hostname,
-      port: parsed.port,
-      href: parsed.href.replace('http:', protocol),
-      password: parsed.password,
-      pathname: parsed.pathname,
-      search: parsed.search,
-      username: parsed.username,
-      protocol,
-    };
-  } catch (error) {
-    return {};
-  }
-};
 export {
   applyFilterByQueryParam,
-  arrayToPostgresArray,
   getMetricsUrl,
   getTimeIntervalFromRange,
   getValuesForEmptyMap,
-  hideVariableValues,
   onFilterChangeCb,
   onGroupByChangeCb,
   retrieveDefaultDropdownOptions,
@@ -291,5 +220,4 @@ export {
   transformToTypeValueArr,
   updateQsHistory,
   urlToPageHeaderMap,
-  parseURI,
 };

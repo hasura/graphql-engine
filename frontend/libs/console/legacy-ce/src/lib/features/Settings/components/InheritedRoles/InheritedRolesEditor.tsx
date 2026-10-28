@@ -74,12 +74,17 @@ const InheritedRolesEditor: React.FC<EditorProps> = ({
     setIsCollapsed(props.isCollapsed);
     const updatedMode = props.inheritedRole ? 'edit' : 'create';
     setMode(updatedMode);
+    // the role set of the role being synced to, not of the previous one
     setOptions(
-      allRoles.filter((role) => inheritedRole?.role_set.includes(role)),
+      allRoles.filter((role) => props.inheritedRole?.role_set.includes(role)),
     );
   }
 
   const [filterText, setFilterText] = useState('');
+
+  const filteredRoles = allRoles.filter((role) =>
+    role.toLowerCase().includes(filterText.trim().toLowerCase()),
+  );
 
   const filterTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.persist();
@@ -172,13 +177,17 @@ const InheritedRolesEditor: React.FC<EditorProps> = ({
                 </Button>
               </div>
               <div>
-                {!options.length ? (
+                {/* the roles that can be picked, not the picked ones */}
+                {!allRoles.length ? (
                   'No singular/Non-inherited Roles available'
+                ) : !filteredRoles.length ? (
+                  'No roles match the filter'
                 ) : (
                   <CheckboxGroup
                     disabled={isSaving}
                     onChange={checkboxValueChange}
-                    options={allRoles.map((option) => ({
+                    // the roles hidden by the filter stay selected
+                    options={filteredRoles.map((option) => ({
                       label: option,
                       value: option,
                     }))}

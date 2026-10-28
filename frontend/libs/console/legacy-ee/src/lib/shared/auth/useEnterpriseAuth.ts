@@ -1,6 +1,7 @@
 import {
   clearConsoleAuthState,
   globals,
+  hasDataAccess,
   loadConsoleAuthState,
   Privilege,
   saveAdminSecretState,
@@ -18,8 +19,11 @@ import useNavigateAuth from './useNavigateAuth';
 import { useNavigate } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { CLI_CONSOLE_MODE, LOGIN_PATH } from '@hasura/shared/types';
-import { useFetchInconsistentMetadata } from '@hasura/metadata/api';
+import { runGraphQL, useFetchInconsistentMetadata } from '@hasura/metadata/api';
 import { useAppContext } from '@hasura/shared/context';
+import { requestJson } from '@hasura/shared/utils';
+
+const GRAPHQL_VALIDATION_QUERY = 'query { __schema { queryType { name } } }';
 
 const useEnterpriseAuth = (): EnterpriseAuthService => {
   const navigate = useNavigate();
@@ -29,7 +33,7 @@ const useEnterpriseAuth = (): EnterpriseAuthService => {
   const [authState, setAuthStateValue] = useState<EnterpriseAuthState | null>(
     null,
   );
-  const { envVars } = useAppContext();
+  const { envVars, endpoints } = useAppContext();
 
   // header getters may be called from stale closures, so track the latest auth state in a ref.
   const authStateRef = useRef<EnterpriseAuthState | null>(null);
@@ -41,11 +45,31 @@ const useEnterpriseAuth = (): EnterpriseAuthService => {
     setAuthStateValue(state);
   }, []);
 
+  // Validate the credentials with a request the engine allows for them.
+  // The metadata API is admin-only, so Hasura Cloud collaborators without the
+  // admin privilege are checked against an API they can access.
+  const validateCredentials = async (input: EnterpriseAuthState) => {
+    const headers = buildEnterpriseAuthHeaders(input);
+    const userPrivileges =
+      input.type === 'hasura-sso' ? (input.project?.privileges ?? []) : [];
+
+    if (hasDataAccess(userPrivileges)) {
+      await fetchInconsistentMetadata(headers);
+    } else if (userPrivileges.includes('graphql_admin')) {
+      await runGraphQL({
+        url: endpoints.graphQLUrl,
+        fetchJson: requestJson,
+        headers,
+        body: { query: GRAPHQL_VALIDATION_QUERY },
+      });
+    }
+    // Other privileges (e.g. view_metrics) have no engine API to check.
+    // The token is validated by the services those pages call.
+  };
+
   const authenticate = useCallback(
     async (input: EnterpriseAuthState) => {
-      const headers = buildEnterpriseAuthHeaders(input);
-
-      await fetchInconsistentMetadata(headers);
+      await validateCredentials(input);
       setAuthState(input);
 
       if (envVars.consoleMode === CLI_CONSOLE_MODE) {

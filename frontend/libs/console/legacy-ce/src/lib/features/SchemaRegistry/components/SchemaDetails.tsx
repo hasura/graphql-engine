@@ -21,7 +21,7 @@ import { RoleBasedSchema, Schema } from '../types';
 import { FaHome, FaAngleRight, FaFileImport, FaSearch } from 'react-icons/fa';
 import { Flex } from '@radix-ui/themes';
 
-export const Breadcrumbs = () => (
+const Breadcrumbs = () => (
   <Flex align="center" className="space-x-xs mb-4">
     <RelativeLink
       to="/api/schema-registry"
@@ -151,7 +151,7 @@ const SchemasDetails: React.FC<{
   );
 };
 
-export const SchemaView: React.FC<{ schema: string }> = (props) => {
+const SchemaView: React.FC<{ schema: string }> = (props) => {
   const { schema } = props;
   const decompressedSchema = LZString.decompressFromBase64(schema);
 
@@ -169,7 +169,7 @@ export const SchemaView: React.FC<{ schema: string }> = (props) => {
   );
 };
 
-export const ChangesView: React.FC<{
+const ChangesView: React.FC<{
   changes: RoleBasedSchema['changes'];
   role: string;
 }> = (props) => {

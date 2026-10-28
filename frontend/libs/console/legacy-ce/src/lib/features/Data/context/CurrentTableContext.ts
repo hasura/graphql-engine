@@ -1,7 +1,7 @@
-import { createContext, useContext } from 'react';
+import { createContext } from 'react';
 import { MetadataTable } from '@hasura/shared/types';
 
-export type CurrentTableState = {
+type CurrentTableState = {
   tableType?: string;
   metadataTable: MetadataTable;
 };
@@ -11,5 +11,3 @@ const defaultState: CurrentTableState = {
 };
 
 export const CurrentTableContext = createContext(defaultState);
-
-export const useCurrentTableContext = () => useContext(CurrentTableContext);

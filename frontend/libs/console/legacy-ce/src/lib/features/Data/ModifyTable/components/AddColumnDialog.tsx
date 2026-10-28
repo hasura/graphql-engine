@@ -190,5 +190,3 @@ export const AddColumnDialog = ({
     </DelayedDialog>
   );
 };
-
-export default AddColumnDialog;

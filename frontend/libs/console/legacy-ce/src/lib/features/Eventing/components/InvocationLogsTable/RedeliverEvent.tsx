@@ -34,7 +34,7 @@ const RedeliverEvent: React.FC<Props> = ({ eventId, source }) => {
 
   const invocationColumns = ['http_status', 'id', 'created_at'];
 
-  if (!logs?.length && !isLoading) {
+  if (isLoading) {
     return <SkeletonList count={5} />;
   }
 

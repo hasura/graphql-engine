@@ -283,7 +283,12 @@ export const ListConnectedDatabases = (props?: { className?: string }) => {
     [envVars, updateProjectRegionForRowId],
   );
 
-  if (isLoading) return <>Loading...</>;
+  if (isLoading)
+    return (
+      <div className={props?.className}>
+        <CardedTable columns={[...columns, null]} data={[]} loading />
+      </div>
+    );
 
   return (
     <div className={props?.className}>

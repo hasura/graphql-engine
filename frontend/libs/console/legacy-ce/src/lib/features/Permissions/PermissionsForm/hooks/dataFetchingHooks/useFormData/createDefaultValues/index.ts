@@ -26,7 +26,7 @@ const getMetadataTable = ({ table, trackedTables }: GetMetadataTableArgs) => {
   return currentTable;
 };
 
-export interface CreateDefaultValuesArgs {
+interface CreateDefaultValuesArgs {
   queryType: DataQueryType;
   roleName: string;
   table: unknown;

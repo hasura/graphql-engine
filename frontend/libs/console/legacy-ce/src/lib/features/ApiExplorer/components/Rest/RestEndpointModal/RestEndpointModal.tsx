@@ -29,7 +29,7 @@ const ENDPOINTS: {
   { value: 'UPDATE', label: 'UPDATE', color: 'yellow' },
   { value: 'DELETE', label: 'DELETE', color: 'red' },
 ];
-export interface RestEndpointModalProps {
+interface RestEndpointModalProps {
   onClose: () => void;
   tableName: string;
   dataSourceName: string;

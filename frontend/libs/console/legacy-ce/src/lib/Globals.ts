@@ -102,7 +102,4 @@ if (globals.consoleMode === SERVER_CONSOLE_MODE) {
     }
   }
 }
-
-export type Globals = typeof globals;
-
 export default globals;

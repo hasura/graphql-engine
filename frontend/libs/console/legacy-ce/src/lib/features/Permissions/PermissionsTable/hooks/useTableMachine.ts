@@ -2,23 +2,22 @@ import { useReducer } from 'react';
 
 import { Selection } from '../../PermissionsTable';
 
-export type MachineState =
-  'closed' | 'formOpen' | 'bulkOpen' | 'updateRoleName';
+type MachineState = 'closed' | 'formOpen' | 'bulkOpen' | 'updateRoleName';
 
-export interface MachineCtx {
+interface MachineCtx {
   newRoleName: string;
   selectedForm: Partial<Selection>;
   bulkSelections: string[];
   isNewRole?: boolean;
 }
 
-export type MachineEvents =
+type MachineEvents =
   | { type: 'FORM_OPEN'; selectedForm: Partial<Selection> }
   | { type: 'BULK_OPEN'; roleName: string }
   | { type: 'NEW_ROLE_NAME'; newRoleName: string }
   | { type: 'CLOSE' };
 
-export type MachineSend = (event: MachineEvents | 'CLOSE') => void;
+type MachineSend = (event: MachineEvents | 'CLOSE') => void;
 
 interface MachineInternalState {
   value: MachineState;

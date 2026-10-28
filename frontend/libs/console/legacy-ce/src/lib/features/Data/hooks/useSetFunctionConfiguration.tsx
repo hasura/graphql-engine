@@ -10,14 +10,6 @@ import {
   areTablesEqual,
   MetadataSelectors,
 } from '@hasura/metadata/helpers';
-
-export type MetadataFunctionPayload = {
-  function: TableFunction;
-  configuration?: MetadataFunction['configuration'];
-  source: string;
-  comment?: string;
-};
-
 export const useSetFunctionConfiguration = ({
   dataSourceName,
   ...globalMutateOptions

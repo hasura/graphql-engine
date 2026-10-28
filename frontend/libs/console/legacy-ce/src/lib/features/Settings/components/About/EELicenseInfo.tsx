@@ -10,7 +10,7 @@ import {
   EETrialCard,
 } from '../../../../features/EETrial';
 
-export const EECTAButton: React.FC<{
+const EECTAButton: React.FC<{
   text: string;
   className?: string;
 }> = (props) => {
@@ -45,7 +45,7 @@ export const EELicenseInfo: React.FC<{ className?: string }> = ({
   );
 };
 
-export const EELicenseInfoUI: React.FC<{
+const EELicenseInfoUI: React.FC<{
   info: EELiteAccess;
 }> = (props) => {
   const { info } = props;

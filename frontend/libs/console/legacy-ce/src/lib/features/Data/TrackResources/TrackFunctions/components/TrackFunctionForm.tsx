@@ -35,7 +35,7 @@ const allowedFunctionTypes: AllowedFunctionTypes[] = [
   'root_field',
 ];
 
-export type TrackFunctionFormProps = {
+type TrackFunctionFormProps = {
   dataSourceName: string;
   onSuccess: () => void;
   onClose: () => void;

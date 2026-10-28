@@ -47,13 +47,3 @@ export type InputArgumentsType = {
 
 // we should extend RemoteRelationship type from `metadata/types.ts` once we have
 // the correct types in place, for both old and new format
-export type RemoteRelationship = {
-  name: string;
-  definition: {
-    to_remote_schema: {
-      lhs_fields: string[];
-      remote_field: RemoteField;
-      remote_schema: string;
-    };
-  };
-};

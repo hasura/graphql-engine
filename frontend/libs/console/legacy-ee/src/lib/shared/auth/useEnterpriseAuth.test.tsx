@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   saveConsoleAuthState: vi.fn(),
   saveAdminSecretState: vi.fn(),
   fetchMetadata: vi.fn(),
+  runGraphQL: vi.fn(),
   navigateAuth: vi.fn(),
   clearQueries: vi.fn(),
   envVars: {
@@ -25,15 +26,25 @@ vi.mock('@hasura/console-legacy-ce', () => ({
   clearConsoleAuthState: mocks.clearConsoleAuthState,
   saveConsoleAuthState: mocks.saveConsoleAuthState,
   saveAdminSecretState: mocks.saveAdminSecretState,
+  hasDataAccess: (privileges?: string[]) =>
+    !privileges?.length || privileges.includes('admin'),
+  hasGraphQLAccess: (privileges?: string[]) =>
+    !privileges?.length ||
+    privileges.includes('admin') ||
+    privileges.includes('graphql_admin'),
 }));
 vi.mock('@hasura/shared/context', () => ({
-  useAppContext: () => ({ envVars: mocks.envVars }),
+  useAppContext: () => ({
+    envVars: mocks.envVars,
+    endpoints: { graphQLUrl: 'http://engine/v1/graphql' },
+  }),
 }));
 vi.mock('@tanstack/react-query', () => ({
   useQueryClient: () => ({ clear: mocks.clearQueries }),
 }));
 vi.mock('@hasura/metadata/api', () => ({
   useFetchInconsistentMetadata: () => mocks.fetchMetadata,
+  runGraphQL: mocks.runGraphQL,
 }));
 vi.mock('./useNavigateAuth', () => ({ default: () => mocks.navigateAuth }));
 vi.mock('./utils', async (importOriginal) => ({
@@ -56,6 +67,7 @@ beforeEach(() => {
   mocks.globals.isAdminSecretSet = true;
   mocks.loadConsoleAuthState.mockReturnValue(null);
   mocks.fetchMetadata.mockResolvedValue({});
+  mocks.runGraphQL.mockResolvedValue({});
 });
 afterEach(() => {
   cleanup();
@@ -172,6 +184,54 @@ describe('Cloud session initialization', () => {
     expect(mocks.clearConsoleAuthState).toHaveBeenCalledOnce();
     expect(mocks.navigateAuth).toHaveBeenCalledWith(null);
     expect(result.current.isAuthenticated).toBe(false);
+  });
+
+  it('validates a GraphQL-only collaborator without the metadata API', async () => {
+    const saved: EnterpriseAuthState = {
+      ...cloudState,
+      project: { privileges: ['graphql_admin'] },
+    };
+    mocks.loadConsoleAuthState.mockReturnValue(saved);
+    const { result } = mount();
+    await act(() => result.current.initialize());
+    expect(mocks.fetchMetadata).not.toHaveBeenCalled();
+    expect(mocks.runGraphQL).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: 'http://engine/v1/graphql',
+        headers: expect.objectContaining({
+          'hasura-collaborator-token': `IDToken ${cloudState.idToken}`,
+        }),
+      }),
+    );
+    expect(mocks.navigateAuth).toHaveBeenCalledWith(saved);
+    expect(result.current.privileges).toEqual(['graphql_admin']);
+  });
+
+  it('clears a GraphQL-only session rejected by the engine', async () => {
+    mocks.loadConsoleAuthState.mockReturnValue({
+      ...cloudState,
+      project: { privileges: ['graphql_admin'] },
+    });
+    mocks.runGraphQL.mockRejectedValue(new Error('invalid token'));
+    const { result } = mount();
+    await act(() => result.current.initialize());
+    expect(mocks.clearConsoleAuthState).toHaveBeenCalledOnce();
+    expect(mocks.navigateAuth).toHaveBeenCalledWith(null);
+    expect(result.current.isAuthenticated).toBe(false);
+  });
+
+  it('accepts a metrics-only collaborator without calling the engine', async () => {
+    const saved: EnterpriseAuthState = {
+      ...cloudState,
+      project: { privileges: ['view_metrics'] },
+    };
+    mocks.loadConsoleAuthState.mockReturnValue(saved);
+    const { result } = mount();
+    await act(() => result.current.initialize());
+    expect(mocks.fetchMetadata).not.toHaveBeenCalled();
+    expect(mocks.runGraphQL).not.toHaveBeenCalled();
+    expect(mocks.navigateAuth).toHaveBeenCalledWith(saved);
+    expect(result.current.isAuthenticated).toBe(true);
   });
 
   it('still restores admin-secret auth for self-hosted consoles', async () => {

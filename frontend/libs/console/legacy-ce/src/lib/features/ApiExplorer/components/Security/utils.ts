@@ -76,7 +76,7 @@ export const getLimitsforRole = (meta: Metadata) => (role: string) => {
 };
 
 // System session variables can't be used as rate limit unique parameters.
-export const RESERVED_SESSION_VARIABLES = [
+const RESERVED_SESSION_VARIABLES = [
   'x-hasura-role',
   'x-hasura-admin-secret',
   'x-hasura-access-key',

@@ -4,10 +4,6 @@ import { areTablesEqual } from '@hasura/metadata/helpers';
 
 import { getTableDisplayName } from '@hasura/shared/utils';
 import { camelize, pluralize, singularize } from 'inflection';
-export type SuggestedRelationshipsResponse = {
-  relationships: SuggestedRelationship[];
-};
-
 type FilterTableRelationshipsArgs = {
   table: Table;
   relationships: SuggestedRelationship[];

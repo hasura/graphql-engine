@@ -16,7 +16,7 @@ import { useAuthFetchJson } from '@hasura/shared/hooks';
 import { HasuraMetadataV3, QualifiedDataSource } from '@hasura/shared/types';
 import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 
-export type ApplyTemplateProps = {
+type ApplyTemplateProps = {
   source: QualifiedDataSource;
   template: TemplateGalleryTemplateItem;
   details: TemplateGalleryTemplateDetailFull;

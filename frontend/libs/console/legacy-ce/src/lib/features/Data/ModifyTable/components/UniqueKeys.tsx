@@ -144,5 +144,3 @@ export const UniqueKeys = ({ source, table }: ModifyTableProps) => {
     </div>
   );
 };
-
-export default UniqueKeys;

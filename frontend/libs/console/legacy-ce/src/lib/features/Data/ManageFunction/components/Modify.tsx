@@ -9,7 +9,7 @@ import { GetFunctionDefinitionResult } from '@hasura/metadata/data-source';
 import FunctionCommentEditor from './FunctionCommentEditor';
 import { useAppContext } from '@hasura/shared/context';
 
-export type ModifyProps = {
+type ModifyProps = {
   source: Source;
   currentFunction: MetadataFunction;
   functionDefinition: GetFunctionDefinitionResult | null | undefined;

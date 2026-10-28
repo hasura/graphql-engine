@@ -102,13 +102,13 @@ export const headerStateReducer = (
   }
 };
 
-export interface SetVariableValueText {
+interface SetVariableValueText {
   type: 'RequestVariables/SET_HEADER_VALUE_TEXT';
   data: string;
   name: string;
 }
 
-export interface SetVariableStateToDefault {
+interface SetVariableStateToDefault {
   type: 'RequestVariables/SET_VARIABLES_TO_DEFAULT_STATE';
 }
 
@@ -123,8 +123,7 @@ const updateVariableValue = (
   return { ...currentVariable, value };
 };
 
-export type VariableStateAction =
-  SetVariableStateToDefault | SetVariableValueText;
+type VariableStateAction = SetVariableStateToDefault | SetVariableValueText;
 
 export const variableStateReducer = (
   state = defaultVariableState,
@@ -142,16 +141,16 @@ export const variableStateReducer = (
   }
 };
 
-export interface SetLoadingState {
+interface SetLoadingState {
   type: 'RequestLoadingState/SET_LOADING_STATE';
 }
 
-export interface SetRequestSuccess {
+interface SetRequestSuccess {
   type: 'RequestLoadingState/SET_REQUEST_SUCCESS';
   data: string;
 }
 
-export interface SetRequestErrored {
+interface SetRequestErrored {
   type: 'RequestLoadingState/SET_REQUEST_ERRORED';
   data: {
     message: string;
@@ -159,7 +158,7 @@ export interface SetRequestErrored {
   };
 }
 
-export type LoadingStateAction =
+type LoadingStateAction =
   SetLoadingState | SetRequestSuccess | SetRequestErrored;
 
 export const requestLoadingStateReducer = (

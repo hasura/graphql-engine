@@ -30,7 +30,7 @@ const dbTodbSchema = z.object({
   }),
 });
 
-export const dbToRsSchema = z.object({
+const dbToRsSchema = z.object({
   name: z.string().min(1, 'Name is a required field'),
   fromSource: z.object({
     type: z.literal('table'),

@@ -15,7 +15,7 @@ import {
 import { getFieldData } from '../../../../../RemoteRelationships/RemoteSchemaRelationships/components/RemoteSchemaTree/utils';
 import { SearchInput, Tree, TreeProps } from '@hasura/shared/ui';
 
-export interface RemoteSchemaTreeProps extends Pick<
+interface RemoteSchemaTreeProps extends Pick<
   TreeProps<TreeNode>,
   'checkable' | 'className'
 > {

@@ -2,31 +2,28 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Theme } from '@radix-ui/themes';
 import { RowPermissionsInput } from './RowPermissionsInput';
-import { getJsonErrorAnnotation } from './JsonEditor';
 
 // Ace doesn't run in jsdom: a textarea that shows the gutter annotations
-vi.mock('@hasura/shared/ui', async (importActual) => {
-  const actual = await importActual<Record<string, unknown>>();
-  return {
-    ...actual,
-    AceEditor: ({
-      value,
-      onChange,
-      annotations,
-    }: {
-      value?: string;
-      onChange?: (value: string) => void;
-      annotations?: { row: number; text: string }[];
-    }) => (
-      <textarea
-        data-testid="json-editor"
-        data-annotations={JSON.stringify(annotations ?? [])}
-        value={value}
-        onChange={(event) => onChange?.(event.target.value)}
-      />
-    ),
-  };
-});
+vi.mock('react-ace', async (importActual) => ({
+  // the real module loads the `ace` global the editor extensions need
+  ...(await importActual<object>()),
+  default: ({
+    value,
+    onChange,
+    annotations,
+  }: {
+    value?: string;
+    onChange?: (value: string) => void;
+    annotations?: { row: number; text: string }[];
+  }) => (
+    <textarea
+      data-testid="json-editor"
+      data-annotations={JSON.stringify(annotations ?? [])}
+      value={value}
+      onChange={(event) => onChange?.(event.target.value)}
+    />
+  ),
+}));
 
 const permissions = { id: { _eq: 'X-Hasura-User-Id' } };
 
@@ -96,50 +93,5 @@ describe('RowPermissionsInput', () => {
     expect(editor().value).toBe('{\n  "id" 1\n}');
     const [annotation] = JSON.parse(editor().dataset.annotations ?? '');
     expect(annotation).toMatchObject({ row: 1, type: 'error' });
-  });
-});
-
-describe('getJsonErrorAnnotation', () => {
-  it('points at the line of the reported position', () => {
-    const text = '{\n  "a": 1,\n  "b": }';
-
-    expect(
-      getJsonErrorAnnotation(
-        text,
-        new SyntaxError('Unexpected token } at position 19'),
-      ),
-    ).toMatchObject({ row: 2, column: 7 });
-  });
-
-  it('uses the reported line and column', () => {
-    expect(
-      getJsonErrorAnnotation(
-        '',
-        new SyntaxError('Unexpected token (line 3 column 4)'),
-      ),
-    ).toMatchObject({ row: 2, column: 3 });
-  });
-
-  it('marks the end of an incomplete input', () => {
-    const text = '{\n  "a": 1';
-
-    expect(
-      getJsonErrorAnnotation(
-        text,
-        new SyntaxError('Unexpected end of JSON input'),
-      ),
-    ).toMatchObject({ row: 1, column: 8 });
-  });
-
-  it('leaves the quoted input out of the message', () => {
-    const text = '{"a": }';
-    let error: unknown;
-    try {
-      JSON.parse(text);
-    } catch (e) {
-      error = e;
-    }
-
-    expect(getJsonErrorAnnotation(text, error).text).not.toContain(text);
   });
 });

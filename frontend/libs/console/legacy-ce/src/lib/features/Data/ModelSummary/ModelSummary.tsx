@@ -6,7 +6,7 @@ export type SourceLevelSummary = {
   totalCount: number;
 };
 
-export type Props = {
+type Props = {
   tablesAndViews?: SourceLevelSummary[];
   collections?: SourceLevelSummary[];
   logicalModels: SourceLevelSummary[];

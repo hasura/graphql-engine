@@ -9,7 +9,7 @@ type DropdownOption = {
 
 interface Props {
   options: DropdownOption[];
-  defaultValue: string | '';
+  value?: string;
   onChange: (option: string) => void;
   className?: string;
   styles?: React.CSSProperties;
@@ -17,7 +17,7 @@ interface Props {
 
 const DropDownSelector: React.FC<Props> = ({
   options,
-  defaultValue,
+  value,
   onChange,
   ...props
 }) => {
@@ -44,7 +44,7 @@ const DropDownSelector: React.FC<Props> = ({
       <Select
         name="data-source"
         onChange={handleValueChange}
-        defaultValue={defaultValue}
+        value={value}
         options={optionProps}
         full
       />

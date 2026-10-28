@@ -6,12 +6,12 @@ import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 import { useNavigate } from 'react-router';
 import { getDriverPrefix } from '@hasura/metadata/helpers';
 
-export const getAddSourceQueryType = (driver: SupportedDriver) => {
+const getAddSourceQueryType = (driver: SupportedDriver) => {
   const prefix = getDriverPrefix(driver);
   return `${prefix}_add_source` as const;
 };
 
-export const getEditSourceQueryType = (driver: SupportedDriver) => {
+const getEditSourceQueryType = (driver: SupportedDriver) => {
   const prefix = getDriverPrefix(driver);
   return `${prefix}_update_source` as const;
 };

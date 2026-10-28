@@ -14,7 +14,7 @@ import { FieldsInput } from './FieldsInput';
 import { CreateBooleanMap } from '@hasura/shared/types';
 import { useSupportedScalars } from '@hasura/metadata/data-source';
 
-export type LogicalModelFormProps = {
+type LogicalModelFormProps = {
   source: Source | undefined;
   sourceOptions: SelectItemProps[];
   disabled?: CreateBooleanMap<AddLogicalModelFormData>;

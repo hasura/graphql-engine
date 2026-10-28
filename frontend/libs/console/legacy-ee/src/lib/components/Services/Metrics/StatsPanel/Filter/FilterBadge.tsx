@@ -1,4 +1,3 @@
-import React from 'react';
 import styles from '../../Metrics.module.scss';
 import cross from '../../images/x-circle-metrics.svg';
 import { Flex } from '@radix-ui/themes';

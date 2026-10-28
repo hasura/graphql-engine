@@ -19,7 +19,7 @@ export const getDatabaseConnectionDisplayName = (
           });
 };
 
-export const getDatabaseUrlFromConnectionParams = ({
+const getDatabaseUrlFromConnectionParams = ({
   username,
   password,
   database,
@@ -57,8 +57,4 @@ export const cleanEmpty = (obj: Record<string, any>): any => {
 
 export const areSSLSettingsEnabled = () => {
   return isProConsole(window.__env);
-};
-
-export const areReadReplicasEnabled = () => {
-  return isProConsole(window.__env) || true;
 };

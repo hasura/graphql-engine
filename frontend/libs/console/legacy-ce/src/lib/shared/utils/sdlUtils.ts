@@ -42,7 +42,7 @@ const getActionTypeFromOperationType = (operationType: string): string => {
   return 'mutation';
 };
 
-export const formatSdl = (sdl: string) => {
+const formatSdl = (sdl: string) => {
   const ast = parse(sdl);
   return print(ast);
 };
@@ -72,7 +72,7 @@ const getEntityDescriptionSdl = ({ description }: { description?: string }) => {
   return entityDescription ? `""" ${entityDescription} """ ` : '';
 };
 
-export const getTypeFromAstDef = (astDef: DefinitionNode) => {
+const getTypeFromAstDef = (astDef: DefinitionNode) => {
   const handleScalar = (def: ScalarTypeDefinitionNode) => {
     return {
       name: def.name.value,
@@ -155,9 +155,6 @@ export const getTypeFromAstDef = (astDef: DefinitionNode) => {
       return;
   }
 };
-
-export type GetTypeFromAstDefResult = ReturnType<typeof getTypeFromAstDef>;
-
 const graphqlToActionScalar = (def: ScalarTypeDefinitionNode): ScalarType => {
   return {
     name: def.name.value,
@@ -467,33 +464,6 @@ ${fieldSdl}
 
   return formatSdl(sdl);
 };
-
-export const getAllActionsFromSdl = (sdl) => {
-  const ast = sdlParse(sdl);
-  const actions: Record<string, any>[] = [];
-
-  ast.definitions
-    .filter((d) => {
-      d.kind === Kind.OPERATION_DEFINITION && d.name?.value;
-    })
-    .forEach((def) => {
-      const d = def as Record<string, any>;
-      d.fields.forEach((f) => {
-        const action = getActionFromOperationAstDef(f);
-        actions.push({
-          name: action.name,
-          definition: {
-            type: getActionTypeFromOperationType(d.name.value),
-            arguments: action.arguments,
-            output_type: action.outputType,
-          },
-        });
-      });
-    });
-
-  return actions;
-};
-
 export const getSdlComplete = async (
   allActions: Action[] | undefined,
   allTypes: CustomTypes | undefined,

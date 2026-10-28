@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { FETCH_SLACK_STATE } from '../queries';
 import { GetSlackStateResponseWithError } from '../types';

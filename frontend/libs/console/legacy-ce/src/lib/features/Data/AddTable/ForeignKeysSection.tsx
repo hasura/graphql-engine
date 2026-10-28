@@ -125,5 +125,3 @@ export const ForeignKeysSection = ({ source }: { source: Source }) => {
     </Section>
   );
 };
-
-export default ForeignKeysSection;

@@ -11,14 +11,7 @@ import {
 } from '@hasura/shared/ui';
 import type { ColumnOption } from './ForeignKeyForm';
 
-export const INDEX_TYPES = [
-  'btree',
-  'hash',
-  'gin',
-  'gist',
-  'spgist',
-  'brin',
-] as const;
+const INDEX_TYPES = ['btree', 'hash', 'gin', 'gist', 'spgist', 'brin'] as const;
 
 const schema = z.object({
   name: z.string().trim().min(1, { message: 'Index name is required' }),
@@ -40,7 +33,7 @@ export const emptyIndexFormValues: IndexFormValues = {
 
 const indexTypeOptions = INDEX_TYPES.map((t) => ({ value: t, label: t }));
 
-export type IndexFormProps = {
+type IndexFormProps = {
   title: string;
   submitLabel: string;
   defaultValues: IndexFormValues;
@@ -124,5 +117,3 @@ export const IndexForm = ({
     </DelayedDialog>
   );
 };
-
-export default IndexForm;

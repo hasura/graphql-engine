@@ -74,7 +74,7 @@ const CollapsibleItems: React.FC<CollapsibleItemsProps> = ({
   );
 };
 
-export type SourceItem = {
+type SourceItem = {
   name: string;
   source: string;
 };

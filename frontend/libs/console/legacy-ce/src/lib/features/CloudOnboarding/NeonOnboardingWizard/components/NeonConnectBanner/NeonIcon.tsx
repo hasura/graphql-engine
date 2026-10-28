@@ -1,5 +1,3 @@
-import React from 'react';
-
 type NeonIconProps = {
   className?: string;
   color?: 'black' | 'white';

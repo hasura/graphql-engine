@@ -1,4 +1,3 @@
-import React from 'react';
 import { StoryObj, Meta } from '@storybook/react-webpack5';
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 

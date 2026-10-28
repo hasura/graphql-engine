@@ -46,7 +46,7 @@ export type CodeBlockProps = {
  * theme (`ACE_EDITOR_THEME_DARK`), with tokens mapped to the same colors Ace
  * gives their equivalents (e.g. JSON keys are `ace_variable` -> #CC6666).
  */
-export const hljsTokenClassNames = clsx(
+const hljsTokenClassNames = clsx(
   '[&_.hljs-attr]:text-sky-700',
   '[&_.hljs-string]:text-emerald-700',
   '[&_.hljs-number]:text-amber-700',

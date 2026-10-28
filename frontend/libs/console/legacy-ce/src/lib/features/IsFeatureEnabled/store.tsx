@@ -7,7 +7,7 @@ import { createStore, useStore as useZustandStore } from 'zustand';
 // TYPES
 // --------------------------------------------------
 
-export type State = {
+type State = {
   hasuraPlan: HasuraPlan;
   serverEnvVars: ServerEnvVars;
 };
@@ -18,7 +18,7 @@ type Setters = {
   setServerEnvVars: (envVars: ServerEnvVars) => void;
 };
 
-export type Store = State & Setters;
+type Store = State & Setters;
 
 /**
  * All the info about the current Hasura plan.
@@ -99,7 +99,7 @@ const serverEnvVarsSchema = z.object({
     .optional(),
 });
 
-export type ServerEnvVars = z.infer<typeof serverEnvVarsSchema>;
+type ServerEnvVars = z.infer<typeof serverEnvVarsSchema>;
 
 // --------------------------------------------------
 // STORE
@@ -182,7 +182,7 @@ const useStoreValue = () => {
   return createNewStore();
 };
 
-export type StoreContextType = ReturnType<typeof useStoreValue>;
+type StoreContextType = ReturnType<typeof useStoreValue>;
 
 const UseStore = createContext<StoreContextType | undefined>(undefined);
 
@@ -191,16 +191,7 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
 
   return <UseStore.Provider value={value}>{children}</UseStore.Provider>;
 };
-
-export const MockStoreContextProvider = (
-  props: React.PropsWithChildren<{
-    params: StoreContextType;
-  }>,
-) => {
-  return <UseStore.Provider value={props.params} {...props} />;
-};
-
-export const useStore = () => {
+const useStore = () => {
   const context = React.useContext(UseStore);
   if (context === undefined) {
     throw new Error('useCount must be used within a StoreProvider');
@@ -215,19 +206,4 @@ export const useStore = () => {
 export function useHasuraPlan() {
   const store = useStore();
   return useZustandStore(store, (state) => state.hasuraPlan);
-}
-
-export function useSetHasuraPlan() {
-  const store = useStore();
-  return useZustandStore(store, (state) => state.setHasuraPlan);
-}
-
-export function useSetEeLicense() {
-  const store = useStore();
-  return useZustandStore(store, (state) => state.setEeLicense);
-}
-
-export function useSetServerEnvVars() {
-  const store = useStore();
-  return useZustandStore(store, (state) => state.setServerEnvVars);
 }

@@ -15,20 +15,20 @@ export const columnSchema = z.object({
   isPrimaryKey: z.boolean(),
 });
 
-export const checkConstraintSchema = z.object({
+const checkConstraintSchema = z.object({
   name: z.string(),
   check: z.string(),
 });
 
 // A composite unique key captured by the form: a set of column names.
-export const uniqueKeySchema = z.object({
+const uniqueKeySchema = z.object({
   columns: z.array(z.string()),
 });
 
 // A single foreign key definition captured by the form. `referenceTable` is
 // stored as a JSON-encoded `Table` (the select value); the mapping below parses
 // it into the `ForeignKeyFormSchema` shape consumed by `createTable`.
-export const foreignKeySchema = z.object({
+const foreignKeySchema = z.object({
   referenceTable: z.unknown(),
   columnMappings: z.array(
     z.object({

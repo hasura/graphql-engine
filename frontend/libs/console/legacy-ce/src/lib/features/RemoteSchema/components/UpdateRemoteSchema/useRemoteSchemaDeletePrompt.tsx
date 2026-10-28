@@ -7,7 +7,7 @@ import { useRemoveRemoteSchema } from '@hasura/metadata/api';
 // enabling it permanently drops dependent objects (e.g. remote relationships
 // defined against this remote schema). The selected value is reported back via
 // `onCascadeChange` so the confirmation handler can forward it to the API.
-export const RemoteSchemaDeleteWarning = ({
+const RemoteSchemaDeleteWarning = ({
   remoteSchemaName,
   onCascadeChange,
 }: {

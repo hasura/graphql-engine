@@ -7,7 +7,7 @@ import { useFieldArray } from 'react-hook-form';
 import { SortRow } from './SortRow';
 import { FiltersAndSortFormValues } from '../types';
 
-export type SortRowsProps = {
+type SortRowsProps = {
   columns: TableColumn[];
   name: string;
   initialSorts?: FiltersAndSortFormValues['sorts'];

@@ -2,7 +2,7 @@ import { KnownEnterpriseDriver } from '@hasura/shared/types';
 import { useAddAgent } from '../../../../ManageAgents/hooks';
 import { AddAgentResponse } from '../../../../ManageAgents/hooks/useAddAgent';
 
-export const agentPaths: Record<KnownEnterpriseDriver, string> = {
+const agentPaths: Record<KnownEnterpriseDriver, string> = {
   snowflake: '/api/v1/snowflake',
   athena: '/api/v1/athena',
   mysql: '/api/v1/mysql',

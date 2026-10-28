@@ -22,7 +22,6 @@ import {
   HasuraRsFields,
   RelationshipFields,
   TreeNode,
-  RemoteRelationship,
   RemoteField,
   InputArgumentsType,
   InputArgumentValueType,
@@ -55,7 +54,7 @@ const isElementActive = (
 /* returns checked value if arg is checked
  * returns null if arg isn't involved in the relationship
  */
-export const getCheckedArgValue = (
+const getCheckedArgValue = (
   relationshipFields: RelationshipFields[],
   key: string,
 ): ArgValue | null => {
@@ -463,100 +462,5 @@ export const parseArgValue = (
       (isNumber(argValue) && (isFloat(argValue) ? 'Float' : 'Int')) || 'String',
   };
 };
-
-const serialiseArguments = (
-  args: InputArgumentValueType,
-  key: string,
-  depth: number,
-  callback: (f: RelationshipFields) => void,
-): void => {
-  if (typeof args === 'object') {
-    Object.keys(args).forEach((argName) => {
-      const argValue = args[argName];
-      const argValueMetadata = parseArgValue(argValue);
-      if (argValueMetadata) {
-        callback({
-          key: `${key}.${argName}`,
-          depth,
-          checkable: true,
-          argValue: argValueMetadata,
-          type: 'arg',
-        });
-      } else {
-        callback({
-          key: `${key}.${argName}`,
-          depth,
-          checkable: false,
-          argValue: null,
-          type: 'arg',
-        });
-        serialiseArguments(argValue, `${key}.${argName}`, depth + 1, callback);
-      }
-    });
-  }
-};
-
-const serialiseRemoteField = (
-  field: {
-    arguments: InputArgumentsType | never;
-    field?: RemoteField | undefined;
-  },
-  key: string,
-  depth: number,
-  callback: (f: RelationshipFields) => void,
-): void => {
-  callback({
-    key,
-    depth,
-    checkable: false,
-    argValue: null,
-    type: 'field',
-  });
-  if (field.field) {
-    const subFieldName = field.field ? Object.keys(field.field)[0] : '';
-    const subField = field.field?.[subFieldName];
-    serialiseRemoteField(
-      subField,
-      `${key}.field.${subFieldName}`,
-      depth + 1,
-      callback,
-    );
-  }
-  if (field.arguments) {
-    serialiseArguments(
-      field.arguments,
-      `${key}.arguments`,
-      depth + 1,
-      callback,
-    );
-  }
-};
-
 // TODO: this only parses the remote relationship in old format, and the type `RemoteRelationship` is old format
 // we should extend this for both old & new format once the server work is done, and remove this comment
-export const parseServerRelationship = (
-  serverRelationship: RemoteRelationship,
-): RelationshipFields[] => {
-  const remoteFields =
-    serverRelationship?.definition?.to_remote_schema.remote_field;
-  if (!remoteFields || isEmpty(remoteFields)) {
-    return [];
-  }
-  // only query root is supported by server relationships, so we only expect fields under query root
-  // this could be extended to use mutation and subscription if server support exists in future
-  const key = '__query';
-  const depth = 0;
-  const relationshipFields: RelationshipFields[] = [
-    { key, depth, checkable: false, argValue: null, type: 'field' },
-  ];
-
-  Object.keys(remoteFields).forEach((rf) => {
-    serialiseRemoteField(
-      remoteFields[rf],
-      `${key}.field.${rf}`,
-      depth + 1,
-      (field: RelationshipFields) => relationshipFields.push(field),
-    );
-  });
-  return relationshipFields;
-};
