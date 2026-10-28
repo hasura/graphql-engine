@@ -16,7 +16,7 @@ vi.mock('../../hooks/useDatabaseLatencyCheck', () => ({
   useDatabaseLatencyCheck: () => latencyState,
 }));
 vi.mock('../../hooks/useReloadSource', () => ({
-  useReloadSource: () => ({ reloadSource: vi.fn(), isPending: false }),
+  useReloadSource: () => ({ mutate: vi.fn(), isPending: false }),
 }));
 vi.mock('../../hooks/useUpdateProjectRegion', () => ({
   useUpdateProjectRegion: () => ({ mutate: vi.fn() }),
