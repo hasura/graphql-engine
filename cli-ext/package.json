@@ -45,7 +45,7 @@
     "@eslint/js": "^10.0.1",
     "@typescript-eslint/eslint-plugin": "8.65.0",
     "@typescript-eslint/parser": "8.65.0",
-    "@yao-pkg/pkg": "6.21.0",
+    "@yao-pkg/pkg": "6.24.0",
     "eslint": "^10.8.0",
     "husky": "^4.2.5",
     "lint-staged": "^10.1.5",
