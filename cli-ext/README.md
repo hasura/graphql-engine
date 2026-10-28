@@ -13,11 +13,11 @@ The binaries will be placed in the `bin` directory at root. Copy the binary to y
 
 Presently, binaries are built for following targets:
 
-- node24-linux-x64
-- node24-windows-x64
-- node24-macos-x64
-- node24-linux-arm64
-- node24-macos-arm64
+- node24.22.1-linux-x64
+- node24.22.1-windows-x64
+- node24.22.1-macos-x64
+- node24.22.1-linux-arm64
+- node24.22.1-macos-arm64
 
 More information on `pkg` and `targets` is available on the [pkg page](https://www.npmjs.com/package/pkg).
 
@@ -66,3 +66,13 @@ Each templater function must return an array of file objects. Something like:
 ```
 
 These files will be generated in the PWD of execution.
+
+## Packaged runtime provenance and release gate
+
+The locked packager is `@yao-pkg/pkg` 6.24.0, which requires `@yao-pkg/pkg-fetch` 3.6.7. The published pkg-fetch 3.6.7 patch manifest maps the pinned Node 24.22.1 targets to its Node 24.22.1 packaging patch. An updated build-host Node does not update the embedded runtime by itself.
+
+Node 24.22.1's official release records the Brotli backport `49dff6f57a` of upstream `0ed4268a4401abcb4472096340477cf4af7d1a2b`. Its embedded Brotli version string remains 1.2.0; that string alone is not a security acceptance check. pkg-fetch's expected SHA-256 for its Linux x64 supplier binary is `c0a4715edd09277f0e66c780dc16eb40be7c14e823e074e0218dd6c27fdac4c3`.
+
+For release validation, use a clean `PKG_CACHE_PATH`, disallow `PKG_NODE_PATH` overrides and locally built/fallback supplier entries, and verify the fetched supplier hash against the locked package. Validate each target independently. Retain the source commit, lockfile, supplier hash and final cli-ext hash, then run benign SDL-to/from and controlled-local-template scaffolding checks on the resulting executable in the final consumer images. A successful roundtrip or exported decoder constant is not a malformed-input regression.
+
+The runtime update does not restrict action-codegen's template execution: its URL and local template paths still execute template JavaScript. Runtime dependency remediation must not be treated as remediation of that separate behavior or as evidence about a reported environment-extraction incident.
