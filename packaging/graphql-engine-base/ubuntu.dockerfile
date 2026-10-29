@@ -1,4 +1,4 @@
-FROM ubuntu:noble-20260930.1
+FROM ubuntu:noble-20261024.1
 
 ### NOTE! Shared libraries here need to be kept in sync with `server-builder.dockerfile`!
 
@@ -33,10 +33,12 @@ RUN set -ex; \
     apt-get update; \
     apt-get upgrade -y; \
     # basic deps
-    apt-get install -y apt-transport-https ca-certificates curl gnupg2 lsb-release;  \
+    apt-get install -y apt-transport-https ca-certificates curl gnupg2 lsb-release libbrotli1;  \
     # Fail closed if the mirror has not received the eMudhra trust-store fix. \
     # Includes the AAA Certificate Services cross-signs; a rebuild alone is not a guarantee. \
     dpkg --compare-versions "$(dpkg-query -W -f='${Version}' ca-certificates)" ge "20260816ubuntu0.24.04.1"; \
+    # Fail closed if the mirror lacks the libbrotli1 security fix (CVE-2026-111497, HIGH). \
+    dpkg --compare-versions "$(dpkg-query -W -f='${Version}' libbrotli1)" ge "1.1.0-2ubuntu0.1"; \
     update-ca-certificates --fresh; \
     # deps needed for graphql-engine
     apt-get install -y libkrb5-3 libpq5 libnuma1 postgresql-common; \
