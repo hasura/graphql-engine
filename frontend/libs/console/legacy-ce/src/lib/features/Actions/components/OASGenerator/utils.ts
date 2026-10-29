@@ -1,11 +1,13 @@
 import { GraphQLObjectType, GraphQLSchema, printSchema } from 'graphql';
 import {
+  CaseStyle,
   GraphQLOperationType,
   Oas2,
   Oas3,
   createGraphQLSchema,
   ReferenceObject,
   SchemaObject,
+  sanitize,
 } from '@hasura/open-api-to-graphql';
 import {
   DataDefinition,
@@ -90,86 +92,125 @@ export const generateQueryParams = (parameters: OperationParameters) => {
 export const normalizeOperationId = (str: string) =>
   camelize(str.replace(/[-\s]+/g, '_'), true);
 
+/**
+ * name of the GraphQL field generated for the OpenAPI property `name`. It
+ * must follow open-api-to-graphql's own naming (we don't set `simpleNames`),
+ * otherwise the transforms read and write fields that don't exist
+ */
+const toGraphQLFieldName = (name: string, definition?: DataDefinition) => {
+  const extensionFieldName = (
+    definition?.schema as Record<string, unknown> | undefined
+  )?.['x-graphql-field-name'];
+  return typeof extensionFieldName === 'string' && extensionFieldName
+    ? extensionFieldName
+    : sanitize(name, CaseStyle.camelCase);
+};
+
+/**
+ * an array in a transform: every element of `source` is bound to `variable`
+ * and rendered through `item`
+ */
+class ArrayTransform {
+  constructor(
+    readonly variable: string,
+    readonly source: string,
+    readonly item: TransformNode,
+  ) {}
+}
+
+type TransformNode =
+  // a Kriti expression, e.g. `{{$body?['id']}}`
+  string | ArrayTransform | { [key: string]: TransformNode };
+
 interface Transform {
-  transform: Record<string, unknown>;
+  transform: TransformNode;
   needTransform: boolean;
 }
+
+/**
+ * name of the `range` loop variable for the items of `name`. It must be a
+ * valid Kriti identifier that can't clash with a keyword (`end`, `range`...)
+ * or with the `item` variable of a root array, hence the `Item` suffix
+ */
+const toLoopVariable = (fieldName: string) => {
+  const identifier = fieldName.replace(/[^A-Za-z0-9_]/g, '_');
+  return /^[A-Za-z]/.test(identifier)
+    ? `${identifier}Item`
+    : `item${identifier}Item`;
+};
 
 const createTransform = (
   definition: SubDefinition,
   prefix: string,
   inverse: boolean,
+  // for an array, the name of the `range` loop variable its items are read
+  // through; root arrays (no enclosing field) use `item`
+  loopVariable = 'item',
 ): Transform => {
-  try {
-    if (Array.isArray(definition)) {
-      // union type not supported at the moment
-      return { transform: {}, needTransform: false };
-    }
-
-    if (
-      definition &&
-      'preferredName' in definition &&
-      typeof definition.preferredName === 'string'
-    ) {
-      const newPrefix =
-        prefix === '$body' ? 'item' : prefix.match(/\['(.*?)'\]/)?.[1] || '';
-      const { transform, needTransform } = createTransform(
-        definition.subDefinitions,
-        newPrefix,
-        inverse,
-      );
-      return {
-        transform: {
-          [`ARRAYSTART(${prefix})`]: true,
-          ...transform,
-          ARRAYEND: true,
-        },
-        needTransform,
-      };
-    }
-
-    let needTransform = false;
-    const transform = Object.entries(definition).reduce((acc, curr) => {
-      const name = curr[0];
-      const value = curr[1] as DataDefinition;
-
-      const keyFrom = inverse ? normalizeOperationId(name) : curr[0];
-      const keyTo = inverse ? curr[0] : normalizeOperationId(name);
-      if (keyFrom !== keyTo) {
-        needTransform = true;
-      }
-      if (
-        value.schema.type === 'object' ||
-        (value.schema.type === 'array' &&
-          'subDefinitions' in value.subDefinitions &&
-          value.subDefinitions.subDefinitions)
-      ) {
-        const {
-          transform: childrenTransform,
-          needTransform: childrenNeedTransform,
-        } = createTransform(
-          value.subDefinitions,
-          `${prefix}?['${keyTo}']`,
-          inverse,
-        );
-        needTransform = needTransform || childrenNeedTransform;
-        return {
-          ...acc,
-          [keyFrom]: childrenTransform,
-        };
-      }
-      return {
-        ...acc,
-        [keyFrom]: `{{${prefix}?['${keyTo}']}}`,
-      };
-    }, {});
-    return {
-      transform,
-      needTransform,
-    };
-  } catch (e) {
+  if (Array.isArray(definition)) {
+    // union type not supported at the moment
     return { transform: {}, needTransform: false };
   }
+
+  if (
+    definition &&
+    'preferredName' in definition &&
+    typeof definition.preferredName === 'string'
+  ) {
+    const { transform, needTransform } = createTransform(
+      definition.subDefinitions,
+      loopVariable,
+      inverse,
+      // an array of arrays binds its inner items to a new variable
+      `${loopVariable}Item`,
+    );
+    return {
+      transform: new ArrayTransform(loopVariable, prefix, transform),
+      needTransform,
+    };
+  }
+
+  let needTransform = false;
+  const transform = Object.entries(definition).reduce((acc, curr) => {
+    const name = curr[0];
+    const value = curr[1] as DataDefinition;
+
+    const fieldName = toGraphQLFieldName(name, value);
+    const keyFrom = inverse ? fieldName : curr[0];
+    const keyTo = inverse ? curr[0] : fieldName;
+    if (keyFrom !== keyTo) {
+      needTransform = true;
+    }
+    if (
+      value.schema.type === 'object' ||
+      (value.schema.type === 'array' &&
+        'subDefinitions' in value.subDefinitions &&
+        value.subDefinitions.subDefinitions)
+    ) {
+      const {
+        transform: childrenTransform,
+        needTransform: childrenNeedTransform,
+      } = createTransform(
+        value.subDefinitions,
+        `${prefix}?['${keyTo}']`,
+        inverse,
+        toLoopVariable(fieldName),
+      );
+      needTransform = needTransform || childrenNeedTransform;
+      return {
+        ...acc,
+        [keyFrom]: childrenTransform,
+      };
+    }
+    return {
+      ...acc,
+      [keyFrom]: `{{${prefix}?['${keyTo}']}}`,
+    };
+  }, {});
+  return {
+    transform,
+    needTransform,
+  };
 };
 
 const createSampleInput = (
@@ -195,7 +236,7 @@ const createSampleInput = (
     return Object.entries(definition).reduce((acc, curr) => {
       const name = curr[0];
       const value = curr[1] as DataDefinition;
-      const keyFrom = normalizeOperationId(name);
+      const keyFrom = toGraphQLFieldName(name, value);
       const keyTo = curr[0];
 
       if (
@@ -220,40 +261,39 @@ const createSampleInput = (
   }
 };
 
+const renderTransform = (node: TransformNode, indent = ''): string => {
+  if (typeof node === 'string') {
+    return node;
+  }
+  if (node instanceof ArrayTransform) {
+    return (
+      `{{if inverse(empty(${node.source}))}} ` +
+      `{{ range _, ${node.variable} := ${node.source}}} ` +
+      `${renderTransform(node.item, indent)} ` +
+      '{{end}} {{else}} null {{end}}'
+    );
+  }
+  const entries = Object.entries(node);
+  if (entries.length === 0) {
+    return '{}';
+  }
+  const inner = `${indent}  `;
+  const fields = entries.map(
+    ([key, value]) =>
+      `${inner}${JSON.stringify(key)}: ${renderTransform(value, inner)}`,
+  );
+  return `{\n${fields.join(',\n')}\n${indent}}`;
+};
+
 /**
- * transform the generated JSON into a valid kriti template
+ * render the generated transform as a kriti template
  */
 const postProcessTransform = (output: Transform): string | null => {
   const { transform, needTransform } = output;
   if (!needTransform) {
     return null;
   }
-  let string = JSON.stringify(transform, null, 2)
-    // removing quotes from values
-    .replace(/"(.*)": "(.*)"/g, '"$1": $2')
-    .replace(/\\"/g, '"')
-    .replace(/\\n/g, '\n\t')
-    // processing arrays
-    .replace(
-      /"(.*?)": \{\n\s*"ARRAYSTART\((.*)\)": true,/g,
-      '"$1": {{if inverse(empty($2))}} {{ range _, $1 := $2}} {',
-    )
-    .replace(
-      /,(\n\s*?)"ARRAYEND": true\n\s*?}/g,
-      '$1} {{end}} {{else}} null {{end}}',
-    );
-
-  // processing root array
-  if (string.match(/\{\n\s*"ARRAYSTART\((.*)\)": true,/g)) {
-    string = string
-      .replace(
-        /\{\n\s*"ARRAYSTART\((.*)\)": true,/g,
-        '{{if inverse(empty($_body))}} {{ range _, item := $_body}} {',
-      )
-      .replace(/\$body/g, 'item')
-      .replace(/\$_body/g, '$body');
-  }
-  return string;
+  return renderTransform(transform);
 };
 
 const createApplicationJSONRequestTransform = (
@@ -295,9 +335,10 @@ const createXWWWFormURLEncodedRequestTransform = (
       value: Object.entries(operation.payloadDefinition.subDefinitions).reduce(
         (acc, curr) => {
           const key = curr[0];
+          const fieldName = toGraphQLFieldName(key, curr[1] as DataDefinition);
           return {
             ...acc,
-            [key]: `{{$body.input.${inputName}?.${normalizeOperationId(key)}}}`,
+            [key]: `{{$body.input.${inputName}?.${fieldName}}}`,
           };
         },
         {} as Record<string, string>,
