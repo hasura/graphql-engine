@@ -1,7 +1,7 @@
 # DATE VERSION: 2026-10-22
 # Modify the above date version (YYYY-MM-DD) if you want to rebuild the image
 
-FROM registry.access.redhat.com/ubi10/ubi-minimal:1792457309 AS pg_dump_source
+FROM registry.access.redhat.com/ubi10/ubi-minimal:1792742518 AS pg_dump_source
 
 ARG TARGETPLATFORM
 
@@ -13,16 +13,17 @@ RUN set -ex; \
   fi; \
   microdnf install -y postgresql18-server 
 
-FROM registry.access.redhat.com/ubi10/ubi-minimal:1792457309
+FROM registry.access.redhat.com/ubi10/ubi-minimal:1792742518
 
 ARG TARGETPLATFORM
 
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 
 # eMudhra compromised intermediates can chain through either of these roots.
-# UBI does not have a confirmed fixed package floor, so persist explicit distrust
-# and regenerate the PEM bundles used by HGE and native clients.
-# This also distrusts otherwise legitimate chains relying solely on these roots.
+# Persist explicit distrust when the roots are present; newer UBI trust stores
+# already remove them. Verify neither remains an anchor after regenerating the
+# PEM bundles used by HGE and native clients. This also distrusts otherwise
+# legitimate chains relying solely on these roots.
 RUN set -ex; \
   microdnf update -y ca-certificates; \
   microdnf install -y ca-certificates p11-kit-trust; \
@@ -31,12 +32,22 @@ RUN set -ex; \
   trust extract --overwrite --format=pem-bundle \
     --filter='pkcs11:object=Comodo%20AAA%20Services%20root;type=cert' \
     "$blocklist/Comodo_AAA_Services_root.pem"; \
-  test -s "$blocklist/Comodo_AAA_Services_root.pem"; \
+  if [ ! -s "$blocklist/Comodo_AAA_Services_root.pem" ]; then \
+    rm "$blocklist/Comodo_AAA_Services_root.pem"; \
+  fi; \
   trust extract --overwrite --format=pem-bundle \
     --filter='pkcs11:object=emSign%20ECC%20Root%20CA%20-%20G3;type=cert' \
     "$blocklist/emSign_ECC_Root_CA_-_G3.pem"; \
-  test -s "$blocklist/emSign_ECC_Root_CA_-_G3.pem"; \
+  if [ ! -s "$blocklist/emSign_ECC_Root_CA_-_G3.pem" ]; then \
+    rm "$blocklist/emSign_ECC_Root_CA_-_G3.pem"; \
+  fi; \
   update-ca-trust extract; \
+  trust list --filter=ca-anchors > /tmp/ca-anchors; \
+  if grep -Eq 'label: (Comodo AAA Services root|AAA Certificate Services|emSign ECC Root CA - G3)$' /tmp/ca-anchors; then \
+    echo 'Compromised eMudhra chain root remains trusted' >&2; \
+    exit 1; \
+  fi; \
+  rm /tmp/ca-anchors; \
   microdnf clean all
 
 RUN set -ex; \
