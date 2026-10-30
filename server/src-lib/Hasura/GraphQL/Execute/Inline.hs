@@ -114,6 +114,12 @@ inlineSelectionSet ::
   t FragmentDefinition ->
   SelectionSet FragmentSpread Name ->
   m (SelectionSet NoFragments Name)
+inlineSelectionSet fragmentDefinitions selectionSet
+  -- Fast path: a document without fragment definitions needs no inlining,
+  -- only a change of type. A spread then refers to an undefined fragment,
+  -- so we fall through to the general case, which reports it.
+  | null fragmentDefinitions,
+    Just inlined <- coerceNoFragments selectionSet = pure inlined
 inlineSelectionSet fragmentDefinitions selectionSet = do
   let fragmentDefinitionMap = HashMap.groupOnNE _fdName fragmentDefinitions
   uniqueFragmentDefinitions <- flip
@@ -151,13 +157,7 @@ inlineSelectionSet fragmentDefinitions selectionSet = do
         }
   where
     fragmentsInSelectionSet :: SelectionSet FragmentSpread Name -> [Name]
-    fragmentsInSelectionSet selectionSet' = concatMap getFragFromSelection selectionSet'
-
-    getFragFromSelection :: Selection FragmentSpread Name -> [Name]
-    getFragFromSelection = \case
-      SelectionField fld -> fragmentsInSelectionSet $ _fSelectionSet fld
-      SelectionFragmentSpread fragmentSpread -> [_fsName fragmentSpread]
-      SelectionInlineFragment inlineFragment -> fragmentsInSelectionSet $ _ifSelectionSet inlineFragment
+    fragmentsInSelectionSet = getConst . traverseSelectionSetFragment (Const . pure . _fsName)
 
 inlineSelection ::
   (MonadInline m) =>

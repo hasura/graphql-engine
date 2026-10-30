@@ -8,6 +8,7 @@ where
 -------------------------------------------------------------------------------
 
 import BlockStrings (blockTest)
+import CoerceNoFragments (coerceNoFragmentsTests)
 import Control.Monad (unless)
 import Data.ByteString.Builder qualified as BSB
 import Data.ByteString.Lazy qualified as LBS
@@ -75,6 +76,7 @@ tests nTests =
         ("property [ parse (lazyTextBuilderPrint ast) == ast ]", propParserLazyTextPrinter nTests),
         ("property [ parse (bytestringBuilderPrint ast) == ast ]", propParserBSPrinter nTests)
       ]
+        ++ coerceNoFragmentsTests nTests
         ++ Keywords.primitiveTests
 
 propParserPrettyPrinter :: TestLimit -> Property

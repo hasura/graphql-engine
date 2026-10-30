@@ -89,6 +89,8 @@ module Language.GraphQL.Draft.Syntax
     fmapSelectionSetFragment,
     fmapSelectionFragment,
     fmapInlineFragment,
+    traverseSelectionSetFragment,
+    coerceNoFragments,
   )
 where
 
@@ -98,8 +100,11 @@ import Control.DeepSeq (NFData)
 import Data.Aeson qualified as J
 import Data.Bifunctor (Bifunctor (bimap))
 import Data.Bool (bool)
+import Data.Functor.Const (Const (..))
+import Data.Functor.Identity (Identity (..))
 import Data.HashMap.Strict (HashMap)
 import Data.Hashable (Hashable)
+import Data.Monoid (Any (..))
 import Data.Scientific (Scientific)
 import Data.String (IsString (..))
 import Data.Text (Text)
@@ -116,6 +121,7 @@ import Language.GraphQL.Draft.Syntax.Name
 import Language.Haskell.TH.Syntax (Lift)
 import Language.Haskell.TH.Syntax qualified as TH
 import Prelude
+import Unsafe.Coerce (unsafeCoerce)
 
 -------------------------------------------------------------------------------
 
@@ -563,18 +569,43 @@ inline :: NoFragments var -> FragmentSpread var
 inline x = case x of {}
 
 fmapFieldFragment :: (frag var -> frag' var) -> Field frag var -> Field frag' var
-fmapFieldFragment f field =
-  field {_fSelectionSet = fmapSelectionSetFragment f (_fSelectionSet field)}
+fmapFieldFragment f = runIdentity . traverseFieldFragment (Identity . f)
 
 fmapSelectionSetFragment :: (frag var -> frag' var) -> SelectionSet frag var -> SelectionSet frag' var
 fmapSelectionSetFragment f = fmap (fmapSelectionFragment f)
 
 fmapSelectionFragment :: (frag var -> frag' var) -> Selection frag var -> Selection frag' var
-fmapSelectionFragment f (SelectionField field) = SelectionField $ fmapFieldFragment f field
-fmapSelectionFragment f (SelectionFragmentSpread frag) = SelectionFragmentSpread $ f frag
-fmapSelectionFragment f (SelectionInlineFragment inlineFrag) =
-  SelectionInlineFragment $ fmapInlineFragment f inlineFrag
+fmapSelectionFragment f = runIdentity . traverseSelectionFragment (Identity . f)
 
 fmapInlineFragment :: (frag var -> frag' var) -> InlineFragment frag var -> InlineFragment frag' var
-fmapInlineFragment f inlineFragment =
-  inlineFragment {_ifSelectionSet = fmapSelectionSetFragment f (_ifSelectionSet inlineFragment)}
+fmapInlineFragment f = runIdentity . traverseInlineFragment (Identity . f)
+
+-- | Since @frag@ and @frag'@ may differ, the types of these traversals
+-- guarantee that they visit every fragment in the structure.
+traverseSelectionSetFragment :: (Applicative f) => (frag var -> f (frag' var)) -> SelectionSet frag var -> f (SelectionSet frag' var)
+traverseSelectionSetFragment = traverse . traverseSelectionFragment
+
+traverseFieldFragment :: (Applicative f) => (frag var -> f (frag' var)) -> Field frag var -> f (Field frag' var)
+traverseFieldFragment f field =
+  (\s -> field {_fSelectionSet = s}) <$> traverseSelectionSetFragment f (_fSelectionSet field)
+
+traverseSelectionFragment :: (Applicative f) => (frag var -> f (frag' var)) -> Selection frag var -> f (Selection frag' var)
+traverseSelectionFragment f (SelectionField field) = SelectionField <$> traverseFieldFragment f field
+traverseSelectionFragment f (SelectionFragmentSpread frag) = SelectionFragmentSpread <$> f frag
+traverseSelectionFragment f (SelectionInlineFragment inlineFrag) =
+  SelectionInlineFragment <$> traverseInlineFragment f inlineFrag
+
+traverseInlineFragment :: (Applicative f) => (frag var -> f (frag' var)) -> InlineFragment frag var -> f (InlineFragment frag' var)
+traverseInlineFragment f inlineFragment =
+  (\s -> inlineFragment {_ifSelectionSet = s}) <$> traverseSelectionSetFragment f (_ifSelectionSet inlineFragment)
+
+-- | Change the type of a selection set that contains no fragment spreads,
+-- without copying it.
+--
+-- This is safe because 'traverseSelectionSetFragment' visits every fragment
+-- (see above), so if it finds none, then the selection set contains no values
+-- of type @frag var@, and its representation is identical at any @frag@.
+coerceNoFragments :: SelectionSet frag var -> Maybe (SelectionSet NoFragments var)
+coerceNoFragments selectionSet
+  | getAny $ getConst $ traverseSelectionSetFragment (\_ -> Const (Any True)) selectionSet = Nothing
+  | otherwise = Just $ unsafeCoerce selectionSet
