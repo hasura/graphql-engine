@@ -54,7 +54,7 @@ const STContainer: React.FC<Props> = ({ children, tabName }) => {
 
   return (
     <Analytics name="AdhocEvents" {...REDACT_EVERYTHING}>
-      <div className="mt-6">
+      <div>
         <Breadcrumbs items={breadCrumbs} />
         <div className="my-4">
           <Heading size="4">{ADHOC_EVENTS_HEADING}</Heading>

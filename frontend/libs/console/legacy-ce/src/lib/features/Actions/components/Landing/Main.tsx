@@ -60,7 +60,7 @@ const Landing = () => {
   return (
     <Analytics name="Actions" {...REDACT_EVERYTHING}>
       <div>
-        <div className="p-5 bootstrap-jail">
+        <div>
           <div>
             <Flex align="center" gap="2">
               <Heading size="5">Actions</Heading>

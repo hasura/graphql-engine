@@ -14,7 +14,7 @@ const AddAdhocEvent: React.FC = () => {
   };
 
   return (
-    <div className="bootstrap-jail">
+    <div>
       <AdhocEventsContainer tabName="add">
         {readOnlyMode ? (
           'Cannot schedule event in read only mode'

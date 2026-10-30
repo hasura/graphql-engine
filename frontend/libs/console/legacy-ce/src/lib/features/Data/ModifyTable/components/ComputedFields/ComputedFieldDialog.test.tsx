@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router';
 import type {
   MetadataTable,
   PostgresComputedField,
@@ -62,14 +63,17 @@ const original: PostgresComputedField = {
 };
 
 const setup = (onClose = vi.fn()) => {
+  // the dialog links to the SQL editor
   render(
-    <ComputedFieldDialog
-      source={source}
-      table={table}
-      functions={[]}
-      computedField={original}
-      onClose={onClose}
-    />,
+    <MemoryRouter>
+      <ComputedFieldDialog
+        source={source}
+        table={table}
+        functions={[]}
+        computedField={original}
+        onClose={onClose}
+      />
+    </MemoryRouter>,
   );
   return { onClose };
 };
