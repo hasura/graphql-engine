@@ -56,7 +56,7 @@ export const ComputedFieldDescription = ({
         onError: (error: Error) => {
           showErrorNotification({
             title: 'Error while dropping the computed field',
-            error: error?.message,
+            error,
           });
         },
       },

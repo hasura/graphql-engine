@@ -121,6 +121,7 @@ export const bigquerySupportedFeatures: DeepRequired<SupportedFeaturesType> = {
   },
   rawSQL: {
     tracking: true,
+    noTransaction: false,
   },
   connectDbForm: {
     enabled: true,

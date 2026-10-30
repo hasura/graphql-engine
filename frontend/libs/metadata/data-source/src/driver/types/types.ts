@@ -401,6 +401,8 @@ export type SupportedFeaturesType = {
   };
   rawSQL: {
     tracking: boolean;
+    // `run_sql` can run statements outside a transaction (`no_transaction`)
+    noTransaction: boolean;
   };
   connectDbForm: ConnectDbForm;
 };

@@ -1,20 +1,28 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ColumnDef, flexRender, useTable } from '@tanstack/react-table';
 import {
   dataTableFeatures,
   DataTableFeatures,
   getReactTablePaginationProps,
+  IconButton,
   Pagination,
   Table,
 } from '@hasura/shared/ui';
 import { getColWidth } from '../../../components/Common/TableCommon/DragFoldTable';
 import { Heading } from '@radix-ui/themes';
+import { ResultRowDialog } from './ResultRowDialog';
+import { FaExpand } from 'react-icons/fa6';
 
 interface ResultTableProps {
   headers: string[];
   rows: Array<string[]>;
 }
-const getColCellContent = (rowColumnValue: React.ReactNode) => {
+// long values are cut to one line at the column width; the full value is
+// shown on hover
+const getColCellContent = (
+  rowColumnValue: React.ReactNode,
+  maxWidth: number,
+) => {
   let cellValue: React.ReactNode;
 
   if (rowColumnValue === null) {
@@ -27,42 +35,78 @@ const getColCellContent = (rowColumnValue: React.ReactNode) => {
     cellValue = rowColumnValue.toString();
   }
 
-  return <div>{cellValue}</div>;
+  return (
+    <div
+      className="truncate"
+      style={{ maxWidth }}
+      title={typeof cellValue === 'string' ? cellValue : undefined}
+    >
+      {cellValue}
+    </div>
+  );
 };
 
-const getTableConfig = (headers: string[], rows: Array<string[]>) => {
-  const dataMap: Record<string, any>[] = [];
-  const data = rows.map((i) => {
-    const result: Record<string, any> = {};
-    const resultMap: Record<string, any> = {};
-    headers.forEach((hdr, hIndex) => {
-      result[hdr] = getColCellContent(i[hIndex]);
-      resultMap[hdr] = i[hIndex];
-    });
-    dataMap.push(resultMap);
-    return result;
-  });
-  const columns: ColumnDef<DataTableFeatures, Record<string, any>>[] =
-    headers.map((header) => ({
-      id: header,
-      accessorKey: header,
-      header,
-      size: Math.ceil(getColWidth(header, dataMap)),
-      cell: (info) => <div>{info.getValue() as React.ReactNode}</div>,
-    }));
+const OPEN_ROW_COLUMN_SIZE = 40;
 
-  return { columns, data };
+const getTableConfig = (
+  headers: string[],
+  rows: Array<string[]>,
+  onOpenRow: (index: number) => void,
+) => {
+  const sizes = headers.map((header, hIndex) =>
+    Math.ceil(
+      getColWidth(
+        header,
+        rows.map((i) => i[hIndex]),
+      ),
+    ),
+  );
+  const columns: ColumnDef<DataTableFeatures, string[]>[] = [
+    // opens the row in full, as cells are cut to the column width
+    {
+      id: 'open-row',
+      header: '',
+      size: OPEN_ROW_COLUMN_SIZE,
+      cell: (info) => (
+        <IconButton
+          color="gray"
+          variant="ghost"
+          radius="full"
+          title="Open row"
+          aria-label="Open row"
+          icon={FaExpand}
+          onClick={() => onOpenRow(info.row.index)}
+        />
+      ),
+    },
+    // cells are read by column position, not by column name: a result can
+    // contain several columns with the same name (e.g. `select a.id, b.id`).
+    // They are rendered from the raw values, so only for the rows shown.
+    ...headers.map(
+      (header, hIndex): ColumnDef<DataTableFeatures, string[]> => ({
+        id: String(hIndex),
+        accessorFn: (row) => row[hIndex],
+        header,
+        size: sizes[hIndex],
+        cell: (info) =>
+          getColCellContent(info.getValue() as React.ReactNode, sizes[hIndex]),
+      }),
+    ),
+  ];
+
+  return columns;
 };
 
 const ResultTable: React.FC<ResultTableProps> = ({ headers, rows }) => {
-  const { columns, data } = useMemo(
-    () => getTableConfig(headers, rows),
+  const [openRowIndex, setOpenRowIndex] = useState<number | null>(null);
+  const columns = useMemo(
+    () => getTableConfig(headers, rows, setOpenRowIndex),
     [headers, rows],
   );
 
   const table = useTable({
     features: dataTableFeatures,
-    data,
+    data: rows,
     columns,
     initialState: {
       pagination: {
@@ -84,7 +128,7 @@ const ResultTable: React.FC<ResultTableProps> = ({ headers, rows }) => {
               {headerGroup.headers.map((header) => (
                 <Table.RowHeaderCell
                   key={header.id}
-                  style={{ width: header.getSize() }}
+                  style={{ width: header.getSize(), fontWeight: 'bold' }}
                 >
                   {header.isPlaceholder
                     ? null
@@ -114,6 +158,13 @@ const ResultTable: React.FC<ResultTableProps> = ({ headers, rows }) => {
       </Table.Root>
       {table.getPageCount() > 1 && (
         <Pagination {...getReactTablePaginationProps(table)} justify="center" />
+      )}
+      {openRowIndex !== null && rows[openRowIndex] && (
+        <ResultRowDialog
+          headers={headers}
+          row={rows[openRowIndex]}
+          onClose={() => setOpenRowIndex(null)}
+        />
       )}
     </div>
   );

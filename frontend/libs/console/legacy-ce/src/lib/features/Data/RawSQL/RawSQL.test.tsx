@@ -97,7 +97,10 @@ const mockedUseMetadata = vi.mocked(useMetadata);
 const setMetadata = (data: typeof metadata | undefined) =>
   mockedUseMetadata.mockReturnValue({ data } as ReturnType<typeof useMetadata>);
 
-const renderRawSQL = (path = '/data/sql') => {
+const renderRawSQL = (
+  path = '/data/sql',
+  consoleMode: 'server' | 'cli' = 'server',
+) => {
   const ui = () => (
     <Theme>
       <MemoryRouter initialEntries={[path]}>
@@ -105,7 +108,7 @@ const renderRawSQL = (path = '/data/sql') => {
           value={{
             ...defaultAppState,
             envVars: {
-              consoleMode: 'server',
+              consoleMode,
             } as typeof defaultAppState.envVars,
           }}
         >
@@ -238,6 +241,63 @@ describe('RawSQL', () => {
     expect(track()).toBeDisabled();
     fireEvent.click(screen.getByText('Run!'));
     expect(lastRun()).toMatchObject({ isTableTracked: false });
+  });
+
+  it('only sends "No transaction" while it applies, without a timeout', () => {
+    renderRawSQL();
+    const noTransaction = () =>
+      screen.queryByRole('checkbox', { name: /No transaction/ });
+    const timeout = () => screen.queryByDisplayValue('10');
+
+    typeSQL('create index concurrently idx on foo (id)');
+    fireEvent.click(screen.getByText('Run!'));
+    expect(lastRun()).toMatchObject({
+      noTransaction: false,
+      statementTimeout: 10,
+    });
+
+    // the timeout is a `SET LOCAL`, which has no effect outside a transaction
+    fireEvent.click(screen.getByRole('checkbox', { name: /No transaction/ }));
+    expect(timeout()).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText('Run!'));
+    expect(lastRun()).toMatchObject({
+      noTransaction: true,
+      statementTimeout: null,
+    });
+
+    // SQL Server has no such option
+    fireEvent.change(database(), { target: { value: 'warehouse' } });
+    expect(noTransaction()).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText('Run!'));
+    expect(lastRun()).toMatchObject({ noTransaction: false });
+
+    // Citus does, and the choice is kept
+    fireEvent.change(database(), { target: { value: 'cluster' } });
+    expect(noTransaction()).toBeChecked();
+    fireEvent.click(screen.getByText('Run!'));
+    expect(lastRun()).toMatchObject({ noTransaction: true });
+
+    fireEvent.change(database(), { target: { value: 'default' } });
+    fireEvent.click(screen.getByRole('checkbox', { name: /No transaction/ }));
+    expect(timeout()).toBeInTheDocument();
+  });
+
+  it('warns that a migration does not record "No transaction"', () => {
+    vi.mocked(useMigrationStatus).mockReturnValue({
+      data: 'healthy',
+    } as ReturnType<typeof useMigrationStatus>);
+    // migration files are only written in CLI mode
+    renderRawSQL('/data/sql', 'cli');
+    const note = () => screen.queryByText(/migrate apply --no-transaction/);
+
+    typeSQL('create index concurrently idx on foo (id)');
+    expect(
+      screen.getByRole('checkbox', { name: /This is a migration/ }),
+    ).toBeChecked();
+    expect(note()).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('checkbox', { name: /No transaction/ }));
+    expect(note()).toBeInTheDocument();
   });
 
   it("keeps the user's migration choice until the SQL implies another", () => {
