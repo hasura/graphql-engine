@@ -134,7 +134,7 @@ const PermissionsFormComponent = ({
 
   return (
     <Form onSubmit={onSubmit}>
-      <div className="md:w-10/12 p-4">
+      <div className="p-4">
         <Flex align="center" gap="4" className="pb-4">
           {Boolean(showCloseButton) && (
             <Button size="1" mode="default" type="button" onClick={handleClose}>
@@ -146,7 +146,7 @@ const PermissionsFormComponent = ({
             {queryType}
           </Text>
         </Flex>
-        <div className="mb-4">
+        <div className="mb-4 md:w-10/12 lg:w-8/12">
           <TextAreaField
             label="Comments"
             labelIcon={<FaRegComment />}

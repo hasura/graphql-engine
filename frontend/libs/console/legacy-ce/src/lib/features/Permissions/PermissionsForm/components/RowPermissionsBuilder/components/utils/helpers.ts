@@ -28,6 +28,11 @@ const getKeyPath = ({
     path.length >= 1;
 
   const previousKey = keyPath[keyPath.length - 1];
+  // an empty key removes the key, leaving its siblings
+  if (newKey === '' && keyPath.length && value !== undefined) {
+    return ['permissions', ...replacePath(keyPath, permissionsState)];
+  }
+
   if (
     // Replacing an `_and` comparator that's empty (as opposed to the default `{}`) with a column key
     isEmptyArray(value, previousKey) ||
@@ -118,7 +123,8 @@ export const updateKey = ({
   // Using cloneDeep we don't run into this issue
   const clone = cloneDeep(permissionsState);
   const path = getKeyPath({ permissionsState: clone, keyPath, newKey, type });
-  const value = getInitialValue(newKey, type);
+  const value =
+    newKey === '' ? (get(clone, path) ?? {}) : getInitialValue(newKey, type);
 
   // removing an item of an array (e.g. of `_and`) strips the empty items
   const parentKey = path[path.length - 1];

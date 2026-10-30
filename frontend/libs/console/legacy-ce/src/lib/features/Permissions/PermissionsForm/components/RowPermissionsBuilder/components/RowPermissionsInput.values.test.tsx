@@ -215,6 +215,32 @@ describe('unexpected values from the JSON editor', () => {
   });
 });
 
+describe('the empty operator option', () => {
+  it('removes the key', async () => {
+    const { onPermissionsChange } = setup({
+      permissions: { name: { _eq: 'a' }, age: { _eq: 1 } },
+      tables: [usersTable('default', [column('name'), column('age')])],
+    });
+
+    await userEvent.click(screen.getByLabelText('name-operator-root'));
+    await userEvent.click(screen.getByRole('option', { name: '-' }));
+
+    expect(onPermissionsChange).toHaveBeenLastCalledWith({ age: { _eq: 1 } });
+  });
+
+  it('is not offered when no key is set', async () => {
+    setup({
+      permissions: {},
+      tables: [usersTable('default', [column('name')])],
+    });
+
+    await userEvent.click(screen.getByLabelText('root-operator'));
+
+    expect(screen.getByRole('option', { name: 'name' })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: '-' })).not.toBeInTheDocument();
+  });
+});
+
 describe('getSiblingKeys', () => {
   const permissions = {
     name: { _eq: 'a' },
@@ -289,5 +315,77 @@ describe('sources with tables of the same name', () => {
     expect(options.map((option) => option.textContent)).toEqual([
       'public.users',
     ]);
+  });
+});
+
+describe('remote database relationships', () => {
+  const tables = [
+    {
+      ...usersTable('default', [column('name')]),
+      relationships: [
+        {
+          name: 'pet',
+          fromSource: 'default',
+          fromTable: { schema: 'public', name: 'users' },
+          relationshipType: 'Object',
+          type: 'remoteDatabaseRelationship',
+          definition: {
+            toSource: 'other',
+            toTable: { schema: 'public', name: 'pets' },
+            mapping: { name: 'owner' },
+          },
+        },
+      ] as Tables[number]['relationships'],
+    },
+    {
+      ...usersTable('other', [column('name'), column('owner')]),
+      table: { schema: 'public', name: 'pets' },
+    },
+  ];
+
+  const optionNames = () =>
+    screen.getAllByRole('option').map((option) => option.textContent);
+
+  it('only offers the comparators the server accepts on a remote column', async () => {
+    setup({ permissions: { pet: { name: { _eq: 'a' } } }, tables });
+
+    await userEvent.click(screen.getByLabelText('pet.name._eq-comparator'));
+
+    expect(optionNames()).toContain('_eq');
+    expect(optionNames()).toContain('_is_null');
+    expect(optionNames()).not.toContain('_ceq');
+    expect(optionNames()).not.toContain('_ilike');
+  });
+
+  it('only offers the columns of the remote table', async () => {
+    setup({ permissions: { pet: { name: { _eq: 'a' } } }, tables });
+
+    await userEvent.click(screen.getByLabelText('pet.name-operator-root'));
+
+    expect(optionNames()).toEqual(['-', 'name', 'owner']);
+  });
+});
+
+describe('_exists', () => {
+  const tables = [usersTable('default', [column('name')])];
+
+  it('disables _where until _table is picked', () => {
+    setup({
+      permissions: { _exists: { _table: {}, _where: {} } },
+      tables,
+    });
+
+    expect(screen.getByLabelText('_exists._where-operator')).toBeDisabled();
+  });
+
+  it('enables _where once _table is picked', () => {
+    setup({
+      permissions: {
+        _exists: { _table: { schema: 'public', name: 'users' }, _where: {} },
+      },
+      tables,
+    });
+
+    expect(screen.getByLabelText('_exists._where-operator')).toBeEnabled();
   });
 });

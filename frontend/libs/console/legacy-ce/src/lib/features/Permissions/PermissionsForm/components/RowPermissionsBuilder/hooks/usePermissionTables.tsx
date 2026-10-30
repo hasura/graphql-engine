@@ -48,21 +48,32 @@ export const usePermissionTables = ({
   // every keystroke, and each of its tables reloads relationships when they change
   const permissionTables = useMemo(
     () =>
-      tables?.map(({ metadataTable, columns, foreignKeys, sourceName }) => {
-        return {
-          table: metadataTable.table,
-          dataSource: metadata.sources?.find(
-            (source) => source.name === sourceName,
-          ),
-          relationships: getAllTableRelationships(
-            metadataTable,
-            sourceName,
-            toForeignKeyConstraints(foreignKeys),
-          ),
+      tables?.map(
+        ({
+          metadataTable,
           columns,
-          computedFields: metadataTable.computed_fields ?? [],
-        };
-      }) ?? [],
+          foreignKeys,
+          tableReturningComputedFields,
+          sourceName,
+        }) => {
+          return {
+            table: metadataTable.table,
+            dataSource: metadata.sources?.find(
+              (source) => source.name === sourceName,
+            ),
+            relationships: getAllTableRelationships(
+              metadataTable,
+              sourceName,
+              toForeignKeyConstraints(foreignKeys),
+            ),
+            columns,
+            // computed fields returning a table can't be used in a row permission
+            computedFields: (metadataTable.computed_fields ?? []).filter(
+              ({ name }) => !tableReturningComputedFields.includes(name),
+            ),
+          };
+        },
+      ) ?? [],
     [tables, metadata],
   );
 

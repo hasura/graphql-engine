@@ -32,7 +32,6 @@ export function AsyncReactSelect<
   IsMulti extends boolean = false,
 >({
   invalid,
-  isDisabled,
   defaultOptions,
   formatOptionLabel,
   menuPortalTarget,

@@ -47,10 +47,35 @@ export const PermissionsForm = (props: PermissionsFormProps) => {
     props.roleName,
   );
 
+  // Issue #10907: metadata is a single shared react-query cache. On client-side
+  // (SPA) navigation the form can mount while that cache is still refetching, so
+  // `props.table` may not yet carry this role's permission. The form seeds
+  // react-hook-form from metadata-derived default values exactly once on mount
+  // (PermissionsFormComponent's `useConsoleForm`), so mounting against the
+  // incomplete snapshot leaves the Row radio and Column checkboxes blank until a
+  // full page refresh. When the permissions table says a permission exists
+  // (`accessType !== 'noAccess'`) but we can't find it yet and metadata is still
+  // fetching, wait for hydration before mounting the form.
+  const awaitingPermissionHydration =
+    props.accessType !== 'noAccess' && !currentPermission && metadataFetching;
+
+  if (awaitingPermissionHydration) {
+    return <Skeleton width="100%" height="300px" />;
+  }
+
+  // Remount the form on any role/table/query/source change. The permissions
+  // table machine keeps the form open across these switches, and react-hook-form
+  // only applies default values on mount, so without a stable identity key the
+  // form would keep the previously selected permission's values. A value-based
+  // key is deliberately avoided so a background metadata refetch does not
+  // remount the form and discard the user's in-progress edits.
+  const formKey = `${props.source.name}-${JSON.stringify(props.table.table)}-${props.roleName}-${props.queryType}`;
+
   const renderContent = () => {
     if (props.accessType === 'noAccess' || !currentPermission) {
       return (
         <PermissionsFormWrapper
+          key={formKey}
           {...props}
           metadata={meta.metadata}
           showCloseButton
@@ -65,7 +90,11 @@ export const PermissionsForm = (props: PermissionsFormProps) => {
             label: 'Modify',
             value: 'modify',
             content: (
-              <PermissionsFormWrapper {...props} metadata={meta.metadata} />
+              <PermissionsFormWrapper
+                key={formKey}
+                {...props}
+                metadata={meta.metadata}
+              />
             ),
           },
           {

@@ -115,6 +115,7 @@ export const ModifyTable: React.FC<ModifyTableProps> = (props) => {
         <Section
           headerText="Computed Fields"
           tooltipMessage="Add a function as a virtual field in the GraphQL API"
+          learnMoreLink="https://hasura.io/docs/2.0/schema/postgres/computed-fields"
         >
           <ComputedFields {...props} />
         </Section>

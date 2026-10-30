@@ -24,7 +24,6 @@ export function ReactSelect<
   IsMulti extends boolean = false,
 >({
   invalid,
-  isDisabled,
   formatOptionLabel,
   menuPortalTarget,
   ...props

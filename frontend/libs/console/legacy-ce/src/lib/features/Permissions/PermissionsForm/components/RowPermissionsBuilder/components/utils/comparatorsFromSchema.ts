@@ -158,10 +158,30 @@ export const mapScalarDataType = (
   return dataTypes?.[dataType] || dataType;
 };
 
+/**
+ * The comparators the server accepts on a column of a remote database
+ * relationship (`RemoteRelSupportedOp`): column comparators aren't, the
+ * columns being in another source.
+ */
+export const remoteRelationshipOperators = [
+  '_eq',
+  '_neq',
+  '_gt',
+  '_lt',
+  '_gte',
+  '_lte',
+  '_in',
+  '_nin',
+  '_like',
+  '_nlike',
+  '_is_null',
+];
+
 export function useOperators({ path }: { path: string[] }) {
   const { comparators } = useContext(rowPermissionsContext);
   const { tables } = useContext(rootTableContext);
-  const { columns, table, source, computedFields } = useContext(tableContext);
+  const { columns, table, source, computedFields, isRemote } =
+    useContext(tableContext);
 
   const columnName = path[path.length - 2];
   const column = columns.find((c) => c.name === columnName);
@@ -180,12 +200,15 @@ export function useOperators({ path }: { path: string[] }) {
     table,
     source,
   });
-  if (dataType && hasWhitelistedOperators(columnDataType(dataType))) {
-    return operators.filter((o) =>
-      whitelist[columnDataType(dataType || '')]?.includes(o.name),
-    );
-  }
-  return operators;
+  const typeOperators =
+    dataType && hasWhitelistedOperators(columnDataType(dataType))
+      ? operators.filter((o) =>
+          whitelist[columnDataType(dataType || '')]?.includes(o.name),
+        )
+      : operators;
+  return isRemote
+    ? typeOperators.filter((o) => remoteRelationshipOperators.includes(o.name))
+    : typeOperators;
 }
 
 type GetDataTypeOperatorsProps = {

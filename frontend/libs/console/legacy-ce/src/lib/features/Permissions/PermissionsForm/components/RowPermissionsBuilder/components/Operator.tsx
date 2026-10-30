@@ -13,8 +13,11 @@ import { rootTableContext } from './RootTableProvider';
 import { findTable } from './utils/tables';
 
 type OperatorOption = ReactSelectOptionType<string> & {
-  type: PermissionType;
+  type?: PermissionType;
 };
+
+// picking it sets an empty key, which removes the key and its condition
+const emptyOption: OperatorOption = { value: '', label: '-' };
 
 /**
  * The other keys of the object holding the key. Without a key, the path is
@@ -43,7 +46,7 @@ export const Operator = ({
   const { operators, permissions, setKey, loadRelationships, isLoading } =
     useContext(rowPermissionsContext);
   const { tables } = useContext(rootTableContext);
-  const { columns, table, source, relationships, computedFields } =
+  const { columns, table, source, relationships, computedFields, isRemote } =
     useContext(tableContext);
   const { rootLogicalModel } = useContext(logicalModelContext);
 
@@ -56,6 +59,31 @@ export const Operator = ({
 
   const optionGroups = useMemo(() => {
     const groups: GroupBase<OperatorOption>[] = [];
+
+    // picking a key used next to this one would overwrite its condition
+    const siblingKeys = getSiblingKeys(permissions, path, operator);
+    const withoutSiblingKeys = () =>
+      groups
+        .map((group) => ({
+          ...group,
+          options: group.options.filter(
+            (option) => !siblingKeys.includes(option.value),
+          ),
+        }))
+        .filter((group) => group.options.length > 0);
+
+    // the server only accepts a column on a remote database relationship
+    if (isRemote) {
+      groups.push({
+        label: 'Columns',
+        options: columns.map((column) => ({
+          type: 'column',
+          value: column.name,
+          label: column.name,
+        })),
+      });
+      return withoutSiblingKeys();
+    }
 
     if (operators.boolean?.items.length) {
       groups.push({
@@ -123,16 +151,7 @@ export const Operator = ({
       });
     }
 
-    // picking a key used next to this one would overwrite its condition
-    const siblingKeys = getSiblingKeys(permissions, path, operator);
-    return groups
-      .map((group) => ({
-        ...group,
-        options: group.options.filter(
-          (option) => !siblingKeys.includes(option.value),
-        ),
-      }))
-      .filter((group) => group.options.length > 0);
+    return withoutSiblingKeys();
   }, [
     permissions,
     path,
@@ -141,6 +160,7 @@ export const Operator = ({
     operators.exist,
     columns,
     computedFields,
+    isRemote,
     rootLogicalModel,
     relationships,
     hasFeature,
@@ -163,7 +183,11 @@ export const Operator = ({
         isSearchable
         isDisabled={isLoading || (parent === '_where' && isEmpty(table))}
         value={selectedOption}
-        options={optionGroups}
+        options={
+          operator && !isEmpty(permissions)
+            ? [emptyOption, ...optionGroups]
+            : optionGroups
+        }
         filterOption={(option, inputValue) => {
           if (!inputValue) {
             return true;

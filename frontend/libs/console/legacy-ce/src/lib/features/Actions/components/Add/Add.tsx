@@ -78,7 +78,7 @@ const AddAction: React.FC = () => {
 
   return (
     <Analytics name="AddAction" {...REDACT_EVERYTHING}>
-      <div className="w-full overflow-y-auto mt-6 pr-4">
+      <div className="w-full overflow-y-auto">
         <div>
           <div className="mb-4">
             <Heading size="6">Add a new action</Heading>

@@ -16,12 +16,19 @@ import { TableToLoad } from '../components';
 import { useAuthFetchJson } from '@hasura/shared/hooks';
 import { useAppContext } from '@hasura/shared/context';
 import { areTablesEqual } from '@hasura/metadata/helpers';
+import {
+  canHaveTableReturningComputedFields,
+  getTableReturningComputedFields,
+  getTableReturningComputedFieldsQueryKey,
+} from '../../../hooks/useTableReturningComputedFields';
 
 type TableWithColumns = {
   metadataTable: MetadataTable;
   columns: TableColumn[];
   /** the foreign keys of a loaded table that has same-table FK relationships */
   foreignKeys: TableFkRelationships[];
+  /** the computed fields returning a table, which a row permission can't use */
+  tableReturningComputedFields: string[];
   sourceName: string;
 };
 
@@ -61,6 +68,7 @@ export const useTablesWithColumns = ({
                 metadataTable,
                 columns: [],
                 foreignKeys: [],
+                tableReturningComputedFields: [],
                 sourceName: source.name,
               };
             }
@@ -72,6 +80,34 @@ export const useTablesWithColumns = ({
               endpoints,
               fetchJson,
             };
+
+            const computedFields = metadataTable.computed_fields ?? [];
+            const qualifiedSource = { name: source.name, kind: source.kind };
+            const tableReturningComputedFields =
+              canHaveTableReturningComputedFields(
+                qualifiedSource,
+                computedFields,
+              )
+                ? queryClient
+                    .fetchQuery({
+                      // shared with `useTableReturningComputedFields`
+                      queryKey: getTableReturningComputedFieldsQueryKey(
+                        qualifiedSource,
+                        computedFields,
+                      ),
+                      queryFn: () =>
+                        getTableReturningComputedFields({
+                          source: qualifiedSource,
+                          computedFields,
+                          endpoints,
+                          fetchJson,
+                        }),
+                      staleTime: defaultQueryOptions.staleTime,
+                    })
+                    // without it these computed fields are offered too, and
+                    // the server reports them on save
+                    .catch(() => [])
+                : [];
 
             const getFKRelationships =
               databaseMethods.introspection.getFKRelationships;
@@ -106,6 +142,7 @@ export const useTablesWithColumns = ({
               metadataTable,
               columns,
               foreignKeys,
+              tableReturningComputedFields: await tableReturningComputedFields,
               sourceName: source.name,
             };
           }),
