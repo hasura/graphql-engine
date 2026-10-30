@@ -54,7 +54,7 @@ export const OASGeneratorPage = () => {
   };
 
   return (
-    <div className="mt-6">
+    <div>
       <div className="mb-4">
         <div>
           <Breadcrumbs

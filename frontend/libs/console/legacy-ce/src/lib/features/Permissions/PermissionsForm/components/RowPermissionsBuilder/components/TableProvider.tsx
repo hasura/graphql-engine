@@ -44,12 +44,15 @@ export const TableProvider = ({
   children,
   table: defaultTable,
   source: sourceProp,
+  isRemote: isRemoteProp,
   objectPath,
 }: {
   children: React.ReactNode;
   table?: Table;
   /** the source of the table, the one of the closest table by default */
   source?: string;
+  /** whether a remote database relationship leads to the table, inherited by default */
+  isRemote?: boolean;
   objectPath?: string;
 }) => {
   const [table, setTableName] = useState<Table>(defaultTable || ({} as Table));
@@ -64,9 +67,13 @@ export const TableProvider = ({
     source: rootSource,
   } = useContext(rootTableContext);
   const { loadRelationships } = useContext(rowPermissionsContext);
-  const { table: closestTableName, source: closestSource } =
-    useContext(tableContext);
+  const {
+    table: closestTableName,
+    source: closestSource,
+    isRemote: closestIsRemote,
+  } = useContext(tableContext);
   const source = sourceProp ?? closestSource ?? rootSource;
+  const isRemote = isRemoteProp ?? closestIsRemote;
 
   //  Stringify values to get a stable key for the derived-state sync below
   const stringifiedTable = getTableDisplayName(table);
@@ -128,6 +135,7 @@ export const TableProvider = ({
     <tableContext.Provider
       value={{
         source,
+        isRemote,
         columns,
         setColumns,
         computedFields,

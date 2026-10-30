@@ -40,7 +40,7 @@ const RemoteSchemaLanding = () => {
   };
 
   return (
-    <div className="m-4">
+    <div>
       <div>
         <Flex align="center" gap="2">
           <Heading size="4">Remote Schemas</Heading>

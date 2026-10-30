@@ -13,6 +13,24 @@ import { areTablesEqual } from '@hasura/metadata/helpers';
 import { RowPermissionBuilder } from './RowPermissionBuilder';
 import { usePermissionTables } from './hooks/usePermissionTables';
 
+// jsdom lacks ResizeObserver, which the _exists table picker (Radix scroll-area)
+// depends on.
+beforeAll(() => {
+  globalThis.ResizeObserver =
+    globalThis.ResizeObserver ??
+    class {
+      observe() {
+        /* noop */
+      }
+      unobserve() {
+        /* noop */
+      }
+      disconnect() {
+        /* noop */
+      }
+    };
+});
+
 const table = (name: string) => ({ schema: 'public', name });
 
 const column = (name: string): TableColumn => ({
@@ -63,6 +81,20 @@ vi.mock('@hasura/metadata/data-source', async (importOriginal) => ({
       getFKRelationships,
     },
   }),
+}));
+
+// the functions of the computed fields that return a table
+const runSQL = vi.fn(async () => ({
+  result_type: 'TuplesOk',
+  result: [
+    ['function_schema', 'function_name'],
+    ['public', 'user_orders'],
+  ],
+}));
+
+vi.mock('@hasura/metadata/api', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@hasura/metadata/api')>()),
+  runSQL: (...args: unknown[]) => runSQL(...(args as [])),
 }));
 
 vi.mock('./hooks/usePermissionComparators', () => ({
@@ -141,8 +173,8 @@ const permissions = {
 
 const formRenderSpy = vi.fn();
 
-const Form = () => {
-  const methods = useForm({ defaultValues: { filter: permissions } });
+const FormWithFilter = ({ filter }: { filter: Record<string, unknown> }) => {
+  const methods = useForm({ defaultValues: { filter } });
   formRenderSpy();
   return (
     <Theme>
@@ -157,6 +189,8 @@ const Form = () => {
     </Theme>
   );
 };
+
+const Form = () => <FormWithFilter filter={permissions} />;
 
 const selectedKeys = () =>
   Array.from(document.querySelectorAll('[class*="singleValue"]')).map(
@@ -210,6 +244,32 @@ describe('RowPermissionBuilder', () => {
     );
     // the builder watches its value on its own
     expect(formRenderSpy).not.toHaveBeenCalled();
+  });
+
+  // Regression test for issue #10907: an `_exists` references its table through
+  // `_table`, not a relationship, so its columns were never introspected and the
+  // `_where` operators rendered blank. The builder must queue that table.
+  it('loads the table of an existing _exists so its _where columns render', async () => {
+    getTableColumns.mockClear();
+    testRenderWithClient(
+      <FormWithFilter
+        filter={{
+          _exists: {
+            _table: table('users'),
+            _where: { id: { _eq: 'X-Hasura-User-Id' } },
+          },
+        }}
+      />,
+    );
+
+    // the column under `_where` resolves only once `users` has been introspected
+    await waitFor(() => expect(selectedKeys()).toContain('id'));
+    expect(selectedKeys()).toEqual(['_exists', 'id', '_eq']);
+
+    const introspectedTables = getTableColumns.mock.calls.map(
+      ([props]) => props.table.name,
+    );
+    expect(introspectedTables).toContain('users');
   });
 });
 
@@ -277,5 +337,43 @@ describe('usePermissionTables', () => {
       ([props]) => props.table.name,
     );
     expect(introspectedTables).toEqual(['orders', 'contracts']);
+  });
+
+  it('leaves out the computed fields returning a table', async () => {
+    const computedField = (name: string, functionName: string) => ({
+      name,
+      definition: { function: { schema: 'public', name: functionName } },
+    });
+    const { result } = renderHook(
+      () =>
+        usePermissionTables({
+          source: source as never,
+          table: table('users'),
+          metadata: {
+            version: 3,
+            sources: [
+              {
+                ...source,
+                tables: [
+                  {
+                    table: table('users'),
+                    computed_fields: [
+                      computedField('full_name', 'user_full_name'),
+                      computedField('orders', 'user_orders'),
+                    ],
+                  },
+                ],
+              },
+            ],
+          } as never,
+        }),
+      { wrapper: testWrapper },
+    );
+
+    await waitFor(() =>
+      expect(
+        result.current.tables[0]?.computedFields.map(({ name }) => name),
+      ).toEqual(['full_name']),
+    );
   });
 });

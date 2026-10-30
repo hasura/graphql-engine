@@ -33,7 +33,7 @@ import {
   BadgeColor,
 } from '@hasura/shared/ui';
 import { useMetadata } from '@hasura/metadata/api';
-import { Flex } from '@radix-ui/themes';
+import { Flex, Grid } from '@radix-ui/themes';
 
 const fillToTenRows = (data: ReactNode[][]) => {
   const rowsToFill = 10 - data.length;
@@ -286,7 +286,7 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
         <div>
           <UploadFile onChange={handleFileUpload} />
         </div>
-        <Flex className="w-1/2 pl-[10px]">
+        <Flex className="w-1/2">
           <InputField
             fieldProps={{
               placeholder: 'Available endpoints...',
@@ -324,44 +324,48 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
           </DropdownButton>
         </Flex>
       </Flex>
-      <div className="grid grid-cols-2 gap-6">
-        <div>
-          <div className="h-[400px] mb-4" data-testid="oas-editor">
-            {!isOasTooBig || showEditor ? (
-              <CodeEditorField
-                noErrorPlaceholder
-                name="oas"
-                placeholder="1. Paste OpenAPI spec in raw text (JSON / YAML) here"
-                editorOptions={editorOptions}
-                editorProps={{
-                  className: 'rounded`-r-none',
-                  mode: 'yaml',
-                }}
-              />
-            ) : (
-              <Flex
-                direction="column"
-                align="center"
-                justify="center"
-                gap="2"
-                className="h-full"
-              >
-                <Text>Editor is disabled because the spec is too large</Text>
+      <Grid
+        columns={{
+          initial: '1',
+          md: '2',
+        }}
+        gap="6"
+      >
+        <div data-testid="oas-editor">
+          {!isOasTooBig || showEditor ? (
+            <CodeEditorField
+              noErrorPlaceholder
+              name="oas"
+              placeholder="1. Paste OpenAPI spec in raw text (JSON / YAML) here"
+              editorOptions={editorOptions}
+              editorProps={{
+                width: '100%',
+                mode: 'yaml',
+              }}
+            />
+          ) : (
+            <Flex
+              direction="column"
+              align="center"
+              justify="center"
+              gap="2"
+              className="h-full"
+            >
+              <Text>Editor is disabled because the spec is too large</Text>
 
-                <Button
-                  onClick={() => {
-                    setShowEditor(true);
-                  }}
-                >
-                  Enable Editor
-                </Button>
-              </Flex>
-            )}
-          </div>
+              <Button
+                onClick={() => {
+                  setShowEditor(true);
+                }}
+              >
+                Enable Editor
+              </Button>
+            </Flex>
+          )}
         </div>
         <div>
           <CardedTable
-            className="h-[400px] relative"
+            className="relative"
             columns={[...columns]}
             data={fillToTenRows(
               filteredOperations.map((op) => {
@@ -395,7 +399,7 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
             )}
           />
         </div>
-      </div>
+      </Grid>
       {isOasTooBig && (
         <IndicatorCard status="warning" showIcon>
           The spec is larger than 3MB. It won&apos;t be saved for future use.
@@ -418,19 +422,17 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
         </div>
       )}
       <div>
-        <div className="mt-2">
-          <InputField
-            label="Base URL"
-            size="medium"
-            fieldProps={{
-              placeholder: 'http://swagger.io/v2',
-              icon: FaSearch,
-            }}
-            name="url"
-            className="mb-0 mt-2"
-            noErrorPlaceholder
-          />
-        </div>
+        <InputField
+          label="Base URL"
+          size="medium"
+          fieldProps={{
+            placeholder: 'http://swagger.io/v2',
+            icon: FaSearch,
+          }}
+          name="url"
+          className="mb-0 mt-2"
+          noErrorPlaceholder
+        />
       </div>
     </Flex>
   );

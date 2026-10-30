@@ -91,7 +91,7 @@ const STContainer: React.FC<Props> = ({ triggerName, children, tabName }) => {
 
   return (
     <Analytics name="CronTriggers" {...REDACT_EVERYTHING}>
-      <div className="p-4">
+      <div>
         <Breadcrumbs items={breadCrumbs} />
         <div className="my-4">
           <Heading size="4">{triggerName}</Heading>

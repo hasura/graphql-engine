@@ -355,7 +355,7 @@ const AddEventTrigger: React.FC = () => {
 
   return (
     <Analytics name="AddEventTrigger" {...REDACT_EVERYTHING}>
-      <div className="w-full overflow-y-auto p-4">
+      <div className="w-full overflow-y-auto">
         <div className="max-w-6xl">
           <div className="pt-4 pb-4 clear-both pl-md">
             <div>

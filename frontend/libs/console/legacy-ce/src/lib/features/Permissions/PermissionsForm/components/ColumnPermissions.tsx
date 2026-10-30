@@ -7,12 +7,14 @@ import {
   CheckboxesField,
   Collapsible,
   CollapsibleHeader,
+  IconTooltip,
   IndicatorCard,
   Text,
 } from '@hasura/shared/ui';
 import { TableColumn, useTableColumns } from '@hasura/metadata/data-source';
 import { PermissionsConfirmationModal } from './RootFieldPermissions/PermissionsConfirmationModal';
 import { useIsDisabled } from '../hooks/useIsDisabled';
+import { useTableReturningComputedFields } from '../hooks/useTableReturningComputedFields';
 import { isPermissionModalDisabled } from '../utils/getPermissionModalStatus';
 import {
   getPermissionsModalTitle,
@@ -120,19 +122,35 @@ export const ColumnPermissionsSection: React.FC<
 
   const tableComputedFields = table.computed_fields?.map(({ name }) => name);
 
+  // computed fields returning a table derive their select permissions from
+  // that table, so the server rejects them in `computed_fields`
+  const { data: tableReturningComputedFields = [] } =
+    useTableReturningComputedFields({
+      source,
+      computedFields: table.computed_fields ?? [],
+    });
+
   const onClick = () => {
+    // if status is not all columns: toggle all on, otherwise toggle all off
+    const toggleAllOn = status !== 'All columns';
     columns?.forEach((column) => {
-      const toggleAllOn = status !== 'All columns';
-      // if status is not all columns: toggle all on
-      // otherwise toggle all off
       setValue(`columns.${column}`, toggleAllOn);
     });
-    computedFields?.forEach((field) => {
-      const toggleAllOn = status !== 'All columns';
-      // if status is not all columns: toggle all on
-      // otherwise toggle all off
-      setValue(`computed_fields.${field}`, toggleAllOn);
-    });
+    // `computed_fields` is an array of selected computed-field names, not a
+    // Record keyed by name. Set the whole array so it stays consistent with
+    // the schema and the CheckboxesField. Writing `computed_fields.<name>`
+    // turned it into an object and later serialized as array indices
+    // ("0", "1", ...), corrupting the saved permission.
+    if (computedFields?.length) {
+      setValue(
+        'computed_fields',
+        toggleAllOn
+          ? computedFields.filter(
+              (fieldName) => !tableReturningComputedFields.includes(fieldName),
+            )
+          : [],
+      );
+    }
   };
 
   if (isError) {
@@ -224,11 +242,23 @@ export const ColumnPermissionsSection: React.FC<
                 name="computed_fields"
                 orientation="horizontal"
                 noErrorPlaceholder
-                options={tableComputedFields.map((fieldName) => ({
-                  label: <Text className="italic">{fieldName}</Text>,
-                  value: fieldName,
-                  title: disabled ? 'Set a row permission first' : undefined,
-                }))}
+                options={tableComputedFields.map((fieldName) => {
+                  const returnsTable =
+                    tableReturningComputedFields.includes(fieldName);
+                  return {
+                    label: (
+                      <Flex align="center" gap="1">
+                        <Text className="italic">{fieldName}</Text>
+                        {returnsTable && (
+                          <IconTooltip message="This computed field returns a table. Its select permissions are derived from the permissions on the returning table and cannot be set here." />
+                        )}
+                      </Flex>
+                    ),
+                    value: fieldName,
+                    disabled: disabled || returnsTable,
+                    title: disabled ? 'Set a row permission first' : undefined,
+                  };
+                })}
               />
             )}
             <Button

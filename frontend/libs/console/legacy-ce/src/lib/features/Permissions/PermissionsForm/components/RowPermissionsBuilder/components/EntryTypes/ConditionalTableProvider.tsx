@@ -45,6 +45,7 @@ export function ConditionalTableProvider({
           key={JSON.stringify([relationshipSource, relationshipTable ?? null])}
           table={relationshipTable}
           source={relationshipSource}
+          isRemote={relationship.type === 'remoteDatabaseRelationship'}
         >
           {children}
         </TableProvider>
