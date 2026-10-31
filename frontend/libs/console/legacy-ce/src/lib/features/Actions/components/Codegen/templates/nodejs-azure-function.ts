@@ -129,26 +129,35 @@ export const templater = (
   //    field1: "",
   //    field2: ""
   // }
+  // The output type can be a scalar (e.g. `String!`), which has no fields:
+  // then the handler responds with a single placeholder value. When it is a
+  // list (e.g. `[ActionResult!]!`), the handler responds with a list of one
+  // placeholder.
   let actionOutputNamedType = actionDef.type;
+  let isListOutput = false;
   while (actionOutputNamedType.kind !== 'NamedType') {
+    if (actionOutputNamedType.kind === 'ListType') {
+      isListOutput = true;
+    }
     actionOutputNamedType = actionOutputNamedType.type;
   }
   const actionOutputType = ast.definitions.find(
-    (def: any) => def.name.value === actionOutputNamedType.name.value,
-  );
-  const outputTypeFieldNames = actionOutputType.fields.map(
-    (f: any) => f.name.value,
+    (def: any) =>
+      def.kind === 'ObjectTypeDefinition' &&
+      def.name.value === actionOutputNamedType.name.value,
   );
 
-  let outputTypeSpread = '{\n      ';
-  outputTypeFieldNames.forEach((n: string, i: number) => {
-    outputTypeSpread += n + ': ""';
-    if (i === outputTypeFieldNames.length - 1) {
-      outputTypeSpread += '\n    }';
-    } else {
-      outputTypeSpread += ',\n      ';
-    }
-  });
+  let sampleOutput = '""';
+  if (actionOutputType) {
+    const outputTypeFieldNames: string[] = actionOutputType.fields.map(
+      (f: any) => f.name.value,
+    );
+    sampleOutput = `{\n${outputTypeFieldNames.map((n) => `  ${n}: ""`).join(',\n')}\n}`;
+  }
+  if (isListOutput) {
+    sampleOutput = `[\n${sampleOutput.replace(/^/gm, '  ')},\n]`;
+  }
+  const outputTypeSpread = sampleOutput.replace(/\n/g, '\n    ');
 
   const basicHandlerCode = generateHandler(
     extractArgsFromBody,

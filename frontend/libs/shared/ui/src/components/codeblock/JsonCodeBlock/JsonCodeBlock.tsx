@@ -30,6 +30,10 @@ export const JsonCodeBlock = ({
     typeof value === 'string' ? value : JSON.stringify(value, null, indent);
 
   const highlighted = useMemo(() => {
+    if (formatted === '{}' && value instanceof Error) {
+      return value.message;
+    }
+
     try {
       return hljs.highlight(formatted, {
         language: 'json',
@@ -38,7 +42,7 @@ export const JsonCodeBlock = ({
     } catch {
       return undefined;
     }
-  }, [formatted]);
+  }, [formatted, value]);
 
   return (
     <CodeBlock
