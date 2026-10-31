@@ -2,6 +2,7 @@ import { parse } from 'graphql';
 import { camelize } from 'inflection';
 import { CodegenDerive, CodegenFile } from './types';
 import { generateHasuraTypes } from './generateHasuraTypes';
+import { getDerivedOutput } from './derive';
 
 export const templater = async (
   actionName: string,
@@ -82,11 +83,11 @@ export const templater = async (
       ? derive.endpoint
       : 'http://localhost:8080/v1/graphql';
   if (shouldDerive && derive) {
-    const operationDoc: any = parse(derive.operation);
-    const operationName =
-      operationDoc.definitions[0].selectionSet.selections.filter(
-        (s: any) => s.name.value.indexOf('__') !== 0,
-      )[0].name.value;
+    const derivedOutput = getDerivedOutput(
+      derive.operation,
+      actionDef.type,
+      ast.definitions,
+    );
 
     operationCodegen = `
 const HASURA_OPERATION = \`${derive.operation}\`;`;
@@ -120,9 +121,7 @@ const execute = async (variables) => {
   }`;
 
     successSnippet = `  // success
-  return res.json({
-    ...data.${operationName}
-  })`;
+  return res.json(${derivedOutput})`;
   }
 
   if (!errorSnippet) {

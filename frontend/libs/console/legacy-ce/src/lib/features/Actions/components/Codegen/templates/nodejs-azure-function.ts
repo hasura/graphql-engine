@@ -1,5 +1,6 @@
 import { parse } from 'graphql';
 import { CodegenDerive, CodegenFile } from './types';
+import { getDerivedOutput } from './derive';
 
 // Generate the basic handler
 // For azure
@@ -38,7 +39,7 @@ const generateFetch = (
   actionName: string,
   rawQuery: string,
   variables: string,
-  queryRootFieldName: string,
+  derivedOutput: string,
   derive: { operation: string; endpoint?: string },
 ) => {
   const queryName = 'HASURA_' + actionName.toUpperCase();
@@ -83,9 +84,7 @@ const execute${actionNameUpper} = async (variables) => {
   // If success
   context.res = {
     headers: { 'Content-Type': 'application/json' },
-    body: {
-      ...data.${queryRootFieldName}
-    }
+    body: ${derivedOutput}
   };
 };`;
 
@@ -130,8 +129,12 @@ export const templater = (
   //    field1: "",
   //    field2: ""
   // }
+  let actionOutputNamedType = actionDef.type;
+  while (actionOutputNamedType.kind !== 'NamedType') {
+    actionOutputNamedType = actionOutputNamedType.type;
+  }
   const actionOutputType = ast.definitions.find(
-    (def: any) => def.name.value === actionDef.type.name.value,
+    (def: any) => def.name.value === actionOutputNamedType.name.value,
   );
   const outputTypeFieldNames = actionOutputType.fields.map(
     (f: any) => f.name.value,
@@ -158,13 +161,6 @@ export const templater = (
   const isDerivation = !!(derive && derive.operation);
   if (isDerivation && derive) {
     const operationAST: any = parse(derive.operation);
-    const queryRootField =
-      operationAST.definitions[0].selectionSet.selections.find(
-        (f: any) => !f.name.value.startsWith('__'),
-      );
-    const queryRootFieldName = queryRootField.alias
-      ? queryRootField.alias.value
-      : queryRootField.name.value;
     const variableNames = operationAST.definitions[0].variableDefinitions.map(
       (vdef: any) => vdef.variable.name.value,
     );
@@ -173,7 +169,12 @@ export const templater = (
       actionName,
       derive.operation,
       `{ ${variableNames.join(', ')} }`,
-      queryRootFieldName,
+      getDerivedOutput(
+        derive.operation,
+        actionDef.type,
+        ast.definitions,
+        '    ',
+      ),
       derive,
     );
   }

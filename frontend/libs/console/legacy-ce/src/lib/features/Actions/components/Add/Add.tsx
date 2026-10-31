@@ -14,7 +14,10 @@ import getDefaultState, {
   getActionResponseTransformDefaultState,
 } from '../Form/state';
 import useActionForm from '../Form/useActionForm';
-import { useSearchParams } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
+import { useQueryClient } from '@tanstack/react-query';
+import { METADATA_QUERY_KEY } from '@hasura/metadata/api';
+import { dataRoutes } from '@hasura/shared/utils';
 import { useCurrentActionContext } from '../../context';
 import { Heading } from '@radix-ui/themes';
 
@@ -23,6 +26,8 @@ const AddAction: React.FC = () => {
   const { createAction, isPending: isCreating } = useCreateAction();
   const { metadata } = useCurrentActionContext();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const {
     state,
     actionDefinitionOnChange,
@@ -56,6 +61,7 @@ const AddAction: React.FC = () => {
     getDefaultState(
       searchParams.get('action_sdl'),
       searchParams.get('types_sdl'),
+      searchParams.get('derived_operation'),
     ),
     getActionRequestTransformDefaultState(),
     getActionResponseTransformDefaultState(),
@@ -66,12 +72,20 @@ const AddAction: React.FC = () => {
     const responseTransform = getResponseTransformObject(
       responseTransformState,
     );
-    createAction({
-      metadata,
-      rawState: state,
-      requestTransform,
-      responseTransform,
-    }).catch(() => {
+    createAction(
+      {
+        metadata,
+        rawState: state,
+        requestTransform,
+        responseTransform,
+      },
+      async (actionName) => {
+        // the edit page reads the action from the metadata, so wait for the
+        // metadata to include it before navigating there
+        await queryClient.refetchQueries({ queryKey: [METADATA_QUERY_KEY] });
+        navigate(dataRoutes.manageAction(actionName, 'modify'));
+      },
+    ).catch(() => {
       //
     });
   };
