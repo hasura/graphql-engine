@@ -3,7 +3,9 @@ import { StoryObj, StoryFn, Meta } from '@storybook/react-webpack5';
 import { Relationship } from '../../../../../DatabaseRelationships';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { action } from 'storybook/actions';
+import { TableColumn, TableRow } from '@hasura/metadata/data-source';
 import { ReactTableWrapper } from './ReactTableWrapper';
+import { MAX_CELL_TEXT_LENGTH } from '../utils';
 import { handlers } from '../../../__mocks__/handlers.mock';
 
 export default {
@@ -228,6 +230,226 @@ export const WithRelationships: StoryObj<typeof ReactTableWrapper> = {
         await expect(firstRowOfAlbum[4]).toHaveTextContent('View');
       },
       { timeout: 5000 },
+    );
+  },
+};
+
+// Big data scenarios. Cells truncate values longer than MAX_CELL_TEXT_LENGTH
+// so large values don't freeze the page; the row dialog shows them in full.
+
+const largeByteaRows = Array.from({ length: 50 }, (_, index) => ({
+  id: index + 1,
+  name: `file_${index + 1}.bin`,
+  // 200,000 bytes per row as hex, like a bytea column holding a file
+  content: `\\x${(index % 16).toString(16).repeat(400_000)}`,
+}));
+
+const largeByteaColumns: TableColumn[] = [
+  {
+    name: 'id',
+    dataType: 'integer',
+    consoleDataType: 'integer',
+    isPrimaryKey: true,
+  },
+  { name: 'content', dataType: 'bytea', consoleDataType: 'binary' },
+  { name: 'name', dataType: 'text', consoleDataType: 'string' },
+];
+
+export const LargeByteaValues: StoryObj<typeof ReactTableWrapper> = {
+  render: () => (
+    <ReactTableWrapper
+      rows={largeByteaRows}
+      isRowsSelectionEnabled
+      onRowsSelect={action('onRowsSelect')}
+      onRowDelete={action('onRowDelete')}
+      tableColumns={largeByteaColumns}
+      source={mockSource}
+      table={['files']}
+      disabled={false}
+      selectedRows={{}}
+    />
+  ),
+
+  name: '🧪 Test - Large bytea values are offered as downloads',
+
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findAllByTestId(/^@table-row-.*$/)).toHaveLength(
+      50,
+    );
+
+    // columns: id (primary key), content, name
+    await expect(canvas.getByTestId('@table-cell-0-2')).toHaveTextContent(
+      'Download (195.3 KB)',
+    );
+    await expect(canvas.getAllByTestId('@download-content')).toHaveLength(50);
+    await expect(canvas.getByTestId('@table-cell-0-3')).toHaveTextContent(
+      'file_1.bin',
+    );
+
+    // binary values have no meaningful order
+    await expect(canvas.getByText('content').parentElement).not.toHaveClass(
+      'cursor-pointer',
+    );
+    await expect(canvas.getByText('name').parentElement).toHaveClass(
+      'cursor-pointer',
+    );
+  },
+};
+
+const largeJsonbRows = Array.from({ length: 50 }, (_, index) => ({
+  id: index + 1,
+  // ~40 KB of JSON per row, like a jsonb document
+  payload: {
+    events: Array.from({ length: 1000 }, (__, event) => ({
+      event,
+      type: event % 2 ? 'click' : 'view',
+    })),
+  },
+  // TableRow only declares primitives, but jsonb values are objects at runtime
+})) as unknown as TableRow[];
+
+export const LargeJsonbValues: StoryObj<typeof ReactTableWrapper> = {
+  render: () => (
+    <ReactTableWrapper
+      rows={largeJsonbRows}
+      isRowsSelectionEnabled
+      onRowsSelect={action('onRowsSelect')}
+      onRowDelete={action('onRowDelete')}
+      tableColumns={[
+        {
+          name: 'id',
+          dataType: 'integer',
+          consoleDataType: 'integer',
+          isPrimaryKey: true,
+        },
+        { name: 'payload', dataType: 'jsonb', consoleDataType: 'json' },
+      ]}
+      source={mockSource}
+      table={['events']}
+      disabled={false}
+      selectedRows={{}}
+    />
+  ),
+
+  name: '🧪 Test - Large jsonb values are truncated',
+
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findAllByTestId(/^@table-row-.*$/)).toHaveLength(
+      50,
+    );
+
+    const payload = canvas.getByTestId('@table-cell-0-2');
+    await expect(payload.textContent?.length).toBeLessThan(
+      MAX_CELL_TEXT_LENGTH + 50,
+    );
+    await expect(payload.textContent).toMatch(
+      /^\{"events":\[\{"event":0,"type":"view"\}.*… \([\d,]+ characters\)$/,
+    );
+  },
+};
+
+const longPrimaryKey = `key-${'x'.repeat(MAX_CELL_TEXT_LENGTH * 2)}`;
+const longValue = 'lorem ipsum '.repeat(500);
+
+export const LongPrimaryKeyIsNotTruncated: StoryObj<typeof ReactTableWrapper> =
+  {
+    render: () => (
+      <ReactTableWrapper
+        rows={[{ key: longPrimaryKey, value: longValue }]}
+        isRowsSelectionEnabled
+        onRowsSelect={action('onRowsSelect')}
+        onRowDelete={action('onRowDelete')}
+        tableColumns={[
+          {
+            name: 'key',
+            dataType: 'text',
+            consoleDataType: 'string',
+            isPrimaryKey: true,
+          },
+          { name: 'value', dataType: 'text', consoleDataType: 'string' },
+        ]}
+        source={mockSource}
+        table={['documents']}
+        disabled={false}
+        selectedRows={{}}
+      />
+    ),
+
+    name: '🧪 Test - Long primary key is kept whole, full value in row dialog',
+
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement);
+
+      // primary keys identify the row, so they are never truncated
+      const primaryKey = await canvas.findByTestId('@open-row-key');
+      await expect(primaryKey.textContent).toBe(longPrimaryKey);
+
+      const value = canvas.getByTestId('@table-cell-0-2');
+      await expect(value).toHaveTextContent('characters)');
+
+      // the row dialog shows the full value
+      await userEvent.click(primaryKey);
+      const dialog = within(document.body);
+      await expect(await dialog.findByText('Table Row')).toBeVisible();
+      await expect(
+        dialog.getByText((_, element) => element?.textContent === longValue),
+      ).toBeInTheDocument();
+    },
+  };
+
+const manyColumnNames = Array.from(
+  { length: 20 },
+  (_, index) => `column_${String(index + 1).padStart(2, '0')}`,
+);
+
+const manyRows = Array.from({ length: 1000 }, (_, row) => ({
+  id: row + 1,
+  ...Object.fromEntries(
+    manyColumnNames.map((name, column) => [name, `r${row + 1}c${column + 1}`]),
+  ),
+}));
+
+export const ManyRowsAndColumns: StoryObj<typeof ReactTableWrapper> = {
+  render: () => (
+    <ReactTableWrapper
+      rows={manyRows}
+      isRowsSelectionEnabled
+      onRowsSelect={action('onRowsSelect')}
+      onRowDelete={action('onRowDelete')}
+      tableColumns={[
+        {
+          name: 'id',
+          dataType: 'integer',
+          consoleDataType: 'integer',
+          isPrimaryKey: true,
+        },
+        ...manyColumnNames.map((name): TableColumn => ({
+          name,
+          dataType: 'text',
+          consoleDataType: 'string',
+        })),
+      ]}
+      source={mockSource}
+      table={['wide_table']}
+      disabled={false}
+      selectedRows={{}}
+    />
+  ),
+
+  name: '🧪 Test - 1,000 rows by 21 columns',
+
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findAllByTestId(/^@table-row-.*$/)).toHaveLength(
+      1000,
+    );
+    await expect(canvas.getByTestId('@table-cell-999-1')).toHaveTextContent(
+      '1000',
+    );
+    await expect(canvas.getByTestId('@table-cell-999-21')).toHaveTextContent(
+      'r1000c20',
     );
   },
 };

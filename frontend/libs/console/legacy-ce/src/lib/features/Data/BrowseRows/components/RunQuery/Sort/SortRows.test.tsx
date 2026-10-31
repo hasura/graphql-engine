@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { AppTheme, useConsoleForm } from '@hasura/shared/ui';
 import { z } from 'zod';
 import type { TableColumn } from '@hasura/metadata/data-source';
@@ -59,5 +60,20 @@ describe('SortRows column options', () => {
       'Alpha',
       'Mike',
     ]);
+  });
+});
+
+describe('SortRows binary columns', () => {
+  it('can not sort by a binary column', async () => {
+    const tableColumns = [
+      { name: 'id', dataType: 'integer', consoleDataType: 'integer' },
+      { name: 'file', dataType: 'bytea', consoleDataType: 'binary' },
+    ] as TableColumn[];
+
+    render(<Harness tableColumns={tableColumns} />);
+    await userEvent.click(screen.getByText('Select a column'));
+
+    expect(screen.getByText('id')).toBeInTheDocument();
+    expect(screen.queryByText('file')).not.toBeInTheDocument();
   });
 });

@@ -88,6 +88,7 @@ export type TableColumn = {
     | 'uuid'
     | 'date'
     | 'time'
+    | 'binary'
     | 'array';
   /** console data type of the elements, when `consoleDataType` is `array` */
   arrayItemType?: Exclude<TableColumn['consoleDataType'], 'array'>;

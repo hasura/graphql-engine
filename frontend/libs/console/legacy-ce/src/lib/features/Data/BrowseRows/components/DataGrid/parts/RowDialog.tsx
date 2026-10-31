@@ -3,11 +3,14 @@ import { FaKey } from 'react-icons/fa';
 import { Badge, DataList, Dialog, JsonCodeBlock } from '@hasura/shared/ui';
 import { columnDataType, TableColumn } from '@hasura/metadata/data-source';
 import { isJsonString } from '@hasura/shared/utils';
+import { BinaryValue } from './BinaryValue';
 
 interface RowDialogProps {
   row: Record<string, unknown>;
   onClose: () => void;
   columns: TableColumn[];
+  /** the file name a binary value of a column of the row downloads to */
+  getBinaryFileName?: (columnName: string) => string;
 }
 
 const NullValue = () => (
@@ -49,9 +52,11 @@ const ArrayValue = ({ items }: { items: unknown[] }) => {
 const RowValue = ({
   value,
   column,
+  getBinaryFileName = (columnName) => `${columnName}.bin`,
 }: {
   value: unknown;
   column?: TableColumn;
+  getBinaryFileName?: RowDialogProps['getBinaryFileName'];
 }) => {
   if (value === null || value === undefined) return <NullValue />;
 
@@ -74,6 +79,16 @@ const RowValue = ({
 
     case 'array':
       if (Array.isArray(value)) return <ArrayValue items={value} />;
+      break;
+
+    case 'binary':
+      if (typeof value === 'string' && column)
+        return (
+          <BinaryValue
+            value={value}
+            fileName={getBinaryFileName(column.name)}
+          />
+        );
       break;
 
     case 'integer':
@@ -115,7 +130,12 @@ const getRowColumns = (
 };
 
 /** A read-only view of a table row. */
-export const RowDialog = ({ onClose, row, columns }: RowDialogProps) => (
+export const RowDialog = ({
+  onClose,
+  row,
+  columns,
+  getBinaryFileName,
+}: RowDialogProps) => (
   <Dialog title="Table Row" onClose={onClose} size="xxxl">
     <DataList
       orientation={{ initial: 'vertical', sm: 'horizontal' }}
@@ -140,7 +160,11 @@ export const RowDialog = ({ onClose, row, columns }: RowDialogProps) => (
         ),
         value: (
           <div className="min-w-0" data-testid={`row-value-${column.name}`}>
-            <RowValue value={row[column.name]} column={column} />
+            <RowValue
+              value={row[column.name]}
+              column={column}
+              getBinaryFileName={getBinaryFileName}
+            />
           </div>
         ),
       }))}

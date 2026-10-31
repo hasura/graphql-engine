@@ -14,6 +14,9 @@ describe('getScalarConsoleDataType', () => {
     ${'time'}                   | ${'String'}  | ${'time'}
     ${'time_with_timezone'}     | ${'String'}  | ${'time'}
     ${'uuid'}                   | ${'ID'}      | ${'string'}
+    ${'binary'}                 | ${'String'}  | ${'binary'}
+    ${'varbinary'}              | ${'String'}  | ${'binary'}
+    ${'blob'}                   | ${'String'}  | ${'binary'}
     ${'custom_number'}          | ${'Float'}   | ${'float'}
     ${'unknown'}                | ${undefined} | ${'string'}
   `(

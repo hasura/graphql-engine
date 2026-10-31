@@ -28,10 +28,12 @@ import clsx from 'clsx';
 import { Relationship } from '../../../../../DatabaseRelationships';
 import { RowOptionsButton } from './RowOptionsButton';
 import { useNavigate } from 'react-router';
-import { dataRoutes } from '@hasura/shared/utils';
+import { dataRoutes, getTableDisplayName } from '@hasura/shared/utils';
 import { RowDialog } from './RowDialog';
+import { BinaryValue } from './BinaryValue';
 import { EditRowDialog } from './EditRowDialog';
 import { toCloneRowState } from '../../../../InsertRow/cloneRow';
+import { formatCellValue } from '../utils';
 
 interface ReactTableWrapperProps {
   disabled: boolean;
@@ -56,12 +58,6 @@ interface ReactTableWrapperProps {
   source: Source;
   table: HasuraTable;
 }
-
-const renderColumnData = (data: any) => {
-  if (['bigint', 'string', 'number'].includes(typeof data)) return data;
-
-  return JSON.stringify(data);
-};
 
 const columnHelper = createColumnHelper<
   SortableSelectableTableFeatures,
@@ -120,16 +116,43 @@ export const ReactTableWrapper: React.FC<ReactTableWrapperProps> = ({
       .sort((a, b) => a.localeCompare(b)),
   ];
 
+  // row keys are the database or the GraphQL names of the columns
+  const binaryColumns = _tableColumns
+    .filter((column) => column.consoleDataType === 'binary')
+    .flatMap((column) => [column.name, column.graphQLProperties?.name]);
+  // downloads are named after the row's primary key, or its position
+  const getBinaryFileName = (row: Record<string, unknown>, column: string) => {
+    const rowId = hasPrimaryKey
+      ? primaryKeyColumns.map((name) => String(row[name])).join('_')
+      : String(rows.indexOf(row as TableRow) + 1);
+    return `${getTableDisplayName(table)}-${column}-${rowId}.bin`;
+  };
+
   const tableColumns = columns.map((column) =>
     columnHelper.accessor((row) => row[column], {
       id: column,
       header: () => <span key={column}>{column}</span>,
-      enableSorting: true,
-      enableMultiSort: true,
+      // binary values have no meaningful order
+      enableSorting: !binaryColumns.includes(column),
+      enableMultiSort: !binaryColumns.includes(column),
       cell: (info: any) => {
-        const value = renderColumnData(info.getValue()) ?? '';
+        const cellValue = info.getValue();
+        if (binaryColumns.includes(column) && typeof cellValue === 'string') {
+          return (
+            <BinaryValue
+              value={cellValue}
+              fileName={getBinaryFileName(info.row.original, column)}
+              data-testid={`@download-${column}`}
+            />
+          );
+        }
+
+        const isPrimaryKey = primaryKeyNames.includes(column);
+        // primary keys identify the row, so they are never truncated
+        const value =
+          formatCellValue(cellValue, isPrimaryKey ? Infinity : undefined) ?? '';
         // primary key values open the row dialog, same as the "Open" row option
-        return primaryKeyNames.includes(column) ? (
+        return isPrimaryKey ? (
           <Link
             onClick={() => setCurrentActiveRow(info.row.original)}
             className="cursor-pointer!"
@@ -264,6 +287,7 @@ export const ReactTableWrapper: React.FC<ReactTableWrapperProps> = ({
                     <div
                       onClick={header.column.getToggleSortingHandler()}
                       className={clsx(
+                        'font-bold',
                         relationshipNames.includes(header.id)
                           ? 'pointer-events-none'
                           : 'pointer-events-auto',
@@ -335,6 +359,9 @@ export const ReactTableWrapper: React.FC<ReactTableWrapperProps> = ({
           row={currentActiveRow}
           onClose={() => setCurrentActiveRow(null)}
           columns={_tableColumns}
+          getBinaryFileName={(column) =>
+            getBinaryFileName(currentActiveRow, column)
+          }
         />
       )}
       {rowToEdit && (

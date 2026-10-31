@@ -18,6 +18,7 @@ export const DataTypeToSQLTypeMap: Record<
   time: ['time'],
   geography: ['geography'],
   uuid: ['uniqueidentifier'],
+  binary: ['binary', 'varbinary', 'image'],
   array: [],
 };
 

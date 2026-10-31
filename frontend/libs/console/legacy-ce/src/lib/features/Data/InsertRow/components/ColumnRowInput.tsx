@@ -61,8 +61,10 @@ export const ColumnRowInput: React.FC<ColumnRowInputProps> = ({
         />
       );
 
+    // binary values are typed as text, e.g. `\x48656c6c6f` for a bytea
     case 'string':
     case 'text':
+    case 'binary':
       return (
         <ExpandableTextInput
           {...props}

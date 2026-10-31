@@ -1,19 +1,36 @@
 import { Analytics, REDACT_EVERYTHING } from '@hasura/shared/analytics';
-import { useLocation } from 'react-router';
+import { matchPath, useLocation } from 'react-router';
 import { useMetadata } from '@hasura/metadata/api';
 import DataSubSidebar from './DataSubSidebar';
 import { useAppContext } from '@hasura/shared/context';
 import { LeftSidebar } from '@hasura/shared/ui';
 
-const MANAGE_DATA_REGEX =
-  /(\/)?data((\/manage)|(\/(\w+)\/)|(\/(\w|%)+\/schema?(\w+)))/;
+// The routes of each sidebar item, as declared in `features/Data/routes.tsx`.
+// `/*` also matches the route itself, e.g. `/data/manage`.
+export const ROUTE_PATTERNS = {
+  manage: [
+    '/data/manage/*',
+    '/data/edit',
+    '/data/schema/manage',
+    // legacy routes, redirected to `/data/manage`
+    '/data/v2/manage/*',
+    '/data/:source/schema/:schema/*',
+  ],
+  sql: ['/data/sql'],
+  nativeQueries: ['/data/native-queries/*'],
+  modelSummary: ['/data/model-count-summary'],
+  migrations: ['/data/migrations'],
+};
+
+export const matchesAny = (patterns: string[], pathname: string) =>
+  patterns.some((pattern) => matchPath(pattern, pathname) !== null);
 
 const LegacyDataSidebar = () => {
-  const location = useLocation();
-  const { data: meta, isFetching: metadataLoading } = useMetadata();
+  const { pathname } = useLocation();
+  const { data: meta, isLoading: metadataLoading } = useMetadata();
   const { envVars } = useAppContext();
 
-  const currentLocation = location.pathname;
+  const isActive = (patterns: string[]) => matchesAny(patterns, pathname);
   const areSourcesPresent = Boolean(meta?.metadata?.sources?.length);
 
   return (
@@ -21,7 +38,7 @@ const LegacyDataSidebar = () => {
       <LeftSidebar
         items={[
           {
-            isActive: MANAGE_DATA_REGEX.test(currentLocation),
+            isActive: isActive(ROUTE_PATTERNS.manage),
             label: 'Data Manager',
             to: `/data/manage`,
             children: (
@@ -34,28 +51,26 @@ const LegacyDataSidebar = () => {
           ...(areSourcesPresent
             ? [
                 {
-                  isActive: currentLocation.includes('/sql'),
+                  isActive: isActive(ROUTE_PATTERNS.sql),
                   label: 'SQL',
                   to: `/data/sql`,
                 },
               ]
             : []),
           {
-            isActive:
-              currentLocation.includes('/native-queries') ||
-              currentLocation.includes('/logical-models'),
+            isActive: isActive(ROUTE_PATTERNS.nativeQueries),
             label: 'Native Queries',
             to: `/data/native-queries`,
           },
           {
-            isActive: currentLocation.includes('/model-count-summary'),
+            isActive: isActive(ROUTE_PATTERNS.modelSummary),
             label: 'Model Summary',
             to: `/data/model-count-summary`,
           },
           ...(envVars.consoleMode === 'cli'
             ? [
                 {
-                  isActive: currentLocation.includes('data/migrations'),
+                  isActive: isActive(ROUTE_PATTERNS.migrations),
                   label: 'Migrations',
                   to: '/data/migrations',
                 },

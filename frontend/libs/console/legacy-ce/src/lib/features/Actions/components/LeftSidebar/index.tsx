@@ -47,9 +47,9 @@ const LeftSidebar = ({ currentAction, actions, allowOpenApiImport }: Props) => {
   const getActionIcon = (action) => {
     switch (action.definition.type) {
       case 'mutation':
-        return <FaEdit aria-hidden="true" />;
+        return <FaEdit className="shrink-0" aria-hidden="true" />;
       default:
-        return <FaBook aria-hidden="true" />;
+        return <FaBook className="shrink-0" aria-hidden="true" />;
     }
   };
 
@@ -73,7 +73,9 @@ const LeftSidebar = ({ currentAction, actions, allowOpenApiImport }: Props) => {
         >
           <Flex align="center" gap="1">
             {actionIcon}
-            {a.name}
+            <Text className="truncate" title={a.name}>
+              {a.name}
+            </Text>
           </Flex>
         </LeftSidebarLeafNavItem>
       );

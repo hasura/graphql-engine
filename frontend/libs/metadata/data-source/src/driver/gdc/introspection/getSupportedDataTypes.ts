@@ -5,6 +5,7 @@ import { getScalarConsoleDataType } from './utils';
 const getDefaultDataTypes = (): TableColumnTypeMap => {
   return {
     array: [],
+    binary: [],
     boolean: [],
     date: [],
     float: [],

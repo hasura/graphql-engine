@@ -46,7 +46,9 @@ export const SortRows = ({
   // See FilterRows: `columns` is the shared introspection cache array, so it
   // must not be sorted in place or the browse grid's column order follows the
   // alphabetical order of this dropdown.
-  const columnOptions = [...columns]
+  // binary values have no meaningful order
+  const columnOptions = columns
+    .filter((column) => column.consoleDataType !== 'binary')
     .sort((a, b) => (a.name > b.name ? 1 : -1))
     .map((column) => {
       return {

@@ -21,6 +21,7 @@ export const DataTypeToSQLTypeMap: Record<
   uuid: [],
   date: ['DATE'],
   time: ['TIME'],
+  binary: ['BYTES'],
   array: [],
 };
 
