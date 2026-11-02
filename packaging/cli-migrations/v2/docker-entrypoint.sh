@@ -36,6 +36,12 @@ if [ -z ${HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT+x} ]; then
     HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT=30
 fi
 
+# check whether a process is still running; a process that has exited but
+# was not reaped yet is a zombie ("Z" state)
+is_running() {
+    [ -r "/proc/$1/stat" ] && [ "$(sed 's/.*) //' "/proc/$1/stat" | cut -c1)" != "Z" ]
+}
+
 # wait for a port to be ready
 wait_for_port() {
     local PORT=$1
@@ -43,12 +49,16 @@ wait_for_port() {
     for _ in $(seq 1 $HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT);
     do
         nc -z localhost "$PORT" > /dev/null 2>&1 && log "migrations-startup" "port $PORT is ready" && return
+        # the server exits if it cannot connect to the database on startup,
+        # e.g. when the database container is still starting, so start it again
+        if ! is_running "$PID"; then
+            log "migrations-startup" "temporary server exited before $PORT was ready, restarting it"
+            start_temp_server
+        fi
         sleep 1
     done
     log "migrations-startup" "failed waiting for $PORT, try increasing HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT (default: 30)" && exit 1
 }
-
-log "migrations-startup" "starting graphql engine temporarily on port $HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT"
 
 # start graphql engine with metadata api enabled. Disable event processing so
 # the temporary server does not poll for / deliver event triggers, cron
@@ -58,12 +68,17 @@ log "migrations-startup" "starting graphql engine temporarily on port $HASURA_GR
 # HASURA_GRAPHQL_DISABLE_EVENTING this keeps the eventing subsystem otherwise
 # intact, so source catalog migrations still create the eventing catalog tables
 # (required when applying metadata that defines event triggers on a fresh db).
-HASURA_GRAPHQL_DATABASE_URL=$HASURA_GRAPHQL_MIGRATIONS_DATABASE_URL \
-    HASURA_GRAPHQL_DISABLE_EVENT_PROCESSING=true \
-    $HGE_BINARY serve --enabled-apis="metadata" \
-               --server-port=${HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT}  &
-# store the pid to kill it later
-PID=$!
+start_temp_server() {
+    HASURA_GRAPHQL_DATABASE_URL=$HASURA_GRAPHQL_MIGRATIONS_DATABASE_URL \
+        HASURA_GRAPHQL_DISABLE_EVENT_PROCESSING=true \
+        $HGE_BINARY serve --enabled-apis="metadata" \
+                   --server-port=${HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT}  &
+    # store the pid to kill it later
+    PID=$!
+}
+
+log "migrations-startup" "starting graphql engine temporarily on port $HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT"
+start_temp_server
 
 # wait for port to be ready
 wait_for_port $HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT
