@@ -1,4 +1,5 @@
 import { CustomFieldNames } from '../..';
+import { getOrderedCustomRootFields } from '../../CustomFieldNames/utils';
 import { Button, Text } from '@hasura/shared/ui';
 import { getTableDisplayName } from '@hasura/shared/utils';
 import React from 'react';
@@ -51,11 +52,11 @@ export const TableRootFields: React.FC<ModifyTableProps> = ({
             value={table.configuration.custom_name}
           />
         )}
-        {Object.entries(table.configuration?.custom_root_fields ?? {}).map(
-          ([key, value]) => (
-            <RootField key={key} property={key} value={value} />
-          ),
-        )}
+        {getOrderedCustomRootFields(
+          table.configuration?.custom_root_fields,
+        ).map(([key, value]) => (
+          <RootField key={key} property={key} value={value} />
+        ))}
       </div>
       <CustomFieldNames.Modal
         tableName={getTableDisplayName(table.table)}
