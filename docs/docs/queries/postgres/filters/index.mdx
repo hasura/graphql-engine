@@ -297,3 +297,27 @@ all objects for which an `id` is set, i.e. all objects will be returned.
 
 This behavior can be preserved in versions v2.0.0 and above by setting the `HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE` env
 var to `true`.
+
+:::caution Optional filters on relationships
+
+With this behavior enabled, a `null` value only collapses the comparison expression, not the relationship around it. A
+variable that is declared as nullable is `null` both when it is passed as `null` and when it is left out.
+
+For example, with the following query:
+
+```graphql
+query ($authorId: Int) {
+  article(where: { author: { id: { _eq: $authorId } } }) {
+    id
+    title
+  }
+}
+```
+
+leaving out `$authorId` reduces the filter to `{ author: {} }` rather than to `{}`. This still requires a related
+`author` to exist, so articles without an author are not returned, even though the filter looks optional.
+
+To make the whole filter optional, pass the boolean expression itself as a variable (e.g. `$where: article_bool_exp`)
+and send `{}` when no filter is needed.
+
+:::
