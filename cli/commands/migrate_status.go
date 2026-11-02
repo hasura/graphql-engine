@@ -2,7 +2,9 @@ package commands
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"sort"
 	"text/tabwriter"
 
 	"github.com/hasura/graphql-engine/cli/v2"
@@ -27,7 +29,10 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura migrate status --admin-secret "<your-admin-secret>"
 
   # Check status on a different server:
-  hasura migrate status --endpoint "<endpoint>"`,
+  hasura migrate status --endpoint "<endpoint>"
+
+  # Print the status as JSON, e.g. for scripts:
+  hasura migrate status --output json`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "PreRunE")
@@ -35,6 +40,10 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 			err := validateConfigV3FlagsWithAll(cmd, ec)
 			if err != nil {
 				return errors.E(op, err)
+			}
+
+			if opts.OutputFormat != "" && opts.OutputFormat != "table" && opts.OutputFormat != "json" {
+				return errors.E(op, fmt.Errorf("invalid output format %q: allowed values are table and json", opts.OutputFormat))
 			}
 
 			return nil
@@ -47,12 +56,26 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 				return errors.E(op, err)
 			}
 
+			if opts.OutputFormat == "json" {
+				out, err := statusToJSON(opts.StatusOpts)
+				if err != nil {
+					return errors.E(op, err)
+				}
+
+				fmt.Fprintln(ec.Stdout, string(out))
+
+				return nil
+			}
+
 			buf := printStatus(opts.StatusOpts)
 			fmt.Fprintf(ec.Stdout, "%s", buf)
 
 			return nil
 		},
 	}
+
+	f := migrateStatusCmd.Flags()
+	f.StringVarP(&opts.OutputFormat, "output", "o", "", "output format (Allowed values: table, json)")
 
 	return migrateStatusCmd
 }
@@ -106,11 +129,51 @@ func (o *MigrateStatusOptions) Run() error {
 type (
 	StatusOptions        map[cli.Source]*migrate.Status
 	MigrateStatusOptions struct {
-		EC         *cli.ExecutionContext
-		Source     cli.Source
-		StatusOpts StatusOptions
+		EC           *cli.ExecutionContext
+		Source       cli.Source
+		StatusOpts   StatusOptions
+		OutputFormat string
 	}
 )
+
+type migrationStatusJSON struct {
+	Version uint64 `json:"version"`
+	Name    string `json:"name"`
+	// PresentInSource and AppliedOnDatabase are the SOURCE STATUS and
+	// DATABASE STATUS columns of the table output
+	PresentInSource   bool `json:"present_in_source"`
+	AppliedOnDatabase bool `json:"applied_on_database"`
+}
+
+type databaseStatusJSON struct {
+	Database   string                `json:"database"`
+	Migrations []migrationStatusJSON `json:"migrations"`
+}
+
+// statusToJSON renders the status of every database as a JSON array, sorted
+// by database name, with the migrations in version order.
+func statusToJSON(statusOpts StatusOptions) ([]byte, error) {
+	databases := make([]databaseStatusJSON, 0, len(statusOpts))
+
+	for source, status := range statusOpts {
+		migrations := make([]migrationStatusJSON, 0, len(status.Index))
+		for _, version := range status.Index {
+			m := status.Migrations[version]
+			migrations = append(migrations, migrationStatusJSON{
+				Version:           version,
+				Name:              m.Name,
+				PresentInSource:   m.IsPresent,
+				AppliedOnDatabase: m.IsApplied,
+			})
+		}
+
+		databases = append(databases, databaseStatusJSON{Database: source.Name, Migrations: migrations})
+	}
+
+	sort.Slice(databases, func(i, j int) bool { return databases[i].Database < databases[j].Database })
+
+	return json.MarshalIndent(databases, "", "  ")
+}
 
 func (o *MigrateStatusOptions) RunOnSource() (*migrate.Status, error) {
 	var op errors.Op = "commands.MigrateStatusOptions.RunOnSource"
