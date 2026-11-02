@@ -1,6 +1,10 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 
+-- hlint takes the typed splice in isSchemaCacheBuildRequiredRunSQL for unused
+-- TemplateHaskell; switching to TemplateHaskellQuotes would break the build.
+{- HLINT ignore "Unused LANGUAGE pragma" -}
+
 -- | Postgres DDL RunSQL
 --
 -- Escape hatch for running raw SQL against a postgres database.
