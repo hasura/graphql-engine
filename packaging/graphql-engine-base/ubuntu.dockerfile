@@ -1,7 +1,7 @@
-# DATE VERSION: 2026-10-19
+# DATE VERSION: 2026-11-02
 # Modify the above date version (YYYY-MM-DD) if you want to rebuild the image
 
-FROM ubuntu:jammy-20260930
+FROM ubuntu:jammy-20261020
 
 ### NOTE! Shared libraries here need to be kept in sync with `server-builder.dockerfile`!
 
@@ -36,12 +36,15 @@ RUN set -ex; \
     apt-get update; \
     apt-get upgrade -y; \
     # basic deps
-    apt-get install -y apt-transport-https ca-certificates curl gnupg2 lsb-release;  \
+    apt-get install -y apt-transport-https ca-certificates curl gnupg2 lsb-release libbrotli1;  \
     # Fail closed if the mirror has not received the eMudhra trust-store fix. \
     # Includes the AAA Certificate Services cross-signs; a rebuild alone is not a guarantee. \
     # 20260816 drops "emSign ECC Root CA - G3" (LP: #2171507); the "~" floor accepts \
     # any Ubuntu release's build of it (e.g. 20260816ubuntu0.22.04.1 on jammy). \
     dpkg --compare-versions "$(dpkg-query -W -f='${Version}' ca-certificates)" ge "20260816~"; \
+    # Fail closed if the mirror lacks the libbrotli1 security fix (CVE-2026-111497, HIGH). \
+    # Ubuntu Jammy fixed version: https://ubuntu.com/security/CVE-2026-111497 \
+    dpkg --compare-versions "$(dpkg-query -W -f='${Version}' libbrotli1)" ge "1.0.9-2ubuntu0.1"; \
     update-ca-certificates --fresh; \
     # deps needed for graphql-engine
     apt-get install -y libkrb5-3 libpq5 libnuma1 unixodbc-dev; \
