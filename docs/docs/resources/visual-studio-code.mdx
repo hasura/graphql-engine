@@ -58,6 +58,11 @@ Notes:
 For advanced configuration, check out the
 [docs for the plugin](https://marketplace.visualstudio.com/items?itemName=apollographql.vscode-apollo).
 
-Note: The [VSCode GraphQL](https://github.com/prisma/vscode-graphql) plugin by Prisma does not currently work with
-Hasura because it has a hard dependency on batching and Hasura does not support batching as of now. Batching as a
-feature in GraphQL Engine is tracked [here](https://github.com/hasura/graphql-engine/issues/1812).
+:::info Note
+
+Hasura GraphQL Engine supports [batched requests](/api-reference/graphql-api/index.mdx#batching-requests), so other
+editor plugins that send batched queries, such as
+[GraphQL: Language Feature Support](https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql), can
+also be pointed at your GraphQL endpoint.
+
+:::
