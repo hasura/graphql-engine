@@ -95,6 +95,14 @@ if [ -z ${HASURA_GRAPHQL_METADATA_DIR+x} ]; then
     HASURA_GRAPHQL_METADATA_DIR="$DEFAULT_METADATA_DIR"
 fi
 
+# a config v3 project keeps its metadata under a databases directory, which
+# this image cannot apply (the server rejects it with: key "tables" not found)
+if [ -d "$HASURA_GRAPHQL_METADATA_DIR/databases" ] && [ ! -f "$HASURA_GRAPHQL_METADATA_DIR/tables.yaml" ]; then
+    log "migrations-apply" "metadata in $HASURA_GRAPHQL_METADATA_DIR is in the config v3 format, use the cli-migrations-v3 image to apply it"
+    kill $PID
+    exit 1
+fi
+
 # apply migrations if the directory exist
 if [ -d "$HASURA_GRAPHQL_MIGRATIONS_DIR" ]; then
     log "migrations-apply" "applying migrations from $HASURA_GRAPHQL_MIGRATIONS_DIR"
