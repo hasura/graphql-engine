@@ -220,10 +220,7 @@ func (o *MigrateApplyOptions) Validate() error {
 				if sourceKind == nil {
 					return herrors.E(
 						op,
-						fmt.Errorf(
-							"error determining database kind for '%s', check if database exists on hasura",
-							o.Source.Name,
-						),
+						errors.New(databaseNotConnectedHint(o.Source.Name)),
 					)
 				}
 
