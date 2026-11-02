@@ -330,6 +330,29 @@ Assuming the `users` table is being tracked, you can use the custom function as 
 }`}
 />
 
+:::info No matching row
+
+A function returning a single row always returns a row in Postgres. If the query inside the function finds no row,
+Postgres returns a row with all columns set to `NULL`, so the field is an object whose fields are all `null` rather than
+`null` itself:
+
+```json
+{
+  "data": {
+    "user_by_email": {
+      "id": null,
+      "name": null,
+      "email": null
+    }
+  }
+}
+```
+
+To check whether a row was found, check a non-nullable column such as the primary key. Alternatively, declare the
+function as `RETURNS SETOF users` to get an empty array when there is no match.
+
+:::
+
 ### Example: PostGIS functions {#pg-custom-functions-postgis}
 
 Let's take a look at an example where the `SETOF` table is not part of the existing schema.
