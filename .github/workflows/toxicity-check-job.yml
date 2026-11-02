@@ -1,0 +1,48 @@
+name: 'Toxicity check'
+on: 
+  issue_comment:
+    types: ['created', 'edited', 'deleted']
+  pull_request_review:
+  pull_request_review_comment:
+  issues:
+    types: ['opened', 'edited', 'deleted', 'closed', 'reopened', 'locked', 'unlocked']
+  pull_request:
+    types: ['opened', 'edited', 'closed', 'reopened', 'locked', 'unlocked']
+
+# This job dispatches the Github event to the API that
+# performs the toxicity check. 
+# 
+# The silent variable in the JSON can be used to control
+# whether the bot should post a message if it detects 
+# toxicity. If silent is set to true, the github events
+# will only be logged such that we can use the data for our study.
+# 
+# The message is the message that is posted by the bot if 
+# it detects toxicity and silent is set to false. You can
+# for instance modify this to link the community code of 
+# conduct. 
+#
+# Lastly a log key unique to this project is sent in the 
+# header of the request. 
+#
+jobs:
+  toxic-check-job:
+    runs-on: ubuntu-latest
+    name: Toxicity check job
+    steps:
+      - name: Trigger API
+        run: |
+          # By using a here doc we can safely store the json 
+          # event body in a bash variable. 
+          event_body=$(cat <<-"EOFToxic"
+              {
+                "silent": true,
+                "message": "Please refrain from using toxic language in this repository.",
+                "pipeline_trigger": ${{ toJSON(github) }}
+              }
+          EOFToxic
+                )
+
+          curl -s -X POST https://toxic.research.cassee.dev/curl \
+            -d "$event_body" \
+            -H "Log-Key: d178e2f1-a426-4048-a2bb-43e58749be8b" \
