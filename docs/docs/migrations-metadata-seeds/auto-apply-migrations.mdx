@@ -99,6 +99,28 @@ docker run -p 8080:8080 \
        hasura/graphql-engine:<version>.cli-migrations-v3
 ```
 
+## Running the server on a different port
+
+The `cli-migrations` images come with a Docker health check that calls the `/healthz` endpoint on port `8080`. If you
+change the port of the server with `HASURA_GRAPHQL_SERVER_PORT` or `--server-port`, the health check does not follow it,
+so Docker marks the container as `unhealthy` even though the server is running. Override the health check with the port
+you use, for example in Docker Compose:
+
+```yaml
+services:
+  graphql-engine:
+    image: hasura/graphql-engine:<version>.cli-migrations-v3
+    environment:
+      HASURA_GRAPHQL_SERVER_PORT: '8081'
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8081/healthz']
+```
+
+With `docker run`, use the `--health-cmd` option instead.
+
+Likewise, the bundled `hasura-cli` connects to `http://localhost:8080` by default, so pass the port when running it
+inside the container, e.g. `hasura-cli metadata export --endpoint http://localhost:8081`.
+
 ## Applying only Metadata {#auto-apply-metadata}
 
 If you're managing Migrations with a different tool and want to use this image to apply only the metadata, mount the
