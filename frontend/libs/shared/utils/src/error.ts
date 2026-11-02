@@ -128,6 +128,30 @@ export const getErrorMessage = (
   return jsonError !== '{}' ? jsonError : (message ?? '');
 };
 
+const DEPENDENT_OBJECTS_ERROR_PREFIX =
+  'cannot drop due to the following dependent objects: ';
+
+/**
+ * The server lists the objects that prevent a drop on a single line,
+ * separated by commas, which is hard to read when there are many of them.
+ * Returns the message with one object per line, or null for other messages.
+ */
+export const formatDependentObjectsError = (message: unknown) => {
+  if (
+    typeof message !== 'string' ||
+    !message.startsWith(DEPENDENT_OBJECTS_ERROR_PREFIX)
+  ) {
+    return null;
+  }
+
+  const objects = message
+    .slice(DEPENDENT_OBJECTS_ERROR_PREFIX.length)
+    .split(', ')
+    .map((object) => `- ${object}`);
+
+  return [DEPENDENT_OBJECTS_ERROR_PREFIX.trimEnd(), ...objects].join('\n');
+};
+
 /**
  * Get the underlying content of the error.
  * @param err an error instance.
@@ -147,16 +171,21 @@ export const getErrorContent = (
   }
 
   if (error instanceof HttpError) {
-    return error.data ? error.data : error.message;
+    return (
+      formatDependentObjectsError((error.data as { error?: unknown })?.error) ??
+      (error.data ? error.data : error.message)
+    );
   }
 
   if (error instanceof Error) {
-    return error.message;
+    return formatDependentObjectsError(error.message) ?? error.message;
   }
 
   if (typeof error !== 'object') {
     return error || message;
   }
 
-  return error;
+  return (
+    formatDependentObjectsError((error as { error?: unknown }).error) ?? error
+  );
 };
