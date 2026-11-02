@@ -599,6 +599,19 @@ If `header` is `{"type": "CustomHeader", "name": "header_name" }` then JWT heade
 header_name: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWI...
 ```
 
+:::info Cookie mode and the Hasura Console
+
+Browsers do not let a web page set the `Cookie` header of a request, so a `Cookie` header added in the request headers
+of the Console's API Explorer is never sent, and the request fails with
+`Missing 'Authorization' or 'Cookie' header in JWT authentication mode`. The browser only sends the cookies that are
+stored for the GraphQL Engine's domain.
+
+To try requests as a user in cookie mode, either make the request from a client outside the browser (e.g. `curl`), or
+log in to your application in the same browser so that it sets the cookie for the GraphQL Engine's domain. You can also
+use the admin secret with the `X-Hasura-Role` header and the session variables of the user as request headers.
+
+:::
+
 ## Run Hasura GraphQL Engine in JWT mode {#running-with-jwt}
 
 ### Docker
