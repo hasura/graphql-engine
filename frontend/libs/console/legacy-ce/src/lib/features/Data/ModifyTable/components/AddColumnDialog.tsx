@@ -29,6 +29,7 @@ const schema = z.object({
   nullable: z.boolean(),
   unique: z.boolean(),
   default: z.string(),
+  comment: z.string(),
 });
 
 type AddColumnFormValues = z.infer<typeof schema>;
@@ -39,6 +40,7 @@ const emptyValues: AddColumnFormValues = {
   nullable: true,
   unique: false,
   default: '',
+  comment: '',
 };
 
 type AddColumnDialogProps = Pick<ModifyTableProps, 'source' | 'table'> & {
@@ -107,6 +109,7 @@ export const AddColumnDialog = ({
         default: values.default.trim()
           ? { value: values.default.trim() }
           : undefined,
+        comment: values.comment.trim() || undefined,
         dependentSQLGenerator:
           preset?.type === values.type
             ? preset.dependentSQLGenerator
@@ -178,6 +181,12 @@ export const AddColumnDialog = ({
               label="Default"
               tooltip="A value or SQL function, e.g. now(). Text values are quoted for you."
               fieldProps={{ placeholder: '(no default)' }}
+            />
+            <InputField
+              name="comment"
+              label="Comment"
+              tooltip="Stored as the column's comment in the database (COMMENT ON COLUMN)"
+              fieldProps={{ placeholder: '(no comment)' }}
             />
             <CheckboxField name="nullable">Nullable</CheckboxField>
             <CheckboxField name="unique">Unique</CheckboxField>

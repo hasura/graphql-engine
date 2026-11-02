@@ -16,6 +16,26 @@ describe('getAddColumnSql (postgres family)', () => {
     });
   });
 
+  it('sets the column comment, escaping quotes', () => {
+    expect(
+      getAddColumnSql({
+        table,
+        column: {
+          name: 'note',
+          type: 'text',
+          nullable: true,
+          comment: " the author's note ",
+        },
+      }),
+    ).toEqual({
+      up: [
+        'ALTER TABLE "public"."Album" ADD COLUMN "note" text;',
+        `COMMENT ON COLUMN "public"."Album"."note" IS 'the author''s note';`,
+      ].join('\n'),
+      down: 'ALTER TABLE "public"."Album" DROP COLUMN "note";',
+    });
+  });
+
   it('adds NOT NULL, UNIQUE and a quoted default', () => {
     const { up } = getAddColumnSql({
       table,
