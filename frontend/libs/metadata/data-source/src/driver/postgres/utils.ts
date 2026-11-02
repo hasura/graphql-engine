@@ -65,8 +65,10 @@ export const isPostgresTable = (tableType: string): boolean => {
   );
 };
 
+// An identifier is either quoted ("My Table") or unquoted, where Postgres also
+// allows `$` after the first character (a10$_abcde).
 const createSQLRegex =
-  /create\s*(?:|or\s*replace)\s*(?<type>view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((?<schema>\"?\w+\"?)\.(?<nameWithSchema>\"?\w+\"?)|(?<name>\"?\w+\"?))\s*(?<partition>partition\s*of)?/gim; // eslint-disable-line
+  /create\s*(?:|or\s*replace)\s*(?<type>view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((?<schema>"[^"]+"|\w[\w$]*)\.(?<nameWithSchema>"[^"]+"|\w[\w$]*)|(?<name>"[^"]+"|\w[\w$]*))\s*(?<partition>partition\s*of)?/gim; // eslint-disable-line
 
 export const parsePostgresCreateSchemaSQL = (sql: string) =>
   parseCreateSQL(sql, 'postgres', createSQLRegex);
