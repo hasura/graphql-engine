@@ -184,3 +184,51 @@ X-Hasura-Role: admin
 | Key  | Required | Schema                                                              | Description               |
 | ---- | -------- | ------------------------------------------------------------------- | ------------------------- |
 | name | true     | [RemoteSchemaName](/api-reference/syntax-defs.mdx#remoteschemaname) | Name of the Remote Schema |
+
+## introspect_remote_schema {#metadata-introspect-remote-schema}
+
+`introspect_remote_schema` returns the introspection result of a Remote Schema, as GraphQL Engine last fetched it from
+the remote server (when the Remote Schema was added, updated or reloaded, or when the server started). The remote server
+is not queried again; use [reload_remote_schema](#metadata-reload-remote-schema) first to pick up changes made to it.
+
+An example request as follows:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "introspect_remote_schema",
+    "args": {
+        "name": "my remote schema"
+    }
+}
+```
+
+The response is the raw result of the GraphQL introspection query sent to the remote server. Any
+[customization](/api-reference/syntax-defs.mdx#remoteschemacustomization) configured for the Remote Schema is not
+applied, so type and field names are those of the remote server rather than those exposed by GraphQL Engine:
+
+```json
+{
+  "data": {
+    "__schema": {
+      "queryType": {
+        "name": "Query"
+      },
+      ...
+    }
+  }
+}
+```
+
+An error with code `not-exists` is returned if there is no Remote Schema with the given name, or if the Remote Schema
+could not be fetched from the remote server and is therefore inconsistent (see
+[get_inconsistent_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-get-inconsistent-metadata)).
+
+### Args syntax {#metadata-introspect-remote-schema-syntax}
+
+| Key  | Required | Schema                                                              | Description               |
+| ---- | -------- | ------------------------------------------------------------------- | ------------------------- |
+| name | true     | [RemoteSchemaName](/api-reference/syntax-defs.mdx#remoteschemaname) | Name of the Remote Schema |
