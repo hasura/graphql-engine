@@ -845,6 +845,21 @@ If you are using Firebase and Hasura, use this config:
 Refer to the [Auth0 JWT Integration tutorial](https://hasura.io/learn/graphql/hasura-authentication/integrations/auth0/)
 for a detailed guide on integrating Auth0 with Hasura.
 
+**Using an access token instead of an ID token**
+
+SPA SDKs such as `auth0-spa-js` and `auth0-react` give you an access token (e.g. from `getAccessTokenSilently()`). Auth0
+only issues the access token as a JWT if the login requests an `audience`, which is the identifier of an API that you
+have registered in the Auth0 dashboard. Without an `audience`, the access token is opaque and Hasura rejects it as an
+invalid JWT.
+
+Also make sure that the Hasura claims are added to the access token and not only to the ID token. In an Auth0 Action,
+use `api.accessToken.setCustomClaim("https://hasura.io/jwt/claims", {...})`.
+
+To test the setup, get an access token from the SDK, decode it (e.g. on [jwt.io](https://jwt.io)) to check that it
+contains the `https://hasura.io/jwt/claims` claim and the expected `aud`, and send it to Hasura in the
+`Authorization: Bearer <access-token>` header. If you set `audience` in the Hasura JWT configuration, it must be the
+same API identifier.
+
 ### Clerk
 
 Clerk integrates with Hasura GraphQL Engine using JWTs.
