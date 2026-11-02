@@ -199,6 +199,19 @@ ignore the request.
 
 In this case, the insert mutation is ignored because there is a conflict and `update_columns` is empty.
 
+:::info Ignored rows are not returned
+
+An empty `update_columns` is translated to Postgres's `ON CONFLICT DO NOTHING`, which does not return the conflicting
+row. So `affected_rows` is `0` and `returning` is an empty list for every object that was ignored, even though a
+matching row exists in the table.
+
+If you need the existing row back, either fetch it with a separate query (for example, filtering on the unique
+constraint's columns), or set `update_columns` to one of the constraint's own columns (e.g. `update_columns: [name]`).
+The second option turns the insert into a no-op update, so the row is returned, but the role needs update permission on
+that column and any update triggers on the table will fire.
+
+:::
+
 ## Upsert in nested mutations
 
 You can specify the `on_conflict` clause while inserting nested objects:
