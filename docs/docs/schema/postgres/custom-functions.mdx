@@ -289,6 +289,47 @@ Assuming the `properties` table is being tracked, you can use the custom functio
 }`}
 />
 
+### Example: Functions returning a single row
+
+A function can also return a single row of a tracked table, by declaring the table itself as its return type instead of
+`SETOF <table-name>`. Such a function is exposed as a field that returns a single object instead of an array, which fits
+lookups such as finding a user by a unique value.
+
+Create the function:
+
+```plsql
+CREATE FUNCTION user_by_email(user_email text)
+RETURNS users AS $$
+    SELECT *
+    FROM users
+    WHERE email = user_email
+    LIMIT 1;
+$$ LANGUAGE sql STABLE;
+```
+
+Assuming the `users` table is being tracked, you can use the custom function as follows:
+
+<GraphiQLIDE
+  query={`query {
+  user_by_email(
+    args: {user_email: "jane@example.com"}
+  ){
+    id
+    name
+    email
+  }
+}`}
+  response={`{
+  "data": {
+    "user_by_email": {
+      "id": 1,
+      "name": "Jane",
+      "email": "jane@example.com"
+    }
+  }
+}`}
+/>
+
 ### Example: PostGIS functions {#pg-custom-functions-postgis}
 
 Let's take a look at an example where the `SETOF` table is not part of the existing schema.
