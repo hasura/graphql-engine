@@ -1,0 +1,54 @@
+---
+description: Deploy Hasura GraphQL Engine with a PostgreSQL database on Pethost
+keywords:
+  - hasura
+  - docs
+  - deployment
+  - pethost
+  - postgresql
+sidebar_position: 14
+sidebar_label: Using Pethost (one-click)
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+
+# Deploying Hasura GraphQL Engine on Pethost
+
+## Introduction
+
+This guide shows how to deploy the Hasura GraphQL Engine with a PostgreSQL database on [Pethost](https://pethost.dev),
+from its one-click template.
+
+## One-click deploy on Pethost
+
+Open the [Hasura template](https://pethost.dev/templates/hasura/) and click **Deploy on Pethost**. After signing in,
+enter an admin password and click **Create project**.
+
+The template runs two services:
+
+- `hasura/graphql-engine`, with `HASURA_GRAPHQL_ADMIN_SECRET` set to the admin password you entered and the console
+  enabled;
+- `postgres`, with its data on a persistent volume, which Hasura uses for its metadata and serves as the data source
+  `default`.
+
+The project gets its own address with HTTPS once the deploy finishes, usually within a minute.
+
+## Access your Hasura Console
+
+Open the console at:
+
+```bash
+https://<your-project-address>/console
+```
+
+and enter the admin password as the admin secret. API calls send it in the `x-hasura-admin-secret` header.
+
+The project's PostgreSQL database is already connected as `default`, so you can create tables in the **Data** tab and
+query them in the **API** tab.
+
+<Thumbnail src="/img/deployment/pethost-hasura-console.png" alt="Hasura Console on Pethost with the default database connected" />
+
+## References
+
+- [Pethost Hasura template](https://pethost.dev/templates/hasura/)
+- [Pethost on GitHub](https://github.com/pethost-dev)
