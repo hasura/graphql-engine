@@ -209,6 +209,16 @@ objects: [
 ]
 ```
 
+:::info Special date/time input values
+
+A string that Hasura cannot parse as a date or time is passed to Postgres as it is, and Postgres converts it. So the
+[special date/time input values](https://www.postgresql.org/docs/current/datatype-datetime.html#DATATYPE-DATETIME-SPECIAL-VALUES)
+of Postgres, such as `now`, `today`, `tomorrow`, `yesterday`, `epoch`, `infinity` and `-infinity`, can also be used for
+`date`, `timetz` and `timestamptz` values, e.g. `{created_at: "now"}`. Postgres resolves `now` to the start time of the
+current transaction. An invalid value is rejected by Postgres with an error.
+
+:::
+
 ## JSON {#json}
 
 GraphQL custom scalar type with name **json**. It is a stringified json value.
