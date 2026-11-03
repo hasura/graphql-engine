@@ -59,6 +59,12 @@ If it has been stored in a directory other than the default then it can be confi
 
   A path to the metadata directory.
 
+### Logging (Optional)
+
+- `HASURA_GRAPHQL_LOG_LEVEL`
+
+  When set to `debug`, the migrations applied on startup are listed in the logs.
+
 ### GraphQL Server (Optional)
 
 Optional configuration for the server which boots during migrations.
