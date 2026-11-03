@@ -1408,7 +1408,10 @@ export function extractRequestDataFromArgs<
       switch (param.in) {
         // Path parameters
         case 'path':
-          path = path.replace(`{${param.name}}`, args[saneParamName]);
+          // A replacer function keeps `$` sequences in the value literal
+          path = path.replace(`{${param.name}}`, () =>
+            String(args[saneParamName]),
+          );
           break;
 
         // Query parameters
