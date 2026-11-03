@@ -362,7 +362,7 @@
 
     app = FastAPI()
 
-    @app.post("/items/", response_model=${t}Args)
+    @app.post("/${t}", response_model=${n})
     async def ${t}Handler(item: ${t}Args = Body(...)) -> ${n}:
         # business logic here
   `;return i=i.replace("from dataclasses","from pydantic.dataclasses").replace(/@dataclass/gi,"@dataclass(config=Config)"),i}},6308:(e,t,n)=>{Object.defineProperty(t,"__esModule",{value:!0});const r=n(7561),i={Int:1111,String:'"<sample value>"',Boolean:!1,Float:11.11,ID:1111};t.typescriptExpressTemplate=e=>{const{actionName:t,returnType:n,derive:o,typeMap:a}=e,s=a.types[n],u=r.html`
