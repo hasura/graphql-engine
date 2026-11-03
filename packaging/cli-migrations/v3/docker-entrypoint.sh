@@ -96,6 +96,12 @@ if [ -d "$HASURA_GRAPHQL_METADATA_DIR" ]; then
     echo "version: 3" > config.yaml
     echo "endpoint: http://localhost:$HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT" >> config.yaml
     echo "metadata_directory: metadata" >> config.yaml
+    # a project exported with `metadata_file: metadata.json` keeps all metadata
+    # in that single file instead of the yaml directory layout
+    if [ -f "$TEMP_PROJECT_DIR/metadata/metadata.json" ]; then
+        log "migrations-apply" "found metadata.json in $HASURA_GRAPHQL_METADATA_DIR, applying metadata from it"
+        echo "metadata_file: metadata/metadata.json" >> config.yaml
+    fi
     hasura-cli metadata apply $METADATA_APPLY_FLAGS
 else
     log "migrations-apply" "directory $HASURA_GRAPHQL_METADATA_DIR does not exist, skipping metadata"
