@@ -17,6 +17,22 @@ If you need to share, introspect or export the GraphQL schema, you can use commu
 [graphqurl](https://github.com/hasura/graphqurl), [Apollo CLI](https://github.com/apollographql/apollo-tooling),
 [get-graphql-schema](https://github.com/prismagraphql/get-graphql-schema), etc.
 
+## Which schema gets exported
+
+Hasura generates a separate GraphQL schema for each role, so the exported schema depends on the role the introspection
+request is made with:
+
+- **With the admin secret** (`X-Hasura-Admin-Secret`), the request is made as the `admin` role and you get the full
+  schema, including every query, mutation and subscription root field.
+- **Without the admin secret**, if the GraphQL Engine is running with an admin secret, the request is rejected unless an
+  [unauthorized role](/auth/authentication/unauthenticated-access.mdx) is configured. If one is configured, you get the
+  schema of that role, which only contains what its permissions allow. For example, if the role has no insert, update or
+  delete permissions, the schema has no mutation root (`mutationType` is `null`).
+- **With the admin secret and an `X-Hasura-Role` header**, you get the schema of that role. This is useful to see the
+  API exactly as a given role sees it.
+
+If [introspection is disabled](/security/disable-graphql-introspection.mdx) for a role, its schema cannot be exported.
+
 ## Using **graphqurl**
 
 For example, using `graphqurl`, you can get the schema as follows:

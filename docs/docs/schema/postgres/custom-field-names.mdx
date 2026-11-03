@@ -116,6 +116,68 @@ A custom field name can be set for a column via the following 2 methods:
 </TabItem>
 </Tabs>
 
+## Expose a table with a different name in the GraphQL API
+
+By default, the GraphQL type of a table and all the names generated from it use the table name. For example, a table
+called `author_details` gives you an `author_details` type, `author_details_bool_exp` and `author_details_insert_input`
+input types and root fields such as `author_details`, `author_details_by_pk` and `insert_author_details`.
+
+You can replace the table name in all of them at once by setting the `custom_name` of the table. With `custom_name` set
+to `author`, the same table gives you an `author` type, `author_bool_exp` and `author_insert_input` input types and
+`author`, `author_by_pk` and `insert_author` root fields. Root fields that you have
+[customized individually](#expose-table-root-fields-with-a-different-name-in-the-graphql-api) keep their custom names.
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="cli" label="CLI">
+
+You can set a custom name for a table in the `tables.yaml` file inside the `metadata` directory:
+
+```yaml {4-5}
+- table:
+    schema: public
+    name: author_details
+  configuration:
+    custom_name: author
+```
+
+Apply the Metadata by running:
+
+```bash
+hasura metadata apply
+```
+
+</TabItem>
+<TabItem value="api" label="API">
+
+A custom name can be set for a table by passing a [Table Config](/api-reference/syntax-defs.mdx#table-config) with
+`custom_name` to the [pg_track_table](/api-reference/metadata-api/table-view.mdx#metadata-pg-track-table) API while
+tracking a table, or to the
+[pg_set_table_customization](/api-reference/metadata-api/table-view.mdx#metadata-pg-set-table-customization) API for a
+table that is already tracked:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_set_table_customization",
+  "args": {
+    "source": "<db_name>",
+    "table": "author_details",
+    "configuration": {
+      "custom_name": "author"
+    }
+  }
+}
+```
+
+`pg_set_table_customization` replaces the existing customization of the table, so include any `custom_root_fields` and
+`column_config` that you want to keep in the same `configuration`.
+
+</TabItem>
+</Tabs>
+
 ## Expose table root fields with a different name in the GraphQL API
 
 <Tabs groupId="user-preference" className="api-tabs">

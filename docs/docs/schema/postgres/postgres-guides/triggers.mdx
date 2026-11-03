@@ -82,6 +82,35 @@ trigger:
 CREATE TRIGGER update_materialized_view AFTER INSERT ON "authors" FOR EACH ROW EXECUTE PROCEDURE refresh_materialized_view();
 ```
 
+## Accessing Hasura session variables in a trigger
+
+When Hasura runs a mutation, it sets the session variables of the request as a local `hasura.user` setting in the same
+transaction (see [Auditing tables](/schema/postgres/postgres-guides/auditing-tables.mdx)). A trigger function can read
+them with the `current_setting` function.
+
+`current_setting` returns text, so cast it to `json` before reading a key from it. The row may also be changed outside
+of a Hasura mutation, e.g. from `psql` or a migration, where the setting is missing. Pass `true` as the second argument
+(`missing_ok`) so that the function does not raise an error in that case, and wrap it in `nullif(..., '')`: on a
+connection that has already run a Hasura mutation, the setting reads as an empty string after that transaction ends, and
+an empty string is not valid `json`:
+
+```plsql
+CREATE FUNCTION set_updated_by()
+  RETURNS trigger AS $BODY$
+  DECLARE
+    session_variables json;
+  BEGIN
+    session_variables := nullif(current_setting('hasura.user', true), '')::json;
+    NEW."updated_by" := session_variables ->> 'x-hasura-user-id';
+    RETURN NEW;
+  END;
+  $BODY$ LANGUAGE plpgsql;
+
+CREATE TRIGGER set_article_updated_by BEFORE INSERT OR UPDATE ON "articles" FOR EACH ROW EXECUTE PROCEDURE set_updated_by();
+```
+
+The keys of the JSON object are the session variable names in lowercase, e.g. `x-hasura-role` and `x-hasura-user-id`.
+
 ## Postgres triggers & Hasura
 
 Postgres triggers can be used to perform business logic such as data validation and can be added

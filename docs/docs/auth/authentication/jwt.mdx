@@ -599,6 +599,19 @@ If `header` is `{"type": "CustomHeader", "name": "header_name" }` then JWT heade
 header_name: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWI...
 ```
 
+:::info Cookie mode and the Hasura Console
+
+Browsers do not let a web page set the `Cookie` header of a request, so a `Cookie` header added in the request headers
+of the Console's API Explorer is never sent, and the request fails with
+`Missing 'Authorization' or 'Cookie' header in JWT authentication mode`. The browser only sends the cookies that are
+stored for the GraphQL Engine's domain.
+
+To try requests as a user in cookie mode, either make the request from a client outside the browser (e.g. `curl`), or
+log in to your application in the same browser so that it sets the cookie for the GraphQL Engine's domain. You can also
+use the admin secret with the `X-Hasura-Role` header and the session variables of the user as request headers.
+
+:::
+
 ## Run Hasura GraphQL Engine in JWT mode {#running-with-jwt}
 
 ### Docker
@@ -757,6 +770,36 @@ tenants to be valid as well.
 In these cases, you **MUST** set the `audience` field to appropriate value. **Failing to do so is a major security
 vulnerability**.
 
+### Revoking JWTs
+
+Hasura does not store sessions. It accepts a JWT as long as its signature, expiry (`exp`) and the configured checks
+(such as `audience` and `issuer`) are valid, so a JWT cannot be revoked on the Hasura side before it expires, e.g. when
+a user logs out or is blocked. Common ways to deal with this are:
+
+- **Use short-lived JWTs.** Keep `exp` to a few minutes and let your auth server issue new JWTs with a refresh token.
+  Revoking the refresh token on your auth server then stops the user from getting new JWTs, and the current one stops
+  working when it expires.
+- **Check a token version in your permissions.** Store a version number for each user in the database, add it to the JWT
+  as a custom claim (e.g. `x-hasura-token-version`), and include a check against it in the row permissions of your
+  tables, for example through a relationship to the `users` table:
+
+  ```json
+  {
+    "user": {
+      "id": { "_eq": "X-Hasura-User-Id" },
+      "token_version": { "_eq": "X-Hasura-Token-Version" }
+    }
+  }
+  ```
+
+  Incrementing `token_version` for a user makes all of their existing JWTs return no rows.
+
+- **Rotate the signing key.** Changing the key in the JWT configuration (or removing it from your JWKs) invalidates
+  every JWT signed with it, so it is only suitable when all tokens need to be revoked, e.g. after a key leak.
+
+A WebSocket connection is authenticated once, when it is opened, so revoking a JWT does not close subscriptions that are
+already running. See [JWT with the WebSocket protocol](#jwt-with-the-websocket-protocol).
+
 ## JWT with the WebSocket protocol
 
 When executing a subscription (or query or mutation) over the WebSocket protocol, the authentication step is executed on
@@ -801,6 +844,21 @@ If you are using Firebase and Hasura, use this config:
 
 Refer to the [Auth0 JWT Integration tutorial](https://hasura.io/learn/graphql/hasura-authentication/integrations/auth0/)
 for a detailed guide on integrating Auth0 with Hasura.
+
+**Using an access token instead of an ID token**
+
+SPA SDKs such as `auth0-spa-js` and `auth0-react` give you an access token (e.g. from `getAccessTokenSilently()`). Auth0
+only issues the access token as a JWT if the login requests an `audience`, which is the identifier of an API that you
+have registered in the Auth0 dashboard. Without an `audience`, the access token is opaque and Hasura rejects it as an
+invalid JWT.
+
+Also make sure that the Hasura claims are added to the access token and not only to the ID token. In an Auth0 Action,
+use `api.accessToken.setCustomClaim("https://hasura.io/jwt/claims", {...})`.
+
+To test the setup, get an access token from the SDK, decode it (e.g. on [jwt.io](https://jwt.io)) to check that it
+contains the `https://hasura.io/jwt/claims` claim and the expected `aud`, and send it to Hasura in the
+`Authorization: Bearer <access-token>` header. If you set `audience` in the Hasura JWT configuration, it must be the
+same API identifier.
 
 ### Clerk
 

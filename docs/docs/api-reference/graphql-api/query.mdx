@@ -493,14 +493,16 @@ In the example above, the `author` field is filtered to only include authors wit
 The boolean expression is used to filter the result set by a specified criteria. It can be used in conjunction with
 other boolean expressions to create complex filters. Hasura makes the following boolean expressions available:
 
-| Boolean expression                | GraphQL expression         | Description                                                                  |
-| --------------------------------- | -------------------------- | ---------------------------------------------------------------------------- |
-| [AndExp](#andexp)                 | `_and`                     | A boolean expression that specifies the logical AND operator.                |
-| [OrExp](#orexp)                   | `_or`                      | A boolean expression that specifies the logical OR operator.                 |
-| [NotExp](#notexp)                 | `_not`                     | A boolean expression that specifies the logical NOT operator.                |
-| [TrueExp](#trueexp)               | `Boolean!`                 | A boolean expression that specifies the logical TRUE operator.               |
-| [ColumnExp](#columnexp)           | `<columnName>`             | A boolean expression that specifies a column.                                |
-| [AggregationExp](#aggregationexp) | `<relationship>_aggregate` | A boolean expression that specifies an aggregation on an array relationship. |
+| Boolean expression                    | GraphQL expression         | Description                                                                  |
+| ------------------------------------- | -------------------------- | ---------------------------------------------------------------------------- |
+| [AndExp](#andexp)                     | `_and`                     | A boolean expression that specifies the logical AND operator.                |
+| [OrExp](#orexp)                       | `_or`                      | A boolean expression that specifies the logical OR operator.                 |
+| [NotExp](#notexp)                     | `_not`                     | A boolean expression that specifies the logical NOT operator.                |
+| [TrueExp](#trueexp)                   | `Boolean!`                 | A boolean expression that specifies the logical TRUE operator.               |
+| [ColumnExp](#columnexp)               | `<columnName>`             | A boolean expression that specifies a column.                                |
+| [RelationshipExp](#relationshipexp)   | `<relationshipName>`       | A boolean expression on the rows of a relationship.                          |
+| [ComputedFieldExp](#computedfieldexp) | `<computedFieldName>`      | A boolean expression on the value of a computed field.                       |
+| [AggregationExp](#aggregationexp)     | `<relationship>_aggregate` | A boolean expression that specifies an aggregation on an array relationship. |
 
 ###### AndExp {#andexp}
 
@@ -740,6 +742,92 @@ query {
   }
 }
 ```
+
+###### RelationshipExp {#relationshipexp}
+
+A relationship expression filters on the related rows of an object or array relationship. In the definition below, the
+`relationship-name` is the name of the relationship and the nested expression is a [BoolExp](#boolexp) on the remote
+table.
+
+<div className="parsed-literal">
+
+<pre>
+  <code>
+    {`{
+  relationship-name: `}
+    <a href="#boolexp">BoolExp</a>
+    {`
+}`}
+  </code>
+</pre>
+
+</div>
+
+For an object relationship, the row matches if the related object matches the nested expression. For an array
+relationship, the row matches if **any** of the related objects match it.
+
+In the example below, the `article` field is filtered to only include articles whose author is from Amsterdam.
+
+```graphql
+query {
+  article(where: { author: { hometown: { _eq: "Amsterdam" } } }) {
+    title
+  }
+}
+```
+
+See [filter based on fields of nested objects](/queries/postgres/filters/using-nested-objects.mdx) for more examples.
+
+###### ComputedFieldExp {#computedfieldexp}
+
+A computed field expression filters on the value of a [computed field](/schema/postgres/computed-fields.mdx) that takes
+no arguments other than the table row (and, optionally, the session variables). In the definition below, the
+`computed-field-name` is the name of the computed field.
+
+For a computed field that returns a scalar, the expression is the same as a [ColumnExp](#columnexp):
+
+<div className="parsed-literal">
+
+<pre>
+  <code>
+    {`{
+  computed-field-name: { `}
+    <a href="#operator">Operator</a>
+    {`: Value }
+}`}
+  </code>
+</pre>
+
+</div>
+
+For a computed field that returns a set of table rows, the expression is a [BoolExp](#boolexp) on that table, like an
+array relationship:
+
+<div className="parsed-literal">
+
+<pre>
+  <code>
+    {`{
+  computed-field-name: `}
+    <a href="#boolexp">BoolExp</a>
+    {`
+}`}
+  </code>
+</pre>
+
+</div>
+
+In the example below, the `author` field is filtered on a `full_name` computed field.
+
+```graphql
+query {
+  author(where: { full_name: { _ilike: "%bob%" } }) {
+    id
+  }
+}
+```
+
+See [filter using values of computed fields](/queries/postgres/filters/using-computed-fields.mdx) for more details.
 
 ###### Operator {#operator}
 

@@ -217,3 +217,15 @@ If the webhook response contains a `Retry-After` header, then the event will be 
 (in seconds) found in the header. Note that the header will be respected only if the response status code is `non-2xx`.
 
 The `Retry-After` header can be used for retrying/rate-limiting/debouncing your webhook triggers.
+
+A few details on how the header is applied:
+
+- The value must be a positive number of seconds. HTTP dates and other values are ignored, and the retry interval of the
+  trigger's retry configuration is used instead.
+- It only applies to the event that the response belongs to. Other events of the same trigger are still delivered as
+  soon as they are created, so the header does not pause the trigger or drop events that happen in the meantime. To
+  debounce frequent changes to the same row, your webhook has to decide what to do with each event, e.g. return a
+  `non-2xx` response with a `Retry-After` header for events that should be processed later, and do the work only once
+  for the latest one.
+- An event whose response has a `Retry-After` header is retried even if the `num_retries` of the trigger's retry
+  configuration have been used up, so a webhook that always returns the header keeps the event pending.

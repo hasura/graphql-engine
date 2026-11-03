@@ -452,6 +452,20 @@ allowing access to other columns based on a different condition.
 Currently, it is not possible to define multiple column & row permission combinations for the same role. However, we
 can work around this limitation by using [views](/schema/postgres/views.mdx).
 
+:::tip Inherited roles
+
+If you only need this for reading data, [inherited roles](/auth/authorization/inherited-roles.mdx) solve it without a
+view. Define each column & row combination as a separate role and make the role used by the client inherit from all of
+them. For every row, the inherited role can read the columns allowed by any of the roles whose row filter matches, and
+the other columns are returned as `null`. See
+[this example](/auth/authorization/inherited-roles.mdx#inherited-select-permissions-example-1), which solves the same
+problem as the one below.
+
+Inherited roles combine insert, update and delete permissions only if they are the same for all the inherited roles, so
+use views when you need different combinations for mutations.
+
+:::
+
 **Example**
 
 Let's say for privacy reasons we only want users to be able to access their own `email`, `phone` and `address` but
