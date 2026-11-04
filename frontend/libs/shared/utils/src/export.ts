@@ -1,5 +1,4 @@
 import isObject from 'lodash/isObject';
-import { isJsonString } from './data';
 
 // return time in format YYYY_MM_DD_hh_mm_ss_s
 export const getCurrTimeForFileName = () => {
@@ -34,21 +33,24 @@ const downloadFile = (fileName: string, dataString: string) => {
   downloadLinkElem.remove();
 };
 
+// Formats a value as a CSV cell (RFC 4180): strings and numbers as they are,
+// objects as JSON, null as an empty cell. A cell containing a comma, a double
+// quote or a line break is quoted, with its double quotes doubled.
+const toCSVCell = (value: unknown) => {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  const text =
+    typeof value === 'object' ? JSON.stringify(value) : String(value);
+  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+};
+
 export const convertRowsToCSV = (rows: Record<string, unknown>[] = []) => {
-  const titleRowString = Object.keys(rows[0] || {}).join(',');
+  const columns = Object.keys(rows[0] || {});
+  const titleRowString = columns.map(toCSVCell).join(',');
+  // values are looked up by column, so every row follows the header order
   const rowsString = rows
-    .map((e) =>
-      Object.values(e)
-        .map(
-          (i) =>
-            `"${
-              typeof i === 'string' && isJsonString(i)
-                ? i.replace(/"/g, `'`) // in csv, a cell with double quotes and comma will result in bad formatting
-                : JSON.stringify(i, null, 2).replace(/"/g, `'`)
-            }"`,
-        )
-        .join(','),
-    )
+    .map((row) => columns.map((column) => toCSVCell(row[column])).join(','))
     .join('\n');
 
   const csvContent = `${titleRowString}\n${rowsString}`;
