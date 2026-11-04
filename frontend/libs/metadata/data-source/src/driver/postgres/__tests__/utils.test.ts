@@ -20,4 +20,32 @@ CREATE TABLE public.locations (
       },
     ]);
   });
+
+  it('reads identifiers containing $', () => {
+    expect(
+      parsePostgresCreateSchemaSQL('create table a10$_abcde (id int);'),
+    ).toEqual([
+      {
+        isPartition: false,
+        name: 'a10$_abcde',
+        schema: 'public',
+        type: 'table',
+      },
+    ]);
+  });
+
+  it('reads quoted identifiers with spaces', () => {
+    expect(
+      parsePostgresCreateSchemaSQL(
+        'CREATE VIEW "My Schema"."Active Users" AS SELECT 1;',
+      ),
+    ).toEqual([
+      {
+        isPartition: false,
+        name: 'Active Users',
+        schema: 'My Schema',
+        type: 'view',
+      },
+    ]);
+  });
 });
