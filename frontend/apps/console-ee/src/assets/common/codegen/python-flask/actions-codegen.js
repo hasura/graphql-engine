@@ -48,7 +48,7 @@
 
       def to_json(self):
           return json.dumps(asdict(self))
-`,c=e=>{let{name:n,required:t,list:i,type:o}=r.serialize(e),a=r.isScalar(o)?s[o]:o;return i&&(a=`List[${a}]`),t||(a=`Optional[${a}]`),{name:n,type:a}},p=e=>Object.entries(e.types).map(([e,n])=>((e,n)=>{const t=n.map(c).map(({name:e,type:n})=>r.indent(`${e}: ${n}`)).join("\n");return a.html`
+`,c=e=>{let{name:n,required:t,list:i,type:o}=r.serialize(e),a=r.isScalar(o)?s[o]:o;return i&&(a=`List[${a}]`),t||(a=`Optional[${a}]`),{name:n,type:a,optional:!t}},p=e=>Object.entries(e.types).map(([e,n])=>((e,n)=>{const t=n.map(c).sort((x,y)=>x.optional-y.optional).map(({name:e,type:n,optional:o})=>r.indent(`${e}: ${n}${o?" = None":""}`)).join("\n");return a.html`
       @dataclass
       class ${e}(RequestMixin):
       ${t}
