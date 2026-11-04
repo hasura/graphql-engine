@@ -1,4 +1,5 @@
 import {
+  getOrderedCustomRootFields,
   getTrackTableType,
   customFieldNamesPlaceholders,
   getQualifiedTableForCustomFieldNames,
@@ -71,5 +72,46 @@ describe('getTrackingTableFormPlaceholders', () => {
     const result = customFieldNamesPlaceholders('customizeTableName');
 
     expect(result).toEqual(expected);
+  });
+});
+
+describe('getOrderedCustomRootFields', () => {
+  it('lists the root fields in the order of the editor', () => {
+    // the order in which the server returns a configuration (#8253)
+    const fromServer = {
+      insert: 'i',
+      select_aggregate: 'sa',
+      insert_one: 'io',
+      select_by_pk: 'sbp',
+      select: 's',
+      delete: 'd',
+      update: 'u',
+      delete_by_pk: 'dbp',
+      update_by_pk: 'ubp',
+    };
+    expect(getOrderedCustomRootFields(fromServer).map(([key]) => key)).toEqual([
+      'select',
+      'select_by_pk',
+      'select_aggregate',
+      'insert',
+      'insert_one',
+      'update',
+      'update_by_pk',
+      'delete',
+      'delete_by_pk',
+    ]);
+  });
+
+  it('puts unknown root fields last and skips empty ones', () => {
+    expect(
+      getOrderedCustomRootFields({
+        future_field: 'f',
+        select: 's',
+        insert: '',
+      }),
+    ).toEqual([
+      ['select', 's'],
+      ['future_field', 'f'],
+    ]);
   });
 });

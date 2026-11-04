@@ -84,6 +84,27 @@ export const mutation_field_props: (keyof CustomFieldNamesFormVals)[] = [
   'delete_by_pk',
 ];
 
+/**
+ * The custom root fields of a table configuration, in the order of the editor
+ * (queries, then mutations). The server returns them in no particular order;
+ * root fields the editor does not know about come last.
+ */
+export const getOrderedCustomRootFields = (
+  customRootFields: Record<string, string | undefined> = {},
+): [string, string][] => {
+  const order: string[] = [
+    ...query_field_props,
+    ...mutation_field_props,
+    'update_many',
+  ];
+  const rank = (key: string) =>
+    order.includes(key) ? order.indexOf(key) : order.length;
+
+  return Object.entries(customRootFields)
+    .filter((entry): entry is [string, string] => !!entry[1])
+    .sort(([a], [b]) => rank(a) - rank(b));
+};
+
 export const initFormValues = (currentConfiguration?: MetadataTableConfig) => ({
   custom_name: currentConfiguration?.custom_name || '',
   select: '',
