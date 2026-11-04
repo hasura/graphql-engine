@@ -1,4 +1,40 @@
-import { getErrorMessage } from './error';
+import { HttpError } from '@hasura/shared/types';
+import {
+  formatDependentObjectsError,
+  getErrorContent,
+  getErrorMessage,
+} from './error';
+
+const dependentObjectsMessage =
+  'cannot drop due to the following dependent objects: relationship ArticlesToArea.area in source "default", relationship Company.area in source "default"';
+
+describe('formatDependentObjectsError', () => {
+  it('puts each dependent object on its own line', () => {
+    expect(formatDependentObjectsError(dependentObjectsMessage)).toBe(
+      [
+        'cannot drop due to the following dependent objects:',
+        '- relationship ArticlesToArea.area in source "default"',
+        '- relationship Company.area in source "default"',
+      ].join('\n'),
+    );
+  });
+
+  it('ignores other messages', () => {
+    expect(formatDependentObjectsError('field not found')).toBeNull();
+    expect(formatDependentObjectsError(undefined)).toBeNull();
+  });
+
+  it('is used for the error content of a failed metadata call', () => {
+    const error = new HttpError(400, 'Bad Request', {
+      code: 'dependency-error',
+      error: dependentObjectsMessage,
+      path: '$.args',
+    });
+    expect(getErrorContent(error)).toBe(
+      formatDependentObjectsError(dependentObjectsMessage),
+    );
+  });
+});
 
 describe('getErrorMessage', () => {
   describe('when error is undefined', () => {
