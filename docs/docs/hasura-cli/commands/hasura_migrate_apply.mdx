@@ -74,8 +74,8 @@ hasura migrate apply --down all
 ## Options
 
 ```sass
-    --up string                   apply all or N up migration steps
-    --down string                 apply all or N down migration steps
+    --up string                   apply all or N up migration steps (use --version to apply a specific migration)
+    --down string                 apply all or N down migration steps (use --version --type down to roll back a specific migration)
     --goto string                 apply migration chain up to to the version specified
     --version string              only apply this particular migration
     --skip-execution              skip executing the migration action, but mark them as applied

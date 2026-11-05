@@ -98,8 +98,18 @@ Further reading:
 	f := migrateApplyCmd.Flags()
 	f.SortFlags = false
 
-	f.StringVar(&opts.UpMigration, "up", "", "apply all or N up migration steps")
-	f.StringVar(&opts.DownMigration, "down", "", "apply all or N down migration steps")
+	f.StringVar(
+		&opts.UpMigration,
+		"up",
+		"",
+		"apply all or N up migration steps (use --version to apply a specific migration)",
+	)
+	f.StringVar(
+		&opts.DownMigration,
+		"down",
+		"",
+		"apply all or N down migration steps (use --version --type down to roll back a specific migration)",
+	)
 	f.StringVar(&opts.GotoVersion, "goto", "", "apply migration chain up to the version specified")
 
 	f.StringVar(&opts.VersionMigration, "version", "", "only apply this particular migration")
@@ -463,6 +473,11 @@ func (o *MigrateApplyOptions) Exec() error {
 	return nil
 }
 
+// minMistakenVersionStep is the smallest --up/--down value treated as a mistaken
+// migration version. Versions are timestamps, so they are far larger than any
+// real number of migrations.
+const minMistakenVersionStep = 1_000_000_000
+
 // Only one flag out of up, down and version can be set at a time. This function
 // checks whether that is the case and returns an error is not.
 func getMigrationTypeAndStep(
@@ -527,6 +542,22 @@ func getMigrationTypeAndStep(
 	step, err := strconv.ParseInt(stepString, 10, 64)
 	if err != nil {
 		return "", 0, herrors.E(op, fmt.Errorf("not a valid input for steps/version: %w", err))
+	}
+
+	// --up and --down take a number of migrations to apply. A count this large
+	// is almost certainly a migration version passed to the wrong flag, and
+	// running it would apply (or roll back) every migration there is.
+	if (migrationName == "up" || migrationName == "down") && step >= minMistakenVersionStep {
+		return "", 0, herrors.E(
+			op,
+			fmt.Errorf(
+				"--%s expects a number of migrations, but %d looks like a migration version; to apply a single version use --version %d --type %s",
+				migrationName,
+				step,
+				step,
+				migrationName,
+			),
+		)
 	}
 
 	return migrationName, step, nil
