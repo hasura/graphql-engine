@@ -45,6 +45,10 @@ RUN set -ex; \
     # Fail closed if the mirror lacks the libbrotli1 security fix (CVE-2026-111497, HIGH). \
     # Ubuntu Jammy fixed version: https://ubuntu.com/security/CVE-2026-111497 \
     dpkg --compare-versions "$(dpkg-query -W -f='${Version}' libbrotli1)" ge "1.0.9-2ubuntu0.1"; \
+    # Fail closed if the mirror lacks the apt security fix (CVE-2026-109518, HIGH). \
+    for pkg in apt apt-transport-https libapt-pkg6.0t64; do \
+      dpkg --compare-versions "$(dpkg-query -W -f='${Version}' "$pkg")" ge "2.8.4ubuntu0.1"; \
+    done; \
     update-ca-certificates --fresh; \
     # deps needed for graphql-engine
     apt-get install -y libkrb5-3 libpq5 libnuma1 unixodbc-dev; \
