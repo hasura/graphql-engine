@@ -156,7 +156,9 @@ services:
       - /var/lib/postgresql/data
 
   sqlserver:
-    image: mcr.microsoft.com/mssql/server:2019-latest
+    # pinned: later 2019 CUs intermittently hung on startup in CI (keep in sync with
+    # MSSQLImage in .buildkite/pipeline-gen/dockerimg/images.go)
+    image: mcr.microsoft.com/mssql/server:2019-CU25-ubuntu-20.04@sha256:5816a1fc8c300f967cd165c39b2982aeeed5c718ba6eda439ce667dad958a6fd
     platform: linux/amd64
     ports:
       - 1433
@@ -170,7 +172,8 @@ services:
       test:
         - CMD-SHELL
         - |
-          /opt/mssql-tools/bin/sqlcmd -U SA -P "$$SA_PASSWORD"
+          # newer images only ship mssql-tools18 (which needs -C to trust the self-signed cert)
+          /opt/mssql-tools18/bin/sqlcmd -C -U SA -P "$$SA_PASSWORD" -Q "SELECT 1" || /opt/mssql-tools/bin/sqlcmd -U SA -P "$$SA_PASSWORD" -Q "SELECT 1"
       start_period: 5s
       interval: 5s
       timeout: 10s
