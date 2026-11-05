@@ -2,7 +2,7 @@
 
 Déclenchez des webhooks à partir d'évènements de la base de données en utilisant les évènenements déclencheurs d'Hasura GraphQL Engine.
 
-![Démo des évènenements déclencheurs](../assets/event-triggers.gif)
+![Démo des évènenements déclencheurs](https://github.com/hasura/graphql-engine/raw/5fa3e0d2b617a4ae85f65491c5ff6c056cb612de/assets/event-triggers.gif)
 
 ## Points clés
 
