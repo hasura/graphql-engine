@@ -116,6 +116,18 @@ var (
 	errDatabaseNameNotSet = stderrors.New("--database-name flag is required")
 )
 
+// databaseNotConnectedHint tells the user how to connect a database that the
+// CLI could not find in the server metadata. --database-name refers to the
+// name a database is connected to Hasura with, not to the Postgres database.
+func databaseNotConnectedHint(databaseName string) string {
+	return fmt.Sprintf(
+		"database '%s' is not connected to Hasura: connect it first, e.g. from the console (Data > Connect Database) "+
+			"or, for a database named 'default', by starting graphql-engine with HASURA_GRAPHQL_DATABASE_URL set; "+
+			"run 'hasura metadata export' to see the names of the connected databases",
+		databaseName,
+	)
+}
+
 // ExecuteMigration runs the actual migration.
 func ExecuteMigration(cmd string, t *migrate.Migrate, stepOrVersion int64) error {
 	var (
@@ -286,11 +298,7 @@ func validateSourceInfo(ec *cli.ExecutionContext) error {
 	if sourceKind == nil {
 		return errors.E(
 			op,
-			fmt.Errorf(
-				"%w: error determining database kind for '%s', check if database exists on hasura",
-				errDatabaseNotFound,
-				ec.Source.Name,
-			),
+			fmt.Errorf("%w: %s", errDatabaseNotFound, databaseNotConnectedHint(ec.Source.Name)),
 		)
 	}
 
