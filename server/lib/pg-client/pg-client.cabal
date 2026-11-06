@@ -98,6 +98,7 @@ test-suite pg-client-tests
   ghc-options:    -threaded -rtsopts -with-rtsopts=-N
   main-is:        Spec.hs
   other-modules:
+    Connection
     Interrupt
     Timeout
     Jsonb

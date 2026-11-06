@@ -248,6 +248,8 @@ initPQConn ::
   IO PQ.Connection
 initPQConn ci logger = do
   host <- extractHost (ciDetails ci)
+  skipConnectionInitialization <-
+    (== Just "true") <$> lookupEnv "HASURA_GRAPHQL_SKIP_PG_CONNECTION_INIT"
   -- if this is a dynamic connection, we'll signal to refresh the secret (if
   -- configured) during each retry, ensuring we don't make too many connection
   -- attempts with the wrong credentials and risk getting locked out
@@ -286,40 +288,51 @@ initPQConn ci logger = do
     -- Check the status of the connection
     s <- liftIO $ PQ.status conn
     let connOk = s == PQ.ConnectionOk
-    bool (whenConnNotOk conn) (whenConnOk conn) connOk
+    bool (whenConnNotOk conn) (whenConnOk skipConnectionInitialization conn) connOk
   where
     retryP = mkPGRetryPolicy $ ciRetries ci
 
     whenConnNotOk conn = Left . PGConnErr <$> readConnErr conn
 
-    whenConnOk conn = do
+    whenConnOk skipConnectionInitialization conn = do
       -- Check the server version
       v <- PQ.serverVersion conn
       let serVerOk = v >= 80200
-      bool (whenSerVerNotOk v) (whenSerVerOk conn) serVerOk
+      bool (whenSerVerNotOk v) (whenSerVerOk skipConnectionInitialization conn) serVerOk
 
     whenSerVerNotOk v =
       throwIO $
         PGConnErr $
           "Unsupported postgres version: " <> fromString (show v)
 
-    whenSerVerOk conn = do
-      -- Set some parameters and check the response
-      mRes <-
-        PQ.exec conn $
-          mconcat $
-            [ "SET client_encoding = 'UTF8';",
-              "SET client_min_messages TO WARNING;"
-            ]
-      case mRes of
-        Just res -> do
-          st <- PQ.resultStatus res
-          case st of
-            PQ.CommandOk -> return $ Right conn
-            _ ->
-              return $ Left $ PGConnErr "unexpected status after setting params"
-        Nothing ->
-          return $ Left $ PGConnErr "unexpected result after setting params"
+    whenSerVerOk skipConnectionInitialization conn
+      | skipConnectionInitialization = do
+          clientEncoding <- PQ.parameterStatus conn "client_encoding"
+          case clientEncoding of
+            Just "UTF8" -> return $ Right conn
+            _ -> do
+              PQ.finish conn
+              return $
+                Left $
+                  PGConnErr
+                    "HASURA_GRAPHQL_SKIP_PG_CONNECTION_INIT=true requires client_encoding=UTF8 in the PostgreSQL connection startup parameters"
+      | otherwise = do
+          -- Set some parameters and check the response
+          mRes <-
+            PQ.exec conn $
+              mconcat $
+                [ "SET client_encoding = 'UTF8';",
+                  "SET client_min_messages TO WARNING;"
+                ]
+          case mRes of
+            Just res -> do
+              st <- PQ.resultStatus res
+              case st of
+                PQ.CommandOk -> return $ Right conn
+                _ ->
+                  return $ Left $ PGConnErr "unexpected status after setting params"
+            Nothing ->
+              return $ Left $ PGConnErr "unexpected result after setting params"
 
 defaultConnInfo :: ConnInfo
 defaultConnInfo = ConnInfo 0 details
