@@ -16,17 +16,6 @@ import (
 func getCliExtFileContent(ec *cli.ExecutionContext) ([]byte, error) {
 	var op errors.Op = "cliext.getCliExtFileContent"
 
-	if ec.CliExtSourceBinPath != "" {
-		ec.Logger.Debug("cli-ext: setting up using --cli-ext-path binary")
-
-		b, err := os.ReadFile(ec.CliExtSourceBinPath)
-		if err != nil {
-			return b, errors.E(op, err)
-		}
-
-		return b, nil
-	}
-
 	cliExtBinName := "cli-ext"
 	if runtime.GOOS == "windows" {
 		cliExtBinName = "cli-ext.exe"
@@ -82,6 +71,29 @@ func getCliExtFileContent(ec *cli.ExecutionContext) ([]byte, error) {
 func Setup(ec *cli.ExecutionContext) error {
 	var op errors.Op = "cliext.Setup"
 
+	if ec.CliExtSourceBinPath != "" {
+		// Run the given binary where it is instead of a copy of it, so it
+		// starts the same way it does when run by hand.
+		ec.Logger.Debug("cli-ext: setting up using --cli-ext-path binary")
+
+		binPath, err := filepath.Abs(ec.CliExtSourceBinPath)
+		if err != nil {
+			return errors.E(op, fmt.Errorf("error resolving --cli-ext-path: %w", err))
+		}
+		info, err := os.Stat(binPath)
+		if err != nil {
+			return errors.E(op, fmt.Errorf("error reading cli-ext binary: %w", err))
+		}
+		if info.IsDir() {
+			return errors.E(op, fmt.Errorf("--cli-ext-path %s is a directory, not the cli-ext binary", binPath))
+		}
+
+		ec.CliExtDestinationDir = ""
+		ec.CliExtDestinationBinPath = binPath
+
+		return nil
+	}
+
 	parentDirPath := filepath.Join(ec.GlobalConfigDir, "cli-ext", ec.Version.GetCLIVersion())
 
 	err := os.MkdirAll(parentDirPath, 0o755)
@@ -124,6 +136,11 @@ func Setup(ec *cli.ExecutionContext) error {
 	return nil
 }
 
+// Cleanup removes the directory Setup unpacked cli-ext into. A binary given
+// with --cli-ext-path is never removed.
 func Cleanup(ec *cli.ExecutionContext) {
+	if ec.CliExtDestinationDir == "" {
+		return
+	}
 	_ = os.RemoveAll(ec.CliExtDestinationDir)
 }
