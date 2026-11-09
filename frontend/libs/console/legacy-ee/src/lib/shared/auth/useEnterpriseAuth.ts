@@ -12,6 +12,7 @@ import type { EnterpriseAuthService, EnterpriseAuthState } from './types';
 import {
   buildEnterpriseAuthHeaders,
   buildMetricsAuthHeaders,
+  getAuthStateExpiry,
   shouldRefreshAuthState,
 } from './utils';
 import { refreshSsoSession } from './refreshSession';
@@ -226,6 +227,7 @@ const useEnterpriseAuth = (): EnterpriseAuthService => {
     isAuthenticated: Boolean(authState),
     getHeaders,
     getMetricsHeaders,
+    sessionExpiry: getAuthStateExpiry(authState),
     authType: authState?.type ?? 'none',
     hasuraUserId: getHasuraUserId(authState),
     privileges,
