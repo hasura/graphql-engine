@@ -1,0 +1,101 @@
+---
+description: Check PostgreSQL migration SQL before a Hasura deployment with pgfence
+keywords:
+  - hasura
+  - docs
+  - ci-cd
+  - migrations
+  - postgres
+  - pgfence
+sidebar_label: Migration safety checks
+sidebar_position: 50
+---
+
+import ProductBadge from '@site/src/components/ProductBadge';
+
+# Migration Safety Checks
+
+<ProductBadge free pro ee />
+
+[pgfence](https://pgfence.com) is an optional open-source CLI that checks PostgreSQL migration SQL for known lock risks
+and policy violations before deployment. For example, a regular `CREATE INDEX` takes a `SHARE` lock that blocks writes;
+`CREATE INDEX CONCURRENTLY` allows ordinary reads and writes but must run outside a transaction block.
+
+## Add a check before applying Migrations
+
+Add these steps after checkout and before the deployment steps in your existing
+[GitHub Actions workflow](/cloud-ci-cd/github-integration.mdx):
+
+```yaml
+- uses: actions/setup-node@v4
+  with:
+    node-version: '22'
+
+- name: Check PostgreSQL migration SQL
+  shell: bash
+  run: |
+    set -euo pipefail
+    test -d hasura/migrations
+    manifest="$RUNNER_TEMP/hasura-up-files"
+    find hasura/migrations -type f -name up.sql -print0 > "$manifest"
+    migration_files=()
+    while IFS= read -r -d '' file; do
+      migration_files+=("$file")
+    done < "$manifest"
+    if [ "${#migration_files[@]}" -eq 0 ]; then
+      echo 'No up.sql migration files found; check the configured path.' >&2
+      exit 1
+    fi
+    npx --yes @flvmnt/pgfence@0.8.1 analyze --format sql --ci --max-risk low --unknown block "${migration_files[@]}"
+```
+
+This example recursively checks every forward `up.sql` file under `hasura/migrations`, including layouts such as
+`hasura/migrations/default/<timestamp>_<name>/up.sql`. It excludes rollback `down.sql` files and preserves filenames
+containing spaces. It checks the full migration history, not just files changed by the current pull request.
+
+The example assumes these files target PostgreSQL. For projects with other database sources, change the `find` path to
+include only your PostgreSQL source directories. Change the migration root if your Hasura project lives elsewhere.
+
+`--max-risk low` allows `SAFE` and `LOW` findings, and makes `MEDIUM`, `HIGH`, and `CRITICAL` findings fail the check.
+For example, it rejects non-concurrent index creation. `--max-risk medium` allows `MEDIUM` findings instead. Policy
+errors, such as missing `lock_timeout`, also fail CI independently of the risk threshold. `--unknown block` also fails
+on statements the tool reports as unanalyzable; it does not expand the analyzer's coverage.
+
+For a machine-readable report, add `--output json` to the same command and redirect its output to a report file. Keep
+`--ci` if that step should enforce the threshold.
+
+## Include timeout settings
+
+Set timeout values appropriate for the operation and verify that your deployment runner preserves them. For example,
+this standalone forward migration includes timeout settings and a concurrent index operation:
+
+```sql
+SET lock_timeout = '2s';
+SET statement_timeout = '5min';
+SET application_name = 'hasura-migration';
+SET idle_in_transaction_session_timeout = '30s';
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS orders_customer_id_idx ON public.orders (customer_id);
+```
+
+The concurrent operation must execute outside a transaction block. pgfence can detect transaction statements present in
+the SQL file, but cannot infer a transaction added by Hasura or another deployment runner. Verify the actual execution
+behavior before choosing this rewrite.
+
+## Interpret the result
+
+Review the report's findings, policy violations, and coverage summary. Resolve parse failures or unsupported analysis
+instead of treating them as a successful safety check. A successful check means no analyzed finding exceeded the
+configured threshold; it does not prove a migration will succeed or avoid production downtime.
+
+Static file analysis does not know the live table sizes, active sessions, lock queues, or application compatibility.
+Review each rewrite, test against a representative database, and follow
+[Hasura Migrations best practices](/migrations-metadata-seeds/migration-best-practices.mdx). Destructive operations
+still need an explicit rollback or recovery plan.
+
+## Further resources
+
+- [pgfence documentation](https://pgfence.com)
+- [pgfence on npm](https://www.npmjs.com/package/@flvmnt/pgfence)
+- [PostgreSQL explicit locking](https://www.postgresql.org/docs/current/explicit-locking.html)
+- [PostgreSQL concurrent index creation](https://www.postgresql.org/docs/current/sql-createindex.html#SQL-CREATEINDEX-CONCURRENTLY)
