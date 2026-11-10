@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { HttpError } from '@hasura/shared/types';
 import type { MetadataTable, Source } from '@hasura/shared/types';
 import { TableColumns } from './TableColumns';
 
@@ -79,9 +80,14 @@ vi.mock('@hasura/metadata/data-source', () => ({
   }),
 }));
 
+const toastSpy = vi.fn();
 vi.mock('@hasura/shared/ui', async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>;
-  return { ...actual, useDestructiveConfirm: () => confirmSpy };
+  return {
+    ...actual,
+    useDestructiveConfirm: () => confirmSpy,
+    hasuraToast: (...args: unknown[]) => toastSpy(...args),
+  };
 });
 
 vi.mock('./EditTableColumnDialog/EditTableColumnDialog', () => ({
@@ -96,7 +102,47 @@ describe('ModifyTable TableColumns', () => {
   beforeEach(() => {
     dropColumn.mockClear();
     confirmSpy.mockClear();
+    toastSpy.mockClear();
     dropSupported = true;
+  });
+
+  it('reports a failed removal instead of closing silently', async () => {
+    dropColumn.mockRejectedValueOnce(
+      new HttpError(400, 'Bad Request', {
+        code: 'data_api_error',
+        message: 'cannot drop column because other objects depend on it',
+      }),
+    );
+    render(<TableColumns source={source} table={table} isView={false} />);
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Remove column ArtistId' }),
+    );
+
+    await waitFor(() =>
+      expect(toastSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'error',
+          title: 'Removing column failed',
+        }),
+      ),
+    );
+    expect(toastSpy.mock.calls[0][0].message).not.toMatch(/removed anyway/);
+    await expect(confirmSpy.mock.results[0].value).resolves.toBe(false);
+  });
+
+  it('warns that a removal failing after it was sent may have applied', async () => {
+    dropColumn.mockRejectedValueOnce(
+      new HttpError(500, 'Internal Server Error', { message: 'boom' }),
+    );
+    render(<TableColumns source={source} table={table} isView={false} />);
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Remove column ArtistId' }),
+    );
+
+    await waitFor(() => expect(toastSpy).toHaveBeenCalled());
+    expect(toastSpy.mock.calls[0][0].message).toMatch(
+      /may have been removed anyway/,
+    );
   });
 
   it('removes a column with the constraints of this table that involve it', async () => {

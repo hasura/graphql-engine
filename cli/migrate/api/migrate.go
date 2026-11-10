@@ -426,21 +426,29 @@ func MigrateAPI(c *gin.Context) {
 			return
 		}
 
+		// Keep these errors local: assigning the outer `err` would make the
+		// deferred cleanup above delete the migration file of a migration that
+		// has already been applied (and reported to the client as a success).
 		defer func() {
-			var files map[string][]byte
-
-			files, err = mdHandler.ExportMetadata()
-			if err != nil {
-				logger.Debug(err)
+			files, exportErr := mdHandler.ExportMetadata()
+			if exportErr != nil {
+				logger.Warnf(
+					"exporting metadata after migration %d_%s: %v",
+					timestamp,
+					request.Name,
+					exportErr,
+				)
 
 				return
 			}
 
-			err = mdHandler.WriteMetadata(files)
-			if err != nil {
-				logger.Debug(err)
-
-				return
+			if writeErr := mdHandler.WriteMetadata(files); writeErr != nil {
+				logger.Warnf(
+					"writing metadata after migration %d_%s: %v",
+					timestamp,
+					request.Name,
+					writeErr,
+				)
 			}
 		}()
 
