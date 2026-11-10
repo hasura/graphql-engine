@@ -18,12 +18,13 @@ import {
   FaTimes,
 } from 'react-icons/fa';
 import { OrderBy, WhereClause } from '@hasura/shared/types';
-import { isArrayString } from '@hasura/shared/utils';
+import { CSVExportOptions, isArrayString } from '@hasura/shared/utils';
 import {
   ExportFileFormat,
   Operator,
   TableRow,
 } from '@hasura/metadata/data-source';
+import { ExportCSVDialog } from './ExportCSVDialog';
 
 interface DataTableOptionsProps {
   query: {
@@ -42,9 +43,11 @@ interface DataTableOptionsProps {
     isDeleting: boolean;
     onExportRows: (
       exportFileFormat: ExportFileFormat,
+      csvOptions?: CSVExportOptions,
     ) => Promise<TableRow[] | Error>;
     onExportSelectedRows: (
       exportFileFormat: ExportFileFormat,
+      csvOptions?: CSVExportOptions,
     ) => Promise<TableRow[] | Error>;
   };
   pagination: {
@@ -164,10 +167,14 @@ export const DataTableOptions = (props: DataTableOptionsProps) => {
     query.whereClauses.length + query.orderByClauses.length;
 
   const [isExporting, setExporting] = useState(false);
-  const onExport = (exportFileFormat: ExportFileFormat) => {
+  // which export the CSV options dialog is open for, if any
+  const [csvExportScope, setCSVExportScope] = useState<
+    'selected' | 'all' | null
+  >(null);
+
+  const runExport = (exportRows: () => Promise<TableRow[] | Error>) => {
     setExporting(true);
-    query
-      .onExportRows(exportFileFormat)
+    exportRows()
       .catch((err) =>
         showErrorNotification({
           title: 'An error occurred',
@@ -179,19 +186,21 @@ export const DataTableOptions = (props: DataTableOptionsProps) => {
       });
   };
 
-  const onExportSelectedRows = (exportFileFormat: ExportFileFormat) => {
-    setExporting(true);
-    query
-      .onExportSelectedRows(exportFileFormat)
-      .catch((err) =>
-        showErrorNotification({
-          title: 'An error occurred',
-          error: err,
-        }),
-      )
-      .finally(() => {
-        setExporting(false);
-      });
+  const onExport = (
+    exportFileFormat: ExportFileFormat,
+    csvOptions?: CSVExportOptions,
+  ) => runExport(() => query.onExportRows(exportFileFormat, csvOptions));
+
+  const onExportSelectedRows = (
+    exportFileFormat: ExportFileFormat,
+    csvOptions?: CSVExportOptions,
+  ) =>
+    runExport(() => query.onExportSelectedRows(exportFileFormat, csvOptions));
+
+  const onExportCSV = (csvOptions: CSVExportOptions) => {
+    if (csvExportScope === 'selected') onExportSelectedRows('CSV', csvOptions);
+    else onExport('CSV', csvOptions);
+    setCSVExportScope(null);
   };
 
   const disabled = query.isDeleting;
@@ -233,10 +242,10 @@ export const DataTableOptions = (props: DataTableOptionsProps) => {
             </DropdownMenu.Label>,
             <DropdownMenu.Item
               key="export-selected-csv"
-              onClick={() => onExportSelectedRows('CSV')}
+              onClick={() => setCSVExportScope('selected')}
               disabled={isExporting || !query.selectedRowsCount}
             >
-              CSV
+              CSV…
             </DropdownMenu.Item>,
             <DropdownMenu.Item
               key="export-selected-json"
@@ -251,10 +260,10 @@ export const DataTableOptions = (props: DataTableOptionsProps) => {
             </DropdownMenu.Label>,
             <DropdownMenu.Item
               key="export-table-csv"
-              onClick={() => onExport('CSV')}
+              onClick={() => setCSVExportScope('all')}
               disabled={isExporting}
             >
-              CSV
+              CSV…
             </DropdownMenu.Item>,
             <DropdownMenu.Item
               key="export-table-json"
@@ -277,6 +286,13 @@ export const DataTableOptions = (props: DataTableOptionsProps) => {
             Export
           </Button>
         </DropdownMenu.Root>
+        {csvExportScope && (
+          <ExportCSVDialog
+            scope={csvExportScope === 'selected' ? 'selected rows' : 'table'}
+            onExport={onExportCSV}
+            onClose={() => setCSVExportScope(null)}
+          />
+        )}
 
         {!query.disableRunQuery && (
           <>
