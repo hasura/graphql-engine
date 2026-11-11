@@ -73,6 +73,35 @@ THe metadata database URL needs to be set for Hasura to start.
 
 :::
 
+### Skip PostgreSQL connection initialization
+
+Skip the `SET client_encoding = 'UTF8'` and `SET client_min_messages TO WARNING` statements normally issued when opening
+a PostgreSQL connection. This can avoid session pinning caused by connection initialization when using Amazon RDS Proxy.
+
+|                     |                                          |
+| ------------------- | ---------------------------------------- |
+| **Env var**         | `HASURA_GRAPHQL_SKIP_PG_CONNECTION_INIT` |
+| **Accepted values** | Set to the exact string `true` to enable |
+| **Default**         | Disabled                                 |
+| **Supported in**    | CE, Enterprise Edition                   |
+
+When unset or set to any value other than `true`, the existing initialization statements are sent as usual. This setting
+applies to all PostgreSQL connections opened by the process, including the Metadata database, sources and read replicas.
+
+When enabled, configure `client_encoding=UTF8` in each connection's startup parameters or ensure that its default is
+`UTF8`. Connections reporting another encoding are rejected because Hasura requires UTF-8. Configure
+`client_min_messages=WARNING` separately, for example through a database role default or a proxy initialization query,
+if that message threshold is required. The setting does not issue replacement SQL or change transaction-local user
+context. It does not prevent pinning caused by other statements, such as SQL text larger than 16 KB.
+
+For example, append `client_encoding=UTF8` to each PostgreSQL URI (use `&` if it already has query parameters) and set:
+
+```bash
+HASURA_GRAPHQL_SKIP_PG_CONNECTION_INIT=true
+```
+
+This option requires a GraphQL Engine binary built with support for it; setting it on an older image has no effect.
+
 ## Serve sub-command flags and environment variables {#command-flags}
 
 For the [`serve` sub-command](/deployment/graphql-engine-flags/index.mdx#the-serve-sub-command), these are the available

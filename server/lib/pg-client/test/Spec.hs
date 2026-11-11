@@ -12,6 +12,7 @@ module Main (main) where
 
 -------------------------------------------------------------------------------
 
+import Connection (specConnection)
 import Control.Concurrent (forkIO, threadDelay)
 import Control.Monad.Trans.Class (MonadTrans (lift))
 import Control.Monad.Trans.Except (runExceptT)
@@ -81,6 +82,7 @@ main = hspec $ do
             }
 
   specInterrupt
+  specConnection
   specTimeout
   specJsonb
   specURL
