@@ -59,6 +59,9 @@ If it has been stored in a directory other than the default then it can be confi
 
   A path to the metadata directory.
 
+  If the directory contains a `metadata.json` file (a project that uses `metadata_file: metadata.json` in its
+  `config.yaml`), metadata is applied from that file instead of the YAML files.
+
 ### GraphQL Server (Optional)
 
 Optional configuration for the server which boots during migrations.
