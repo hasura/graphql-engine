@@ -22,7 +22,17 @@ func NewDeployCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Use:   "deploy",
 		Short: "(PREVIEW) Utility command to apply Hasura Metadata & database migrations to graphql-engine",
 		Long: `When working with a Hasura instance, you'll apply Hasura Metadata and database migrations to the graphql-engine server. This command reduces the number of steps by completing the same tasks (` + " ``hasura metadata apply``" + " and ``hasura migrate apply``" + `) in one command.
-		
+
+The steps run in this order, and the command stops at the first step that fails:
+
+1. ` + "``hasura metadata apply``" + ` (config v3 only), so that the databases to migrate are known to the server
+2. ` + "``hasura migrate apply --all-databases``" + `
+3. ` + "``hasura metadata apply``" + `
+4. ` + "``hasura metadata reload``" + `
+5. ` + "``hasura seed apply``" + ` on all databases, when ` + "``--with-seeds``" + ` is set
+
+For example, if applying the migrations fails, the metadata is not applied again.
+
 Further reading:
 - https://hasura.io/docs/latest/migrations-metadata-seeds/index/#migrations-in-graphql-engine
 - https://hasura.io/docs/latest/migrations-metadata-seeds/manage-migrations/
