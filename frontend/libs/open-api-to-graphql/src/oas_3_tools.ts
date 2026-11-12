@@ -497,8 +497,8 @@ function buildUrl(server: ServerObject): string {
   ) {
     for (let variableKey in server.variables) {
       // TODO: check for default? Would be invalid OAS
-      url = url.replace(
-        `{${variableKey}}`,
+      // A replacer function keeps `$` sequences in the value literal
+      url = url.replace(`{${variableKey}}`, () =>
         server.variables[variableKey].default.toString(),
       );
     }

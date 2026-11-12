@@ -46,9 +46,13 @@ export function useDropColumn(options?: Options) {
         message: 'Column removed successfully!',
         type: 'success',
       });
+      options?.onSuccess?.(data, variables, onMutateResult, context);
+    },
+    // Refresh on failure too (see `useAddColumn`).
+    onSettled: (data, error, variables, onMutateResult, context) => {
       invalidateMetadata(queryClient);
       queryClient.invalidateQueries({ queryKey: [variables.source.name] });
-      options?.onSuccess?.(data, variables, onMutateResult, context);
+      options?.onSettled?.(data, error, variables, onMutateResult, context);
     },
   });
 }

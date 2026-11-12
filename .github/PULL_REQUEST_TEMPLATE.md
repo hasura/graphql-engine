@@ -1,119 +1,75 @@
 <!-- Thank you for submitting this PR! :) -->
-<!-- Provide a general summary of your changes in the Title above ^, end with (close #<issue-no>) or (fix #<issue-no>) -->
 
-### Description
-<!-- The title might not be enough to convey how this change affects the user. -->
-<!-- Describe the changes from a user's perspective -->
-
-### Changelog
-
-<!-- Fill this section if this is a user facing change. -->
-
-__Component__ : server / cli / console / build <!-- choose one -->
-
-__Type__: bugfix / feature / enhancement <!-- choose one -->
-
-__Product__: community-edition
-
-#### Short Changelog
-
-<!-- One line description of this change. (optional if you choose to fill the Long Changelog section instead) -->
-
-#### Long Changelog
+## Description
 
 <!--
-  Detailed description of this change. This might contain links to documentation, blogposts, images. Use markdown for formatting.
-  (optional if you choose to fill the Short Changelog section instead)
+  Questions to consider answering:
+  1. What user-facing changes are being made?
+  2. What are issues related to this PR? (Consider adding `(close #<issue-no>)` to the PR title)
+  3. What is the conceptual design behind this PR?
+     - When introducing new Metadata: check https://github.com/hasura/graphql-engine-mono/issues/6116
+  4. How can this PR be tested/verified?
+  5. Does the PR have limitations?
+  6. Does the PR introduce breaking changes? Also think about the format for Metadata and logging.
+     For `hdb_catalog` version bumps, make sure to update the docs for downgrading:
+     https://hasura.io/docs/latest/graphql/core/deployment/downgrading.html#downgrading-across-catalogue-versions
 -->
 
+## Changelog
 
-<!-- Changelog Section End -->
+- Add a changelog entry (in the "Changelog entry" section below) if the changes in this PR have any user-facing impact. See [changelog guide](https://github.com/hasura/graphql-engine-mono/wiki/Changelog-Guide).
+- If no changelog is required ignore/remove this section and add a `no-changelog-required` label to the PR.
 
-### Related Issues
-<!-- Please make sure you have an issue associated with this Pull Request -->
-<!-- And then add `(close #<issue-no>)` to the pull request title -->
-<!-- Add the issue number below (e.g. #234) -->
+### Component
+_(Select only one. In case of multiple components, choose the most appropriate)_
+- [ ] server
+- [ ] console
+- [ ] cli
+- [ ] data-connector
+- [ ] build
+<!-- component : end : DO NOT REMOVE -->
 
-### Solution and Design
-<!-- How is this issue solved/fixed? What is the design? -->
-<!-- It's better if we elaborate -->
+### Product
+_(Select all products this will be available in)_
+- [ ] community-edition
+- [ ] cloud
+- [ ] enterprise-edition
+- [ ] enterprise-edition-classic
+<!-- product : end : DO NOT REMOVE -->
 
-### Steps to test and verify
-<!-- If this is a feature, what are the steps to try them out? -->
-<!-- If this is a bug-fix, how do we verify the fix? -->
+### Type
+<!-- See changelog structure: https://github.com/hasura/graphql-engine-mono/wiki/Changelog-Guide#structure-of-our-changelog -->
+_(Select only one. In case of multiple, choose the most appropriate)_
+- [ ] highlight
+- [ ] enhancement
+- [ ] bugfix
+- [ ] behaviour-change
+- [ ] performance-enhancement
+- [ ] security-fix
+<!-- type : end : DO NOT REMOVE -->
 
-### Limitations, known bugs & workarounds
-<!-- Limitations of the PR, known bugs and suggested workarounds -->
-<!-- Feel free to delete these comment lines -->
+### Changelog entry
+<!--
+  - Add a user understandable changelog entry
+  - Include all details needed to understand the change. Try including links to docs or issues if relevant
+  - For Highlights start with a H4 heading (#### <entry title>)
+  - See best practices for writing changelog entry: https://github.com/hasura/graphql-engine-mono/wiki/Changelog-Guide#how-to-write-a-changelog-entry--changelog-best-practices   
+  - Get the changelog entry reviewed by your team
+-->
 
-### Server checklist
-<!-- A checklist for server code -->
+_Replace with changelog entry_
 
-#### Catalog upgrade
-<!-- Is hdb_catalog version bumped? -->
-Does this PR change Hasura Catalog version?
-- [ ] No
-- [ ] Yes
-  - [ ] Updated docs with SQL for downgrading the catalog <!-- https://hasura.io/docs/latest/graphql/core/deployment/downgrading.html#downgrading-across-catalogue-versions -->
+<!-- changelog-entry : end : DO NOT REMOVE -->
 
-#### Metadata
-<!-- Hasura metadata changes -->
+<!-- changelog : end : DO NOT REMOVE -->
+---
 
-Does this PR add a new Metadata feature?
-- [ ] No
-- [ ] Yes
-  - Does `run_sql` auto manages the new metadata through schema diffing?
-    - [ ] Yes
-    - [ ] Not required
-  - Does `run_sql` auto manages the definitions of metadata on renaming?
-    - [ ] Yes
-    - [ ] Not required
-  - Does `export_metadata`/`replace_metadata` supports the new metadata added?
-    - [ ] Yes
-    - [ ] Not required
+### Kodiak commit message
+Information used by [Kodiak bot](https://kodiakhq.com/) while merging this PR.
 
+#### Commit title
+Same as the title of this pull request
 
-#### GraphQL
-- [ ] No new GraphQL schema is generated
-- [ ] New GraphQL schema is being generated:
-   - [ ] New types and typenames are correlated
-   <!-- No dangling types or typenames with missing types (a potential bug, introspection fails) -->
-   <!-- If you have anything in your mind, which can be added here as a check list item, please submit a PR to update this template :) -->
-
-#### Breaking changes
-
-- [ ] No Breaking changes
-- [ ] There are breaking changes:
-
-  1. Metadata API
-
-     Existing `query` types:
-     - [ ] Modify `args` payload which is not backward compatible
-     - [ ] Behavioural change of the API
-     - [ ] Change in response `JSON` schema
-     - [ ] Change in error code
-     <!-- Add if anything not listed above -->
-
-  2. GraphQL API
-
-     Schema Generation:
-     <!-- Any changes in schema auto-generation logic -->
-     <!-- All GraphQL schema names are case sensitive -->
-     - [ ] Change in any `NamedType`
-     - [ ] Change in table field names
-     <!-- Add if anything not listed above -->
-
-     Schema Resolve:-
-     <!-- Any change in logic of resolving input request -->
-     - [ ] Change in treatment of `null` value for any input fields <!-- Explain them below -->
-     <!-- Add if anything not listed above -->
-
-  3. Logging
-
-     - [ ] Log `JSON` schema has changed
-     - [ ] Log `type` names have changed
-     <!-- Add if anything not listed above -->
-
-<!-- Add any other breaking change not mentioned above -->
-
-<!-- Explain briefly about your breaking changes below -->
+#### Commit body
+(Append below if you want to add something to the commit body)
+<!-- kodiak-commit-message-body-start: do not remove/edit this line -->
