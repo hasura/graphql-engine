@@ -138,6 +138,10 @@ func (ec *ExecutionContext) setupGlobalConfig() error {
 		ec.Logger.Debugf("global config file set as '%s'", ec.GlobalConfigFile)
 	}
 
+	// the telemetry notice is shown on the first run, which is every run in
+	// containers that start without a global config file
+	showTelemetryNotice := false
+
 	// check if the global config file exist
 	_, err = os.Stat(ec.GlobalConfigFile)
 	if stderrors.Is(err, fs.ErrNotExist) {
@@ -167,8 +171,7 @@ func (ec *ExecutionContext) setupGlobalConfig() error {
 			gc,
 		)
 
-		// also show a notice about telemetry
-		ec.Logger.Info(TelemetryNotice)
+		showTelemetryNotice = true
 	} else if stderrors.Is(err, fs.ErrExist) || err == nil {
 		// file exists, verify contents
 		ec.Logger.Debug("global config file exists, verifying contents")
@@ -205,6 +208,12 @@ func (ec *ExecutionContext) setupGlobalConfig() error {
 	err = ec.readGlobalConfig()
 	if err != nil {
 		return errors.E(op, err)
+	}
+
+	// there is nothing to tell when telemetry is already disabled, e.g. with
+	// HASURA_GRAPHQL_ENABLE_TELEMETRY=false
+	if showTelemetryNotice && ec.GlobalConfig.EnableTelemetry {
+		ec.Logger.Info(TelemetryNotice)
 	}
 
 	return nil
