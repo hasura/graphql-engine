@@ -122,6 +122,12 @@ At least one of these **must** be configured to migrate the database successfull
 
   `HASURA_GRAPHQL_DATABASE_URL=postgres://<username>:<password>@<host>:<port>/<database_name>`
 
+### Logging (Optional)
+
+- `HASURA_GRAPHQL_LOG_LEVEL`
+
+  When set to `debug`, the migrations applied on startup are listed in the logs.
+
 ### GraphQL Server (Optional)
 
   Optional configuration for the server which boots during migrations.

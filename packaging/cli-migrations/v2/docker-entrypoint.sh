@@ -36,6 +36,13 @@ if [ -z ${HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT+x} ]; then
     HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT=30
 fi
 
+# hasura-cli lists the migrations it applies only at its DEBUG log level, so
+# follow the server log level when it is set to debug
+MIGRATE_APPLY_FLAGS=""
+if [ "$(echo "${HASURA_GRAPHQL_LOG_LEVEL:-}" | tr '[:upper:]' '[:lower:]')" = "debug" ]; then
+    MIGRATE_APPLY_FLAGS="--log-level DEBUG"
+fi
+
 # wait for a port to be ready
 wait_for_port() {
     local PORT=$1
@@ -88,7 +95,7 @@ if [ -d "$HASURA_GRAPHQL_MIGRATIONS_DIR" ]; then
     cd "$TEMP_PROJECT_DIR"
     echo "version: 2" > config.yaml
     echo "endpoint: http://localhost:$HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT" >> config.yaml
-    hasura-cli migrate apply
+    hasura-cli migrate apply $MIGRATE_APPLY_FLAGS
 else
     log "migrations-apply" "directory $HASURA_GRAPHQL_MIGRATIONS_DIR does not exist, skipping migrations"
 fi
