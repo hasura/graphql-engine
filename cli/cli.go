@@ -330,6 +330,20 @@ func (c *ServerConfig) ParseEndpoint() error {
 		return errors.E(op, err)
 	}
 
+	// a common mistake is to use the GraphQL API URL as the endpoint, which
+	// otherwise only fails later with a confusing "resource does not exist"
+	if trimmed := strings.TrimRight(nurl.Path, "/"); strings.HasSuffix(trimmed, "/v1/graphql") {
+		root := *nurl
+		root.Path = strings.TrimSuffix(trimmed, "/v1/graphql")
+		root.RawPath = ""
+
+		return errors.E(op, fmt.Errorf(
+			"endpoint %q is the GraphQL API of graphql-engine, not its root URL: use %q instead",
+			c.Endpoint,
+			root.String(),
+		))
+	}
+
 	c.ParsedEndpoint = nurl
 
 	return nil
