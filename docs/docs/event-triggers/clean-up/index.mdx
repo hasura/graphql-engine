@@ -112,3 +112,62 @@ WHERE (delivered = true OR error = true)
 
 See the [Postgres date/time functions](https://www.postgresql.org/docs/current/functions-datetime.html)
 for more details.
+
+## Cleaning up large tables
+
+On large event tables, a single `DELETE` of most of the rows can run for a long time, write a lot of WAL (transaction
+log), and leave many dead rows behind. Postgres then reclaims them with a long `AUTOVACUUM`, which also writes WAL and
+can fill up the database disk.
+
+If you want to remove **all** event data (Option 5), `TRUNCATE` is much faster and frees the space immediately, without
+leaving dead rows for autovacuum:
+
+```sql
+TRUNCATE hdb_catalog.event_invocation_logs, hdb_catalog.event_log;
+```
+
+:::caution Warning
+
+Like Option 5, this also removes the events that are not delivered yet, and it cannot be limited with a `WHERE` clause.
+`TRUNCATE` takes an exclusive lock on both tables, so all access to them waits until it has finished. This includes
+writes to tables with Event Triggers and the delivery of pending events.
+
+:::
+
+To remove only part of the data, delete it in batches instead of in a single statement, so that each transaction stays
+short and autovacuum can keep up. For example, the following procedure (Postgres 11 or later) deletes processed events
+and HTTP logs older than 3 months, 10000 rows at a time, and commits after each batch:
+
+```sql
+CREATE PROCEDURE pg_temp.clean_up_event_data() AS $$
+DECLARE
+  deleted integer;
+BEGIN
+  LOOP
+    DELETE FROM hdb_catalog.event_invocation_logs
+    WHERE id IN (
+        SELECT id FROM hdb_catalog.event_invocation_logs
+        WHERE created_at < now() - interval '3 months'
+        LIMIT 10000 );
+    GET DIAGNOSTICS deleted = ROW_COUNT;
+    COMMIT;
+    EXIT WHEN deleted = 0;
+  END LOOP;
+
+  LOOP
+    DELETE FROM hdb_catalog.event_log
+    WHERE id IN (
+        SELECT id FROM hdb_catalog.event_log
+        WHERE (delivered = true OR error = true)
+         AND created_at < now() - interval '3 months'
+        LIMIT 10000 );
+    GET DIAGNOSTICS deleted = ROW_COUNT;
+    COMMIT;
+    EXIT WHEN deleted = 0;
+  END LOOP;
+END $$ LANGUAGE plpgsql;
+
+CALL pg_temp.clean_up_event_data();
+```
+
+`CALL` must be run outside of an explicit transaction block, otherwise the `COMMIT` statements fail.

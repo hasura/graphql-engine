@@ -2,7 +2,7 @@
 
 使用Hasura GraphQL引擎的事件触发器在数据库事件上触发webhooks。
 
-![Event triggers demo](../assets/event-triggers.gif)
+![Event triggers demo](https://github.com/hasura/graphql-engine/raw/5fa3e0d2b617a4ae85f65491c5ff6c056cb612de/assets/event-triggers.gif)
 
 ## 重点
 

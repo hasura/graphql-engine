@@ -69,6 +69,29 @@ Here's how a GraphQL request is processed in webhook mode:
 
 <Thumbnail src='/img/auth/auth-webhook-overview.png' alt='Authentication using webhooks' width='1000px' />
 
+## Session variables sent as request headers
+
+Clients can send `X-Hasura-*` request headers, but whether Hasura uses them as session variables depends on how the
+request is authenticated:
+
+| Request                                                                                                                                          | Session variables come from                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| With a valid admin secret, or no auth set up                                                                                                     | All `X-Hasura-*` request headers. `X-Hasura-Role` selects the role, which defaults to `admin`.                                                                                                                                                                                                                                                                                                                                                                               |
+| With a JWT                                                                                                                                       | The JWT claims: the `x-hasura-*` claims in the [claims namespace](/auth/authentication/jwt.mdx#claims-namespace), or the claims mapped with [`claims_map`](/auth/authentication/jwt.mdx#claims_map). `x-hasura-allowed-roles` and `x-hasura-default-role` are not exposed as session variables. Of the request headers only `X-Hasura-Role` is used, to pick one of the allowed roles; a role that is not allowed fails the request. Other `X-Hasura-*` headers are ignored. |
+| Through the auth webhook                                                                                                                         | The webhook response only. Client headers are forwarded to the webhook (all of them for `POST`, [most of them](/auth/authentication/webhook.mdx#webhook-request) for `GET`), and the webhook decides what to return. This includes requests without credentials: the webhook can return the unauthorized role.                                                                                                                                                               |
+| Without an admin secret or JWT, when an [unauthorized role](/auth/authentication/unauthenticated-access.mdx) is configured (not in webhook mode) | The `X-Hasura-*` request headers, with the unauthorized role.                                                                                                                                                                                                                                                                                                                                                                                                                |
+
+So a client that is authenticated with a JWT or through the webhook cannot set or override session variables like
+`X-Hasura-User-Id` by sending them as headers.
+
+:::warning Header values are not verified for the unauthorized role
+
+When the request has no admin secret and no JWT (in admin-secret-only mode, or in JWT mode with an unauthorized role
+configured), any client can send arbitrary `X-Hasura-*` headers and they become session variables. Do not rely on
+session variables such as `X-Hasura-User-Id` in the permissions of the unauthorized role.
+
+:::
+
 ## Other access levels
 - [Admin secret access](/auth/authentication/admin-secret-access.mdx)
 - [Unauthenticated / Public access](/auth/authentication/unauthenticated-access.mdx)

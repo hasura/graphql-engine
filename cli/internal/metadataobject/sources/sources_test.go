@@ -9,7 +9,9 @@ import (
 	goyaml "github.com/goccy/go-yaml"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 	"github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.yaml.in/yaml/v3"
 )
 
@@ -200,4 +202,140 @@ func TestSourceConfig_Export(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestPlainTextCredentials(t *testing.T) {
+	tests := []struct {
+		name   string
+		source string
+		want   []string
+	}{
+		{
+			"postgres url in plain text",
+			`configuration: {connection_info: {database_url: "postgres://user:secret@db:5432/app"}}`,
+			[]string{"connection_info.database_url"},
+		},
+		{
+			"postgres url from env",
+			`configuration: {connection_info: {database_url: {from_env: PG_DATABASE_URL}}}`,
+			nil,
+		},
+		{
+			"postgres url with env templates",
+			`configuration: {connection_info: {database_url: "postgres://{{PG_USER}}:{{PG_PASSWORD}}@db:5432/app"}}`,
+			nil,
+		},
+		{
+			"postgres url from file",
+			`configuration: {connection_info: {database_url: {dynamic_from_file: /secrets/pg_url}}}`,
+			nil,
+		},
+		{
+			"postgres connection parameters with password",
+			`configuration: {connection_info: {database_url: {connection_parameters: {host: db, password: secret}}}}`,
+			[]string{"connection_info.database_url.connection_parameters.password"},
+		},
+		{
+			"postgres connection parameters without password",
+			`configuration: {connection_info: {database_url: {connection_parameters: {host: db}}}}`,
+			nil,
+		},
+		{
+			"postgres null url",
+			`configuration: {connection_info: {database_url: null}}`,
+			nil,
+		},
+		{
+			"postgres read replicas and connection set",
+			`configuration:
+  connection_info: {database_url: {from_env: PG_DATABASE_URL}}
+  read_replicas:
+    - {database_url: {from_env: PG_REPLICA_URL}}
+    - {database_url: "postgres://user:secret@replica:5432/app"}
+  connection_set:
+    - {name: tenant, connection_info: {database_url: "postgres://user:secret@tenant:5432/app"}}`,
+			[]string{
+				"read_replicas[1].database_url",
+				"connection_set[0].connection_info.database_url",
+			},
+		},
+		{
+			"mssql connection string in plain text",
+			`configuration: {connection_info: {connection_string: "Server=db;Password=secret"}}`,
+			[]string{"connection_info.connection_string"},
+		},
+		{
+			"mssql connection string from env",
+			`configuration: {connection_info: {connection_string: {from_env: MSSQL_URL}}}`,
+			nil,
+		},
+		{
+			"mssql read replica in plain text",
+			`configuration:
+  connection_info: {connection_string: {from_env: MSSQL_URL}}
+  read_replicas: [{connection_string: "Server=replica;Password=secret"}]`,
+			[]string{"read_replicas[0].connection_string"},
+		},
+		{
+			"bigquery service account in plain text",
+			`configuration: {service_account: {client_email: a@b.c, private_key: secret, project_id: p}}`,
+			[]string{"service_account"},
+		},
+		{
+			"bigquery service account from env",
+			`configuration: {service_account: {from_env: BIGQUERY_SERVICE_ACCOUNT}}`,
+			nil,
+		},
+		{
+			"no connection info",
+			`configuration: {template: null}`,
+			nil,
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var source struct {
+				Configuration yaml.Node `yaml:"configuration"`
+			}
+			require.NoError(t, yaml.Unmarshal([]byte(tc.source), &source))
+			assert.Equal(t, tc.want, plainTextCredentials(source.Configuration))
+		})
+	}
+}
+
+func TestSourceConfig_WarnPlainTextCredentials(t *testing.T) {
+	logger, hook := test.NewNullLogger()
+	sourceConfig := &SourceConfig{MetadataDir: "metadata", logger: logger}
+
+	metadata := map[string]yaml.Node{}
+	require.NoError(t, yaml.Unmarshal([]byte(`
+sources:
+  - name: default
+    kind: postgres
+    tables: []
+    configuration:
+      connection_info:
+        database_url: postgres://user:secret@db:5432/app
+  - name: other
+    kind: postgres
+    tables: []
+    configuration:
+      connection_info:
+        database_url:
+          from_env: PG_DATABASE_URL
+`), &metadata))
+
+	files, err := sourceConfig.Export(metadata)
+	require.NoError(t, err)
+	assert.Empty(t, hook.AllEntries(), "exporting alone must not warn")
+
+	sourceConfig.WarnPlainTextCredentials(files)
+
+	require.Len(t, hook.AllEntries(), 1)
+	assert.Equal(t, logrus.WarnLevel, hook.LastEntry().Level)
+	assert.Equal(
+		t,
+		`database "default": connection_info.database_url is stored in plain text in metadata/databases/databases.yaml; read it from an environment variable (from_env) instead`,
+		hook.LastEntry().Message,
+	)
 }

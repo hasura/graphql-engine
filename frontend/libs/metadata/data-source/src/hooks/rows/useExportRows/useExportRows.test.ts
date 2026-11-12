@@ -169,6 +169,25 @@ describe('useExportRows', () => {
     expect(downloadObjectAsCsvFile).toHaveBeenCalledWith(
       expect.stringContaining('export_public_Album'),
       expectedResult,
+      undefined,
+      ['AlbumId', 'Title', 'ArtistId'],
+    );
+  });
+
+  it('passes the CSV options to the CSV download function', async () => {
+    const { result } = renderHook(() => useExportRows(), {
+      wrapper: testWrapper,
+    });
+
+    await result.current.onExportRows(baseUseExportRowsPros, 'CSV', {
+      delimiter: ';',
+    });
+
+    expect(downloadObjectAsCsvFile).toHaveBeenCalledWith(
+      expect.stringContaining('export_public_Album'),
+      expectedResult,
+      { delimiter: ';' },
+      expect.any(Array),
     );
   });
 

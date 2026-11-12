@@ -10,6 +10,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/sources"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 )
@@ -49,6 +50,8 @@ func (m *metadataModeDirectoryHandler) Export(o *MetadataExportOptions) error {
 	if err != nil {
 		return errors.E(op, fmt.Errorf("cannot write metadata to project: %w", err))
 	}
+
+	sources.New(o.EC, o.EC.MetadataDir).WarnPlainTextCredentials(files)
 
 	return nil
 }

@@ -1,11 +1,11 @@
 import {
   Badge,
   DestructiveDialogCascade,
+  useCascadeDialog,
   DropdownButton,
   DropdownMenu,
   getDestructiveDescription,
   hasuraToast,
-  showErrorNotification,
   Text,
 } from '@hasura/shared/ui';
 import { Flex } from '@radix-ui/themes';
@@ -13,7 +13,7 @@ import React, { useState } from 'react';
 import { FaTable } from 'react-icons/fa';
 import { Source, Table } from '@hasura/shared/types';
 import { CreateRestEndpoint } from '../../../ApiExplorer/components/Rest/CreateRestEndpoints';
-import { useUntrackTable } from '@hasura/metadata/api';
+import { useErrorNotification, useUntrackTable } from '@hasura/metadata/api';
 import { useNavigate } from 'react-router';
 import { dataRoutes, extractTableInfo } from '@hasura/shared/utils';
 import { areTablesEqual, isNativeDriver } from '@hasura/metadata/helpers';
@@ -31,9 +31,8 @@ export const TableName: React.FC<{
   const { mutateAsync: untrackTable, isPending: isUntracking } =
     useUntrackTable();
   const { mutate: dropTable, isPending: isDropping } = useDropTable();
-  const [openDestructiveDialog, setOpenDestructiveDialog] = useState<
-    'none' | 'untrack' | 'delete'
-  >('none');
+  const showErrorNotification = useErrorNotification();
+  const destructiveDialog = useCascadeDialog<'untrack' | 'delete'>();
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
 
   const dbMethods = getDatabaseMethods(source.kind);
@@ -44,24 +43,28 @@ export const TableName: React.FC<{
     extractTableInfo(table)?.name || tableName.split('.').pop() || tableName;
 
   const handleUntrack = (cascade: boolean) => {
+    destructiveDialog.clearError();
     return untrackTable({ source, table, cascade })
       .then(() => {
         hasuraToast({
           type: 'success',
           title: 'Successfully untracked table',
         });
-        setOpenDestructiveDialog('none');
+        destructiveDialog.close();
         navigate(dataRoutes.manageDatabaseSource(source.name));
       })
-      .catch((err) => {
-        showErrorNotification({
-          title: 'Error while untracking table',
-          error: err,
-        });
-      });
+      .catch((err) =>
+        destructiveDialog.handleError(err, (error) =>
+          showErrorNotification({
+            title: 'Error while untracking table',
+            error,
+          }),
+        ),
+      );
   };
 
   const handleDelete = (cascade: boolean) => {
+    destructiveDialog.clearError();
     return dropTable(
       {
         source,
@@ -72,6 +75,13 @@ export const TableName: React.FC<{
         onSuccess: () => {
           navigate(dataRoutes.manageDatabaseSource(source.name));
         },
+        onError: (err) =>
+          destructiveDialog.handleError(err, (error) =>
+            showErrorNotification({
+              title: 'Dropping table failed',
+              error,
+            }),
+          ),
       },
     );
   };
@@ -99,7 +109,7 @@ export const TableName: React.FC<{
             .concat([
               <DropdownMenu.Item
                 key="untrack"
-                onSelect={() => setOpenDestructiveDialog('untrack')}
+                onSelect={() => destructiveDialog.open('untrack')}
               >
                 Untrack
               </DropdownMenu.Item>,
@@ -110,7 +120,7 @@ export const TableName: React.FC<{
                     <DropdownMenu.Item
                       key="delete"
                       color="red"
-                      onSelect={() => setOpenDestructiveDialog('delete')}
+                      onSelect={() => destructiveDialog.open('delete')}
                     >
                       Delete
                     </DropdownMenu.Item>,
@@ -142,20 +152,25 @@ export const TableName: React.FC<{
           onClose={() => setIsRenameDialogOpen(false)}
         />
       )}
-      {openDestructiveDialog !== 'none' && (
+      {destructiveDialog.openFor && (
         <DestructiveDialogCascade
+          {...destructiveDialog.dialogProps}
           title={
-            openDestructiveDialog === 'untrack'
+            destructiveDialog.openFor === 'untrack'
               ? 'Untrack table'
               : 'Delete table'
           }
-          onClose={() => setOpenDestructiveDialog('none')}
+          loading={
+            destructiveDialog.openFor === 'untrack' ? isUntracking : isDropping
+          }
           onConfirm={
-            openDestructiveDialog === 'untrack' ? handleUntrack : handleDelete
+            destructiveDialog.openFor === 'untrack'
+              ? handleUntrack
+              : handleDelete
           }
         >
           {getDestructiveDescription({
-            destroyTerm: openDestructiveDialog,
+            destroyTerm: destructiveDialog.openFor,
             resourceName: tableName,
             resourceType: 'table',
           })}

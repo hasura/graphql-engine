@@ -65,3 +65,52 @@
     args:
       sql: |
         DROP TABLE users;
+
+# Dollar-quoted PL/pgSQL blocks must remain intact with no_transaction enabled.
+- url: /v1/query
+  status: 200
+  response:
+    result_type: CommandOk
+    result:
+  query:
+    type: run_sql
+    args:
+      sql: |
+        DO $$ BEGIN IF 'x' ~ '^x$' THEN NULL; END IF; END $$;
+      no_transaction: true
+
+# A dollar-quoted function body may contain positional parameters and other tags.
+# Keep splitting real statements after the closing delimiter and return the last result.
+- url: /v1/query
+  status: 200
+  response:
+    result_type: TuplesOk
+    result:
+    - [result]
+    - [x]
+  query:
+    type: run_sql
+    args:
+      sql: |
+        CREATE FUNCTION run_sql_dollar_quote_regression(value text)
+        RETURNS text AS $$
+        BEGIN
+          IF $1 ~ '^x$' AND $1 = $value$x$value$ THEN
+            RETURN $1;
+          END IF;
+          RETURN NULL;
+        END;
+        $$ LANGUAGE plpgsql;
+        SELECT run_sql_dollar_quote_regression('x') AS result;
+      no_transaction: true
+
+# Revert the function created by the dollar-quote regression test.
+- url: /v1/query
+  status: 200
+  response:
+    result_type: CommandOk
+    result:
+  query:
+    type: run_sql
+    args:
+      sql: DROP FUNCTION run_sql_dollar_quote_regression(text);

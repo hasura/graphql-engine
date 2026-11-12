@@ -15,6 +15,35 @@ export const getHeadersSectionIsOpen = () => {
 
   return isOpen ? isOpen === 'true' : defaultIsOpen;
 };
+/**
+ * Replace the values of the headers that the auth service provides
+ * (matched case-insensitively). Returns `null` when nothing changed.
+ */
+export const applyAuthHeaders = (
+  headers: DataHeader[],
+  authHeaders: Record<string, string>,
+): DataHeader[] | null => {
+  const authValues = new Map(
+    Object.entries(authHeaders).map(([key, value]) => [
+      key.toLowerCase(),
+      value,
+    ]),
+  );
+
+  let changed = false;
+  const newHeaders = headers.map((header) => {
+    const value = authValues.get(header.key.toLowerCase());
+    if (value === undefined || value === header.value) {
+      return header;
+    }
+
+    changed = true;
+    return { ...header, value };
+  });
+
+  return changed ? newHeaders : null;
+};
+
 export const persistGraphiQLHeaders = (headers: DataHeader[]) => {
   // filter empty headers
   const validHeaders = headers.filter((h) => h.key);
