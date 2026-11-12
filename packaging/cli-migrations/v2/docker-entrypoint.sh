@@ -31,6 +31,12 @@ if [ -z ${HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT+x} ]; then
     HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT=9691
 fi
 
+# Pass the endpoint of the temporary server explicitly to every hasura-cli call.
+# The endpoint in config.yaml alone is not enough: hasura-cli gives the
+# HASURA_GRAPHQL_ENDPOINT environment variable precedence over config.yaml, so
+# setting that variable on the container would point the CLI elsewhere.
+MIGRATIONS_ENDPOINT="http://localhost:$HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT"
+
 if [ -z ${HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT+x} ]; then
     log "migrations-startup" "server timeout is not set, defaulting to 30 seconds"
     HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT=30
@@ -88,7 +94,7 @@ if [ -d "$HASURA_GRAPHQL_MIGRATIONS_DIR" ]; then
     cd "$TEMP_PROJECT_DIR"
     echo "version: 2" > config.yaml
     echo "endpoint: http://localhost:$HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT" >> config.yaml
-    hasura-cli migrate apply
+    hasura-cli migrate apply --endpoint "$MIGRATIONS_ENDPOINT"
 else
     log "migrations-apply" "directory $HASURA_GRAPHQL_MIGRATIONS_DIR does not exist, skipping migrations"
 fi
@@ -103,7 +109,7 @@ if [ -d "$HASURA_GRAPHQL_METADATA_DIR" ]; then
     echo "version: 2" > config.yaml
     echo "endpoint: http://localhost:$HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT" >> config.yaml
     echo "metadata_directory: metadata" >> config.yaml
-    hasura-cli metadata apply 
+    hasura-cli metadata apply --endpoint "$MIGRATIONS_ENDPOINT"
 else
     log "migrations-apply" "directory $HASURA_GRAPHQL_METADATA_DIR does not exist, skipping metadata"
 fi
