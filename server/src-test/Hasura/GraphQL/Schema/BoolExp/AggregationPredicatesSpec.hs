@@ -21,6 +21,7 @@ import Hasura.GraphQL.Schema.BoolExp.AggregationPredicates
     defaultAggregationPredicatesParser,
   )
 import Hasura.GraphQL.Schema.Introspection (queryInputFieldsParserIntrospection)
+import Hasura.GraphQL.Schema.Typename (MkTypename (..))
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.BoolExp.AggregationPredicates
@@ -240,6 +241,106 @@ spec = do
                   ]
                   albumTableInfo
         (Unshowable maybeParser) `shouldSatisfy` (isNothing . unUnshowable)
+
+    describe "When the source customizes type names" do
+      let prefixedParser namingConventionSep2023 =
+            runSchemaTest prefixedSourceInfo
+              $ local (modifier (\so -> so {Options.soNamingConventionSep2023 = namingConventionSep2023}))
+              $ defaultAggregationPredicatesParser @('Postgres 'Vanilla) @_ @_ @ParserTest
+                [ FunctionSignature
+                    { fnName = "count",
+                      fnGQLName = [G.name|count|],
+                      fnArguments = ArgumentsStar,
+                      fnReturnType = PGInteger
+                    }
+                ]
+                albumTableInfo
+          introspectTypes parser =
+            queryInputFieldsParserIntrospection
+              parser
+              [GQL.field|
+              __schema {
+                types {
+                  name
+                  inputFields {
+                    name
+                    type { name }
+                  }
+                }
+              }  |]
+
+      dependentSpec (prefixedParser Options.EnableNamingConventionSep2023) $ do
+        it "Prefixes the aggregation predicate types with naming-convention-sep-2023" \parser -> do
+          introspectionResult <- introspectTypes parser
+          let expected =
+                [aesonQQ|
+                { "types": [
+                  {
+                    "name": "pfx_track_aggregate_bool_exp",
+                    "inputFields": [
+                      {
+                        "name": "count",
+                        "type": {
+                          "name": "pfx_track_aggregate_bool_exp_count"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "name": "pfx_track_aggregate_bool_exp_count",
+                    "inputFields": [
+                      {
+                        "name": "arguments",
+                        "type": {
+                          "name": null
+                        }
+                      },
+                      {
+                        "name": "distinct",
+                        "type": {
+                          "name": "Boolean"
+                        }
+                      },
+                      {
+                        "name": "filter",
+                        "type": {
+                          "name": "pfx_track_bool_exp"
+                        }
+                      },
+                      {
+                        "name": "predicate",
+                        "type": {
+                          "name": null
+                        }
+                      }
+                    ]
+                  }
+                  ]
+                }
+                |]
+          expected `shouldBeSubsetOf` introspectionResult
+
+      dependentSpec (prefixedParser Options.DisableNamingConventionSep2023) $ do
+        it "Keeps the bare aggregation predicate type names without naming-convention-sep-2023" \parser -> do
+          introspectionResult <- introspectTypes parser
+          let expected =
+                [aesonQQ|
+                { "types": [
+                  {
+                    "name": "track_aggregate_bool_exp",
+                    "inputFields": [
+                      {
+                        "name": "count",
+                        "type": {
+                          "name": "track_aggregate_bool_exp_count"
+                        }
+                      }
+                    ]
+                  }
+                  ]
+                }
+                |]
+          expected `shouldBeSubsetOf` introspectionResult
   where
     albumTableInfo :: TableInfo ('Postgres 'Vanilla)
     albumTableInfo =
@@ -327,6 +428,17 @@ spec = do
           _siQueryTagsConfig = Nothing,
           _siCustomization = ResolvedSourceCustomization mempty mempty HasuraCase Nothing,
           _siDbObjectsIntrospection = DBObjectsIntrospection mempty mempty mempty mempty
+        }
+
+    prefixedSourceInfo :: SourceInfo ('Postgres 'Vanilla)
+    prefixedSourceInfo =
+      sourceInfo
+        { _siCustomization =
+            ResolvedSourceCustomization
+              mempty
+              (MkTypename ([G.name|pfx_|] <>))
+              HasuraCase
+              Nothing
         }
 
     makeTableCache :: [TableInfo ('Postgres 'Vanilla)] -> HashMap QualifiedTable (TableInfo ('Postgres 'Vanilla))

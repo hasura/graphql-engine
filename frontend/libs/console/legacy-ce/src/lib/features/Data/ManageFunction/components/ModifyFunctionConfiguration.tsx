@@ -15,7 +15,7 @@ import { useSetFunctionConfiguration } from '../../hooks/useSetFunctionConfigura
 import { cleanEmpty } from '../../../ConnectDBRedesign/components/ConnectPostgresWidget/utils/helpers';
 import { functionDisplayName } from '@hasura/metadata/helpers';
 
-export type ModifyFunctionConfigurationProps = {
+type ModifyFunctionConfigurationProps = {
   currentFunction: MetadataFunction;
   source: Source;
   isVolatile?: boolean;
@@ -37,7 +37,7 @@ const validationSchema = z.object({
   exposed_as: z.enum(exposeAsEnums).default('query'),
 });
 
-export type Schema = z.infer<typeof validationSchema>;
+type Schema = z.infer<typeof validationSchema>;
 
 export const ModifyFunctionConfiguration = ({
   source,
@@ -70,8 +70,8 @@ export const ModifyFunctionConfiguration = ({
       qualifiedFunction: currentFunction.function,
       // the comment is edited separately; don't drop it when saving the rest
       configuration: {
-        ...(currentFunction.configuration?.comment
-          ? { comment: currentFunction.configuration.comment }
+        ...(currentFunction?.comment
+          ? { comment: currentFunction.comment }
           : {}),
         ...cleanEmpty(data),
       },

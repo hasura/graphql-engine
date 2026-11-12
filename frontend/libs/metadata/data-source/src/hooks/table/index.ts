@@ -1,5 +1,6 @@
-export * from './useTableEnums';
 export * from './useTrackableTables';
+export * from './useEnumColumnValues';
+export * from './useColumnOperators';
 export * from './useTrackedAndUntrackedTables';
 export * from './useIsTableView';
 export * from './useTableForeignKeys';

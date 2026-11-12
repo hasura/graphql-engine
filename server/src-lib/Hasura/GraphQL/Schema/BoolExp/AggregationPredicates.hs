@@ -26,6 +26,7 @@ import Hasura.GraphQL.Schema.Parser
     Parser,
   )
 import Hasura.GraphQL.Schema.Table
+import Hasura.GraphQL.Schema.Typename (MkTypename (..))
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
@@ -60,6 +61,14 @@ defaultAggregationPredicatesParser aggFns ti = runMaybeT do
   sourceInfo :: SourceInfo b <- asks getter
   let customization = _siCustomization sourceInfo
       tCase = _rscNamingConvention customization
+  -- Before the September 2023 naming convention changes the source's type name
+  -- customization was not applied to the aggregation predicate types, which
+  -- let two sources with distinct prefixes clash on the same bare type name.
+  -- Prefixing them is a change to the names of existing types, so it is opt-in.
+  namingConventionSep2023 <- retrieve Options.soNamingConventionSep2023
+  let mkTypename = case namingConventionSep2023 of
+        Options.EnableNamingConventionSep2023 -> runMkTypename $ _rscTypeNames customization
+        Options.DisableNamingConventionSep2023 -> id
   -- Check in schema options whether we should include aggregation predicates
   include <- retrieve Options.soIncludeAggregationPredicates
   case include of
@@ -86,13 +95,13 @@ defaultAggregationPredicatesParser aggFns ti = runMaybeT do
 
           -- We only make a field for aggregations over a relation if at least
           -- some aggregation predicates are callable.
-          relAggregateField rel (C.fromCustomName relGqlName) typeGqlName tCase rowPermissions
+          relAggregateField rel (C.fromCustomName relGqlName) typeGqlName tCase mkTypename rowPermissions
             -- We only return an InputFieldsParser for aggregation predicates,
             -- if we parse at least one aggregation predicate
             <$> (collectOptionalFieldsNE . succeedingBranchesNE)
               ( aggregationFunctions <&> \FunctionSignature {..} -> do
                   let relFunGqlName = mkRelationFunctionIdentifier typeGqlName fnGQLName
-                  aggPredicateField fnGQLName typeGqlName tCase <$> unfuse do
+                  aggPredicateField fnGQLName typeGqlName tCase mkTypename <$> unfuse do
                     aggPredArguments <-
                       -- We only include an aggregation predicate if we are able to
                       -- access columns all its arguments. This might fail due to
@@ -114,7 +123,7 @@ defaultAggregationPredicatesParser aggFns ti = runMaybeT do
                           AggregationPredicateArguments
                             <$> fuse
                               ( P.field Name._arguments Nothing
-                                  . P.object (applyFieldNameCaseIdentifier tCase (mkRelationFunctionArgumentsFieldName typeGqlName fnGQLName)) Nothing
+                                  . P.object (mkTypename $ applyFieldNameCaseIdentifier tCase (mkRelationFunctionArgumentsFieldName typeGqlName fnGQLName)) Nothing
                                   <$> collectFieldsNE
                                     ( args `for` \ArgumentSignature {..} ->
                                         P.field argName Nothing <$> fails (tableSelectColumnsPredEnum (== (ColumnScalar argType)) relFunGqlName relTable)
@@ -134,12 +143,13 @@ defaultAggregationPredicatesParser aggFns ti = runMaybeT do
       C.GQLNameIdentifier ->
       C.GQLNameIdentifier ->
       NamingCase ->
+      (G.Name -> G.Name) ->
       (IR.AnnBoolExp b (UnpreparedValue b)) ->
       (InputFieldsParser n [AggregationPredicate b (UnpreparedValue b)]) ->
       (InputFieldsParser n (Maybe (AggregationPredicatesImplementation b (UnpreparedValue b))))
-    relAggregateField rel relGqlName typeGqlName tCase rowPermissions =
+    relAggregateField rel relGqlName typeGqlName tCase mkTypename rowPermissions =
       P.fieldOptional (applyFieldNameCaseIdentifier tCase (mkTableAggregateTypeName relGqlName)) Nothing
-        . P.object (applyTypeNameCaseIdentifier tCase typeGqlName) Nothing
+        . P.object (mkTypename $ applyTypeNameCaseIdentifier tCase typeGqlName) Nothing
         . fmap (AggregationPredicatesImplementation rel rowPermissions)
         . ( `P.bindFields`
               \case
@@ -152,10 +162,11 @@ defaultAggregationPredicatesParser aggFns ti = runMaybeT do
       G.Name ->
       C.GQLNameIdentifier ->
       NamingCase ->
+      (G.Name -> G.Name) ->
       InputFieldsParser n (AggregationPredicate b (UnpreparedValue b)) ->
       InputFieldsParser n (Maybe (AggregationPredicate b (UnpreparedValue b)))
-    aggPredicateField fnGQLName typeGqlName tCase =
-      P.fieldOptional fnGQLName Nothing . P.object (applyFieldNameCaseIdentifier tCase (typeGqlName <> C.fromCustomName fnGQLName)) Nothing
+    aggPredicateField fnGQLName typeGqlName tCase mkTypename =
+      P.fieldOptional fnGQLName Nothing . P.object (mkTypename $ applyFieldNameCaseIdentifier tCase (typeGqlName <> C.fromCustomName fnGQLName)) Nothing
 
     -- Collect all non-failing branches of optional field parsers.
     -- Fails only when all branches fail.

@@ -8,9 +8,9 @@ import {
   Dialog,
   useConsoleForm,
   hasuraToast,
-  DisplayToastErrorMessage,
   DialogFooter,
   Text,
+  showErrorNotification,
 } from '@hasura/shared/ui';
 import { useMetadata } from '@hasura/metadata/api';
 import {
@@ -43,7 +43,7 @@ import {
 } from '@hasura/metadata/data-source';
 import { Flex } from '@radix-ui/themes';
 
-export type AddLogicalModelDialogProps = {
+type AddLogicalModelDialogProps = {
   defaultValues?: Partial<AddLogicalModelFormData>;
   onCancel?: () => void;
   onSubmit?: (data: AddLogicalModelFormData) => void;
@@ -198,12 +198,11 @@ const WidgetUI = ({
         props.onSubmit?.(data);
       },
       onError: (err) => {
-        hasuraToast({
-          type: 'error',
+        showErrorNotification({
           title: isEditMode
             ? LOGICAL_MODEL_EDIT_ERROR
             : LOGICAL_MODEL_CREATE_ERROR,
-          children: <DisplayToastErrorMessage message={err.message} />,
+          error: err,
         });
       },
     });

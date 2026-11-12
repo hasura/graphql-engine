@@ -1,4 +1,4 @@
-import { parseConsoleType } from './env';
+import { hasAdminSecret, parseConsoleType } from './env';
 
 describe('parseConsoleType', () => {
   describe('when parseConsoleType is called with env var "oss"', () => {
@@ -27,5 +27,20 @@ describe('parseConsoleType', () => {
         'Unmanaged console type "invalid"',
       );
     });
+  });
+});
+
+describe('hasAdminSecret', () => {
+  it('returns true when the server reports an admin secret', () => {
+    expect(hasAdminSecret({ isAdminSecretSet: true })).toBe(true);
+  });
+  it('returns true when the CLI injects an admin secret', () => {
+    expect(hasAdminSecret({ adminSecret: 'cli-secret' })).toBe(true);
+  });
+  it('returns false when neither is set', () => {
+    expect(hasAdminSecret({ isAdminSecretSet: false, adminSecret: '' })).toBe(
+      false,
+    );
+    expect(hasAdminSecret({})).toBe(false);
   });
 });

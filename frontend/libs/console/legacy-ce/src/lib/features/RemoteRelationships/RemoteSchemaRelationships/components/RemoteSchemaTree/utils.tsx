@@ -63,7 +63,7 @@ const isElementActive = (
 /* returns checked value if arg is checked
  * returns null if arg isn't involved in the relationship
  */
-export const getCheckedArgValue = (
+const getCheckedArgValue = (
   relationshipFields: RelationshipFields[],
   key: string,
 ): ArgValue | null => {
@@ -469,9 +469,7 @@ export const getExpandedKeys = (relationshipFields: RelationshipFields[]) =>
 export const getCheckedKeys = (relationshipFields: RelationshipFields[]) =>
   relationshipFields.filter((rf) => rf.argValue).map((rf) => rf.key);
 
-export const parseArgValue = (
-  argValue: InputArgumentValueType,
-): ArgValue | null => {
+const parseArgValue = (argValue: InputArgumentValueType): ArgValue | null => {
   if (typeof argValue === 'object' && argValue !== null) {
     return null;
   }

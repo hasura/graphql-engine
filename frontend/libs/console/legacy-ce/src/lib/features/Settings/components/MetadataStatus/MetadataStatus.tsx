@@ -265,28 +265,21 @@ const MetadataStatus = () => {
     ) {
       return null;
     }
+
     return (
-      <div
-        className={`w-full p-4 bg-red-100 items-center flex justify-between flex-row border border-red-200`}
-      >
-        <IndicatorCard
-          showIcon
-          status="negative"
-          onDismiss={dismissErrorBanner}
-        >
-          You have been redirected because your GraphQL Engine metadata is in an
-          inconsistent state
-        </IndicatorCard>
-      </div>
+      <IndicatorCard showIcon status="negative" onDismiss={dismissErrorBanner}>
+        You have been redirected because your GraphQL Engine metadata is in an
+        inconsistent state
+      </IndicatorCard>
     );
   };
 
   return (
     <Analytics name="MetadataStatus" {...REDACT_EVERYTHING}>
       <div className="p-4">
-        {banner()}
         <Flex direction="column" gap="4">
           <Heading size="6">Hasura Metadata Status</Heading>
+          {banner()}
           {content()}
         </Flex>
       </div>

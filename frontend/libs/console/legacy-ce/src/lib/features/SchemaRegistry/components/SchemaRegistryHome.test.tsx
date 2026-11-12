@@ -66,6 +66,7 @@ const renderHome = (schemaId: string | undefined) => {
 describe('SchemaRegistryHome', () => {
   beforeEach(() => {
     h.navigate.mockClear();
+    window.history.replaceState({}, '', '/api/schema-registry');
     h.listResponse.current = {
       kind: 'success',
       response: [dump],
@@ -93,6 +94,7 @@ describe('SchemaRegistryHome', () => {
     expect(screen.getByTestId('schema-change-details')).toHaveTextContent(
       'user-role-id',
     );
+    expect(h.navigate).not.toHaveBeenCalled();
   });
 
   it('does not render the details pane for the empty uuid sentinel', () => {
@@ -179,9 +181,61 @@ describe('SchemaCard (via SchemaChangeList)', () => {
     expect(screen.queryByText('B4')).not.toBeInTheDocument();
 
     // Open card b -> its derived open state flips (B4 shows); card a collapses.
-    fireEvent.click(screen.getByText('v2'));
+    fireEvent.click(
+      screen.getAllByRole('button', { name: /View schema published/ })[1],
+    );
     expect(screen.getByText('B4')).toBeInTheDocument();
     expect(screen.queryByText('A4')).not.toBeInTheDocument();
+  });
+
+  it('does not mutate the supplied role order', () => {
+    const card = cardWith('a', []);
+    card.roles.reverse();
+    const originalOrder = card.roles.map((role) => role.id);
+    renderList([card]);
+    expect(card.roles.map((role) => role.id)).toEqual(originalOrder);
+  });
+
+  it('renders a deep-linked role even when its card would otherwise be collapsed', () => {
+    const Wrapper = makeWrapper();
+    render(
+      <Wrapper>
+        <SchemaChangeList
+          schemas={[cardWith('a', []), cardWith('b', [])]}
+          urlSchemaCard={[]}
+          pageNumber={0}
+          totalCount={2}
+          selectedRoleID="b4"
+          handlePrev={vi.fn()}
+          handleNext={vi.fn()}
+        />
+      </Wrapper>,
+    );
+    expect(screen.getByRole('button', { name: 'B4' })).toHaveAttribute(
+      'aria-current',
+      'true',
+    );
+  });
+
+  it('deduplicates a deep-linked schema already on the page', () => {
+    const Wrapper = makeWrapper();
+    const card = cardWith('a', []);
+    render(
+      <Wrapper>
+        <SchemaChangeList
+          schemas={[card]}
+          urlSchemaCard={[card]}
+          pageNumber={0}
+          totalCount={1}
+          selectedRoleID="admin-a"
+          handlePrev={vi.fn()}
+          handleNext={vi.fn()}
+        />
+      </Wrapper>,
+    );
+    expect(screen.getAllByRole('button', { name: 'Admin' })).toHaveLength(1);
+    expect(screen.getByRole('button', { name: 'Prev' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
   });
 
   it('re-syncs the tags list when the tags prop changes', () => {

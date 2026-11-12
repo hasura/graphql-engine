@@ -7,7 +7,7 @@ import {
 import { Permission } from '../../components/types';
 import { getDriverPrefix } from '@hasura/metadata/helpers';
 
-export interface CreateLogicalModalBodyArgs {
+interface CreateLogicalModalBodyArgs {
   logicalModels: LogicalModel[];
   logicalModelName: string;
   permission: Permission;

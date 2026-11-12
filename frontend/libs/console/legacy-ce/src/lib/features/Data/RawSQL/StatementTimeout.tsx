@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { IconTooltip, Input } from '@hasura/shared/ui';
+import { IconTooltip, Input, Text } from '@hasura/shared/ui';
 import { Flex } from '@radix-ui/themes';
 
 const StatementTimeout: FC<StatementTimeoutProps> = ({
@@ -10,7 +10,7 @@ const StatementTimeout: FC<StatementTimeoutProps> = ({
 }) => {
   return (
     <Flex className="mt-3" align="center" gap="2">
-      Statement timeout (seconds)
+      <Text>Statement timeout (seconds)</Text>
       <IconTooltip message="Abort statements that take longer than the specified time" />
       <Input
         disabled={isCliMode && isMigrationChecked}

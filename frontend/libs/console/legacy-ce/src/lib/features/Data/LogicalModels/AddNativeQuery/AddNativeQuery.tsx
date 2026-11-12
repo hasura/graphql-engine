@@ -6,6 +6,7 @@ import {
   useConsoleForm,
   hasuraToast,
   Separator,
+  showErrorNotification,
 } from '@hasura/shared/ui';
 import { NativeQuery } from '@hasura/shared/types';
 import { MetadataWrapper } from '../../components';
@@ -88,9 +89,8 @@ export const AddNativeQuery = ({
         push(Routes.NativeQueries);
       },
       onError: (err) => {
-        hasuraToast({
-          type: 'error',
-          message: err.message,
+        showErrorNotification({
+          error: err,
           title: 'Track Native Query',
           //toastOptions: { duration: 2000 },
         });

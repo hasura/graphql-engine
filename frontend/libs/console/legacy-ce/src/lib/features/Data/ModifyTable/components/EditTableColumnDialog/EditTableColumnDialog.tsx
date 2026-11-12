@@ -21,6 +21,7 @@ import { sanitizeGraphQLFieldNames } from '@hasura/shared/utils';
 import { useUpdateTableConfiguration } from '../../../ModifyTable/hooks';
 import { ModifyTableColumn, ModifyTableProps } from '../../types';
 import { ColumnFormValues, columnFormSchema, schema } from './schema';
+import { MigrationRequestNotice } from '../MigrationRequestNotice';
 import { Flex } from '@radix-ui/themes';
 
 interface EditTableColumnDialogProps extends ModifyTableProps {
@@ -138,18 +139,23 @@ export const EditTableColumnDialog = ({
     }
   };
 
+  // Closing mid-request would hide whether the change and its migration made
+  // it, so the dialog stays open (Cancel is already disabled while loading).
+  const isPending = isSavingConfig || isAlteringColumn;
+  const closeUnlessPending = isPending ? undefined : onClose;
+
   return (
     <DelayedDialog
       size="md"
       title={`Edit column ${column.name}`}
-      onClose={onClose}
+      onClose={closeUnlessPending}
       footer={
         <DialogFooter
           onSubmit={() => {
             handleSubmit(onSubmit)();
           }}
-          isLoading={isSavingConfig || isAlteringColumn}
-          onClose={onClose}
+          isLoading={isPending}
+          onClose={closeUnlessPending}
           callToDeny="Cancel"
           callToAction="Save"
         />
@@ -170,8 +176,10 @@ export const EditTableColumnDialog = ({
                 <ReactSelectField
                   name="type"
                   label="Type"
-                  placeholder="Select a type"
+                  placeholder="Select or type a type"
                   options={typeOptions}
+                  // custom types, e.g. `text[]` or a domain, can be typed
+                  creatable
                   selectProps={{
                     ...REACT_SELECT_FILTER_PROPS,
                     menuPortalTarget: getDialogPortalTarget(),
@@ -230,6 +238,10 @@ export const EditTableColumnDialog = ({
               error={alterColumnError}
             />
           ) : null}
+          <MigrationRequestNotice
+            isPending={isAlteringColumn}
+            error={alterColumnError}
+          />
         </div>
       )}
     </DelayedDialog>

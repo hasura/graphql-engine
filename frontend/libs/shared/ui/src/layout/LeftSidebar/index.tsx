@@ -1,21 +1,26 @@
+import clsx from 'clsx';
 import { Separator } from '../../components';
 import NavItem, { LeftSidebarNavItemProps } from './NavItem';
 
 export type LeftSidebarProps = {
+  className?: string;
   items: LeftSidebarNavItemProps[];
 };
 
-export const LeftSidebar = ({ items }: LeftSidebarProps) => {
+export const LeftSidebar = ({ items, className }: LeftSidebarProps) => {
   return (
-    <div className="h-screen overflow-y-scroll">
-      {items.flatMap((item, i) => {
-        const result = [<NavItem key={`item-${i}`} {...item} />];
-
-        if (i < items.length - 1) {
-          result.push(<Separator key={`separator-${i}`} size="4" />);
+    <div className={clsx('h-full overflow-y-scroll', className)}>
+      {items.map((item, i) => {
+        if (i === 0) {
+          return <NavItem key={`item-${i}`} {...item} />;
         }
 
-        return result;
+        return (
+          <div key={`item-${i}`}>
+            <Separator size="4" />
+            <NavItem {...item} />
+          </div>
+        );
       })}
     </div>
   );

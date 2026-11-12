@@ -107,10 +107,17 @@ export const defaultReactSelectClassNames = (
       'divide-y divide-[var(--gray-a6)]',
       'focus:outline-none',
     ),
+  // like the Radix Select separator: the groups are split by a line, and each
+  // label sits right above its own options
+  group: () =>
+    clsx(
+      'not-first:mt-[var(--space-2)] not-first:pt-[var(--space-2)]',
+      'not-first:border-t not-first:border-[var(--gray-a6)]',
+    ),
   groupHeading: () =>
     clsx(
-      'flex items-center min-h-[var(--space-6)] px-[var(--space-5)]',
-      'text-[var(--gray-a10)]',
+      'flex items-center px-[var(--space-5)] pt-1 pb-1',
+      'text-[length:var(--font-size-1)] text-[var(--gray-a10)]',
     ),
   option: (state) =>
     clsx(

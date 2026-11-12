@@ -194,9 +194,69 @@ describe('adaptLocalArrayRelationshipWithFkConstraint', () => {
       expect(result).toEqual(expected);
     });
   });
+
+  it('takes the target table from the metadata without a matching constraint', () => {
+    const relationship: LocalTableArrayRelationship = {
+      name: 'table_a_table_cs',
+      using: {
+        foreign_key_constraint_on: {
+          column: 'id_a',
+          table: { name: 'table_c', schema: 'public' },
+        },
+      },
+    };
+
+    const result = adaptLocalArrayRelationshipWithFkConstraint({
+      table: { name: 'table_a', schema: 'public' },
+      dataSourceName: 'aPostgres',
+      relationship,
+      suggestedRelationships: [],
+    });
+
+    expect(result.fromTable).toEqual({ name: 'table_a', schema: 'public' });
+    expect(result.definition).toEqual({
+      toTable: { name: 'table_c', schema: 'public' },
+      toColumns: ['id_a'],
+      fromTable: { name: 'table_a', schema: 'public' },
+      mapping: {},
+    });
+  });
 });
 
 describe('adaptLocalObjectRelationshipWithFkConstraint', () => {
+  it('matches the constraint columns in any order without reordering the metadata', () => {
+    const columns = ['b_id', 'a_id'];
+    const relationship: SameTableObjectRelationship = {
+      name: 'parent',
+      using: { foreign_key_constraint_on: columns },
+    };
+
+    const result = adaptLocalObjectRelationshipWithFkConstraint({
+      table: { name: 'child', schema: 'public' },
+      dataSourceName: 'default',
+      relationship,
+      suggestedRelationships: [
+        {
+          type: 'object',
+          from: {
+            table: { schema: 'public', name: 'child' },
+            columns: ['b_id', 'a_id'],
+          },
+          to: {
+            table: { schema: 'public', name: 'parent' },
+            columns: ['b', 'a'],
+          },
+        },
+      ],
+    });
+
+    expect(result.definition.toTable).toEqual({
+      schema: 'public',
+      name: 'parent',
+    });
+    expect(columns).toEqual(['b_id', 'a_id']);
+  });
+
   it('returns the correct object relationships', () => {
     const table: Table = {
       name: 'Album',

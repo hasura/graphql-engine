@@ -1,7 +1,7 @@
 // @ts-check
 // Not part of webpack's public API/types, but this is how webpack's own
 // WebpackOptionsApply constructs it internally from `options.ignoreWarnings`.
-const IgnoreWarningsPlugin = require('webpack/lib/IgnoreWarningsPlugin');
+const IgnoreWarningsPlugin = require('webpack/lib/diagnostics/IgnoreWarningsPlugin');
 const { SourceMapDevToolPlugin } = require('webpack');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const {

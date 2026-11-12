@@ -314,4 +314,28 @@ describe('RowPermissionInput -> updateKey should', () => {
       permissions: { id: { _is_null: false } },
     });
   });
+
+  test('strip the first object of an array when removing its permission', () => {
+    const result = updateKey({
+      permissionsState: {
+        operators: {},
+        permissions: { _and: [{ id: { _eq: '' } }, { name: { _eq: '' } }] },
+      },
+      newKey: '',
+      keyPath: ['_and', '0', 'id'],
+    });
+
+    expect(result.permissions).toEqual({ _and: [{ name: { _eq: '' } }] });
+  });
+
+  test('set a key starting with a digit as any other key', () => {
+    const result = updateKey({
+      permissionsState: { operators: {}, permissions: {} },
+      newKey: '2fa_enabled',
+      keyPath: [],
+      type: 'column',
+    });
+
+    expect(result.permissions).toEqual({ '2fa_enabled': { _eq: '' } });
+  });
 });

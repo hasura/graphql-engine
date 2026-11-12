@@ -7,10 +7,10 @@ import {
   useDestructiveAlert,
   useHasuraAlert,
   hasuraToast,
-  DisplayToastErrorMessage,
   Checkbox,
   Button,
   Text,
+  showErrorNotification,
 } from '@hasura/shared/ui';
 import DisplaySuggestedRelationship from './DisplaySuggestedRelationship';
 import { UNTRACK_RELATIONSHIP_SUCCESS_MESSAGE } from '../constants';
@@ -114,9 +114,9 @@ export const TrackedSuggestedRelationships = ({
                 onChange?.();
               },
               onError: (err) => {
-                hasuraToast({
-                  type: 'error',
-                  children: <DisplayToastErrorMessage message={err.message} />,
+                showErrorNotification({
+                  title: 'Untracking relationship failed',
+                  error: err,
                 });
                 resolve(false);
               },

@@ -9,7 +9,7 @@ type Props = {
 
 const InvocationLogs: React.FC<Props> = ({ triggerName }) => {
   const { paginationState, setPaginationState } = usePagination();
-  const { data: rows } = useGetScheduledEventInvocations({
+  const { data: rows, isLoading } = useGetScheduledEventInvocations({
     trigger_name: triggerName,
     type: 'cron',
     limit: paginationState.limit,
@@ -23,6 +23,7 @@ const InvocationLogs: React.FC<Props> = ({ triggerName }) => {
         <div className="bootstrap-jail">
           <InvocationLogsTable
             rows={rows ?? []}
+            isLoading={isLoading}
             columns={['id', 'status', 'event_id', 'created_at']}
             paginationState={paginationState}
             setPaginationState={setPaginationState}

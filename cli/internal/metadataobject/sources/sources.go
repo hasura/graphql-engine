@@ -387,9 +387,43 @@ func (t *SourceConfig) Export(metadata map[string]yaml.Node) (map[string][]byte,
 		return nil, errors.E(op, t.error(err))
 	}
 
-	files[filepath.ToSlash(filepath.Join(t.MetadataDir, sourcesDirectory, t.Filename()))] = buf.Bytes()
+	files[t.rootFilePath()] = buf.Bytes()
 
 	return files, nil
+}
+
+// WarnPlainTextCredentials logs a warning for every database credential that
+// the exported files store as a literal value instead of reading it from an
+// environment variable.
+func (t *SourceConfig) WarnPlainTextCredentials(files map[string][]byte) {
+	path := t.rootFilePath()
+
+	content, ok := files[path]
+	if !ok {
+		return
+	}
+
+	var sources []SourceWithNormalFields
+	if err := yaml.Unmarshal(content, &sources); err != nil {
+		t.logger.Debugf("cannot check %s for plain text credentials: %v", path, err)
+
+		return
+	}
+
+	for _, source := range sources {
+		for _, field := range plainTextCredentials(source.Configuration) {
+			t.logger.Warnf(
+				"database %q: %s is stored in plain text in %s; read it from an environment variable (from_env) instead",
+				source.Name,
+				field,
+				path,
+			)
+		}
+	}
+}
+
+func (t *SourceConfig) rootFilePath() string {
+	return filepath.ToSlash(filepath.Join(t.MetadataDir, sourcesDirectory, t.Filename()))
 }
 
 func (t *SourceConfig) GetFiles() ([]string, error) {

@@ -16,7 +16,7 @@ const ModifyAction: React.FC = () => {
 
   return (
     <ActionContainer tabName="modify">
-      <ModifyActionForm initialState={initialState} />
+      <ModifyActionForm key={currentAction.name} initialState={initialState} />
     </ActionContainer>
   );
 };

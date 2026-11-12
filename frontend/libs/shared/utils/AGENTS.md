@@ -59,11 +59,15 @@ and GraphQL query/mutation-string generation for the table/data browser UI.
   type to add keys).
 - **graphql/** — Largest submodule: generates raw GraphQL query/mutation
   strings for table browsing (depends on `@hasura/shared/types`, `graphql`
-  package). Subfolders: `query/` (`generateGraphQLSelectQuery` — async,
-  builds `where`/`order_by`/`limit`/`offset`; `getQueryRoot`), `mutation/`
-  (`generateGraphQLInsertMutation`, `generateGraphQLDeleteMutation`,
-  `generateGraphQLDeleteByPrimaryKeyMutation`, `getMutationRoot`), `common/`
-  (`getTypeName`, `formatGraphQL`, gql name-validation regex/error-notif
+  package). Subfolders: `query/` (`generateGraphQLSelectQuery` — resolves
+  the root/column field names and `order_by` enum values from an introspected
+  `GraphQLSchema` and passes `where`/`order_by`/`limit`/`offset` as variables;
+  `getQueryRoot`; `getRootFieldMap`/`findRootField`), `mutation/`
+  (`generateGraphQLRowMutation` — the insert/update/delete counterpart of
+  `generateGraphQLSelectQuery`, also schema-resolved; `getMutationRoot`),
+  `common/` (`tableFields.ts` — column field-name resolution and RQL-style
+  `where` → GraphQL bool-exp conversion shared by both generators;
+  `getTypeName`, `formatGraphQL`, gql name-validation regex/error-notif
   constants). Root-name resolvers all follow the same priority: custom root
   field name > custom table name > default, then apply operation suffix and
   source-level prefix/suffix.

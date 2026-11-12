@@ -2,8 +2,6 @@ import { DeepRequired } from '@hasura/shared/types';
 import { SupportedFeaturesType } from '../types';
 import { postgresSupportedFeatures } from '../common/capabilities';
 
-export type CockroachDBTable = { name: string; schema: string };
-
 export const cockroachSupportedFeatures: DeepRequired<SupportedFeaturesType> = {
   ...postgresSupportedFeatures,
   connectDbForm: {

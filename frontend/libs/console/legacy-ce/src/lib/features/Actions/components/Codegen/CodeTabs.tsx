@@ -1,18 +1,15 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getFrameworkCodegen } from './utils';
-import {
-  getErrorMessage,
-  getFileExtensionFromFilename,
-} from '@hasura/shared/utils';
+import { getFileExtensionFromFilename } from '@hasura/shared/utils';
 import {
   SkeletonList,
   Tabs,
   TabsItem,
   getLanguageModeFromExtension,
   AceEditor,
-  IndicatorCard,
   Link,
+  ErrorCard,
 } from '@hasura/shared/ui';
 import { Action } from '@hasura/shared/types';
 
@@ -109,14 +106,18 @@ const CodeTabs = ({
 
   if (error) {
     return (
-      <IndicatorCard status="negative" showIcon>
-        Error generating code.&nbsp;
-        <Link onClick={() => refetch()} className="cursor-pointer!">
-          Try again
-        </Link>
-        <br />
-        {getErrorMessage(error)}
-      </IndicatorCard>
+      <ErrorCard
+        showIcon
+        error={error}
+        headline={
+          <>
+            Error generating code.&nbsp;
+            <Link onClick={() => refetch()} className="cursor-pointer!">
+              Try again
+            </Link>
+          </>
+        }
+      />
     );
   }
 

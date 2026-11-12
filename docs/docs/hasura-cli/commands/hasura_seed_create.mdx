@@ -54,6 +54,7 @@ hasura seed create tables_seed --from-table table1 --from-table table2
 --disable-interactive            disables interactive prompts (default: false) (env "HASURA_GRAPHQL_DISABLE_INTERACTIVE")
 --endpoint string                http(s) endpoint for Hasura GraphQL Engine (env "HASURA_GRAPHQL_ENDPOINT")
 --envfile string                 .env filename to load ENV vars from (default ".env")
+--header stringArray             custom HTTP header to send with every request to Hasura GraphQL Engine, in "Name: value" form; repeatable. e.g. --header "Authorization: Bearer <token>"
 --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) (env "HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY")
 --log-level string               log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
 --no-color                       do not colorize output (default: false)

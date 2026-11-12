@@ -107,6 +107,7 @@ test-suite graphql-parser-tests
   main-is:        Spec.hs
   other-modules:
     BlockStrings
+    CoerceNoFragments
     Keywords
 
   build-depends:

@@ -135,5 +135,3 @@ export const Indexes = ({ source, table }: ModifyTableProps) => {
     </>
   );
 };
-
-export default Indexes;

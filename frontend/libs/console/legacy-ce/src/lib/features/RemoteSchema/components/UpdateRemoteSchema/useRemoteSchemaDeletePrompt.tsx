@@ -7,7 +7,7 @@ import { useRemoveRemoteSchema } from '@hasura/metadata/api';
 // enabling it permanently drops dependent objects (e.g. remote relationships
 // defined against this remote schema). The selected value is reported back via
 // `onCascadeChange` so the confirmation handler can forward it to the API.
-export const RemoteSchemaDeleteWarning = ({
+const RemoteSchemaDeleteWarning = ({
   remoteSchemaName,
   onCascadeChange,
 }: {
@@ -24,6 +24,7 @@ export const RemoteSchemaDeleteWarning = ({
       </p>
       <div className="mt-3">
         <Checkbox
+          align="start"
           value={cascade}
           onChange={(checked) => {
             const next = checked === true;

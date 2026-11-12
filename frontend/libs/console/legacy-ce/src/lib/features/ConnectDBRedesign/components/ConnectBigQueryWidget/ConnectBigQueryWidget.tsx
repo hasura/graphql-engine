@@ -5,8 +5,7 @@ import {
   useConsoleForm,
   Collapsible,
   Tabs,
-  hasuraToast,
-  DisplayToastErrorMessage,
+  showErrorNotification,
 } from '@hasura/shared/ui';
 import { GraphQLCustomization } from '../GraphQLCustomization/GraphQLCustomization';
 import { Configuration } from './parts/Configuration';
@@ -32,23 +31,7 @@ export const ConnectBigQueryWidget = (props: ConnectBigQueryWidgetProps) => {
   const [tab, setTab] = useState('connectionDetails');
 
   const { createConnection, editConnection, isPending } =
-    useManageDatabaseConnection({
-      onSuccess: () => {
-        hasuraToast({
-          type: 'success',
-          title: isEditMode
-            ? 'Database updated successful!'
-            : 'Database added successfully!',
-        });
-      },
-      onError: (err) => {
-        hasuraToast({
-          type: 'error',
-          title: err.name,
-          children: <DisplayToastErrorMessage message={err.message} />,
-        });
-      },
-    });
+    useManageDatabaseConnection({});
 
   const handleSubmit = (formValues: BigQueryConnectionSchema) => {
     const payload = generateBigQueryRequestPayload({
@@ -74,11 +57,10 @@ export const ConnectBigQueryWidget = (props: ConnectBigQueryWidgetProps) => {
     try {
       reset(getDefaultValues(metadataSource));
     } catch (err) {
-      console.log(err);
-      hasuraToast({
-        type: 'error',
+      showErrorNotification({
         title:
           'Error while retrieving database. Please check if the database is of type bigquery.',
+        error: err,
       });
     }
   }, [metadataSource, reset]);

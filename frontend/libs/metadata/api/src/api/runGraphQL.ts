@@ -19,8 +19,9 @@ export async function runGraphQL<T = any>({
 
   // Throw the first GraphQL Error
   // We do this because response.status is 200 even if there are errors
-  if (result?.data.errors?.length) {
-    throw new GraphQLError('GraphQLError', result.data.errors[0]);
+  if (result?.errors?.length) {
+    const [error] = result.errors;
+    throw new GraphQLError(error.message, { extensions: error.extensions });
   }
 
   return result.data;

@@ -4,6 +4,7 @@ import {
   Button,
   DropdownMenu,
   hasuraToast,
+  showErrorNotification,
   Text,
   useDestructivePrompt,
 } from '@hasura/shared/ui';
@@ -72,10 +73,9 @@ export const QueryCollectionsOperationsHeader: React.FC<
                           selectedOperations,
                           {
                             onError: (e) => {
-                              hasuraToast({
-                                type: 'error',
+                              showErrorNotification({
                                 title: 'Failed to move operations',
-                                message: `Failed to move operations to collection ${collection.name}: ${e.message}`,
+                                error: e,
                               });
                             },
                             onSuccess: () => {
@@ -113,10 +113,9 @@ export const QueryCollectionsOperationsHeader: React.FC<
                           selectedOperations,
                           {
                             onError: (e) => {
-                              hasuraToast({
-                                type: 'error',
+                              showErrorNotification({
                                 title: 'Failed to add operations',
-                                message: `Failed to add operations to collection ${collection.name}: ${e.message}`,
+                                error: e,
                               });
                             },
                             onSuccess: () => {

@@ -4,14 +4,12 @@ import {
 } from '@hasura/metadata/api';
 import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 
-export type SaveActionPermissionArgs = {
+type SaveActionPermissionArgs = {
   action: string;
   role: string;
 };
 
-export const getCreateActionPermissionQuery = (
-  args: SaveActionPermissionArgs,
-) => {
+const getCreateActionPermissionQuery = (args: SaveActionPermissionArgs) => {
   return {
     type: 'create_action_permission' as const,
     args,

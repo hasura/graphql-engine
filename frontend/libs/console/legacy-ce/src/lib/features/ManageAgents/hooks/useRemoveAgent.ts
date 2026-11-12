@@ -1,5 +1,5 @@
 import { useMetadataMigration } from '@hasura/metadata/api';
-import { hasuraToast } from '@hasura/shared/ui';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 import { useQueryClient } from '@tanstack/react-query';
 
 export const useRemoveAgent = () => {
@@ -14,10 +14,9 @@ export const useRemoveAgent = () => {
       queryClient.refetchQueries({ queryKey: ['agent_list'], exact: true });
     },
     onError: (err) => {
-      hasuraToast({
+      showErrorNotification({
         title: 'Error',
-        type: 'error',
-        message: err.toString(),
+        error: err,
       });
     },
   });

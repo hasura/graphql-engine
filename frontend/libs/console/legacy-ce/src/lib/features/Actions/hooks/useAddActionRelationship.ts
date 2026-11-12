@@ -1,7 +1,6 @@
 import { useCallback } from 'react';
 import { useMetadataMigration } from '@hasura/metadata/api';
-import { getErrorMessage } from '@hasura/shared/utils';
-import { hasuraToast } from '@hasura/shared/ui';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 import type {
   CustomTypeObjectRelationship,
   CustomTypes,
@@ -98,10 +97,9 @@ const useAddActionRelationship = () => {
             });
           },
           onError: (err) => {
-            hasuraToast({
+            showErrorNotification({
               title: errorMsg,
-              message: getErrorMessage(err),
-              type: 'error',
+              error: err,
             });
           },
         },

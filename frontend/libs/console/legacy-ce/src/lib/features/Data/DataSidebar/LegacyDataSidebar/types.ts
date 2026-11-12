@@ -10,11 +10,7 @@ export type SourceItem = {
   table: Table;
   source: string;
   type: SourceItemsTypes;
+  /** why the table, view or function is inconsistent with the database */
+  inconsistency?: string;
   children?: SourceItem[];
 };
-
-export const activeStyle = {
-  color: '#fd9540',
-};
-
-export const legacyIconStyles = 'ml-2 mr-[15px]';

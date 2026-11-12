@@ -11,7 +11,7 @@ import {
   parseUnexistingEnvVarSchemaError,
   parseHasuraEnvVarsNotAllowedError,
 } from '@hasura/metadata/helpers';
-import { hasuraToast } from '@hasura/shared/ui';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 
 type QueryArgs = SetOpenTelemetryQuery['args'];
 
@@ -72,10 +72,9 @@ export function useSetOpenTelemetry() {
     }
 
     // UNEXPECTED ERROR
-    hasuraToast({
-      type: 'error',
+    showErrorNotification({
       title: 'Error!',
-      message: JSON.stringify(err),
+      error: err,
     });
 
     trackCustomEvent(

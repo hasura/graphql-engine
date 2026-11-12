@@ -2,7 +2,7 @@ import { MssqlConfiguration, Source } from '@hasura/shared/types';
 import { adaptGraphQLCustomization } from '../../GraphQLCustomization/utils/adaptResponse';
 import { MssqlConnectionInfoSchema, MssqlConnectionSchema } from '../schema';
 
-export const adaptMssqlConnectionInfo = (
+const adaptMssqlConnectionInfo = (
   connectionInfo: MssqlConfiguration['connection_info'],
 ): MssqlConnectionInfoSchema => {
   return {

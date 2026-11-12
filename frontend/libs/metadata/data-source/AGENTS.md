@@ -35,9 +35,9 @@ relationships.
     createForeignKey/alterForeignKey/dropForeignKey), `config`
     (getDefaultQueryRoot, getSupportedQueryTypes, getViolationActions,
     getFrequentlyUsedColumns), `check` (isFeatureSupported,
-    isSchemaModification, isTable), `utilities.parseCreateSchemaSQL`. Also
-    exports `DatasourceSqlQueries` type and re-exports `NotImplementedError`
-    (defined in `@hasura/shared/types`).
+    isSchemaModification, isTable), `utilities.parseCreateSchemaSQL`/
+    `statementTimeoutSQL`. Also re-exports `NotImplementedError` (defined in
+    `@hasura/shared/types`).
   - `driver/types/{introspection,relationship,table,types}.ts` — prop/result
     types for all `Database` methods (`GetTableRowsProps`,
     `IntrospectedTable`, `TableColumn`, `DriverInfo`,
@@ -47,43 +47,41 @@ relationships.
   - `driver/dataSources.ts` — the driver registry/dispatcher: `drivers` map
     (`postgres`, `bigquery`, `citus`, `mssql`, `gdc`, `cockroach`, `alloy`),
     `getDatabaseMethods(driver)` (maps `'pg'`→postgres, native drivers→their
-    impl, anything else→`gdc` fallback), `getDatabaseKind`,
+    impl, anything else→`gdc` fallback),
     `getAllSourceKinds` (merges server-reported source kinds with a
     hardcoded AlloyDB entry, since AlloyDB isn't reported by the server —
-    it's just Postgres under the hood), `getDataSourceSqlQueries`,
+    it's just Postgres under the hood),
     `getConnectDatabaseFormSchema` (builds a zod schema for the "connect
     database" form from a driver's OpenAPI config schema, via
     `transformSchemaToZodObject` from `@hasura/shared/ui`).
-  - `driver/index.ts` — `DataSource(args)` factory: given `{ endpoints,
-fetchJson, driver }`, returns `{ introspectTables }`. Re-exports
-    `types/database`, `utils`, `common/utils`, `common/sqlUtils`, `guards`,
-    `postgres`, `types`, `dataSources`.
-  - `driver/guards.ts` — relationship type guards: `isRemoteDBRelationship`,
+  - `driver/index.ts` — barrel: re-exports `types/database`, `utils`,
+    `common/utils`, `common/sqlUtils`, `common/validation`, `guards`,
+    `postgres`, `types`, `dataSources`, plus `getTableName` and
+    `AlloyDbTable`.
+  - `driver/guards.ts` — relationship type guards:
     `isRemoteSchemaRelationship`, `isLegacyRemoteSchemaRelationship`,
     `isManualObjectRelationship`, `isSameTableObjectRelationship`,
-    `isLocalTableObjectRelationship`, `isManualArrayRelationship`,
-    `isLocalTableArrayRelationship`, `isLegacyFkConstraint`. Distinguishes
-    relationship shapes purely by structural narrowing (presence of
-    `to_source`/`hasura_fields`/`manual_configuration`/
-    `foreign_key_constraint_on` keys) — order/specificity of checks matters
+    `isManualArrayRelationship`. Distinguishes relationship shapes purely by
+    structural narrowing (presence of `to_remote_schema`/`hasura_fields`/
+    `manual_configuration`/`foreign_key_constraint_on` keys) — order/specificity of checks matters
     since shapes overlap.
   - `driver/utils.ts` — shared driver-level utils.
   - **Per-driver folders** (`postgres/`, `bigquery/`, `citus/`,
     `cockroach/`, `mssql/`, `gdc/`, `alloydb/`), each generally following:
     `index.ts` (barrel + assembles the `Database` object), `database.ts`,
     `types.ts`, `introspection/`, `query/getTableRows.ts`, `modify/`,
-    `sqlQueries.ts`, `utils.ts`.
+    `utils.ts` (postgres also has `sqlQueries.ts`).
     - **postgres/** — the most complete/reference implementation (also
       used for `cockroach`, `citus`, `alloy` via aliasing). Has extra
-      introspection (getFunctionDefinition, getTableComment,
-      getDatabaseConfiguration) and a full `modify/` set.
+      introspection (getFunctionDefinition, getTableComment) and a full
+      `modify/` set.
     - **citus/cockroach** — smaller, Postgres-derived variants; reuse much
       of `common/`.
     - **bigquery** — different shape (no FK relationships, dataset/project
       hierarchy); `introspection/getTablesListAsTree.tsx` (JSX, builds
-      `TreeDataNode` tree nodes) and `modify/defaultQueryRoot.ts`.
-    - **mssql** — has schema create/delete, `getIsTableView`,
-      `getStoredProcedures`, `getVersion`, but no full row-modify support
+      `TreeDataNode` tree nodes); no `modify/` folder.
+    - **mssql** — has schema create/delete and `getVersion`, but no full
+      row-modify support
       (no insert/update/delete row builders, unlike postgres).
     - **gdc** (Generic Data Connector) — the fallback implementation used
       for every driver not in the native list (Snowflake, Athena, etc.).
@@ -100,9 +98,19 @@ fetchJson, driver }`, returns `{ introspectTables }`. Re-exports
     - `getAllSourceKinds/` — fetches server-reported source kinds.
     - `getTableName/` — `getTableName` (also re-exported at
       `driver/index.ts`).
-    - `graphqlUtil.ts` — GraphQL name/type helpers.
-    - `modify/{deleteRows,insertRows,updateRows}.ts` — generic REST/SQL
-      row-mutation builders shared by SQL-ish drivers.
+    - `getTableGraphQLContext.ts` — metadata lookup of a tracked table plus
+      the introspected GraphQL schema, shared by `getTableRowsFromGraphQL`
+      and the row mutations.
+    - `sharedRequests.ts` — `getGraphQLSchema` (introspection cached per
+      metadata resource version) and `exportMetadataShared` (concurrent
+      metadata exports share one request). Use these in driver code instead
+      of calling `exportMetadata`/`runIntrospectionQuery` per table.
+    - `modify/runRowMutation.ts` — `runRowMutationFromGraphQL`: inserts,
+      updates or deletes rows through the GraphQL API for every driver
+      (refuses an update/delete with an empty filter).
+      `modify/{deleteRows,insertRows,updateRows}.ts` are thin curries over
+      it, taking the driver's validator and `getDefaultQueryRoot`. Row CRUD
+      no longer goes through `/v2/query`.
     - `sqlQueries.ts`, `sqlUtils.ts`, `utils.tsx`, `validation.ts` — shared
       SQL string builders and validators.
   - **driver/types/** — cross-driver prop/result types.
@@ -115,13 +123,13 @@ fetchJson, driver }`, returns `{ introspectTables }`. Re-exports
     `useDatabaseConfiguration`, `useDatabaseVersion`, `useStoredProcedures`,
     `useSupportedDataTypes`, `useSupportedScalars`, `useTableColumns`,
     `useTreeData`.
-  - `hooks/table/` — `useTableComment`, `useTableEnums`,
-    `useTableForeignKeys`/`useTablesForeignKeys`, `useTableInfos`,
+  - `hooks/table/` — `useTableComment`,
+    `useTableForeignKeys`/`useTablesForeignKeys`,
     `useTrackableTables`, `useTrackedAndUntrackedTables`, `useIsTableView`.
   - `hooks/function/` — `useFunctionDefinition`, `useTrackableFunctions`,
     `useTrackedAndUntrackedFunctions`.
   - `hooks/rows/` — `useRows` (core browse-rows query; exports
-    `getBrowseRowsQueryKey`, `getRowsColumns`, `DEFAULT_STALE_TIME = 0` —
+    `getBrowseRowsQueryKey`, `DEFAULT_STALE_TIME = 0` —
     see Gotchas), `useInsertRows`, `useEditRows`, `useDeleteRows`,
     `useExportRows/` (CSV/JSON export helpers).
   - `hooks/modify/` — mutation hooks: `useCreateTable`, `useDropTable`,
@@ -134,12 +142,11 @@ fetchJson, driver }`, returns `{ introspectTables }`. Re-exports
     creation hook with its own `types.ts`/`typeGuards.ts`/`utils.ts`.
 - **types/** — `types/table.ts`, `types/queryKey.ts` (centralized React
   Query key builders: `getTrackableFunctionsQueryKey`,
-  `getTrackableTablesQueryKey`, `getTableEnumsQueryKey`,
-  `getTableCommentQueryKey`, `getTableForeignKeysQueryKey`,
-  `getTablesForeignKeysQueryKey`, `getTableColumnInfosQueryKey`).
+  `getTrackableTablesQueryKey`, `getTableCommentQueryKey`, `getTableForeignKeysQueryKey`,
+  `getTablesForeignKeysQueryKey`).
 - **utils/** — `utils/capabilities.ts` (`supportsSchemaLessTables`),
-  `utils/table/` (`foreignKey.ts`, `selectors.ts`, `table.ts`) — generic
-  table/FK helpers not tied to a specific driver.
+  `utils/table/` (`selectors.ts`, `table.ts`) — generic table helpers not
+  tied to a specific driver.
 
 ## Gotchas
 
@@ -155,8 +162,7 @@ fetchJson, driver }`, returns `{ introspectTables }`. Re-exports
   insert/update/delete builders, unlike postgres/citus/cockroach.
 - AlloyDB is synthesized, not server-reported: `getAllSourceKinds` manually
   appends an `alloy` entry because the server doesn't return it as a
-  distinct source kind; its SQL queries alias directly to
-  `postgresSqlQueries`/postgres `database.ts`.
+  distinct source kind; it delegates to the postgres `database.ts`.
 - `SupportedFeaturesType` (legacy) vs `Capabilities` (dc-api-types) are two
   parallel capability systems — native drivers populate both
   `check.isFeatureSupported` and `introspection.getDriverCapabilities`.
@@ -164,9 +170,6 @@ fetchJson, driver }`, returns `{ introspectTables }`. Re-exports
 - Relationship type guards in `driver/guards.ts` rely on overlapping
   structural shapes — adding a new relationship shape needs care not to be
   misclassified by an earlier, looser guard.
-- `DataSource()` factory (`driver/index.ts`) has a commented-out/dead
-  `getIsTableView` method referencing a `Feature.NotImplemented` sentinel
-  that doesn't appear to exist elsewhere — treat as stale/incomplete code.
 - Some introspection files (e.g. `getTablesListAsTree.tsx`) build
   `TreeDataNode` tree UI (the `Tree` type from `@hasura/shared/ui`) directly inside what's nominally a data-layer
   package — this library is not purely headless/logic-only.

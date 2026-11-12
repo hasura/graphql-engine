@@ -1,1 +1,1 @@
-export { getTableRows } from './getTableRows';
+export { getDefaultQueryRoot, getTableRows } from './getTableRows';

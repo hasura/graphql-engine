@@ -7,7 +7,9 @@ export const useMetadataHelpers = () => {
   });
 
   const fetchMetadata = useCallback(async () => {
-    const metadataResult = await refetch();
+    // join a fetch already in flight rather than cancelling it, so callers
+    // fetching at the same time share one request
+    const metadataResult = await refetch({ cancelRefetch: false });
     if (metadataResult.error) {
       throw metadataResult.error;
     }

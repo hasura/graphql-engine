@@ -1,14 +1,12 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import { FaChartLine, FaServer } from 'react-icons/fa';
-import clsx from 'clsx';
 import {
   EnterpriseNavbarButton,
   WithEELiteAccess,
   telemetryUserEventsTracker,
   Onboarding,
   CloudOnboarding,
-  ControlPlane,
   useCatalogState,
   useTelemetryStore,
   UpdateVersion,
@@ -22,31 +20,35 @@ import './NotificationOverrides.css';
 import { moduleName } from '../Services/Metrics/constants';
 import { shouldRedirectToMetadataStatus } from './metadataStatusRedirect';
 import { useAppContext } from '@hasura/shared/context';
-import { useProjectInfo } from '../../hooks/useProjectInfo';
-import { METADATA_STATUS_PATH } from '@hasura/shared/types';
-import useEnterpriseAuth from '../../shared/auth/useEnterpriseAuth';
+import { CLI_CONSOLE_MODE, METADATA_STATUS_PATH } from '@hasura/shared/types';
+import { useAuthContext } from '../../shared/auth/context';
 import { useInconsistentMetadata, useMetadata } from '@hasura/metadata/api';
 import { Badge, DropdownMenu, hasuraToast } from '@hasura/shared/ui';
 import { InitializeTelemetry } from '@hasura/shared/analytics';
 import { CiLogout } from 'react-icons/ci';
 
-const { Plan, Project_Entitlement_Types_Enum } = ControlPlane;
-
 const Main = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout, privileges } = useEnterpriseAuth();
+  const { logout, privileges } = useAuthContext();
   const { refreshCatalogState } = useCatalogState();
   const { serverVersion, envVars } = useAppContext();
   const { consoleState } = useTelemetryStore();
-  const { data: meta } = useMetadata();
-  const { data: inconsistentMetadata, isLoading: inconsistentLoading } =
-    useInconsistentMetadata();
-  const { data: projectInfo } = useProjectInfo();
   const accessState = checkAccess(privileges);
+  const canAccessData = hasDataAccess(privileges);
+  // the metadata API is admin-only. A 4xx response logs the user out, so
+  // collaborators without data access (e.g. graphql_admin, view_metrics) skip it.
+  const { data: meta } = useMetadata(undefined, {
+    staleTime: 5 * 60000,
+    enabled: canAccessData,
+  });
+  const { data: inconsistentMetadata, isLoading: inconsistentLoading } =
+    useInconsistentMetadata(undefined, undefined, canAccessData);
 
   useEffect(() => {
-    refreshCatalogState();
+    if (canAccessData) {
+      refreshCatalogState();
+    }
 
     if (envVars.isMetadataAPIEnabled === false) {
       const errorTitle = 'Metadata APIs are not accessible to the console';
@@ -69,17 +71,27 @@ const Main = () => {
   // was truthy and it redirected unconditionally, then never re-evaluated. Guard
   // on the loading/defined state and depend on it so it reacts to the resolved
   // (or re-fetched) result. Access policy (admin/admin-collaborator) is preserved.
+  //
+  // `navigate` changes identity on every location change (non-data router), so
+  // read it from a ref: the redirect must only fire when the metadata
+  // consistency changes, not on every navigation, or the console is locked on
+  // the metadata status page.
+  const navigateRef = useRef(navigate);
+  useEffect(() => {
+    navigateRef.current = navigate;
+  });
+
   useEffect(() => {
     if (
       shouldRedirectToMetadataStatus({
-        hasDataAccess: hasDataAccess(privileges),
+        hasDataAccess: canAccessData,
         isLoading: inconsistentLoading,
         inconsistentMetadata,
       })
     ) {
-      navigate(METADATA_STATUS_PATH);
+      navigateRef.current(METADATA_STATUS_PATH);
     }
-  }, [inconsistentLoading, inconsistentMetadata, privileges, navigate]);
+  }, [inconsistentLoading, inconsistentMetadata, canAccessData]);
 
   const handleBodyClick = (e) => {
     const heartDropDownOpen = document.querySelectorAll(
@@ -94,48 +106,11 @@ const Main = () => {
     }
   };
 
-  /**
-   * if a project is on the new cloud_free_v2 plan
-   * metrics are probably not enabled
-   * check if entitlement is enabled for such plans
-   */
-  const hasMetricsEntitlement = () => {
-    // get the plan name and entitlements array from the project
-    const plan_name = projectInfo?.plan_name ?? '';
-
-    // entitlements are added only for projects on the
-    //  new cloud_free_v2 and cloud_shared plans
-    // so if the plan is not one of these, return true
-    if (
-      plan_name === Plan.CloudFree ||
-      plan_name === Plan.CloudPayg ||
-      plan_name === Plan.Pro ||
-      plan_name === Plan.CloudDedicatedVPC
-    ) {
-      return true;
-    }
-
-    // if the plan is one of the new plans, check if the
-    // metrics entitlement is enabled
-    const { entitlement: { config_is_enabled } = {} } =
-      (projectInfo?.entitlements ?? []).find(
-        ({ entitlement: { type } }) =>
-          type === Project_Entitlement_Types_Enum.ConsoleMetricsTab,
-      ) || {};
-
-    // if the entitlement is enabled, return true
-    return !!config_is_enabled;
-  };
-
   const renderMetricsTab = () => {
-    if (!isMonitoringTabSupportedEnvironment(envVars)) {
-      return null;
-    }
-
     // still show the monitoring tab if the user login with admin secret
     if (
-      !accessState.hasMetricAccess ||
-      (envVars.consoleType !== 'pro' && !hasMetricsEntitlement())
+      !isMonitoringTabSupportedEnvironment(envVars) ||
+      !accessState.hasMetricAccess
     ) {
       return null;
     }
@@ -154,15 +129,17 @@ const Main = () => {
   const renderProjectInfo = () => {
     const detailsPath = `${window.location.protocol}//${window.location.host}/project/${envVars.projectID}/details`;
     return envVars.consoleType === 'cloud' ? (
-      <div className={clsx('ml-0')}>
-        <a href={detailsPath} target="_blank" rel="noopener noreferrer">
-          <Badge>
-            <FaServer />
-            &nbsp;
-            <span>{envVars.projectName}</span>
-          </Badge>
-        </a>
-      </div>
+      <a
+        href={detailsPath}
+        target="_blank"
+        rel="noopener noreferrer"
+        title={envVars.projectName}
+      >
+        <Badge color="gray" variant="solid" highContrast>
+          <FaServer aria-hidden="true" />
+          <span>{envVars.projectName}</span>
+        </Badge>
+      </a>
     ) : null;
   };
 
@@ -198,7 +175,10 @@ const Main = () => {
           }
           accesses={accessState}
           moreUserMenuItems={
-            envVars.consoleType !== 'cloud'
+            // Cloud signs in via Hasura OAuth and the CLI supplies its own
+            // credentials, so there's no console session to log out of.
+            envVars.consoleType !== 'cloud' &&
+            envVars.consoleMode !== CLI_CONSOLE_MODE
               ? [
                   <DropdownMenu.Item onSelect={logout}>
                     <CiLogout />

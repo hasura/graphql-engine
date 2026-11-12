@@ -31,25 +31,21 @@ export const useInvalidateInconsistentMetadata = () => {
 
 export const useFetchInconsistentMetadata = () => {
   const { endpoints } = useAppContext();
-  const queryClient = useQueryClient();
-
+  // This imperative fetch validates credentials during login/initialization.
+  // Never reuse cached data or an in-flight query from another credential set.
+  // The UI's useInconsistentMetadata query below remains cached.
   return (headers: Record<string, string>) =>
-    queryClient.query({
-      queryKey: [INCONSISTENT_METADATA_QUERY_KEY],
-      queryFn: () => {
-        return requestJson<InconsistentMetadata>(endpoints.metadata, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(getInconsistentMetadataQuery),
-        });
-      },
-      staleTime: DEFAULT_STALE_TIME,
+    requestJson<InconsistentMetadata>(endpoints.metadata, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(getInconsistentMetadataQuery),
     });
 };
 
 export const useInconsistentMetadata = <T = InconsistentMetadata>(
   selector?: (m: InconsistentMetadata) => T,
   staleTime: number = DEFAULT_STALE_TIME,
+  enabled = true,
 ) => {
   const { endpoints } = useAppContext();
   const fetchJson = useAuthFetchJson();
@@ -65,6 +61,7 @@ export const useInconsistentMetadata = <T = InconsistentMetadata>(
     staleTime: staleTime || DEFAULT_STALE_TIME,
     refetchOnWindowFocus: false,
     select: selector,
+    enabled,
   });
 
   return queryReturn;

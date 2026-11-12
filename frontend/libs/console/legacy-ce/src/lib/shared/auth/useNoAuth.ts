@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { AuthService } from '@hasura/shared/context';
 import useNavigateAuth from './useNavigateAuth';
 import { useFetchInconsistentMetadata } from '@hasura/metadata/api';
@@ -10,6 +11,7 @@ const getHeaders = async () => ({});
  */
 export const useNoAuth = (): AuthService<any> => {
   const navigateAuth = useNavigateAuth();
+  const queryClient = useQueryClient();
   const fetchInconsistentMetadata = useFetchInconsistentMetadata();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -30,11 +32,14 @@ export const useNoAuth = (): AuthService<any> => {
   }, [fetchInconsistentMetadata]);
 
   const initialize = async () => {
-    await authenticate().then(navigateAuth);
+    await authenticate()
+      .then(navigateAuth)
+      .catch(() => navigateAuth(false));
   };
 
   const logout = () => {
     setIsAuthenticated(false);
+    queryClient.clear();
   };
 
   return {

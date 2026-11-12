@@ -9,7 +9,7 @@ import {
 } from '@hasura/shared/ui';
 import { Analytics } from '@hasura/shared/analytics';
 import React, { useMemo } from 'react';
-import { FaBook, FaEdit, FaFileImport, FaWrench } from 'react-icons/fa';
+import { FaBook, FaEdit, FaFileImport } from 'react-icons/fa';
 import { useNavigate } from 'react-router';
 import { useAppContext } from '@hasura/shared/context';
 import type { Action } from '@hasura/shared/types';
@@ -47,11 +47,9 @@ const LeftSidebar = ({ currentAction, actions, allowOpenApiImport }: Props) => {
   const getActionIcon = (action) => {
     switch (action.definition.type) {
       case 'mutation':
-        return <FaEdit aria-hidden="true" />;
-      case 'query':
-        return <FaBook aria-hidden="true" />;
+        return <FaEdit className="shrink-0" aria-hidden="true" />;
       default:
-        return <FaWrench aria-hidden="true" />;
+        return <FaBook className="shrink-0" aria-hidden="true" />;
     }
   };
 
@@ -75,7 +73,9 @@ const LeftSidebar = ({ currentAction, actions, allowOpenApiImport }: Props) => {
         >
           <Flex align="center" gap="1">
             {actionIcon}
-            {a.name}
+            <Text className="truncate" title={a.name}>
+              {a.name}
+            </Text>
           </Flex>
         </LeftSidebarLeafNavItem>
       );
@@ -127,8 +127,8 @@ const LeftSidebar = ({ currentAction, actions, allowOpenApiImport }: Props) => {
                     navigate(dataRoutes.manageAction('add-oas'));
                   }}
                 >
-                  <FaFileImport className="relative left-[-2px] -top-px" />{' '}
-                  Import OpenAPI{' '}
+                  <FaFileImport className="relative -left-0.5 -top-px" /> Import
+                  OpenAPI{' '}
                   <Badge className="ml-1 font-xs" color="purple">
                     New
                   </Badge>

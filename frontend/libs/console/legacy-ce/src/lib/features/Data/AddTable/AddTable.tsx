@@ -56,5 +56,3 @@ export const AddTable = () => {
     </div>
   );
 };
-
-export default AddTable;

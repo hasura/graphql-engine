@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { useDeleteSlackApp } from './useDeleteSlackApp';
 import { useSlackOAuth } from './useSlackOAuth';
 

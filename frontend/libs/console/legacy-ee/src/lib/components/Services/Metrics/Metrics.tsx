@@ -18,57 +18,75 @@ import { Button, Link, Text } from '@hasura/shared/ui';
 import { Code, Skeleton } from '@radix-ui/themes';
 import { useAppContext } from '@hasura/shared/context';
 
-/*
- * useClient hook will be called for every change in the accessToken and when it changes,
- * a new apollo client instance is created and returned to the required component
- * We are using useMemo here whose key functionality is to do an expensive operation and memoize it.
- * In this scenario we are creating a new client which is sort of like an expensive operation and that should
- * only happen when the accessToken actually changes
- *
- * This hook also keeps the previous client instance in the state which is sort of used to close the old web
- * connections if there exists any
- * */
-
 const Metrics = () => {
   const { envVars } = useAppContext();
   const { data: projectInfo, isFetching: projectInfoLoading } =
     useProjectInfo();
   const { logout, authType, getMetricsHeaders } = useAuthContext();
-  const [persistedClient, updateClient] =
-    React.useState<ApolloClientOutput | null>();
+  // The Cloud browser session already authenticates metrics requests through
+  // cookies (the Apollo HTTP link includes credentials). It does not need a
+  // second Hasura OAuth login or the engine's admin secret.
+  const useCloudSession =
+    envVars.consoleType === 'cloud' && envVars.consoleMode === 'server';
+  const canConnect =
+    useCloudSession || authType === 'hasura-sso' || authType === 'pat';
+  const [connection, setConnection] = React.useState<{
+    client: ApolloClientOutput;
+    projectInfo: typeof projectInfo;
+    getHeaders: typeof getMetricsHeaders;
+    authType: typeof authType;
+    useCloudSession: boolean;
+  } | null>(null);
+  const [clientError, setClientError] = React.useState(false);
+  // Never render a client made for an earlier project or session.
+  const persistedClient =
+    connection?.projectInfo === projectInfo &&
+    connection?.getHeaders === getMetricsHeaders &&
+    connection?.authType === authType &&
+    connection?.useCloudSession === useCloudSession
+      ? connection.client
+      : null;
 
   React.useEffect(() => {
-    if (!projectInfo) {
+    setClientError(false);
+    if (!projectInfo || !canConnect) {
       return;
     }
 
-    if (persistedClient) {
-      disposeApolloClient(persistedClient);
-    }
-
+    let cancelled = false;
     let client: ApolloClientOutput | undefined;
-
-    (authType === 'hasura-sso' || authType === 'pat'
-      ? getMetricsHeaders()
-      : Promise.resolve({})
-    ).then((metricsHeaders) => {
-      const metricsEndpoint = getMetricsUrl(projectInfo.metricsFQDN);
-      // Create a new client again and return
-      client = makeApolloClient(metricsEndpoint, metricsHeaders);
-      updateClient(client);
-    });
+    // Never forward HGE credentials or unrelated SSO tokens to Cloud metrics.
+    const metricsHeaders = useCloudSession
+      ? Promise.resolve({})
+      : getMetricsHeaders();
+    metricsHeaders
+      .then((metricsHeaders) => {
+        if (cancelled) return;
+        client = makeApolloClient(
+          getMetricsUrl(projectInfo.metricsFQDN),
+          metricsHeaders,
+        );
+        setConnection({
+          client,
+          projectInfo,
+          getHeaders: getMetricsHeaders,
+          authType,
+          useCloudSession,
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setClientError(true);
+      });
 
     return () => {
-      try {
-        if (client) {
-          disposeApolloClient(client);
-        }
-      } catch {
-        // Teardown-only: the Apollo client may already be disposed on unmount;
-        // there is nothing actionable to recover here.
+      cancelled = true;
+      if (client) {
+        void disposeApolloClient(client).catch(() => {
+          // Teardown-only: the client may already have been disposed.
+        });
       }
     };
-  }, [projectInfoLoading, projectInfo, authType, getMetricsHeaders]);
+  }, [projectInfo, authType, getMetricsHeaders, useCloudSession, canConnect]);
 
   if (projectInfoLoading) {
     return (
@@ -78,9 +96,6 @@ const Metrics = () => {
     );
   }
 
-  /*
-   * if access token is not available, redirect or redo auth
-   * */
   const proMode =
     envVars.consoleType === 'pro' ||
     envVars.consoleType === 'cloud' ||
@@ -88,7 +103,21 @@ const Metrics = () => {
 
   const renderMetrics = () => {
     if (envVars.consoleMode === 'server') {
-      if (!envVars.projectID) {
+      if (
+        !useCloudSession &&
+        (authType === 'admin-secret' || authType === 'sso')
+      ) {
+        return (
+          <div className="p-6">
+            <Text>
+              Please <LoginWith shouldRedirectBack>click here</LoginWith> to
+              enable access to the monitoring data.
+            </Text>
+          </div>
+        );
+      }
+
+      if (!projectInfo?.id) {
         return (
           <div className="p-6">
             <Text>
@@ -107,7 +136,7 @@ const Metrics = () => {
         );
       }
 
-      const projectId = projectInfo?.id || envVars.projectID;
+      const projectId = projectInfo.id;
 
       if (persistedClient) {
         const metricsContent = (
@@ -143,13 +172,10 @@ const Metrics = () => {
         );
       }
 
-      if (authType === 'admin-secret' || authType === 'sso') {
+      if (!clientError && canConnect) {
         return (
           <div className="p-6">
-            <Text>
-              Please <LoginWith shouldRedirectBack>click here</LoginWith> to
-              enable access to the monitoring data.
-            </Text>
+            <Skeleton width="100%" height="20px" />
           </div>
         );
       }

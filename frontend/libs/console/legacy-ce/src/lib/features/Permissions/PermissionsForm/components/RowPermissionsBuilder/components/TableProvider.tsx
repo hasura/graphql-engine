@@ -4,8 +4,8 @@ import { Columns, Relationships, TableContext } from './types';
 import { rootTableContext } from './RootTableProvider';
 import { fieldsToColumns } from './utils/nestedObjects';
 import { rowPermissionsContext } from './RowPermissionsProvider';
-import { areTablesEqual } from '@hasura/metadata/helpers';
 import { getTableDisplayName } from '@hasura/shared/utils';
+import { findTable } from './utils/tables';
 
 export const tableContext = createContext<TableContext>({
   table: [],
@@ -30,13 +30,29 @@ export const tableContext = createContext<TableContext>({
   },
 });
 
+/**
+ * The relationships a permission can use: the server accepts a remote database
+ * relationship to a source of any kind, but only on a single column join.
+ * Remote schema relationships aren't supported.
+ */
+export const isPermissionRelationship = (relationship: Relationships[number]) =>
+  relationship.type === 'localRelationship' ||
+  (relationship.type === 'remoteDatabaseRelationship' &&
+    Object.keys(relationship.definition.mapping).length === 1);
+
 export const TableProvider = ({
   children,
   table: defaultTable,
+  source: sourceProp,
+  isRemote: isRemoteProp,
   objectPath,
 }: {
   children: React.ReactNode;
   table?: Table;
+  /** the source of the table, the one of the closest table by default */
+  source?: string;
+  /** whether a remote database relationship leads to the table, inherited by default */
+  isRemote?: boolean;
   objectPath?: string;
 }) => {
   const [table, setTableName] = useState<Table>(defaultTable || ({} as Table));
@@ -44,22 +60,24 @@ export const TableProvider = ({
   const [columns, setColumns] = useState<Columns>([]);
   const [computedFields, setComputedFields] = useState<ComputedField[]>([]);
   const [relationships, setRelationships] = useState<Relationships>([]);
-  const { tables, rootTable } = useContext(rootTableContext);
+  const {
+    tables,
+    tablesKey,
+    rootTable,
+    source: rootSource,
+  } = useContext(rootTableContext);
   const { loadRelationships } = useContext(rowPermissionsContext);
-  const { table: closestTableName } = useContext(tableContext);
-  const closestTable = tables.find((t) =>
-    areTablesEqual(t.table, closestTableName),
-  );
-
-  const supportedSources = tables
-    .map((i) => i.dataSource)
-    .filter((s) => s?.kind === 'postgres')
-    .map((s) => s?.name);
+  const {
+    table: closestTableName,
+    source: closestSource,
+    isRemote: closestIsRemote,
+  } = useContext(tableContext);
+  const source = sourceProp ?? closestSource ?? rootSource;
+  const isRemote = isRemoteProp ?? closestIsRemote;
 
   //  Stringify values to get a stable key for the derived-state sync below
   const stringifiedTable = getTableDisplayName(table);
-  const stringifiedTables = `[${tables.map((t) => getTableDisplayName(t)).join(',')}]`;
-  const syncKey = `${stringifiedTable}|${stringifiedTables}|${
+  const syncKey = `${stringifiedTable}|${source ?? ''}|${tablesKey}|${
     objectPath ?? ''
   }|${closestTableName ? getTableDisplayName(closestTableName) : ''}|${
     rootTable?.dataSource?.name ?? ''
@@ -74,7 +92,8 @@ export const TableProvider = ({
   const [prevSyncKey, setPrevSyncKey] = useState<string | null>(null);
   if (syncKey !== prevSyncKey) {
     setPrevSyncKey(syncKey);
-    const foundTable = tables.find((t) => areTablesEqual(t.table, table));
+    const closestTable = findTable(tables, closestTableName, closestSource);
+    const foundTable = findTable(tables, table, source);
     let skipObjectPath = false;
     if (foundTable) {
       setColumns(foundTable.columns);
@@ -83,13 +102,7 @@ export const TableProvider = ({
         skipObjectPath = true;
       } else {
         setRelationships(
-          foundTable.relationships.filter((rel) => {
-            return (
-              rel.type === 'localRelationship' ||
-              (rel.type !== 'remoteSchemaRelationship' &&
-                supportedSources?.includes(rel.definition.toSource))
-            );
-          }),
+          foundTable.relationships.filter(isPermissionRelationship),
         );
       }
     }
@@ -108,7 +121,7 @@ export const TableProvider = ({
   }
 
   useEffect(() => {
-    const foundTable = tables.find((t) => areTablesEqual(t.table, table));
+    const foundTable = findTable(tables, table, source);
     if (
       foundTable &&
       foundTable?.dataSource?.name === rootTable?.dataSource?.name
@@ -116,11 +129,13 @@ export const TableProvider = ({
       // Load initial related tables' columns
       loadRelationships?.(foundTable.relationships);
     }
-  }, [table, tables, rootTable?.dataSource?.name, loadRelationships]);
+  }, [table, source, tables, rootTable?.dataSource?.name, loadRelationships]);
 
   return (
     <tableContext.Provider
       value={{
+        source,
+        isRemote,
         columns,
         setColumns,
         computedFields,

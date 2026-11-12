@@ -168,7 +168,8 @@ const useCreateAction = () => {
         requestTransform,
         responseTransform,
       }: CreateActionArgs,
-      onSuccess?: () => unknown,
+      // receives the name of the created action
+      onSuccess?: (actionName: string) => unknown,
       onError?: (err: unknown) => void,
     ) => {
       const preparedData = prepareSaveActionData({ metadata, rawState });
@@ -200,9 +201,7 @@ const useCreateAction = () => {
             args: [customFieldsQueryUp, actionQueryUp],
           },
         })
-          .then(() => {
-            onSuccess?.();
-
+          .then(async () => {
             hasuraToast({
               title: 'Created action successfully!',
               type: 'success',
@@ -211,6 +210,8 @@ const useCreateAction = () => {
             if (rawState.derive?.operation) {
               persistDerivedAction(state.name, rawState.derive.operation);
             }
+
+            await onSuccess?.(state.name);
 
             return true;
           })

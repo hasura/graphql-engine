@@ -27,7 +27,7 @@ import Test.Hspec (SpecWith, describe, it)
 spec :: SpecWith GlobalTestEnvironment
 spec = do
   Fixture.hgeWithEnv [] do
-    Fixture.runClean -- re-run fixture setup on every test
+    Fixture.run -- tests only query, so one setup per fixture suffices
       ( NE.fromList
           [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
               { Fixture.setupTeardown = \(testEnvironment, _) ->
@@ -39,7 +39,7 @@ spec = do
           ]
       )
       (tests >> distinctOnTests)
-    Fixture.runClean -- re-run fixture setup on every test
+    Fixture.run -- tests only query, so one setup per fixture suffices
       ( NE.fromList
           [ (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
               { Fixture.setupTeardown = \(testEnvironment, _) ->

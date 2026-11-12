@@ -1,4 +1,4 @@
-import { hasuraToast } from '@hasura/shared/ui';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 import { QueryCollectionQuery } from '@hasura/shared/types';
 import { QueryCollectionOperationDialog } from './QueryCollectionOperationDialog';
 import { useEditOperationInQueryCollection } from '@hasura/metadata/api';
@@ -30,10 +30,9 @@ export const QueryCollectionOperationEdit = (
             },
             {
               onError: (e) => {
-                hasuraToast({
-                  type: 'error',
-                  title: 'Error',
-                  message: `Failed to edit operation in query collection: ${e.message}`,
+                showErrorNotification({
+                  title: 'Failed to edit operation in query collection',
+                  error: e,
                 });
               },
               onSuccess: () => {

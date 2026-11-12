@@ -31,6 +31,7 @@ const ActionsContainer = () => {
 
   const sidebarContent = (
     <LeftSidebar
+      className="flex flex-col justify-between"
       items={[
         {
           isActive: location.pathname.includes('actions/manage'),

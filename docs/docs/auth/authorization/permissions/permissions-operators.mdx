@@ -76,6 +76,43 @@ regular expressions are a curious cross between LIKE notation and common regular
 | `_cgte`    | Column greater than or equal to |
 | `_clte`    | Column less than or equal to    |
 
+Column comparison operators compare a column with another column of the same type, instead of with a static value or a
+session variable. The right-hand side names the column to compare with:
+
+- `"column_name"` or `["column_name"]` refers to a column of the table the expression is evaluated on at that point. At
+  the top level that is the table the permission is defined on; inside a relationship it is the related table.
+- `["$", "column_name"]` refers to a column of the table the permission is defined on (the root table), also from inside
+  a relationship.
+
+For example, this select permission on an `articles` table only allows the rows that were updated after they were
+published:
+
+```json
+{
+  "updated_at": {
+    "_cgt": "published_at"
+  }
+}
+```
+
+And this select permission on `articles` only allows the articles whose author belongs to the same team as the article,
+by comparing a column of the related `author` table with a column of `articles` itself:
+
+```json
+{
+  "author": {
+    "team_id": {
+      "_ceq": ["$", "team_id"]
+    }
+  }
+}
+```
+
+The two columns must have exactly the same type, so for example an `integer` column cannot be compared with a `bigint`
+column. Paths through relationships, such as `["$", "author", "team_id"]`, are not supported on the right-hand side.
+
+Column comparison operators are supported on Postgres-compatible databases and data connectors, but not on SQL Server or
+BigQuery.
 
 ## JSONB operators
 

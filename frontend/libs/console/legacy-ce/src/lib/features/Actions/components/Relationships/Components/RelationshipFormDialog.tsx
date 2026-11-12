@@ -1,5 +1,9 @@
 import React from 'react';
-import { DelayedDialog, DialogFooter, hasuraToast } from '@hasura/shared/ui';
+import {
+  DelayedDialog,
+  DialogFooter,
+  showErrorNotification,
+} from '@hasura/shared/ui';
 import { CustomTypeObjectRelationship, Metadata } from '@hasura/shared/types';
 import TypeRelationshipEditor from './RelationshipEditor';
 import useAddActionRelationship from '../../../../Actions/hooks/useAddActionRelationship';
@@ -34,10 +38,9 @@ const RelationshipFormDialog = ({
   const onSave = () => {
     const validationError = getRelValidationError(relConfig);
     if (validationError) {
-      return hasuraToast({
-        type: 'error',
+      return showErrorNotification({
         title: 'Cannot create relationship',
-        message: validationError,
+        error: validationError,
       });
     }
 

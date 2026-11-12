@@ -37,7 +37,7 @@ const TreeView: React.FC<TreeViewProps> = ({
     ...groupBy(items, 'source'),
   };
 
-  if (!items.length) {
+  if (!Object.keys(allDatabases).length) {
     return preLoadState ? (
       <SkeletonList count={5} />
     ) : (

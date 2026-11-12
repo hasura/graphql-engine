@@ -5,8 +5,8 @@ import {
   useConsoleForm,
   GraphQLSanitizedInputField,
   hasuraToast,
-  DisplayToastErrorMessage,
   DialogFooter,
+  showErrorNotification,
 } from '@hasura/shared/ui';
 import { SuggestedRelationshipWithName } from '../SuggestedRelationships/hooks/useSuggestedRelationships';
 import { useCreateTableRelationships } from '@hasura/metadata/data-source';
@@ -58,10 +58,9 @@ export const SuggestedRelationshipTrackModal: React.FC<
           onClose();
         },
         onError: (err) => {
-          hasuraToast({
-            type: 'error',
+          showErrorNotification({
             title: 'Failed to track',
-            children: <DisplayToastErrorMessage message={err.message} />,
+            error: err,
           });
         },
       },

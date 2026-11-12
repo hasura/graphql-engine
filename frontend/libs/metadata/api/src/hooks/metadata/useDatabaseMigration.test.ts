@@ -40,6 +40,34 @@ describe('runDatabaseMigration', () => {
     expect(body.datasource).toBe('default');
   });
 
+  it.each([
+    ['cockroach', 'cockroach_run_sql'],
+    ['citus', 'citus_run_sql'],
+    ['mssql', 'mssql_run_sql'],
+  ] as const)(
+    'keeps the %s prefix for up and down when isMigration is true',
+    async (kind, expectedType) => {
+      const fetchJson = vi.fn().mockResolvedValue([]);
+
+      await runDatabaseMigration({
+        endpoints,
+        fetchJson,
+        isMigration: true,
+        args: {
+          name: 'add_foo_table',
+          up: [{ sql: 'CREATE TABLE foo (id int);' }],
+          down: [{ sql: 'DROP TABLE foo;' }],
+          source: { name: 'db', kind },
+        },
+      });
+
+      const body = JSON.parse(fetchJson.mock.calls[0][1].body);
+      // an unprefixed `run_sql` would be run as `pg_run_sql` on this source
+      expect(body.up[0].type).toBe(expectedType);
+      expect(body.down[0].type).toBe(expectedType);
+    },
+  );
+
   it('sanitizes and truncates the migration name', async () => {
     const fetchJson = vi.fn().mockResolvedValue([]);
     const unsafeLongName = `evil/../name${'x'.repeat(300)}`;

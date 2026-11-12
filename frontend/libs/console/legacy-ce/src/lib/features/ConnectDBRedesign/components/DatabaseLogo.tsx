@@ -6,7 +6,7 @@ import { Flex } from '@radix-ui/themes';
 
 export const DatabaseLogo: React.FC<{
   title: string;
-  image: string;
+  image: React.ReactNode;
   releaseName?: string;
   noConnection: boolean;
 }> = ({ title, image, releaseName, noConnection }) => {
@@ -18,11 +18,15 @@ export const DatabaseLogo: React.FC<{
       justify="center"
       className="mt-2 absolute h-full w-full pointer-events-none"
     >
-      <img
-        src={image}
-        className="h-[24px] mb-2 object-contain"
-        alt={`${title} logo`}
-      />
+      {typeof image === 'string' ? (
+        <img
+          src={image}
+          className="h-6 mb-2 object-contain"
+          alt={`${title} logo`}
+        />
+      ) : (
+        image
+      )}
       <Text>{title}</Text>
 
       {noConnection ? (

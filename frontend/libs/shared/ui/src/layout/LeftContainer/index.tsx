@@ -7,7 +7,7 @@ export const LeftContainer: React.FC<{ children?: React.ReactNode }> = ({
     <div
       id="nav-sidebar"
       style={{
-        height: 'calc(100vh - 50px)',
+        height: 'calc(100vh - 64px)',
       }}
     >
       {children}

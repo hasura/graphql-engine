@@ -18,7 +18,7 @@ import StatsPanel from '../StatsPanel/StatsPanel';
 import { useSearchParams } from 'react-router';
 import { Analytics, REDACT_EVERYTHING } from '@hasura/shared/analytics';
 
-export const Operations = () => {
+const Operations = () => {
   const [searchParams] = useSearchParams();
   const queryParams = applyFilterByQueryParam(searchParams, true);
 

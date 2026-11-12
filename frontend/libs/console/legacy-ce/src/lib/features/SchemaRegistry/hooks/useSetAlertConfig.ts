@@ -1,9 +1,8 @@
-import * as React from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { SET_ALERT_CONFIG } from '../queries';
 import { SetAlertConfigResponseWithError } from '../types';
 import { FETCH_ALERT_CONFIG_QUERY_NAME } from '../constants';
-import { hasuraToast } from '@hasura/shared/ui';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 import { controlPlaneClient } from '../../ControlPlane';
 
 type setEmailAlertMutationFnArgs = {
@@ -43,12 +42,10 @@ export const useSetEmailAlertConfig = (onSuccess: VoidFunction) => {
         if (data.data) onSuccess();
       }
     },
-    onError: () => {
-      hasuraToast({
-        type: 'error',
-        title: 'Error!',
-        message:
-          'Something went wrong while setting alerts for Schema Registry',
+    onError: (error) => {
+      showErrorNotification({
+        error,
+        title: 'Setting alerts for Schema Registry failed',
       });
     },
     onSettled: (response) => {

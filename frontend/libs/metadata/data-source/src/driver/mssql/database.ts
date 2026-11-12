@@ -9,10 +9,10 @@ import {
   getVersion,
   getTrackableTables,
 } from './introspection';
-import { getTableRows } from './query';
+import { getDefaultQueryRoot, getTableRows } from './query';
 import { DataTypeToSQLTypeMap, DataTypeScalars, isMSSQLTable } from './utils';
 import { Database } from '../types/database';
-import { mssqlSupportedFeatures, MssqlTable } from './types';
+import { mssqlSupportedFeatures } from './types';
 import { isFeatureSupported } from '../common/capabilities';
 import { parseCreateSQL } from '../common/sqlUtils';
 import { createDatabaseSchema, deleteDatabaseSchema } from './modify';
@@ -51,18 +51,15 @@ export const mssql: Database = {
   modify: {
     createDatabaseSchema,
     deleteDatabaseSchema,
-    insertRows: insertRowsCurry(validateInputRowValues, ''),
-    updateRows: updateRowsCurry(validateInputRowValues, ''),
-    deleteRows: deleteRowsCurry(''),
+    insertRows: insertRowsCurry(validateInputRowValues, getDefaultQueryRoot),
+    updateRows: updateRowsCurry(validateInputRowValues, getDefaultQueryRoot),
+    deleteRows: deleteRowsCurry(getDefaultQueryRoot),
   },
   query: {
     getTableRows,
   },
   config: {
-    getDefaultQueryRoot: ({ table }) => {
-      const { name, schema } = table as MssqlTable;
-      return schema === 'dbo' ? name : `${schema}_${name}`;
-    },
+    getDefaultQueryRoot,
     getSupportedQueryTypes: () => {
       return ['select', 'insert', 'update', 'delete'];
     },

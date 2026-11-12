@@ -59,28 +59,6 @@ export const useReplaceMetadata = () => {
                 },
               });
             });
-
-            // FIXME: metadata will reload on redirect.
-            // const updateCurrentDataSource = (newState: Metadata) => {
-            //   const currentSource = newState.metadata.sources.find(
-            //     (x: Source) =>
-            //       x.name === getState().tables.currentDataSource
-            //   );
-
-            //   if (!currentSource && newState.metadata.sources?.[0]) {
-            //     dispatch({
-            //       type: UPDATE_CURRENT_DATA_SOURCE,
-            //       source: newState.metadata.sources[0].name,
-            //     });
-            //     const driver = newState.metadata.sources[0].kind as NativeDrivers ?? 'postgres';
-            //     const dataSource = services[driver] as DataSourcesAPI;
-            //     setDataSourceState({ driver });
-
-            //     dispatch(
-            //       fetchDataInit(dataSource, newState.metadata.sources[0].name)
-            //     );
-            //   }
-            // };
           },
           onError: (err) => {
             showErrorNotification({

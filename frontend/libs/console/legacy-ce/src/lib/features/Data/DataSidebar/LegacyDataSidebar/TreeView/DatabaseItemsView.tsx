@@ -3,7 +3,9 @@ import { ReactNode } from 'react';
 import { SourceItem, SourceItemsTypes } from '../types';
 import { FaDatabase, FaFolder, FaListUl, FaTable } from 'react-icons/fa';
 import SchemaItemsView from './SchemaItemsView';
+import LeafItemsView from './LeafItemsView';
 import groupBy from 'lodash/groupBy';
+import partition from 'lodash/partition';
 import { Flex, Skeleton, Strong } from '@radix-ui/themes';
 import { Button } from '@hasura/shared/ui';
 import { useNavigate } from 'react-router';
@@ -19,11 +21,11 @@ type DatabaseItemsViewProps = {
 };
 
 const sourceItemsTypesToIcons: Record<SourceItemsTypes, ReactNode> = {
-  enum: <FaListUl />,
-  database: <FaDatabase />,
-  function: <FaDatabase />,
+  enum: <FaListUl className="shrink-0" />,
+  database: <FaDatabase className="shrink-0" />,
+  function: <FaDatabase className="shrink-0" />,
   schema: null,
-  table: <FaTable />,
+  table: <FaTable className="shrink-0" />,
   view: null,
 };
 
@@ -40,7 +42,7 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
   const handleSelectSchema = (value: string) => {
     navigate({
       pathname: dataRoutes.manageDatabaseSource(sourceName),
-      search: `?schema=${encodeURIComponent(value)}&tab=schemas`,
+      search: `?schema=${encodeURIComponent(value)}&tab=tables`,
     });
   };
 
@@ -48,7 +50,13 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
     navigate(dataRoutes.manageDatabaseSource(sourceName));
   };
 
-  const schemas = groupBy(items, 'schema');
+  // objects of databases without schemas (e.g. MongoDB collections) are listed
+  // under the database, not in an unnamed schema folder
+  const [schemaItems, schemalessItems] = partition(
+    items,
+    (item) => !!item.schema,
+  );
+  const schemas = groupBy(schemaItems, 'schema');
 
   return (
     <div>
@@ -64,9 +72,14 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
           className="justify-start! text-left!"
           full
         >
-          <Flex align="center" gap="2">
-            {isActive ? <AiOutlineDown /> : <AiOutlineRight />}
-            {sourceItemsTypesToIcons['database']} <Strong>{sourceName}</Strong>
+          <Flex align="center" gap="2" className="min-w-0">
+            {isActive ? (
+              <AiOutlineDown className="shrink-0" />
+            ) : (
+              <AiOutlineRight className="shrink-0" />
+            )}
+            {sourceItemsTypesToIcons['database']}{' '}
+            <Strong className="truncate">{sourceName}</Strong>
           </Flex>
         </Button>
       </div>
@@ -76,6 +89,7 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
               key={schemaName}
               items={schemaItems}
               currentTable={params.tableName}
+              isCurrentFunction={params.isFunction}
               isActive={schemaName === params.schema}
               setActiveSchema={handleSelectSchema}
               schemaName={schemaName}
@@ -84,6 +98,21 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
             />
           ))
         : null}
+      {isActive && schemalessItems.length ? (
+        <Flex direction="column" gap="1" className="mb-2">
+          {schemalessItems.map((item, key) => (
+            <LeafItemsView
+              item={item}
+              isActive={
+                !params.schema &&
+                params.tableName === item.tableName &&
+                params.isFunction === (item.type === 'function')
+              }
+              key={key}
+            />
+          ))}
+        </Flex>
+      ) : null}
       {databaseLoading && isActive ? (
         <Flex align="center" gap="2">
           <FaFolder />

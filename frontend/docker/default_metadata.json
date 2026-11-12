@@ -104,6 +104,19 @@
             }
           }
         }
+      },
+      {
+        "name": "aMongo",
+        "kind": "mongo",
+        "tables": [],
+        "configuration": {
+          "template": null,
+          "timeout": null,
+          "value": {
+            "connection": "mongodb://mongo:27017",
+            "db": "sample"
+          }
+        }
       }
     ],
     "backend_configs": {
@@ -113,6 +126,9 @@
         },
         "sqlite": {
           "uri": "http://sqlite:8100"
+        },
+        "mongo": {
+          "uri": "http://mongo-data-connector:3000"
         }
       }
     }

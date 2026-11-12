@@ -4,10 +4,13 @@ import { Flex } from '@radix-ui/themes';
 import {
   Button,
   Checkbox,
+  DestructiveDialogCascade,
+  getDestructiveDescription,
   hasuraToast,
   showErrorNotification,
   Table,
   useAppearance,
+  useCascadeDialog,
 } from '@hasura/shared/ui';
 import { MetadataTable, QualifiedDataSource } from '@hasura/shared/types';
 import { TableDisplayName } from '../components/TableDisplayName';
@@ -49,7 +52,9 @@ export const TableRow = React.memo(
     const [isMongoTrackingModalVisible, setShowMongoTrackingModalVisible] =
       React.useState(false);
     const { trackTables, isPending: trackLoading } = useTrackTables();
-    const { untrackTables, isPending: untrackLoading } = useUntrackTables();
+    const { mutate: untrackTables, isPending: untrackLoading } =
+      useUntrackTables();
+    const untrackDialog = useCascadeDialog();
 
     const { data: capabilities } = useDriverCapabilities({
       source,
@@ -70,33 +75,24 @@ export const TableRow = React.memo(
         },
         {
           onSuccess: () => {
-            hasuraToast({
-              type: 'success',
-              title: 'Success!',
-              message: 'Object tracked successfully.',
-            });
             reset();
             setShowCustomModal(false);
             onTableTrack?.(table);
-          },
-          onError: (err) => {
-            showErrorNotification({
-              title: 'Unable to perform operation',
-              error: err,
-            });
           },
         },
       );
     };
 
-    const untrack = () => {
+    const untrack = (cascade: boolean) => {
+      untrackDialog.clearError();
       untrackTables(
         {
-          tables: [table],
+          tables: [{ table: table.table, cascade }],
           source: source.name,
         },
         {
           onSuccess: () => {
+            untrackDialog.close();
             hasuraToast({
               type: 'success',
               title: 'Success!',
@@ -105,12 +101,13 @@ export const TableRow = React.memo(
             reset();
             onTableTrack?.(table);
           },
-          onError: (err) => {
-            showErrorNotification({
-              title: 'Unable to perform operation',
-              error: err,
-            });
-          },
+          onError: (err) =>
+            untrackDialog.handleError(err, (error) =>
+              showErrorNotification({
+                title: 'Unable to perform operation',
+                error,
+              }),
+            ),
         },
       );
     };
@@ -153,7 +150,7 @@ export const TableRow = React.memo(
               <Button
                 data-testid={`untrack-${table.name}`}
                 size="sm"
-                onClick={() => untrack()}
+                onClick={() => untrackDialog.open(true)}
                 loading={untrackLoading}
                 loadingText="Please wait"
               >
@@ -223,6 +220,24 @@ export const TableRow = React.memo(
               </>
             )}
           </Flex>
+          {untrackDialog.isOpen && (
+            <DestructiveDialogCascade
+              {...untrackDialog.dialogProps}
+              title="Untrack table"
+              confirmButtonProps={{
+                children: 'Untrack',
+                loadingText: 'Untracking...',
+              }}
+              onConfirm={untrack}
+              loading={untrackLoading}
+            >
+              {getDestructiveDescription({
+                destroyTerm: 'untrack',
+                resourceName: table.name,
+                resourceType: 'table',
+              })}
+            </DestructiveDialogCascade>
+          )}
         </Table.Cell>
       </Table.Row>
     );

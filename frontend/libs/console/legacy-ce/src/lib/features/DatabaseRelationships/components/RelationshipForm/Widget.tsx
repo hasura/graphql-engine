@@ -27,8 +27,12 @@ import { schema, Schema } from './schema';
 import { SourceOption } from './parts/SourceSelect';
 import { useHandleSubmit } from './utils';
 import { useIntrospectRemoteSchema } from '@hasura/metadata/api';
-import { useTableColumns } from '@hasura/metadata/data-source';
+import {
+  useTableColumnInfos,
+  useTableColumns,
+} from '@hasura/metadata/data-source';
 import { getTableLabel } from '@hasura/shared/utils';
+import { areTablesEqual } from '@hasura/metadata/helpers';
 import { createFilter } from 'react-select';
 
 interface WidgetProps {
@@ -73,14 +77,39 @@ const adaptDataSourceKind = (
   return undefined;
 };
 
+/**
+ * The "To Reference" select matches its value against the option values by
+ * deep equality, and the table options carry the `driver` too: use the
+ * matching option's value so that it is selected.
+ */
+const getToSourceTableValue = (
+  sourceOptions: SourceOption[],
+  dataSourceName: string,
+  table: Table | undefined,
+): Extract<Schema['toSource'], { type: 'table' }> => {
+  for (const { value } of sourceOptions) {
+    if (
+      value.type === 'table' &&
+      value.dataSourceName === dataSourceName &&
+      table !== undefined &&
+      areTablesEqual(value.table, table)
+    )
+      return value;
+  }
+
+  return { type: 'table', dataSourceName, table };
+};
+
 const getDefaultValue = ({
   dataSourceName,
   table,
   relationship,
+  sourceOptions,
 }: {
   dataSourceName: string;
   table: Table;
   relationship: Relationship;
+  sourceOptions: SourceOption[];
 }): Schema => {
   if (relationship.type === 'remoteSchemaRelationship')
     return {
@@ -106,14 +135,13 @@ const getDefaultValue = ({
       dataSourceName,
       table,
     },
-    toSource: {
-      dataSourceName:
-        relationship.type === 'remoteDatabaseRelationship'
-          ? relationship.definition.toSource
-          : dataSourceName,
-      table: relationship.definition.toTable,
-      type: 'table',
-    },
+    toSource: getToSourceTableValue(
+      sourceOptions,
+      relationship.type === 'remoteDatabaseRelationship'
+        ? relationship.definition.toSource
+        : dataSourceName,
+      relationship.definition.toTable,
+    ),
     details: {
       columnMap: Object.entries(relationship.definition.mapping).map(
         ([key, value]) => ({ from: key, to: value }),
@@ -146,6 +174,7 @@ export const Widget = ({
             dataSourceName,
             table,
             relationship: defaultValue,
+            sourceOptions,
           })
         : {
             fromSource: {
@@ -174,8 +203,10 @@ export const Widget = ({
       ? adaptDataSourceKind(sourceOptions, toSource.dataSourceName)
       : undefined;
 
+  // only the names of the target table's columns are mapped, whereas the
+  // source table's full columns are loaded by the table page anyway
   const { data: targetTableColumns, isLoading: isColumnDataLoading } =
-    useTableColumns({
+    useTableColumnInfos({
       source:
         toSource?.type === 'table' && toSourceKind
           ? {
@@ -317,7 +348,7 @@ export const Widget = ({
 
                       <MapColumns
                         name="details.columnMap"
-                        targetTableColumns={targetTableColumns?.columns ?? []}
+                        targetTableColumns={targetTableColumns ?? []}
                         sourceTableColumns={sourceTableColumns?.columns ?? []}
                       />
                     </div>

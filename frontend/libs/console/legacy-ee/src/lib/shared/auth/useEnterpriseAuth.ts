@@ -1,6 +1,7 @@
 import {
   clearConsoleAuthState,
   globals,
+  hasDataAccess,
   loadConsoleAuthState,
   Privilege,
   saveAdminSecretState,
@@ -11,23 +12,19 @@ import type { EnterpriseAuthService, EnterpriseAuthState } from './types';
 import {
   buildEnterpriseAuthHeaders,
   buildMetricsAuthHeaders,
-  getHasuraSsoIdentityProvider,
-  getOAuthRedirectUrl,
-  makeHasuraSsoAuthState,
-  makeSsoAuthState,
-  retrieveByRefreshToken,
+  getAuthStateExpiry,
   shouldRefreshAuthState,
 } from './utils';
+import { refreshSsoSession } from './refreshSession';
 import useNavigateAuth from './useNavigateAuth';
 import { useNavigate } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
-import {
-  CLI_CONSOLE_MODE,
-  LOGIN_PATH,
-  ProServerEnv,
-} from '@hasura/shared/types';
-import { useFetchInconsistentMetadata } from '@hasura/metadata/api';
+import { CLI_CONSOLE_MODE, LOGIN_PATH } from '@hasura/shared/types';
+import { runGraphQL, useFetchInconsistentMetadata } from '@hasura/metadata/api';
 import { useAppContext } from '@hasura/shared/context';
+import { requestJson } from '@hasura/shared/utils';
+
+const GRAPHQL_VALIDATION_QUERY = 'query { __schema { queryType { name } } }';
 
 const useEnterpriseAuth = (): EnterpriseAuthService => {
   const navigate = useNavigate();
@@ -37,12 +34,10 @@ const useEnterpriseAuth = (): EnterpriseAuthService => {
   const [authState, setAuthStateValue] = useState<EnterpriseAuthState | null>(
     null,
   );
-  const { envVars } = useAppContext();
+  const { envVars, endpoints } = useAppContext();
 
-  // header getters may be called from stale closures and concurrently,
-  // so track the latest auth state and the in-flight refresh request in refs.
+  // header getters may be called from stale closures, so track the latest auth state in a ref.
   const authStateRef = useRef<EnterpriseAuthState | null>(null);
-  const refreshPromiseRef = useRef<Promise<EnterpriseAuthState> | null>(null);
   const navigateAuthRef = useRef(navigateAuth);
   navigateAuthRef.current = navigateAuth;
 
@@ -51,11 +46,31 @@ const useEnterpriseAuth = (): EnterpriseAuthService => {
     setAuthStateValue(state);
   }, []);
 
+  // Validate the credentials with a request the engine allows for them.
+  // The metadata API is admin-only, so Hasura Cloud collaborators without the
+  // admin privilege are checked against an API they can access.
+  const validateCredentials = async (input: EnterpriseAuthState) => {
+    const headers = buildEnterpriseAuthHeaders(input);
+    const userPrivileges =
+      input.type === 'hasura-sso' ? (input.project?.privileges ?? []) : [];
+
+    if (hasDataAccess(userPrivileges)) {
+      await fetchInconsistentMetadata(headers);
+    } else if (userPrivileges.includes('graphql_admin')) {
+      await runGraphQL({
+        url: endpoints.graphQLUrl,
+        fetchJson: requestJson,
+        headers,
+        body: { query: GRAPHQL_VALIDATION_QUERY },
+      });
+    }
+    // Other privileges (e.g. view_metrics) have no engine API to check.
+    // The token is validated by the services those pages call.
+  };
+
   const authenticate = useCallback(
     async (input: EnterpriseAuthState) => {
-      const headers = buildEnterpriseAuthHeaders(input);
-
-      await fetchInconsistentMetadata(headers);
+      await validateCredentials(input);
       setAuthState(input);
 
       if (envVars.consoleMode === CLI_CONSOLE_MODE) {
@@ -80,59 +95,38 @@ const useEnterpriseAuth = (): EnterpriseAuthService => {
     [setAuthState],
   );
 
-  // exchange the refresh token of an SSO session for a new auth state.
-  // Throws if the session can't be refreshed.
-  const refreshSsoAuthState = async (
-    state: EnterpriseAuthState,
-  ): Promise<EnterpriseAuthState> => {
-    if (state.type !== 'sso' && state.type !== 'hasura-sso') {
-      return state;
-    }
-
-    if (!state.refreshToken) {
-      throw new Error(
-        'the session has expired and no refresh token is present',
-      );
-    }
-
-    const provider =
-      state.type === 'hasura-sso'
-        ? getHasuraSsoIdentityProvider(envVars)
-        : (envVars as ProServerEnv).ssoIdentityProviders?.find(
-            (idp) => idp.client_id === state.clientId,
-          );
-
-    if (!provider) {
-      throw new Error('unable to find the identity provider of the session');
-    }
-
-    const redirectUri = getOAuthRedirectUrl(envVars.urlPrefix);
-    const data = await retrieveByRefreshToken(
-      provider,
-      state.refreshToken,
-      redirectUri,
-    );
-    const newState =
-      state.type === 'hasura-sso'
-        ? makeHasuraSsoAuthState(data, envVars)
-        : makeSsoAuthState(provider, data);
-
-    if (!newState || newState.type !== state.type) {
-      throw new Error('invalid token response from the identity provider');
-    }
-
-    // identity providers may not rotate the refresh token
-    return {
-      ...newState,
-      refreshToken: newState.refreshToken ?? state.refreshToken,
-    };
-  };
-
   const initialize = async () => {
-    // Admin secret is set globally by the CLI.
-    let authState = loadConsoleAuthState<EnterpriseAuthState>();
+    // Cloud and CLI consoles can inject an admin secret through window.__env.
+    // Prefer it over a credential saved in local storage (e.g. from an earlier
+    // session on the same origin).
+    const injectedAdminSecret =
+      envVars.consoleMode === CLI_CONSOLE_MODE ||
+      envVars.consoleType === 'cloud'
+        ? envVars.adminSecret
+        : '';
+    let authState: EnterpriseAuthState | null = injectedAdminSecret
+      ? {
+          type: 'admin-secret',
+          adminSecret: injectedAdminSecret,
+          shouldPersist: false,
+        }
+      : loadConsoleAuthState<EnterpriseAuthState>();
+    // Without an injected secret, a saved admin secret, PAT, or third-party
+    // SSO session must not bypass Hasura OAuth in a cloud console.
+    if (
+      !injectedAdminSecret &&
+      envVars.consoleType === 'cloud' &&
+      authState?.type !== 'hasura-sso'
+    ) {
+      clearConsoleAuthState();
+      navigateAuth(null);
+      return;
+    }
+
     if (!authState) {
-      if (globals.isAdminSecretSet || !globals.adminSecret) {
+      // An injected secret also sets isAdminSecretSet. Only prompt for
+      // credentials when the engine requires a secret and none is available.
+      if (globals.isAdminSecretSet && !globals.adminSecret) {
         navigateAuth(null);
         return;
       }
@@ -153,7 +147,7 @@ const useEnterpriseAuth = (): EnterpriseAuthService => {
     // the persisted SSO token may have expired while the console was closed
     if (shouldRefreshAuthState(authState)) {
       try {
-        authState = await refreshSsoAuthState(authState);
+        authState = await refreshSsoSession(authState, envVars);
       } catch (err) {
         console.error('failed to refresh the access token', err);
         clearConsoleAuthState();
@@ -166,7 +160,11 @@ const useEnterpriseAuth = (): EnterpriseAuthService => {
       .then((isAuthenticated) =>
         navigateAuth(isAuthenticated ? authState : null),
       )
-      .catch(() => navigateAuth(null));
+      .catch(() => {
+        clearConsoleAuthState();
+        setAuthState(null);
+        navigateAuth(null);
+      });
   };
 
   const logout = () => {
@@ -184,25 +182,6 @@ const useEnterpriseAuth = (): EnterpriseAuthService => {
     navigateAuthRef.current(null);
   };
 
-  const refreshAuthState = (state: EnterpriseAuthState) => {
-    if (!refreshPromiseRef.current) {
-      refreshPromiseRef.current = refreshSsoAuthState(state)
-        .then((newState) => {
-          setAuthState(newState);
-          if (envVars.consoleMode !== CLI_CONSOLE_MODE) {
-            saveConsoleAuthState(newState);
-          }
-
-          return newState;
-        })
-        .finally(() => {
-          refreshPromiseRef.current = null;
-        });
-    }
-
-    return refreshPromiseRef.current;
-  };
-
   // return the current auth state, refreshing the SSO token if it's about to expire.
   // Clears the session and redirects to the login page if the refresh fails.
   const getFreshAuthState = async () => {
@@ -212,7 +191,11 @@ const useEnterpriseAuth = (): EnterpriseAuthService => {
     }
 
     try {
-      return await refreshAuthState(state);
+      // concurrent callers share a single refresh request
+      const newState = await refreshSsoSession(state, envVars);
+      setAuthState(newState);
+
+      return newState;
     } catch (err) {
       console.error('failed to refresh the access token', err);
       expireSession();
@@ -244,9 +227,11 @@ const useEnterpriseAuth = (): EnterpriseAuthService => {
     isAuthenticated: Boolean(authState),
     getHeaders,
     getMetricsHeaders,
+    sessionExpiry: getAuthStateExpiry(authState),
     authType: authState?.type ?? 'none',
     hasuraUserId: getHasuraUserId(authState),
     privileges,
+    idToken: authState?.type === 'hasura-sso' ? authState.idToken : undefined,
     initialize,
     logout,
   };

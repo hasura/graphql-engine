@@ -4,9 +4,9 @@ import {
   useConsoleForm,
   IndicatorCard,
   hasuraToast,
-  DisplayToastErrorMessage,
   SelectField,
   DialogFooter,
+  showErrorNotification,
 } from '@hasura/shared/ui';
 import { AllowedFunctionTypes } from './UntrackedFunctions';
 import { useMetadata, useTrackFunctions } from '@hasura/metadata/api';
@@ -35,7 +35,7 @@ const allowedFunctionTypes: AllowedFunctionTypes[] = [
   'root_field',
 ];
 
-export type TrackFunctionFormProps = {
+type TrackFunctionFormProps = {
   dataSourceName: string;
   onSuccess: () => void;
   onClose: () => void;
@@ -98,10 +98,9 @@ export const TrackFunctionForm = ({
           });
         },
         onError: (err) => {
-          hasuraToast({
-            type: 'error',
-            title: err.name,
-            children: <DisplayToastErrorMessage message={err.message} />,
+          showErrorNotification({
+            title: 'Tracking object failed',
+            error: err,
           });
         },
       },

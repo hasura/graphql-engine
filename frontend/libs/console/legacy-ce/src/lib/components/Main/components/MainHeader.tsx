@@ -27,7 +27,7 @@ import {
   Text,
   Tooltip,
 } from '@hasura/shared/ui';
-import { getPathRoot } from '@hasura/shared/utils';
+import { getPathRoot, hasAdminSecret } from '@hasura/shared/utils';
 import { ProPopup } from './ProPopup';
 import { Help } from './Help';
 import NotificationSection from './NotificationSection';
@@ -58,7 +58,7 @@ const MainHeader = ({
   const { envVars } = useAppContext();
   const [isPopUpOpen, setIsPopUpOpen] = useState(false);
 
-  const isAdminSecretSet = Boolean(envVars.isAdminSecretSet);
+  const isAdminSecretSet = hasAdminSecret(envVars);
 
   const toggleProPopup = () => {
     setIsPopUpOpen(!isPopUpOpen);

@@ -19,7 +19,7 @@ import {
   SqlCodeBlock,
 } from '@hasura/shared/ui';
 
-export const TemplateGalleryModalBody: React.FC<{
+const TemplateGalleryModalBody: React.FC<{
   template: TemplateGalleryTemplateDetailFull | undefined;
   isFetching: boolean;
   error?: unknown;

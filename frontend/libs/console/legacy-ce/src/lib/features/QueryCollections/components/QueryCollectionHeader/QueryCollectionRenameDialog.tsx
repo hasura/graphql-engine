@@ -6,6 +6,7 @@ import {
   useConsoleForm,
   hasuraToast,
   DialogFooter,
+  showErrorNotification,
 } from '@hasura/shared/ui';
 import { Analytics, REDACT_EVERYTHING } from '@hasura/shared/analytics';
 import { useRenameQueryCollection } from '@hasura/metadata/api';
@@ -74,10 +75,9 @@ export const QueryCollectionRenameDialog: React.FC<
                       type: 'manual',
                       message: (error as Error).message,
                     });
-                    hasuraToast({
-                      type: 'error',
+                    showErrorNotification({
                       title: 'Error renaming collection',
-                      message: (error as Error).message,
+                      error,
                     });
                   },
                 });

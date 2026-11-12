@@ -25,6 +25,11 @@ CREATE TABLE hdb_catalog.hdb_source_catalog_version(
 CREATE UNIQUE INDEX hdb_source_catalog_version_one_row
 ON hdb_catalog.hdb_source_catalog_version((version IS NOT NULL));
 
+-- The singleton expression index cannot be used as a replica identity.
+-- A publication that includes UPDATEs requires one even for an INSERT with
+-- ON CONFLICT DO UPDATE into an empty table (e.g. PostgreSQL 15.15).
+ALTER TABLE hdb_catalog.hdb_source_catalog_version REPLICA IDENTITY FULL;
+
 /* TODO: The columns `created_at` and `next_retry_at` does not contain timezone (TIMESTAMP type) while `locked` has a timezone
 offset (TIMESTAMPTZ). The time repesented by TIMESTAMP is in the timezone of the Postgres server. If the
 timezone of the PG server is changed, then the entries in the event_log table can be confusing since there is no

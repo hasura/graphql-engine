@@ -7,7 +7,7 @@ import { useFieldArray } from 'react-hook-form';
 import { SortRow } from './SortRow';
 import { FiltersAndSortFormValues } from '../types';
 
-export type SortRowsProps = {
+type SortRowsProps = {
   columns: TableColumn[];
   name: string;
   initialSorts?: FiltersAndSortFormValues['sorts'];
@@ -43,7 +43,12 @@ export const SortRows = ({
     }
   }, [initialSorts, update]);
 
+  // See FilterRows: `columns` is the shared introspection cache array, so it
+  // must not be sorted in place or the browse grid's column order follows the
+  // alphabetical order of this dropdown.
+  // binary values have no meaningful order
   const columnOptions = columns
+    .filter((column) => column.consoleDataType !== 'binary')
     .sort((a, b) => (a.name > b.name ? 1 : -1))
     .map((column) => {
       return {

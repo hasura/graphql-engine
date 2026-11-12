@@ -7,7 +7,7 @@ import { AppTheme } from '@hasura/shared/ui';
 const h = vi.hoisted(() => ({
   initAdmin: vi.fn(() => Promise.resolve()),
   initNoAuth: vi.fn(() => Promise.resolve()),
-  isAdminSecretSet: true,
+  envVars: { isAdminSecretSet: true } as Record<string, unknown>,
 }));
 
 vi.mock('./useAdminSecretAuth', () => ({
@@ -21,8 +21,7 @@ vi.mock('@hasura/shared/context', async (importOriginal) => {
     await importOriginal<typeof import('@hasura/shared/context')>();
   return {
     ...actual,
-    useAppContext: () =>
-      ({ envVars: { isAdminSecretSet: h.isAdminSecretSet } }) as any,
+    useAppContext: () => ({ envVars: h.envVars }) as any,
   };
 });
 
@@ -35,7 +34,7 @@ describe('AuthProvider', () => {
   });
 
   it('shows the validating screen, then initializes ONLY admin-secret auth when the admin secret is set', async () => {
-    h.isAdminSecretSet = true;
+    h.envVars = { isAdminSecretSet: true };
     // LoadingScreen reads the appearance, so render under AppTheme like the app does.
     render(
       <AppTheme>
@@ -53,8 +52,41 @@ describe('AuthProvider', () => {
   });
 
   it('initializes ONLY no-auth when the admin secret is not set', async () => {
-    h.isAdminSecretSet = false;
+    h.envVars = { isAdminSecretSet: false };
     // LoadingScreen reads the appearance, so render under AppTheme like the app does.
+    render(
+      <AppTheme>
+        <AuthProvider>
+          <div>protected app</div>
+        </AuthProvider>
+      </AppTheme>,
+    );
+
+    expect(await screen.findByText('protected app')).toBeInTheDocument();
+
+    expect(h.initNoAuth).toHaveBeenCalledTimes(1);
+    expect(h.initAdmin).not.toHaveBeenCalled();
+  });
+
+  // The CLI injects `adminSecret` but never `isAdminSecretSet`.
+  it('initializes admin-secret auth when the CLI injects an admin secret', async () => {
+    h.envVars = { consoleMode: 'cli', adminSecret: 'cli-secret' };
+    render(
+      <AppTheme>
+        <AuthProvider>
+          <div>protected app</div>
+        </AuthProvider>
+      </AppTheme>,
+    );
+
+    expect(await screen.findByText('protected app')).toBeInTheDocument();
+
+    expect(h.initAdmin).toHaveBeenCalledTimes(1);
+    expect(h.initNoAuth).not.toHaveBeenCalled();
+  });
+
+  it('initializes no-auth for a CLI console without an admin secret', async () => {
+    h.envVars = { consoleMode: 'cli', adminSecret: '' };
     render(
       <AppTheme>
         <AuthProvider>

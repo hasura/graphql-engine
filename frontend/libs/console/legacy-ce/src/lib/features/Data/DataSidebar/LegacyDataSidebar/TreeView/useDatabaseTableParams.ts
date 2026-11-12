@@ -5,13 +5,17 @@ const useDatabaseTableParams = () => {
   const params = useParams();
   const [searchParams] = useSearchParams();
 
-  const tableInfo = tryParseTableInfo(searchParams.get('table'));
+  // Function pages carry the qualified function in `?function=` instead of `?table=`.
+  const functionInfo = tryParseTableInfo(searchParams.get('function'));
+  const tableInfo =
+    functionInfo ?? tryParseTableInfo(searchParams.get('table'));
   const schema = searchParams.get('schema');
 
   return {
     source: params.source,
     schema: tableInfo?.schema || schema,
     tableName: tableInfo?.name,
+    isFunction: Boolean(functionInfo),
   };
 };
 

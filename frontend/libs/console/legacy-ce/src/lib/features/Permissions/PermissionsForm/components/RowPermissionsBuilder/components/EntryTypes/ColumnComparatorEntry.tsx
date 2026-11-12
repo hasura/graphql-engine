@@ -1,4 +1,6 @@
 import { useContext, useEffect } from 'react';
+import { GroupBase } from 'react-select';
+import { ReactSelect, ReactSelectOptionType } from '@hasura/shared/ui';
 import { isComparator } from '../utils/helpers';
 import { tableContext } from '../TableProvider';
 import { rowPermissionsContext } from '../RowPermissionsProvider';
@@ -15,8 +17,11 @@ export function ColumnComparatorEntry({
   path: string[];
 }) {
   const { setValue } = useContext(rowPermissionsContext);
-  const showRootColumns = v.includes('$');
+  // the value is a column path; anything else (e.g. typed in the JSON editor)
+  // is reset to an empty path
   const valueIsArray = Array.isArray(v);
+  const columnPath: string[] = valueIsArray ? v : [];
+  const showRootColumns = columnPath.includes('$');
   useEffect(() => {
     if (!valueIsArray) {
       setValue(path, []);
@@ -31,14 +36,63 @@ export function ColumnComparatorEntry({
       >
         <div className="ml-6">
           <div className="p-2 space-y-2">
-            <ColumnsSelect v={v} k={k} path={path} />
+            <ColumnsSelect v={columnPath} k={k} path={path} />
             {showRootColumns ? (
-              <RootColumnsSelect v={v} k={k} path={path} />
+              <RootColumnsSelect v={columnPath} k={k} path={path} />
             ) : null}
           </div>
         </div>
       </div>
     </ConditionalTableProvider>
+  );
+}
+
+/**
+ * A searchable select of columns. The `testId` is kept on a wrapper, as
+ * react-select doesn't forward it, and each option of the open menu gets
+ * `${testId}-${column}`.
+ */
+function ColumnSelect({
+  testId,
+  value,
+  options,
+  onChange,
+}: {
+  testId: string;
+  value: string | undefined;
+  options: GroupBase<ReactSelectOptionType<string>>[];
+  onChange: (value: string) => void;
+}) {
+  const { isLoading } = useContext(rowPermissionsContext);
+  const selectedOption =
+    options
+      .flatMap((group) => group.options)
+      .find((option) => option.value === value) ?? null;
+
+  return (
+    <div data-testid={testId} className="w-60">
+      <ReactSelect<ReactSelectOptionType<string>>
+        inputId={`${testId}-select-value`}
+        aria-label={testId}
+        isSearchable
+        isDisabled={isLoading}
+        placeholder="-"
+        value={selectedOption}
+        options={options}
+        formatOptionLabel={(option, { context }) =>
+          context === 'menu' ? (
+            <span data-testid={`${testId}-${option.value}`}>
+              {option.label}
+            </span>
+          ) : (
+            option.label
+          )
+        }
+        onChange={(option) => {
+          if (option) onChange(option.value);
+        }}
+      />
+    </div>
   );
 }
 
@@ -52,41 +106,25 @@ function ColumnsSelect({ k, v, path }: { k: string; v: any; path: string[] }) {
         ? ''
         : // Could be $ or undefined
           v.find((v: any) => v === '$');
-  const testId = `${path.join('.')}-column-comparator-entry`;
 
   return (
-    <select
-      data-testid={testId}
-      className="border border-gray-200 rounded-md block"
+    <ColumnSelect
+      testId={`${path.join('.')}-column-comparator-entry`}
       value={value}
-      onChange={(e) => {
-        if (e.target.value === '$') {
-          setValue(path, [e.target.value, '']);
-        } else {
-          setValue(path, [e.target.value]);
-        }
+      options={[
+        {
+          label: 'Columns',
+          options: columns.map((c) => ({ value: c.name, label: c.name })),
+        },
+        {
+          label: 'Root table',
+          options: [{ value: '$', label: '$' }],
+        },
+      ]}
+      onChange={(column) => {
+        setValue(path, column === '$' ? ['$', ''] : [column]);
       }}
-    >
-      <option value="">-</option>
-      <optgroup label="columns">
-        {columns.map((c) => {
-          return (
-            <option
-              data-testid={`${testId}-${c.name}`}
-              key={c.name}
-              value={c.name}
-            >
-              {c.name}
-            </option>
-          );
-        })}
-      </optgroup>
-      <optgroup label="root">
-        <option data-testid={`${testId}-$`} value="$">
-          $
-        </option>
-      </optgroup>
-    </select>
+    />
   );
 }
 
@@ -102,28 +140,23 @@ function RootColumnsSelect({
   const { setValue } = useContext(rowPermissionsContext);
   const value = v.find((v: any) => v !== '$');
   const { rootTable } = useContext(rootTableContext);
-  const testId = `${path.join('.')}-root-column-comparator-entry`;
+
   return (
-    <select
-      className="border border-gray-200 rounded-md block"
-      data-testid={testId}
+    <ColumnSelect
+      testId={`${path.join('.')}-root-column-comparator-entry`}
       value={value}
-      onChange={(e) => {
-        setValue(path, ['$', e.target.value]);
+      options={[
+        {
+          label: 'Root table columns',
+          options: (rootTable?.columns ?? []).map((c) => ({
+            value: c.name,
+            label: c.name,
+          })),
+        },
+      ]}
+      onChange={(column) => {
+        setValue(path, ['$', column]);
       }}
-    >
-      <option value="">-</option>
-      {rootTable?.columns.map((c) => {
-        return (
-          <option
-            key={c.name}
-            data-testid={`${testId}-${c.name}`}
-            value={c.name}
-          >
-            {c.name}
-          </option>
-        );
-      })}
-    </select>
+    />
   );
 }

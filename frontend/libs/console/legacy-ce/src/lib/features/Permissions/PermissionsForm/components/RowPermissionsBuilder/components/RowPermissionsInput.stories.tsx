@@ -7,7 +7,6 @@ import {
   userEvent,
   waitFor,
   within,
-  fireEvent,
   waitForElementToBeRemoved,
 } from 'storybook/test';
 import {
@@ -610,10 +609,11 @@ export const BooleanArrayTypeRoot: StoryObj<typeof RowPermissionsInput> = {
 
     await expect(
       canvas.getByTestId('Author._ceq-column-comparator-entry'),
-    ).toHaveValue('$');
+    ).toHaveTextContent('$');
 
-    await fireEvent.click(
-      canvas.getByTestId('Author._ceq-column-comparator-entry'),
+    // the column selects are react-selects, opened from their input
+    await userEvent.click(
+      canvas.getByLabelText('Author._ceq-column-comparator-entry'),
     );
 
     // Author._ceq-column-comparator-entry shows currently selected table columns (id, name, and surname)
@@ -627,8 +627,8 @@ export const BooleanArrayTypeRoot: StoryObj<typeof RowPermissionsInput> = {
       canvas.getByTestId('Author._ceq-column-comparator-entry-surname'),
     ).toBeInTheDocument();
 
-    await fireEvent.click(
-      canvas.getByTestId('Author._ceq-root-column-comparator-entry'),
+    await userEvent.click(
+      canvas.getByLabelText('Author._ceq-root-column-comparator-entry'),
     );
 
     // Author._ceq-root-column-comparator-entry shows root columns (id and title)

@@ -1,6 +1,23 @@
 import { FrequentlyUsedColumn } from '../../types';
 import { PostgresTable } from '../types';
 
+export const uuidIdColumn: FrequentlyUsedColumn = {
+  name: 'id',
+  validFor: ['add'],
+  type: 'uuid',
+  typeText: 'UUID',
+  primary: true,
+  default: 'gen_random_uuid()',
+};
+
+export const createdAtColumn: FrequentlyUsedColumn = {
+  name: 'created_at',
+  validFor: ['add', 'modify'],
+  type: 'timestamptz',
+  typeText: 'timestamp',
+  default: 'now()',
+};
+
 /** Presets shared by Postgres-family drivers; each driver appends its own
  *  `updated_at` preset since its trigger SQL is dialect-specific. */
 export const commonFrequentlyUsedColumns: FrequentlyUsedColumn[] = [
@@ -26,21 +43,8 @@ export const commonFrequentlyUsedColumns: FrequentlyUsedColumn[] = [
     primary: true,
     minPGVersion: 10,
   },
-  {
-    name: 'id',
-    validFor: ['add'],
-    type: 'uuid',
-    typeText: 'UUID',
-    primary: true,
-    default: 'gen_random_uuid()',
-  },
-  {
-    name: 'created_at',
-    validFor: ['add', 'modify'],
-    type: 'timestamptz',
-    typeText: 'timestamp',
-    default: 'now()',
-  },
+  uuidIdColumn,
+  createdAtColumn,
 ];
 
 export const getFrequentlyUsedColumns = (): FrequentlyUsedColumn[] => [

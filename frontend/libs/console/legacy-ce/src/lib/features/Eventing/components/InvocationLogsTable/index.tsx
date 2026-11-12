@@ -17,12 +17,14 @@ import { getInvocationLogStatus } from '../../EventTriggers/components/utils';
 import { convertDateTimeToLocale } from '@hasura/shared/utils';
 import RedeliverEventButton from './RedeliverEventButton';
 import ExpanderButton from '../ExpanderButton';
-import { Flex } from '@radix-ui/themes';
+import TableLoadingRows from '../TableLoadingRows';
+import { Em, Flex } from '@radix-ui/themes';
 import InvocationLogDetails from '../InvocationLogDetails';
 
 interface Props extends FilterTableProps {
   tableDef?: QualifiedTable;
   source?: QualifiedDataSource;
+  isLoading?: boolean;
 }
 
 const InvocationLogsTable: React.FC<Props> = ({
@@ -32,6 +34,7 @@ const InvocationLogsTable: React.FC<Props> = ({
   columns,
   tableDef,
   source,
+  isLoading,
 }) => {
   const [redeliveredEventId, setRedeliveredEventId] = React.useState<
     string | null
@@ -324,6 +327,18 @@ const InvocationLogsTable: React.FC<Props> = ({
               </React.Fragment>
             );
           })}
+          {isLoading && !rows.length && (
+            <TableLoadingRows columnCount={tableColumns.length} />
+          )}
+          {!isLoading && !rows.length && (
+            <Table.Row>
+              <Table.Cell colSpan={tableColumns.length} align="center">
+                <Text>
+                  <Em>No invocation logs</Em>
+                </Text>
+              </Table.Cell>
+            </Table.Row>
+          )}
         </Table.Body>
       </Table.Root>
       <PaginationOffset

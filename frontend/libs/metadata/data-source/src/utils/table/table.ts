@@ -1,5 +1,5 @@
 import { ReactSelectOptionType } from '@hasura/shared/ui';
-import { TableColumn, TableColumnTypeMap } from '../../driver/types';
+import { TableColumn } from '../../driver/types';
 import { Table } from '@hasura/shared/types';
 import { getTableDisplayName } from '@hasura/shared/utils';
 
@@ -28,27 +28,9 @@ export function escapeTableName(tableName: string): string | null {
   return tableName.toLowerCase().replace(/\s+|_?\W+_?/g, '_');
 }
 
-export function getColumnDataTypeGroup(
-  typeMap: TableColumnTypeMap,
-  typeName: string,
-): TableColumn['consoleDataType'] | undefined {
-  return Object.entries(typeMap).find(([_, supportedTypes]) =>
-    supportedTypes.includes(typeName),
-  )?.[0] as TableColumn['consoleDataType'];
-}
-
 const getDateISOString = () => new Date().toISOString();
 const getISODatePart = () => getDateISOString().slice(0, 10);
 const getISOTimePart = () => getDateISOString().slice(11, 19);
-
-export const getTableColumnValuePlaceholder = (
-  group: TableColumn['consoleDataType'] | null | undefined,
-  columnType: string,
-) => {
-  if (!group) {
-    return columnType;
-  }
-};
 
 export const getTableColumnDataTypePlaceholder = (
   group: TableColumn['consoleDataType'],

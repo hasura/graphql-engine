@@ -28,9 +28,12 @@ export const useReloadMetadata = () => {
   const reloadMetadata = ({
     shouldReloadAllSources = false,
     shouldReloadRemoteSchemas = false,
+    sources = [],
   }: {
     shouldReloadRemoteSchemas?: boolean;
     shouldReloadAllSources?: boolean;
+    /** sources to reload besides the inconsistent ones, e.g. to refresh enum values */
+    sources?: string[];
   }) => {
     const inconsistentSources = inconsistentMetadata?.inconsistent_objects
       .length
@@ -48,8 +51,8 @@ export const useReloadMetadata = () => {
     let reloadSources: string[] | boolean = [];
     if (shouldReloadAllSources) {
       reloadSources = true;
-    } else if (inconsistentSources.length) {
-      reloadSources = inconsistentSources;
+    } else if (inconsistentSources.length || sources.length) {
+      reloadSources = Array.from(new Set([...sources, ...inconsistentSources]));
     }
 
     let reloadRemoteSchemas: string[] | boolean = [];

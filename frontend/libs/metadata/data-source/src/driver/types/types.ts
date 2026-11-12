@@ -15,6 +15,7 @@ import {
   QualifiedTable,
   Where,
   OrderBy,
+  Metadata,
 } from '@hasura/shared/types';
 import { ColumnValueGenerationStrategy } from '@hasura/dc-api-types';
 import { Endpoints } from '@hasura/shared/context';
@@ -87,7 +88,10 @@ export type TableColumn = {
     | 'uuid'
     | 'date'
     | 'time'
+    | 'binary'
     | 'array';
+  /** console data type of the elements, when `consoleDataType` is `array` */
+  arrayItemType?: Exclude<TableColumn['consoleDataType'], 'array'>;
   nullable?: boolean;
   /**
    * Full SQL type including modifiers (e.g. `character varying(255)`), when
@@ -178,16 +182,19 @@ export type GetTableRowsProps = {
     limit?: number;
     order_by?: OrderBy[];
   };
+  /** an already exported metadata, so the rows don't export it again */
+  metadata?: Metadata;
 } & DataSourceNetworkArgs;
 export type TableRow = Record<string, string | number | boolean>;
-
-export type validOperators = string;
-export type SelectColumn = string | { name: string; columns: SelectColumn[] };
 
 export type Operator = {
   name: string;
   value: string;
   defaultValue?: string;
+  /** the GraphQL type name of the operand, when known, e.g. `jsonb` */
+  valueType?: string;
+  /** whether the operand is a list, when known, e.g. for `_in` */
+  isListValue?: boolean;
 };
 
 export type Version = string;
@@ -240,11 +247,6 @@ export type ChangeTableNameProps = {
   newName: string;
 } & DataSourceNetworkArgs;
 
-export type GetIsTableViewProps = {
-  dataSourceName: string;
-  table: Table;
-} & DataSourceNetworkArgs;
-
 export type GetSupportedDataTypesProps = {
   driver: SupportedDriver;
 } & DataSourceNetworkArgs;
@@ -278,7 +280,6 @@ export type InsertRowArgs = {
   table: Table;
   objects: Record<string, unknown>[];
   columns: TableColumn[];
-  defaultColumns: string[];
   /**
    * Also write a CLI migration file for the inserted rows (console CLI mode).
    * Ignored by drivers that don't support it.
@@ -296,7 +297,6 @@ export type UpdateRowArgs = {
   set: Record<string, unknown>;
   where: Record<string, unknown>;
   columns: TableColumn[];
-  defaultColumns: string[];
 };
 
 export type UpdateRowProps = DataSourceNetworkArgs & {
@@ -402,6 +402,8 @@ export type SupportedFeaturesType = {
   };
   rawSQL: {
     tracking: boolean;
+    // `run_sql` can run statements outside a transaction (`no_transaction`)
+    noTransaction: boolean;
   };
   connectDbForm: ConnectDbForm;
 };

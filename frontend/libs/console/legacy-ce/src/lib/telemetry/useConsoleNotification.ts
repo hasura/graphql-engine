@@ -20,7 +20,7 @@ const useConsoleNotifications = (
   refreshCatalogState: () => Promise<CatalogState>,
 ) => {
   const { serverVersion, endpoints, isProduction } = useAppContext();
-  const { hasuraUserId, getHeaders } = useAuthContext();
+  const { hasuraUserId } = useAuthContext();
   const { consoleState, notifications } = useTelemetryStore();
 
   const userType = hasuraUserId || 'admin';
@@ -122,8 +122,7 @@ const useConsoleNotifications = (
       }
     }
 
-    const headers = await getHeaders();
-    return updateCatalogState(notificationUrl, composedUpdatedState, headers)
+    return updateCatalogState(notificationUrl, composedUpdatedState, {})
       .then(refreshCatalogState)
       .catch((err) => {
         console.error('failed to update catalog state', err);

@@ -3,7 +3,10 @@ import { Table } from '@hasura/shared/types';
 import { getLSItem, setLSItem } from '@hasura/shared/utils';
 import { useEffect, useMemo, useState } from 'react';
 import { DataGridOptions } from '../../DataGrid/DataGrid';
-import { convertUrlToDataGridOptions } from '../../DataGrid/DataGrid.utils';
+import {
+  convertUrlToDataGridOptions,
+  fromLegacyWhere,
+} from '../../DataGrid/DataGrid.utils';
 
 type GetUniqueTableKeyProps = {
   table: Table;
@@ -35,7 +38,8 @@ const getWhereAndOrderByFromLocalStorage = ({
     : '';
 
   if (localUserQueryString) {
-    return JSON.parse(localUserQueryString) as WhereAndOrderBy;
+    const saved = JSON.parse(localUserQueryString) as WhereAndOrderBy;
+    return { ...saved, where: fromLegacyWhere(saved.where) };
   }
 
   return undefined;

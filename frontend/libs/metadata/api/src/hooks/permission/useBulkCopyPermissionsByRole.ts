@@ -1,6 +1,5 @@
 import { useCallback } from 'react';
-import { hasuraToast } from '@hasura/shared/ui';
-import { getErrorMessage } from '@hasura/shared/utils';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 import { DataQueryType, permissionToKey, Table } from '@hasura/shared/types';
 import { areTablesEqual } from '@hasura/metadata/helpers';
 import {
@@ -161,10 +160,9 @@ export const useBulkCopyPermissionsByRole = () => {
         {
           ...options,
           onError: (error, variables, onMutateResult, context) => {
-            hasuraToast({
-              type: 'error',
+            showErrorNotification({
+              error,
               title: errorTitle,
-              message: getErrorMessage(error),
             });
             options?.onError?.(error, variables, onMutateResult, context);
           },

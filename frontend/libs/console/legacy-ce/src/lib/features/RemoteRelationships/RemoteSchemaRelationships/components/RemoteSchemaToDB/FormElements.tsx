@@ -10,7 +10,7 @@ import { RemoteDatabaseWidget } from '../RemoteDatabaseWidget';
 import { RsSourceTypeSelector } from '../RsSourceTypeSelector';
 import { Schema } from './schema';
 import { getTypesFromIntrospection } from '../../../utils';
-import { useTableColumns } from '@hasura/metadata/data-source';
+import { useTableColumnInfos } from '@hasura/metadata/data-source';
 import { useIntrospectRemoteSchema, useMetadata } from '@hasura/metadata/api';
 import { MetadataSelectors } from '@hasura/metadata/helpers';
 import { Flex, Skeleton } from '@radix-ui/themes';
@@ -101,16 +101,16 @@ const RelationshipMapSelector = ({
   const dataSourceName = target?.dataSourceName;
   const source = MetadataSelectors.findSource(dataSourceName)(meta);
 
-  const { data: columnData, isFetching: isFetchingColumns } = useTableColumns({
-    source,
-    table,
-  });
+  const { data: columnData, isFetching: isFetchingColumns } =
+    useTableColumnInfos({
+      source,
+      table,
+    });
 
   // Stabilize these so they only change when their source data changes; this
   // keeps the pruning effect below from depending on a fresh array every render.
   const columns: string[] = useMemo(
-    () =>
-      columnData ? (columnData.columns ?? []).map((column) => column.name) : [],
+    () => (columnData ?? []).map((column) => column.name),
     [columnData],
   );
   const types = useMemo(

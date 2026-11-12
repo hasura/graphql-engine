@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
 import { useMetadataMigration } from '@hasura/metadata/api';
 import { SupportedDriver, EventRequestTransform } from '@hasura/shared/types';
-import { hasuraToast } from '@hasura/shared/ui';
-import { getErrorMessage, transformHeaderConfigs } from '@hasura/shared/utils';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
+import { transformHeaderConfigs } from '@hasura/shared/utils';
 import { defaultState, type LocalEventTriggerState } from '../types';
 import type { RequestTransformState } from '../../../ConfigureTransformation/stateDefaults';
 import { getRequestTransformObject } from '../../../ConfigureTransformation/utils';
@@ -11,7 +11,7 @@ import { getDriverPrefix } from '@hasura/metadata/helpers';
 
 const errorTitle = 'Creating event trigger failed';
 
-export type CreateEventTriggerArgs = {
+type CreateEventTriggerArgs = {
   state: LocalEventTriggerState;
   transformState: RequestTransformState;
   sourceKind: SupportedDriver;
@@ -110,10 +110,9 @@ const useCreateEventTrigger = () => {
           },
           onError: (err) => {
             onError?.(err);
-            hasuraToast({
+            showErrorNotification({
               title: errorTitle,
-              message: getErrorMessage(err),
-              type: 'error',
+              error: err,
             });
           },
         },

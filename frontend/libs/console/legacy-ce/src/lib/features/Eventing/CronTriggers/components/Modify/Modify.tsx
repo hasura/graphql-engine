@@ -15,6 +15,7 @@ const Modify: React.FC<Props> = ({ currentTrigger }) => {
     <Analytics name="ScheduledTriggerModify" {...REDACT_EVERYTHING}>
       <div className="mb-4">
         <Form
+          key={currentTrigger.name}
           currentTrigger={currentTrigger}
           onSuccess={(triggerName?: string) => {
             navigate(`/events/cron/${triggerName}/modify`);

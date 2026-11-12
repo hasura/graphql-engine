@@ -9,7 +9,7 @@ import { GetFunctionDefinitionResult } from '@hasura/metadata/data-source';
 import FunctionCommentEditor from './FunctionCommentEditor';
 import { useAppContext } from '@hasura/shared/context';
 
-export type ModifyProps = {
+type ModifyProps = {
   source: Source;
   currentFunction: MetadataFunction;
   functionDefinition: GetFunctionDefinitionResult | null | undefined;
@@ -54,12 +54,7 @@ export const Modify = ({
         />
       )}
       <div className="w-full md:w-8/12">
-        <FunctionCommentEditor
-          source={source}
-          func={currentFunction}
-          defaultValue={currentFunction.configuration?.comment ?? ''}
-          readOnly={readOnlyMode}
-        />
+        <FunctionCommentEditor comment={currentFunction.comment} />
       </div>
       {functionDefinition?.definition ? (
         <div className="w-full md:w-8/12">
@@ -79,6 +74,7 @@ export const Modify = ({
             <SqlCodeBlock
               language={source.kind}
               text={functionDefinition.definition}
+              scrollable
             />
           </div>
         </div>

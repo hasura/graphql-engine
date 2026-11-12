@@ -1,4 +1,3 @@
 export { AccelerateProject } from './AccelerateProject';
-export { DisplayDetails, Details } from './Details';
-export { InconsistentSourceDetails } from './InconsistentSourceDetails';
+export { Details } from './Details';
 export { LatencyBadge } from './LatencyBadge';

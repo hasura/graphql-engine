@@ -1,4 +1,5 @@
 import { renderHook, waitFor } from '@testing-library/react';
+import { buildSchema, introspectionFromSchema } from 'graphql';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { useRows, UseRowsPropType } from './index';
@@ -95,12 +96,37 @@ describe('Postgres browse rows data', () => {
     },
   ];
 
+  const introspection = introspectionFromSchema(
+    buildSchema(`
+      enum order_by { asc desc }
+      input Int_comparison_exp { _gt: Int }
+      input Album_bool_exp { AlbumId: Int_comparison_exp }
+      input Album_order_by { Title: order_by }
+      type Album { AlbumId: Int! Title: String! ArtistId: Int! }
+      type query_root {
+        Album(where: Album_bool_exp, order_by: [Album_order_by!], limit: Int, offset: Int): [Album!]!
+      }
+      schema { query: query_root }
+    `),
+  );
+
+  const graphQLRequests: { operationName: string; variables?: unknown }[] = [];
+
   const server = setupServer(
     http.post('/v1/metadata', () => {
       return HttpResponse.json(mockMetadata, { status: 200 });
     }),
-    http.post('/v2/query', () => {
-      return HttpResponse.json(expectedResult, { status: 200 });
+    http.post('/v1/graphql', async ({ request }) => {
+      const body = (await request.json()) as {
+        operationName: string;
+        variables?: unknown;
+      };
+      graphQLRequests.push(body);
+
+      if (body.operationName === 'IntrospectionQuery')
+        return HttpResponse.json({ data: introspection });
+
+      return HttpResponse.json({ data: { Album: expectedResult } });
     }),
   );
 
@@ -125,7 +151,7 @@ describe('Postgres browse rows data', () => {
       columns: albumColumns,
       options: {
         limit: 10,
-        where: [{ AlbumId: { $gt: 4 } }],
+        where: [{ AlbumId: { _gt: 4 } }],
         order_by: [{ column: 'Title', type: 'desc' }],
         offset: 15,
       },
@@ -135,6 +161,15 @@ describe('Postgres browse rows data', () => {
     });
     await waitFor(() => expect(result.current.isSuccess).toBeTruthy());
     expect(result.current.data).toEqual(expectedResult);
+    expect(graphQLRequests[graphQLRequests.length - 1]).toMatchObject({
+      operationName: 'TableRows',
+      variables: {
+        where: { _and: [{ AlbumId: { _gt: 4 } }] },
+        order_by: [{ Title: 'desc' }],
+        limit: 10,
+        offset: 15,
+      },
+    });
   });
 });
 

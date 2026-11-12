@@ -2,10 +2,10 @@ import { Database } from '../types/database';
 import { checkSchemaModification } from '../common/utils';
 import {
   getTableColumns,
+  getTableColumnInfos,
   getSupportedOperators,
   getTrackableTables,
 } from './introspection';
-import { getTableRows } from './query';
 import { postgresCapabilities } from '../common/capabilities';
 import { consoleDataTypeToSQLTypeMap, consoleScalars } from '../postgres/types';
 import { cockroachSupportedFeatures } from './types';
@@ -35,16 +35,14 @@ export const cockroach: Database = {
       return ['schema', 'name'];
     },
     getTableColumns,
-    getTableColumnInfos: getTableColumns,
+    getTableColumnInfos,
     getTablesListAsTree,
     getSupportedOperators,
     getSupportedDataTypes: async () => consoleDataTypeToSQLTypeMap,
     getSupportedScalars: async () => consoleScalars,
     ...getPostgresIntrospectionMethods('cockroach'),
   },
-  query: {
-    getTableRows,
-  },
+  query: postgres.query,
   config: {
     ...postgres.config,
     getFrequentlyUsedColumns,

@@ -12,8 +12,9 @@ export function ExistsEntry({
 }) {
   return (
     <TableProvider>
-      <Entry k="_where" v={v._where} path={[...path, '_where']} />
-      <Entry k="_table" v={v._table} path={[...path, '_table']} />
+      {/* `_exists` may be anything in the JSON editor */}
+      <Entry k="_where" v={v?._where ?? {}} path={[...path, '_where']} />
+      <Entry k="_table" v={v?._table ?? {}} path={[...path, '_table']} />
     </TableProvider>
   );
 }

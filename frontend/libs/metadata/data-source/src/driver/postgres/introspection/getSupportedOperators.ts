@@ -4,81 +4,81 @@ export const getSupportedOperators = () => {
   const graphqlOps: Operator[] = [
     {
       name: 'equals',
-      value: '$eq',
+      value: '_eq',
     },
     {
       name: 'not equals',
-      value: '$ne',
+      value: '_neq',
     },
     {
       name: 'in',
-      value: '$in',
+      value: '_in',
       defaultValue: '[]',
     },
     {
       name: 'not in',
-      value: '$nin',
+      value: '_nin',
       defaultValue: '[]',
     },
     {
       name: '>',
-      value: '$gt',
+      value: '_gt',
     },
     {
       name: '<',
-      value: '$lt',
+      value: '_lt',
     },
     {
       name: '>=',
-      value: '$gte',
+      value: '_gte',
     },
     {
       name: '<=',
-      value: '$lte',
+      value: '_lte',
     },
     {
       name: 'like',
-      value: '$like',
+      value: '_like',
       defaultValue: '%%',
     },
     {
       name: 'not like',
-      value: '$nlike',
+      value: '_nlike',
       defaultValue: '%%',
     },
     {
       name: 'like (case-insensitive)',
-      value: '$ilike',
+      value: '_ilike',
       defaultValue: '%%',
     },
     {
       name: 'not like (case-insensitive)',
-      value: '$nilike',
+      value: '_nilike',
       defaultValue: '%%',
     },
     {
       name: 'similar',
-      value: '$similar',
+      value: '_similar',
     },
     {
       name: 'not similar',
-      value: '$nsimilar',
+      value: '_nsimilar',
     },
     {
       name: '~',
-      value: '$regex',
+      value: '_regex',
     },
     {
       name: '~*',
-      value: '$iregex',
+      value: '_iregex',
     },
     {
       name: '!~',
-      value: '$nregex',
+      value: '_nregex',
     },
     {
       name: '!~*',
-      value: '$niregex',
+      value: '_niregex',
     },
   ];
   return graphqlOps;

@@ -5,12 +5,15 @@ import { useEELiteAccess } from '../../hooks/useEELiteAccess';
 import { LearnMoreLink, Text } from '@hasura/shared/ui';
 
 export const MultipleAdminSecretsPage = () => {
-  const { access } = useEELiteAccess();
-  const isFeatureForbidden = access === 'forbidden';
+  const { access, consoleType } = useEELiteAccess();
 
-  const isFeatureActive = access === 'active';
+  const isFeatureForbidden =
+    consoleType === 'oss' ||
+    (consoleType === 'pro-lite' && access === 'forbidden');
 
   if (isFeatureForbidden) return null;
+
+  const isFeatureActive = consoleType !== 'pro-lite' || access === 'active';
 
   return (
     <Flex className="max-w-(--breakpoint-lg) p-4">

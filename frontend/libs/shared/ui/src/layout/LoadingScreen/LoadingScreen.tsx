@@ -24,20 +24,30 @@ const LottieScreen = () => {
 export const LoadingScreen = ({
   children,
   isError,
+  fullScreen = true,
 }: {
   isError?: boolean;
   children: React.ReactNode;
+  /**
+   * Fill the whole viewport (app boot, login). Set to `false` when rendering
+   * inside the page area below the console header.
+   */
+  fullScreen?: boolean;
 }) => {
   const { appearance } = useAppearance();
 
   return (
-    <Flex align="center" justify="center" className="w-full h-screen">
+    <Flex
+      align="center"
+      justify="center"
+      className={fullScreen ? 'w-full h-screen' : 'w-full min-h-[60vh]'}
+    >
       <Flex
         direction="column"
         justify="center"
         align="center"
         gap="4"
-        className={'max-w-[500px]'}
+        className={'sm:mx-w-2/3 md:max-w-1/2'}
       >
         <div>
           {isError ? (

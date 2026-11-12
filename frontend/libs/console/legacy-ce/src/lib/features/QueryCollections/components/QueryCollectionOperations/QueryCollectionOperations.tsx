@@ -15,7 +15,7 @@ import {
   useRemoveOperationsFromQueryCollection,
 } from '@hasura/metadata/api';
 import { QueryCollectionQuery } from '@hasura/shared/types';
-import { Flex, Skeleton } from '@radix-ui/themes';
+import { Flex } from '@radix-ui/themes';
 import { MetadataSelectors } from '@hasura/metadata/helpers';
 
 const Check: React.FC<React.ComponentProps<'input'>> = (props) => (
@@ -58,7 +58,11 @@ export const QueryCollectionsOperations: React.FC<
   if (isLoading) {
     return (
       <div data-testid="query-collection-operations-loading">
-        <Skeleton height="200px" />
+        <CardedTable
+          columns={['', 'Operation', 'Type', '']}
+          data={[]}
+          loading
+        />
       </div>
     );
   }

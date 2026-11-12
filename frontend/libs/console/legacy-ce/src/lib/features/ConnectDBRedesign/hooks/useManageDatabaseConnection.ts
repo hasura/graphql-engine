@@ -6,8 +6,7 @@ import { useAuthFetchJson } from '@hasura/shared/hooks';
 import { SupportedDriver } from '@hasura/shared/types';
 import { useAppContext } from '@hasura/shared/context';
 import { getDriverPrefix } from '@hasura/metadata/helpers';
-import { hasuraToast } from '@hasura/shared/ui';
-import { getErrorMessage } from '@hasura/shared/utils';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 
 export const useManageDatabaseConnection = ({
   onSuccess,
@@ -39,14 +38,17 @@ export const useManageDatabaseConnection = ({
           },
           {
             onSuccess: () => {
+              hasuraToast({
+                type: 'success',
+                title: 'Database added successfully!',
+              });
               onSuccess?.();
               refetchMetadata();
             },
             onError: (err: Error) => {
-              hasuraToast({
-                type: 'error',
+              showErrorNotification({
                 title: 'Failed to connect database',
-                message: getErrorMessage(err),
+                error: err,
               });
               onError?.(err);
             },
@@ -108,12 +110,15 @@ export const useManageDatabaseConnection = ({
           onSuccess: () => {
             onSuccess?.();
             refetchMetadata();
+            hasuraToast({
+              type: 'success',
+              title: 'Database updated successfully',
+            });
           },
           onError: (err: Error) => {
-            hasuraToast({
-              type: 'error',
+            showErrorNotification({
               title: 'Failed to edit database connection',
-              message: getErrorMessage(err),
+              error: err,
             });
             onError?.(err);
           },

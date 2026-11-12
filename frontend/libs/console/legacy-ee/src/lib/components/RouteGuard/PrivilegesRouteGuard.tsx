@@ -4,6 +4,7 @@ import { useAuthContext } from '../../shared/auth/context';
 import { useProjectInfo } from '../../hooks/useProjectInfo';
 import { useAppContext } from '@hasura/shared/context';
 import { Privilege } from '@hasura/console-legacy-ce';
+import RouteGuardLoading from './RouteGuardLoading';
 
 type PrivilegesRouteGuardProps = {
   allowedPrivileges: Privilege[];
@@ -60,7 +61,7 @@ const PrivilegesRouteGuard = ({
     setLoading(false);
   }, [projectInfoLoading]);
 
-  if (loading) return null;
+  if (loading) return <RouteGuardLoading />;
   return <Outlet />;
 };
 

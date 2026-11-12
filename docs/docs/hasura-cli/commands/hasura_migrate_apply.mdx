@@ -74,8 +74,8 @@ hasura migrate apply --down all
 ## Options
 
 ```sass
-    --up string                   apply all or N up migration steps
-    --down string                 apply all or N down migration steps
+    --up string                   apply all or N up migration steps (use --version to apply a specific migration)
+    --down string                 apply all or N down migration steps (use --version --type down to roll back a specific migration)
     --goto string                 apply migration chain up to to the version specified
     --version string              only apply this particular migration
     --skip-execution              skip executing the migration action, but mark them as applied
@@ -96,6 +96,7 @@ hasura migrate apply --down all
 --disable-interactive            disables interactive prompts (default: false) (env "HASURA_GRAPHQL_DISABLE_INTERACTIVE")
 --endpoint string                http(s) endpoint for Hasura GraphQL Engine (env "HASURA_GRAPHQL_ENDPOINT")
 --envfile string                 .env filename to load ENV vars from (default ".env")
+--header stringArray             custom HTTP header to send with every request to Hasura GraphQL Engine, in "Name: value" form; repeatable. e.g. --header "Authorization: Bearer <token>"
 --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) (env "HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY")
 --log-level string               log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
 --no-color                       do not colorize output (default: false)

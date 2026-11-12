@@ -9,7 +9,7 @@ import {
 } from '@hasura/shared/types';
 import { hasuraToast } from '@hasura/shared/ui';
 
-export type TrackStoredProcedure = {
+type TrackStoredProcedure = {
   dataSourceName: string;
 } & StoredProcedure;
 
