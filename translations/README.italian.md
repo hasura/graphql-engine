@@ -13,7 +13,7 @@ Leggi di più su [hasura.io](https://hasura.io) e nei [docs](https://hasura.io/d
 
 ------------------
 
-![Hasura GraphQL Engine Demo](../assets/demo.gif)
+![Hasura GraphQL Engine Demo](https://github.com/hasura/graphql-engine/raw/5fa3e0d2b617a4ae85f65491c5ff6c056cb612de/assets/demo.gif)
 
 ------------------
 

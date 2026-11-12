@@ -15,6 +15,7 @@ import {
 } from '@hasura/metadata/data-source';
 import uniqBy from 'lodash/uniqBy';
 import { Source, Table, WhereClause, OrderBy } from '@hasura/shared/types';
+import type { CSVExportOptions } from '@hasura/shared/utils';
 import {
   ErrorCard,
   SkeletonList,
@@ -196,7 +197,10 @@ export const DataGrid = (props: DataGridProps) => {
 
   const [selectedRows, setSelectedRows] = useState<RowSelectionState>({});
 
-  const onExportSelectedRows = (exportFileFormat: ExportFileFormat) => {
+  const onExportSelectedRows = (
+    exportFileFormat: ExportFileFormat,
+    csvOptions?: CSVExportOptions,
+  ) => {
     const whereClause = adaptSelectedRowIdsToWhereClause({
       rowsId: selectedRows,
       rows,
@@ -216,10 +220,14 @@ export const DataGrid = (props: DataGridProps) => {
         table,
       },
       exportFileFormat,
+      csvOptions,
     );
   };
 
-  const onExportAllRows = (exportFileFormat: ExportFileFormat) =>
+  const onExportAllRows = (
+    exportFileFormat: ExportFileFormat,
+    csvOptions?: CSVExportOptions,
+  ) =>
     onExportRows(
       {
         columns: tableColumnQueryResult?.columns,
@@ -231,6 +239,7 @@ export const DataGrid = (props: DataGridProps) => {
         table,
       },
       exportFileFormat,
+      csvOptions,
     );
 
   const handleOnRelationshipClick = ({

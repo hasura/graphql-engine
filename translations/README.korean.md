@@ -16,7 +16,7 @@ Hasura는 Postgres를 지원하는 GraphQL 앱을 만들거나 Postgres를 사�
 
 ------------------
 
-![Hasura GraphQL Engine 데모](../assets/demo.gif)
+![Hasura GraphQL Engine 데모](https://github.com/hasura/graphql-engine/raw/5fa3e0d2b617a4ae85f65491c5ff6c056cb612de/assets/demo.gif)
 
 ------------------
 

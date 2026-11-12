@@ -38,6 +38,17 @@ The following types of requests can be made using the GraphQL API:
 - [Query / Subscription](/api-reference/graphql-api/query.mdx)
 - [Mutation](/api-reference/graphql-api/mutation.mdx)
 
+## Queries and mutations over WebSocket
+
+In addition to `POST` requests, the GraphQL API also accepts WebSocket connections on the same endpoint (e.g.
+`wss://my-graphql-engine.com/v1/graphql`, or `wss://my-graphql-engine.com/v1/relay` for the Relay API). They are used
+for subscriptions, but queries and mutations can be sent over the same connection too, so a client can use a single
+WebSocket connection for all its operations.
+
+A query or a mutation sent over WebSocket gets a single result, after which the operation is completed. Both the
+`subscriptions-transport-ws` and the `graphql-ws` protocols are supported (see the
+[communication protocol](/subscriptions/postgres/index.mdx#communication-protocol) of subscriptions).
+
 ## Batching requests
 
 The GraphQL API provides support for batched requests (which can be a combination of queries and mutations). The
