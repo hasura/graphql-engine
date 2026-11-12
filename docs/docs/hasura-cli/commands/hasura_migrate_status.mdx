@@ -29,12 +29,16 @@ hasura migrate status --admin-secret "<your-admin-secret>"
 
 # Check status on a different server:
 hasura migrate status --endpoint "<endpoint>"
+
+# Print the status as JSON, e.g. for scripts:
+hasura migrate status --output json
 ```
 
 ## Options
 
 ```sass
--h, --help   help for status
+-h, --help            help for status
+-o, --output string   output format (Allowed values: table, json)
 ```
 
 ## Options inherited from parent commands
