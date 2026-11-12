@@ -49,10 +49,16 @@ export function useAlterColumn(options?: Options) {
           message: 'Column modified successfully!',
           type: 'success',
         });
+      }
+      options?.onSuccess?.(data, variables, onMutateResult, context);
+    },
+    // Refresh on failure too (see `useAddColumn`). Skipped when nothing ran.
+    onSettled: (data, error, variables, onMutateResult, context) => {
+      if (data || error) {
         invalidateMetadata(queryClient);
         queryClient.invalidateQueries({ queryKey: [variables.source.name] });
       }
-      options?.onSuccess?.(data, variables, onMutateResult, context);
+      options?.onSettled?.(data, error, variables, onMutateResult, context);
     },
   });
 }

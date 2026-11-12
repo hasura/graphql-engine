@@ -167,7 +167,8 @@ objects: [
 
 ## Date {#date}
 
-GraphQL custom scalar with name **date**. Date (no time of day). Allowed values are yyyy-mm-dd.
+GraphQL custom scalar with name **date**. Date (no time of day). Allowed values are yyyy-mm-dd, or one of the
+[special date/time input values](#special-date-time-input-values) of Postgres.
 
 E.g.
 
@@ -182,7 +183,8 @@ objects: [
 ## Time with time zone {#timetz}
 
 GraphQL custom scalar type with name **timetz**. Time of day only, with time zone. Allowed values should be of ISO8601
-format (e.g. 17:30:15Z, 17:30:15+05:30, 17:30:15.234890+05:30).
+format (e.g. 17:30:15Z, 17:30:15+05:30, 17:30:15.234890+05:30), or one of the
+[special date/time input values](#special-date-time-input-values) of Postgres.
 
 E.g.
 
@@ -197,7 +199,8 @@ objects: [
 ## Timestamp with time zone {#timestamptz}
 
 GraphQL custom scalar type with name **timestamptz**. Both date and time, with time zone. Allowed values should be of
-ISO8601 format (e.g. 2016-07-20T17:30:15Z, 2016-07-20T17:30:15+05:30, 2016-07-20T17:30:15.234890+05:30).
+ISO8601 format (e.g. 2016-07-20T17:30:15Z, 2016-07-20T17:30:15+05:30, 2016-07-20T17:30:15.234890+05:30), or one of the
+[special date/time input values](#special-date-time-input-values) of Postgres.
 
 E.g.
 
@@ -208,6 +211,24 @@ objects: [
   }
 ]
 ```
+
+<div id="special-date-time-input-values" />
+
+:::info Special date/time input values
+
+A string that Hasura cannot parse as a date or time is passed to Postgres as it is, and Postgres converts it. So the
+[special date/time input values](https://www.postgresql.org/docs/current/datatype-datetime.html#DATATYPE-DATETIME-SPECIAL-VALUES)
+of Postgres can also be used for date/time columns, e.g. `{created_at: "now"}`:
+
+- `now` can be used for `date`, time and timestamp columns. Postgres resolves it to the start time of the current
+  transaction.
+- `today`, `tomorrow`, `yesterday`, `epoch`, `infinity` and `-infinity` can only be used for `date` and timestamp
+  columns.
+- `allballs` (midnight UTC) can only be used for time columns.
+
+A value that is not valid for the column type is rejected by Postgres with an error.
+
+:::
 
 ## JSON {#json}
 

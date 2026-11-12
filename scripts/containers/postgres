@@ -10,7 +10,7 @@
 ######################
 
 if [ "$MODE" = "test" ]; then
-  PG_PORT=35432
+  PG_PORT="${PG_TEST_PORT:-35432}"
 else
   PG_PORT="${PG_PORT:-25432}"
 fi
@@ -95,6 +95,34 @@ function pg_wait {
     echo -n '.' && sleep 0.2
   done
   echo " Ok"
+}
+
+# Create the role and databases that the hspec api-tests harness expects (see
+# server/lib/test-harness/src/Harness/Constants.hs). Idempotent, in case the
+# volume survived a previous run.
+function pg_setup_api_tests_db {
+  $PG_DOCKER -v ON_ERROR_STOP=1 -c "
+    DO \$\$ BEGIN
+      IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'hasura') THEN
+        CREATE ROLE hasura SUPERUSER LOGIN PASSWORD 'hasura';
+      END IF;
+    END \$\$;"
+  local db
+  for db in hasura hasura_metadata; do
+    if [ -z "$($PG_DOCKER -tAc "SELECT 1 FROM pg_database WHERE datname = '$db'")" ]; then
+      $PG_DOCKER -v ON_ERROR_STOP=1 -c "CREATE DATABASE $db OWNER hasura"
+    fi
+  done
+}
+
+# Recreate the api-tests databases, so that repeated test runs each start from
+# scratch, like in CI (some tests assert on e.g. all scheduled events).
+function pg_reset_api_tests_db {
+  local db
+  for db in hasura hasura_metadata; do
+    $PG_DOCKER -v ON_ERROR_STOP=1 -c "DROP DATABASE IF EXISTS $db WITH (FORCE)"
+  done
+  pg_setup_api_tests_db
 }
 
 function pg_cleanup {

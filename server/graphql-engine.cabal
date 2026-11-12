@@ -126,6 +126,8 @@ extra-source-files:
   src-rsr/pg_source_migrations/0_to_1.sql
   src-rsr/pg_source_migrations/1_to_2.sql
   src-rsr/pg_source_migrations/2_to_3.sql
+  src-rsr/pg_source_migrations/3_to_4.sql
+  src-rsr/pg_source_migrations/4_to_5.sql
   src-rsr/pg_table_metadata.sql
   src-rsr/table_meta.sql
   src-rsr/trigger.sql.shakespeare
@@ -1319,3 +1321,4 @@ test-suite graphql-engine-test-postgres
     Test.Hasura.EventTriggerCleanupSuite
     Test.Hasura.StreamingSubscriptionSuite
     Test.Hasura.Server.MigrateSuite
+    Test.Hasura.Server.SourceCatalogSuite
