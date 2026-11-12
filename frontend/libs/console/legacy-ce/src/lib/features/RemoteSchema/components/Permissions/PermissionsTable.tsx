@@ -14,7 +14,7 @@ import type { PermOpenEditType } from './types';
 import type { AccessType, RemoteSchemaPermission } from '@hasura/shared/types';
 import { PermissionEdit } from '../../hooks/useRemoteSchemaRelationshipForm';
 
-export type PermissionsTableProps = {
+type PermissionsTableProps = {
   setSchemaDefinition: (data: string) => void;
   permOpenEdit: PermOpenEditType;
   permCloseEdit: () => void;

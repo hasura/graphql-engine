@@ -5,12 +5,3 @@ export const constructRedirectUrl = (pathname: string, search: string) => {
   }
   return finalUrl;
 };
-
-export const isJsonString = (str) => {
-  try {
-    JSON.parse(str);
-  } catch (e) {
-    return false;
-  }
-  return true;
-};

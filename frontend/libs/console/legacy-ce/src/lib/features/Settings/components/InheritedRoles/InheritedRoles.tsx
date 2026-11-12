@@ -93,9 +93,13 @@ const InheritedRoles: React.FC = () => {
       resetState();
     };
     if (inheritedRole) {
-      updateInheritedRole(role.role_name, role.role_set).finally(onComplete);
+      return updateInheritedRole(role.role_name, role.role_set).finally(
+        onComplete,
+      );
     } else {
-      addInheritedRole(role.role_name, role.role_set).finally(onComplete);
+      return addInheritedRole(role.role_name, role.role_set).finally(
+        onComplete,
+      );
     }
   };
 

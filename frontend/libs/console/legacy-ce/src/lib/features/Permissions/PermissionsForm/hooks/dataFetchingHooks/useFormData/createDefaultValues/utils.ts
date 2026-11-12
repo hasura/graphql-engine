@@ -19,7 +19,7 @@ export type DefaultPermissionValues = PermissionsSchema & {
   operators?: Record<string, unknown>;
 };
 
-export const getCheckType = (
+const getCheckType = (
   check?: Record<string, unknown> | null,
 ): 'none' | 'no_checks' | 'custom' => {
   if (!check) {
@@ -37,27 +37,17 @@ interface GetRowCountArgs {
   currentQueryPermissions?: SelectPermissionDefinition;
 }
 
-export const getRowCount = ({ currentQueryPermissions }: GetRowCountArgs) => {
+const getRowCount = ({ currentQueryPermissions }: GetRowCountArgs) => {
   return currentQueryPermissions?.limit
     ? String(currentQueryPermissions.limit)
     : '';
-};
-
-interface GetCheckArgs {
-  currentQueryPermissions?: Record<string, any>;
-  type: 'check' | 'filter';
-}
-
-export const getCheck = ({ currentQueryPermissions, type }: GetCheckArgs) => {
-  const check = currentQueryPermissions?.[type];
-  return check ? JSON.stringify(check) : '';
 };
 
 interface GetPresetArgs {
   currentQueryPermissions?: Record<string, any>;
 }
 
-export const getPresets = ({ currentQueryPermissions }: GetPresetArgs) => {
+const getPresets = ({ currentQueryPermissions }: GetPresetArgs) => {
   const set = Object.entries(currentQueryPermissions?.set || {}) as Array<
     [string, string]
   >;
@@ -89,7 +79,7 @@ const getColumns = (
   }, {});
 };
 
-export const createPermission = {
+const createPermission = {
   insert: (
     permission: InsertPermissionDefinition,
     tableColumns: TableColumn[],
@@ -218,7 +208,7 @@ interface GetCurrentPermissionArgs {
   queryType: DataQueryType;
 }
 
-export const getCurrentPermission = ({
+const getCurrentPermission = ({
   table,
   roleName,
   queryType,

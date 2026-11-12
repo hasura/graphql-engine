@@ -1,5 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import React, { Profiler } from 'react';
+import { Profiler } from 'react';
 import { render, screen } from '@testing-library/react';
 
 vi.mock('lottie-react', () => ({

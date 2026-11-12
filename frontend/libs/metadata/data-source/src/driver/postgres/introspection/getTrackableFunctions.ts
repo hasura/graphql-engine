@@ -2,7 +2,7 @@ import { RunSQLResponse } from '@hasura/shared/types';
 import { GetTrackableFunctionProps, IntrospectedFunction } from '../../types';
 import { runSQL } from '@hasura/metadata/api';
 
-export const adaptIntrospectedFunctions = (
+const adaptIntrospectedFunctions = (
   sqlResponse: RunSQLResponse,
 ): IntrospectedFunction[] => {
   return (sqlResponse.result ?? []).slice(1).map((row) => ({

@@ -62,7 +62,8 @@ FROM pg_attribute a
 WHERE a.attnum > 0 
   AND NOT a.attisdropped
   AND t.relname = '${name}'
-  AND s.nspname = '${schema}' 
+  AND s.nspname = '${schema}'
+ORDER BY a.attnum
 `;
 
     const tables = await runSQL({

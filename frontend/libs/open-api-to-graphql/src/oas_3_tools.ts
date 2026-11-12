@@ -497,8 +497,8 @@ function buildUrl(server: ServerObject): string {
   ) {
     for (let variableKey in server.variables) {
       // TODO: check for default? Would be invalid OAS
-      url = url.replace(
-        `{${variableKey}}`,
+      // A replacer function keeps `$` sequences in the value literal
+      url = url.replace(`{${variableKey}}`, () =>
         server.variables[variableKey].default.toString(),
       );
     }
@@ -882,56 +882,6 @@ function GetOneOfTargetGraphQLType<TSource, TContext, TArgs>(
     // No member schema types, therefore use the base schema type
     return baseTargetType;
   }
-}
-
-/**
- * Identifies common path components in the given list of paths. Returns these
- * components as well as an updated list of paths where the common prefix was
- * removed.
- */
-function extractBasePath(paths: string[]): {
-  basePath: string;
-  updatedPaths: string[];
-} {
-  if (paths.length <= 1) {
-    return {
-      basePath: '/',
-      updatedPaths: paths,
-    };
-  }
-
-  let basePathComponents: string[] = paths[0].split('/');
-
-  for (let path of paths) {
-    if (basePathComponents.length === 0) {
-      break;
-    }
-    const pathComponents = path.split('/');
-    for (let i = 0; i < pathComponents.length; i++) {
-      if (i < basePathComponents.length) {
-        if (pathComponents[i] !== basePathComponents[i]) {
-          basePathComponents = basePathComponents.slice(0, i);
-        }
-      } else {
-        break;
-      }
-    }
-  }
-
-  const updatedPaths = paths.map((path) =>
-    path.split('/').slice(basePathComponents.length).join('/'),
-  );
-
-  let basePath =
-    basePathComponents.length === 0 ||
-    (basePathComponents.length === 1 && basePathComponents[0] === '')
-      ? '/'
-      : basePathComponents.join('/');
-
-  return {
-    basePath,
-    updatedPaths,
-  };
 }
 
 function isIdParam(part) {

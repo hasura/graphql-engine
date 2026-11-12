@@ -47,7 +47,7 @@ export const isFeatureFlagEnabled = (id: string) => {
   return flag.state.enabled;
 };
 
-export function getFeatureFlags(additionalFlags?: FeatureFlagDefinition[]) {
+function getFeatureFlags(additionalFlags?: FeatureFlagDefinition[]) {
   const flags = getAvailableFeatureFlags();
   const state = getFeatureFlagStore();
   return mergeFlagWithState([...(additionalFlags ?? []), ...flags], state);

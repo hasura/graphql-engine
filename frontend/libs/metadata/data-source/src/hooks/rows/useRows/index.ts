@@ -3,6 +3,7 @@ import { useQuery, UseQueryOptions } from '@tanstack/react-query';
 import { OrderBy } from '@hasura/shared/types';
 import { useAuthFetchJson } from '@hasura/shared/hooks';
 import { useAppContext } from '@hasura/shared/context';
+import { useMetadata } from '@hasura/metadata/api';
 import { getDatabaseMethods, TableColumn, TableRow } from '../../../driver';
 
 const DEFAULT_STALE_TIME = 1000;
@@ -40,6 +41,12 @@ export function useRows<T = TableRow[]>(
   const fetchJson = useAuthFetchJson();
   const queryKey = getBrowseRowsQueryKey(props);
 
+  // reloaded when the rows mount only, instead of exported on every page
+  const { data: metadata, isFetching: isMetadataFetching } = useMetadata(
+    undefined,
+    { staleTime: 0 },
+  );
+
   return useQuery<TableRow[], unknown, T>({
     refetchOnWindowFocus: false,
     staleTime: DEFAULT_STALE_TIME,
@@ -58,9 +65,12 @@ export function useRows<T = TableRow[]>(
         table: props.table,
         columns: props.columns ?? [],
         options: props.options,
+        metadata,
       });
     },
     enabled:
+      Boolean(metadata) &&
+      !isMetadataFetching &&
       Boolean(props.columns?.length) &&
       Boolean(props.source) &&
       Boolean(props.table) &&

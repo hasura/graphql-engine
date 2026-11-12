@@ -6,7 +6,7 @@ const CurrentActionGuard = () => {
   const { currentAction } = useCurrentActionContext();
   if (!currentAction) {
     return (
-      <div className="my-6">
+      <div>
         <IndicatorCard status="negative" showIcon>
           Action not found
         </IndicatorCard>

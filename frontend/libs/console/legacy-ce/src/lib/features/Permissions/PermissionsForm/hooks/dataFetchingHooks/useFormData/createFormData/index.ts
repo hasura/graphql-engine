@@ -68,7 +68,7 @@ const getRoles = (metadataTables?: MetadataTable[]) => {
   return Array.from(res || []);
 };
 
-export interface CreateFormDataArgs {
+interface CreateFormDataArgs {
   table: unknown;
   tableColumns: TableColumn[];
   source: Source;

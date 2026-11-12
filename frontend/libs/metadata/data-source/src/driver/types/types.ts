@@ -15,6 +15,7 @@ import {
   QualifiedTable,
   Where,
   OrderBy,
+  Metadata,
 } from '@hasura/shared/types';
 import { ColumnValueGenerationStrategy } from '@hasura/dc-api-types';
 import { Endpoints } from '@hasura/shared/context';
@@ -87,6 +88,7 @@ export type TableColumn = {
     | 'uuid'
     | 'date'
     | 'time'
+    | 'binary'
     | 'array';
   /** console data type of the elements, when `consoleDataType` is `array` */
   arrayItemType?: Exclude<TableColumn['consoleDataType'], 'array'>;
@@ -180,6 +182,8 @@ export type GetTableRowsProps = {
     limit?: number;
     order_by?: OrderBy[];
   };
+  /** an already exported metadata, so the rows don't export it again */
+  metadata?: Metadata;
 } & DataSourceNetworkArgs;
 export type TableRow = Record<string, string | number | boolean>;
 
@@ -241,11 +245,6 @@ export type ChangeTableNameProps = {
   table: Omit<IntrospectedTable, 'name'>;
   isMigration: boolean;
   newName: string;
-} & DataSourceNetworkArgs;
-
-export type GetIsTableViewProps = {
-  dataSourceName: string;
-  table: Table;
 } & DataSourceNetworkArgs;
 
 export type GetSupportedDataTypesProps = {
@@ -403,6 +402,8 @@ export type SupportedFeaturesType = {
   };
   rawSQL: {
     tracking: boolean;
+    // `run_sql` can run statements outside a transaction (`no_transaction`)
+    noTransaction: boolean;
   };
   connectDbForm: ConnectDbForm;
 };

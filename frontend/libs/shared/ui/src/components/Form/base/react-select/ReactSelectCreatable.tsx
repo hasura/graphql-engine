@@ -22,7 +22,6 @@ export function ReactSelectCreatable<
   IsMulti extends boolean = false,
 >({
   isInvalid,
-  isDisabled,
   options,
   loadOptions,
   menuPortalTarget,

@@ -3,9 +3,6 @@ import type {
   ConsoleScope,
   NotificationsReadState,
 } from '@hasura/metadata/api';
-import { getLSItem } from '@hasura/shared/utils';
-import { LS_KEYS } from '@hasura/shared/types';
-
 export const defaultNotification: ConsoleNotification = {
   subject: 'No updates available at the moment',
   created_at: Date.now(),
@@ -46,15 +43,4 @@ export const getConsoleScope = (
 
   // EE classic edition no longer has the pro suffix.
   return 'PRO';
-};
-
-export const getLastSeenNotifications = (): number | undefined => {
-  try {
-    const rawNotificationLastSeen = getLSItem(LS_KEYS.notificationsLastSeen);
-    return rawNotificationLastSeen
-      ? JSON.parse(rawNotificationLastSeen)
-      : undefined;
-  } catch {
-    return undefined;
-  }
 };

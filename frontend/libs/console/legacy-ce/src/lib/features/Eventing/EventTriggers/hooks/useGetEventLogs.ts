@@ -5,10 +5,10 @@ import { EventLog } from '@hasura/shared/types';
 import { useAppContext } from '@hasura/shared/context';
 import { getDriverPrefix } from '@hasura/metadata/helpers';
 
-export const GET_EVENT_LOGS_QUERY_KEY = 'GET_EVENT_LOGS';
+const GET_EVENT_LOGS_QUERY_KEY = 'GET_EVENT_LOGS';
 
 // https://hasura.io/docs/2.0/api-reference/metadata-api/event-triggers/#metadata-pg-get-event-logs-syntax
-export type GetEventLogsArgs = {
+type GetEventLogsArgs = {
   name: string;
   source: QualifiedDataSource;
   // Type of event logs to be fetched. If status is not provided then all types of status are included.
@@ -17,16 +17,13 @@ export type GetEventLogsArgs = {
   offset?: number;
 };
 
-export type Options<FinalResult> = {
+type Options<FinalResult> = {
   select?: (m: EventLog[]) => FinalResult;
   staleTime?: number;
   enabled?: boolean;
 };
 
-export const getScheduledEventTrigger = ({
-  source,
-  ...args
-}: GetEventLogsArgs) => {
+const getScheduledEventTrigger = ({ source, ...args }: GetEventLogsArgs) => {
   return {
     type: `${getDriverPrefix(source.kind)}_get_event_logs` as const,
     args: {

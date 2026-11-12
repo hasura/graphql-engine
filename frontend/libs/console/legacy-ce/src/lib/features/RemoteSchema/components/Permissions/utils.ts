@@ -26,6 +26,8 @@ import {
   BooleanValueNode,
   EnumValueNode,
   GraphQLInterfaceType,
+  astFromValue,
+  print,
 } from 'graphql';
 import {
   RemoteSchemaFields,
@@ -442,7 +444,7 @@ const serialiseArgs = (args: ArgTreeType, argDef: GraphQLInputField) => {
           break;
 
         default:
-          val = `${key}:"${value}"`;
+          val = `${key}:${JSON.stringify(value)}`;
           break;
       }
 
@@ -471,7 +473,7 @@ const isEnumType = (type: GraphQLInputType): boolean => {
 };
 
 // Check if type belongs to default gql scalar types
-export const checkDefaultGQLScalarType = (typeName: string): boolean => {
+const checkDefaultGQLScalarType = (typeName: string): boolean => {
   const gqlDefaultTypes = ['Boolean', 'Float', 'String', 'Int', 'ID'];
   if (gqlDefaultTypes.indexOf(typeName) > -1) return true;
   return false;
@@ -518,7 +520,8 @@ const formatArg = ({ argName, arg }: FormatParamArgs): string | undefined => {
     return `${argName}`;
   }
 
-  return `"${argName}"`;
+  // escaped, as a quote or a newline would end the string early
+  return JSON.stringify(String(argName));
 };
 
 /**
@@ -595,13 +598,14 @@ const getSDLField = (
           Object.values(f.args).forEach((arg: GraphQLInputField) => {
             valueStr = `${arg.name} : ${arg.type.toString()}`;
 
-            // add default value after type definition if it exists
-            if (arg.defaultValue !== undefined) {
-              const defaultValue = formatArg({
-                arg,
-                argName: arg.defaultValue as string,
-              });
-              valueStr = `${valueStr} = ${defaultValue} `;
+            // add default value after type definition if it exists, printed as
+            // a GraphQL literal of its type (escaped strings, unquoted booleans)
+            const defaultValue =
+              arg.defaultValue !== undefined
+                ? astFromValue(arg.defaultValue, arg.type)
+                : null;
+            if (defaultValue) {
+              valueStr = `${valueStr} = ${print(defaultValue)} `;
             }
 
             const argName = argTree?.[type?.name]?.[f?.name]?.[arg?.name];

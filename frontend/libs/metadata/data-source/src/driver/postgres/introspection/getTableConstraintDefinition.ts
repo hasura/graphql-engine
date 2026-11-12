@@ -64,6 +64,3 @@ export const getTableConstraintDefinitionCurry =
       ? response.result[1][0]
       : undefined;
   };
-
-export const getTableConstraintDefinition =
-  getTableConstraintDefinitionCurry('postgres');

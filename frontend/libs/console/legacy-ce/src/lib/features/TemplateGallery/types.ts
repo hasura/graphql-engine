@@ -38,12 +38,6 @@ export interface TemplateGallerySection {
   templates: TemplateGalleryTemplateItem[];
 }
 
-export interface TemplateGalleryStore {
-  templates?: {
-    sections: TemplateGallerySection[];
-  };
-}
-
 export interface ServerJsonRootConfig {
   [key: string]: {
     template_version: string;

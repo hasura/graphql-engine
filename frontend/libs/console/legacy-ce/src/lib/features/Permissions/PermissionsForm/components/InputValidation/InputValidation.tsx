@@ -13,7 +13,7 @@ import { FaShieldAlt } from 'react-icons/fa';
 import { useFormContext } from 'react-hook-form';
 import { Em, Flex, Strong } from '@radix-ui/themes';
 
-export const inputValidationEnabledSchema = z.object({
+const inputValidationEnabledSchema = z.object({
   enabled: z.literal(true),
   type: z.enum(['http']),
   definition: z.object({

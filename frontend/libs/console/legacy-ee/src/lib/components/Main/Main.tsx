@@ -34,13 +34,21 @@ const Main = () => {
   const { refreshCatalogState } = useCatalogState();
   const { serverVersion, envVars } = useAppContext();
   const { consoleState } = useTelemetryStore();
-  const { data: meta } = useMetadata();
-  const { data: inconsistentMetadata, isLoading: inconsistentLoading } =
-    useInconsistentMetadata();
   const accessState = checkAccess(privileges);
+  const canAccessData = hasDataAccess(privileges);
+  // the metadata API is admin-only. A 4xx response logs the user out, so
+  // collaborators without data access (e.g. graphql_admin, view_metrics) skip it.
+  const { data: meta } = useMetadata(undefined, {
+    staleTime: 5 * 60000,
+    enabled: canAccessData,
+  });
+  const { data: inconsistentMetadata, isLoading: inconsistentLoading } =
+    useInconsistentMetadata(undefined, undefined, canAccessData);
 
   useEffect(() => {
-    refreshCatalogState();
+    if (canAccessData) {
+      refreshCatalogState();
+    }
 
     if (envVars.isMetadataAPIEnabled === false) {
       const errorTitle = 'Metadata APIs are not accessible to the console';
@@ -72,7 +80,6 @@ const Main = () => {
   useEffect(() => {
     navigateRef.current = navigate;
   });
-  const canAccessData = hasDataAccess(privileges);
 
   useEffect(() => {
     if (

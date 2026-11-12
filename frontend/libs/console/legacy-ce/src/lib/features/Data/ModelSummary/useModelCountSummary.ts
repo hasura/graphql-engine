@@ -4,7 +4,7 @@ import { SourceLevelSummary } from './ModelSummary';
 
 const MONGO_DB_TYPE = 'mongodb';
 
-export const selectModelSummaryData = (m: Metadata) => {
+const selectModelSummaryData = (m: Metadata) => {
   const tablesAndViews: SourceLevelSummary[] = m.metadata.sources
     .filter((source) => source.kind !== MONGO_DB_TYPE)
     .map((source) => ({

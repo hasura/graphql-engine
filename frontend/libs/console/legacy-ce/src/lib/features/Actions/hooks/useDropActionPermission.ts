@@ -4,14 +4,12 @@ import {
 } from '@hasura/metadata/api';
 import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 
-export type RemoveActionPermissionArgs = {
+type RemoveActionPermissionArgs = {
   role: string;
   action: string;
 };
 
-export const getDropActionPermissionQuery = (
-  args: RemoveActionPermissionArgs,
-) => {
+const getDropActionPermissionQuery = (args: RemoveActionPermissionArgs) => {
   return {
     type: 'drop_action_permission' as const,
     args,

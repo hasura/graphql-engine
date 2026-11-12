@@ -2,7 +2,7 @@ import React from 'react';
 import { Button, Card, Text } from '@hasura/shared/ui';
 import { Flex } from '@radix-ui/themes';
 
-export type BulkSelectProps = {
+type BulkSelectProps = {
   bulkSelect: string[];
   permRemoveMultipleRoles: () => void;
 };

@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { StoryFn, Meta } from '@storybook/react-webpack5';
 import { ReactQueryDecorator } from '@hasura/shared/testing';
 import { AvailableRelationshipsList } from './AvailableRelationshipsList';

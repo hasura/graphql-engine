@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { Button } from '@hasura/shared/ui';
 import { GraphQLError } from 'graphql';
 import { hasuraToast } from '@hasura/shared/ui';

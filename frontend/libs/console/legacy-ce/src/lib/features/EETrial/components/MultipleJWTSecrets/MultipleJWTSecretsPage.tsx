@@ -1,4 +1,3 @@
-import React from 'react';
 import { MultipleJWTSecretsSvg } from './MultipleJWTSecretsSvg';
 import { EETrialCard } from '../EETrialCard/EETrialCard';
 import { useEELiteAccess } from '../../hooks/useEELiteAccess';

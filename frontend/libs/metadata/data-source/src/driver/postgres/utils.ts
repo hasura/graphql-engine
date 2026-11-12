@@ -65,8 +65,27 @@ export const isPostgresTable = (tableType: string): boolean => {
   );
 };
 
-const createSQLRegex =
-  /create\s*(?:|or\s*replace)\s*(?<type>view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((?<schema>\"?\w+\"?)\.(?<nameWithSchema>\"?\w+\"?)|(?<name>\"?\w+\"?))\s*(?<partition>partition\s*of)?/gim; // eslint-disable-line
+// Parsed names are later interpolated into introspection SQL, so identifiers
+// are matched against an allowlist rather than "anything between quotes":
+// - unquoted: a letter or `_`, then letters, digits, `_` or `$` (a10$_abcde)
+// - quoted: letters, digits, `_`, `$` and spaces ("My Table")
+// Anything else (quotes, `;`, `-`, ...) is not matched, so it is not tracked.
+const unquotedIdentifier = '[A-Za-z_][A-Za-z0-9_$]*';
+const quotedIdentifier = '"[A-Za-z0-9_$ ]+"';
+// `if not exists` must not be read as a table named `if`.
+const identifier = `(?!if\\s+not\\s+exists\\b)(?:${quotedIdentifier}|${unquotedIdentifier})`;
+// A name must not be followed by more name characters, so a rejected name is
+// skipped rather than truncated (`public."a;b"` must not match as `public`).
+const endOfName = '(?![\\w$."])';
+
+const createSQLRegex = new RegExp(
+  'create\\s*(?:|or\\s*replace)\\s*(?<type>view|table|function)\\s*' +
+    '(?:\\s*if\\s*not\\s*exists\\s*)?' +
+    `(?:(?<schema>${identifier})\\.(?<nameWithSchema>${identifier})${endOfName}` +
+    `|(?<name>${identifier})${endOfName})` +
+    '\\s*(?<partition>partition\\s*of)?',
+  'gim',
+);
 
 export const parsePostgresCreateSchemaSQL = (sql: string) =>
   parseCreateSQL(sql, 'postgres', createSQLRegex);

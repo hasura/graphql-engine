@@ -117,6 +117,7 @@ export const postgresSupportedFeatures: DeepRequired<SupportedFeaturesType> = {
   },
   rawSQL: {
     tracking: true,
+    noTransaction: true,
   },
   connectDbForm: {
     enabled: true,

@@ -5,7 +5,10 @@ import {
   IndicatorCard,
   hasuraToast,
   DropdownMenu,
+  DestructiveDialogCascade,
+  useCascadeDialog,
   Table,
+  Text,
   showErrorNotification,
 } from '@hasura/shared/ui';
 import { TrackableListMenu } from '../../TrackResources/components/TrackableListMenu';
@@ -82,61 +85,104 @@ export const TableList = ({
   } = listProps;
 
   const { trackTables, isPending: trackLoading } = useTrackTables();
-  const { untrackTables, isPending: untrackLoading } = useUntrackTables();
+  const { mutate: untrackTables, isPending: untrackLoading } =
+    useUntrackTables();
+
+  const untrackDialog = useCascadeDialog();
 
   const verb = viewingTablesThatAre === 'untracked' ? 'tracked' : 'untracked';
-  const action =
-    viewingTablesThatAre === 'untracked' ? trackTables : untrackTables;
 
-  const handleCheckAction = async () => {
+  const handleCheckAction = (cascade = false) => {
+    const checkedTables = getCheckedTables();
     //make a copy of the current counts to have an accurate copy of what it was prior to the track/untrack
     const currentCounts = { ...typeCounts };
     // count the items by type in the payload
-    const actionCounts = countByType(getCheckedTables());
+    const actionCounts = countByType(checkedTables);
 
-    action(
+    const onDone = (doneCount: number, failedCount: number) => {
+      if (failedCount === 0) {
+        // create an array of item types where the number tracked/untracked is the same as the total (user tracked/untracked ALL of that type)
+        const toRemove = Object.entries(actionCounts).reduce<string[]>(
+          (prev, [key, value]) => {
+            if (value === currentCounts[key]) {
+              prev = [...prev, key];
+            }
+            return prev;
+          },
+          [],
+        );
+
+        // if we found any, filter them out of the selectedTableTypes
+        if (toRemove.length > 0) {
+          setSelectedTableTypes((prev) =>
+            prev.filter((t) => !toRemove.includes(t)),
+          );
+        }
+      }
+
+      hasuraToast({
+        type: 'success',
+        title: `Successfully ${verb}`,
+        message: `${doneCount} ${doneCount <= 1 ? 'table' : 'tables'} ${verb}${
+          failedCount > 0 ? `, ${failedCount} failed` : ''
+        }!`,
+      });
+      onMultipleTablesTrack?.();
+      onChange?.();
+    };
+
+    const showError = (error: unknown) =>
+      showErrorNotification({
+        title: `Failed to ${verb} tables`,
+        error,
+      });
+
+    if (viewingTablesThatAre === 'untracked') {
+      trackTables(
+        { tables: checkedTables, source: source.name },
+        {
+          onSuccess: () => {
+            resetCheckboxes();
+            onDone(checkedTables.length, 0);
+          },
+          onError: showError,
+        },
+      );
+      return;
+    }
+
+    untrackDialog.clearError();
+    untrackTables(
       {
-        tables: getCheckedTables(),
         source: source.name,
+        tables: checkedTables.map(({ table }) => ({ table, cascade })),
       },
       {
-        onSuccess: () => {
-          // create an array of item types where the number tracked/untracked is the same as the total (user tracked/untracked ALL of that type)
-          const toRemove = Object.entries(actionCounts).reduce<string[]>(
-            (prev, [key, value]) => {
-              if (value === currentCounts[key]) {
-                prev = [...prev, key];
-              }
-              return prev;
-            },
-            [],
-          );
+        onSuccess: (response) => {
+          const failedCount = response.warnings?.length ?? 0;
+          onDone(checkedTables.length - failedCount, failedCount);
 
-          // if we found any, filter them out of the selectedTableTypes
-          if (toRemove.length > 0) {
-            setSelectedTableTypes((prev) =>
-              prev.filter((t) => !toRemove.includes(t)),
-            );
+          if (failedCount === 0) {
+            resetCheckboxes();
+            untrackDialog.close();
+            return;
           }
 
-          resetCheckboxes();
-
-          hasuraToast({
-            type: 'success',
-            title: `Successfully ${verb}`,
-            message: `${getCheckedTables().length} ${
-              getCheckedTables().length <= 1 ? 'table' : 'tables'
-            } ${verb}!`,
-          });
-          onMultipleTablesTrack?.();
-          onChange?.();
+          // Some tables failed to untrack. They stay selected (the untracked
+          // ones drop out of the list once it refreshes), so that they can
+          // be retried, e.g. with cascade.
+          untrackDialog.handleError(response, () =>
+            showErrorNotification({
+              title: `Failed to ${verb} ${failedCount} ${
+                failedCount === 1 ? 'table' : 'tables'
+              }`,
+              error: response.warnings,
+            }),
+          );
         },
-        onError: (err) => {
-          showErrorNotification({
-            title: `Failed to ${verb} tables`,
-            error: err,
-          });
-        },
+        // failures caused by dependent objects are shown in the dialog,
+        // which asks to retry with cascade
+        onError: (err) => untrackDialog.handleError(err, showError),
       },
     );
   };
@@ -163,7 +209,11 @@ export const TableList = ({
           viewingTablesThatAre === 'tracked' ? 'Untrack' : 'Track'
         } Selected (${getCheckedTables().length})`}
         handleTrackButton={() => {
-          handleCheckAction();
+          if (viewingTablesThatAre === 'tracked') {
+            untrackDialog.open(true);
+          } else {
+            handleCheckAction();
+          }
         }}
         showButton={trackMultipleEnabled}
         isLoading={trackLoading || untrackLoading}
@@ -236,6 +286,34 @@ export const TableList = ({
             ))}
           </Table.Body>
         </Table.Root>
+      )}
+
+      {untrackDialog.isOpen && (
+        <DestructiveDialogCascade
+          {...untrackDialog.dialogProps}
+          title="Untrack tables"
+          confirmButtonProps={{
+            children: 'Untrack',
+            loadingText: 'Untracking...',
+          }}
+          onConfirm={handleCheckAction}
+          loading={untrackLoading}
+        >
+          <Text as="div">
+            Are you sure you want to untrack{' '}
+            {getCheckedTables().length === 1
+              ? 'this table'
+              : `these ${getCheckedTables().length} tables`}
+            ?
+          </Text>
+          <ul className="mt-2 max-h-40 list-disc overflow-y-auto pl-5">
+            {getCheckedTables().map((table) => (
+              <li key={table.id} className="break-all">
+                <Text>{table.name}</Text>
+              </li>
+            ))}
+          </ul>
+        </DestructiveDialogCascade>
       )}
     </div>
   );

@@ -8,7 +8,7 @@ import { useRemoveAPILimits, type ApiLimitInput } from '@hasura/metadata/api';
 import type { ApiLimits } from '@hasura/shared/types';
 import useAPILimitForm from './hooks/useAPILimitForm';
 
-export const labels: Record<
+const labels: Record<
   keyof RoleLimits,
   { title: string; info: ReactElement<any> }
 > = {

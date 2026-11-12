@@ -13,7 +13,7 @@ const ETProcessedEvents: React.FC = () => {
   const { readOnlyMode } = useAppContext();
   const { eventTrigger, currentSource } = useEventTriggerDetailContext();
   const { paginationState, setPaginationState } = usePagination();
-  const { data: rows } = useGetEventLogs({
+  const { data: rows, isLoading } = useGetEventLogs({
     name: eventTrigger.name,
     source: currentSource,
     limit: paginationState.limit,
@@ -34,6 +34,7 @@ const ETProcessedEvents: React.FC = () => {
         <div className="mt-6" data-test="event-filter-table">
           <EventsTable
             rows={rows ?? []}
+            isLoading={isLoading}
             paginationState={paginationState}
             setPaginationState={setPaginationState}
             columns={['id', 'delivered', 'created_at', 'tries']}

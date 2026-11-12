@@ -1,10 +1,13 @@
 import { Metadata, Source, Table } from '@hasura/shared/types';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { Permissions, Relationships, RowPermissionsInput } from './components';
 import { usePermissionTables } from './hooks/usePermissionTables';
 import { usePermissionComparators } from './hooks/usePermissionComparators';
-import { getNewTablesToLoad } from './utils/relationships';
+import {
+  getNewExistsTablesToLoad,
+  getNewTablesToLoad,
+} from './utils/relationships';
 import { Skeleton } from '@radix-ui/themes';
 
 interface Props {
@@ -34,6 +37,24 @@ export const RowPermissionBuilder = ({
   });
 
   const comparators = usePermissionComparators();
+
+  // An `_exists` operator references its table through `_table` rather than a
+  // relationship, so it is never queued by the relationship loader below. Queue
+  // those tables here so their columns are introspected and the `_where`
+  // conditions render instead of showing blank operators.
+  useEffect(() => {
+    setTablesToLoad((previousTablesToLoad) => {
+      const tablesToAdd = getNewExistsTablesToLoad({
+        permissions: value,
+        tablesToLoad: previousTablesToLoad,
+        source: source.name,
+      });
+
+      return tablesToAdd.length > 0
+        ? [...previousTablesToLoad, ...tablesToAdd]
+        : previousTablesToLoad;
+    });
+  }, [value, source.name, setTablesToLoad]);
 
   // stable, as every table of the builder loads the tables of its
   // relationships whenever this changes

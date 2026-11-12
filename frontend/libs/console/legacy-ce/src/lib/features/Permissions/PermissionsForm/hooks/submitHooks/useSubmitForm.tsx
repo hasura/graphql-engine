@@ -17,7 +17,7 @@ import {
 } from '@hasura/metadata/api';
 import type { TablePermissionInputValidationSchema } from '../../components/InputValidation/InputValidation';
 
-export interface UseSubmitFormArgs {
+interface UseSubmitFormArgs {
   dataSourceName: string;
   table: Table;
   roleName: string;

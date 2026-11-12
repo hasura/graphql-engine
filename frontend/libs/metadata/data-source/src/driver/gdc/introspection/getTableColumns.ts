@@ -35,7 +35,7 @@ const getScalarTypesCapabilities = async (
   return capabilities?.scalar_types ?? {};
 };
 
-export const getTableInfo = async (props: GetTableColumnsProps) => {
+const getTableInfo = async (props: GetTableColumnsProps) => {
   const { fetchJson, dataSourceName, table, endpoints } = props;
   return runMetadataQuery<GetTableInfoResponse>({
     url: endpoints.metadata,
