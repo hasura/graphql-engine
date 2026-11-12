@@ -30,6 +30,14 @@ export const getAddColumnSql = ({ table, column }: AddColumnArgs) => {
   up.push(`ALTER TABLE ${qualifiedTable} ADD COLUMN ${columnDef};`);
   down.push(`ALTER TABLE ${qualifiedTable} DROP COLUMN "${name}";`);
 
+  // dropping the column on the way down also drops its comment
+  const comment = column.comment?.trim();
+  if (comment) {
+    up.push(
+      `COMMENT ON COLUMN ${qualifiedTable}."${name}" IS '${comment.replace(/'/g, "''")}';`,
+    );
+  }
+
   const dependent = column.dependentSQLGenerator?.(table, name);
   if (dependent) {
     up.push(dependent.upSql);

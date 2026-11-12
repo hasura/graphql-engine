@@ -139,7 +139,8 @@ export type DropColumnProps = DataSourceNetworkArgs & {
 
 export type AddColumnArgs = {
   table: Table;
-  column: ModifyTableColumnArgs & { unique?: boolean };
+  /** `comment` is set as the column's SQL comment (`COMMENT ON COLUMN`). */
+  column: ModifyTableColumnArgs & { unique?: boolean; comment?: string };
 };
 export type AddColumnProps = DataSourceNetworkArgs & {
   dataSourceName: string;
