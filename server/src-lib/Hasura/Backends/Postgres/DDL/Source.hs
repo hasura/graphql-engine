@@ -284,6 +284,8 @@ prepareCatalog sourceConfig = _pecRunTx (_pscExecCtx sourceConfig) (PGExecCtxInf
 
            CREATE UNIQUE INDEX hdb_source_catalog_version_one_row
            ON hdb_catalog.hdb_source_catalog_version((version IS NOT NULL));
+           # See server/src-rsr/pg_source_migrations/4_to_5.sql
+           ALTER TABLE hdb_catalog.hdb_source_catalog_version REPLICA IDENTITY FULL;
         |]
       pure ()
 

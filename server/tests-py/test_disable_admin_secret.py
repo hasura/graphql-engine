@@ -57,6 +57,119 @@ def test_disable_admin_secret_requires_fallback_auth(
     ) in result.stdout
 
 
+def _disabled_admin_secret_env(**extra):
+    env = {**os.environ, 'HASURA_GRAPHQL_DISABLE_ADMIN_SECRET': 'true', **extra}
+    for name in (
+        'HASURA_GRAPHQL_AUTH_HOOK',
+        'HASURA_GRAPHQL_JWT_SECRET',
+        'HASURA_GRAPHQL_JWT_SECRETS',
+        'HASURA_GRAPHQL_SSO_PROVIDERS',
+        'HASURA_GRAPHQL_ADMIN_SECRETS',
+    ):
+        env.pop(name, None)
+    for name in ('HASURA_GRAPHQL_ADMIN_SECRET', 'HASURA_GRAPHQL_UNAUTHORIZED_ROLE'):
+        if name not in extra:
+            env.pop(name, None)
+    return env
+
+
+def test_disable_admin_secret_rejects_admin_unauthorized_role(
+    hge_bin, metadata_schema_url, worker_id
+):
+    if not hge_bin:
+        pytest.skip('This test requires --hge-bin')
+
+    port = ports.find_free_port(worker_id)
+    result = subprocess.run(
+        [hge_bin, '--metadata-database-url', metadata_schema_url,
+         'serve', '--server-port', str(port)],
+        env=_disabled_admin_secret_env(HASURA_GRAPHQL_UNAUTHORIZED_ROLE='admin'),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        encoding='utf-8',
+        timeout=30,
+    )
+
+    assert result.returncode != 0
+    assert 'HASURA_GRAPHQL_UNAUTHORIZED_ROLE' in result.stdout
+    assert 'cannot be' in result.stdout
+
+
+def test_disable_admin_secret_falls_back_to_unauthorized_role(
+    hge_bin, metadata_schema_url, worker_id, tmp_path
+):
+    """Without webhook or JWT, every request uses the fixed unauthorized role."""
+    if not hge_bin:
+        pytest.skip('This test requires --hge-bin')
+
+    admin_secret = secrets.token_urlsafe(32)
+    port = ports.find_free_port(worker_id)
+    url = f'http://127.0.0.1:{port}'
+    env = _disabled_admin_secret_env(
+        HASURA_GRAPHQL_ADMIN_SECRET=admin_secret,
+        HASURA_GRAPHQL_UNAUTHORIZED_ROLE='anonymous',
+    )
+
+    def graphql(headers):
+        return requests.post(
+            url + '/v1/graphql', json={'query': '{ __typename }'},
+            headers=headers, timeout=5,
+        )
+
+    def export_metadata(headers):
+        return requests.post(
+            url + '/v1/metadata', json={'type': 'export_metadata', 'args': {}},
+            headers=headers, timeout=5,
+        )
+
+    escalation_attempts = [
+        {},
+        {'x-hasura-admin-secret': admin_secret},
+        {'x-hasura-admin-secret': 'wrong'},
+        {'x-hasura-role': 'admin'},
+        {'x-hasura-admin-secret': admin_secret, 'x-hasura-role': 'admin'},
+        {'Authorization': 'Bearer synthetic.invalid.token'},
+    ]
+
+    process = None
+    with (tmp_path / 'hge.log').open('w') as log:
+        try:
+            process = subprocess.Popen(
+                [hge_bin, '--metadata-database-url', metadata_schema_url,
+                 'serve', '--server-port', str(port), '--enable-telemetry=false'],
+                env=env, stdout=log, stderr=subprocess.STDOUT,
+            )
+            deadline = time.monotonic() + 30
+            while time.monotonic() < deadline:
+                assert process.poll() is None, 'Engine exited before becoming healthy'
+                try:
+                    if requests.get(url + '/healthz', timeout=1).status_code == 200:
+                        break
+                except requests.RequestException:
+                    pass
+                time.sleep(0.2)
+            else:
+                pytest.fail('Engine did not become healthy within 30 seconds')
+
+            for headers in escalation_attempts:
+                response = graphql(headers)
+                assert response.status_code == 200, (headers, response.text)
+                assert response.json() == {'data': {'__typename': 'query_root'}}, headers
+
+                # Admin-only APIs stay out of reach whatever the headers say.
+                response = export_metadata(headers)
+                assert response.status_code != 200, (headers, response.text)
+                assert 'error' in response.json(), headers
+        finally:
+            if process is not None:
+                process.terminate()
+                try:
+                    process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait(timeout=5)
+
+
 @pytest.mark.parametrize('disable_admin_secret', [False, True])
 @pytest.mark.parametrize('configuration', ['jwks', 'mixed', 'static'])
 def test_jwk_loading_and_rotation(

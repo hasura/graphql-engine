@@ -34,17 +34,15 @@ export function startSentryTracing(envVars: EnvVars) {
 
   logSentryEnabled(environment);
 
+  // Keep error monitoring without enabling performance tracing in the HGE console.
   Sentry.init({
     dsn: consoleSentryDsn.value,
-    tracesSampleRate: 1.0,
     integrations: (defaultIntegrations) => [
       // Disable tracking console.logs. Console breadcrumbs come from their own
       // default integration since Sentry v11.
       ...defaultIntegrations.filter(
         (integration) => integration.name !== 'Console',
       ),
-
-      Sentry.browserTracingIntegration(),
 
       Sentry.breadcrumbsIntegration({
         // Disable tracking clicks, important to avoid leaking sensitive data.

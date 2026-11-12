@@ -13,6 +13,9 @@ export type AuthService<S, AT = 'none' | 'admin-secret'> = {
   // Hasura Cloud collaborator privileges. Undefined means full access.
   privileges?: string[];
   getHeaders: () => Promise<Record<string, string>>;
+  // When the credentials returned by getHeaders expire, in epoch milliseconds.
+  // Undefined for credentials that don't expire (none, admin secret, PAT).
+  sessionExpiry?: number;
   authenticate: (input: S) => Promise<boolean>;
   initialize: () => Promise<void>;
   logout: () => void;

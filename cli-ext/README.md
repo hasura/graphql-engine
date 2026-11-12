@@ -32,6 +32,49 @@ A supported list and combinations of `node-range`, `platform` and `architecture`
 
 The hasura cli provides a `--cli-ext-path` flag to use a different cli-ext binary.
 
+## Releasing cli-ext
+
+cli-ext publication uses an already-built pull-request commit, separately from
+an HGE/CLI release:
+
+1. Open a PR with the cli-ext changes and apply `auto-approve-ci` and
+   `ci/build-cli-ext`. Do not apply `auto-update-auto-merge` before the source
+   build: that mode reuses cached binaries. CLI/console dev modes and server-test
+   mode can omit the job, and normal mono CI skip rules still apply.
+2. Wait for a successful, actually executed source build in the mono pipeline's
+   `build-cli-ext` job. Record the exact source commit and producer job; a green
+   cached or skipped job is not sufficient.
+3. Push a new `cli-ext/vX.Y.Z` tag on that exact successfully built commit. The
+   tagged commit must include the release workflow and producer-selection logic
+   described here. The `release cli-ext` GitHub workflow selects the newest
+   **mono** producer status on that SHA; a pending or failed mono build blocks
+   publication, even if an older mono build succeeded. Tag-triggered EE-lite
+   statuses are not release producers. No new source build is requested by the
+   tag itself.
+4. Check the workflow's provenance/checksum verification, macOS arm64 ad-hoc
+   signing, and publication to
+   `gs://graphql-engine-cdn.hasura.io/cli-ext/releases/versioned/vX.Y.Z/`.
+   Missing, expired, cached, or mismatched artifacts fail closed; rebuild the
+   same source commit in mono and rerun the workflow instead of bypassing checks.
+5. In the same PR, update the cached-download version in
+   `.buildkite/scripts/cli/build-cli-ext.sh` and the Go CLI fallback version in
+   `cli/internal/cliext/cli_ext.go`. Leave the release tag on the earlier built
+   commit; then get the pin update reviewed and merged.
+6. Include that pin update in the next relevant HGE/CLI release branch and verify
+   the helper embedded by the released CLI. Publishing a helper does not upgrade
+   existing CLI executables, and `cli-ext/package.json` does not determine the
+   published CDN version.
+
+The Buildkite webhook filters can still start a full EE-lite pipeline for a
+`cli-ext/` tag. This procedure does not require its source build or its HGE
+publication/deployment gates, and does not change those external pipeline filters.
+
+Run the credential-free release-helper regressions with:
+
+```bash
+node --test .github/scripts/cli-ext-*.test.js
+```
+
 ## API
 
 ```
