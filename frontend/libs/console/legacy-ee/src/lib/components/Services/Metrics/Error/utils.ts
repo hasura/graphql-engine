@@ -41,23 +41,6 @@ export const checkIfEmptyReturnAppropriateValue = (n) => {
   }
   return '';
 };
-
-export const getFilterNameFromEmptyValue = (n) => {
-  if (n === EMPTY_ERROR_CODE_SYMBOL) {
-    return ERROR_CODE_SYMBOL;
-  }
-  if (n === EMPTY_ROLE_SYMBOL) {
-    return ROLE_SYMBOL;
-  }
-  if (n === EMPTY_OPERATION_NAME_SYMBOL) {
-    return OPERATION_NAME_SYMBOL;
-  }
-  if (n === EMPTY_OPERATION_TYPE_SYMBOL) {
-    return OPERATION_TYPE_SYMBOL;
-  }
-  return '';
-};
-
 export const getIfAliased = (c) => {
   if (c in aliasedColumns) {
     return aliasedColumns[c];
@@ -71,35 +54,7 @@ export const getActualIfAliased = (c) => {
   }
   return c;
 };
-
-const parseGroupByArrayType = (q) => {
-  const regex = /{(.*)}/m;
-  return regex.exec(q);
-};
-
 const filterByType = (filters, type) => filters.filter((f) => f.type === type);
-const indexOf = (list, predicateFn) => {
-  let elementIndex = -1;
-  list.forEach((l, index) => {
-    if (predicateFn(l)) {
-      elementIndex = index;
-    }
-  });
-  return elementIndex;
-};
-
-const getJson = (list, key) => {
-  const r: Record<string, any> = {};
-  list.forEach((l) => {
-    if (typeof l[key] === 'string') {
-      r[l[key]] = true;
-    } else {
-      r.Custom = true;
-    }
-  });
-  return r;
-};
-
 const stripUnderScore = (val) => {
   return val.split('_').join(' ');
 };
@@ -107,11 +62,6 @@ const stripUnderScore = (val) => {
 const capitalize = (val) => {
   return `${val.charAt(0).toUpperCase()}${val.slice(1)}`;
 };
-
-const curried = (sourceFn) => (type) => (value) => {
-  sourceFn(type, value);
-};
-
 /* Doing this to fix refreshing state on every miliseconds change */
 const removeSecondsMiliseconds = (d) => {
   d.setSeconds(0, 0);
@@ -145,33 +95,6 @@ const getTimeRangeValue = (symbol?: string) => {
       return new Date(0).toISOString();
   }
 };
-
-const detectAdjective = (n) => {
-  if (n > 1) return 's';
-  return '';
-};
-
-const getSelectedValue = (selectedValues, defaultValue) => {
-  let filteredElement = defaultValue;
-  const totalSelectedValues = Object.keys(selectedValues);
-  if (totalSelectedValues.length > 0) {
-    filteredElement = totalSelectedValues[0];
-  }
-  return filteredElement;
-};
-
-const getSelectedFiltersCount = (selectedValues) => {
-  let filteredElement = 'No filter applied';
-
-  const totalSelectedValues = Object.keys(selectedValues);
-  if (totalSelectedValues.length > 0) {
-    filteredElement = `${totalSelectedValues.length} filter${detectAdjective(
-      totalSelectedValues.length,
-    )} applied`;
-  }
-  return filteredElement;
-};
-
 export const getWhereClauseEx = (
   filterMap,
   filters,
@@ -205,22 +128,10 @@ export const getWhereClauseEx = (
 export const getWhereClause = (filterMap, filters) => {
   return getWhereClauseEx(filterMap, filters, (arr) => `{${arr.join(',')}}`);
 };
-
-export const getSelectedLength = (o) => {
-  return Object.keys(o).length;
-};
-
 export {
-  getSelectedFiltersCount,
-  getSelectedValue,
-  detectAdjective,
   getTimeRangeValue,
-  curried,
-  indexOf,
-  getJson,
   capitalize,
   stripUnderScore,
   filterByType,
-  parseGroupByArrayType,
   removeSecondsMiliseconds,
 };

@@ -16,7 +16,7 @@ Baca lebih lanjut di [hasura.io](https://hasura.io) dan [dokumentasinya](https:/
 
 ------------------
 
-![Demo Hasura GraphQL Engine](../assets/demo.gif)
+![Demo Hasura GraphQL Engine](https://github.com/hasura/graphql-engine/raw/5fa3e0d2b617a4ae85f65491c5ff6c056cb612de/assets/demo.gif)
 
 ------------------
 

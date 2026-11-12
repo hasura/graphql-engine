@@ -30,8 +30,8 @@ const ScheduledTriggerLanding: React.FC = () => {
 
   return (
     <Analytics name="ScheduledTriggerLanding" {...REDACT_EVERYTHING}>
-      <div className="pl-0 w-full mt-4 bootstrap-jail">
-        <div className="pl-md">
+      <div className="w-full">
+        <div>
           <Flex>
             <h2 className="text-xl font-bold mr-4">{CRON_TRIGGER}s</h2>
             <div className="ml-4">

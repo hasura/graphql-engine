@@ -17,7 +17,7 @@ import {
 const TABLE_RELKINDS = `'r', 'p', 'f'`;
 const VIEW_RELKINDS = `'v', 'm'`;
 
-export const getRelationCommentSql = (
+const getRelationCommentSql = (
   { schema, name }: PostgresTable,
   relkinds: string,
 ) => `
@@ -30,7 +30,7 @@ WHERE c.relname = '${name}'
 LIMIT 1;
 `;
 
-export const getFunctionCommentSql = ({ schema, name }: PostgresFunction) => `
+const getFunctionCommentSql = ({ schema, name }: PostgresFunction) => `
 SELECT obj_description(p.oid, 'pg_proc') AS comment
 FROM pg_proc p
   JOIN pg_namespace s ON p.pronamespace = s.oid

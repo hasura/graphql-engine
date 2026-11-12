@@ -1,4 +1,3 @@
-import React from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Checkbox, ErrorMessage } from '@hasura/shared/ui';
 import { CheckboxProps, Link } from '@radix-ui/themes';

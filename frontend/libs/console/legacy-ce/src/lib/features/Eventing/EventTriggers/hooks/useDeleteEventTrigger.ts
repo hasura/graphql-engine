@@ -8,7 +8,7 @@ import {
 } from '@hasura/shared/ui';
 import { getDriverPrefix } from '@hasura/metadata/helpers';
 
-export type DeleteEventTriggerArgs = {
+type DeleteEventTriggerArgs = {
   name: string;
   source: { name: string; kind: SupportedDriver };
 };

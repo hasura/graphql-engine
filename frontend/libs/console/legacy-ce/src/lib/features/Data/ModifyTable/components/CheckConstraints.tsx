@@ -146,5 +146,3 @@ export const CheckConstraints = ({ source, table }: ModifyTableProps) => {
     </div>
   );
 };
-
-export default CheckConstraints;

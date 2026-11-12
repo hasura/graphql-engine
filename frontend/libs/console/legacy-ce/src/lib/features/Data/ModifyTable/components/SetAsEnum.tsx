@@ -44,5 +44,3 @@ export const SetAsEnum: React.FC<ModifyTableProps> = ({ source, table }) => {
     </Section>
   );
 };
-
-export default SetAsEnum;

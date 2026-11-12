@@ -53,9 +53,7 @@ export const RenderWidget = (props: RenderWidgetProps) => {
       onSuccess={onSuccess}
       onCancel={onCancel}
       onError={onError}
-      defaultValue={
-        mode === MODE.EDIT && relationship ? relationship : undefined
-      }
+      relationship={relationship}
     />
   );
 };

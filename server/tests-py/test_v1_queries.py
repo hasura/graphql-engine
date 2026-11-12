@@ -587,8 +587,117 @@ class TestRunSQL:
         hge_ctx.may_skip_test_teardown = True
 
     def test_sql_no_tx(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/sql_no_tx.yaml')
-        hge_ctx.may_skip_test_teardown = True
+        try:
+            check_query_f(hge_ctx, self.dir() + '/sql_no_tx.yaml')
+        finally:
+            hge_ctx.v1q({
+                'type': 'run_sql',
+                'args': {'sql': 'DROP FUNCTION IF EXISTS run_sql_dollar_quote_regression(text); DROP TABLE IF EXISTS users;'}
+            })
+
+    def test_sql_no_tx_lexical_boundaries(self, hge_ctx):
+        # A concurrent index proves that splitting still avoids an implicit transaction.
+        sql = r"""
+            CREATE TABLE run_sql_lexical_regression (value text);
+            INSERT INTO run_sql_lexical_regression VALUES
+                ('http://x--y'), ('/* literal */'), ('it''s;ok'),
+                (E'it\'s;ok'), ($tag$body;--/* literal */$tag$);
+            /* outer ; /* nested comment */ still inside */
+            CREATE INDEX CONCURRENTLY run_sql_lexical_regression_idx
+                ON run_sql_lexical_regression (value);
+            DO $body$
+            BEGIN
+                -- Keep comment markers inside the following strings.
+                IF 'http://x--y' <> 'http://x--y' OR '/*' <> '/*' THEN
+                    RAISE EXCEPTION 'splitter changed SQL text';
+                END IF;
+            END
+            $body$;
+            SELECT count(1) AS "count;--/*", 'it''s;ok' AS a$b$c,
+                E'it\'s;ok' AS escaped,
+                $tag$body;--/* literal */$tag$ AS dollar
+                FROM run_sql_lexical_regression;
+            -- A trailing comment must not replace the final SELECT result.
+            /* trailing ; */
+        """
+        try:
+            response = hge_ctx.v1q({
+                'type': 'run_sql',
+                'args': {'sql': sql, 'no_transaction': True}
+            })
+            assert response == {
+                'result_type': 'TuplesOk',
+                'result': [
+                    ['count;--/*', 'a$b$c', 'escaped', 'dollar'],
+                    ['5', "it's;ok", "it's;ok", 'body;--/* literal */']
+                ]
+            }
+        finally:
+            hge_ctx.v1q({
+                'type': 'run_sql',
+                'args': {'sql': 'DROP TABLE IF EXISTS run_sql_lexical_regression;'}
+            })
+
+    def test_sql_no_tx_partial_failure(self, hge_ctx):
+        try:
+            hge_ctx.v1q({
+                'type': 'run_sql',
+                'args': {'sql': 'CREATE TABLE run_sql_partial_failure (value integer);'}
+            })
+            for no_transaction in [False, True]:
+                response = hge_ctx.v1q({
+                    'type': 'run_sql',
+                    'args': {
+                        'sql': 'INSERT INTO run_sql_partial_failure VALUES (1); SELECT 1 / 0; INSERT INTO run_sql_partial_failure VALUES (2);',
+                        'no_transaction': no_transaction
+                    }
+                }, expected_status_code=400)
+                assert response['code'] == 'postgres-error'
+                assert response['internal']['error']['status_code'] == '22012'
+                result = hge_ctx.v1q({
+                    'type': 'run_sql',
+                    'args': {'sql': 'SELECT value FROM run_sql_partial_failure ORDER BY value;'}
+                })
+                expected_rows = [['value'], ['1']] if no_transaction else [['value']]
+                assert result == {'result_type': 'TuplesOk', 'result': expected_rows}
+        finally:
+            hge_ctx.v1q({
+                'type': 'run_sql',
+                'args': {'sql': 'DROP TABLE IF EXISTS run_sql_partial_failure;'}
+            })
+
+    def test_sql_no_tx_read_only(self, hge_ctx):
+        response = hge_ctx.v1q({
+            'type': 'run_sql',
+            'args': {
+                'sql': "SELECT 'first'; SELECT 'http://x--y;/*z*/' AS \"last;result\"; -- trailing comment",
+                'no_transaction': True,
+                'read_only': True
+            }
+        })
+        assert response == {
+            'result_type': 'TuplesOk',
+            'result': [['last;result'], ['http://x--y;/*z*/']]
+        }
+
+    def test_sql_no_tx_unterminated_input(self, hge_ctx):
+        for sql in ["SELECT 1; /* unterminated", "SELECT 'unterminated;", 'SELECT "unterminated;', 'SELECT $tag$unterminated;']:
+            response = hge_ctx.v1q({
+                'type': 'run_sql',
+                'args': {'sql': sql, 'no_transaction': True}
+            }, expected_status_code=400)
+            assert response['code'] == 'postgres-error'
+            assert response['internal']['error']['status_code'] == '42601'
+
+    def test_sql_no_tx_empty_input(self, hge_ctx):
+        # Preserve the existing EmptyQuery error rather than inventing a successful result.
+        for sql in ['', ' ; ; ', '-- only a comment', '/* outer /* nested */ comment */;']:
+            response = hge_ctx.v1q({
+                'type': 'run_sql',
+                'args': {'sql': sql, 'no_transaction': True}
+            }, expected_status_code=400)
+            assert response['code'] == 'postgres-error'
+            assert response['internal']['error']['exec_status'] == 'EmptyQuery'
 
     @classmethod
     def dir(cls):

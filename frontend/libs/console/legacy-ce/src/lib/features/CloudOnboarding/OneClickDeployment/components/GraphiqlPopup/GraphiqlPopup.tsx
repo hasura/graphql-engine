@@ -1,4 +1,3 @@
-import React from 'react';
 import { Analytics } from '@hasura/shared/analytics';
 import { Button, IndicatorCard, Separator } from '@hasura/shared/ui';
 import { FaGithub } from 'react-icons/fa';

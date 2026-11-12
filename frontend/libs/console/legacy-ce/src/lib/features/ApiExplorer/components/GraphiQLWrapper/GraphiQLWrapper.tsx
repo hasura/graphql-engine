@@ -17,6 +17,7 @@ import { createGraphiQLFetcher } from '@graphiql/toolkit';
 import { useGraphqlWsClient } from './graphiqlLifecycle';
 import { ExternalQuerySync } from './ExternalQuerySync';
 import { GraphiQLThemeSync } from './GraphiQLThemeSync';
+import { GraphiQLFontSize } from './GraphiQLFontSize';
 import { explorer } from './plugins';
 import { GraphiQLPlugin } from '@graphiql/react';
 import {
@@ -202,6 +203,7 @@ const GraphiQLWrapper = ({
         >
           <ExternalQuerySync externalQuery={query} />
           <GraphiQLThemeSync />
+          <GraphiQLFontSize />
           <GraphiQL.Toolbar>
             {({ prettify }) => (
               <>

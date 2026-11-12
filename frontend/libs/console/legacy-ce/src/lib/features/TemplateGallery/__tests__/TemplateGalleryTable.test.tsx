@@ -48,7 +48,9 @@ describe('TemplateGalleryBody', () => {
 
     renderSchemaGalleryBody();
 
-    expect(screen.getByText(/loading templates/i)).toBeVisible();
+    expect(
+      screen.getAllByTestId('carded-table-loading-cell').length,
+    ).toBeGreaterThan(0);
   });
   it('should display an error when the api return something bad', async () => {
     server.use(networkStubs.rootJsonError);
@@ -56,7 +58,7 @@ describe('TemplateGalleryBody', () => {
     renderSchemaGalleryBody();
 
     await waitForElementToBeRemoved(() =>
-      screen.queryByText(/loading templates/i),
+      screen.queryAllByTestId('carded-table-loading-cell'),
     );
 
     expect(
@@ -69,7 +71,7 @@ describe('TemplateGalleryBody', () => {
     renderSchemaGalleryBody();
 
     await waitForElementToBeRemoved(() =>
-      screen.queryByText(/loading templates/i),
+      screen.queryAllByTestId('carded-table-loading-cell'),
     );
 
     expect(screen.getByText(/no templates/i)).toBeVisible();
@@ -80,7 +82,7 @@ describe('TemplateGalleryBody', () => {
     const { openModalFn } = renderSchemaGalleryBody();
 
     await waitForElementToBeRemoved(() =>
-      screen.queryByText(/loading templates/i),
+      screen.queryAllByTestId('carded-table-loading-cell'),
     );
 
     expect(

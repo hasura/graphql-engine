@@ -18,7 +18,7 @@ const schema = z.object({
 
 export type PrimaryKeyFormValues = z.infer<typeof schema>;
 
-export type PrimaryKeyFormProps = {
+type PrimaryKeyFormProps = {
   title: string;
   submitLabel: string;
   defaultValues: PrimaryKeyFormValues;
@@ -91,5 +91,3 @@ export const PrimaryKeyForm = ({
     </DelayedDialog>
   );
 };
-
-export default PrimaryKeyForm;

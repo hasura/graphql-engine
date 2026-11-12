@@ -73,15 +73,15 @@ relationships.
     `utils.ts` (postgres also has `sqlQueries.ts`).
     - **postgres/** — the most complete/reference implementation (also
       used for `cockroach`, `citus`, `alloy` via aliasing). Has extra
-      introspection (getFunctionDefinition, getTableComment,
-      getDatabaseConfiguration) and a full `modify/` set.
+      introspection (getFunctionDefinition, getTableComment) and a full
+      `modify/` set.
     - **citus/cockroach** — smaller, Postgres-derived variants; reuse much
       of `common/`.
     - **bigquery** — different shape (no FK relationships, dataset/project
       hierarchy); `introspection/getTablesListAsTree.tsx` (JSX, builds
-      `TreeDataNode` tree nodes) and `modify/defaultQueryRoot.ts`.
-    - **mssql** — has schema create/delete, `getIsTableView`,
-      `getStoredProcedures`, `getVersion`, but no full row-modify support
+      `TreeDataNode` tree nodes); no `modify/` folder.
+    - **mssql** — has schema create/delete and `getVersion`, but no full
+      row-modify support
       (no insert/update/delete row builders, unlike postgres).
     - **gdc** (Generic Data Connector) — the fallback implementation used
       for every driver not in the native list (Snowflake, Athena, etc.).

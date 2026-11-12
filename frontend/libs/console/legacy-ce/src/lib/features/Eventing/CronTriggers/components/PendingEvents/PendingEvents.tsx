@@ -24,7 +24,7 @@ const PendingEvents: React.FC<Props> = ({ currentTrigger }) => {
       },
     ],
   });
-  const { data: rows } = useGetScheduledEvents({
+  const { data: rows, isLoading } = useGetScheduledEvents({
     trigger_name: currentTrigger.name,
     type: 'cron',
     limit: paginationState.limit,
@@ -66,6 +66,7 @@ const PendingEvents: React.FC<Props> = ({ currentTrigger }) => {
       <div className="mt-6" data-test="event-filter-table">
         <EventsTable
           rows={rows ?? []}
+          isLoading={isLoading}
           paginationState={paginationState}
           setPaginationState={setPaginationState}
           onCancelEvent={onCancelCronTrigger}

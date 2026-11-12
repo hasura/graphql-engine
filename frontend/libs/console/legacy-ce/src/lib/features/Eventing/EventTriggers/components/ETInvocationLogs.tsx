@@ -11,7 +11,7 @@ const ETInvocationLogs: React.FC = () => {
   const { readOnlyMode } = useAppContext();
   const { eventTrigger, currentSource } = useEventTriggerDetailContext();
   const { paginationState, setPaginationState } = usePagination();
-  const { data: rows } = useGetEventInvocations({
+  const { data: rows, isLoading } = useGetEventInvocations({
     name: eventTrigger.name,
     source: currentSource,
     limit: paginationState.limit,
@@ -32,6 +32,7 @@ const ETInvocationLogs: React.FC = () => {
           <div className="bootstrap-jail">
             <InvocationLogsTable
               rows={rows ?? []}
+              isLoading={isLoading}
               columns={['id', 'redeliver', 'status', 'event_id', 'created_at']}
               paginationState={paginationState}
               setPaginationState={setPaginationState}

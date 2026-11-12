@@ -7,12 +7,7 @@ import { useAuthFetchJson } from '@hasura/shared/hooks';
 import { useAppContext } from '@hasura/shared/context';
 import { QualifiedDataSource, Table } from '@hasura/shared/types';
 import { getDatabaseMethods, NotImplementedError } from '../../driver';
-import {
-  getUntrackTableQuery,
-  invalidateMetadata,
-  runMetadataQuery,
-  useErrorNotification,
-} from '@hasura/metadata/api';
+import { invalidateMetadata } from '@hasura/metadata/api';
 import { hasuraToast } from '@hasura/shared/ui';
 
 type DropTableProps = {
@@ -26,11 +21,18 @@ type UseDropTableOptions = Omit<
   'mutationFn'
 >;
 
+/**
+ * Drops a table from the database. The server removes it from the metadata in
+ * the same transaction, or fails with a `dependency-error` when other metadata
+ * objects depend on it and `cascade` is false.
+ *
+ * Errors are not shown by this hook: callers handle them in `onError`, e.g. in
+ * a dialog or a toast.
+ */
 export function useDropTable(options?: UseDropTableOptions) {
   const { endpoints, envVars } = useAppContext();
   const fetchJson = useAuthFetchJson();
   const queryClient = useQueryClient();
-  const showErrorNotification = useErrorNotification();
 
   return useMutation<boolean, unknown, DropTableProps>({
     ...options,
@@ -43,18 +45,8 @@ export function useDropTable(options?: UseDropTableOptions) {
         );
       }
 
-      await runMetadataQuery({
-        fetchJson,
-        url: endpoints.metadata,
-        body: getUntrackTableQuery(
-          {
-            source: source.name,
-            ...props,
-          },
-          source.kind,
-        ),
-      });
-
+      // Untracking the table in a separate request first would leave it
+      // untracked whenever the DROP failed.
       const result = await modifyMethods.modify.dropTable({
         dataSourceName: source.name,
         isMigration: envVars.consoleMode === 'cli',
@@ -81,10 +73,6 @@ export function useDropTable(options?: UseDropTableOptions) {
     },
     onError(error, variables, onMutateResult, context) {
       invalidateMetadata(queryClient);
-      showErrorNotification({
-        title: 'Dropping table failed',
-        error,
-      });
 
       options?.onError?.(error, variables, onMutateResult, context);
     },

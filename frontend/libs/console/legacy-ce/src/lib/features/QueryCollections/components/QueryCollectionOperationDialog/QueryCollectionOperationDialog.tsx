@@ -54,7 +54,7 @@ const schema = z.discriminatedUnion('option', [
   }),
 ]);
 
-export type QueryCollectionOperation = z.infer<typeof schema>;
+type QueryCollectionOperation = z.infer<typeof schema>;
 
 interface QueryCollectionOperationDialogProps {
   title: string;

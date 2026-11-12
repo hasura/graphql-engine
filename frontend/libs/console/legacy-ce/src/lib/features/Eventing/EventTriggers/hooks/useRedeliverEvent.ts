@@ -3,7 +3,7 @@ import { SupportedDriver } from '@hasura/shared/types';
 import { getDriverPrefix } from '@hasura/metadata/helpers';
 import { useAppContext } from '@hasura/shared/context';
 
-export type RedeliverEventArgs = {
+type RedeliverEventArgs = {
   eventId: string;
   sourceKind: SupportedDriver;
 };

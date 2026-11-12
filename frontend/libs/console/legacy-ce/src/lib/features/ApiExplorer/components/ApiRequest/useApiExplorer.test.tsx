@@ -156,4 +156,43 @@ describe('useApiExplorer header changes', () => {
       'content-type': 'text/plain',
     });
   });
+
+  it('applies refreshed auth header values to the rows and objectHeaders', async () => {
+    const { result } = renderExplorer(5);
+    await waitFor(() => expect(result.current.headersInitialized).toBe(true));
+
+    act(() => {
+      result.current.changeRequestHeader(
+        {
+          key: 'hasura-collaborator-token',
+          value: 'IDToken old',
+          selected: true,
+          isDisabled: true,
+        },
+        result.current.headers.length - 1,
+      );
+    });
+    act(() => {
+      result.current.handleHeaderUnfocus();
+    });
+    expect(result.current.objectHeaders).toEqual({
+      'content-type': 'application/json',
+      'hasura-collaborator-token': 'IDToken old',
+    });
+
+    act(() => {
+      result.current.updateAuthHeaders({
+        'hasura-collaborator-token': 'IDToken new',
+      });
+    });
+
+    expect(
+      result.current.headers.find((h) => h.key === 'hasura-collaborator-token')
+        ?.value,
+    ).toBe('IDToken new');
+    expect(result.current.objectHeaders).toEqual({
+      'content-type': 'application/json',
+      'hasura-collaborator-token': 'IDToken new',
+    });
+  });
 });

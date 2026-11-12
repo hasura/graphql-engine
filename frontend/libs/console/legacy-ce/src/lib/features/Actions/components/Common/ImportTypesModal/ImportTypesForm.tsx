@@ -100,8 +100,6 @@ ${allTypeDefs}`;
       ];
     }) ?? [];
 
-  if (isLoading) return <div>Loading...</div>;
-
   return (
     <div>
       <Flex gap="8">
@@ -109,7 +107,11 @@ ${allTypeDefs}`;
           <TypeSearchForm setSearch={handleSearch} />
           <Flex align="center" className="relative">
             <div className="w-full max-h-[312px] overflow-y-auto">
-              <CardedTable columns={['', 'TYPE NAME']} data={rowData} />
+              <CardedTable
+                columns={['', 'TYPE NAME']}
+                data={rowData}
+                loading={isLoading}
+              />
             </div>
             <div className="absolute -right-8">
               <FaArrowRight />

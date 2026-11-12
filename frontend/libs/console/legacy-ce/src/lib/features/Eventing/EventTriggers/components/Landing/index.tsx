@@ -53,7 +53,7 @@ insert_user(objects: [{name: "testuser"}] ){
 
   return (
     <Analytics name="EventTriggersLanding" {...REDACT_EVERYTHING}>
-      <div className="w-full pt-4">
+      <div className="w-full">
         <div>
           <Flex align="center" gap="2">
             <Heading size="4">{EVENT_TRIGGER}s</Heading>

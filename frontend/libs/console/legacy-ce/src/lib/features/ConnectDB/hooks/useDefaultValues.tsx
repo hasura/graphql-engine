@@ -6,7 +6,7 @@ interface Args {
   driver: string;
 }
 
-export const useExistingConfig = (name: string) => {
+const useExistingConfig = (name: string) => {
   const { data, ...rest } = useMetadata(MetadataSelectors.findSource(name));
   return { data: data?.configuration, ...rest };
 };

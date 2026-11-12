@@ -32,7 +32,6 @@ export const RowActions = ({
           leftIcon={FaEdit}
           onClick={() => onActionClick(relationship, MODE.EDIT)}
         >
-          <FaEdit className="fill-current mr-1" />
           Edit
         </Button>
       )}

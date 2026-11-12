@@ -20,6 +20,7 @@ const columns: TableColumn[] = [
     arrayItemType: 'string',
   },
   { name: 'note', dataType: 'text', consoleDataType: 'text' },
+  { name: 'file', dataType: 'bytea', consoleDataType: 'binary' },
 ];
 
 const row = {
@@ -29,6 +30,7 @@ const row = {
   data: '{"nested":{"a":1}}',
   tags: ['a', null],
   note: null,
+  file: '\\x48656c6c6f',
   extra: 7,
 };
 
@@ -67,7 +69,16 @@ describe('RowDialog', () => {
       screen
         .getAllByTestId(/^row-value-/)
         .map((element) => element.dataset.testid?.replace('row-value-', '')),
-    ).toEqual(['id', 'active', 'data', 'extra', 'note', 'tags', 'title']);
+    ).toEqual([
+      'id',
+      'active',
+      'data',
+      'extra',
+      'file',
+      'note',
+      'tags',
+      'title',
+    ]);
     expect(screen.getByLabelText('Primary key')).toBeInTheDocument();
   });
 
@@ -88,5 +99,11 @@ describe('RowDialog', () => {
     ).toEqual(['a', 'NULL']);
     expect(value('note')).toHaveTextContent('NULL');
     expect(value('extra')).toHaveTextContent('7');
+  });
+
+  it('offers binary values as a download instead of showing them', () => {
+    renderRowDialog();
+    expect(value('file')).toHaveTextContent('Download (5 B)');
+    expect(value('file')).not.toHaveTextContent('48656c6c6f');
   });
 });

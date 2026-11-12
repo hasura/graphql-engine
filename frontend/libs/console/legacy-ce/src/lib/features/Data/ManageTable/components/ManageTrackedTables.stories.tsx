@@ -72,8 +72,12 @@ export const Untrack: StoryObj<typeof ManageTrackedTables> = {
     // This might indicate that the button must wait for some asynchronous operation before it's ready
     await dangerouslyDelay(1000);
 
-    // Track public.Invoice
     await userEvent.click(button);
+
+    // Confirm in the untrack dialog, rendered in a portal
+    await userEvent.click(
+      await within(document.body).findByRole('button', { name: 'Untrack' }),
+    );
 
     // It should not be in the Tracked tab anymore
     await waitForElementToBeRemoved(

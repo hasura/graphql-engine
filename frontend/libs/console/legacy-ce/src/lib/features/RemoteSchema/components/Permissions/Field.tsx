@@ -16,7 +16,7 @@ import { FaChevronDown, FaChevronRight, FaFilter } from 'react-icons/fa';
 import { Flex } from '@radix-ui/themes';
 import { Button, IconButton, Link, Text } from '@hasura/shared/ui';
 
-export interface FieldProps {
+interface FieldProps {
   i: FieldType;
   setItem: (e: FieldType) => void;
   onExpand?: () => void;

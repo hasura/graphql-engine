@@ -4,7 +4,7 @@ import { isObject } from '@hasura/shared/utils';
  * Router state of the Insert Row page that prefills the form with a row to
  * clone, e.g. `navigate(insertPath, { state: toCloneRowState(row) })`.
  */
-export type CloneRowState = { cloneRow: Record<string, unknown> };
+type CloneRowState = { cloneRow: Record<string, unknown> };
 
 export const toCloneRowState = (
   row: Record<string, unknown>,

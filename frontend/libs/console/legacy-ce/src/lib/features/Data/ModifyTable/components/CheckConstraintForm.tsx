@@ -21,7 +21,7 @@ export const emptyCheckConstraintFormValues: CheckConstraintFormValues = {
   check: '',
 };
 
-export type CheckConstraintFormProps = {
+type CheckConstraintFormProps = {
   title: string;
   submitLabel: string;
   defaultValues: CheckConstraintFormValues;
@@ -94,5 +94,3 @@ export const CheckConstraintForm = ({
     </Dialog>
   );
 };
-
-export default CheckConstraintForm;

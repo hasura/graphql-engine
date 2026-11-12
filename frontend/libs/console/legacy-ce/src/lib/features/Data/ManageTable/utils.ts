@@ -14,12 +14,10 @@ function isRecordObject(x: unknown): x is Record<string, unknown> {
   return isPlainObject(x);
 }
 
-export function hasNameAndSchema(
-  table: unknown,
-): table is PostgresOrMssqlTable {
+function hasNameAndSchema(table: unknown): table is PostgresOrMssqlTable {
   return isRecordObject(table) && 'schema' in table && 'name' in table;
 }
-export function isBigQueryTable(table: unknown): table is BigQueryTable {
+function isBigQueryTable(table: unknown): table is BigQueryTable {
   return isRecordObject(table) && 'dataset' in table && 'name' in table;
 }
 

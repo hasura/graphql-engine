@@ -83,7 +83,8 @@ export const ListConnectedDatabases = (props?: { className?: string }) => {
 
   const [activeRow, setActiveRow] = useState<number>();
 
-  const { reloadSource, isPending: isSourceReloading } = useReloadSource();
+  const { mutate: reloadSource, isPending: isSourceReloading } =
+    useReloadSource();
 
   const { dropSource, isPending: isSourceRemovalInProgress } = useDropSource({
     onSuccess: () => {
@@ -283,7 +284,12 @@ export const ListConnectedDatabases = (props?: { className?: string }) => {
     [envVars, updateProjectRegionForRowId],
   );
 
-  if (isLoading) return <>Loading...</>;
+  if (isLoading)
+    return (
+      <div className={props?.className}>
+        <CardedTable columns={[...columns, null]} data={[]} loading />
+      </div>
+    );
 
   return (
     <div className={props?.className}>

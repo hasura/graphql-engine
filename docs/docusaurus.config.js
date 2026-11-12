@@ -111,6 +111,7 @@ const config = {
   ],
   plugins: [
     'docusaurus-plugin-sass',
+    path.resolve(__dirname, './src/plugins/codemirror-graphql-json-parse'),
     [
       'content-docs',
       /** @type {import('@docusaurus/plugin-content-docs').Options} */

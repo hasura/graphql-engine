@@ -77,6 +77,16 @@ Available COMMANDs:
     For unit tests, you can limit the number of tests by using
     'test --unit --match "runTx" mssql'
 
+  test --postgres-api-tests [hspec_args...]
+    Run the Postgres hspec api-tests (server/lib/api-tests), launching a
+    postgres container set up the way the test harness expects. Tests whose
+    fixtures need other backends (Citus, Cockroach, SQL Server, data
+    connectors) are skipped. Any arguments are passed to hspec, e.g.
+      $0 test --postgres-api-tests --match "/Test.Subscriptions.StreamingSubscriptions/"
+    Set API_TESTS_REPEAT=N to run them up to N times against the same
+    container, stopping at the first failure (to reproduce flaky tests). RTS
+    options can be passed too, e.g. '+RTS -N2 -RTS' to mimic a 2-core CI box.
+
 EOL
 exit 1
 }
@@ -233,7 +243,18 @@ case "${1-}" in
   mysql)
   ;;
   test)
+    RUN_API_TESTS=false
     case "${2-}" in
+      --postgres-api-tests)
+      API_TEST_ARGS=( "${@:3}" )
+      RUN_API_TESTS=true
+      RUN_INTEGRATION_TESTS=false
+      RUN_UNIT_TESTS=false
+      RUN_HLINT=false
+      # The test harness hardcodes postgres on this port; see
+      # server/lib/test-harness/src/Harness/Constants.hs
+      PG_TEST_PORT=65002
+      ;;
       --unit)
       UNIT_TEST_ARGS=( "${@:3}" )
       RUN_INTEGRATION_TESTS=false
@@ -745,6 +766,59 @@ elif [ "$MODE" = "test" ]; then
         --project-file="$CABAL_PROJECT_FILE" \
         test:graphql-engine-tests \
         -- "${UNIT_TEST_ARGS[@]}"
+  fi
+
+  if [ "$RUN_API_TESTS" = true ]; then
+    echo_pretty "Running hspec api-tests against Postgres"
+    # Build first (possibly failing) before launching postgres. We run the
+    # built binaries directly rather than with 'cabal run', which would also
+    # re-check the build plan on every repetition.
+    cabal build \
+      --project-file="$CABAL_PROJECT_FILE" \
+      exe:graphql-engine api-tests:exe:api-tests
+    # Some tests spawn their own graphql-engine:
+    GRAPHQL_ENGINE="$(cabal list-bin --project-file="$CABAL_PROJECT_FILE" exe:graphql-engine)"
+    export GRAPHQL_ENGINE
+    API_TESTS_BIN="$(cabal list-bin --project-file="$CABAL_PROJECT_FILE" api-tests:exe:api-tests)"
+    # In Postgres mode the harness runs every fixture whose labels (module name
+    # included) mention Postgres. Skip the fixtures for other backends, which we
+    # don't launch: cross-backend ones like "Postgres-SQLServer", and plain
+    # Citus/Cockroach fixtures in modules like Test.Databases.Postgres.*
+    API_TESTS_SKIP_ARGS=()
+    for backend in Citus Cockroach SQLServer; do
+      API_TESTS_SKIP_ARGS+=(--skip "/$backend/" --skip "/$backend-" --skip "-$backend/")
+    done
+    # These labels look like 'DataConnector "sqlite"':
+    API_TESTS_SKIP_ARGS+=(--skip '/DataConnector "' --skip '-DataConnector "')
+    # Labelled Postgres, but needs the dc-reference-agent (on port 65005) behind
+    # the "foobar" data connector that the harness configures:
+    API_TESTS_SKIP_ARGS+=(--skip '/Test.API.Metadata.TransparentDefaults/')
+
+    pg_start
+    pg_setup_api_tests_db
+
+    # Stops at the first failing run, leaving its log (tests-hspec.log) in place.
+    API_TESTS_REPEAT="${API_TESTS_REPEAT:-1}"
+    API_TESTS_STATUS=0
+    for i in $(seq 1 "$API_TESTS_REPEAT"); do
+      if [ "$i" -gt 1 ]; then
+        echo_pretty "api-tests run $i of $API_TESTS_REPEAT; resetting databases"
+        pg_reset_api_tests_db
+      fi
+      HASURA_TEST_BACKEND_TYPE=Postgres \
+        "$API_TESTS_BIN" "${API_TESTS_SKIP_ARGS[@]}" "${API_TEST_ARGS[@]}" || API_TESTS_STATUS=$?
+      if [ "$API_TESTS_STATUS" -ne 0 ]; then
+        [ "$API_TESTS_REPEAT" -gt 1 ] && echo_error "api-tests failed on run $i of $API_TESTS_REPEAT"
+        break
+      fi
+    done
+    rm -f api-tests.tix
+    if [ "$API_TESTS_STATUS" -eq 0 ] && [ "$API_TESTS_REPEAT" -gt 1 ]; then
+      echo_pretty "api-tests: all $API_TESTS_REPEAT runs passed"
+    fi
+    # Nothing else runs in this mode, and the coverage report below only
+    # covers the unit and integration tests, so we're done:
+    exit "$API_TESTS_STATUS"
   fi
 
   if [ "$RUN_HLINT" = true ]; then

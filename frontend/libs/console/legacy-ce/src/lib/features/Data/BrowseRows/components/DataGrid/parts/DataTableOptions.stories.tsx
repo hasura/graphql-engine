@@ -56,6 +56,8 @@ const ComponentWrapper = () => {
         query={{
           onQuerySearch: () => updateStatus('@runQueryBtn is clicked'),
           onRefreshQueryOptions: () => updateStatus('@resetBtn is clicked'),
+          onRefreshRows: () => updateStatus('@refreshRowsBtn is clicked'),
+          isRefreshingRows: false,
           orderByClauses,
           whereClauses,
           supportedOperators: [
