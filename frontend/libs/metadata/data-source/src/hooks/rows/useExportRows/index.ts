@@ -1,5 +1,6 @@
 import { getFileName } from './utils';
 import {
+  CSVExportOptions,
   downloadObjectAsCsvFile,
   downloadObjectAsJsonFile,
   getTableDisplayName,
@@ -15,6 +16,7 @@ export type UseExportRowsReturn = {
   onExportRows: (
     filter: UseRowsPropType,
     exportFileFormat: ExportFileFormat,
+    csvOptions?: Partial<CSVExportOptions>,
   ) => Promise<TableRow[] | Error>;
 };
 
@@ -25,6 +27,7 @@ export const useExportRows = (): UseExportRowsReturn => {
   const onExportRows: UseExportRowsReturn['onExportRows'] = async (
     filter: UseRowsPropType,
     exportFileFormat: ExportFileFormat,
+    csvOptions?: Partial<CSVExportOptions>,
   ) => {
     if (!filter.source || !filter.table) {
       return new Error('Source and table are required to export rows');
@@ -32,19 +35,21 @@ export const useExportRows = (): UseExportRowsReturn => {
 
     const dataSource = getDatabaseMethods(filter.source.kind);
 
+    const columns = filter.columns?.length
+      ? filter.columns
+      : await dataSource.introspection.getTableColumns({
+          endpoints,
+          fetchJson,
+          dataSourceName: filter.source.name,
+          table: filter.table,
+        });
+
     const rows = await dataSource.query.getTableRows({
       endpoints,
       fetchJson,
       dataSourceName: filter.source.name,
       table: filter.table,
-      columns: filter.columns?.length
-        ? filter.columns
-        : await dataSource.introspection.getTableColumns({
-            endpoints,
-            fetchJson,
-            dataSourceName: filter.source.name,
-            table: filter.table,
-          }),
+      columns,
       options: filter.options,
     });
 
@@ -53,7 +58,13 @@ export const useExportRows = (): UseExportRowsReturn => {
     if (exportFileFormat === 'JSON') {
       downloadObjectAsJsonFile(fileName, rows);
     } else if (exportFileFormat === 'CSV') {
-      downloadObjectAsCsvFile(fileName, rows);
+      // the column names give an empty export its header row
+      downloadObjectAsCsvFile(
+        fileName,
+        rows,
+        csvOptions,
+        columns.map((column) => column.name),
+      );
     }
 
     return rows;

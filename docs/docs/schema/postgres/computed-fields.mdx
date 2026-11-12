@@ -109,6 +109,41 @@ Query data from the `authors` table:
 }`}
 />
 
+Scalar computed fields can also be used to filter and sort, in `where` and `order_by` arguments, like regular columns.
+This is only possible for computed fields whose SQL function takes no arguments other than the table row and the
+optional [session argument](#accessing-hasura-session-variables-in-computed-fields). For non-admin roles, the computed
+field must also be allowed in the role's select permissions (see
+[computed fields permissions](#computed-fields-permissions)). Table computed fields can be used for filtering and, via
+their aggregates, for sorting too. See
+[filtering using computed fields](/queries/postgres/filters/using-computed-fields.mdx) and
+[sorting based on computed fields](/queries/postgres/sorting.mdx#sorting-based-on-computed-fields) for details.
+
+<GraphiQLIDE
+  query={`query {
+  authors(
+    where: {full_name: {_ilike: "chris%"}}
+    order_by: {full_name: asc}
+  ) {
+    id
+    full_name
+  }
+}`}
+  response={`{
+  "data": {
+    "authors": [
+      {
+        "id": 3,
+        "full_name": "Chris Evans"
+      },
+      {
+        "id": 1,
+        "full_name": "Chris Raichael"
+      }
+    ]
+  }
+}`}
+/>
+
 ### 2. Table computed fields
 
 Computed fields whose associated SQL function returns `SETOF <table-name>` are table computed fields. The return table

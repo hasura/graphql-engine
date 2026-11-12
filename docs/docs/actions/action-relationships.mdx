@@ -85,6 +85,15 @@ mutation updateAuthorAndGetArticles($id: Int, $name: String) {
 
 See more details at [custom object type relationships](/actions/types.mdx)
 
+:::info Permissions on the related table
+
+A relationship field like `updatedAuthor` is only part of the schema for the roles that have a
+[select permission](/auth/authorization/permissions/index.mdx) on the related table (`author` here). For any other role
+the field does not exist, and querying it fails with a "field not found" validation error, even when the role is allowed
+to run the Action. Add a select permission on the related table for every role that should see the relationship.
+
+:::
+
 ### Creating relationships for custom object types
 
 You can create relationships for custom output types by:

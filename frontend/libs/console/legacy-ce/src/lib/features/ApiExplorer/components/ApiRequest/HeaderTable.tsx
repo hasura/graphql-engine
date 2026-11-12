@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FaEye, FaQuestionCircle, FaTimes, FaUserSecret } from 'react-icons/fa';
 import {
   getHeadersSectionIsOpen,
@@ -22,8 +22,17 @@ import {
 } from '@hasura/shared/ui';
 import { ServerConfig } from '@hasura/metadata/api';
 import { Flex } from '@radix-ui/themes';
-import { useAppContext } from '@hasura/shared/context';
+import { useAppContext, useAuthContext } from '@hasura/shared/context';
 import clsx from 'clsx';
+
+// Reload the auth headers this long before the session expires. It must be shorter
+// than the leeway the auth service refreshes the session within (60s in EE),
+// otherwise getHeaders returns the current token without refreshing it.
+const REFRESH_BEFORE_EXPIRY_MS = 30 * 1000;
+// Don't reload more often than this if the session expiry doesn't move forward.
+const MIN_REFRESH_DELAY_MS = 5 * 1000;
+// setTimeout overflows for longer delays
+const MAX_TIMEOUT_MS = 2 ** 31 - 1;
 
 /* When the page is loaded for the first time, hydrate the header state from the localStorage
  * Keep syncing the localStorage state when user modifies.
@@ -40,7 +49,7 @@ const ActionIcon = ({ message, dataHeaderID }) => (
 );
 
 const tableCellInputClassNames =
-  'w-full border-0 outline-none focus:ring-0 focus:outline-none';
+  'w-full border-0 outline-none focus:ring-0 focus:outline-none overflow-x-scroll!';
 const tableHeaderCellClassNames = 'uppercase tracking-wider';
 
 type Props = {
@@ -50,6 +59,7 @@ type Props = {
   handleHeaderUnfocus: () => void;
   removeRequestHeader: (index: number) => void;
   changeRequestHeader: (header: DataHeader, index: number) => void;
+  updateAuthHeaders: (authHeaders: Record<string, string>) => void;
   analyzeBearerToken: (
     token: string | null | undefined,
     dataHeaderIndex: number,
@@ -66,11 +76,67 @@ const HeaderTable = ({
   handleHeaderUnfocus,
   removeRequestHeader,
   changeRequestHeader,
+  updateAuthHeaders,
   analyzingToken,
   analyzeBearerToken,
   serverConfig,
 }: Props) => {
   const { envVars } = useAppContext();
+  const { getHeaders, sessionExpiry } = useAuthContext();
+
+  // The auth headers (hasura-collaborator-token, hasura-sso-token) are loaded once
+  // when the page mounts. Reload them when the session is refreshed elsewhere in
+  // the console, and shortly before it expires so getHeaders refreshes it.
+  useEffect(() => {
+    if (!sessionExpiry) {
+      return;
+    }
+
+    let cancelled = false;
+    const reloadAuthHeaders = () => {
+      getHeaders()
+        .then((authHeaders) => {
+          if (!cancelled) {
+            updateAuthHeaders(authHeaders);
+          }
+        })
+        .catch((err) => {
+          // the auth service redirects to the login page when the session can't be refreshed
+          console.error('failed to refresh the request auth headers', err);
+        });
+    };
+
+    const isAboutToExpire = () =>
+      Date.now() >= sessionExpiry - REFRESH_BEFORE_EXPIRY_MS;
+
+    // sync the rows with the current session, e.g. after it was refreshed by another request
+    reloadAuthHeaders();
+
+    const timer = setTimeout(
+      reloadAuthHeaders,
+      Math.min(
+        Math.max(
+          sessionExpiry - REFRESH_BEFORE_EXPIRY_MS - Date.now(),
+          MIN_REFRESH_DELAY_MS,
+        ),
+        MAX_TIMEOUT_MS,
+      ),
+    );
+
+    // timers in background tabs are throttled and may fire after the token expired
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && isAboutToExpire()) {
+        reloadAuthHeaders();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [sessionExpiry, getHeaders, updateAuthHeaders]);
   const [adminSecretVisible, setAdminSecretVisible] = useState(false);
   const [headersSectionIsOpen, setHeadersSectionIsOpenState] = useState(
     getHeadersSectionIsOpen(),
@@ -311,7 +377,7 @@ const HeaderTable = ({
         }
 
         return (
-          <Table.Cell>
+          <Table.Cell className="w-24">
             <Flex justify="end" align="center" gap="2">
               {getHeaderAdminVal()}
               {getJWTInspectorIcon()}
@@ -386,7 +452,9 @@ const HeaderTable = ({
                 Value
               </Text>
             </Table.RowHeaderCell>
-            <Table.RowHeaderCell className={tableHeaderCellClassNames} />
+            <Table.RowHeaderCell
+              className={clsx(tableHeaderCellClassNames, 'w-24')}
+            />
           </Table.Row>
         </Table.Header>
         <Table.Body>{getHeaderRows()}</Table.Body>

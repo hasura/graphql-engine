@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
   Badge,
   DestructiveDialogCascade,
@@ -7,6 +6,7 @@ import {
   IconButton,
   showErrorNotification,
   Text,
+  useCascadeDialog,
 } from '@hasura/shared/ui';
 import { Flex } from '@radix-ui/themes';
 import { TbMathFunction } from 'react-icons/tb';
@@ -33,10 +33,11 @@ export const ComputedFieldDescription = ({
   computedField,
   onEdit,
 }: ComputedFieldDescriptionProps) => {
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const deleteDialog = useCascadeDialog();
   const { mutate: dropComputedField, isPending } = useDropComputedField();
 
   const onDelete = (cascade: boolean) => {
+    deleteDialog.clearError();
     return dropComputedField(
       {
         source,
@@ -46,19 +47,20 @@ export const ComputedFieldDescription = ({
       },
       {
         onSuccess: () => {
-          setIsDeleteDialogOpen(false);
+          deleteDialog.close();
           hasuraToast({
             title: 'Success!',
             message: 'Computed field dropped successfully',
             type: 'success',
           });
         },
-        onError: (error: Error) => {
-          showErrorNotification({
-            title: 'Error while dropping the computed field',
-            error,
-          });
-        },
+        onError: (err: Error) =>
+          deleteDialog.handleError(err, (error) =>
+            showErrorNotification({
+              title: 'Error while dropping the computed field',
+              error,
+            }),
+          ),
       },
     );
   };
@@ -79,7 +81,7 @@ export const ComputedFieldDescription = ({
           size="1"
           icon={FaTrash}
           title="Remove"
-          onClick={() => setIsDeleteDialogOpen(true)}
+          onClick={() => deleteDialog.open(true)}
         />
       </Flex>
 
@@ -99,10 +101,10 @@ export const ComputedFieldDescription = ({
         </Flex>
       </Badge>
 
-      {isDeleteDialogOpen && (
+      {deleteDialog.isOpen && (
         <DestructiveDialogCascade
+          {...deleteDialog.dialogProps}
           title="Remove computed field"
-          onClose={() => setIsDeleteDialogOpen(false)}
           onConfirm={onDelete}
           loading={isPending}
         >
