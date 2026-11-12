@@ -139,28 +139,20 @@ where
                     location_type,
                     validate_non_null_graphql_variables,
                     |mut l, v| {
-                        // when normalizing list values, we don't want to coerce values as lists
-                        // i.e, `[1,2]` isn't a valid value for `[[Int]]` but `1` is a valid value for `[Int]`
-                        if wrapped_type.is_list() && !v.is_list() {
-                            // raise an error
-                            Err(Error::IncorrectFormat {
-                                expected_type: "LIST",
-                                actual_type: value.kind(),
-                            })
-                        } else {
-                            l.push(normalize(
-                                schema,
-                                namespaced_getter,
-                                context,
-                                v,
-                                &LocationType::List {
-                                    type_: wrapped_type,
-                                },
-                                type_info,
-                                validate_non_null_graphql_variables,
-                            )?);
-                            Ok(l)
-                        }
+                        // each item is coerced to the item type, which may itself be a list:
+                        // `[1, 2, 3]` for `[[Int]]` is `[[1], [2], [3]]` (spec, "List: Input Coercion")
+                        l.push(normalize(
+                            schema,
+                            namespaced_getter,
+                            context,
+                            v,
+                            &LocationType::List {
+                                type_: wrapped_type,
+                            },
+                            type_info,
+                            validate_non_null_graphql_variables,
+                        )?);
+                        Ok(l)
                     },
                 )
             } else {
@@ -575,7 +567,7 @@ mod test {
 
     #[test]
     fn test_input_coercion_for_list_example_6() {
-        // Test if foo: [[Int]] = [1,2,3] is not coerced
+        // Test if foo: [[Int]] = [1,2,3] is coerced to [[1], [2], [3]]
         let int_typename = ast::TypeName(mk_name!("Int"));
         let int_scalar = Scalar {
             name: int_typename,
@@ -588,6 +580,17 @@ mod test {
         let location_type = List {
             type_: &list_list_int(),
         };
+        let expected_value = normalized_ast::Value::List(vec![
+            normalized_ast::Value::List(vec![normalized_ast::Value::SimpleValue(
+                normalized_ast::SimpleValue::Integer(1),
+            )]),
+            normalized_ast::Value::List(vec![normalized_ast::Value::SimpleValue(
+                normalized_ast::SimpleValue::Integer(2),
+            )]),
+            normalized_ast::Value::List(vec![normalized_ast::Value::SimpleValue(
+                normalized_ast::SimpleValue::Integer(3),
+            )]),
+        ]);
         let normalized_value = normalize::normalize(
             &schema,
             &sdl::SDLNamespacedGetter(),
@@ -596,8 +599,49 @@ mod test {
             &location_type,
             &int_scalar_type_info,
             &crate::validation::NonNullGraphqlVariablesValidation::Validate,
-        );
-        assert!(normalized_value.is_err());
+        )
+        .unwrap();
+        assert_eq!(normalized_value, expected_value);
+    }
+
+    #[test]
+    fn test_input_coercion_for_list_example_6_with_null() {
+        // Test if foo: [[Int]] = [1, null, 3] is coerced to [[1], null, [3]]
+        let int_typename = ast::TypeName(mk_name!("Int"));
+        let int_scalar = Scalar {
+            name: int_typename,
+            description: None,
+            directives: vec![],
+        };
+        let int_scalar_type_info = InputType::Scalar(&int_scalar);
+        let schema = fake_schema();
+        let value = Parser::new("[1, null, 3]")
+            .parse_const_value()
+            .unwrap()
+            .item;
+        let location_type = List {
+            type_: &list_list_int(),
+        };
+        let expected_value = normalized_ast::Value::List(vec![
+            normalized_ast::Value::List(vec![normalized_ast::Value::SimpleValue(
+                normalized_ast::SimpleValue::Integer(1),
+            )]),
+            normalized_ast::Value::SimpleValue(normalized_ast::SimpleValue::Null),
+            normalized_ast::Value::List(vec![normalized_ast::Value::SimpleValue(
+                normalized_ast::SimpleValue::Integer(3),
+            )]),
+        ]);
+        let normalized_value = normalize::normalize(
+            &schema,
+            &sdl::SDLNamespacedGetter(),
+            &(),
+            &value,
+            &location_type,
+            &int_scalar_type_info,
+            &crate::validation::NonNullGraphqlVariablesValidation::Validate,
+        )
+        .unwrap();
+        assert_eq!(normalized_value, expected_value);
     }
 
     #[test]
