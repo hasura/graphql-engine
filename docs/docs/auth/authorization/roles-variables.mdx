@@ -403,3 +403,17 @@ a valid format of type `text[]`, you can run:
 ```sql
 select '{hello,world}'::text[];
 ```
+
+:::info The format depends on the operator and the column type
+
+The same session variable cannot always be used with different operators. For example:
+
+- `_in` and `_nin` on a `text` column compare it with a `text[]` value, so the session variable must be a Postgres array
+  literal, e.g. `{hello,world}`.
+- `_contains` and `_contained_in` on a `jsonb` column compare it with a `jsonb` value, so the session variable must be
+  JSON, e.g. `["hello","world"]`.
+
+A JSON array such as `["hello","world"]` is not a valid `text[]` literal, and `{hello,world}` is not valid JSON. If you
+need both kinds of checks, use a separate session variable for each format.
+
+:::
