@@ -11,6 +11,7 @@ import {
   ErrorCard,
   hasuraToast,
   showErrorNotification,
+  Button,
 } from '@hasura/shared/ui';
 import { Flex } from '@radix-ui/themes';
 import { TrackableComputedFunction } from '@hasura/metadata/data-source';
@@ -29,6 +30,7 @@ import {
   TableFunction,
 } from '@hasura/shared/types';
 import { schema, Schema } from './schema';
+import { useNavigate } from 'react-router';
 
 type ComputedFieldDialogProps = {
   source: Source;
@@ -45,6 +47,7 @@ export const ComputedFieldDialog = ({
   computedField,
   onClose,
 }: ComputedFieldDialogProps) => {
+  const navigate = useNavigate();
   const isEditMode = Boolean(computedField);
 
   const { Form, methods } = useConsoleForm({
@@ -179,7 +182,20 @@ export const ComputedFieldDialog = ({
             />
 
             <ReactSelectField
-              label="Function"
+              label={
+                <Flex align="center" gap="2">
+                  <Text weight="bold">Function</Text>
+                  <Button
+                    size="1"
+                    mode="default"
+                    onClick={() => {
+                      navigate('/data/sql');
+                    }}
+                  >
+                    Create new
+                  </Button>
+                </Flex>
+              }
               name="function"
               placeholder="Select a function"
               options={functions.map((fn) => ({

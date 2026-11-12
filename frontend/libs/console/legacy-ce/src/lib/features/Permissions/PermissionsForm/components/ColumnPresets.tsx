@@ -36,7 +36,8 @@ const PresetsRow: React.FC<PresetsRowProps> = ({
   const { watch } = useFormContext();
 
   const watched: Preset = watch(`presets.${id}`);
-  const disabled = allDisabled || watched.columnName === 'default_column';
+  // the blank row has no column yet
+  const disabled = allDisabled || !watched.columnName;
 
   return (
     <Flex align="center" gap="4">
@@ -95,7 +96,7 @@ const PresetsRow: React.FC<PresetsRowProps> = ({
         </Text>
       </Flex>
 
-      {watched.columnName !== 'default' && (
+      {!!watched.columnName && (
         <Flex align="center" className="md:w-1/12">
           <Button type="button" size="sm" mode="destructive" onClick={remove}>
             Delete
@@ -128,7 +129,7 @@ const useStatus = (disabled: boolean) => {
 
   const columnNames = presets
     ?.map(({ columnName }) => columnName)
-    .filter((columnName) => columnName !== 'default');
+    .filter(Boolean);
 
   if (!columnNames?.length) {
     return 'No Presets';
@@ -161,11 +162,12 @@ export const ColumnPresetsSection: React.FC<ColumnPresetsSectionProps> = ({
   });
 
   React.useEffect(() => {
-    const finalRowIsNotDefault =
-      controlledFields[controlledFields?.length - 1]?.columnName;
+    // keep a blank row to add a preset with, also when there are no presets
+    const finalRowIsNotBlank =
+      controlledFields[controlledFields?.length - 1]?.columnName !== '';
     const allColumnsSet = controlledFields?.length === columns?.length;
 
-    if (finalRowIsNotDefault && !allColumnsSet) {
+    if (finalRowIsNotBlank && !allColumnsSet) {
       append({
         columnName: '',
         presetType: 'static',

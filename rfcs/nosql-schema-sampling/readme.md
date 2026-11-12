@@ -49,6 +49,7 @@ It generates a MongoDB validation schema based on the analysis of the documents 
 That schema can then be used by Hasura to generate a GraphQL schema on top of the MongoDB datasource.
 
 ### How do I get started
+- Restore the sample data from git history: `(cd sample_data && git restore --source=f34e1363cc -- sample_mflix)` (see `sample_data/README.md`)
 - `docker compose up`
   - Runs MongoDB and loads up the `sample_mflix` sample database.
   - Has a healthcheck so the sampler shouldn't run till the database is ready.

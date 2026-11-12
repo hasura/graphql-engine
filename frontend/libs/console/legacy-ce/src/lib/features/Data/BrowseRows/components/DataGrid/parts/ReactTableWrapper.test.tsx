@@ -127,3 +127,72 @@ describe('ReactTableWrapper row options', () => {
     });
   });
 });
+
+describe('ReactTableWrapper binary columns', () => {
+  const fileColumn: TableColumn = {
+    name: 'file',
+    dataType: 'bytea',
+    consoleDataType: 'binary',
+  };
+
+  const renderBinaryTable = (setSorting = vi.fn()) =>
+    render(
+      <Theme>
+        <MemoryRouter>
+          <ReactTableWrapper
+            rows={[{ id: 7, file: '\\x48656c6c6f' }]}
+            tableColumns={[{ ...idColumn, isPrimaryKey: true }, fileColumn]}
+            isRowsSelectionEnabled
+            onRowsSelect={vi.fn()}
+            onRowDelete={vi.fn()}
+            source={{ name: 'db', kind: 'postgres', tables: [] } as never}
+            table={{ schema: 'public', name: 'album' }}
+            disabled={false}
+            selectedRows={{}}
+            sort={{ sorting: [], setSorting }}
+          />
+        </MemoryRouter>
+      </Theme>,
+    );
+
+  it('offers the value as a download instead of showing it', () => {
+    renderBinaryTable();
+    const download = screen.getByTestId('@download-file');
+
+    expect(download).toHaveTextContent('Download (5 B)');
+    expect(screen.queryByText(/48656c6c6f/)).not.toBeInTheDocument();
+  });
+
+  it('downloads the decoded bytes, named after the table and the row', async () => {
+    const createObjectURL = vi.fn((_: Blob) => 'blob:file');
+    const revokeObjectURL = vi.fn();
+    Object.assign(URL, { createObjectURL, revokeObjectURL });
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(function (this: HTMLAnchorElement) {
+        expect(this.download).toBe('public.album-file-7.bin');
+        expect(this.href).toBe('blob:file');
+      });
+
+    renderBinaryTable();
+    await userEvent.click(screen.getByTestId('@download-file'));
+
+    expect(click).toHaveBeenCalledOnce();
+    const blob = createObjectURL.mock.calls[0][0];
+    expect(new TextDecoder().decode(await blob.arrayBuffer())).toBe('Hello');
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:file');
+    click.mockRestore();
+  });
+
+  it('can not be sorted', async () => {
+    const setSorting = vi.fn();
+    renderBinaryTable(setSorting);
+
+    await userEvent.click(screen.getByText('file'));
+    expect(setSorting).not.toHaveBeenCalled();
+
+    // other columns still sort
+    await userEvent.click(screen.getByText('id'));
+    expect(setSorting).toHaveBeenCalled();
+  });
+});

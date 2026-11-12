@@ -34,7 +34,7 @@ import {
   removeCommentsSQL,
 } from '@hasura/metadata/data-source';
 import { useAppContext } from '@hasura/shared/context';
-import { Em, Flex, Heading, Strong } from '@radix-ui/themes';
+import { Em, Flex, Grid, Heading, Strong } from '@radix-ui/themes';
 
 /**
  * # RawSQL React FC
@@ -52,6 +52,7 @@ const RawSQL = () => {
   const [isMigrationChecked, setIsMigrationChecked] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isReadOnlyChecked, setIsReadOnlyChecked] = useState(false);
+  const [isNoTransactionChecked, setIsNoTransactionChecked] = useState(false);
   const [isTableTrackChecked, setIsTableTrackChecked] = useState(false);
   const [isCascadeChecked, setIsCascadeChecked] = useState(false);
   const [migrationName, setMigrationName] = useState('run_sql_migration');
@@ -91,12 +92,23 @@ const RawSQL = () => {
   const dataSource = selectedDriver ? getDatabaseMethods(selectedDriver) : null;
   const isTrackingSupported =
     dataSource?.check.isFeatureSupported('rawSQL.tracking') ?? false;
+  const isNoTransactionSupported =
+    dataSource?.check.isFeatureSupported('rawSQL.noTransaction') ?? false;
   const isCLIMode = envVars.consoleMode === CLI_CONSOLE_MODE;
+
+  const isRawSQLSupported =
+    !!selectedDriver && !unsupportedRawSQLDrivers.includes(selectedDriver);
+
+  // "No transaction" is only sent while it's shown
+  const isNoTransaction =
+    isNoTransactionChecked && isRawSQLSupported && isNoTransactionSupported;
 
   // Derived straight from `dataSource` (already computed above); a plain value
   // the React Compiler can memoize, instead of a manual useMemo it had to skip.
+  // The timeout is a `SET LOCAL`, which has no effect outside a transaction.
   const isStatementTimeoutSupported = dataSource
-    ? typeof dataSource.utilities.statementTimeoutSQL === 'function'
+    ? typeof dataSource.utilities.statementTimeoutSQL === 'function' &&
+      !isNoTransaction
     : null;
 
   // Keep the entered timeout when switching to a driver without support for
@@ -104,9 +116,6 @@ const RawSQL = () => {
   const effectiveStatementTimeout = isStatementTimeoutSupported
     ? statementTimeout
     : null;
-
-  const isRawSQLSupported =
-    !!selectedDriver && !unsupportedRawSQLDrivers.includes(selectedDriver);
 
   // "Track this" is only sent while it's shown and enabled
   const isTableTracked =
@@ -129,6 +138,7 @@ const RawSQL = () => {
       isTableTracked,
       cascade: isCascadeChecked,
       readOnly: isReadOnlyChecked,
+      noTransaction: isNoTransaction,
       statementTimeout: effectiveStatementTimeout,
       migration,
     });
@@ -327,7 +337,7 @@ const RawSQL = () => {
 
   const getReadOnlySection = () => {
     return (
-      <Flex className="mt-3" gap="2">
+      <Flex gap="2">
         <Checkbox
           value={isReadOnlyChecked}
           id="read-only-checkbox"
@@ -346,6 +356,37 @@ const RawSQL = () => {
     );
   };
 
+  const getNoTransactionSection = () => {
+    return (
+      <div className="mt-3">
+        <Flex gap="2">
+          <Checkbox
+            value={isNoTransactionChecked}
+            id="no-transaction-checkbox"
+            onChange={(checked) => {
+              setIsNoTransactionChecked(checked === true);
+            }}
+          >
+            No transaction
+          </Checkbox>
+          <IconTooltip
+            message={
+              'Run each statement on its own, outside a transaction, for statements like CREATE INDEX CONCURRENTLY. If a statement fails, the ones before it are not rolled back, and the statement timeout does not apply.'
+            }
+          />
+        </Flex>
+        {isNoTransactionChecked && isCLIMode && isMigrationChecked && (
+          <Text as="p" size="2" className="mt-2">
+            <Em>
+              Note: the migration file does not record this option. Apply it
+              with <code>hasura migrate apply --no-transaction</code>.
+            </Em>
+          </Text>
+        )}
+      </div>
+    );
+  };
+
   const getTrackThisSection = () => {
     const dispatchTrackThis = () => {
       setIsTableTrackChecked((prev) => !prev);
@@ -354,7 +395,7 @@ const RawSQL = () => {
     const isDisabled = suggestLangChange;
 
     return (
-      <Flex className="mt-6" align="center" gap="2">
+      <Flex align="center" gap="2">
         <Checkbox
           value={isTableTrackChecked}
           id="track-checkbox"
@@ -478,9 +519,23 @@ const RawSQL = () => {
           <div>
             {!isRawSQLSupported ? null : (
               <>
-                {isTrackingSupported ? getTrackThisSection() : null}
-                {getMetadataCascadeSection()}
-                {getReadOnlySection()}
+                <Grid
+                  columns={{
+                    initial: '1',
+                    md: '2',
+                  }}
+                >
+                  <div>
+                    {isTrackingSupported ? getTrackThisSection() : null}
+                    {getMetadataCascadeSection()}
+                  </div>
+                  <div>
+                    {getReadOnlySection()}
+                    {isNoTransactionSupported
+                      ? getNoTransactionSection()
+                      : null}
+                  </div>
+                </Grid>
                 {getMigrationSection()}
               </>
             )}

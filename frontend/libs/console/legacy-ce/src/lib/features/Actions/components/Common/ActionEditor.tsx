@@ -267,11 +267,9 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
 
       <Analytics name="ActionEditor" {...REDACT_EVERYTHING}>
         <div className="mb-6 w-8/12">
-          <Flex align="center" gap="2" asChild>
-            <Heading size="4">
-              <Heading size="3">Action custom timeout</Heading>
-              <IconTooltip message="Configure timeout for Action. Defaults to 30 seconds." />
-            </Heading>
+          <Flex align="center" gap="2">
+            <Heading size="3">Action custom timeout</Heading>
+            <IconTooltip message="Configure timeout for Action. Defaults to 30 seconds." />
           </Flex>
           <div className="mb-6 w-4/12 mt-4">
             <Input

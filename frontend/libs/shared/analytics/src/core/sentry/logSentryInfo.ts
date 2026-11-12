@@ -1,7 +1,7 @@
 export function logSentryEnabled(environment: string) {
   console.group();
   console.log(
-    '%c Sentry Tracing Enabled ',
+    '%c Sentry Error Monitoring Enabled ',
     'background: #A0D7D1; color: black; display: block;',
   );
   console.log(

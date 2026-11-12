@@ -399,9 +399,9 @@ initialiseAppEnv ::
   SamplingPolicy ->
   ManagedT m (AppInit, AppEnv)
 initialiseAppEnv BasicConnectionInfo {..} serveOptions@ServeOptions {..} liveQueryHook serverMetrics prometheusMetrics traceSamplingPolicy = do
-  when (soDisableAdminSecret && isNothing soAuthHook && null soJwtSecret)
+  when (soDisableAdminSecret && isNothing soAuthHook && null soJwtSecret && isNothing soUnAuthRole)
     $ throwErrExit InvalidEnvironmentVariableOptionsError
-    $ "Fatal Error: requires either HASURA_GRAPHQL_AUTH_HOOK or HASURA_GRAPHQL_JWT_SECRET when the admin secret is disabled"
+    $ "Fatal Error: requires either HASURA_GRAPHQL_AUTH_HOOK, HASURA_GRAPHQL_JWT_SECRET, or HASURA_GRAPHQL_UNAUTHORIZED_ROLE when the admin secret is disabled"
 
   loggers@(Loggers _loggerCtx logger pgLogger) <- mkLoggers soEnabledLogTypes soLogLevel
 

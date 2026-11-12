@@ -88,6 +88,7 @@ export type TableColumn = {
     | 'uuid'
     | 'date'
     | 'time'
+    | 'binary'
     | 'array';
   /** console data type of the elements, when `consoleDataType` is `array` */
   arrayItemType?: Exclude<TableColumn['consoleDataType'], 'array'>;
@@ -401,6 +402,8 @@ export type SupportedFeaturesType = {
   };
   rawSQL: {
     tracking: boolean;
+    // `run_sql` can run statements outside a transaction (`no_transaction`)
+    noTransaction: boolean;
   };
   connectDbForm: ConnectDbForm;
 };

@@ -508,6 +508,7 @@ unAuthRoleOption =
       Config._helpMessage =
         "Unauthorized role, used when admin-secret is not sent in admin-secret only mode "
           ++ "or \"Authorization\" header is absent in JWT mode"
+          ++ " or admin-secret authentication is disabled without an auth hook or JWT"
     }
 
 parseCorsConfig :: Opt.Parser (Maybe Cors.CorsConfig)

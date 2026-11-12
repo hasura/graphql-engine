@@ -48,7 +48,6 @@ export const consoleDataTypeToSQLTypeMap: Record<
     'txid_snapshot',
     'char',
     'varchar',
-    'bytea',
     'cidr',
     'inet',
   ],
@@ -92,6 +91,7 @@ export const consoleDataTypeToSQLTypeMap: Record<
   time: ['time', 'timetz', 'time with time zone', 'time without time zone'],
   geography: ['geography'],
   uuid: ['uuid'],
+  binary: ['bytea'],
   // array types are named after their element type (e.g. `text[]`), which
   // can be typed as a custom type
   array: [],

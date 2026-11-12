@@ -94,3 +94,27 @@ This will downgrade your Hasura instance from catalog version 48 to version 47, 
 
 
 :::
+
+## PostgreSQL source catalog version 5
+
+The PostgreSQL source catalog is versioned separately from the Metadata catalog,
+in `hdb_catalog.hdb_source_catalog_version` in each connected source database.
+Source catalog version 5 sets `REPLICA IDENTITY FULL` on this singleton version
+table so that initialization and upgrades work when an UPDATE publication
+includes the table. The `graphql-engine downgrade` command does not downgrade
+source catalogs.
+
+Before switching back to an engine that supports only source catalog version 4,
+stop all GraphQL Engine instances using the affected sources and run the
+following SQL on **each source database** that has source catalog version 5:
+
+```sql
+UPDATE hdb_catalog.hdb_source_catalog_version
+SET version = '4', upgraded_on = NOW()
+WHERE version = '5';
+```
+
+Keep `REPLICA IDENTITY FULL` in place: it is compatible with the version 4 schema
+and lets the older engine update the version row under an UPDATE publication.
+An older engine will still be unable to initialize a fresh source catalog under
+such a publication on affected PostgreSQL versions.
