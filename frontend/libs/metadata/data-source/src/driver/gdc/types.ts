@@ -86,6 +86,7 @@ export const gdcSupportedFeatures: DeepRequired<SupportedFeaturesType> = {
   },
   rawSQL: {
     tracking: false,
+    noTransaction: false,
   },
   connectDbForm: {
     enabled: true,

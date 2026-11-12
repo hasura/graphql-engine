@@ -14,6 +14,10 @@ const localCodegenTemplaters: Record<
   'nodejs-zeit': () => import('./templates/nodejs-zeit'),
   'nodejs-azure-function': () => import('./templates/nodejs-azure-function'),
   'typescript-zeit': () => import('./templates/typescript-zeit'),
+  'typescript-express': () => import('./templates/typescript-express'),
+  'javascript-js-doc-express': () =>
+    import('./templates/javascript-js-doc-express'),
+  'go-serve-mux': () => import('./templates/go-serve-mux'),
 };
 
 const getCodegenFilePath = (framework: string) => {

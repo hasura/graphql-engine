@@ -45,9 +45,14 @@ const createSelectObject = (input: PermissionsSchema) => {
     const columns = Object.entries(input.columns)
       .filter(({ 1: value }) => value)
       .map(([key]) => key);
-    const computed_fields = Object.entries(input.computed_fields)
-      .filter(({ 1: value }) => value)
-      .map(([key]) => key);
+    // `computed_fields` is an array of the selected computed-field *names*
+    // (see the CheckboxesField in ColumnPermissions and the `computed_fields`
+    // zod schema `z.array(z.string())`). It must be serialized as-is. Running
+    // `Object.entries` over it, as the `columns` Record above does, would emit
+    // the array indices ("0", "1", ...) as field names and produce an
+    // inconsistent metadata object that the server rejects with
+    // `computed field "0" does not exist`.
+    const computed_fields = (input.computed_fields ?? []).filter(Boolean);
 
     // Input may be undefined
     const filter = formatFilterValues(input.filter);
@@ -117,7 +122,8 @@ const createInsertObject = (input: PermissionsSchema) => {
 
     const set =
       input?.presets?.reduce((acc, preset) => {
-        if (preset.columnName === 'default') return acc;
+        // skip the blank row the form keeps to add a preset with
+        if (!preset.columnName || preset.columnName === 'default') return acc;
         return { ...acc, [preset.columnName]: preset.columnValue };
       }, {}) ?? {};
 
@@ -189,7 +195,8 @@ const createUpdateObject = (input: PermissionsSchema) => {
     const check = formatFilterValues(input.check);
     const set =
       input?.presets?.reduce((acc, preset) => {
-        if (preset.columnName === 'default') return acc;
+        // skip the blank row the form keeps to add a preset with
+        if (!preset.columnName || preset.columnName === 'default') return acc;
         const isNumber = !isNaN(Number(preset.columnValue));
         return {
           ...acc,

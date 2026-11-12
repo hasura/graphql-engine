@@ -24,6 +24,7 @@ let renameSupported = true;
 
 vi.mock('@hasura/metadata/api', () => ({
   useUntrackTable: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useErrorNotification: () => vi.fn(),
 }));
 
 vi.mock('@hasura/metadata/data-source', () => ({

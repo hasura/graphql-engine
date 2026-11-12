@@ -1,5 +1,6 @@
 import { parse } from 'graphql';
 import { CodegenDerive, CodegenFile } from './types';
+import { getDerivedOutput } from './derive';
 
 export const templater = (
   actionName: string,
@@ -27,8 +28,13 @@ export const templater = (
   });
 
   let actionOutputType = actionDef.type;
+  // whether the action outputs a list, e.g. `[ActionResult!]!`
+  let isListOutput = false;
 
   while (actionOutputType.kind !== 'NamedType') {
+    if (actionOutputType.kind === 'ListType') {
+      isListOutput = true;
+    }
     actionOutputType = actionOutputType.type;
   }
   const outputType = ast.definitions.find((d: any) => {
@@ -38,7 +44,11 @@ export const templater = (
     );
   });
 
-  const outputTypeFields = outputType.fields.map((f: any) => f.name.value);
+  // the output of an action can also be a scalar (e.g. `String!`), which is
+  // not an object type and has no fields
+  const outputTypeFields: string[] | null = outputType
+    ? outputType.fields.map((f: any) => f.name.value)
+    : null;
 
   let graphqlClientCode = '';
   let operationCodegen = '';
@@ -56,11 +66,11 @@ export const templater = (
       ? derive.endpoint
       : 'http://localhost:8080/v1/graphql';
   if (shouldDerive && derive) {
-    const operationDoc: any = parse(derive.operation);
-    const operationName =
-      operationDoc.definitions[0].selectionSet.selections.filter(
-        (s: any) => s.name.value.indexOf('__') !== 0,
-      )[0].name.value;
+    const derivedOutput = getDerivedOutput(
+      derive.operation,
+      actionDef.type,
+      ast.definitions,
+    );
 
     operationCodegen = `
 const HASURA_OPERATION = \`
@@ -96,9 +106,7 @@ const execute = async (variables) => {
   }`;
 
     successSnippet = `  // success
-  return res.json({
-    ...data.${operationName}
-  })`;
+  return res.json(${derivedOutput})`;
   }
 
   if (!errorSnippet) {
@@ -111,10 +119,14 @@ const execute = async (variables) => {
   }
 
   if (!successSnippet) {
+    const sampleOutput = outputTypeFields
+      ? `{\n${outputTypeFields.map((f: string) => `  ${f}: "<value>"`).join(',\n')}\n}`
+      : '"<value>"';
+    const output = isListOutput
+      ? `[\n${sampleOutput.replace(/^/gm, '  ')},\n]`
+      : sampleOutput;
     successSnippet = `  // success
-  return res.json({
-${outputTypeFields.map((f: string) => `    ${f}: "<value>"`).join(',\n')}
-  })`;
+  return res.json(${output.replace(/\n/g, '\n  ')})`;
   }
 
   const handlerContent = `

@@ -24,6 +24,7 @@ where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
+import Data.Char qualified as Char
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as HS
 import Data.List.NonEmpty qualified as NE
@@ -273,66 +274,134 @@ runRunSQL sqlGen q@RunSQL {..} = do
           PG.ReadWrite -> NoTxReadWrite
         else Tx rTxAccessMode Nothing
 
--- | Splits SQL input into separate statements while handling comments and strings.
+data SQLSplitState
+  = SQLNormal
+  | SQLString Bool
+  | SQLIdentifier
+  | SQLDollarString Text
+  | SQLLineComment
+  | SQLBlockComment Int
+
+-- | Split at unquoted semicolons, preserving SQL text and ignoring comment-only statements.
+-- Ordinary strings follow PostgreSQL's default standard_conforming_strings = on.
 splitSQLStatements :: Text -> [Text]
-splitSQLStatements = filter (not . T.null) . map T.strip . process T.empty False Nothing False
+splitSQLStatements = scan [] False SQLNormal
   where
-    process :: Text -> Bool -> Maybe Text -> Bool -> Text -> [Text]
-    process acc inString dollarTag inComment txt =
+    scan :: [Text] -> Bool -> SQLSplitState -> Text -> [Text]
+    -- Keep ordinary runs as Text slices rather than allocating one chunk per character.
+    scan chunks hasSQL ssState txt =
       case T.uncons txt of
-        Nothing -> [acc | not (T.null acc)]
+        Nothing -> case ssState of
+          SQLBlockComment _ -> [statement chunks] -- Let PostgreSQL reject unterminated comments.
+          _ -> [statement chunks | hasSQL]
         Just (c, rest) ->
-          case c of
-            '-'
-              | "--" `T.isPrefixOf` txt ->
-                  let rest' = T.dropWhile (/= '\n') rest
-                      rest'' = case T.uncons rest' of
-                        Just ('\n', rs) -> rs
-                        _ -> rest'
-                   in process acc inString dollarTag False rest''
-            '/'
-              | "/*" `T.isPrefixOf` txt ->
-                  process acc inString dollarTag False (dropBlockComment rest)
-            '\'' | isNothing dollarTag && not inComment ->
-              case T.uncons rest of
-                Just ('\'', rest') ->
-                  process (acc <> "''") inString dollarTag inComment rest'
-                _ ->
-                  process (T.snoc acc '\'') (not inString) dollarTag inComment rest
-            '$' ->
-              case dollarTag of
-                Just tag
-                  | tag `T.isPrefixOf` txt ->
-                      process (acc <> tag <> "$") inString Nothing inComment (T.drop (T.length tag + 1) txt)
-                _
-                  | not (inString || inComment) ->
-                      let (tag', remaining) = readDollarTag txt
-                       in if T.null tag'
-                            then process (T.snoc acc '$') inString dollarTag inComment rest
-                            else process (acc <> tag' <> "$") inString (Just tag') inComment remaining
+          let keep chunk = scan (chunk : chunks)
+              keepChar = keep (T.singleton c)
+           in case ssState of
+                SQLNormal
+                  | "--" `T.isPrefixOf` txt -> keep "--" hasSQL SQLLineComment (T.drop 2 txt)
+                  | "/*" `T.isPrefixOf` txt -> keep "/*" hasSQL (SQLBlockComment 1) (T.drop 2 txt)
+                  | c == ';' -> [statement chunks | hasSQL] <> scan [] False SQLNormal rest
+                  | (c == 'e' || c == 'E') && "'" `T.isPrefixOf` rest ->
+                      keep (T.take 2 txt) True (SQLString True) (T.drop 1 rest)
+                  | c == '\'' -> keepChar True (SQLString False) rest
+                  | c == '"' -> keepChar True SQLIdentifier rest
+                  | identifierStart c ->
+                      let (identifier, remaining) = T.span identifierContinue txt
+                       in keep identifier True SQLNormal remaining
+                  | c == '$' -> case T.uncons rest of
+                      Just (digit, _)
+                        | asciiDigit digit ->
+                            let (digits, remaining) = T.span asciiDigit rest
+                             in keep ("$" <> digits) True SQLNormal remaining
+                      _ -> case dollarDelimiter txt of
+                        Just (delimiter, remaining) -> keep delimiter True (SQLDollarString delimiter) remaining
+                        Nothing -> keepChar True SQLNormal rest
+                  | otherwise -> keepChar (hasSQL || not (sqlSpace c)) SQLNormal rest
+                SQLString escapes
+                  | escapes && c == '\\' ->
+                      let (escaped, remaining) = T.splitAt 1 rest
+                       in keep (T.singleton c <> escaped) hasSQL ssState remaining
+                  | c == '\'' -> case T.uncons rest of
+                      Just ('\'', remaining) -> keep "''" hasSQL ssState remaining
+                      _ -> case stringContinuation rest of
+                        Just (separator, remaining) -> keep ("'" <> separator) hasSQL ssState remaining
+                        Nothing -> keepChar hasSQL SQLNormal rest
                   | otherwise ->
-                      process (T.snoc acc '$') inString dollarTag inComment rest
-            ';'
-              | not inString && isNothing dollarTag && not inComment ->
-                  acc : process T.empty inString dollarTag inComment rest
-            _ ->
-              process (T.snoc acc c) inString dollarTag inComment rest
+                      let (body, remaining) = T.span (\x -> x /= '\'' && (not escapes || x /= '\\')) txt
+                       in keep body hasSQL ssState remaining
+                SQLIdentifier
+                  | c == '"' -> case T.uncons rest of
+                      Just ('"', remaining) -> keep "\"\"" hasSQL ssState remaining
+                      _ -> keepChar hasSQL SQLNormal rest
+                  | otherwise ->
+                      let (body, remaining) = T.span (/= '"') txt
+                       in keep body hasSQL ssState remaining
+                SQLDollarString delimiter
+                  | delimiter `T.isPrefixOf` txt -> keep delimiter hasSQL SQLNormal (T.drop (T.length delimiter) txt)
+                  | otherwise ->
+                      let (body, remaining) = T.breakOn delimiter txt
+                       in keep body hasSQL ssState remaining
+                SQLLineComment
+                  | newline c -> keepChar hasSQL SQLNormal rest
+                  | otherwise ->
+                      let (body, remaining) = T.span (not . newline) txt
+                       in keep body hasSQL ssState remaining
+                SQLBlockComment depth
+                  | "/*" `T.isPrefixOf` txt -> keep "/*" hasSQL (SQLBlockComment (depth + 1)) (T.drop 2 txt)
+                  | "*/" `T.isPrefixOf` txt ->
+                      keep "*/" hasSQL (if depth == 1 then SQLNormal else SQLBlockComment (depth - 1)) (T.drop 2 txt)
+                  | c == '/' || c == '*' -> keepChar hasSQL ssState rest
+                  | otherwise ->
+                      let (body, remaining) = T.span (\x -> x /= '/' && x /= '*') txt
+                       in keep body hasSQL ssState remaining
 
-    dropBlockComment :: Text -> Text
-    dropBlockComment txt =
-      case T.breakOn "*/" txt of
-        (_before, after) -> if "*/" `T.isPrefixOf` after then T.drop 2 after else ""
+    statement :: [Text] -> Text
+    statement = T.dropAround sqlSpace . T.concat . reverse
 
-    readDollarTag :: Text -> (Text, Text)
-    readDollarTag txt =
+    asciiDigit :: Char -> Bool
+    asciiDigit c = c >= '0' && c <= '9'
+
+    identifierStart :: Char -> Bool
+    identifierStart c = c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || Char.ord c >= 128
+
+    identifierContinue :: Char -> Bool
+    identifierContinue c = identifierStart c || asciiDigit c || c == '$'
+
+    dollarDelimiter :: Text -> Maybe (Text, Text)
+    dollarDelimiter txt =
       let afterDollar = T.drop 1 txt
-          tagBody = T.takeWhile (/= '$') afterDollar
-       in if T.length afterDollar
-            > T.length tagBody
-            && T.index afterDollar (T.length tagBody)
-            == '$'
-            then ("$" <> tagBody, T.drop (T.length tagBody + 2) txt)
-            else ("", T.drop 1 txt)
+          (tag, suffix) = T.span (\c -> identifierStart c || asciiDigit c) afterDollar
+          validStart = maybe True (identifierStart . fst) (T.uncons tag)
+       in case T.uncons suffix of
+            Just ('$', remaining) | validStart -> Just ("$" <> tag <> "$", remaining)
+            _ -> Nothing
+
+    newline :: Char -> Bool
+    newline c = c == '\n' || c == '\r'
+
+    sqlSpace :: Char -> Bool
+    sqlSpace c = c `elem` [' ', '\t', '\n', '\r', '\f']
+
+    -- PostgreSQL carries escape-string mode across newline-separated string literals.
+    -- Only whitespace and line comments (not block comments) allow this continuation.
+    stringContinuation :: Text -> Maybe (Text, Text)
+    -- Count only the separator consumed: taking the length of each remaining UTF-8
+    -- suffix makes long chains of concatenated literals quadratic.
+    stringContinuation txt = lookAhead False 0 txt
+      where
+        lookAhead seenNewline consumed remaining =
+          let (spaces, rest) = T.span sqlSpace remaining
+              seenNewline' = seenNewline || T.any newline spaces
+              consumed' = consumed + T.length spaces
+           in case T.uncons rest of
+                Just ('\'', afterQuote)
+                  | seenNewline' ->
+                      Just (T.take (consumed' + 1) txt, afterQuote)
+                _ | "--" `T.isPrefixOf` rest ->
+                      let (comment, afterComment) = T.span (not . newline) rest
+                       in lookAhead seenNewline' (consumed' + T.length comment) afterComment
+                _ -> Nothing
 
 -- | @'withMetadataCheck' source cascade txAccess runSQLQuery@ executes @runSQLQuery@ and checks if the schema changed as a
 -- result. If it did, it checks to ensure the changes do not violate any integrity constraints, and

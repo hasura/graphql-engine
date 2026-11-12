@@ -21,6 +21,7 @@ export const DataTypeToSQLTypeMap: Record<
   uuid: [],
   date: ['DATE'],
   time: ['TIME'],
+  binary: ['BYTES'],
   array: [],
 };
 
@@ -121,6 +122,7 @@ export const bigquerySupportedFeatures: DeepRequired<SupportedFeaturesType> = {
   },
   rawSQL: {
     tracking: true,
+    noTransaction: false,
   },
   connectDbForm: {
     enabled: true,

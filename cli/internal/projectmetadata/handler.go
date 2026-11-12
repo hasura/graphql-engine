@@ -9,6 +9,8 @@ import (
 	"maps"
 	"os"
 	"path/filepath"
+	"slices"
+	"strings"
 
 	"github.com/hasura/graphql-engine/cli/v2"
 	internalerrors "github.com/hasura/graphql-engine/cli/v2/internal/errors"
@@ -58,22 +60,187 @@ func (h *Handler) SetMetadataObjects(objects metadataobject.Objects) {
 func (h *Handler) WriteMetadata(files map[string][]byte) error {
 	var op internalerrors.Op = "projectmetadata.Handler.WriteMetadata"
 
-	for name, content := range files {
-		fs := afero.NewOsFs()
-		if err := fs.MkdirAll(filepath.Dir(name), os.ModePerm); err != nil {
+	if len(files) == 0 {
+		return nil
+	}
+
+	fs := afero.NewOsFs()
+
+	// written holds every file and directory that is part of this export,
+	// filesByDir groups the files so that each directory is listed only once
+	written := make(map[string]struct{})
+	filesByDir := make(map[string][]string)
+
+	for name := range files {
+		clean := filepath.Clean(name)
+		dir := filepath.Dir(clean)
+		written[clean] = struct{}{}
+
+		filesByDir[dir] = append(filesByDir[dir], name)
+	}
+
+	root := commonDir(filesByDir)
+
+	dirs := make([]string, 0, len(filesByDir))
+	for dir := range filesByDir {
+		for d := dir; d != root && isSubPath(root, d); d = filepath.Dir(d) {
+			if _, ok := written[d]; !ok {
+				written[d] = struct{}{}
+				dirs = append(dirs, d)
+			}
+		}
+	}
+
+	// fix parents before their children, as a rename changes the children's paths
+	slices.SortFunc(dirs, func(a, b string) int {
+		return strings.Count(
+			a,
+			string(filepath.Separator),
+		) - strings.Count(
+			b,
+			string(filepath.Separator),
+		)
+	})
+
+	for _, dir := range dirs {
+		if err := renameCaseVariantDir(fs, dir, written); err != nil {
+			return internalerrors.E(op, err)
+		}
+	}
+
+	for dir, names := range filesByDir {
+		if err := fs.MkdirAll(dir, os.ModePerm); err != nil {
 			return internalerrors.E(op, err)
 		}
 
-		err := afero.WriteFile(fs, name, content, 0o644)
-		if err != nil {
-			return internalerrors.E(
-				op,
-				fmt.Errorf("creating metadata file %s failed: %w", name, err),
-			)
+		if err := removeCaseVariantFiles(fs, dir, names, written); err != nil {
+			return internalerrors.E(op, err)
+		}
+
+		for _, name := range names {
+			err := afero.WriteFile(fs, name, files[name], 0o644)
+			if err != nil {
+				return internalerrors.E(
+					op,
+					fmt.Errorf("creating metadata file %s failed: %w", name, err),
+				)
+			}
 		}
 	}
 
 	return nil
+}
+
+// On case insensitive file systems (Windows, macOS) writing
+// databases/default/tables/public_user.yaml would reuse an existing
+// databases/Default/tables/public_User.yaml and keep the stale casing, which
+// breaks the project on case sensitive file systems. The helpers below fix
+// the casing of directories and files before the export is written. Entries
+// that are themselves part of the export are left alone, as e.g. tables
+// "User" and "user" can coexist in postgres.
+
+// renameCaseVariantDir renames a directory whose name differs from dir only
+// in letter case to dir, keeping its contents. It does nothing if dir already
+// exists with the exact casing.
+func renameCaseVariantDir(fs afero.Fs, dir string, written map[string]struct{}) error {
+	parent, base := filepath.Split(dir)
+
+	entries, err := afero.ReadDir(fs, parent)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("reading metadata directory %s failed: %w", parent, err)
+	}
+
+	var variant string
+
+	for _, entry := range entries {
+		if entry.Name() == base {
+			return nil
+		}
+
+		if variant != "" || !entry.IsDir() || !strings.EqualFold(entry.Name(), base) {
+			continue
+		}
+
+		if _, ok := written[filepath.Join(parent, entry.Name())]; !ok {
+			variant = filepath.Join(parent, entry.Name())
+		}
+	}
+
+	if variant == "" {
+		return nil
+	}
+
+	if err := fs.Rename(variant, dir); err != nil {
+		return fmt.Errorf("renaming metadata directory %s to %s failed: %w", variant, dir, err)
+	}
+
+	return nil
+}
+
+// removeCaseVariantFiles deletes the files in dir whose names differ from one
+// of names only in letter case.
+func removeCaseVariantFiles(
+	fs afero.Fs,
+	dir string,
+	names []string,
+	written map[string]struct{},
+) error {
+	entries, err := afero.ReadDir(fs, dir)
+	if err != nil {
+		return fmt.Errorf("reading metadata directory %s failed: %w", dir, err)
+	}
+
+	folded := make(map[string]struct{}, len(names))
+	for _, name := range names {
+		folded[strings.ToLower(filepath.Base(name))] = struct{}{}
+	}
+
+	for _, entry := range entries {
+		variant := filepath.Join(dir, entry.Name())
+		if _, ok := written[variant]; ok || entry.IsDir() {
+			continue
+		}
+
+		if _, ok := folded[strings.ToLower(entry.Name())]; !ok {
+			continue
+		}
+
+		if err := fs.Remove(variant); err != nil {
+			return fmt.Errorf("removing stale metadata file %s failed: %w", variant, err)
+		}
+	}
+
+	return nil
+}
+
+// commonDir returns the deepest directory containing all of dirs. Directory
+// casing is only fixed below it, so that the project directory and its
+// parents are never renamed.
+func commonDir(dirs map[string][]string) string {
+	root := ""
+	for dir := range dirs {
+		if root == "" {
+			root = dir
+
+			continue
+		}
+
+		for !isSubPath(root, dir) && root != filepath.Dir(root) {
+			root = filepath.Dir(root)
+		}
+	}
+
+	return root
+}
+
+func isSubPath(root, path string) bool {
+	rel, err := filepath.Rel(root, path)
+
+	return err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
 }
 
 func (h *Handler) ExportMetadata() (map[string][]byte, error) {

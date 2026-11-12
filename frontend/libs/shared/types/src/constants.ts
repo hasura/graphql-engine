@@ -28,6 +28,7 @@ export const LS_KEYS = {
   dataColumnsCollapsedKey: 'data:collapsed',
   dataColumnsOrderKey: 'data:order',
   dataPageSizeKey: 'data:pageSize',
+  dataCSVExportOptions: 'data:csvExportOptions',
   derivedActions: 'actions:derivedActions',
   graphiqlQuery: 'graphiql:query',
   graphiqlVariables: 'graphiql:variables',

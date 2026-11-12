@@ -18,8 +18,8 @@ const AddScheduledTrigger: React.FC = () => {
 
   return (
     <Analytics name="AddScheduledTrigger" {...REDACT_EVERYTHING}>
-      <div className="md-md bootstrap-jail">
-        <Heading size="4" className="pt-4 pb-4 mt-0 mb-0 pl-4">
+      <div>
+        <Heading size="4" className="pb-4">
           Create a new cron trigger
         </Heading>
         <Form

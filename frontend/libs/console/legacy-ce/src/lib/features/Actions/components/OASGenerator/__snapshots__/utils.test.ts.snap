@@ -20,13 +20,13 @@ exports[`optimizer API > should generate correctly 1`] = `
   "sequence": {{$body.input.optimiserRequestInput?['sequence']}},
   "score": {{$body.input.optimiserRequestInput?['score']}},
   "optimise": {{$body.input.optimiserRequestInput?['optimise']}},
-  "features": {{if inverse(empty($body.input.optimiserRequestInput?['features']))}} {{ range _, features := $body.input.optimiserRequestInput?['features']}} {
-    "name": {{features?['name']}},
-    "feature_type": {{features?['featureType']}},
-    "start": {{features?['start']}},
-    "end": {{features?['end']}},
-    "optimise": {{features?['optimise']}}
-    } {{end}} {{else}} null {{end}},
+  "features": {{if inverse(empty($body.input.optimiserRequestInput?['features']))}} {{ range _, featuresItem := $body.input.optimiserRequestInput?['features']}} {
+    "name": {{featuresItem?['name']}},
+    "feature_type": {{featuresItem?['featureType']}},
+    "start": {{featuresItem?['start']}},
+    "end": {{featuresItem?['end']}},
+    "optimise": {{featuresItem?['optimise']}}
+  } {{end}} {{else}} null {{end}},
   "optimisation_params": {{$body.input.optimiserRequestInput?['optimisationParams']}},
   "from_json": {{$body.input.optimiserRequestInput?['fromJson']}},
   "to_json": {{$body.input.optimiserRequestInput?['toJson']}}
@@ -36,21 +36,21 @@ exports[`optimizer API > should generate correctly 1`] = `
   "geneName": {{$body?['gene_name']}},
   "preOptimisationSequence": {{$body?['pre_optimisation_sequence']}},
   "postOptimisationSequence": {{$body?['post_optimisation_sequence']}},
-  "preOptimisationPenalties": {{if inverse(empty($body?['pre_optimisation_penalties']))}} {{ range _, preOptimisationPenalties := $body?['pre_optimisation_penalties']}} {
-    "start": {{pre_optimisation_penalties?['start']}},
-    "end": {{pre_optimisation_penalties?['end']}},
-    "group": {{pre_optimisation_penalties?['group']}},
-    "score": {{pre_optimisation_penalties?['score']}},
-    "strand": {{pre_optimisation_penalties?['strand']}}
-    } {{end}} {{else}} null {{end}},
+  "preOptimisationPenalties": {{if inverse(empty($body?['pre_optimisation_penalties']))}} {{ range _, preOptimisationPenaltiesItem := $body?['pre_optimisation_penalties']}} {
+    "start": {{preOptimisationPenaltiesItem?['start']}},
+    "end": {{preOptimisationPenaltiesItem?['end']}},
+    "group": {{preOptimisationPenaltiesItem?['group']}},
+    "score": {{preOptimisationPenaltiesItem?['score']}},
+    "strand": {{preOptimisationPenaltiesItem?['strand']}}
+  } {{end}} {{else}} null {{end}},
   "preOptimisationScoreDetail": {{$body?['pre_optimisation_score_detail']}},
-  "postOptimisationPenalties": {{if inverse(empty($body?['post_optimisation_penalties']))}} {{ range _, postOptimisationPenalties := $body?['post_optimisation_penalties']}} {
-    "start": {{post_optimisation_penalties?['start']}},
-    "end": {{post_optimisation_penalties?['end']}},
-    "group": {{post_optimisation_penalties?['group']}},
-    "score": {{post_optimisation_penalties?['score']}},
-    "strand": {{post_optimisation_penalties?['strand']}}
-    } {{end}} {{else}} null {{end}},
+  "postOptimisationPenalties": {{if inverse(empty($body?['post_optimisation_penalties']))}} {{ range _, postOptimisationPenaltiesItem := $body?['post_optimisation_penalties']}} {
+    "start": {{postOptimisationPenaltiesItem?['start']}},
+    "end": {{postOptimisationPenaltiesItem?['end']}},
+    "group": {{postOptimisationPenaltiesItem?['group']}},
+    "score": {{postOptimisationPenaltiesItem?['score']}},
+    "strand": {{postOptimisationPenaltiesItem?['strand']}}
+  } {{end}} {{else}} null {{end}},
   "postOptimisationScoreDetail": {{$body?['post_optimisation_score_detail']}}
 }",
   "sampleInput": "{

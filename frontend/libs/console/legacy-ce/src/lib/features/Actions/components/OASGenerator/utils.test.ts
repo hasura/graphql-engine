@@ -136,3 +136,135 @@ describe('optimizer API', () => {
     expect(action).toMatchSnapshot();
   });
 });
+
+describe('array transforms', () => {
+  const event = {
+    type: 'object',
+    properties: { at_time: { type: 'string' } },
+  };
+  const lineItem = {
+    type: 'object',
+    properties: {
+      item_sku: { type: 'string' },
+      unit_count: { type: 'integer' },
+      // names that aren't valid Kriti identifiers or are Kriti keywords
+      end: { type: 'array', items: event },
+      '2fa_codes': { type: 'array', items: event },
+      item: { type: 'array', items: event },
+      // array of arrays
+      event_grid: { type: 'array', items: { type: 'array', items: event } },
+    },
+  };
+  const arrayOas = {
+    openapi: '3.0.0',
+    info: { title: 'orders', version: '1.0.0' },
+    servers: [{ url: 'http://example.com' }],
+    paths: {
+      '/orders': {
+        post: {
+          operationId: 'createOrders',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    'line-items': { type: 'array', items: lineItem },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            '200': {
+              description: 'ok',
+              content: {
+                'application/json': {
+                  schema: { type: 'array', items: lineItem },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  } as unknown as Oas3;
+
+  it('ranges request arrays over a valid identifier, not the raw field name', async () => {
+    const action = await generateAction(arrayOas, 'createOrders');
+    const transform = action.requestTransforms?.value as string;
+
+    expect(transform).toMatch(
+      /range _, lineItemsItem := \$body\.input\.\w+\?\['lineItems'\]/,
+    );
+    expect(transform).toContain("{{lineItemsItem?['itemSku']}}");
+    expect(transform).not.toContain('range _, line-items');
+  });
+
+  it('ranges a root response array over $body through item', async () => {
+    const action = await generateAction(arrayOas, 'createOrders');
+
+    expect(action.responseTransforms).toContain('{{ range _, item := $body}}');
+    expect(action.responseTransforms).toContain("{{item?['unit_count']}}");
+  });
+
+  it('never uses a keyword, an invalid identifier or `item` as a loop variable', async () => {
+    const action = await generateAction(arrayOas, 'createOrders');
+    const variables = [
+      ...action.responseTransforms.matchAll(/range _, (\S+) :=/g),
+    ].map((match) => match[1]);
+
+    expect(variables).toEqual(
+      expect.arrayContaining([
+        'item',
+        'endItem',
+        'item_2faCodesItem',
+        'itemItem',
+      ]),
+    );
+    variables.forEach((variable) =>
+      expect(variable).toMatch(/^[A-Za-z][A-Za-z0-9_]*$/),
+    );
+    // only the root array binds `item`
+    expect(variables.filter((variable) => variable === 'item')).toHaveLength(1);
+  });
+
+  it('renders an array of arrays as nested ranges', async () => {
+    const action = await generateAction(arrayOas, 'createOrders');
+
+    expect(action.responseTransforms).toContain(
+      "\"eventGrid\": {{if inverse(empty(item?['event_grid']))}} {{ range _, eventGridItem := item?['event_grid']}} " +
+        '{{if inverse(empty(eventGridItem))}} {{ range _, eventGridItemItem := eventGridItem}} {',
+    );
+    expect(action.responseTransforms).toContain(
+      '"atTime": {{eventGridItemItem?[\'at_time\']}}',
+    );
+    expect(action.responseTransforms).not.toContain('ARRAY');
+  });
+
+  it('only writes response keys that are fields of the generated type', async () => {
+    const action = await generateAction(arrayOas, 'createOrders');
+    const typeFields = new Set(
+      [...action.types.matchAll(/^\s+(\w+)(?:\(.*\))?:/gm)].map(
+        (match) => match[1],
+      ),
+    );
+    const keys = [...action.responseTransforms.matchAll(/"([^"]+)":/g)].map(
+      (match) => match[1],
+    );
+
+    // `2fa_codes` is named `_2faCodes` in the GraphQL schema
+    expect(keys).toContain('_2faCodes');
+    keys.forEach((key) => expect(typeFields).toContain(key));
+  });
+
+  it('reads request fields under their GraphQL names', async () => {
+    const action = await generateAction(arrayOas, 'createOrders');
+    const transform = action.requestTransforms?.value as string;
+
+    expect(transform).toContain(
+      "{{ range _, item_2faCodesItem := lineItemsItem?['_2faCodes']}}",
+    );
+  });
+});
