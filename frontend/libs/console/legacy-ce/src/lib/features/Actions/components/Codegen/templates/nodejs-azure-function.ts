@@ -1,5 +1,6 @@
 import { parse } from 'graphql';
 import { CodegenDerive, CodegenFile } from './types';
+import { getDerivedOutput } from './derive';
 
 // Generate the basic handler
 // For azure
@@ -38,7 +39,7 @@ const generateFetch = (
   actionName: string,
   rawQuery: string,
   variables: string,
-  queryRootFieldName: string,
+  derivedOutput: string,
   derive: { operation: string; endpoint?: string },
 ) => {
   const queryName = 'HASURA_' + actionName.toUpperCase();
@@ -83,9 +84,7 @@ const execute${actionNameUpper} = async (variables) => {
   // If success
   context.res = {
     headers: { 'Content-Type': 'application/json' },
-    body: {
-      ...data.${queryRootFieldName}
-    }
+    body: ${derivedOutput}
   };
 };`;
 
@@ -130,22 +129,35 @@ export const templater = (
   //    field1: "",
   //    field2: ""
   // }
+  // The output type can be a scalar (e.g. `String!`), which has no fields:
+  // then the handler responds with a single placeholder value. When it is a
+  // list (e.g. `[ActionResult!]!`), the handler responds with a list of one
+  // placeholder.
+  let actionOutputNamedType = actionDef.type;
+  let isListOutput = false;
+  while (actionOutputNamedType.kind !== 'NamedType') {
+    if (actionOutputNamedType.kind === 'ListType') {
+      isListOutput = true;
+    }
+    actionOutputNamedType = actionOutputNamedType.type;
+  }
   const actionOutputType = ast.definitions.find(
-    (def: any) => def.name.value === actionDef.type.name.value,
-  );
-  const outputTypeFieldNames = actionOutputType.fields.map(
-    (f: any) => f.name.value,
+    (def: any) =>
+      def.kind === 'ObjectTypeDefinition' &&
+      def.name.value === actionOutputNamedType.name.value,
   );
 
-  let outputTypeSpread = '{\n      ';
-  outputTypeFieldNames.forEach((n: string, i: number) => {
-    outputTypeSpread += n + ': ""';
-    if (i === outputTypeFieldNames.length - 1) {
-      outputTypeSpread += '\n    }';
-    } else {
-      outputTypeSpread += ',\n      ';
-    }
-  });
+  let sampleOutput = '""';
+  if (actionOutputType) {
+    const outputTypeFieldNames: string[] = actionOutputType.fields.map(
+      (f: any) => f.name.value,
+    );
+    sampleOutput = `{\n${outputTypeFieldNames.map((n) => `  ${n}: ""`).join(',\n')}\n}`;
+  }
+  if (isListOutput) {
+    sampleOutput = `[\n${sampleOutput.replace(/^/gm, '  ')},\n]`;
+  }
+  const outputTypeSpread = sampleOutput.replace(/\n/g, '\n    ');
 
   const basicHandlerCode = generateHandler(
     extractArgsFromBody,
@@ -158,13 +170,6 @@ export const templater = (
   const isDerivation = !!(derive && derive.operation);
   if (isDerivation && derive) {
     const operationAST: any = parse(derive.operation);
-    const queryRootField =
-      operationAST.definitions[0].selectionSet.selections.find(
-        (f: any) => !f.name.value.startsWith('__'),
-      );
-    const queryRootFieldName = queryRootField.alias
-      ? queryRootField.alias.value
-      : queryRootField.name.value;
     const variableNames = operationAST.definitions[0].variableDefinitions.map(
       (vdef: any) => vdef.variable.name.value,
     );
@@ -173,7 +178,12 @@ export const templater = (
       actionName,
       derive.operation,
       `{ ${variableNames.join(', ')} }`,
-      queryRootFieldName,
+      getDerivedOutput(
+        derive.operation,
+        actionDef.type,
+        ast.definitions,
+        '    ',
+      ),
       derive,
     );
   }

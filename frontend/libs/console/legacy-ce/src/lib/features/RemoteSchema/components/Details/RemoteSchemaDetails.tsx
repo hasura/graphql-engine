@@ -67,6 +67,7 @@ const RemoteSchemaDetails = () => {
                   <Input
                     type="text"
                     placeholder={manualUrl || `<${envName}>`}
+                    value={manualUrl}
                     full
                     disabled
                     rightButton={

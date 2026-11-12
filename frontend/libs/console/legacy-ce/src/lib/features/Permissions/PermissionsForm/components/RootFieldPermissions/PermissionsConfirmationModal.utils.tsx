@@ -1,6 +1,3 @@
-import { getLSItem } from '@hasura/shared/utils';
-import { LS_KEYS } from '@hasura/shared/types';
-
 type Scenario = 'aggregate' | 'pk' | 'pks';
 
 type GetPermissionsModalTitleArgs = {
@@ -36,9 +33,3 @@ export const getPermissionsModalDescription = (scenario: Scenario) =>
       GraphQL root field visibility since the primary key is disabled.
     </>
   );
-
-export const getPermissionModalEnabled = () => {
-  const status = getLSItem(LS_KEYS.permissionConfirmationModalStatus);
-  const isEnabled = !status || status === 'enabled';
-  return isEnabled;
-};

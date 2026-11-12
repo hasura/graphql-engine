@@ -13,7 +13,7 @@ import { EETrialCard, useEELiteAccess } from '../../../EETrial';
 import { isProConsole } from '@hasura/shared/utils';
 import { useAppContext } from '@hasura/shared/context';
 
-export const buildUrl = (name: string, section: string) =>
+const buildUrl = (name: string, section: string) =>
   `/api/allow-list/detail/${name}/${section}`;
 
 export const AllowListDetail: React.FC = () => {

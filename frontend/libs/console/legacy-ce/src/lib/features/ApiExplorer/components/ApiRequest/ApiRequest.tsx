@@ -35,6 +35,7 @@ const ApiRequest = ({ numberOfTables }: Props) => {
     handleHeaderUnfocus,
     removeRequestHeader,
     changeRequestHeader,
+    updateAuthHeaders,
     analyzingToken,
     tokenInfo,
     analyzeBearerToken,
@@ -109,6 +110,7 @@ const ApiRequest = ({ numberOfTables }: Props) => {
         analyzeBearerToken={analyzeBearerToken}
         analyzingToken={analyzingToken}
         changeRequestHeader={changeRequestHeader}
+        updateAuthHeaders={updateAuthHeaders}
         headers={headers}
         removeRequestHeader={removeRequestHeader}
         serverConfig={serverConfig}

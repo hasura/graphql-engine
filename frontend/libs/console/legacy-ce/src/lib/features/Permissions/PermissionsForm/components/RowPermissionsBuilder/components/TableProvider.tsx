@@ -30,16 +30,29 @@ export const tableContext = createContext<TableContext>({
   },
 });
 
+/**
+ * The relationships a permission can use: the server accepts a remote database
+ * relationship to a source of any kind, but only on a single column join.
+ * Remote schema relationships aren't supported.
+ */
+export const isPermissionRelationship = (relationship: Relationships[number]) =>
+  relationship.type === 'localRelationship' ||
+  (relationship.type === 'remoteDatabaseRelationship' &&
+    Object.keys(relationship.definition.mapping).length === 1);
+
 export const TableProvider = ({
   children,
   table: defaultTable,
   source: sourceProp,
+  isRemote: isRemoteProp,
   objectPath,
 }: {
   children: React.ReactNode;
   table?: Table;
   /** the source of the table, the one of the closest table by default */
   source?: string;
+  /** whether a remote database relationship leads to the table, inherited by default */
+  isRemote?: boolean;
   objectPath?: string;
 }) => {
   const [table, setTableName] = useState<Table>(defaultTable || ({} as Table));
@@ -54,9 +67,13 @@ export const TableProvider = ({
     source: rootSource,
   } = useContext(rootTableContext);
   const { loadRelationships } = useContext(rowPermissionsContext);
-  const { table: closestTableName, source: closestSource } =
-    useContext(tableContext);
+  const {
+    table: closestTableName,
+    source: closestSource,
+    isRemote: closestIsRemote,
+  } = useContext(tableContext);
   const source = sourceProp ?? closestSource ?? rootSource;
+  const isRemote = isRemoteProp ?? closestIsRemote;
 
   //  Stringify values to get a stable key for the derived-state sync below
   const stringifiedTable = getTableDisplayName(table);
@@ -76,10 +93,6 @@ export const TableProvider = ({
   if (syncKey !== prevSyncKey) {
     setPrevSyncKey(syncKey);
     const closestTable = findTable(tables, closestTableName, closestSource);
-    const supportedSources = tables
-      .map((i) => i.dataSource)
-      .filter((s) => s?.kind === 'postgres')
-      .map((s) => s?.name);
     const foundTable = findTable(tables, table, source);
     let skipObjectPath = false;
     if (foundTable) {
@@ -89,13 +102,7 @@ export const TableProvider = ({
         skipObjectPath = true;
       } else {
         setRelationships(
-          foundTable.relationships.filter((rel) => {
-            return (
-              rel.type === 'localRelationship' ||
-              (rel.type !== 'remoteSchemaRelationship' &&
-                supportedSources?.includes(rel.definition.toSource))
-            );
-          }),
+          foundTable.relationships.filter(isPermissionRelationship),
         );
       }
     }
@@ -128,6 +135,7 @@ export const TableProvider = ({
     <tableContext.Provider
       value={{
         source,
+        isRemote,
         columns,
         setColumns,
         computedFields,

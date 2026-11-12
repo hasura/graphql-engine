@@ -26,6 +26,7 @@ export const useListAllDatabaseRelationships = ({
   const {
     data: { tracked = [] } = {},
     isLoading: isSuggestedRelationshipsLoading,
+    isPending: isSuggestedRelationshipsPending,
     isFetching: isSuggestedRelationshipsFetching,
     error: suggestedRelationshipsError,
   } = useSuggestedRelationships({
@@ -50,6 +51,7 @@ export const useListAllDatabaseRelationships = ({
   const {
     data: relationshipsWithManualConfigs = [],
     isLoading: isMetadataLoading,
+    isPending: isMetadataPending,
     isFetching: isMetadataFetching,
     error: metadataError,
   } = useMetadata((m) => {
@@ -113,6 +115,9 @@ export const useListAllDatabaseRelationships = ({
   return {
     data: [...filteredTrackedFkRels, ...relationshipsWithManualConfigs],
     isLoading: isSuggestedRelationshipsLoading || isMetadataLoading,
+    // the suggested relationships wait for the metadata, and a disabled query
+    // isn't `isLoading` in React Query v5
+    isPending: isSuggestedRelationshipsPending || isMetadataPending,
     isFetching: isSuggestedRelationshipsFetching || isMetadataFetching,
     error: [metadataError, suggestedRelationshipsError],
   };

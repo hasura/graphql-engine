@@ -20,7 +20,7 @@ import { format } from 'date-fns';
 import { ArrayInput } from '../../../../InsertRow/components/ArrayInput';
 import { hasTimeZone } from '../../../../InsertRow/components/ColumnRowInput.utils';
 
-export type FilterValueKind = 'list' | 'boolean' | 'json' | 'datetime' | 'text';
+type FilterValueKind = 'list' | 'boolean' | 'json' | 'datetime' | 'text';
 
 const BUILT_IN_SCALARS = ['String', 'Int', 'Float', 'Boolean', 'ID'];
 

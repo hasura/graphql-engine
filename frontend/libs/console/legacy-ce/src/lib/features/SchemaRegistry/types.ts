@@ -55,33 +55,15 @@ export type SchemaChangeCard = {
 /*
   Schema Registry Query types
 */
-
-export type GetSchemaListResponseWithError = {
-  data?: GetSchemaListQueryResponse;
-  errors?: GraphQLError[];
-};
-export type GetSchemaListQueryResponse = {
-  schema_registry_dumps: SchemaRegistryDumpWithSiblingSchema[];
-  schema_registry_dumps_aggregate: SchemaRegistryDumpsAggregate;
-};
-export type GetSchemaChangeListResponseWithError = {
-  data?: GetSchemaChangeListQueryResponse;
-  errors?: GraphQLError[];
-};
-export type GetSchemaChangeListQueryResponse = {
-  schema_registry_dumps: SchemaChangeListDumpWithSiblingSchema[];
-  schema_registry_dumps_aggregate: SchemaRegistryDumpsAggregate;
-};
-
 /**
  * Query types for dumps_v2 aggregate
  * START
  */
-export type SchemaRegistryDumpsAggregate = {
+type SchemaRegistryDumpsAggregate = {
   aggregate: SchemaRegistryCountAggregate;
 };
 
-export type SchemaRegistryCountAggregate = {
+type SchemaRegistryCountAggregate = {
   count: number;
 };
 
@@ -109,10 +91,10 @@ export type GetSchemaRegstiryDumpsV1AggregateResponse = {
 export type GetSchemaRegistryNotificationResponse = {
   schema_registry_dumps_v2: SchemaRegsitryNotificationData[];
 };
-export type SchemaRegsitryNotificationData = SchemaRegistryChangeRecordedAt & {
+type SchemaRegsitryNotificationData = SchemaRegistryChangeRecordedAt & {
   diff_with_previous_schema: SchemaDiffData[];
 };
-export type SchemaRegistryChangeRecordedAt = {
+type SchemaRegistryChangeRecordedAt = {
   change_recorded_at: string;
 };
 /**
@@ -181,7 +163,7 @@ export type SiblingSchema = SchemaRegistryDump & {
   diff_with_previous_schema: SchemaDiffData[];
 };
 
-export type SchemaDiffData = {
+type SchemaDiffData = {
   current_schema_hash: string;
   former_schema_hash: string;
   former_schema_id: string;
@@ -219,7 +201,7 @@ export type GetAlertConfigQueryResponse = {
   alert_config_service: AlertConfig[];
 };
 
-export type AlertConfig = {
+type AlertConfig = {
   project_id: string;
   type: AlertType;
   metadata: Record<string, any>;
@@ -231,7 +213,7 @@ export type SetAlertConfigResponseWithError = {
   errors?: GraphQLError[];
 };
 
-export type SchemaRegistryAlert = {
+type SchemaRegistryAlert = {
   id: string;
   project_id: string;
   alert_type: string;
@@ -243,24 +225,9 @@ export type SchemaRegistryAlert = {
 export type SetAlertConfigQueryResponse = {
   schema_registry_alerts: SchemaRegistryAlert;
 };
-
-export type SetSchemaRegistryAlert = {
-  id: string;
-  project_id: string;
-  alert_type: string;
-  config: Record<string, boolean>;
-};
-
 export type ConfigKey = 'safe' | 'dangerous' | 'breaking';
 
 // Tag types
-export type Tag = {
-  id: string;
-  name: string;
-  color: string;
-  projectID?: string;
-};
-
 export type CreateSchemaRegistryTagResponseWithError = {
   data?: CreateSchemaRegistryTagMutationInsertResponse;
   errors?: GraphQLError[];
@@ -286,7 +253,7 @@ export type DeleteSchemaRegistryTagMutationResponse = {
   delete_schema_registry_tags_by_pk: DeletedTagID;
 };
 
-export type DeletedTagID = {
+type DeletedTagID = {
   id: string;
 };
 
@@ -315,7 +282,7 @@ export type GetSlackStateQueryResponse = {
   slack_config: SlackConfig[];
 };
 
-export type SlackConfig = {
+type SlackConfig = {
   channel_name: string;
   webhook_url: string;
   project_id: string;

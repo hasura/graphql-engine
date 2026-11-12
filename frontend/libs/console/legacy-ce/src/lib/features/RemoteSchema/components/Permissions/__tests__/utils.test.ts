@@ -142,6 +142,33 @@ describe('Utils.ts', () => {
     expect(sdl).toMatchSnapshot();
   });
 
+  it('REGRESSION TEST: generateSDL escapes string values (parse-failed "not enough input")', () => {
+    const remoteSchema = `
+      type Query {
+        greet(
+          message: String = "say \\"hi\\"\\nbye"
+          loud: Boolean = false
+          name: String
+        ): String
+      }
+    `;
+    const schemaFields = getRemoteSchemaFields(
+      buildSchema(remoteSchema),
+      buildSchema(addPresetDefinition(remoteSchema)),
+    );
+
+    const sdl = generateSDL(schemaFields, {
+      'type Query': { greet: { name: 'a "quoted"\nname' } },
+    });
+
+    // the SDL sent to `add_remote_schema_permissions` must parse
+    expect(() => buildSchema(addPresetDefinition(sdl))).not.toThrow();
+    expect(sdl).toContain('message : String = "say \\"hi\\"\\nbye"');
+    // a default is a literal of its type, not a string
+    expect(sdl).toContain('loud : Boolean = false');
+    expect(sdl).toContain('@preset(value: "a \\"quoted\\"\\nname")');
+  });
+
   it('REGRESSION TEST: generateSDL should include referenced enum types (ALBUM_select_column issue)', () => {
     // This test reproduces the bug reported in the issue:
     // When a field has an argument that references an enum type (like ALBUM_select_column),

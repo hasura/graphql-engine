@@ -11,7 +11,7 @@ import {
   isScalarType,
 } from 'graphql';
 
-export type GetTypeResult = {
+type GetTypeResult = {
   type: string;
   isList?: boolean;
   isObject?: boolean;
@@ -44,7 +44,7 @@ const getType = (type: GraphQLType): GetTypeResult | null => {
   return null;
 };
 
-export const getFields = (tableName: string, schema: GraphQLSchema) => {
+const getFields = (tableName: string, schema: GraphQLSchema) => {
   const type = schema.getType(tableName);
 
   if (isObjectType(type) || isInputObjectType(type)) {
@@ -99,7 +99,7 @@ export const getColumnOperators = ({
   return [];
 };
 
-export const getColumns = (
+const getColumns = (
   fields: GraphQLInputFieldMap | GraphQLFieldMap<any, any>,
 ) => {
   const fieldsObject = createFieldObject(fields);
@@ -109,7 +109,7 @@ export const getColumns = (
   );
 };
 
-export const getRelationships = (
+const getRelationships = (
   fields: GraphQLInputFieldMap | GraphQLFieldMap<any, any>,
 ) => {
   const fieldsObject = createFieldObject(fields);
@@ -118,7 +118,7 @@ export const getRelationships = (
   );
 };
 
-export const getBoolOperators = () => {
+const getBoolOperators = () => {
   return ['_and', '_or', '_not'];
 };
 

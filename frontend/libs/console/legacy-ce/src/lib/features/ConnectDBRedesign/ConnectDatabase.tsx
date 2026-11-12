@@ -7,7 +7,7 @@ import { useDatabaseConnectDrivers } from './hooks/useConnectDatabaseDrivers';
 import type { DbConnectConsoleType } from './types';
 import type { SupportedDriver } from '@hasura/shared/types';
 
-export type ConnectDatabaseProps = {
+type ConnectDatabaseProps = {
   /**
    *
    * Can be used to set initial selected database. Will default to Postgres if not set.

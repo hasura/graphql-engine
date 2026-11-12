@@ -18,28 +18,11 @@ export const DataTypeToSQLTypeMap: Record<
   time: ['time'],
   geography: ['geography'],
   uuid: ['uniqueidentifier'],
+  binary: ['binary', 'varbinary', 'image'],
   array: [],
 };
 
 export const DataTypeScalars = Object.values(DataTypeToSQLTypeMap).flat();
-
-export const columnDataTypes = {
-  BIGINT: 'bigint',
-  BIT: 'bit',
-  DECIMAL: 'decimal',
-  INT: 'int',
-  MONEY: 'money',
-  FLOAT: 'float',
-  NCHAR: 'nchar',
-  NTEXT: 'ntext',
-  NVARCHAR: 'nvarchar',
-  BINARY: 'binary',
-  IMAGE: 'image',
-  NUMERIC: 'numeric',
-  DATE: 'date',
-  DATETIME: 'datetime',
-  DATETIME2: 'datetime2',
-};
 
 export function adaptSQLDataType(
   sqlDataType: string,

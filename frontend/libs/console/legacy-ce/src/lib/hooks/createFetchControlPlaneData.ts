@@ -8,7 +8,7 @@ import { GraphQLError } from 'graphql';
  * to transform the response data. This can be transformed into a hook, and directly use headers from
  * `useAppSelector` hook if required. This can also be passed to react query as the `queryFn` if required.
  */
-export function controlPlaneDataApiClient<
+function controlPlaneDataApiClient<
   ResponseData,
   TransformedData = ResponseData,
 >(

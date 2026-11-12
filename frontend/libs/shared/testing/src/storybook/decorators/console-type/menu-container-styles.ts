@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import { MenuPlacement } from './MenuContent';
 
-export const twStyles = {
+const twStyles = {
   label: `font-bold text-[#2E3438] text-[12px]`,
   menuContainer: {
     base: `right-0 mr-4 rounded-t-md z-99999 fixed pointer-events-auto`,
@@ -42,13 +42,13 @@ export const twStyles = {
 };
 
 // Functions to generate classNames
-export const getMenuContainerClass = (menuPlacement: MenuPlacement): string =>
+const getMenuContainerClass = (menuPlacement: MenuPlacement): string =>
   clsx(
     twStyles.menuContainer.base,
     twStyles.menuContainer.position[menuPlacement],
   );
 
-export const getTriggerButtonClass = (
+const getTriggerButtonClass = (
   menuPlacement: MenuPlacement,
   minimized: boolean,
 ): string =>
@@ -59,7 +59,7 @@ export const getTriggerButtonClass = (
     !minimized && twStyles.triggerButton.notMinimized.translate[menuPlacement],
   );
 
-export const getMainMenuContainerClass = (
+const getMainMenuContainerClass = (
   menuPlacement: MenuPlacement,
   minimized: boolean,
 ): string =>

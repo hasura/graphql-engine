@@ -33,6 +33,37 @@ very undersized for your system. You can read more details about the configurati
 
 With respect to Hasura, several environment variables and project settings can be configured to tune performance.
 
+#### CPU allocation and Haskell runtime capabilities
+
+The GraphQL Engine uses the Haskell runtime, where a _capability_ allows Haskell code to execute on one CPU core. By
+default, the runtime may use the number of processors visible on the host. In containers, this can be much larger than
+the CPU resources available to the GraphQL Engine. The engine attempts to detect cgroup CPU limits and adjust its
+capability count automatically.
+
+If cgroups cannot be detected, or a cgroup has no CPU limit (for example, `cpu.max` contains `max`), the engine leaves
+the capability count unchanged. When automatic detection leaves this count greater than sixteen without a CPU limit, it
+logs a warning. Eight is a warning threshold, not a maximum supported CPU count. Too many capabilities can increase
+per-capability memory overhead, delay garbage collection, and cause gradually increasing memory usage due to 
+fragmentation that looks like a memory leak.
+
+To size the runtime appropriately, either:
+
+- Configure a container CPU limit, such as Docker's `--cpus` option or Kubernetes' `resources.limits.cpu`, so the engine
+  can automatically size its capabilities when cgroup limits are detectable. A Kubernetes CPU _request_ alone does not
+  set a CPU limit.
+- Set the `GHCRTS` environment variable to `-N<number>`, replacing `<number>` with a positive integer appropriate for
+  the CPU resources available to the engine. For example, `GHCRTS="-N4"` configures four capabilities. Preserve any
+  other runtime options already set in `GHCRTS` when adding or changing `-N`.
+
+:::caution Balance memory usage and performance
+
+Reducing the capability count can help avoid excessive memory usage and memory leak-like growth, but setting it too low
+reduces parallelism and can limit throughput or increase latency. A low container CPU limit can also cause CPU
+throttling. Benchmark representative workloads and monitor memory usage, CPU throttling, throughput, and latency before
+choosing a value. Do not use a low capability count as a substitute for investigating an actual memory leak.
+
+:::
+
 #### Connection pooling
 
 Hasura provides automatic connection pools for (PostgreSQL and MSSQL) database connections. These pools are elastic and

@@ -2,7 +2,7 @@ import { TableFunction } from '@hasura/shared/types';
 import { useParams, useSearchParams } from 'react-router';
 
 //  TYPES
-export type QueryStringParseResult =
+type QueryStringParseResult =
   | {
       querystringParseResult: 'success';
       qualifiedFunction: TableFunction | undefined;

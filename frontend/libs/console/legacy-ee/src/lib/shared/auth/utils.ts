@@ -378,7 +378,7 @@ export const buildMetricsAuthHeaders = (
   }
 };
 
-export type HasuraJWTPayload = JwtPayload & {
+type HasuraJWTPayload = JwtPayload & {
   allowed_schemas?: string[];
   allowed_tables?: Record<string, any>;
   collaborator_privileges?: string[];

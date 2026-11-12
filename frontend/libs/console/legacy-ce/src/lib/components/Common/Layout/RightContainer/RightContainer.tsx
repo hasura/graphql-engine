@@ -9,7 +9,7 @@ const RightContainer: React.FC<{
   return (
     <div className="container-fluid">
       <div className="row">
-        <div className={`${styles.main} pl-0 ${styles.padd_top}`} style={style}>
+        <div className={`${styles.main} pt-4`} style={style}>
           <div className={`${styles.rightBar}`}>{children}</div>
         </div>
       </div>

@@ -24,6 +24,24 @@ replaces the older [schema/Metadata API](/api-reference/schema-metadata-api/inde
 
 :::
 
+:::info Request version vs. Metadata version
+
+`export_metadata` and `replace_metadata` requests take a top-level `version` field, `1` or `2`, which defaults to `1`.
+It selects the format of the API call itself:
+
+- `export_metadata` version 1 returns the bare Metadata object; version 2 wraps it in an object together with
+  `resource_version`.
+- `replace_metadata` version 2 requires the Metadata to be wrapped in an object together with options like
+  `allow_inconsistent_metadata` and `allow_warnings`; version 1 accepts either the bare Metadata object or that wrapped
+  form.
+
+It is unrelated to the `version` field _inside_ the Metadata object, which is the version of the Metadata format. The
+current format, which supports multiple databases, is version `3` (the format used by CLI config v3 projects), and it
+can be exported and replaced with either request version. `replace_metadata` also still accepts the older Metadata
+versions `1` and `2`, which have no `sources`.
+
+:::
+
 ## export_metadata {#metadata-export-metadata}
 
 `export_metadata` is used to export the current Metadata from the server as a JSON file.

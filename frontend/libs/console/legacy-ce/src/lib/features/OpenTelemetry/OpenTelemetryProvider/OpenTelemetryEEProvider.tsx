@@ -1,5 +1,3 @@
-import * as React from 'react';
-
 import { OpenTelemetry } from '../OpenTelemetry/OpenTelemetry';
 
 import { useOpenTelemetry } from './hooks/useOpenTelemetry';

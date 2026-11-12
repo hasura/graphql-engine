@@ -52,4 +52,20 @@ describe('getTableColumnsCurry', () => {
       vi.mocked(runSQL).mockClear();
     },
   );
+
+  it('asks for the columns in the order they are defined in the table', async () => {
+    await getTableColumnsCurry('postgres')({
+      dataSourceName: 'db',
+      table: { schema: 'public', name: 'album' },
+      endpoints: { queryV2: '/v2/query' } as never,
+      fetchJson: vi.fn(),
+    });
+
+    const columnsQuery = vi
+      .mocked(runSQL)
+      .mock.calls.map(([{ args }]) => args.sql)
+      .find((sql) => sql.includes('pg_catalog.format_type'));
+    expect(columnsQuery).toMatch(/ORDER BY a\.attnum\s*$/);
+    vi.mocked(runSQL).mockClear();
+  });
 });

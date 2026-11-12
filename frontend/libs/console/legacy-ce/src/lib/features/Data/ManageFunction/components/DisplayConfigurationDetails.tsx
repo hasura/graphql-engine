@@ -11,7 +11,7 @@ import { GetFunctionDefinitionResult } from '@hasura/metadata/data-source';
 import { TableDisplayName } from '../../ManageTable/components/TableDisplayName';
 import { dataRoutes } from '@hasura/shared/utils';
 
-export type DisplayConfigurationDetailsProps = {
+type DisplayConfigurationDetailsProps = {
   source: QualifiedDataSource;
   currentFunction: MetadataFunction;
   functionDefinition: GetFunctionDefinitionResult | null | undefined;

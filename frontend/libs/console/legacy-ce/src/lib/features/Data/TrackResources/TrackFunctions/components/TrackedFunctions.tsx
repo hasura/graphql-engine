@@ -7,7 +7,6 @@ import {
   IconButton,
   IndicatorCard,
   LearnMoreLink,
-  SkeletonList,
   hasuraToast,
   showErrorNotification,
 } from '@hasura/shared/ui';
@@ -26,7 +25,7 @@ import { Source } from '@hasura/shared/types';
 import { dataRoutes } from '@hasura/shared/utils';
 import { TrackedFunction } from '@hasura/metadata/data-source';
 
-export type TrackedFunctionsProps = {
+type TrackedFunctionsProps = {
   source: Source;
   trackedFunctions: TrackedFunction[];
   isLoading?: boolean;
@@ -92,7 +91,8 @@ export const TrackedFunctions = (props: TrackedFunctionsProps) => {
     getCheckedItems,
   } = listProps;
 
-  if (isLoading) return <SkeletonList count={5} />;
+  if (isLoading)
+    return <CardedTable columns={['', 'Function', '']} data={[]} loading />;
 
   if (!trackedFunctions.length)
     return (

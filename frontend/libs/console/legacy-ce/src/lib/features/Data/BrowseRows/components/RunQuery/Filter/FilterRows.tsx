@@ -7,7 +7,7 @@ import { useFieldArray } from 'react-hook-form';
 import { FilterRow } from './FilterRow';
 import { FilterFormValues, FiltersAndSortFormValues } from '../types';
 
-export type FilterRowsProps = {
+type FilterRowsProps = {
   columns: TableColumn[];
   /** operators of a column whose operators aren't known */
   operators: Operator[];

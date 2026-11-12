@@ -36,7 +36,7 @@ import {
   frequentlyUsedColumnToFormColumn,
 } from './schema';
 
-export type AddTableFormProps = {
+type AddTableFormProps = {
   source: Source;
   targetSchema: string | null;
   onCreated: (table: { name: string; schema: string }) => void;
@@ -268,5 +268,3 @@ export const AddTableForm = ({
     </Form>
   );
 };
-
-export default AddTableForm;

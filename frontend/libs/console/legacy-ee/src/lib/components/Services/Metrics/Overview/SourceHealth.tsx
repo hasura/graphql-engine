@@ -13,10 +13,17 @@ import { hasAdminAccess } from '@hasura/console-legacy-ce';
 const SourceHealth = () => {
   const { data: projectInfo } = useProjectInfo();
   const { privileges } = useAuthContext();
-  const { data: inconsistentMetadata } = useInconsistentMetadata();
-  const { data: metadataData } = useMetadata();
-
   const isAdmin = hasAdminAccess(projectInfo?.privileges ?? privileges ?? []);
+  // the metadata API is admin-only, other collaborators would be logged out.
+  const { data: inconsistentMetadata } = useInconsistentMetadata(
+    undefined,
+    undefined,
+    isAdmin,
+  );
+  const { data: metadataData } = useMetadata(undefined, {
+    staleTime: 5 * 60000,
+    enabled: isAdmin,
+  });
 
   return (
     <div className={clsx(styles['sourceHealth'], 'bootstrap-jail')}>

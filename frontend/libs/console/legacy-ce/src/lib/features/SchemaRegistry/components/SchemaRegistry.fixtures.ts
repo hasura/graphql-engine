@@ -1,7 +1,7 @@
 import LZString from 'lz-string';
 import { Schema, SchemaChange, SchemaChangeCard } from '../types';
 
-export const sampleChanges: SchemaChange[] = [
+const sampleChanges: SchemaChange[] = [
   {
     criticality: { level: 'BREAKING' },
     type: 'FIELD_REMOVED',

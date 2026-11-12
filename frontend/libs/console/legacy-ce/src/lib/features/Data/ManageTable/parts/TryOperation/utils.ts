@@ -22,7 +22,7 @@ import {
 export type OperationType =
   'query' | 'mutation' | 'subscription' | 'streaming_subscription';
 
-export type TableRootFields = {
+type TableRootFields = {
   namespace?: string;
   query?: GraphQLField<unknown, unknown>;
   insert?: GraphQLField<unknown, unknown>;
@@ -156,7 +156,7 @@ export const toGraphQLLiteral = (value: unknown): string => {
   return JSON.stringify(value) ?? 'null';
 };
 
-export const getInitialValueColumn = (
+const getInitialValueColumn = (
   columns: TableColumn[],
 ): TableColumn | undefined =>
   columns.find((c) => c.isPrimaryKey && c.consoleDataType === 'integer') ??

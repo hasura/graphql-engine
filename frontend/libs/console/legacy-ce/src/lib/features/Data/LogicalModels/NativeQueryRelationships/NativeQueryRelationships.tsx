@@ -16,7 +16,7 @@ import { ListNativeQueryRow } from './components/ListNativeQueryRelationships';
 import { MetadataSelectors } from '@hasura/metadata/helpers';
 import { useCallback } from 'react';
 
-export type NativeQueryRelationshipProps = {
+type NativeQueryRelationshipProps = {
   dataSourceName: string;
   nativeQueryName: string;
 };

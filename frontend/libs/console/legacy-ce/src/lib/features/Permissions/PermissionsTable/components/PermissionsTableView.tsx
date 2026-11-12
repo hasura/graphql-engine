@@ -4,7 +4,7 @@ import { Checkbox, Input, Table } from '@hasura/shared/ui';
 import { AccessType } from '@hasura/shared/types';
 import { PermissionAccessCell } from './Cells';
 
-export interface PermissionsTableColumn {
+interface PermissionsTableColumn {
   key: string;
   label: string;
 }
@@ -37,7 +37,7 @@ export interface PermissionsTableRow {
   cells: Record<string, PermissionsTableCellData>;
 }
 
-export interface PermissionsTableViewProps {
+interface PermissionsTableViewProps {
   columns: PermissionsTableColumn[];
   rows: PermissionsTableRow[];
   roleColumnLabel?: string;

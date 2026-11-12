@@ -1,4 +1,3 @@
-import React from 'react';
 import { Line } from 'react-chartjs-2';
 import '../Common/registerCharts';
 import { format as formatDate } from 'date-fns';

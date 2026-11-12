@@ -17,6 +17,7 @@ export const getTableRowsFromGraphQL = async ({
   endpoints,
   fetchJson,
   defaultQueryRoot,
+  metadata,
 }: GetTableRowsProps & { defaultQueryRoot: string }): Promise<TableRow[]> => {
   const { schema, tableCustomization, sourceCustomization } =
     await getTableGraphQLContext({
@@ -25,6 +26,7 @@ export const getTableRowsFromGraphQL = async ({
       endpoints,
       fetchJson,
       caller: 'getTableRows',
+      metadata,
     });
 
   const selectQuery = generateGraphQLSelectQuery({

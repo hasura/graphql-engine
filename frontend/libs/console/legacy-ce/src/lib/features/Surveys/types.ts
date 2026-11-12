@@ -21,12 +21,6 @@ export enum AllowedSurveyThemes {
   familiaritySurveyTheme = 'Familiarity Survey Theme',
 }
 
-export enum AllowedSurveyNames {
-  deleteSurveyName = 'Hasura Cloud Project Delete Survey',
-  downgradeSurveyName = 'Hasura Cloud Project Downgrade Survey',
-  familiaritySurvey = 'Hasura familiarity survey',
-}
-
 export enum SurveyQueryKey {
   fetchAllSurveyData = 'survey:fetchAllSurveyData',
 }

@@ -127,6 +127,29 @@ describe('PermissionEditor (derived resultString + prop-reset)', () => {
     await waitFor(() => expect(saveButton()).toBeDisabled());
   });
 
+  it('saves the generated SDL, not the stale schemaDefinition prop', async () => {
+    const user = userEvent.setup();
+    const saveRemoteSchemaPermission = vi.fn();
+    render(
+      <PermissionEditor
+        {...baseProps}
+        // the definition before this edit, e.g. empty for a new role
+        schemaDefinition=""
+        saveRemoteSchemaPermission={saveRemoteSchemaPermission}
+        remoteSchemaFields={fields(['TypeA'])}
+      />,
+    );
+    await user.click(screen.getByRole('button', { name: 'check-all' }));
+    await waitFor(() => expect(saveButton()).toBeEnabled());
+
+    await user.click(saveButton());
+
+    expect(saveRemoteSchemaPermission).toHaveBeenCalledWith(
+      'GENERATED_SDL',
+      expect.any(Function),
+    );
+  });
+
   it('does not recompute the SDL in a render loop', async () => {
     render(
       <PermissionEditor

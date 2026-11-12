@@ -53,7 +53,7 @@ const FeatureFlagsBody = (props: FeatureFlagsProps) => {
   const result = useFeatureFlags(additionalFlags);
   const setFeatureFlagEnabled = useSetFeatureFlagEnabled();
   const { isError, isLoading, data } = result;
-  if (isLoading) return <h3 className="text-lg">Loading...</h3>;
+  if (isLoading) return <CardedTable columns={columns} data={[]} loading />;
   if (isError)
     return (
       <h3 className="text-lg">

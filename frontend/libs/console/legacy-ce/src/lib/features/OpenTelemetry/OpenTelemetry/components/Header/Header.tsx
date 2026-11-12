@@ -27,7 +27,7 @@ type HeaderLayoutProps = {
   hero: ReactNode;
 };
 
-export function HeaderLayout(props: HeaderLayoutProps) {
+function HeaderLayout(props: HeaderLayoutProps) {
   return (
     <>
       {/* The following markup has been stolen from the Prometheus page */}

@@ -2,7 +2,6 @@ import { getLSItem, setLSItem } from '@hasura/shared/utils';
 import {
   defaultRequestContentType,
   GraphiQlHeader,
-  QueryParams,
   RequestTransformState,
   RequestTransformStateBody,
   ResponseTransformState,
@@ -16,7 +15,6 @@ import {
 import {
   ActionRequestTransform,
   RequestTransformContentType,
-  RequestTransformMethod,
   ResponseTransform,
 } from '@hasura/shared/types';
 import { EventRequestTransform } from '@hasura/shared/types';
@@ -96,7 +94,7 @@ export const setEnvVarsToLS = (envVars: NameValue[]) => {
   setLSItem(LS_KEYS.webhookTransformEnvVars, JSON.stringify(validEnvVars));
 };
 
-export const getArrayFromServerPairObject = (
+const getArrayFromServerPairObject = (
   pairs: Nullable<Record<string, string>> | string,
 ): NameValue[] => {
   const transformArray: NameValue[] = [];
@@ -247,20 +245,6 @@ export const parseValidateApiData = (
     setError(errorMessage);
   }
 };
-
-export type ValidateTransformOptionsArgsType = {
-  version: '1' | '2';
-  inputPayloadString: string;
-  webhookUrl: string;
-  envVarsFromContext?: NameValue[];
-  sessionVarsFromContext?: NameValue[];
-  transformerBody?: RequestTransformStateBody;
-  requestUrl?: string;
-  queryParams?: QueryParams;
-  isEnvVar?: boolean;
-  requestMethod?: Nullable<RequestTransformMethod>;
-};
-
 const getWordListArray = (mainObj: Record<string, any>) => {
   const uniqueWords = new Set<string>();
   const recursivelyWalkObj = (obj: Record<string, any>) => {
@@ -393,11 +377,4 @@ export const getResponseTransformState = (
   isResponsePayloadTransform: !!responseTransform?.body,
   responseBody: getResponseTransformBody(responseTransform),
 });
-
-export const fixedInputStyles =
-  'inline-flex items-center h-onput rounded-l text-gray-600 font-semibold px-sm border border-r-0 border-gray-300 bg-gray-50';
-
-export const buttonShadow =
-  'bg-gray-50 bg-linear-to-t from-transparent to-white border border-gray-300 rounded shadow-xs hover:border-gray-400';
-
 export const editorDebounceTime = 1000;
