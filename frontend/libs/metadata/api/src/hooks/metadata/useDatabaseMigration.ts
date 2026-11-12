@@ -54,24 +54,20 @@ export async function runDatabaseMigration({
     });
   }
 
-  // The CLI does not accept pg_run_sql type.
-  // Therefore we need to fallback to run_sql.
+  // The CLI lists `run_sql` but not `pg_run_sql` among its query types, so
+  // Postgres keeps the unprefixed alias. Every other driver must keep its
+  // own prefix: `run_sql` is `pg_run_sql`, which fails on e.g. CockroachDB.
+  const getMigrationRunSqlQuery = (query: RunDatabaseMigrationArgs) => {
+    const runSqlQuery = getRunSqlQuery({ ...query, source: args.source });
+    return runSqlQuery.type === 'pg_run_sql'
+      ? { ...runSqlQuery, type: 'run_sql' as const }
+      : runSqlQuery;
+  };
+
   const migrationBody = {
     name: sanitize(args.name.substring(0, MAX_ALLOWED_MIGRATION_LENGTH)),
-    up: args.up.map((up) => ({
-      ...getRunSqlQuery({
-        ...up,
-        source: args.source,
-      }),
-      type: 'run_sql' as const,
-    })),
-    down: args.down.map((down) => ({
-      ...getRunSqlQuery({
-        ...down,
-        source: args.source,
-      }),
-      type: 'run_sql' as const,
-    })),
+    up: args.up.map(getMigrationRunSqlQuery),
+    down: args.down.map(getMigrationRunSqlQuery),
     datasource: args.source.name,
     skip_execution: args.skip_execution,
   };

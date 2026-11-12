@@ -1,8 +1,7 @@
 import { useCallback } from 'react';
 import { getRequestTransformObject } from '../../../ConfigureTransformation/utils';
-import { hasuraToast } from '@hasura/shared/ui';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 import {
-  getErrorMessage,
   isURLTemplated,
   isValidURL,
   transformHeaderConfigs,
@@ -19,7 +18,7 @@ const errorTitle = 'Saving event trigger failed';
 
 export type EventTriggerProperty = 'webhook' | 'ops' | 'retry_conf' | 'headers';
 
-export type ModifyEventTriggerArgs = {
+type ModifyEventTriggerArgs = {
   source: QualifiedDataSource;
   state: LocalEventTriggerState;
   transformState: RequestTransformState;
@@ -143,10 +142,9 @@ const useModifyEventTrigger = () => {
           },
           onError: (err) => {
             onError?.(err);
-            hasuraToast({
+            showErrorNotification({
               title: errorTitle,
-              message: getErrorMessage(err),
-              type: 'error',
+              error: err,
             });
           },
         },

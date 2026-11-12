@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import InheritedRolesEditor, { EditorProps } from './InheritedRolesEditor';
 
@@ -22,10 +23,67 @@ describe('InheritedRolesEditor prop sync (adjust-state-during-render)', () => {
     render(<InheritedRolesEditor {...baseProps()} />);
     expect(screen.getByText('Create Role:')).toBeInTheDocument();
     expect(screen.getByText('newRole')).toBeInTheDocument();
-    // create mode starts with no selected options
+    // create mode starts with no selected options, but every role to pick from
+    expect(
+      screen.queryByText('No singular/Non-inherited Roles available'),
+    ).not.toBeInTheDocument();
+    ['a', 'b', 'c'].forEach((role) =>
+      expect(screen.getByRole('checkbox', { name: role })).not.toBeChecked(),
+    );
+    expect(screen.getByRole('button', { name: 'Save Role' })).toBeDisabled();
+  });
+
+  it('shows the empty state only when there is no role to pick', () => {
+    render(<InheritedRolesEditor {...baseProps({ allRoles: [] })} />);
     expect(
       screen.getByText('No singular/Non-inherited Roles available'),
     ).toBeInTheDocument();
+  });
+
+  it('filters the roles to pick, keeping the hidden ones selected', async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    render(
+      <InheritedRolesEditor
+        {...baseProps({ allRoles: ['admin', 'editor', 'user'], onSave })}
+      />,
+    );
+
+    await user.click(screen.getByRole('checkbox', { name: 'admin' }));
+    await user.type(screen.getByPlaceholderText('Filter Roles...'), 'us');
+    expect(
+      screen.queryByRole('checkbox', { name: 'admin' }),
+    ).not.toBeInTheDocument();
+    await user.click(screen.getByRole('checkbox', { name: 'user' }));
+
+    await user.click(screen.getByRole('button', { name: 'Save Role' }));
+    expect(onSave).toHaveBeenCalledWith({
+      role_name: 'newRole',
+      role_set: ['admin', 'user'],
+    });
+  });
+
+  it('selects the role set of the role switched to', () => {
+    const { rerender } = render(
+      <InheritedRolesEditor
+        {...baseProps({
+          inheritedRole: { role_name: 'x', role_set: ['a'] },
+          inheritedRoleName: undefined,
+        })}
+      />,
+    );
+    rerender(
+      <InheritedRolesEditor
+        {...baseProps({
+          inheritedRole: { role_name: 'y', role_set: ['b', 'c'] },
+          inheritedRoleName: undefined,
+        })}
+      />,
+    );
+
+    expect(screen.getByRole('checkbox', { name: 'a' })).not.toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'b' })).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'c' })).toBeChecked();
   });
 
   it('syncs to the new role name when the inheritedRoleName prop changes', () => {

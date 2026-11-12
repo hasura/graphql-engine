@@ -1,7 +1,6 @@
 import { useCallback } from 'react';
 import { useMetadataMigration } from '@hasura/metadata/api';
-import { getErrorMessage } from '@hasura/shared/utils';
-import { hasuraToast } from '@hasura/shared/ui';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 import type { CustomTypes } from '@hasura/shared/types';
 import { generateSetCustomTypesQuery } from './useSetCustomGraphQLTypes';
 import { removeTypeRelationship } from '../utils';
@@ -43,10 +42,9 @@ const useRemoveActionRelationship = () => {
             });
           },
           onError: (err) => {
-            hasuraToast({
+            showErrorNotification({
               title: `Failed to remove the relationship: "${relationshipName}"`,
-              message: getErrorMessage(err),
-              type: 'error',
+              error: err,
             });
           },
         },

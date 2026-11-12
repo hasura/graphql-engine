@@ -15,6 +15,8 @@ import { MemoryRouter, useLocation } from 'react-router';
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import {
   AuthContext,
+  AppContext,
+  defaultAppState,
   type AuthService,
   type AdminSecretState,
 } from '@hasura/shared/context';
@@ -61,7 +63,19 @@ function fixedWrapper(
     return e(
       MemoryRouter,
       { initialEntries: [initialPath] },
-      e(AuthContext.Provider, { value: auth }, children, e(PathnameProbe)),
+      e(
+        AppContext.Provider,
+        {
+          value: {
+            ...defaultAppState,
+            endpoints: {
+              ...defaultAppState.endpoints,
+              metadata: '/v1/metadata',
+            },
+          },
+        },
+        e(AuthContext.Provider, { value: auth }, children, e(PathnameProbe)),
+      ),
     );
   };
 }
@@ -393,5 +407,109 @@ describe('useAuthFetchJson — consumer effect dependency behavior', () => {
     // Real dependency changed -> effect re-runs.
     await userEvent.click(screen.getByTestId('change-source'));
     await waitFor(() => expect(runs).toEqual(['pg_one', 'pg_two']));
+  });
+});
+
+describe('useAuthFetchJson — metadata authentication failures', () => {
+  it.each([
+    [400, 'access-denied'],
+    [403, 'access-denied'],
+    [400, 'invalid-jwt'],
+    [400, 'jwt-invalid-claims'],
+    [400, 'jwt-missing-role-claims'],
+    [403, 'permission-denied'],
+    [401, undefined],
+  ])('expires the session for HTTP %s / %s', async (status, code) => {
+    const error = new HttpError(status, 'auth rejected', { code });
+    mockedRequestJson.mockRejectedValueOnce(error);
+    const auth = makeAuthService(async () => ({}));
+    const { result } = renderHook(() => useAuthFetchJson(), {
+      wrapper: fixedWrapper(auth),
+    });
+    await act(async () => {
+      await expect(
+        result.current('/v1/metadata', { method: 'POST' }),
+      ).rejects.toBeInstanceOf(UnauthorizedError);
+    });
+    expect(auth.logout).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('pathname').textContent).toBe(LOGIN_PATH);
+  });
+
+  it.each([
+    [400, { code: 'parse-failed' }, '/v1/metadata'],
+    [400, { code: 'validation-failed' }, '/v1/metadata'],
+    [403, { code: 'unexpected' }, '/v1/metadata'],
+    [400, 'access-denied', '/v1/metadata'],
+    [400, null, '/v1/metadata'],
+    [500, { code: 'access-denied' }, '/v1/metadata'],
+    ['network-error', { code: 'access-denied' }, '/v1/metadata'],
+    [
+      403,
+      { code: 'access-denied' },
+      'https://another-service.example/v1/metadata',
+    ],
+    [400, { code: 'access-denied' }, '/v1/graphql'],
+  ] as const)(
+    'preserves non-session errors: %s %j %s',
+    async (status, payload, url) => {
+      const error = new HttpError(status, 'not an expired session', payload);
+      mockedRequestJson.mockRejectedValueOnce(error);
+      const auth = makeAuthService(async () => ({}));
+      const { result } = renderHook(() => useAuthFetchJson(), {
+        wrapper: fixedWrapper(auth),
+      });
+      await act(async () => {
+        await expect(result.current(url)).rejects.toBe(error);
+      });
+      expect(auth.logout).not.toHaveBeenCalled();
+      expect(screen.getByTestId('pathname').textContent).toBe('/data');
+    },
+  );
+
+  it('keeps metadata login errors available to the login form', async () => {
+    const error = new HttpError(400, 'invalid token', { code: 'invalid-jwt' });
+    mockedRequestJson.mockRejectedValueOnce(error);
+    const auth = makeAuthService(async () => ({}));
+    const { result } = renderHook(() => useAuthFetchJson(), {
+      wrapper: fixedWrapper(auth, LOGIN_PATH),
+    });
+    await act(async () => {
+      await expect(result.current('/v1/metadata')).rejects.toBe(error);
+    });
+    expect(auth.logout).not.toHaveBeenCalled();
+    expect(screen.getByTestId('pathname').textContent).toBe(LOGIN_PATH);
+  });
+
+  it('uses the latest committed logout when a retained fetcher fails', async () => {
+    const authA = makeAuthService(async () => ({}));
+    const authB = makeAuthService(async () => ({}));
+    function Harness({ children }: { children: React.ReactNode }) {
+      const [auth, setAuth] = React.useState(authA);
+      return e(
+        MemoryRouter,
+        { initialEntries: ['/data'] },
+        e(
+          AuthContext.Provider,
+          { value: auth },
+          children,
+          e('button', { onClick: () => setAuth(authB) }, 'change session'),
+          e(PathnameProbe),
+        ),
+      );
+    }
+    const { result } = renderHook(() => useAuthFetchJson(), {
+      wrapper: Harness,
+    });
+    const retained = result.current;
+    await userEvent.click(screen.getByText('change session'));
+    mockedRequestJson.mockRejectedValueOnce(new HttpError(401, 'expired'));
+    await act(async () => {
+      await expect(retained('/v1/metadata')).rejects.toBeInstanceOf(
+        UnauthorizedError,
+      );
+    });
+    expect(result.current).toBe(retained);
+    expect(authA.logout).not.toHaveBeenCalled();
+    expect(authB.logout).toHaveBeenCalledTimes(1);
   });
 });

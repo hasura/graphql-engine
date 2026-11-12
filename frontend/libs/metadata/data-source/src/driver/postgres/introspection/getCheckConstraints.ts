@@ -31,5 +31,3 @@ export const getCheckConstraintsCurry =
 
     return adaptCheckConstraints(response.result);
   };
-
-export const getCheckConstraints = getCheckConstraintsCurry('postgres');

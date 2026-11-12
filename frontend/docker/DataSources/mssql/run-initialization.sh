@@ -13,8 +13,7 @@ if test -f "$DONE_SCRIPT"; then
    echo "Setup has already been performed. Delete file 'REMOVE_ME_TO_RERUN_SETUP.txt' to rerun setup."
 else
    echo "$SETUP_SCRIPT has not yet run. Running setup script"
-   /opt/mssql-tools/bin/sqlcmd -I -S mssql -U sa -P Password! -i "$SETUP_SCRIPT"
-
+   /opt/mssql-tools18/bin/sqlcmd -C -I -S mssql -U sa -P 'Password!' -i "$SETUP_SCRIPT"
    # after script runs, create a dummy file to keep track of state
    echo >> $DONE_SCRIPT
 fi

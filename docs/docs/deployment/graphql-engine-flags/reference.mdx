@@ -129,9 +129,14 @@ Authentication via the `x-hasura-admin-secret` request header is disabled.
 | **Default**         | `false`                               |
 | **Supported in**    | CE and Enterprise Edition             |
 
-When enabled in CE, you must configure either `HASURA_GRAPHQL_AUTH_HOOK` or `HASURA_GRAPHQL_JWT_SECRET`. In self-hosted
-Enterprise Edition, you must configure at least one of `HASURA_GRAPHQL_AUTH_HOOK`, `HASURA_GRAPHQL_JWT_SECRET`,
-`HASURA_GRAPHQL_JWT_SECRETS`, or `HASURA_GRAPHQL_SSO_PROVIDERS`.
+When enabled in CE, configure `HASURA_GRAPHQL_AUTH_HOOK`, `HASURA_GRAPHQL_JWT_SECRET`, or
+`HASURA_GRAPHQL_UNAUTHORIZED_ROLE`. In self-hosted Enterprise Edition, you can also configure
+`HASURA_GRAPHQL_JWT_SECRETS` or `HASURA_GRAPHQL_SSO_PROVIDERS`.
+
+If neither JWT nor an auth hook is configured, requests fall back to `HASURA_GRAPHQL_UNAUTHORIZED_ROLE` when it is set.
+The role is fixed: request headers cannot override it or grant admin-secret or backend-only access. Without an
+unauthorized role, requests that are not authenticated by another configured method are rejected. The unauthorized role
+cannot be `admin` when the admin secret is disabled.
 
 :::warning CE console and metadata APIs
 
@@ -385,7 +390,8 @@ Used to set the default [naming convention](/schema/postgres/naming-convention.m
 
 By default, even when `graphql-default` is selected, the following names keep using `hasura-default`-style (snake_case)
 casing, to preserve backward compatibility with schemas generated before September 2023. Enable this flag to opt in to
-the full `graphql-default`.
+the full `graphql-default`. The flag also applies a source's type name prefix and suffix to the input types of
+aggregation predicates, whatever the naming convention.
 
 |                     |                                        |
 | ------------------- | -------------------------------------- |
@@ -1443,7 +1449,9 @@ Add SQL and GraphQL queries to the OTLP traces.
 ### Unauthorized Role
 
 This identifies an [unauthorized role](/auth/authentication/unauthenticated-access.mdx), used when the
-`x-hasura-admin-key` is not sent or the `Authorization` header is absent in JWT mode.
+`x-hasura-admin-key` is not sent or the `Authorization` header is absent in JWT mode. When
+`HASURA_GRAPHQL_DISABLE_ADMIN_SECRET=true` and neither JWT nor an auth hook is configured, requests use this role
+regardless of any admin-secret or role headers.
 
 |                     |                                                                                                                                   |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------- |

@@ -1,4 +1,4 @@
-import { DisplayToastErrorMessage, hasuraToast } from '@hasura/shared/ui';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 import {
   useMetadataMigration,
   useMetadata,
@@ -45,10 +45,9 @@ export const MongoTrackCollectionModalWrapper = ({
         });
       },
       onError: (err) => {
-        hasuraToast({
-          type: 'error',
+        showErrorNotification({
           title: COLLECTION_TRACK_TRACK_ERROR,
-          children: <DisplayToastErrorMessage message={err.message} />,
+          error: err,
         });
       },
     });

@@ -21,23 +21,11 @@ export const DataTypeToSQLTypeMap: Record<
   uuid: [],
   date: ['DATE'],
   time: ['TIME'],
+  binary: ['BYTES'],
   array: [],
 };
 
 export const DataTypeScalars = Object.values(DataTypeToSQLTypeMap).flat();
-
-export const columnDataTypes = {
-  INTEGER: 'integer',
-  BIGINT: 'bigint',
-  GUID: 'guid',
-  JSONDTYPE: 'nvarchar',
-  DATETIMEOFFSET: 'timestamp with time zone',
-  NUMERIC: 'numeric',
-  DATE: 'date',
-  TIME: 'time',
-  TEXT: 'text',
-};
-
 export const bigQueryCapabilities: Capabilities = {
   queries: {
     foreach: {},
@@ -134,6 +122,7 @@ export const bigquerySupportedFeatures: DeepRequired<SupportedFeaturesType> = {
   },
   rawSQL: {
     tracking: true,
+    noTransaction: false,
   },
   connectDbForm: {
     enabled: true,

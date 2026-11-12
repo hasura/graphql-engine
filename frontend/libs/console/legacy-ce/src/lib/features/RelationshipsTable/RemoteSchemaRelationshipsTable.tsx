@@ -20,7 +20,7 @@ import FromRsCell from './components/FromRsCell';
 import { RemoteRelationship, RemoteSchema } from '@hasura/shared/types';
 import { Flex } from '@radix-ui/themes';
 
-export const columns = ['NAME', 'TARGET', 'TYPE', 'RELATIONSHIP', null];
+const columns = ['NAME', 'TARGET', 'TYPE', 'RELATIONSHIP', null];
 
 const legend: { Icon: IconType; name: string }[] = [
   {
@@ -49,7 +49,7 @@ const legend: { Icon: IconType; name: string }[] = [
   },
 ];
 
-export interface RelationshipsTableProps {
+interface RelationshipsTableProps {
   remoteSchema: RemoteSchema;
   onEdit: (props: ExistingRelationshipMeta) => void;
   onDelete: (props: Omit<ExistingRelationshipMeta, 'relationshipType'>) => void;

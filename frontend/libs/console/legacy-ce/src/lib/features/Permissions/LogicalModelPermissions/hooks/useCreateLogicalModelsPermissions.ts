@@ -3,7 +3,7 @@ import { useMetadataMigration, useMetadata } from '@hasura/metadata/api';
 import { LogicalModel, Source } from '@hasura/shared/types';
 import { errorTransform } from './utils/errorTransform';
 import { getCreateLogicalModelBody } from './utils/getCreateLogicalModelBody';
-import { hasuraToast } from '@hasura/shared/ui';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 
 const useCreateLogicalModelsPermissions = ({
   logicalModels,
@@ -52,12 +52,9 @@ const useCreateLogicalModelsPermissions = ({
               });
             },
             onError: (err) => {
-              hasuraToast({
-                type: 'error',
-                title: 'Error!',
-                message:
-                  err?.message ??
-                  'Something went wrong while saving permissions',
+              showErrorNotification({
+                title: 'Something went wrong while saving permissions',
+                error: err,
               });
             },
             onSettled: async () => {
@@ -65,12 +62,10 @@ const useCreateLogicalModelsPermissions = ({
             },
           },
         );
-      } catch (error: any) {
-        hasuraToast({
-          type: 'error',
-          title: 'Error!',
-          message:
-            error?.message ?? 'Something went wrong while saving permissions',
+      } catch (error) {
+        showErrorNotification({
+          title: 'Something went wrong while saving permissions!',
+          error,
         });
       }
     },

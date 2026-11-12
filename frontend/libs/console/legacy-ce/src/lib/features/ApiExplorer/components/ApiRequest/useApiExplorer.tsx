@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { hasuraToast } from '@hasura/shared/ui';
 import { getGraphQLEndpoint, getHeadersAsJSON } from '../../utils';
@@ -9,6 +9,7 @@ import {
   persistGraphiQLMode,
   getGraphiQLQueryFromLocalStorage,
   createTokenInfo,
+  applyAuthHeaders,
 } from './utils';
 import type { DataHeader, GraphiqlMode } from '@hasura/shared/types';
 import { jwtDecode } from 'jwt-decode';
@@ -116,6 +117,13 @@ const useApiExplorer = ({ numberOfTables }: Props) => {
         : headers.map((h, i) => (i === index ? header : h));
     setAndPersistHeaders(newHeaders);
 
+    // Key/value edits are applied on blur (handleHeaderUnfocus), but toggling
+    // the checkbox has no blur, so apply it immediately. A new headers object
+    // rebuilds GraphiQL's fetcher, which re-runs schema introspection.
+    if (headers[index]?.selected !== header.selected) {
+      diffAndSetObjectHeaders(newHeaders);
+    }
+
     if (index === newHeaders.length - 1 && header.key) {
       // Add a new empty header.
       setHeaders([...newHeaders, createGraphiqlHeader()]);
@@ -219,6 +227,31 @@ const useApiExplorer = ({ numberOfTables }: Props) => {
     });
   }, []);
 
+  // the auth header refresh runs from a timer, so read the latest headers from a ref
+  // to avoid overwriting edits made after the timer was scheduled.
+  const headersRef = useRef(headers);
+  useEffect(() => {
+    headersRef.current = headers;
+  }, [headers]);
+
+  // write refreshed auth header values (e.g. a renewed SSO token) into the header rows
+  const updateAuthHeaders = useCallback(
+    (authHeaders: Record<string, string>) => {
+      const newHeaders = applyAuthHeaders(headersRef.current, authHeaders);
+      if (!newHeaders) {
+        return;
+      }
+
+      headersRef.current = newHeaders;
+      setAndPersistHeaders(newHeaders);
+      setObjectHeaders((current) => {
+        const newObjectHeaders = getHeadersAsJSON(newHeaders);
+        return isEqual(newObjectHeaders, current) ? current : newObjectHeaders;
+      });
+    },
+    [],
+  );
+
   const diffAndSetObjectHeaders = (newHeaders: DataHeader[]) => {
     const newObjectHeaders = getHeadersAsJSON(newHeaders);
     if (!isEqual(newObjectHeaders, objectHeaders)) {
@@ -248,6 +281,7 @@ const useApiExplorer = ({ numberOfTables }: Props) => {
     handleHeaderFocus,
     removeRequestHeader,
     changeRequestHeader,
+    updateAuthHeaders,
     analyzeBearerToken,
     analyzingToken,
     resetAnalyzingToken,

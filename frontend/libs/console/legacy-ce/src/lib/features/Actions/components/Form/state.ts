@@ -41,7 +41,7 @@ input SampleInput {
 }
 `;
 
-export const defaultActionRequestBody = `{
+const defaultActionRequestBody = `{
   "users": {
     "name": {{$body.input.arg1.username}},
     "password": {{$body.input.arg1.password}}
@@ -79,13 +79,14 @@ export const getActionResponseTransformDefaultState =
     };
   };
 
-export const defaultActionResponseBody = `{
+const defaultActionResponseBody = `{
   "response": {{$body}}
 }`;
 
 const getDefaultState = (
   defaultActionSdl?: string | null,
   defaultTypesSdl?: string | null,
+  derivedOperation?: string | null,
 ): ActionState => ({
   handler: '',
   actionDefinition: {
@@ -105,6 +106,7 @@ const getDefaultState = (
   kind: 'synchronous',
   timeout: '',
   comment: '',
+  ...(derivedOperation ? { derive: { operation: derivedOperation } } : {}),
 });
 
 export default getDefaultState;

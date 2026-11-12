@@ -1,5 +1,3 @@
-import { buildClientSchema, GraphQLSchema, IntrospectionQuery } from 'graphql';
-
 export const introspection = {
   data: {
     __schema: {
@@ -28138,9 +28136,3 @@ export const introspection = {
     },
   },
 };
-
-export const schema = new GraphQLSchema(
-  buildClientSchema(
-    introspection.data as unknown as IntrospectionQuery,
-  ).toConfig(),
-);

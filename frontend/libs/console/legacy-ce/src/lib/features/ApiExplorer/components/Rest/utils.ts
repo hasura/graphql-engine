@@ -2,8 +2,6 @@ import { parse } from 'graphql';
 import globals from '../../../../Globals';
 import { VariableState } from './LivePreview/state';
 import { isJsonString } from '@hasura/shared/utils';
-import { AllowedRestMethods } from '@hasura/shared/types';
-
 // getCurrentPageHost can be used within all components
 // that are showing the REST endpoint that will be generated
 export const getCurrentPageHost = () => {
@@ -13,27 +11,8 @@ export const getCurrentPageHost = () => {
     : globals.dataApiUrl;
   return globals.dataApiUrl ?? `${pageProtocol}://${urlHost}`;
 };
-
-const positionsMap = {
-  GET: 1,
-  POST: 2,
-  PUT: 3,
-  PATCH: 4,
-  DELETE: 5,
-};
-
-const modifyMethodsList = (methods: AllowedRestMethods[]) =>
-  methods.map((method) => ({ name: method, position: positionsMap[method] }));
-
 // badgeSort is applied when displaying badges
 // so that they come in the same order GET, POST, PUT, PATCH, DELETE
-export const badgeSort = (methods: AllowedRestMethods[]) => {
-  const modifiedMethods = modifyMethodsList(methods);
-  return modifiedMethods
-    .sort((a, b) => a.position - b.position)
-    .map((method) => method.name);
-};
-
 const acceptedTypeKind = ['NonNullType', 'NamedType'] as const;
 type AcceptedGQLType =
   'Int' | 'Boolean' | 'String' | 'ID' | 'Float' | 'UUID' | 'Double';

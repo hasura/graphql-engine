@@ -2,12 +2,6 @@ import { http, HttpResponse } from 'msw';
 import { HasuraMetadataV3 } from '@hasura/shared/types';
 
 const baseUrl = 'http://localhost:8080';
-
-export const schemaList = {
-  result_type: 'TuplesOk',
-  result: [['schema_name'], ['public'], ['default']],
-};
-
 export const handlers = (url = baseUrl) => [
   http.post(`${url}/v1/metadata`, () => {
     return HttpResponse.json({

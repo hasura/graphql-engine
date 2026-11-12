@@ -55,6 +55,7 @@ hasura console --endpoint <container network endpoint, like: http://host.docker.
     --console-hge-endpoint string    endpoint on which the CLI Console should reach the HGE Server
     --console-port string            port for serving console (default "9695")
     --endpoint string                http(s) endpoint for Hasura GraphQL Engine (env "HASURA_GRAPHQL_ENDPOINT")
+    --header stringArray             custom HTTP header to send with every request to Hasura GraphQL Engine, in "Name: value" form; repeatable. e.g. --header "Authorization: Bearer <token>"
 -h, --help                           help for console
     --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) (env "HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY")
     --no-browser                     do not automatically open console in browser

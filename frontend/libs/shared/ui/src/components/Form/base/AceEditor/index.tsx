@@ -1,4 +1,4 @@
-import { forwardRef, useState } from 'react';
+import { forwardRef } from 'react';
 import BaseEditor, { IAceEditorProps, IAceOptions } from 'react-ace';
 import {
   ACE_EDITOR_THEME,
@@ -7,8 +7,6 @@ import {
   setEditorCommandEnabled,
 } from './utils';
 import { useOptionalAppearance } from '../../../../theme/ThemeProvider';
-import { Tooltip } from '../../../Tooltip';
-import { Strong, Text } from '@radix-ui/themes';
 import clsx from 'clsx';
 
 import 'ace-builds/src-noconflict/ext-searchbox';
@@ -62,8 +60,6 @@ export const AceEditor = forwardRef<AceEditorRef, AceEditorProps>(
     },
     ref,
   ) => {
-    const [tipState, setTipState] = useState<'ANY' | 'ESC' | 'TAB'>('ANY');
-
     // When the caller does not pin a theme, follow the console appearance so the
     // editor recolors live on a dark-mode toggle (react-ace re-themes in place,
     // no remount, so editor content is preserved).
@@ -99,11 +95,9 @@ export const AceEditor = forwardRef<AceEditorRef, AceEditorProps>(
           readOnly={disabled}
           highlightActiveLine={!disabled}
           onBlur={(ev, editor) => {
-            setTipState('ANY');
             onBlur?.(ev, editor);
           }}
           onFocus={(ev, editor) => {
-            setTipState('ESC');
             if (editor) {
               setEditorCommandEnabled(editor, 'indent', true);
               setEditorCommandEnabled(editor, 'outdent', true);
@@ -115,7 +109,6 @@ export const AceEditor = forwardRef<AceEditorRef, AceEditorProps>(
               name: 'Esc',
               bindKey: { win: 'Esc', mac: 'Esc' },
               exec: (editor) => {
-                setTipState('TAB');
                 if (editor) {
                   setEditorCommandEnabled(editor, 'indent', false);
                   setEditorCommandEnabled(editor, 'outdent', false);
@@ -133,33 +126,6 @@ export const AceEditor = forwardRef<AceEditorRef, AceEditorProps>(
           )}
           {...props}
         />
-
-        <Tooltip
-          side="bottom"
-          open={tipState !== 'ANY'}
-          content={
-            tipState === 'ESC' ? (
-              <Text>
-                Tip:{' '}
-                <Strong>
-                  Press <em>Esc</em> key
-                </Strong>{' '}
-                then navigate with <em>Tab</em>
-              </Text>
-            ) : tipState === 'TAB' ? (
-              <Text>
-                Tip: Press <em>Esc</em> key then{' '}
-                <Strong>
-                  navigate with <em>Tab</em>
-                </Strong>
-              </Text>
-            ) : null
-          }
-        >
-          <div className="absolute bottom-0 right-0 left-0 h-0 -z-1">
-            &nbsp;
-          </div>
-        </Tooltip>
       </div>
     );
   },

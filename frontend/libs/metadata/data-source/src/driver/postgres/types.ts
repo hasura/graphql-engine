@@ -24,26 +24,6 @@ export type TrackableComputedFunction = {
   returns_set: boolean;
 };
 
-export const postgresColumnDataTypes = {
-  ARRAY: 'ARRAY',
-  BIGINT: 'bigint',
-  BIGSERIAL: 'bigserial',
-  BOOLEAN: 'boolean',
-  BOOL: 'bool',
-  DATE: 'date',
-  DATETIME: 'datetime',
-  INTEGER: 'integer',
-  JSONB: 'jsonb',
-  JSONDTYPE: 'json',
-  NUMERIC: 'numeric',
-  SERIAL: 'serial',
-  TEXT: 'text',
-  TIME: 'time with time zone',
-  TIMESTAMP: 'timestamp with time zone',
-  TIMETZ: 'timetz',
-  UUID: 'uuid',
-};
-
 export const consoleDataTypeToSQLTypeMap: Record<
   TableColumn['consoleDataType'],
   string[]
@@ -68,7 +48,6 @@ export const consoleDataTypeToSQLTypeMap: Record<
     'txid_snapshot',
     'char',
     'varchar',
-    'bytea',
     'cidr',
     'inet',
   ],
@@ -103,19 +82,19 @@ export const consoleDataTypeToSQLTypeMap: Record<
     'float8',
   ],
   timestamp: [
-    'timetz',
     'timestamptz',
     'timestamp',
     'timestamp with time zone',
     'timestamp without time zone',
-    'time with time zone',
-    'time without time zone',
   ],
   date: ['date'],
-  time: ['time'],
+  time: ['time', 'timetz', 'time with time zone', 'time without time zone'],
   geography: ['geography'],
   uuid: ['uuid'],
-  array: ['ARRAY'],
+  binary: ['bytea'],
+  // array types are named after their element type (e.g. `text[]`), which
+  // can be typed as a custom type
+  array: [],
 };
 
 export const consoleScalars = Object.values(consoleDataTypeToSQLTypeMap).flat();

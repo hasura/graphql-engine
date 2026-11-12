@@ -1,5 +1,7 @@
 import { runDatabaseMigration } from '@hasura/metadata/api';
 import { InsertRowProps, TableColumn } from '../../types';
+import { runRowMutationFromGraphQL } from '../../common/modify/runRowMutation';
+import { getDefaultQueryRoot } from '../config';
 import { PostgresTable } from '../types';
 import { validatePostgresInputRowValues } from '../utils';
 
@@ -19,7 +21,7 @@ const toArrayElement = (value: unknown): string => {
   return `"${str.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
 };
 
-/** Converts a value returned by the `/v2/query` API into a SQL literal. */
+/** Converts a value returned by the GraphQL API into a SQL literal. */
 export const toSQLLiteral = (value: unknown): string => {
   if (value === null || value === undefined) return 'NULL';
   if (typeof value === 'number' || typeof value === 'boolean') {
@@ -79,27 +81,21 @@ export async function insertRows({
     }),
   );
 
-  const result = (await fetchJson(endpoints.queryV2, {
-    method: 'POST',
-    body: JSON.stringify({
-      type: 'insert',
-      args: {
-        objects,
-        // the inserted rows (with generated values) are needed for the migration
-        returning: args.isMigration
-          ? args.columns.map((column) => column.name)
-          : undefined,
-        source: args.source.name,
-        table: args.table,
-      },
-    }),
-  })) as { affected_rows: number; returning?: Row[] };
+  const result = await runRowMutationFromGraphQL({
+    endpoints,
+    fetchJson,
+    source: args.source,
+    table: args.table,
+    getDefaultQueryRoot,
+    operation: 'insert',
+    objects,
+    // the inserted rows (with generated values) are needed for the migration
+    returning: args.isMigration
+      ? args.columns.map((column) => column.name)
+      : undefined,
+  });
 
-  if (!result || typeof result !== 'object' || !('affected_rows' in result)) {
-    return 0;
-  }
-
-  if (args.isMigration && result.returning?.length) {
+  if (args.isMigration && result.returning.length) {
     const table = args.table as PostgresTable;
     try {
       // the rows are already inserted: only write the migration files
@@ -131,5 +127,5 @@ export async function insertRows({
     }
   }
 
-  return result.affected_rows;
+  return result.affectedRows;
 }

@@ -52,7 +52,7 @@ const columns: InsertRowFormProps['columns'] = [
   {
     name: 'date',
     dataType: 'date',
-    consoleDataType: 'text',
+    consoleDataType: 'date',
     config: {
       comment: '',
     },
@@ -64,7 +64,7 @@ const columns: InsertRowFormProps['columns'] = [
   {
     name: 'datetime',
     dataType: 'datetime',
-    consoleDataType: 'text',
+    consoleDataType: 'timestamp',
     config: {
       comment: '',
     },
@@ -76,7 +76,7 @@ const columns: InsertRowFormProps['columns'] = [
   {
     name: 'time',
     dataType: 'time with time zone',
-    consoleDataType: 'text',
+    consoleDataType: 'time',
     config: {
       comment: '',
     },

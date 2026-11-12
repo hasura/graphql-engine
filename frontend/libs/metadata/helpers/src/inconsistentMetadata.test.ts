@@ -6,6 +6,7 @@ import {
 import {
   findInconsistentRemoteSchema,
   findInconsistentSource,
+  findInconsistentSourceObject,
 } from './inconsistentMetadata';
 
 const remoteSchemaInconsistency: InconsistentObjectRemoteSchema = {
@@ -98,5 +99,87 @@ describe('findInconsistentSource', () => {
 
   it('returns undefined for an empty list', () => {
     expect(findInconsistentSource([], 'my_source')).toBeUndefined();
+  });
+});
+
+describe('findInconsistentSourceObject', () => {
+  // as reported by the server
+  const tableInconsistency: InconsistentObject = {
+    type: 'table',
+    name: 'table foobar in source default',
+    reason:
+      'Inconsistent object: no such table/view exists in source: "foobar"',
+    definition: { schema: 'public', name: 'foobar' },
+    function_name: '',
+  };
+  const functionInconsistency: InconsistentObject = {
+    type: 'function',
+    name: 'function stable_func1 in source default',
+    reason: 'Inconsistent object: in function "stable_func1": ...',
+    definition: { schema: 'public', name: 'stable_func1' },
+  };
+  const gdcTableInconsistency: InconsistentObject = {
+    type: 'table',
+    name: 'table ["Album"] in source chinook',
+    reason: 'Inconsistent object: no such table',
+    definition: ['Album'],
+    function_name: '',
+  };
+  const objects = [
+    sourceInconsistency,
+    tableInconsistency,
+    functionInconsistency,
+    gdcTableInconsistency,
+  ];
+
+  it('finds a table by its source and name', () => {
+    expect(
+      findInconsistentSourceObject(objects, {
+        source: 'default',
+        type: 'table',
+        definition: { name: 'foobar', schema: 'public' },
+      }),
+    ).toBe(tableInconsistency);
+    expect(
+      findInconsistentSourceObject(objects, {
+        source: 'chinook',
+        type: 'table',
+        definition: ['Album'],
+      }),
+    ).toBe(gdcTableInconsistency);
+  });
+
+  it('finds a function by its source and name', () => {
+    expect(
+      findInconsistentSourceObject(objects, {
+        source: 'default',
+        type: 'function',
+        definition: { name: 'stable_func1', schema: 'public' },
+      }),
+    ).toBe(functionInconsistency);
+  });
+
+  it('does not match the same name in another source or of another type', () => {
+    expect(
+      findInconsistentSourceObject(objects, {
+        source: 'other',
+        type: 'table',
+        definition: { name: 'foobar', schema: 'public' },
+      }),
+    ).toBeUndefined();
+    expect(
+      findInconsistentSourceObject(objects, {
+        source: 'default',
+        type: 'function',
+        definition: { name: 'foobar', schema: 'public' },
+      }),
+    ).toBeUndefined();
+    expect(
+      findInconsistentSourceObject(undefined, {
+        source: 'default',
+        type: 'table',
+        definition: { name: 'foobar', schema: 'public' },
+      }),
+    ).toBeUndefined();
   });
 });

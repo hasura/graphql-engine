@@ -36,7 +36,7 @@ import {
   frequentlyUsedColumnToFormColumn,
 } from './schema';
 
-export type AddTableFormProps = {
+type AddTableFormProps = {
   source: Source;
   targetSchema: string | null;
   onCreated: (table: { name: string; schema: string }) => void;
@@ -149,8 +149,10 @@ export const AddTableForm = ({
                   <Table.Cell>
                     <ReactSelectField
                       name={`columns.${index}.type`}
-                      placeholder="Select a type"
+                      placeholder="Select or type a type"
                       options={typeOptions}
+                      // custom types, e.g. `text[]` or a domain, can be typed
+                      creatable
                       selectProps={REACT_SELECT_FILTER_PROPS}
                       noErrorPlaceholder
                     />
@@ -266,5 +268,3 @@ export const AddTableForm = ({
     </Form>
   );
 };
-
-export default AddTableForm;

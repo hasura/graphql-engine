@@ -5,7 +5,7 @@ import {
   PostgresConnectionSchema,
 } from '../schema';
 
-export const adaptDatabaseUrl = (
+const adaptDatabaseUrl = (
   databaseUrl: PostgresConfiguration['connection_info']['database_url'],
 ): PostgresConnectionInfoSchema['databaseUrl'] => {
   return typeof databaseUrl === 'string'

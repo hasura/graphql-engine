@@ -1,16 +1,4 @@
 import gql from 'graphql-tag';
-
-const fetchSummaryMetrics = gql`
-  subscription SummaryMetrics($where: search_summary_metrics_args!) {
-    search_summary_metrics(args: $where) {
-      average_requests_per_minute
-      average_execution_time
-      success_count
-      total_requests
-    }
-  }
-`;
-
 const fetchLiveStats = gql`
   subscription GetLiveStats($projectIds: _uuid = "") {
     search_latest_project_metrics(args: { project_ids: $projectIds }) {
@@ -18,32 +6,6 @@ const fetchLiveStats = gql`
       warp_threads
       websocket_connections
       active_subscriptions
-    }
-  }
-`;
-
-const fetchRequestsOverTime = gql`
-  subscription RequestsOverTime(
-    $fromTime: timestamptz!
-    $toTime: timestamptz!
-    $userRoles: _text
-    $projectIds: _uuid
-    $timeInterval: String
-  ) {
-    search_requests_over_time(
-      args: {
-        from_time: $fromTime
-        operation_names: "{}"
-        operation_ids: "{}"
-        project_ids: $projectIds
-        user_roles: $userRoles
-        time_interval: $timeInterval
-        to_time: $toTime
-      }
-      order_by: { timestamp: asc }
-    ) {
-      timestamp
-      value
     }
   }
 `;
@@ -130,66 +92,10 @@ const fetchTop5Latencies = gql`
     }
   }
 `;
-
-const fetchDbMetrics = gql`
-  query fetchDbMetrics($projectId: uuid!, $db: String, $from: timestamptz) {
-    database_metrics(
-      where: {
-        name: { _eq: $db }
-        project_id: { _eq: $projectId }
-        time: { _gte: $from }
-      }
-      order_by: { instance_uid: desc, time: desc }
-      distinct_on: instance_uid
-    ) {
-      total_connections
-    }
-  }
-`;
-const fetchDbReplicaMetrics = gql`
-  query fetchDbMetrics($projectId: uuid!, $from: timestamptz, $name: String) {
-    database_metrics(
-      where: {
-        project_id: { _eq: $projectId }
-        time: { _gte: $from }
-        name: { _eq: $name }
-        is_primary: { _eq: false }
-      }
-      order_by: { database_host: asc, instance_uid: desc, time: desc }
-      distinct_on: [instance_uid, database_host]
-    ) {
-      total_connections
-      database_host
-    }
-  }
-`;
-
-const fetchDbMasterDBMetrics = gql`
-  query fetchDbMetrics($projectId: uuid!, $db: String, $from: timestamptz) {
-    database_metrics(
-      where: {
-        name: { _eq: $db }
-        time: { _gte: $from }
-        project_id: { _eq: $projectId }
-        is_primary: { _eq: true }
-      }
-      order_by: { instance_uid: desc, time: desc }
-      distinct_on: instance_uid
-    ) {
-      total_connections
-    }
-  }
-`;
-
 export {
-  fetchSummaryMetrics,
-  fetchRequestsOverTime,
   fetchApiHealthData,
   fetchTop5Requests,
   fetchTop5ErrorRates,
   fetchTop5Latencies,
-  fetchDbMetrics,
-  fetchDbReplicaMetrics,
-  fetchDbMasterDBMetrics,
   fetchLiveStats,
 };

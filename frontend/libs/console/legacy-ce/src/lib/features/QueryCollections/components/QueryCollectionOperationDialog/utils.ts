@@ -1,6 +1,6 @@
 import { parse, print, visit, DefinitionNode } from 'graphql';
 
-export type NewDefinitionNode = DefinitionNode & {
+type NewDefinitionNode = DefinitionNode & {
   name?: {
     value: string;
   };

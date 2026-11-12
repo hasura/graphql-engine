@@ -1,18 +1,45 @@
-import { useQuery } from '@tanstack/react-query';
-import { getDatabaseMethods, TableColumn } from '@hasura/metadata/data-source';
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
+import {
+  getDatabaseMethods,
+  isSameTableObjectRelationship,
+  TableColumn,
+  TableFkRelationships,
+  UseTableColumnsResult,
+} from '@hasura/metadata/data-source';
+import { defaultQueryOptions } from '@hasura/metadata/api';
 import { Metadata, MetadataTable } from '@hasura/shared/types';
 import { TableToLoad } from '../components';
 import { useAuthFetchJson } from '@hasura/shared/hooks';
 import { useAppContext } from '@hasura/shared/context';
 import { areTablesEqual } from '@hasura/metadata/helpers';
+import {
+  canHaveTableReturningComputedFields,
+  getTableReturningComputedFields,
+  getTableReturningComputedFieldsQueryKey,
+} from '../../../hooks/useTableReturningComputedFields';
 
-export type TableWithColumns = {
+type TableWithColumns = {
   metadataTable: MetadataTable;
   columns: TableColumn[];
+  /** the foreign keys of a loaded table that has same-table FK relationships */
+  foreignKeys: TableFkRelationships[];
+  /** the computed fields returning a table, which a row permission can't use */
+  tableReturningComputedFields: string[];
   sourceName: string;
 };
 
 const USE_TABLE_WITH_COLUMNS_QUERY_KEY = 'USE_TABLE_WITH_COLUMNS';
+
+// an object relationship on the table's own foreign key only names its
+// columns, so its target table comes from the database
+const hasSameTableFkRelationships = (metadataTable: MetadataTable) =>
+  (metadataTable.object_relationships ?? []).some(
+    isSameTableObjectRelationship,
+  );
 
 export const useTablesWithColumns = ({
   tablesToLoad,
@@ -23,45 +50,106 @@ export const useTablesWithColumns = ({
 }) => {
   const { endpoints } = useAppContext();
   const fetchJson = useAuthFetchJson();
+  const queryClient = useQueryClient();
 
   return useQuery<TableWithColumns[], Error>({
     queryKey: [USE_TABLE_WITH_COLUMNS_QUERY_KEY, tablesToLoad],
-    queryFn: async () => {
-      const result: TableWithColumns[] = [];
-
-      for (const source of metadata.sources) {
-        for (const metadataTable of source.tables) {
-          if (
-            tablesToLoad.find(
+    queryFn: () =>
+      Promise.all(
+        metadata.sources.flatMap((source) =>
+          source.tables.map(async (metadataTable) => {
+            const isTableToLoad = tablesToLoad.some(
               (t) =>
                 areTablesEqual(metadataTable.table, t.table) &&
                 source.name === t?.source,
-            )
-          ) {
-            const databaseMethods = getDatabaseMethods(source.kind);
-
-            const columns = await databaseMethods.introspection.getTableColumns(
-              {
-                dataSourceName: source.name,
-                table: metadataTable.table,
-                endpoints,
-                fetchJson,
-              },
             );
+            if (!isTableToLoad) {
+              return {
+                metadataTable,
+                columns: [],
+                foreignKeys: [],
+                tableReturningComputedFields: [],
+                sourceName: source.name,
+              };
+            }
 
-            result.push({ metadataTable, columns, sourceName: source.name });
-          } else {
-            result.push({
+            const databaseMethods = getDatabaseMethods(source.kind);
+            const props = {
+              dataSourceName: source.name,
+              table: metadataTable.table,
+              endpoints,
+              fetchJson,
+            };
+
+            const computedFields = metadataTable.computed_fields ?? [];
+            const qualifiedSource = { name: source.name, kind: source.kind };
+            const tableReturningComputedFields =
+              canHaveTableReturningComputedFields(
+                qualifiedSource,
+                computedFields,
+              )
+                ? queryClient
+                    .fetchQuery({
+                      // shared with `useTableReturningComputedFields`
+                      queryKey: getTableReturningComputedFieldsQueryKey(
+                        qualifiedSource,
+                        computedFields,
+                      ),
+                      queryFn: () =>
+                        getTableReturningComputedFields({
+                          source: qualifiedSource,
+                          computedFields,
+                          endpoints,
+                          fetchJson,
+                        }),
+                      staleTime: defaultQueryOptions.staleTime,
+                    })
+                    // without it these computed fields are offered too, and
+                    // the server reports them on save
+                    .catch(() => [])
+                : [];
+
+            const getFKRelationships =
+              databaseMethods.introspection.getFKRelationships;
+            // each table is cached on its own, so loading the tables of a new
+            // relationship doesn't introspect the already loaded ones again
+            const [{ columns }, foreignKeys] = await Promise.all([
+              queryClient.fetchQuery<UseTableColumnsResult>({
+                // shared with `useTableColumns`
+                queryKey: [source.name, 'column-introspection', props.table],
+                queryFn: async () => ({
+                  columns:
+                    await databaseMethods.introspection.getTableColumns(props),
+                  supportedOperators:
+                    databaseMethods.introspection.getSupportedOperators(),
+                }),
+                staleTime: defaultQueryOptions.staleTime,
+              }),
+              getFKRelationships && hasSameTableFkRelationships(metadataTable)
+                ? queryClient
+                    .fetchQuery({
+                      queryKey: [source.name, 'fk-relationships', props.table],
+                      queryFn: () => getFKRelationships(props),
+                      staleTime: defaultQueryOptions.staleTime,
+                    })
+                    // without the foreign keys only these relationships are
+                    // missing, so the rest of the builder still works
+                    .catch(() => [])
+                : [],
+            ]);
+
+            return {
               metadataTable,
-              columns: [],
+              columns,
+              foreignKeys,
+              tableReturningComputedFields: await tableReturningComputedFields,
               sourceName: source.name,
-            });
-          }
-        }
-      }
-
-      return result;
-    },
+            };
+          }),
+        ),
+      ),
     refetchOnWindowFocus: false,
+    // the tables stay usable while the ones of a new relationship load
+    placeholderData: keepPreviousData,
   });
 };

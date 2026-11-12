@@ -15,6 +15,7 @@ import {
   getTableTriggersCurry,
   getTriggerFunctionsCurry,
 } from './getTableTriggers';
+import { getDatabaseSchemasCurry } from './getDatabaseSchemas';
 
 export { getTrackableTables } from './getTrackableTables';
 // export { getDatabaseConfiguration } from './getDatabaseConfiguration';
@@ -23,9 +24,7 @@ export * from './getFKRelationships';
 export { getTablesListAsTree } from './getTablesListAsTree';
 export { getSupportedOperators } from './getSupportedOperators';
 export { getTrackableFunctions } from './getTrackableFunctions';
-export { getDatabaseSchemas } from './getDatabaseSchemas';
 
-export * from './getIsTableView';
 export * from './getCheckConstraints';
 export * from './getVersion';
 export * from './getFunctionDefinition';
@@ -46,7 +45,9 @@ export const getPostgresIntrospectionMethods = (
   getTableIndexes: getTableIndexesCurry(driver),
   getTableTriggers: getTableTriggersCurry(driver),
   getTriggerFunctions: getTriggerFunctionsCurry(driver),
+  getDatabaseSchemas: getDatabaseSchemasCurry(driver),
 });
+
 export * from './adaptCheckConstraints';
 export * from './adaptKeys';
 export * from './getTableKeys';

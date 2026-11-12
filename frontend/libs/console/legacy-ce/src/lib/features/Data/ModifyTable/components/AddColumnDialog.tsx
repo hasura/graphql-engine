@@ -22,6 +22,7 @@ import {
   useSupportedDataTypes,
 } from '@hasura/metadata/data-source';
 import { ModifyTableProps } from '../types';
+import { MigrationRequestNotice } from './MigrationRequestNotice';
 
 const schema = z.object({
   name: z.string().trim().min(1, { message: 'Column name is required' }),
@@ -115,18 +116,22 @@ export const AddColumnDialog = ({
     });
   };
 
+  // Closing mid-request would hide whether the change and its migration made
+  // it, so the dialog stays open (Cancel is already disabled while loading).
+  const closeUnlessPending = isPending ? undefined : onClose;
+
   return (
     <DelayedDialog
       size="md"
       title="Add Column"
-      onClose={onClose}
+      onClose={closeUnlessPending}
       footer={
         <DialogFooter
           onSubmit={() => {
             handleSubmit(onSubmit)();
           }}
           isLoading={isPending}
-          onClose={onClose}
+          onClose={closeUnlessPending}
           callToDeny="Cancel"
           callToAction="Add Column"
         />
@@ -164,8 +169,10 @@ export const AddColumnDialog = ({
             <ReactSelectField
               name="type"
               label="Type"
-              placeholder="Select a type"
+              placeholder="Select or type a type"
               options={typeOptions}
+              // custom types, e.g. `text[]` or a domain, can be typed
+              creatable
               selectProps={{
                 ...REACT_SELECT_FILTER_PROPS,
                 menuPortalTarget: getDialogPortalTarget(),
@@ -183,10 +190,9 @@ export const AddColumnDialog = ({
           {error ? (
             <ErrorCard headline="Adding column failed" error={error} />
           ) : null}
+          <MigrationRequestNotice isPending={isPending} error={error} />
         </div>
       )}
     </DelayedDialog>
   );
 };
-
-export default AddColumnDialog;

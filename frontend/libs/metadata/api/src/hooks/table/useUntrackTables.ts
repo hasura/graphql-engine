@@ -1,9 +1,5 @@
-import {
-  useMetadataMigration,
-  MetadataMigrationOptions,
-  useMetadataHelpers,
-} from '../metadata';
-import { BulkKeepGoingResponse, SupportedDriver } from '@hasura/shared/types';
+import { useMetadataMigrationMutation, useMetadataHelpers } from '../metadata';
+import { SupportedDriver } from '@hasura/shared/types';
 import { getDriverPrefix } from '@hasura/metadata/helpers';
 
 export type UntrackTablesArgs = {
@@ -36,26 +32,26 @@ export const getUntrackTablesQuery = (
   };
 };
 
+// Tables that failed to untrack are reported as warnings, unless every table
+// failed, in which case the request fails with the warnings in `internal`.
+export type UntrackTablesResponse = {
+  message: 'success';
+  warnings?: {
+    code: string;
+    message: string;
+    name: string;
+    type: string;
+  }[];
+};
+
 export const useUntrackTables = () => {
   const { fetchSource } = useMetadataHelpers();
-  const { mutate, ...rest } = useMetadataMigration<BulkKeepGoingResponse>();
-
-  const untrackTables = async (
-    args: UntrackTablesArgs,
-    options?: MetadataMigrationOptions,
-  ) => {
-    const { source, resource_version } = await fetchSource(args.source);
-
-    return mutate(
-      {
-        query: getUntrackTablesQuery(args, source.kind, resource_version),
-      },
-      options,
-    );
-  };
-
-  return {
-    untrackTables,
-    ...rest,
-  };
+  // the source is fetched inside the mutation, so that `isPending` covers it
+  // and a failure to fetch it reaches `onError`
+  return useMetadataMigrationMutation<UntrackTablesResponse, UntrackTablesArgs>(
+    async (args) => {
+      const { source, resource_version } = await fetchSource(args.source);
+      return getUntrackTablesQuery(args, source.kind, resource_version);
+    },
+  );
 };

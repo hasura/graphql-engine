@@ -26,24 +26,7 @@ export interface HeaderFromEnv {
    */
   value_from_env: string;
 }
-/**
- *
- * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#objectfield
- */
-export interface ObjectField {
-  /**
-   * Description of the Input object type
-   */
-  description?: string;
-  /**
-   * Name of the Input object type
-   */
-  name: string;
-  /**
-   * GraphQL type of the Input object type
-   */
-  type: string;
-}
+
 /**
  * Type used in exported 'metadata.json' and replace metadata endpoint
  *
@@ -88,7 +71,7 @@ export interface Action {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/actions.html#actiondefinition
  */
-export interface ActionDefinition {
+interface ActionDefinition {
   arguments?: InputArgument[];
   forward_client_headers?: boolean;
   /**
@@ -105,7 +88,7 @@ export interface ActionDefinition {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/actions.html#inputargument
  */
-export interface InputArgument {
+interface InputArgument {
   name: string;
   type: string;
 }
@@ -116,7 +99,7 @@ export interface InputArgument {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#headerfromenv
  */
-export interface Header {
+interface Header {
   /**
    * Name of the header
    */
@@ -130,14 +113,14 @@ export interface Header {
    */
   value_from_env?: string;
 }
-export declare enum ActionDefinitionType {
+declare enum ActionDefinitionType {
   Mutation = 'mutation',
   Query = 'query',
 }
 /**
  * Permissions of the action
  */
-export interface Permissions {
+interface Permissions {
   role: string;
 }
 /**
@@ -198,7 +181,7 @@ export interface CronTrigger {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/scheduled-triggers.html#retryconfst
  */
-export interface RetryConfST {
+interface RetryConfST {
   /**
    * Number of times to retry delivery.
    * Default: 0
@@ -231,7 +214,7 @@ export interface CustomTypes {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#enumtype
  */
-export interface EnumType {
+interface EnumType {
   /**
    * Description of the Enum type
    */
@@ -249,7 +232,7 @@ export interface EnumType {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#enumvalue
  */
-export interface EnumValue {
+interface EnumValue {
   /**
    * Description of the Enum value
    */
@@ -267,7 +250,7 @@ export interface EnumValue {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#inputobjecttype
  */
-export interface InputObjectType {
+interface InputObjectType {
   /**
    * Description of the Input object type
    */
@@ -285,7 +268,7 @@ export interface InputObjectType {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#inputobjectfield
  */
-export interface InputObjectField {
+interface InputObjectField {
   /**
    * Description of the Input object type
    */
@@ -303,7 +286,7 @@ export interface InputObjectField {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#objecttype
  */
-export interface ObjectType {
+interface ObjectType {
   /**
    * Description of the Input object type
    */
@@ -325,7 +308,7 @@ export interface ObjectType {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#objectrelationship
  */
-export interface CustomTypeObjectRelationship {
+interface CustomTypeObjectRelationship {
   /**
    * Mapping of fields of object type to columns of remote table
    */
@@ -345,14 +328,14 @@ export interface CustomTypeObjectRelationship {
    */
   type: CustomTypeObjectRelationshipType;
 }
-export interface QualifiedTable {
+interface QualifiedTable {
   name: string;
   schema: string;
 }
 /**
  * Type of the relationship
  */
-export declare enum CustomTypeObjectRelationshipType {
+declare enum CustomTypeObjectRelationshipType {
   Array = 'array',
   Object = 'object',
 }
@@ -360,7 +343,7 @@ export declare enum CustomTypeObjectRelationshipType {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#scalartype
  */
-export interface ScalarType {
+interface ScalarType {
   /**
    * Description of the Scalar type
    */
@@ -392,7 +375,7 @@ export interface CustomFunction {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#function-configuration
  */
-export interface FunctionConfiguration {
+interface FunctionConfiguration {
   /**
    * Function argument which accepts session info JSON
    * Currently, only functions which satisfy the following constraints can be exposed over the
@@ -403,7 +386,7 @@ export interface FunctionConfiguration {
    */
   session_argument?: string;
 }
-export interface QualifiedFunction {
+interface QualifiedFunction {
   name: string;
   schema: string;
 }
@@ -428,14 +411,14 @@ export interface QueryCollectionEntry {
 /**
  * List of queries
  */
-export interface Definition {
+interface Definition {
   queries: QueryCollection[];
 }
 /**
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#collectionquery
  */
-export interface QueryCollection {
+interface QueryCollection {
   name: string;
   query: string;
 }
@@ -463,7 +446,7 @@ export interface RemoteSchema {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#remoteschemadef
  */
-export interface RemoteSchemaDef {
+interface RemoteSchemaDef {
   forward_client_headers?: boolean;
   headers?: Header[];
   timeout_seconds?: number;
@@ -496,7 +479,7 @@ export interface TableEntry {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#create-array-relationship-syntax
  */
-export interface ArrayRelationship {
+interface ArrayRelationship {
   /**
    * Comment
    */
@@ -517,7 +500,7 @@ export interface ArrayRelationship {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#arrrelusing
  */
-export interface ArrRelUsing {
+interface ArrRelUsing {
   /**
    * The column with foreign key constraint
    */
@@ -534,7 +517,7 @@ export interface ArrRelUsing {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#arrrelusingfkeyon
  */
-export interface ArrRelUsingFKeyOn {
+interface ArrRelUsingFKeyOn {
   column: string;
   table: QualifiedTable | string;
 }
@@ -545,7 +528,7 @@ export interface ArrRelUsingFKeyOn {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#arrrelusingmanualmapping
  */
-export interface ArrRelUsingManualMapping {
+interface ArrRelUsingManualMapping {
   /**
    * Mapping of columns from current table to remote table
    */
@@ -561,7 +544,7 @@ export interface ArrRelUsingManualMapping {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/computed-field.html#args-syntax
  */
-export interface ComputedField {
+interface ComputedField {
   /**
    * Comment
    */
@@ -581,7 +564,7 @@ export interface ComputedField {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/computed-field.html#computedfielddefinition
  */
-export interface ComputedFieldDefinition {
+interface ComputedFieldDefinition {
   /**
    * The SQL function
    */
@@ -602,7 +585,7 @@ export interface ComputedFieldDefinition {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/table-view.html#table-config
  */
-export interface TableConfig {
+interface TableConfig {
   /**
    * Customise the table name / query root name
    */
@@ -625,7 +608,7 @@ export interface TableConfig {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/table-view.html#custom-root-fields
  */
-export interface CustomRootFields {
+interface CustomRootFields {
   /**
    * Customise the `delete_<table-name>` root field
    */
@@ -667,7 +650,7 @@ export interface CustomRootFields {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#create-delete-permission-syntax
  */
-export interface DeletePermissionEntry {
+interface DeletePermissionEntry {
   /**
    * Comment
    */
@@ -687,7 +670,7 @@ export interface DeletePermissionEntry {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#deletepermission
  */
-export interface DeletePermission {
+interface DeletePermission {
   /**
    * Only the rows where this precondition holds true are updatable
    */
@@ -705,7 +688,7 @@ export interface DeletePermission {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#create-event-trigger
  */
-export interface EventTrigger {
+interface EventTrigger {
   /**
    * The SQL function
    */
@@ -731,7 +714,7 @@ export interface EventTrigger {
 /**
  * The SQL function
  */
-export interface EventTriggerDefinition {
+interface EventTriggerDefinition {
   /**
    *
    * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec
@@ -753,7 +736,7 @@ export interface EventTriggerDefinition {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec
  */
-export interface OperationSpec {
+interface OperationSpec {
   /**
    *
    * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns
@@ -765,7 +748,7 @@ export interface OperationSpec {
    */
   payload?: string[] | Columns;
 }
-export declare enum Columns {
+declare enum Columns {
   Empty = '*',
 }
 /**
@@ -774,7 +757,7 @@ export declare enum Columns {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#retryconf
  */
-export interface RetryConf {
+interface RetryConf {
   /**
    * Number of seconds to wait between each retry.
    * Default: 10
@@ -795,7 +778,7 @@ export interface RetryConf {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#args-syntax
  */
-export interface InsertPermissionEntry {
+interface InsertPermissionEntry {
   /**
    * Comment
    */
@@ -815,7 +798,7 @@ export interface InsertPermissionEntry {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#insertpermission
  */
-export interface InsertPermission {
+interface InsertPermission {
   /**
    * When set to true the mutation is accessible only if x-hasura-use-backend-only-permissions
    * session variable exists
@@ -849,7 +832,7 @@ export interface InsertPermission {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#args-syntax
  */
-export interface ObjectRelationship {
+interface ObjectRelationship {
   /**
    * Comment
    */
@@ -870,7 +853,7 @@ export interface ObjectRelationship {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#objrelusing
  */
-export interface ObjRelUsing {
+interface ObjRelUsing {
   /**
    * The column with foreign key constraint
    */
@@ -887,7 +870,7 @@ export interface ObjRelUsing {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#objrelusingmanualmapping
  */
-export interface ObjRelUsingManualMapping {
+interface ObjRelUsingManualMapping {
   /**
    * Mapping of columns from current table to remote table
    */
@@ -903,7 +886,7 @@ export interface ObjRelUsingManualMapping {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-relationships.html#args-syntax
  */
-export interface RemoteRelationship {
+interface RemoteRelationship {
   /**
    * Definition object
    */
@@ -916,7 +899,7 @@ export interface RemoteRelationship {
 /**
  * Definition object
  */
-export interface RemoteRelationshipDef {
+interface RemoteRelationshipDef {
   /**
    * Column(s) in the table that is used for joining with remote schema field.
    * All join keys in remote_field must appear here.
@@ -933,7 +916,7 @@ export interface RemoteRelationshipDef {
    */
   remote_schema: string;
 }
-export interface RemoteField {
+interface RemoteField {
   arguments: {
     [key: string]: string;
   };
@@ -952,7 +935,7 @@ export interface RemoteField {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#create-select-permission-syntax
  */
-export interface SelectPermissionEntry {
+interface SelectPermissionEntry {
   /**
    * Comment
    */
@@ -972,7 +955,7 @@ export interface SelectPermissionEntry {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#selectpermission
  */
-export interface SelectPermission {
+interface SelectPermission {
   /**
    * Toggle allowing aggregate queries
    */
@@ -1005,7 +988,7 @@ export interface SelectPermission {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#create-update-permission-syntax
  */
-export interface UpdatePermissionEntry {
+interface UpdatePermissionEntry {
   /**
    * Comment
    */
@@ -1025,7 +1008,7 @@ export interface UpdatePermissionEntry {
  *
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#updatepermission
  */
-export interface UpdatePermission {
+interface UpdatePermission {
   /**
    * Postcondition which must be satisfied by rows which have been updated
    */
@@ -1058,166 +1041,4 @@ export interface UpdatePermission {
   set?: {
     [key: string]: string;
   };
-}
-export declare class Convert {
-  static toPGColumn(json: string): string;
-  static pGColumnToJson(value: string): string;
-  static toComputedFieldName(json: string): string;
-  static computedFieldNameToJson(value: string): string;
-  static toRoleName(json: string): string;
-  static roleNameToJson(value: string): string;
-  static toTriggerName(json: string): string;
-  static triggerNameToJson(value: string): string;
-  static toRemoteRelationshipName(json: string): string;
-  static remoteRelationshipNameToJson(value: string): string;
-  static toRemoteSchemaName(json: string): string;
-  static remoteSchemaNameToJson(value: string): string;
-  static toCollectionName(json: string): string;
-  static collectionNameToJson(value: string): string;
-  static toGraphQLName(json: string): string;
-  static graphQLNameToJson(value: string): string;
-  static toGraphQLType(json: string): string;
-  static graphQLTypeToJson(value: string): string;
-  static toRelationshipName(json: string): string;
-  static relationshipNameToJson(value: string): string;
-  static toActionName(json: string): string;
-  static actionNameToJson(value: string): string;
-  static toWebhookURL(json: string): string;
-  static webhookURLToJson(value: string): string;
-  static toTableName(json: string): QualifiedTable | string;
-  static tableNameToJson(value: QualifiedTable | string): string;
-  static toQualifiedTable(json: string): QualifiedTable;
-  static qualifiedTableToJson(value: QualifiedTable): string;
-  static toTableConfig(json: string): TableConfig;
-  static tableConfigToJson(value: TableConfig): string;
-  static toTableEntry(json: string): TableEntry;
-  static tableEntryToJson(value: TableEntry): string;
-  static toCustomRootFields(json: string): CustomRootFields;
-  static customRootFieldsToJson(value: CustomRootFields): string;
-  static toCustomColumnNames(json: string): {
-    [key: string]: string;
-  };
-  static customColumnNamesToJson(value: { [key: string]: string }): string;
-  static toFunctionName(json: string): QualifiedFunction | string;
-  static functionNameToJson(value: QualifiedFunction | string): string;
-  static toQualifiedFunction(json: string): QualifiedFunction;
-  static qualifiedFunctionToJson(value: QualifiedFunction): string;
-  static toCustomFunction(json: string): CustomFunction;
-  static customFunctionToJson(value: CustomFunction): string;
-  static toFunctionConfiguration(json: string): FunctionConfiguration;
-  static functionConfigurationToJson(value: FunctionConfiguration): string;
-  static toObjectRelationship(json: string): ObjectRelationship;
-  static objectRelationshipToJson(value: ObjectRelationship): string;
-  static toObjRelUsing(json: string): ObjRelUsing;
-  static objRelUsingToJson(value: ObjRelUsing): string;
-  static toObjRelUsingManualMapping(json: string): ObjRelUsingManualMapping;
-  static objRelUsingManualMappingToJson(
-    value: ObjRelUsingManualMapping,
-  ): string;
-  static toArrayRelationship(json: string): ArrayRelationship;
-  static arrayRelationshipToJson(value: ArrayRelationship): string;
-  static toArrRelUsing(json: string): ArrRelUsing;
-  static arrRelUsingToJson(value: ArrRelUsing): string;
-  static toArrRelUsingFKeyOn(json: string): ArrRelUsingFKeyOn;
-  static arrRelUsingFKeyOnToJson(value: ArrRelUsingFKeyOn): string;
-  static toArrRelUsingManualMapping(json: string): ArrRelUsingManualMapping;
-  static arrRelUsingManualMappingToJson(
-    value: ArrRelUsingManualMapping,
-  ): string;
-  static toColumnPresetsExpression(json: string): {
-    [key: string]: string;
-  };
-  static columnPresetsExpressionToJson(value: {
-    [key: string]: string;
-  }): string;
-  static toInsertPermissionEntry(json: string): InsertPermissionEntry;
-  static insertPermissionEntryToJson(value: InsertPermissionEntry): string;
-  static toInsertPermission(json: string): InsertPermission;
-  static insertPermissionToJson(value: InsertPermission): string;
-  static toSelectPermissionEntry(json: string): SelectPermissionEntry;
-  static selectPermissionEntryToJson(value: SelectPermissionEntry): string;
-  static toSelectPermission(json: string): SelectPermission;
-  static selectPermissionToJson(value: SelectPermission): string;
-  static toUpdatePermissionEntry(json: string): UpdatePermissionEntry;
-  static updatePermissionEntryToJson(value: UpdatePermissionEntry): string;
-  static toUpdatePermission(json: string): UpdatePermission;
-  static updatePermissionToJson(value: UpdatePermission): string;
-  static toDeletePermissionEntry(json: string): DeletePermissionEntry;
-  static deletePermissionEntryToJson(value: DeletePermissionEntry): string;
-  static toDeletePermission(json: string): DeletePermission;
-  static deletePermissionToJson(value: DeletePermission): string;
-  static toComputedField(json: string): ComputedField;
-  static computedFieldToJson(value: ComputedField): string;
-  static toComputedFieldDefinition(json: string): ComputedFieldDefinition;
-  static computedFieldDefinitionToJson(value: ComputedFieldDefinition): string;
-  static toEventTrigger(json: string): EventTrigger;
-  static eventTriggerToJson(value: EventTrigger): string;
-  static toEventTriggerDefinition(json: string): EventTriggerDefinition;
-  static eventTriggerDefinitionToJson(value: EventTriggerDefinition): string;
-  static toEventTriggerColumns(json: string): string[] | Columns;
-  static eventTriggerColumnsToJson(value: string[] | Columns): string;
-  static toOperationSpec(json: string): OperationSpec;
-  static operationSpecToJson(value: OperationSpec): string;
-  static toHeaderFromValue(json: string): HeaderFromValue;
-  static headerFromValueToJson(value: HeaderFromValue): string;
-  static toHeaderFromEnv(json: string): HeaderFromEnv;
-  static headerFromEnvToJson(value: HeaderFromEnv): string;
-  static toRetryConf(json: string): RetryConf;
-  static retryConfToJson(value: RetryConf): string;
-  static toCronTrigger(json: string): CronTrigger;
-  static cronTriggerToJson(value: CronTrigger): string;
-  static toRetryConfST(json: string): RetryConfST;
-  static retryConfSTToJson(value: RetryConfST): string;
-  static toRemoteSchema(json: string): RemoteSchema;
-  static remoteSchemaToJson(value: RemoteSchema): string;
-  static toRemoteSchemaDef(json: string): RemoteSchemaDef;
-  static remoteSchemaDefToJson(value: RemoteSchemaDef): string;
-  static toRemoteRelationship(json: string): RemoteRelationship;
-  static remoteRelationshipToJson(value: RemoteRelationship): string;
-  static toRemoteRelationshipDef(json: string): RemoteRelationshipDef;
-  static remoteRelationshipDefToJson(value: RemoteRelationshipDef): string;
-  static toRemoteField(json: string): {
-    [key: string]: RemoteField;
-  };
-  static remoteFieldToJson(value: { [key: string]: RemoteField }): string;
-  static toInputArguments(json: string): {
-    [key: string]: string;
-  };
-  static inputArgumentsToJson(value: { [key: string]: string }): string;
-  static toQueryCollectionEntry(json: string): QueryCollectionEntry;
-  static queryCollectionEntryToJson(value: QueryCollectionEntry): string;
-  static toQueryCollection(json: string): QueryCollection;
-  static queryCollectionToJson(value: QueryCollection): string;
-  static toAllowList(json: string): AllowList;
-  static allowListToJson(value: AllowList): string;
-  static toCustomTypes(json: string): CustomTypes;
-  static customTypesToJson(value: CustomTypes): string;
-  static toInputObjectType(json: string): InputObjectType;
-  static inputObjectTypeToJson(value: InputObjectType): string;
-  static toInputObjectField(json: string): InputObjectField;
-  static inputObjectFieldToJson(value: InputObjectField): string;
-  static toObjectType(json: string): ObjectType;
-  static objectTypeToJson(value: ObjectType): string;
-  static toObjectField(json: string): ObjectField;
-  static objectFieldToJson(value: ObjectField): string;
-  static toCustomTypeObjectRelationship(
-    json: string,
-  ): CustomTypeObjectRelationship;
-  static customTypeObjectRelationshipToJson(
-    value: CustomTypeObjectRelationship,
-  ): string;
-  static toScalarType(json: string): ScalarType;
-  static scalarTypeToJson(value: ScalarType): string;
-  static toEnumType(json: string): EnumType;
-  static enumTypeToJson(value: EnumType): string;
-  static toEnumValue(json: string): EnumValue;
-  static enumValueToJson(value: EnumValue): string;
-  static toAction(json: string): Action;
-  static actionToJson(value: Action): string;
-  static toActionDefinition(json: string): ActionDefinition;
-  static actionDefinitionToJson(value: ActionDefinition): string;
-  static toInputArgument(json: string): InputArgument;
-  static inputArgumentToJson(value: InputArgument): string;
-  static toHasuraMetadataV2(json: string): HasuraMetadataV2;
-  static hasuraMetadataV2ToJson(value: HasuraMetadataV2): string;
 }

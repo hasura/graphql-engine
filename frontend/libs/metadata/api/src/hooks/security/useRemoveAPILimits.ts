@@ -1,6 +1,5 @@
-import { hasuraToast } from '@hasura/shared/ui';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 import { useCallback } from 'react';
-import { getErrorMessage } from '@hasura/shared/utils';
 import type { ApiLimits } from '@hasura/shared/types';
 import { apiLimitsFieldNames } from './useUpdateAPILimits';
 import { useMetadataMigration } from '../metadata';
@@ -66,10 +65,9 @@ export const useRemoveAPILimits = () => {
             });
           },
           onError: (err) => {
-            hasuraToast({
+            showErrorNotification({
               title: 'Removing API limits failed!',
-              message: getErrorMessage(err),
-              type: 'error',
+              error: err,
             });
           },
         },

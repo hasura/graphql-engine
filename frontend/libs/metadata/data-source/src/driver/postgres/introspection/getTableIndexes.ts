@@ -23,5 +23,3 @@ export const getTableIndexesCurry =
     });
     return adaptIndexes(response.result);
   };
-
-export const getTableIndexes = getTableIndexesCurry('postgres');

@@ -1,11 +1,13 @@
 import { Source, Table } from '@hasura/shared/types';
-import { SupportedDriver } from '@hasura/shared/types';
 import {
   getTableColumnDataTypePlaceholder,
   useEditRows,
+  useEnumColumnValues,
   useTableColumns,
 } from '@hasura/metadata/data-source';
+import { areTablesEqual } from '@hasura/metadata/helpers';
 import { EditRowForm, EditRowFormProps } from './EditRowForm';
+import { ReloadEnumValuesButton } from '../InsertRow/components/ReloadEnumValuesButton';
 
 type EditRowFormContainerProps = {
   source: Source;
@@ -24,7 +26,11 @@ export const EditRowFormContainer = ({
     source,
     table,
   });
-  const driver = source.kind;
+  const { data: enumColumnValues } = useEnumColumnValues({ source, table });
+  // the GraphQL enum type only reflects updated rows after a metadata reload
+  const isEnumTable = source.tables.some(
+    (t) => t.is_enum && areTablesEqual(t.table, table),
+  );
 
   const { mutate: editRow, isPending: isSubmitting } = useEditRows();
 
@@ -36,6 +42,7 @@ export const EditRowFormContainer = ({
       placeholder: column.consoleDataType
         ? getTableColumnDataTypePlaceholder(column.consoleDataType)
         : '',
+      enumValues: enumColumnValues?.[column.name],
     })) ?? [];
 
   const primaryKeyColumns = (tableColumnQueryResult?.columns ?? []).filter(
@@ -60,7 +67,6 @@ export const EditRowFormContainer = ({
           {} as Record<string, unknown>,
         ),
         columns: tableColumnQueryResult?.columns ?? [],
-        defaultColumns: [],
       },
       { onSuccess },
     );
@@ -73,7 +79,11 @@ export const EditRowFormContainer = ({
       isSubmitting={isSubmitting}
       isLoading={isLoading}
       onEditRow={onEditRow}
-      driver={driver as SupportedDriver}
+      actions={
+        isEnumTable ? (
+          <ReloadEnumValuesButton sourceName={source.name} />
+        ) : undefined
+      }
     />
   );
 };

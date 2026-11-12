@@ -46,9 +46,15 @@ export function useAddColumn(options?: Options) {
         message: 'Column added successfully!',
         type: 'success',
       });
+      options?.onSuccess?.(data, variables, onMutateResult, context);
+    },
+    // Refresh on failure too: in CLI mode the SQL can be applied even when the
+    // request fails (e.g. the migration version could not be recorded), and the
+    // table view must show the database's real state.
+    onSettled: (data, error, variables, onMutateResult, context) => {
       invalidateMetadata(queryClient);
       queryClient.invalidateQueries({ queryKey: [variables.source.name] });
-      options?.onSuccess?.(data, variables, onMutateResult, context);
+      options?.onSettled?.(data, error, variables, onMutateResult, context);
     },
   });
 }

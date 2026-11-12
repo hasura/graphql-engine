@@ -8,12 +8,12 @@ import { ActivateEEFormSchema } from './schema';
 import { eeTrialsControlPlaneClient } from '../../../utils';
 import { useClientCredentialsPost } from './useClientCredentialsPost';
 
-export type ActivateEeTrialResponseWithError = {
+type ActivateEeTrialResponseWithError = {
   data?: EETrialRegistrationResponse;
   errors?: GraphQLError[];
 };
 
-export type ActivateEeTrialMutationVariables = {
+type ActivateEeTrialMutationVariables = {
   email: string;
   password: string;
 };

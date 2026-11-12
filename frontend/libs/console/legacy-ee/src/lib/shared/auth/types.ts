@@ -45,5 +45,6 @@ export type EnterpriseAuthService = AuthService<
   AuthType
 > & {
   privileges: Privilege[];
+  idToken?: string;
   getMetricsHeaders: () => Promise<Record<string, string>>;
 };

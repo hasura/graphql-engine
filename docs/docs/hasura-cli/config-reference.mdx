@@ -154,3 +154,64 @@ As an example, the `--endpoint` flag can be used to set the `HASURA_GRAPHQL_ENDP
 ```bash
 hasura metadata apply --endpoint "https://my-project.hasura.app"
 ```
+
+## Custom request headers
+
+The `--header` flag lets you attach arbitrary HTTP headers to every request the CLI
+makes to the Hasura GraphQL Engine (or to a gateway in front of it). This is useful
+when the engine or gateway authenticates requests with something other than an admin
+secret — for example a JWT in an `Authorization` header.
+
+The flag is available on the CLI commands that communicate with the engine, including
+`hasura migrate ...`, `hasura metadata ...`, `hasura seed ...`, `hasura deploy`,
+`hasura actions ...` and `hasura console`. It takes a value in `Name: value` form and
+can be repeated to send multiple headers:
+
+```bash
+hasura metadata export --header "Authorization: Bearer <JWT>"
+
+hasura migrate apply \
+  --header "Authorization: Bearer <JWT>" \
+  --header "X-Tenant-Id: acme"
+```
+
+Notes and semantics:
+
+- **Repeatable:** specify `--header` once per header you want to send.
+- **Values are preserved verbatim:** only the first `:` separates the name from the
+  value, so values may themselves contain `:` and `,` (for example Bearer tokens or
+  URLs). Only optional spaces and horizontal tabs around the value are trimmed.
+- **Validation:** header names must be valid HTTP tokens and neither names nor values
+  may contain carriage-return, line-feed or other control characters (a trailing
+  `\r\n` is rejected rather than silently stripped). Malformed input is rejected with
+  an error that never prints the header value, so secrets are not leaked to the
+  terminal, logs or telemetry.
+- **Duplicates:** specifying the same header name more than once (compared
+  case-insensitively) is rejected, so the request sent to the server is unambiguous.
+- **Precedence with the admin secret:** if an admin secret is configured (via
+  `--admin-secret`, the config file or an environment variable) it continues to be
+  sent as before. A `--header` value takes precedence only when it targets the same
+  header name (for example `X-Hasura-Admin-Secret`); header names are compared
+  case-insensitively, so exactly one value is sent for that header and the `--header`
+  value wins. Headers with other names are sent in addition to the admin secret header.
+- **No admin secret configured:** when no admin secret is set, the CLI does not send an
+  `X-Hasura-Admin-Secret` (or legacy `X-Hasura-Access-Key`) header at all. This lets a
+  custom auth header such as `--header "x-api-key: ..."` or `--header "Authorization:
+  Bearer ..."` be honoured by the server's auth webhook/JWT — previously an empty
+  admin-secret header was sent, which a server with an admin secret would reject before
+  consulting the webhook. Custom headers are applied to every request the CLI makes to
+  the engine, including the `/v1/version` probe.
+- **Not persisted:** `--header` is a command-line flag only. Its values are never
+  written to `config.yaml` and are not read from environment variables or the config
+  file, which keeps credentials such as JWTs out of your project configuration.
+
+:::info Authorization is enforced by the server
+
+These flags only transport headers; they do not grant any privileges by themselves.
+The destination engine or gateway must be configured to authorize the requested
+migrate/metadata operation for the identity the header represents. An ordinary JWT
+does not, on its own, confer the metadata/admin privileges that these operations
+usually require. Conversely, if an admin secret is configured it may still grant admin
+access — supplying a custom header does not disable it.
+
+:::

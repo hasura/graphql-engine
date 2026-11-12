@@ -13,14 +13,14 @@ import { EETrialCard, useEELiteAccess } from '../../../EETrial';
 import { isProConsole } from '@hasura/shared/utils';
 import { useAppContext } from '@hasura/shared/context';
 
-export const buildUrl = (name: string, section: string) =>
+const buildUrl = (name: string, section: string) =>
   `/api/allow-list/detail/${name}/${section}`;
 
 export const AllowListDetail: React.FC = () => {
   const params = useParams<{ name: string; section: string }>();
   const navigate = useNavigate();
   const name = params.name ?? '';
-  const section = params.section ?? '';
+  const section = params.section ?? 'operations';
   const { envVars } = useAppContext();
   const { access: eeLiteAccess } = useEELiteAccess();
   const {

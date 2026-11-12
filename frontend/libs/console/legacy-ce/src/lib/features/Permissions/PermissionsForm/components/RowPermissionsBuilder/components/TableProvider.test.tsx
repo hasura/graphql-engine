@@ -1,7 +1,7 @@
 import { useContext } from 'react';
 import { render, screen } from '@testing-library/react';
 import { TableProvider, tableContext } from './TableProvider';
-import { rootTableContext } from './RootTableProvider';
+import { getTablesKey, rootTableContext } from './RootTableProvider';
 import { rowPermissionsContext } from './RowPermissionsProvider';
 import { Tables } from './types';
 
@@ -38,7 +38,14 @@ const Consumer = () => {
 const wrapper = (tables: Tables, loadRelationships = vi.fn()) => {
   const rootTable = tables.find((t) => JSON.stringify(t.table) === '["Album"]');
   return (
-    <rootTableContext.Provider value={{ table: ['Album'], tables, rootTable }}>
+    <rootTableContext.Provider
+      value={{
+        table: ['Album'],
+        tables,
+        tablesKey: getTablesKey(tables),
+        rootTable,
+      }}
+    >
       <rowPermissionsContext.Provider
         value={
           {
@@ -91,5 +98,91 @@ describe('TableProvider', () => {
     render(wrapper(makeTables(['AlbumId'])));
     // initial render + the single allowed during-render sync pass
     expect(renderSpy.mock.calls.length).toBeLessThanOrEqual(3);
+  });
+
+  it('keeps the relationships a permission can use', () => {
+    const remoteDatabaseRelationship = (
+      name: string,
+      toSource: string,
+      mapping: Record<string, string>,
+    ) => ({
+      name,
+      fromSource: 'pg',
+      fromTable: ['Album'],
+      relationshipType: 'Object',
+      type: 'remoteDatabaseRelationship',
+      definition: { toSource, toTable: ['Artist'], mapping },
+    });
+
+    const tables = [
+      {
+        ...makeTables(['AlbumId'])[0],
+        relationships: [
+          {
+            name: 'local',
+            fromSource: 'pg',
+            fromTable: ['Album'],
+            relationshipType: 'Object',
+            type: 'localRelationship',
+            definition: { toTable: ['Artist'], mapping: { id: 'id' } },
+          },
+          remoteDatabaseRelationship('to_postgres', 'pg2', { id: 'id' }),
+          remoteDatabaseRelationship('to_mssql', 'mssql', { id: 'id' }),
+          remoteDatabaseRelationship('multi_column', 'pg2', {
+            id: 'id',
+            code: 'code',
+          }),
+          {
+            name: 'remote_schema',
+            fromSource: 'pg',
+            fromTable: ['Album'],
+            relationshipType: 'Remote',
+            type: 'remoteSchemaRelationship',
+            definition: {},
+          },
+        ],
+      },
+      {
+        table: ['Artist'],
+        columns: [],
+        relationships: [],
+        dataSource: { name: 'mssql', kind: 'mssql' },
+        computedFields: [],
+      },
+    ] as unknown as Tables;
+
+    const Relationships = () => {
+      const { relationships } = useContext(tableContext);
+      return (
+        <div data-testid="relationships">
+          {relationships.map((r) => r.name).join(',')}
+        </div>
+      );
+    };
+
+    render(
+      <rootTableContext.Provider
+        value={{
+          table: ['Album'],
+          tables,
+          tablesKey: getTablesKey(tables),
+          rootTable: tables[0],
+        }}
+      >
+        <rowPermissionsContext.Provider
+          value={{ loadRelationships: vi.fn() } as any}
+        >
+          <TableProvider table={['Album']}>
+            <Relationships />
+          </TableProvider>
+        </rowPermissionsContext.Provider>
+      </rootTableContext.Provider>,
+    );
+
+    // the server only accepts a remote database relationship on a single
+    // column, to a source of any kind
+    expect(screen.getByTestId('relationships')).toHaveTextContent(
+      /^local,to_postgres,to_mssql$/,
+    );
   });
 });

@@ -109,8 +109,8 @@ result` for composing with a `useMetadata(selector)` hook (from
   `selectRawEventTriggers`, `selectEventTriggers` (attaches `{name, schema,
 source}` table info to each), `selectEventTriggerByName`,
   `selectEventsTriggersByTable`, `selectManualEventsTriggers`,
-  `getSupportsForeignKeys(source)` (returns `false` only for bigquery — an
-  "assume true unless known-false" heuristic).
+  `getSupportsForeignKeys(source)` (`true` only for the Postgres family:
+  postgres, citus, cockroach, alloy; `false` for an undefined source).
 - **selector/table.ts** — `findMetadataTableCoarse`: looser table lookup
   than `findMetadataTable`, matches by extracted `schema`+`name` on a raw
   list; returns `undefined` if `tables`, `schema`, or `name` is falsy.
@@ -142,9 +142,9 @@ source}` table info to each), `selectEventTriggerByName`,
 - `findInconsistentRemoteSchema` matches on a literal string prefix
   (`"remote_schema ${remoteSchemaName}"`, not just `remoteSchemaName`) —
   passing a name that already includes the prefix silently fails to match.
-- `getSupportsForeignKeys` is an allow-list-by-exclusion: currently only
-  returns `false` for `bigquery`; adding a new FK-unsupported source kind
-  requires remembering to update this function directly.
+- `getSupportsForeignKeys` is an allow-list of the Postgres family
+  (`isPostgresFlavour`); a new source kind that supports foreign keys must be
+  added to this function directly.
 - `isGDCFunction` is a bare alias of `isGDCTable` — no function-specific
   shape checking; relies on functions and tables sharing the same tuple-array
   wire representation for GDC sources.

@@ -8,6 +8,7 @@ import { Token } from './Token';
 import { EntryType } from './EntryType';
 import { useOperators } from './utils/comparatorsFromSchema';
 import { InputSuggestion } from './InputSuggestion';
+import clsx from 'clsx';
 
 export const Entry = ({
   k,
@@ -22,6 +23,12 @@ export const Entry = ({
   const isDisabled = k === '_where' && isEmpty(table);
   const operators = useOperators({ path });
   const operator = operators.find((o) => o.name === k);
+
+  const entryClass = clsx({
+    'my-2': true,
+    'bg-(--gray-a3)': isDisabled,
+  });
+
   if (
     operator?.name === '_contains' ||
     operator?.name === '_contained_in' ||
@@ -31,7 +38,7 @@ export const Entry = ({
     return (
       <div
         style={{ marginLeft: 8 + (path.length + 1) * 4 + 'px' }}
-        className={`my-2 ${isDisabled ? 'bg-gray-50' : ''}`}
+        className={entryClass}
       >
         <Flex gap="4" className="px-2" align="center">
           <Key k={k} path={path} v={v} />
@@ -45,7 +52,7 @@ export const Entry = ({
   return (
     <div
       style={{ marginLeft: 8 + (path.length + 1) * 4 + 'px' }}
-      className={`my-2 ${isDisabled ? 'bg-gray-50' : ''}`}
+      className={entryClass}
     >
       <div
         className={`px-2 ${isPrimitive(v) ? ' flex gap-4 content-center' : ''}`}

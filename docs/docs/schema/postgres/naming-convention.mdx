@@ -256,13 +256,22 @@ By default, even when `graphql-default` is selected, the following names keep us
   arguments.
 
 To opt in to the full `graphql-default` naming for these cases as well, set the environment variable
-`HASURA_FF_NAMING_CONVENTION_SEP_2023=true` (case-insensitive). This flag is disabled by default, and only has an
-effect when a source's naming convention is `graphql-default`; it has no effect on `hasura-default` sources.
+`HASURA_FF_NAMING_CONVENTION_SEP_2023=true` (case-insensitive). This flag is disabled by default. Apart from the
+type names of aggregation predicates described below, it only has an effect when a source's naming convention is
+`graphql-default`.
+
+The same flag also applies the source's
+[type name customization](/api-reference/metadata-api/source.mdx#metadata-pg-add-source) (`type_names.prefix` /
+`type_names.suffix`) to the input types of aggregation predicates (`<table>_aggregate_bool_exp`,
+`<table>_aggregate_bool_exp_<function>` and their arguments types), for every naming convention. Without the flag
+these types stay unprefixed, so two sources with the same table name and distinct prefixes cannot both expose
+aggregation predicates for it: the schema fails with `Found conflicting definitions for GraphQL type`.
 
 :::caution
 
-Enabling this flag changes the shape of your GraphQL schema for existing `graphql-default` sources. Any client
-queries that reference the affected constraint enum values, cast argument types, or function args type names will
-need to be updated.
+Enabling this flag changes the shape of your GraphQL schema for existing `graphql-default` sources, and for any
+source with type name customization that exposes aggregation predicates. Any client queries that reference the
+affected constraint enum values, cast argument types, function args type names or aggregation predicate type names
+(for example, in variable definitions) will need to be updated.
 
 :::

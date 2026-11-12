@@ -1,8 +1,8 @@
 import { TrackableTable } from '@hasura/metadata/api';
-import { Metadata, MetadataTable, Table } from '@hasura/shared/types';
+import { MetadataTable } from '@hasura/shared/types';
 import { extractTableInfo } from '@hasura/shared/utils';
-import { areTablesEqual, MetadataSelectors } from '@hasura/metadata/helpers';
-import { IntrospectedTable, TableColumn } from '../../driver';
+import { areTablesEqual } from '@hasura/metadata/helpers';
+import { IntrospectedTable } from '../../driver';
 
 type Payload = {
   trackedTables: TrackableTable[];
@@ -48,50 +48,4 @@ export const splitByTracked = ({
     },
     { trackedTables: [], untrackedTables: [] },
   );
-};
-export const adaptUntrackedTables =
-  (trackedTables: Table[]) => (introspectedTables: IntrospectedTable[]) => {
-    return introspectedTables
-      .filter((introspectedTable) => {
-        const isTableTracked = trackedTables.find((t) =>
-          areTablesEqual(t, introspectedTable.table),
-        );
-
-        return !isTableTracked;
-      })
-      .map((untrackedTable) => ({
-        ...untrackedTable,
-        id: untrackedTable.name,
-        is_tracked: false,
-      }));
-  };
-
-export const adaptTrackedTables =
-  (trackedTables: Table[]) => (introspectedTables: IntrospectedTable[]) => {
-    return introspectedTables
-      .filter((introspectedTable) => {
-        const isTableTracked = trackedTables.find((t) =>
-          areTablesEqual(t, introspectedTable.table),
-        );
-
-        return isTableTracked;
-      })
-      .map((trackedTable) => ({
-        ...trackedTable,
-        id: trackedTable.name,
-        is_tracked: true,
-      }));
-  };
-
-export const selectTrackedTables =
-  (m: Metadata | undefined) => (dataSourceName: string) => {
-    if (!m) {
-      return [];
-    }
-
-    return MetadataSelectors.getTables(dataSourceName)(m)?.map((t) => t.table);
-  };
-
-export const selectPrimaryKeys = (columns: TableColumn[]) => {
-  return columns.filter((col) => col.isPrimaryKey);
 };

@@ -96,13 +96,13 @@ export function useGraphqlWsClient(
   return useSyncExternalStore(store.subscribe, store.getSnapshot);
 }
 
-export interface ExternalQuerySyncInput {
+interface ExternalQuerySyncInput {
   externalQuery: string;
   lastExternal: string;
   editorValue: string | undefined; // undefined => editor not ready
 }
 
-export interface ExternalQuerySyncPlan {
+interface ExternalQuerySyncPlan {
   /** Call queryEditor.setValue(value) when true. */
   setValue: boolean;
   value?: string;

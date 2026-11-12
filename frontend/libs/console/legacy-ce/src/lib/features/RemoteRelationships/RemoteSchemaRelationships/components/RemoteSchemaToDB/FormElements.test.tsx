@@ -21,8 +21,8 @@ vi.mock('@hasura/metadata/api', () => ({
 }));
 
 vi.mock('@hasura/metadata/data-source', () => ({
-  useTableColumns: () => ({
-    data: { columns: [{ name: 'id' }, { name: 'email' }] },
+  useTableColumnInfos: () => ({
+    data: [{ name: 'id' }, { name: 'email' }],
     isFetching: false,
   }),
 }));

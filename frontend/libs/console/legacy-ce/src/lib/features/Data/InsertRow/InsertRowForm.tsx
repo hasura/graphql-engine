@@ -2,11 +2,7 @@ import { Button, Checkbox, IconTooltip, SkeletonList } from '@hasura/shared/ui';
 import { useState } from 'react';
 import { ColumnRow } from './components/ColumnRow';
 import { convertTableValue } from './InsertRowForm.utils';
-import { SupportedDriver } from '@hasura/shared/types';
-import {
-  TableColumn,
-  useSupportedDataTypes,
-} from '@hasura/metadata/data-source';
+import { TableColumn } from '@hasura/metadata/data-source';
 import { Flex } from '@radix-ui/themes';
 
 export type InsertRowFormProps = {
@@ -14,13 +10,16 @@ export type InsertRowFormProps = {
     placeholder: string;
     insertable: boolean;
     description: string;
+    /** allowed values when the column references an enum table */
+    enumValues?: string[];
   })[];
   isInserting: boolean;
   isLoading: boolean;
   onInsertRow: (formData: Record<string, unknown>) => void;
-  driver: SupportedDriver;
   initialValues?: Record<string, unknown>;
   submitLabel?: string;
+  /** extra actions shown next to the form buttons */
+  actions?: React.ReactNode;
   /** shows the "This is a migration" checkbox (console CLI mode) */
   migration?: {
     checked: boolean;
@@ -33,12 +32,11 @@ export const InsertRowForm: React.FC<InsertRowFormProps> = ({
   isInserting = false,
   isLoading = false,
   onInsertRow,
-  driver,
   initialValues,
   submitLabel = 'Insert row',
+  actions,
   migration,
 }) => {
-  const { data: supportedDataTypes } = useSupportedDataTypes(driver);
   const [values, setValues] = useState<Record<string, unknown>[]>(() =>
     initialValues
       ? Object.entries(initialValues)
@@ -59,7 +57,7 @@ export const InsertRowForm: React.FC<InsertRowFormProps> = ({
 
         const finalColumnValue = convertTableValue(
           columnValue,
-          columnDefinition?.dataType,
+          columnDefinition?.consoleDataType,
         );
 
         const formData: Record<string, unknown> = {
@@ -144,7 +142,6 @@ export const InsertRowForm: React.FC<InsertRowFormProps> = ({
             key={column.name}
             label={column.name}
             name={column.name}
-            supportedDataTypes={supportedDataTypes}
             onChange={onChange}
             placeholder={column.placeholder}
             isDisabled={!column.insertable}
@@ -157,8 +154,10 @@ export const InsertRowForm: React.FC<InsertRowFormProps> = ({
                 ? `${column.dataType} Auto Increment`
                 : column.dataType
             }
-            driver={driver}
+            consoleDataType={column.consoleDataType}
+            arrayItemType={column.arrayItemType}
             initialValue={initialValues?.[column.name]}
+            enumValues={column.enumValues}
           />
         ))}
       </Flex>
@@ -180,6 +179,7 @@ export const InsertRowForm: React.FC<InsertRowFormProps> = ({
         <Button mode="primary" loading={isInserting} type="submit">
           {submitLabel}
         </Button>
+        {actions}
       </Flex>
     </form>
   );

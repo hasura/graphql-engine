@@ -4,7 +4,7 @@ import {
 } from './parts/RemoteSchemaTree';
 import { RelationshipFields } from './types';
 import { GraphQLSchema } from 'graphql';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { RemoteSchemaRelationship } from '../../types';
 import { parseServerRelationship } from './utils';
 import { RemoteFieldDisplay } from './parts/RemoteFieldDisplay';

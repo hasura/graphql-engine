@@ -1,6 +1,6 @@
 import { useReplaceMetadata } from './useReplaceMetadata';
 import { isConsoleError } from '@hasura/shared/utils';
-import { hasuraToast } from '@hasura/shared/ui';
+import { showErrorNotification } from '@hasura/shared/ui';
 
 export const useReplaceMetadataFromFile = () => {
   const replaceMetadata = useReplaceMetadata();
@@ -16,10 +16,9 @@ export const useReplaceMetadataFromFile = () => {
       parsedFileContent = JSON.parse(fileContent);
     } catch (e) {
       if (isConsoleError(e)) {
-        hasuraToast({
-          type: 'error',
+        showErrorNotification({
           title: 'Error parsing metadata file',
-          message: e.message,
+          error: e,
         });
       }
 

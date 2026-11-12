@@ -1,4 +1,3 @@
-import React from 'react';
 import { FaDatabase, FaPlug } from 'react-icons/fa';
 import { Relationship } from '../../../types';
 

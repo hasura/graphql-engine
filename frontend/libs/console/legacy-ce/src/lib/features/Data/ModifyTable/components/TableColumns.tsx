@@ -16,12 +16,15 @@ import { TableColumnDescription } from './TableColumnDescription';
 import { AddColumnDialog } from './AddColumnDialog';
 import {
   Button,
+  hasuraToast,
   IndicatorCard,
   SkeletonList,
   useDestructiveConfirm,
 } from '@hasura/shared/ui';
 import { FaPlus } from 'react-icons/fa';
 import { getErrorMessage } from '@hasura/shared/utils';
+import { useAppContext } from '@hasura/shared/context';
+import { mayHaveBeenApplied } from './MigrationRequestNotice';
 
 type TableColumnProps = ModifyTableProps;
 
@@ -40,6 +43,7 @@ export const TableColumns: React.FC<TableColumnProps> = (props) => {
     },
   );
 
+  const { envVars } = useAppContext();
   const dbMethods = getDatabaseMethods(props.source.kind);
   const canListUniqueKeys = Boolean(dbMethods.introspection.getUniqueKeys);
   const canAddColumn = !props.isView && Boolean(dbMethods.modify?.addColumn);
@@ -94,7 +98,20 @@ export const TableColumns: React.FC<TableColumnProps> = (props) => {
             ),
           });
           return true;
-        } catch {
+        } catch (err) {
+          // The confirm dialog closes without showing anything on `false`, so
+          // the failure must be reported here.
+          hasuraToast({
+            type: 'error',
+            title: 'Removing column failed',
+            message: mayHaveBeenApplied(err)
+              ? `${getErrorMessage(err)}. The column may have been removed anyway: the list has been refreshed, check it${
+                  envVars.consoleMode === 'cli'
+                    ? ' and run `hasura migrate status` before retrying'
+                    : ' before retrying'
+                }.`
+              : getErrorMessage(err),
+          });
           return false;
         }
       },
@@ -123,17 +140,23 @@ export const TableColumns: React.FC<TableColumnProps> = (props) => {
 
   return (
     <>
-      {(columns ?? []).map((c: TableColumn) => (
-        <TableColumnDescription
-          column={{ ...c, config: columnConfig?.[c.name] }}
-          key={c.name}
-          onEdit={(column) => {
-            setIsEditColumnFormActive(true);
-            setSelectedColumn(column);
-          }}
-          onRemove={canDropColumn ? removeColumn : undefined}
-        />
-      ))}
+      {columns?.length ? (
+        <table>
+          <tbody>
+            {columns.map((c: TableColumn) => (
+              <TableColumnDescription
+                column={{ ...c, config: columnConfig?.[c.name] }}
+                key={c.name}
+                onEdit={(column) => {
+                  setIsEditColumnFormActive(true);
+                  setSelectedColumn(column);
+                }}
+                onRemove={canDropColumn ? removeColumn : undefined}
+              />
+            ))}
+          </tbody>
+        </table>
+      ) : null}
       {isEditColumnFormActive && selectedColumn && (
         <EditTableColumnDialog
           {...props}

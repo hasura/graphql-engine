@@ -3,7 +3,7 @@ import { parse as sdlParser } from 'graphql/language/parser';
 import { DocumentNode, GraphQLError } from 'graphql';
 import { Analytics, REDACT_EVERYTHING } from '@hasura/shared/analytics';
 import { Flex, Heading } from '@radix-ui/themes';
-import { IconTooltip, AceEditor, IndicatorCard } from '@hasura/shared/ui';
+import { IconTooltip, AceEditor } from '@hasura/shared/ui';
 
 type GraphQLEditorProps = {
   value: string;
@@ -64,14 +64,18 @@ const GraphQLEditor: React.FC<GraphQLEditorProps> = ({
     onChange(val, null, parseDebounceTimer, null);
   };
 
-  const errorMessage =
-    error && (error.message || 'This is not valid GraphQL SDL');
-
-  const errorMessageLine =
-    error &&
-    error.locations &&
-    error.locations.length &&
-    ` at line ${error.locations[0].line}, column ${error.locations[0].column} `;
+  // the parse error is shown in the editor's gutter, on its line
+  const errorLocation = error?.locations?.[0];
+  const annotations = error
+    ? [
+        {
+          row: errorLocation ? errorLocation.line - 1 : 0,
+          column: errorLocation ? errorLocation.column - 1 : 0,
+          type: 'error',
+          text: error.message || 'This is not valid GraphQL SDL',
+        },
+      ]
+    : [];
 
   return (
     <Analytics name="GraphiQLEditor" {...REDACT_EVERYTHING}>
@@ -94,18 +98,12 @@ const GraphQLEditor: React.FC<GraphQLEditorProps> = ({
             width={width || '100%'}
             showPrintMargin={false}
             disabled={readOnlyMode}
+            annotations={annotations}
             setOptions={{
               useWorker: false,
               showLineNumbers: true,
             }}
           />
-          {error && (
-            <div className="absolute bottom-0 left-[48px] w-[calc(100%-48px)]">
-              <IndicatorCard className="py-1!" status="negative" size="1">
-                {errorMessage} {errorMessageLine}
-              </IndicatorCard>
-            </div>
-          )}
         </div>
       </div>
     </Analytics>

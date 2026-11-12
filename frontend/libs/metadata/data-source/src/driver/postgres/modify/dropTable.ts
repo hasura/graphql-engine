@@ -3,7 +3,7 @@ import { PostgresFamilyDriver } from '@hasura/shared/types';
 import { DropTableProps } from '../../types';
 import { runDatabaseMigration } from '@hasura/metadata/api';
 
-export const getDropTableOrViewSql = (
+const getDropTableOrViewSql = (
   table: PostgresTable,
   property: 'table' | 'view' = 'table',
   cascade?: boolean,
@@ -32,6 +32,9 @@ export const dropTableCurry = (kind: PostgresFamilyDriver) => {
         up: [
           {
             sql: getDropTableOrViewSql(pgTable, 'table', cascade),
+            // run_sql removes the dropped table from the metadata, together
+            // with its dependent metadata objects when cascading
+            cascade,
           },
         ],
         down: [],

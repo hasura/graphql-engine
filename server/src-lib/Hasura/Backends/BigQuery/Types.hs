@@ -589,8 +589,15 @@ instance ToJSON Decimal where
   toJSON (Decimal x) = J.toJSON x
 
 -- | Convert 'Scientific' to 'Text'
+--
+-- 'Fixed' formatting is linear in the exponent, and the input may be untrusted,
+-- so fall back to exponent notation outside of +/-1024 (as aeson's encoder
+-- does). Such values are far outside the range of BigQuery's decimal types anyway.
 scientificToText :: Scientific -> Text
-scientificToText num = toStrict $ toLazyText $ formatScientificBuilder Fixed Nothing num
+scientificToText num = toStrict $ toLazyText $ formatScientificBuilder format Nothing num
+  where
+    e = base10Exponent num
+    format = if e < -1024 || e > 1024 then Generic else Fixed
 
 -- | BigQuery's conception of a \"big\" fixed precision decimal.
 newtype BigDecimal = BigDecimal Text

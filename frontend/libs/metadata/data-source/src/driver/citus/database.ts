@@ -6,7 +6,6 @@ import {
   getTableColumnInfos,
   getTrackableTables,
 } from './introspection';
-import { getTableRows } from './query';
 import { postgresCapabilities } from '../common/capabilities';
 import {
   isPostgresTable,
@@ -43,9 +42,7 @@ export const citus: Database = {
     ...getPostgresIntrospectionMethods('citus'),
   },
   modify: createPostgresModifyMethods('citus'),
-  query: {
-    getTableRows,
-  },
+  query: postgres.query,
   config: postgres.config,
   check: {
     isFeatureSupported: (feature) =>

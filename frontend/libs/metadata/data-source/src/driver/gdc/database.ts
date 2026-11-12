@@ -41,9 +41,9 @@ export const gdc: Database = {
     getTableRows,
   },
   modify: {
-    insertRows: insertRowsCurry(validateInputRowValues, ''),
-    updateRows: updateRowsCurry(validateInputRowValues, ''),
-    deleteRows: deleteRowsCurry(''),
+    insertRows: insertRowsCurry(validateInputRowValues, getDefaultQueryRoot),
+    updateRows: updateRowsCurry(validateInputRowValues, getDefaultQueryRoot),
+    deleteRows: deleteRowsCurry(getDefaultQueryRoot),
   },
   config: {
     getDefaultQueryRoot,

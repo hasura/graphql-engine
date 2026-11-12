@@ -4,7 +4,11 @@ import {
   Metadata,
 } from '@hasura/shared/types';
 import { Button, JsonCodeBlock, Text } from '@hasura/shared/ui';
-import { extractTableInfo, getTableDisplayName } from '@hasura/shared/utils';
+import {
+  dataRoutes,
+  extractTableInfo,
+  getTableDisplayName,
+} from '@hasura/shared/utils';
 import { NavigateFunction } from 'react-router';
 import { Strong } from '@radix-ui/themes';
 
@@ -27,16 +31,21 @@ export const resolveInconsistentInheritedRole = (
   if (!tableSource) {
     return;
   }
-  const tableSchema = tableSource.tables
-    .map((t) => extractTableInfo(t.table))
-    .find((t) => t?.name === table);
+  const tableSchema = tableSource.tables.find(
+    (t) => extractTableInfo(t.table)?.name === table,
+  );
   if (!tableSchema) {
     return;
   }
 
-  navigate(
-    `/data/${source}/schema/${tableSchema.schema}/tables/${table}/permissions?role=${role}&permission_type=${permission_type}`,
+  const targetRoute = dataRoutes.manageTable(
+    source,
+    tableSchema.table,
+    'permissions',
   );
+  targetRoute.search = `${targetRoute.search}&role=${role}&permission_type=${permission_type}`;
+
+  navigate(targetRoute);
 };
 
 export const getInconsistentObjectDisplay = (

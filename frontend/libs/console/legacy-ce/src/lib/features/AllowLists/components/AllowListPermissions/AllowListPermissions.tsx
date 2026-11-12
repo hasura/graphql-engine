@@ -8,6 +8,7 @@ import {
   Table,
   Input,
   PermissionsIcon,
+  showErrorNotification,
 } from '@hasura/shared/ui';
 import { FaPlusCircle } from 'react-icons/fa';
 import { useSetRoleToAllowListPermission } from '../../hooks/AllowListPermissions/useSetRoleToAllowListPermissions';
@@ -65,10 +66,9 @@ export const AllowListPermissions: React.FC<AllowListPermissionsTabProps> = ({
         setUpdatingRoles(updatingRoles.filter((role) => role !== roleName));
       },
       onError: (e) => {
-        hasuraToast({
-          type: 'error',
-          message: `Error updating allow list permissions: ${e.message}`,
-          title: 'Error',
+        showErrorNotification({
+          error: e,
+          title: 'Error updating allow list permissions',
         });
         setUpdatingRoles(updatingRoles.filter((role) => role !== roleName));
       },
@@ -120,10 +120,9 @@ export const AllowListPermissions: React.FC<AllowListPermissionsTabProps> = ({
                 });
               },
               onError: (e) => {
-                hasuraToast({
-                  type: 'error',
+                showErrorNotification({
                   title: 'Collection not added to allowlist',
-                  message: `Collection ${collectionName} could not be added to the allowlist: ${e.message}`,
+                  error: e,
                 });
               },
             });

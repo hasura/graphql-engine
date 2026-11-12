@@ -3,7 +3,7 @@
 import Globals from '../../../Globals';
 import Endpoints from '../../../Endpoints';
 
-export const getEnvVars = () => {
+const getEnvVars = () => {
   const tenantId = Globals.hasuraCloudTenantId;
   const query = `
     query getTenantEnv($tenantId: uuid!) {
@@ -40,7 +40,7 @@ export const getEnvVars = () => {
     });
 };
 
-export const updateEnvVars = (
+const updateEnvVars = (
   currentHash: string,
   envs: { key: any; value: any }[],
 ) => {
@@ -91,7 +91,7 @@ export const updateEnvVars = (
     });
 };
 
-export const getAvailableEnvVar = (envVars: Record<string, any>) => {
+const getAvailableEnvVar = (envVars: Record<string, any>) => {
   const newEnvVarName = 'PG_DATABASE_URL';
   let suffix = 0;
   while (

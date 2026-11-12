@@ -152,7 +152,7 @@ export const BULK_QUERY_TYPES = ['bulk', 'concurrent_bulk'] as const;
 export type BulkQueryType = (typeof BULK_QUERY_TYPES)[number];
 
 type SupportedMetadataDataSourcesPrefix =
-  'mssql' | 'bigquery' | 'pg' | KnownEnterpriseDriver;
+  'mssql' | 'bigquery' | 'pg' | 'citus' | 'cockroach' | KnownEnterpriseDriver;
 
 type MetadataQueryType = (typeof METADATA_QUERY_TYPES)[number];
 

@@ -23,6 +23,7 @@ const createForeignKey = vi.fn();
 vi.mock('@hasura/metadata/data-source', () => ({
   useCreateForeignKey: () => ({ mutate: createForeignKey, isPending: false }),
   useTableColumns: () => ({ data: { columns: [{ name: 'id' }] } }),
+  useTableColumnInfos: () => ({ data: [{ name: 'id' }] }),
   createTableSelectOption: (table: { name: string; schema: string }) => ({
     label: `${table.schema} / ${table.name}`,
     value: table,

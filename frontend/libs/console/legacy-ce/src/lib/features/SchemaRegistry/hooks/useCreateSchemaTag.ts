@@ -5,7 +5,7 @@ import {
   CreateSchemaRegistryTagResponseWithError,
   SchemaRegistryTag,
 } from '../types';
-import { hasuraToast } from '@hasura/shared/ui';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 
 type createSchemaRegistryTagMutationFnArgs = {
   tagName: string;
@@ -61,12 +61,10 @@ export const useCreateSchemaTag = (
         if (data.data) onSuccess(data.data.insert_schema_registry_tags_one);
       }
     },
-    onError: () => {
-      hasuraToast({
-        type: 'error',
-        title: 'Error!',
-        message:
-          'Something went wrong while creating the tag for Schema Registry',
+    onError: (error) => {
+      showErrorNotification({
+        title: 'Creating the tag for Schema Registry failed',
+        error,
       });
     },
   });

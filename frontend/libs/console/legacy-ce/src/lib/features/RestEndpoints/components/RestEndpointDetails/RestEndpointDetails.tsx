@@ -9,7 +9,7 @@ import {
   useConsoleForm,
   Button,
   hasuraToast,
-  AceEditor,
+  showErrorNotification,
 } from '@hasura/shared/ui';
 import { FaArrowRight, FaPlay } from 'react-icons/fa';
 import { useRestEndpointRequest } from '../../hooks/useRestEndpointRequest';
@@ -236,23 +236,9 @@ export const RestEndpointDetails = (props: RestEndpointDetailsProps) => {
                         });
                       },
                       onError: (error) => {
-                        hasuraToast({
-                          title: 'Error',
+                        showErrorNotification({
                           message: 'Request failed',
-                          type: 'error',
-                          children: (
-                            <div className="overflow-hidden">
-                              <AceEditor
-                                setOptions={{
-                                  minLines: 1,
-                                  maxLines: Infinity,
-                                  showGutter: false,
-                                  useWorker: false,
-                                }}
-                                value={JSON.stringify(error, null, 2)}
-                              />
-                            </div>
-                          ),
+                          error,
                         });
                       },
                     },

@@ -52,6 +52,10 @@ export const WithoutActions = () => (
   <CardedTable columns={columns} data={data} />
 );
 
+export const Loading = () => (
+  <CardedTable columns={columns} data={data} loading />
+);
+
 export const HorizontalTable = () => (
   <CardedTable orientation="horizontal" columns={columns} data={data} />
 );

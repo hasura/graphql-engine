@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation } from 'react-router';
+import { Theme } from '@radix-ui/themes';
 import { dataRoutes } from '@hasura/shared/utils';
 import DatabaseItemsView from './DatabaseItemsView';
 import { SourceItem } from '../types';
@@ -61,6 +62,71 @@ describe('DatabaseItemsView', () => {
     setup('other');
 
     expect(screen.queryByText('public')).not.toBeInTheDocument();
+  });
+
+  it('lists objects without a schema under the database, not in an unnamed folder', () => {
+    const collection: SourceItem = {
+      name: 'movies',
+      schema: '',
+      tableName: 'movies',
+      table: ['movies'],
+      source: 'default',
+      type: 'table',
+    };
+    render(
+      <Theme>
+        <MemoryRouter>
+          <DatabaseItemsView
+            sourceName="default"
+            params={{
+              source: 'default',
+              schema: null,
+              tableName: undefined,
+              isFunction: false,
+            }}
+            items={[...items, collection]}
+            databaseLoading={false}
+            schemaLoading={false}
+          />
+        </MemoryRouter>
+      </Theme>,
+    );
+
+    // the collection is listed without expanding a schema folder
+    expect(screen.getByText('movies')).toBeInTheDocument();
+    expect(screen.getByText('public')).toBeInTheDocument();
+  });
+
+  it('hides objects without a schema when the database is not active', () => {
+    render(
+      <Theme>
+        <MemoryRouter>
+          <DatabaseItemsView
+            sourceName="default"
+            params={{
+              source: 'other',
+              schema: null,
+              tableName: undefined,
+              isFunction: false,
+            }}
+            items={[
+              {
+                name: 'movies',
+                schema: '',
+                tableName: 'movies',
+                table: ['movies'],
+                source: 'default',
+                type: 'table',
+              },
+            ]}
+            databaseLoading={false}
+            schemaLoading={false}
+          />
+        </MemoryRouter>
+      </Theme>,
+    );
+
+    expect(screen.queryByText('movies')).not.toBeInTheDocument();
   });
 
   it('still navigates when the database row is clicked', async () => {

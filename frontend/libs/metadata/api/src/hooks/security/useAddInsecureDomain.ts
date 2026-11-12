@@ -1,6 +1,5 @@
-import { hasuraToast } from '@hasura/shared/ui';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 import { useCallback } from 'react';
-import { getErrorMessage } from '@hasura/shared/utils';
 import { useMetadataMigration } from '../metadata';
 
 export const useAddInsecureDomain = () => {
@@ -26,10 +25,9 @@ export const useAddInsecureDomain = () => {
             return true;
           },
           onError: async (err) => {
-            hasuraToast({
+            showErrorNotification({
               title: 'Adding domain failed!',
-              message: getErrorMessage(err),
-              type: 'error',
+              error: err,
             });
 
             return false;

@@ -3,14 +3,21 @@ import {
   OperationDefinitionNode,
   OperationTypeNode,
   GraphQLSchema,
+  print,
 } from 'graphql';
-import { hasuraToast, DropdownMenu, useHasuraAlert } from '@hasura/shared/ui';
+import {
+  hasuraToast,
+  DropdownMenu,
+  useHasuraAlert,
+  showErrorNotification,
+} from '@hasura/shared/ui';
 import { ToolbarButton } from '@graphiql/react';
 import { CiShare1 } from 'react-icons/ci';
 import { useNavigate } from 'react-router';
 import { trackGraphiQlToolbarButtonClick } from '../customAnalyticsEvents';
 import deriveAction from './utils';
-import { getErrorMessage, dataRoutes } from '@hasura/shared/utils';
+import { useDataConnectorScalarReplacements } from './useDataConnectorScalarReplacements';
+import { dataRoutes } from '@hasura/shared/utils';
 import {
   getActionDefinitionSdl,
   getTypesSdl,
@@ -28,6 +35,7 @@ const DeriveActionButton = ({ operations, schema }: Props) => {
   const navigate = useNavigate();
   const { hasuraConfirm } = useHasuraAlert();
   const [optionsOpen, setOptionsOpen] = useState(false);
+  const scalarReplacements = useDataConnectorScalarReplacements();
 
   const onRun = (operation: OperationDefinitionNode) => {
     if (!schema) return;
@@ -35,12 +43,16 @@ const DeriveActionButton = ({ operations, schema }: Props) => {
     let derivedOperationMetadata: ReturnType<typeof deriveAction>;
 
     try {
-      derivedOperationMetadata = deriveAction(operation, schema);
+      derivedOperationMetadata = deriveAction(
+        operation,
+        schema,
+        null,
+        scalarReplacements,
+      );
     } catch (e) {
-      hasuraToast({
-        type: 'error',
+      showErrorNotification({
         title: errorTitle,
-        message: getErrorMessage(e),
+        error: e,
       });
 
       return;
@@ -63,9 +75,13 @@ const DeriveActionButton = ({ operations, schema }: Props) => {
       );
       navigate({
         pathname: dataRoutes.createAction,
+        // the operation is persisted along with the created action, to
+        // generate handler code that delegates to it
         search: `?action_sdl=${encodeURIComponent(
           actionsSdl,
-        )}&types_sdl=${encodeURIComponent(typesSdl)}`,
+        )}&types_sdl=${encodeURIComponent(
+          typesSdl,
+        )}&derived_operation=${encodeURIComponent(print(operation))}`,
       });
     };
 

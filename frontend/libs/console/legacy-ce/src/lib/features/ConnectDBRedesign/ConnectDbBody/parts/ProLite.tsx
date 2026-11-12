@@ -79,7 +79,10 @@ export const ProLite = ({
 
       {(!selectedDriver?.enterprise ||
         (eeLicenseInfo === 'active' && isDriverAvailable)) && (
-        <ConnectButton selectedDriver={selectedDriver} />
+        <ConnectButton
+          selectedDriver={selectedDriver}
+          isDriverAvailable={isDriverAvailable}
+        />
       )}
     </>
   );

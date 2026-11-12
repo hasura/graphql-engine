@@ -7,7 +7,7 @@
  * and initializes the headers.
  */
 import React from 'react';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { vi } from 'vitest';
 import { AuthContext } from '@hasura/shared/context';
@@ -105,5 +105,94 @@ describe('useApiExplorer initial query seeding', () => {
     await waitFor(() => expect(result.current.headersInitialized).toBe(true));
     // a trailing empty placeholder header is always appended
     expect(result.current.headers.length).toBeGreaterThan(0);
+  });
+});
+
+describe('useApiExplorer header changes', () => {
+  it('applies a checkbox toggle to objectHeaders immediately', async () => {
+    const { result } = renderExplorer(5);
+    await waitFor(() => expect(result.current.headersInitialized).toBe(true));
+    expect(result.current.objectHeaders).toEqual({
+      'content-type': 'application/json',
+    });
+
+    act(() => {
+      result.current.changeRequestHeader(
+        { ...result.current.headers[0], selected: false },
+        0,
+      );
+    });
+    expect(result.current.objectHeaders).toEqual({});
+
+    act(() => {
+      result.current.changeRequestHeader(
+        { ...result.current.headers[0], selected: true },
+        0,
+      );
+    });
+    expect(result.current.objectHeaders).toEqual({
+      'content-type': 'application/json',
+    });
+  });
+
+  it('defers key/value edits to objectHeaders until blur', async () => {
+    const { result } = renderExplorer(5);
+    await waitFor(() => expect(result.current.headersInitialized).toBe(true));
+
+    act(() => {
+      result.current.changeRequestHeader(
+        { ...result.current.headers[0], value: 'text/plain' },
+        0,
+      );
+    });
+    expect(result.current.objectHeaders).toEqual({
+      'content-type': 'application/json',
+    });
+
+    act(() => {
+      result.current.handleHeaderUnfocus();
+    });
+    expect(result.current.objectHeaders).toEqual({
+      'content-type': 'text/plain',
+    });
+  });
+
+  it('applies refreshed auth header values to the rows and objectHeaders', async () => {
+    const { result } = renderExplorer(5);
+    await waitFor(() => expect(result.current.headersInitialized).toBe(true));
+
+    act(() => {
+      result.current.changeRequestHeader(
+        {
+          key: 'hasura-collaborator-token',
+          value: 'IDToken old',
+          selected: true,
+          isDisabled: true,
+        },
+        result.current.headers.length - 1,
+      );
+    });
+    act(() => {
+      result.current.handleHeaderUnfocus();
+    });
+    expect(result.current.objectHeaders).toEqual({
+      'content-type': 'application/json',
+      'hasura-collaborator-token': 'IDToken old',
+    });
+
+    act(() => {
+      result.current.updateAuthHeaders({
+        'hasura-collaborator-token': 'IDToken new',
+      });
+    });
+
+    expect(
+      result.current.headers.find((h) => h.key === 'hasura-collaborator-token')
+        ?.value,
+    ).toBe('IDToken new');
+    expect(result.current.objectHeaders).toEqual({
+      'content-type': 'application/json',
+      'hasura-collaborator-token': 'IDToken new',
+    });
   });
 });

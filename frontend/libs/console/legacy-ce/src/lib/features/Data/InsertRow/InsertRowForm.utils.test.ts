@@ -2,19 +2,19 @@ import { convertTableValue } from './InsertRowForm.utils';
 
 describe('convertTableValue', () => {
   it.each`
-    columnValue | dataType     | expected
-    ${'foo'}    | ${'string'}  | ${'foo'}
-    ${'13.2'}   | ${'number'}  | ${13.2}
-    ${'11'}     | ${'number'}  | ${11}
-    ${'true'}   | ${'boolean'} | ${true}
-    ${'false'}  | ${'boolean'} | ${false}
-    ${'true'}   | ${'bool'}    | ${true}
-    ${'false'}  | ${'bool'}    | ${false}
-    ${'123'}    | ${'float'}   | ${123}
+    columnValue   | consoleDataType | expected
+    ${'foo'}      | ${'string'}     | ${'foo'}
+    ${'13.2'}     | ${'number'}     | ${13.2}
+    ${'11'}       | ${'integer'}    | ${11}
+    ${'123.5'}    | ${'float'}      | ${123.5}
+    ${'true'}     | ${'boolean'}    | ${true}
+    ${'false'}    | ${'boolean'}    | ${false}
+    ${'2022-1-1'} | ${'date'}       | ${'2022-1-1'}
+    ${'42'}       | ${undefined}    | ${'42'}
   `(
-    'given $dataType it returns $expected',
-    ({ columnValue, dataType, expected }) => {
-      expect(convertTableValue(columnValue, dataType)).toEqual(expected);
+    'given $consoleDataType it returns $expected',
+    ({ columnValue, consoleDataType, expected }) => {
+      expect(convertTableValue(columnValue, consoleDataType)).toEqual(expected);
     },
   );
 });

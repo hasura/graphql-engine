@@ -38,6 +38,3 @@ export const getUniqueKeysCurry =
     });
     return runKeysQuery(kind, props, sql);
   };
-
-export const getPrimaryKey = getPrimaryKeyCurry('postgres');
-export const getUniqueKeys = getUniqueKeysCurry('postgres');

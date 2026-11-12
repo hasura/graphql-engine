@@ -18,6 +18,7 @@ import {
 import { PrometheusAnimation } from './PrometheusAnimation';
 import { EETrialCard, EELiteAccess } from '../EETrial';
 import { Code, Flex, Heading, Link, Skeleton } from '@radix-ui/themes';
+import { ConsoleType } from '@hasura/shared/types';
 
 type PrometheusFormProps = {
   /**
@@ -43,7 +44,9 @@ type PrometheusFormProps = {
   /**
    * Flag indicating whether a EETrial license is activated
    */
-  eeLiteAccess: EELiteAccess;
+  eeLiteAccess: EELiteAccess & {
+    consoleType: ConsoleType;
+  };
 };
 
 type PrometheusFormFieldsProps = {
@@ -288,7 +291,11 @@ export const PrometheusSettingsForm: React.FC<PrometheusFormProps> = ({
   errorMode = false,
   eeLiteAccess,
 }) => {
-  const withoutLicense = eeLiteAccess.access !== 'active';
+  const withoutLicense = !(
+    eeLiteAccess.consoleType === 'pro' ||
+    (eeLiteAccess.consoleType === 'pro-lite' &&
+      eeLiteAccess.access === 'active')
+  );
 
   return (
     <Flex direction="column" gap="4" className="max-w-(--breakpoint-lg) p-4">

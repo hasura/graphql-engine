@@ -1,4 +1,4 @@
-import { hasuraToast } from '@hasura/shared/ui';
+import { hasuraToast, showErrorNotification } from '@hasura/shared/ui';
 import { QueryCollectionOperationDialog } from './QueryCollectionOperationDialog';
 import { useAddOperationsToQueryCollection } from '@hasura/metadata/api';
 
@@ -24,10 +24,9 @@ export const QueryCollectionOperationAdd = (
             [{ name: values.name, query: values.query }],
             {
               onError: (e) => {
-                hasuraToast({
-                  type: 'error',
-                  title: 'Error',
-                  message: `Failed to add operation to query collection: ${e.message}`,
+                showErrorNotification({
+                  title: 'Failed to add operation to query collection',
+                  error: e,
                 });
               },
               onSuccess: () => {
@@ -46,10 +45,9 @@ export const QueryCollectionOperationAdd = (
 
         addOperationToQueryCollection(queryCollectionName, values.gqlFile, {
           onError: (e) => {
-            hasuraToast({
-              type: 'error',
-              title: 'Error',
-              message: `Failed to add operation to query collection: ${e.message}`,
+            showErrorNotification({
+              title: 'Failed to add operation to query collection',
+              error: e,
             });
           },
           onSuccess: () => {

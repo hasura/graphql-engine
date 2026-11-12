@@ -4,14 +4,13 @@ import { getDefaultValues, MssqlConnectionSchema, schema } from './schema';
 import { ReadReplicas } from './parts/ReadReplicas';
 import { useManageDatabaseConnection } from '../../hooks/useManageDatabaseConnection';
 import {
-  hasuraToast,
   InputField,
   useConsoleForm,
   Button,
   Collapsible,
   Tabs,
-  DisplayToastErrorMessage,
   Text,
+  showErrorNotification,
 } from '@hasura/shared/ui';
 import { useMetadata } from '@hasura/metadata/api';
 import { generateMssqlRequestPayload } from './utils/generateRequests';
@@ -35,23 +34,7 @@ export const ConnectMssqlWidget = (props: ConnectMssqlWidgetProps) => {
   );
 
   const { createConnection, editConnection, isPending } =
-    useManageDatabaseConnection({
-      onSuccess: () => {
-        hasuraToast({
-          type: 'success',
-          title: isEditMode
-            ? 'Database updated successful!'
-            : 'Database added successfully!',
-        });
-      },
-      onError: (err) => {
-        hasuraToast({
-          type: 'error',
-          title: err.name,
-          children: <DisplayToastErrorMessage message={err.message} />,
-        });
-      },
-    });
+    useManageDatabaseConnection({});
 
   const handleSubmit = (formValues: MssqlConnectionSchema) => {
     const payload = generateMssqlRequestPayload({
@@ -77,10 +60,10 @@ export const ConnectMssqlWidget = (props: ConnectMssqlWidgetProps) => {
     try {
       reset(getDefaultValues(metadataSource));
     } catch (err) {
-      hasuraToast({
-        type: 'error',
+      showErrorNotification({
         title:
           'Error while retriving database. Please check if the database is of type mssql',
+        error: err,
       });
     }
   }, [metadataSource, reset]);

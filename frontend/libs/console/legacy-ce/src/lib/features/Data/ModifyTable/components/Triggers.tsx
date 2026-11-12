@@ -199,5 +199,3 @@ export const Triggers = ({ source, table }: ModifyTableProps) => {
     </>
   );
 };
-
-export default Triggers;

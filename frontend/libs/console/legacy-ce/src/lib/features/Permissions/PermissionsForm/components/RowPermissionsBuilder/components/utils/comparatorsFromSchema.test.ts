@@ -125,6 +125,17 @@ describe('getDataTypeOperators', () => {
     const operators = getDataTypeOperators(mssqlRealColumnTypeInput);
     expect(operators.length).toEqual(15);
   });
+
+  it('maps the data type by the kind of the source, not its name', () => {
+    const operators = getDataTypeOperators({
+      ...mssqlRealColumnTypeInput,
+      tables: mssqlRealColumnTypeInput.tables.map((table) => ({
+        ...table,
+        dataSource: { ...table.dataSource, name: 'warehouse' },
+      })),
+    });
+    expect(operators.length).toEqual(15);
+  });
 });
 
 describe('mapScalarDataType', () => {

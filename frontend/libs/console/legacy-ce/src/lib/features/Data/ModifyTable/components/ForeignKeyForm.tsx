@@ -20,6 +20,7 @@ import {
   createTableSelectOption,
   getDatabaseMethods,
   TableFkRelationships,
+  useTableColumnInfos,
   useTableColumns,
   ViolationAction,
 } from '@hasura/metadata/data-source';
@@ -42,7 +43,7 @@ export const fkFormSchema = z.object({
 
 export type FkFormValues = z.infer<typeof fkFormSchema>;
 
-export const getDefaultViolationAction = (source: Source): ViolationAction => {
+const getDefaultViolationAction = (source: Source): ViolationAction => {
   const actions =
     getDatabaseMethods(source.kind).config?.getViolationActions?.() ?? [];
   return (actions.includes('restrict') ? 'restrict' : actions[0]) ?? 'restrict';
@@ -77,7 +78,7 @@ export const fkToFormValues = (
 
 export type ColumnOption = { value: string; label: string };
 
-export type ForeignKeyFormProps = {
+type ForeignKeyFormProps = {
   source: Source;
   /** The existing table the foreign key is defined on; its columns are
    *  introspected for the "From column" options. */
@@ -133,11 +134,12 @@ export const ForeignKeyForm = ({
     }));
 
   const referenceTable = watch('referenceTable') as HasuraTable;
-  const { data: refColumns } = useTableColumns({
+  // only the names of the reference table's columns are needed
+  const { data: refColumns } = useTableColumnInfos({
     source,
     table: referenceTable,
   });
-  const refColumnOptions = (refColumns?.columns ?? []).map((c) => ({
+  const refColumnOptions = (refColumns ?? []).map((c) => ({
     value: c.name,
     label: c.name,
   }));
@@ -278,5 +280,3 @@ export const ForeignKeyForm = ({
     </DelayedDialog>
   );
 };
-
-export default ForeignKeyForm;

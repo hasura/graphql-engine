@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Flex, Heading } from '@radix-ui/themes';
 import {
-  hasuraToast,
   useConsoleForm,
   Tabs,
   Button,
-  DisplayToastErrorMessage,
+  showErrorNotification,
 } from '@hasura/shared/ui';
 import { useMetadata } from '@hasura/metadata/api';
 import { PostgresSource, Source } from '@hasura/shared/types';
@@ -52,23 +51,7 @@ export const ConnectPostgresWidget = (props: ConnectPostgresWidgetProps) => {
   );
 
   const { createConnection, editConnection, isPending } =
-    useManageDatabaseConnection({
-      onSuccess: () => {
-        hasuraToast({
-          type: 'success',
-          title: isEditMode
-            ? 'Database updated successfully!'
-            : 'Database added successfully!',
-        });
-      },
-      onError: (err) => {
-        hasuraToast({
-          type: 'error',
-          title: err.name,
-          children: <DisplayToastErrorMessage message={err.message} />,
-        });
-      },
-    });
+    useManageDatabaseConnection({});
 
   const handleSubmit = (formValues: PostgresConnectionSchema) => {
     const payload = generatePostgresRequestPayload({
@@ -100,10 +83,10 @@ export const ConnectPostgresWidget = (props: ConnectPostgresWidgetProps) => {
     try {
       reset(getDefaultValues(metadataSource));
     } catch (err) {
-      hasuraToast({
-        type: 'error',
+      showErrorNotification({
         title:
           'Error while retriving database. Please check if the database is of type postgres',
+        error: err,
       });
     }
   }, [metadataSource, reset]);

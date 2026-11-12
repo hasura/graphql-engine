@@ -11,6 +11,7 @@ import {
 } from '@hasura/shared/ui';
 import { FilterTableProps } from '../../EventTriggers/types';
 import ExpanderButton from '../ExpanderButton';
+import TableLoadingRows from '../TableLoadingRows';
 import { convertDateTimeToLocale } from '@hasura/shared/utils';
 import {
   getEventStatusIcon,
@@ -26,6 +27,7 @@ interface Props extends FilterTableProps {
     onSuccess?: () => void,
   ) => void;
   sortable?: boolean;
+  isLoading?: boolean;
   renderExpand: (row: any) => React.ReactNode;
 }
 
@@ -36,6 +38,7 @@ const EventsTable: React.FC<Props> = ({
   columns,
   onCancelEvent,
   sortable,
+  isLoading,
   renderExpand,
 }) => {
   const [expandedRowIndex, setExpandedRowIndex] = React.useState<number | null>(
@@ -301,7 +304,10 @@ const EventsTable: React.FC<Props> = ({
               </React.Fragment>
             );
           })}
-          {!rows.length && (
+          {isLoading && !rows.length && (
+            <TableLoadingRows columnCount={tableColumns.length} />
+          )}
+          {!isLoading && !rows.length && (
             <Table.Row>
               <Table.Cell colSpan={tableColumns.length} align="center">
                 <Text>

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Flex } from '@radix-ui/themes';
+import { Box, Card, Flex, Text } from '@radix-ui/themes';
+import { HasuraIcon } from '@hasura/shared/ui';
 import {
   FaBolt,
   FaCogs,
@@ -12,160 +13,150 @@ import {
   FaServer,
 } from 'react-icons/fa';
 
+// Radix color tokens flip with the console appearance, so the diagram follows
+// light/dark mode without any `dark:` overrides.
+const lineColor = 'border-(--gray-a8)';
+const mutedText = 'text-(--gray-a10)';
+
+const NodeBox = ({ icon, label }: { icon: React.ReactNode; label: string }) => (
+  <Flex
+    align="center"
+    gap="2"
+    className={`w-48 rounded-(--radius-2) border p-2 ${lineColor} ${mutedText}`}
+  >
+    {icon}
+    <Text size="2">{label}</Text>
+  </Flex>
+);
+
+const ArrowHead = () => (
+  <svg
+    className={`w-4 h-full -ml-1.5 ${mutedText}`}
+    fill="currentColor"
+    viewBox="0 0 16 16"
+    height="1em"
+    width="1em"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M5.56 14L5 13.587V2.393L5.54 2 11 7.627v.827L5.56 14z" />
+  </svg>
+);
+
+const Line = () => <div className={`w-4 border-t ${lineColor}`} />;
+
+const EdgeLabel = ({
+  icon,
+  label,
+}: {
+  icon: React.ReactNode;
+  label: string;
+}) => (
+  <Flex align="center" gap="2" px="2" className={mutedText}>
+    {icon}
+    <Text size="2">{label}</Text>
+  </Flex>
+);
+
+/** A titled column of nodes with a bracket on the side facing Hasura. */
+const NodeGroup = ({
+  title,
+  side,
+  children,
+}: {
+  title: string;
+  side: 'left' | 'right';
+  children: React.ReactNode;
+}) => {
+  const edge = side === 'left' ? 'right-0' : 'left-0';
+  return (
+    <Flex
+      align="center"
+      className={`relative ${side === 'left' ? 'pr-6' : 'pl-6'}`}
+    >
+      <Text
+        size="2"
+        weight="bold"
+        className={`absolute -top-3.5 uppercase tracking-wider ${mutedText} ${
+          side === 'left' ? 'left-0' : 'right-0'
+        }`}
+      >
+        {title}
+      </Text>
+
+      <div className={`absolute h-full border-r ${edge} ${lineColor}`} />
+      <div className={`absolute w-4 border-t top-0 ${edge} ${lineColor}`} />
+      <div className={`absolute w-4 border-b bottom-0 ${edge} ${lineColor}`} />
+
+      <Flex direction="column" gap="2" py="4">
+        {children}
+      </Flex>
+    </Flex>
+  );
+};
+
 export const QueryCollectionOperationsEmptyState = () => {
   return (
-    <div className="my-sm relative">
+    <Box my="2" className="relative">
       <Flex
         align="center"
-        className="w-max bg-gray-200 border border-gray-300 rounded pt-8 p-4"
+        pt="6"
+        px="4"
+        pb="4"
+        className="w-max rounded-(--radius-3) border bg-(--gray-a3) border-(--gray-a6)"
       >
-        <Flex align="center" className="relative pr-6">
-          <span className="absolute -top-3.5 left-0 text-sm font-semibold text-gray-400 uppercase tracking-wider">
-            Sources
-          </span>
-
-          <div className="absolute h-full right-0 border-r border-gray-400" />
-          <div className="absolute w-4 border-t border-gray-400 top-0 right-0" />
-          <div className="absolute w-4 border-b border-gray-400 bottom-0 right-0" />
-
-          <div className="space-y-2 py-4">
-            <Flex align="center" justify="end">
-              <div className="relative bg-transparent rounded border border-gray-400 text-gray-400 overflow-hidden p-2 w-48">
-                <Flex align="center">
-                  <FaCogs className="mr-1.5" />
-                  <span>REST Endpoints</span>
-                </Flex>
-              </div>
-            </Flex>
-
-            <Flex align="center" justify="end">
-              <div className="relative bg-transparent rounded border border-gray-400 text-gray-400 overflow-hidden p-2 w-48">
-                <Flex align="center">
-                  <FaDatabase className="mr-1.5" />
-                  <span>Database</span>
-                </Flex>
-              </div>
-            </Flex>
-
-            <Flex align="center" justify="end">
-              <div className="relative bg-transparent rounded border border-gray-400 text-gray-400 overflow-hidden p-2 w-48">
-                <Flex align="center">
-                  <FaPlug className="mr-1.5" />
-                  <span>GraphQL Services</span>
-                </Flex>
-              </div>
-            </Flex>
-          </div>
-        </Flex>
+        <NodeGroup title="Sources" side="left">
+          <NodeBox icon={<FaCogs />} label="REST Endpoints" />
+          <NodeBox icon={<FaDatabase />} label="Database" />
+          <NodeBox icon={<FaPlug />} label="GraphQL Services" />
+        </NodeGroup>
 
         <Flex align="center">
-          <div className="w-4 border-t border-gray-400" />
-          <span className="flex items-center px-xs text-sm text-gray-400">
-            <FaLink className="mr-1.5" />
-            Connected
-          </span>
-          <div className="w-4 border-t border-gray-400" />
-          <svg
-            className="text-gray-400 w-4 h-full -ml-1.5"
-            stroke="currentColor"
-            fill="currentColor"
-            strokeWidth="0"
-            viewBox="0 0 16 16"
-            height="1em"
-            width="1em"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path d="M5.56 14L5 13.587V2.393L5.54 2 11 7.627v.827L5.56 14z" />
-          </svg>
+          <Line />
+          <EdgeLabel icon={<FaLink />} label="Connected" />
+          <Line />
+          <ArrowHead />
         </Flex>
 
-        <div>
-          <div className="bg-white rounded shadow w-48 hover:shadow-md">
-            <Flex align="center" className="relative p-2">
-              <div className="absolute mt-[-8px] top-1/2 right-[-6px] animate-ping rounded-full w-6 h-6 bg-amber-500 z-10" />
-              <Flex
-                align="center"
-                justify="center"
-                className="absolute mt-[-8px] top-1/2 right-[-6px] rounded-full w-6 h-6 bg-amber-500 z-10"
-              >
-                <FaLock color="white" className="w-2 h-2" />
-              </Flex>
-              <img
-                alt="hasura"
-                className="w-3 h-3 mr-1.5"
-                src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODEiIGhlaWdodD0iODQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgY2xpcC1wYXRoPSJ1cmwoI2EpIiBmaWxsPSIjMDAwIj48cGF0aCBkPSJNNzkuNzE5IDI4LjYwMmMyLjQwMy03LjUyOS45NTktMjIuNTY2LTMuNzAzLTI4LjExNC0uNjA5LS43MjYtMS43NTQtLjYyMi0yLjI1OS4xNzZsLTUuNzQ1IDkuMDY0YTQuNDAzIDQuNDAzIDAgMCAxLTUuOS45NjQgMzkuMzI0IDM5LjMyNCAwIDAgMC0yMS42OC02LjQ4MSAzOS4zMjQgMzkuMzI0IDAgMCAwLTIxLjY4IDYuNDgxIDQuNDE0IDQuNDE0IDAgMCAxLTUuOS0uOTY0TDcuMTA3LjY2NEM2LjYwMi0uMTM0IDUuNDU3LS4yMzggNC44NS40ODguMTg3IDYuMDM2LTEuMjU3IDIxLjA3MyAxLjE0NiAyOC42MDJjLjc5NCAyLjUgMS4wMiA1LjE0NC41NDYgNy43MjYtLjQ2NCAyLjU1MS0uOTM4IDUuNjQxLS45MzggNy43NzhDLjc1NCA2Ni4xMzIgMTguNTI1IDg0IDQwLjQzMiA4NCA2Mi4zNSA4NCA4MC4xMSA2Ni4xNDIgODAuMTEgNDQuMTA1YzAtMi4xNDctLjQ2NC01LjIyNy0uOTM4LTcuNzc4LS40NzQtMi41ODItLjI0OC01LjIyNy41NDctNy43MjZabS0zOS4yODcgNDYuNDhjLTE2LjkzNiAwLTMwLjcxNS0xMy44NTUtMzAuNzE1LTMwLjg4MyAwLS41Ni4wMi0xLjExLjA0MS0xLjY2LjYxOS0xMS42MDQgNy42MjItMjEuNTI4IDE3LjU0NC0yNi4yNTdhMzAuMyAzMC4zIDAgMCAxIDEzLjEzLTIuOTY2YzQuNjkzIDAgOS4xNDkgMS4wNjggMTMuMTQgMi45NzYgOS45MjIgNC43MyAxNi45MjYgMTQuNjU0IDE3LjU0NSAyNi4yNDguMDMuNTUuMDQgMS4wOTkuMDQgMS42NTktLjAxIDE3LjAyOC0xMy43OSAzMC44ODMtMzAuNzI1IDMwLjg4M1oiLz48cGF0aCBkPSJtNTMuNzM3IDU2LjA4My03Ljg0OS0xMy42NzgtNi43MzUtMTEuNDA4YS44NzQuODc0IDAgMCAwLS43NjMtLjQzNmgtNi40MzZBLjg4My44ODMgMCAwIDAgMzEuMiAzMS45bDYuNDM2IDEwLjg5LTguNjQzIDEzLjI1MmEuOTAzLjkwMyAwIDAgMC0uMDQyLjkxM2MuMTU1LjI5LjQ1NC40NjcuNzc0LjQ2N2g2LjQ3N2MuMyAwIC41NzgtLjE1Ni43NDMtLjQwNWw0LjY3Mi03LjM0MiA0LjE4OCA3LjNjLjE1NC4yOC40NTMuNDQ3Ljc2My40NDdoNi4zODRjLjMyIDAgLjYwOS0uMTY2Ljc2NC0uNDQ2YS44MjIuODIyIDAgMCAwIC4wMi0uODkyWiIvPjwvZz48ZGVmcz48Y2xpcFBhdGggaWQ9ImEiPjxwYXRoIGZpbGw9IiNmZmYiIGQ9Ik0wIDBoODF2ODRIMHoiLz48L2NsaXBQYXRoPjwvZGVmcz48L3N2Zz4="
-              />
-              <span className="font-semibold">Hasura</span>
+        <Card size="1" className="w-48 p-0! overflow-hidden hover:shadow-md">
+          <Flex align="center" gap="2" p="2" className="relative">
+            <div className="absolute mt-[-8px] top-1/2 right-[-6px] animate-ping rounded-full w-6 h-6 bg-(--amber-9) z-10" />
+            <Flex
+              align="center"
+              justify="center"
+              className="absolute mt-[-8px] top-1/2 right-[-6px] rounded-full w-6 h-6 bg-(--amber-9) z-10"
+            >
+              <FaLock color="white" className="w-2 h-2" />
             </Flex>
-            <div className="relative">
-              <span className="flex items-center border-t border-gray-200 bg-gray-100 text-sm rounded-b py-1.5 px-sm">
-                <FaLock className="mr-1.5" />
-                <span>Allow List Operations</span>
-              </span>
-            </div>
-          </div>
-        </div>
+            <HasuraIcon className="w-3 h-3 text-(--gray-12)" />
+            <Text size="2" weight="bold">
+              Hasura
+            </Text>
+          </Flex>
+          <Flex
+            align="center"
+            gap="2"
+            py="1"
+            px="2"
+            className="border-t border-(--gray-a5) bg-(--gray-a2) text-(--gray-11)"
+          >
+            <FaLock />
+            <Text size="2">Allow List Operations</Text>
+          </Flex>
+        </Card>
 
         <Flex align="center">
-          <div className="w-4 border-t border-gray-400" />
-          <svg
-            className="text-gray-400 w-4 h-full -ml-1.5"
-            stroke="currentColor"
-            fill="currentColor"
-            strokeWidth="0"
-            viewBox="0 0 16 16"
-            height="1em"
-            width="1em"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path d="M5.56 14L5 13.587V2.393L5.54 2 11 7.627v.827L5.56 14z" />
-          </svg>
-          <span className="flex items-center px-xs text-sm text-gray-400">
-            <FaBolt className="mr-1.5" />
-            Powering
-          </span>
-          <div className="w-4 border-t border-gray-400" />
+          <Line />
+          <ArrowHead />
+          <EdgeLabel icon={<FaBolt />} label="Powering" />
+          <Line />
         </Flex>
 
-        <Flex align="center" className="relative pl-6">
-          <span className="absolute -top-3 right-0 text-sm font-semibold text-gray-400 uppercase tracking-wider">
-            Consumers
-          </span>
-
-          <div className="absolute h-full left-0 border-r border-gray-400" />
-          <div className="absolute w-4 border-t border-gray-400 top-0 left-0" />
-          <div className="absolute w-4 border-b border-gray-400 bottom-0 left-0" />
-
-          <div className="space-y-2 py-4">
-            <Flex align="center" justify="end">
-              <div className="relative bg-transparent rounded border border-gray-400 text-gray-400 overflow-hidden p-2 w-48">
-                <Flex align="center">
-                  <FaMobileAlt className="mr-1.5" />
-                  <span>Apps</span>
-                </Flex>
-              </div>
-            </Flex>
-
-            <Flex align="center" justify="end">
-              <div className="relative bg-transparent rounded border border-gray-400 text-gray-400 overflow-hidden p-2 w-48">
-                <Flex align="center">
-                  <FaServer className="mr-1.5" />
-                  <span>Data Platforms</span>
-                </Flex>
-              </div>
-            </Flex>
-
-            <Flex align="center" justify="end">
-              <div className="relative bg-transparent rounded border border-gray-400 text-gray-400 overflow-hidden p-2 w-48">
-                <Flex align="center">
-                  <FaProjectDiagram className="mr-1.5" />
-                  <span>Other Services</span>
-                </Flex>
-              </div>
-            </Flex>
-          </div>
-        </Flex>
+        <NodeGroup title="Consumers" side="right">
+          <NodeBox icon={<FaMobileAlt />} label="Apps" />
+          <NodeBox icon={<FaServer />} label="Data Platforms" />
+          <NodeBox icon={<FaProjectDiagram />} label="Other Services" />
+        </NodeGroup>
       </Flex>
-    </div>
+    </Box>
   );
 };

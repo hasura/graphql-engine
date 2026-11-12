@@ -25,7 +25,8 @@ export const useTableColumnInfos = <T = TableColumn[]>(
   const fetchJson = useAuthFetchJson();
 
   return useQuery({
-    queryKey: [source?.name, 'column-introspection', table],
+    // not `useTableColumns`' key, as its data has another shape
+    queryKey: [source?.name, 'column-info-introspection', table],
     queryFn: async () => {
       if (!source || !table) {
         throw new Error('source and table are required');

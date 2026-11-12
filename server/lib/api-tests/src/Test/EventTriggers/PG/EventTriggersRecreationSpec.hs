@@ -231,7 +231,7 @@ message: success
             args:
               source: postgres
               sql: |
-                  SELECT tag, object_identity FROM #{schemaName}.ddl_history ORDER BY object_identity COLLATE "C";
+                  SELECT tag, object_identity FROM #{schemaName}.ddl_history ORDER BY object_identity COLLATE "C", tag COLLATE "C";
           |]
 
     let expected =
@@ -259,11 +259,15 @@ message: success
           - hdb_catalog.gen_hasura_uuid()
         - - CREATE TABLE
           - hdb_catalog.hdb_event_log_cleanups
+        - - ALTER TABLE
+          - hdb_catalog.hdb_source_catalog_version
         - - CREATE TABLE
           - hdb_catalog.hdb_source_catalog_version
         - - CREATE INDEX
           - hdb_catalog.hdb_source_catalog_version_one_row
       |]
+    -- The version-table ALTER sets its replica identity during initialization.
+    -- Sort equal object identities by tag so ALTER and CREATE have a stable order.
     -- NOTE: we omit below, because of differences in behavior of PG16 and
     -- PG17 in how types are qualified when printed:
     --

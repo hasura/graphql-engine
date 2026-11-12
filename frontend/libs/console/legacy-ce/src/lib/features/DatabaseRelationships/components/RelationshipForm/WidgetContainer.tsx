@@ -16,7 +16,6 @@ interface WidgetProps {
   onCancel: () => void;
   onSuccess: (data: BulkAtomicResponse | BulkKeepGoingResponse) => void;
   onError: (err: Error) => void;
-  defaultValue?: Relationship;
 }
 
 export const WidgetContainer = ({

@@ -6,6 +6,7 @@ import {
   IconTooltip,
   getDestructiveDescription,
   hasuraToast,
+  showErrorNotification,
 } from '@hasura/shared/ui';
 import React, { useState } from 'react';
 import { FaEllipsisH } from 'react-icons/fa';
@@ -66,11 +67,10 @@ export const QueryCollectionHeaderMenu: React.FC<
                       message: `Removed ${queryCollection.name} from allow list`,
                     });
                   },
-                  onError: () => {
-                    hasuraToast({
-                      type: 'error',
-                      title: 'Error',
-                      message: `Failed to remove ${queryCollection.name} from allow list`,
+                  onError: (error) => {
+                    showErrorNotification({
+                      title: `Failed to remove ${queryCollection.name} from allow list`,
+                      error,
                     });
                   },
                 });
@@ -90,11 +90,10 @@ export const QueryCollectionHeaderMenu: React.FC<
                       message: `Added ${queryCollection.name} to allow list`,
                     });
                   },
-                  onError: () => {
-                    hasuraToast({
-                      type: 'error',
-                      title: 'Error',
-                      message: `Failed to add ${queryCollection.name} to allow list`,
+                  onError: (error) => {
+                    showErrorNotification({
+                      title: `Failed to add ${queryCollection.name} to allow list`,
+                      error,
                     });
                   },
                 });

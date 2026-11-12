@@ -82,9 +82,9 @@ type SlackIntegrationStatusTileProps = {
   onAction: () => void;
 };
 
-export const SlackIntegrationStatusTile: React.FC<
-  SlackIntegrationStatusTileProps
-> = (props) => {
+const SlackIntegrationStatusTile: React.FC<SlackIntegrationStatusTileProps> = (
+  props,
+) => {
   const { status, onAction } = props;
 
   const slackIntegrationTileProps = getSlackIntegrationStatusTileProps(
@@ -119,7 +119,7 @@ type SlackIntegrationStateProps = {
   onDismiss: () => void;
 };
 
-export const SlackIntegrationState = (props: SlackIntegrationStateProps) => {
+const SlackIntegrationState = (props: SlackIntegrationStateProps) => {
   const { slackIntegrationStatus, onIntegrationSlack, onDelete, onDismiss } =
     props;
   const isButtonDisabled = slackIntegrationStatus.status === 'authenticating';

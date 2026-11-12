@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import { Skeleton } from '@radix-ui/themes';
 import {
   Table,
   TableHeaderProps,
@@ -60,20 +61,39 @@ type CardedTableProps = Omit<TableProps, 'children'> & {
    * The header orientation of table.
    */
   orientation?: 'vertical' | 'horizontal';
+  /**
+   * Shows skeleton rows instead of `data`.
+   */
+  loading?: boolean;
+  /**
+   * The number of skeleton rows shown while loading.
+   */
+  loadingRowCount?: number;
   options?: {
     header?: Omit<TableHeaderProps, 'children'>;
     body?: Omit<ThemeTableBodyProps, 'children'>;
   };
 };
 
+const getLoadingData = (columnCount: number, rowCount: number) =>
+  Array.from({ length: rowCount }, () =>
+    Array.from({ length: columnCount }, (_, i) => (
+      <Skeleton key={i} height="16px" data-testid="carded-table-loading-cell" />
+    )),
+  );
+
 export const CardedTable = ({
   columns,
-  data,
+  data: rows,
   options,
   variant = 'surface',
   orientation,
+  loading,
+  loadingRowCount = 5,
   ...rest
 }: CardedTableProps) => {
+  const data = loading ? getLoadingData(columns.length, loadingRowCount) : rows;
+
   if (orientation == 'horizontal') {
     return (
       <Table.Root variant={variant} {...rest}>

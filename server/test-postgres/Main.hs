@@ -50,6 +50,7 @@ import System.Exit (exitFailure)
 import System.Metrics qualified as EKG
 import Test.Hasura.EventTriggerCleanupSuite qualified as EventTriggerCleanupSuite
 import Test.Hasura.Server.MigrateSuite qualified as MigrateSuite
+import Test.Hasura.Server.SourceCatalogSuite qualified as SourceCatalogSuite
 import Test.Hasura.StreamingSubscriptionSuite qualified as StreamingSubscriptionSuite
 import Test.Hspec
 
@@ -171,6 +172,7 @@ main = do
       $ beforeAll setupCacheRef
       $ describe "Hasura.Server.Migrate"
       $ MigrateSuite.suite sourceConfig pgContext pgConnInfo
+    describe "Source catalog suite" $ SourceCatalogSuite.suite pgContext pgConnInfo
     describe "Streaming subscription suite" $ streamingSubscriptionSuite
     describe "Event trigger log cleanup suite" $ eventTriggerLogCleanupSuite
 

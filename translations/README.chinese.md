@@ -16,7 +16,7 @@ Hasura可帮助您构建基于Postgres的GraphQL应用程序，或将使用Postg
 
 ------------------
 
-![Hasura GraphQL 引擎演示](../assets/demo.gif)
+![Hasura GraphQL 引擎演示](https://github.com/hasura/graphql-engine/raw/5fa3e0d2b617a4ae85f65491c5ff6c056cb612de/assets/demo.gif)
 
 ------------------
 
