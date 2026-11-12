@@ -3,6 +3,7 @@ module Hasura.RQL.DDL.CustomTypes
     clearCustomTypesInMetadata,
     resolveCustomTypes,
     lookupBackendScalar,
+    lookupBackendScalarWithAliases,
     ScalarParsingMap (..),
   )
 where
@@ -27,6 +28,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.SQL.AnyBackend qualified as AB
@@ -208,7 +210,7 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
         let fieldBaseType = G.getBaseType $ unGraphQLType $ _iofdType inputObjectField
         if
           | Set.member fieldBaseType inputTypes -> pure ()
-          | Just scalarInfo <- lookupBackendScalar allScalars fieldBaseType ->
+          | Just scalarInfo <- lookupBackendScalarWithAliases allScalars fieldBaseType ->
               tell $ HashMap.singleton fieldBaseType scalarInfo
           | otherwise ->
               refute
@@ -253,7 +255,7 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
                   pure $ AOFTEnum enumDef
               | HashMap.member fieldBaseType objectTypes ->
                   pure $ AOFTObject fieldBaseType
-              | Just scalarInfo <- lookupBackendScalar allScalars fieldBaseType ->
+              | Just scalarInfo <- lookupBackendScalarWithAliases allScalars fieldBaseType ->
                   pure $ AOFTScalar scalarInfo
               | otherwise ->
                   refute
@@ -350,6 +352,48 @@ lookupBackendScalar allScalars baseType =
       ASTReusedScalar baseType
         <$> AB.traverseBackend @Backend backendScalars \(ScalarParsingMap scalarMap :: ScalarParsingMap b) ->
           HashMap.lookup baseType scalarMap
+
+-- | Resolve a backend scalar, accepting both naming-convention spellings for
+-- Postgres scalars as a fallback. Keep the requested GraphQL name and the
+-- original backend parser: accepting an alias must not turn it into a generic
+-- JSON custom scalar.
+--
+-- Exact matches retain their existing precedence. Callers which also resolve
+-- explicitly declared custom types must check those before the alias fallback,
+-- so a newly accepted alias cannot shadow an existing custom type.
+lookupBackendScalarWithAliases ::
+  BackendMap ScalarParsingMap ->
+  G.Name ->
+  Maybe AnnotatedScalarType
+lookupBackendScalarWithAliases allScalars baseType =
+  lookupBackendScalar allScalars baseType <|> case L.uniques aliasCandidates of
+    [scalar] -> Just $ ASTReusedScalar baseType scalar
+    -- Do not choose an arbitrary parser if different backend scalars share an
+    -- alias. Repeated entries for the same scalar are harmless.
+    _ -> Nothing
+  where
+    aliasCandidates =
+      postgresAliases @'Vanilla
+        <> postgresAliases @'Citus
+        <> postgresAliases @'Cockroach
+
+    postgresAliases ::
+      forall pgKind.
+      (Backend ('Postgres pgKind)) =>
+      [AB.AnyBackend ScalarWrapper]
+    postgresAliases = do
+      ScalarParsingMap scalarMap <- maybeToList $ BackendMap.lookup @('Postgres pgKind) allScalars
+      scalar <- HashMap.elems scalarMap
+      guard
+        $ any
+          ( \namingCase ->
+              either
+                (const False)
+                (== baseType)
+                (mkScalarTypeName namingCase (unwrapScalar scalar) :: Either QErr G.Name)
+          )
+          [HasuraCase, GraphqlCase]
+      pure $ AB.mkAnyBackend scalar
 
 data CustomTypeValidationError
   = -- | type names have to be unique across all types

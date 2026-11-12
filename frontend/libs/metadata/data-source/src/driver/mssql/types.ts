@@ -88,6 +88,7 @@ export const mssqlSupportedFeatures: DeepRequired<SupportedFeaturesType> = {
   },
   rawSQL: {
     tracking: true,
+    noTransaction: false,
   },
   connectDbForm: {
     enabled: true,

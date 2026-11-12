@@ -23,9 +23,9 @@ const ClearButton: React.FC<ClearButtonProps> = ({ className, onClick }) => {
   );
 };
 
-export type InputRef = RefCallBack | React.RefObject<HTMLInputElement | null>;
+type InputRef = RefCallBack | React.RefObject<HTMLInputElement | null>;
 
-export type InputProps = FieldWrapperPassThroughProps & {
+type InputProps = FieldWrapperPassThroughProps & {
   /**
    * The input field name
    */

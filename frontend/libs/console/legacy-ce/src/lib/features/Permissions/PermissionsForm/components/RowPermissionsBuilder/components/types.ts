@@ -53,7 +53,7 @@ export type RowPermissionsState = {
   permissions: Permissions;
   comparators: Comparators;
   setValue: (path: string[], value: any) => void;
-  setKey: (props: { path: string[]; key: any; type: PermissionType }) => void;
+  setKey: (props: { path: string[]; key: any; type?: PermissionType }) => void;
   setPermissions: (permissions: Permissions) => void;
   loadRelationships?: (relationships: Relationships) => void;
   isLoading?: boolean;
@@ -76,6 +76,11 @@ export type TableContext = {
   table: Table;
   /** the source of the table */
   source?: string;
+  /**
+   * the table is the target of a remote database relationship, where the
+   * server only accepts a column with a few comparators
+   */
+  isRemote?: boolean;
   setTable: (table: Table) => void;
   comparator?: string | undefined;
   setComparator: (comparator: string | undefined) => void;

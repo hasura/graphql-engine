@@ -26,8 +26,7 @@ import { useMetadata } from '@hasura/metadata/api';
 import { areTablesEqual, MetadataSelectors } from '@hasura/metadata/helpers';
 import { Skeleton } from '@radix-ui/themes';
 
-export type ManageTableTabs =
-  'modify' | 'browse' | 'relationships' | 'permissions';
+type ManageTableTabs = 'modify' | 'browse' | 'relationships' | 'permissions';
 
 type Tab = {
   value: string;

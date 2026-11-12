@@ -9,7 +9,7 @@ export interface VariableState extends VariableData {
   value: string;
 }
 
-export type LoadingState = {
+type LoadingState = {
   isLoading: boolean;
   success: boolean;
   data?: string;

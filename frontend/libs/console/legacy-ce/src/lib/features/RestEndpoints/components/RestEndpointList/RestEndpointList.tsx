@@ -13,7 +13,6 @@ import {
   Text,
   DropdownMenu,
   Input,
-  SkeletonList,
   IndicatorCard,
   Badge,
   GraphqlCodeBlock,
@@ -96,10 +95,6 @@ export const RestEndpointList: React.FC = () => {
       emptySearch: localEmptySearch,
     };
   }, [highlighted, restEndpoints, search, selectedMethods]);
-
-  if (isLoading) {
-    return <SkeletonList count={5} />;
-  }
 
   if (isError) {
     return (
@@ -214,6 +209,7 @@ export const RestEndpointList: React.FC = () => {
           </div>
         </Flex>
         <CardedTable
+          loading={isLoading}
           columns={[
             'DETAILS',
             'ENDPOINT',

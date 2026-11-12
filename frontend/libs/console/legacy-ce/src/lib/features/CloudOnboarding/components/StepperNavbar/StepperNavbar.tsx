@@ -1,4 +1,3 @@
-import React from 'react';
 import { Avatar, Flex, Strong } from '@radix-ui/themes';
 import { CustomRightChevron } from './components/CustomRightChevron';
 import { Text } from '@hasura/shared/ui';

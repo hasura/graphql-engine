@@ -79,5 +79,3 @@ export const ComputedFields = ({ source, table }: ComputedFieldsProps) => {
     </>
   );
 };
-
-export default ComputedFields;

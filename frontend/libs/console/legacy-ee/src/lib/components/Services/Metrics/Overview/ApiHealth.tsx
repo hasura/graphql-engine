@@ -40,7 +40,7 @@ const parseErrorRate = (datasource) =>
     };
   });
 
-export const getAverageRPM = (data: ApiHealthData[] = []) => {
+const getAverageRPM = (data: ApiHealthData[] = []) => {
   let requestsSUM = 0;
   let totalbucketsWithData = 0;
   data.forEach((c) => {

@@ -9,9 +9,6 @@ export const schema = z
   // we need to do this transform bc the server rejects a property with an empty value
   // so, the only way to remove a comment/custom_name is to send a new object WITHOUT the property
   .transform((value) => pickBy(value, (d) => d !== ''));
-
-export type Schema = z.infer<typeof schema>;
-
 /** The full edit form: database column definition + metadata column config.
  *  The database fields are only editable when the driver can alter columns. */
 export const columnFormSchema = z.object({

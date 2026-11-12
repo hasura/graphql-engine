@@ -21,7 +21,7 @@ type TableDefinition = {
 };
 
 //  CONSTANTS
-export const TABLE_DEFINITION_SEARCH_KEY = 'table';
+const TABLE_DEFINITION_SEARCH_KEY = 'table';
 const DATASOURCE_DEFINITION_SEARCH_KEY = 'database';
 
 const invalidTableDefinitionResult: QueryStringParseResult = {

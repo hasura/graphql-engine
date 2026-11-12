@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import clsx from 'clsx';
-import { Card, CardProps, Code, CodeProps, Flex } from '@radix-ui/themes';
+import { Card, CardProps, Code, CodeProps } from '@radix-ui/themes';
 import { FaRegCheckCircle, FaRegCopy } from 'react-icons/fa';
 import { IconButton } from '../../Button';
 
@@ -46,7 +46,7 @@ export type CodeBlockProps = {
  * theme (`ACE_EDITOR_THEME_DARK`), with tokens mapped to the same colors Ace
  * gives their equivalents (e.g. JSON keys are `ace_variable` -> #CC6666).
  */
-export const hljsTokenClassNames = clsx(
+const hljsTokenClassNames = clsx(
   '[&_.hljs-attr]:text-sky-700',
   '[&_.hljs-string]:text-emerald-700',
   '[&_.hljs-number]:text-amber-700',
@@ -75,8 +75,6 @@ export const hljsTokenClassNames = clsx(
   'dark:[&_.hljs-punctuation]:text-[#C5C8C6]',
   'dark:[&_.hljs-comment]:text-[#969896]',
 );
-
-const iconClassName = 'w-3.5 h-3.5';
 
 /**
  * `<Code>` is rendered as a block so its own line-height alone sets the row
@@ -117,7 +115,7 @@ export const CodeBlock = ({
   return (
     <Card variant={variant} size="1" className={clsx('relative', className)}>
       {!hideCopyButton && (
-        <Flex className="absolute top-1.5 right-1.5" align="center">
+        <div className="absolute top-4 right-1.5">
           <IconButton
             type="button"
             variant="ghost"
@@ -126,20 +124,16 @@ export const CodeBlock = ({
             aria-label={copyButtonLabel}
             data-testid="code-block-copy-button"
             onClick={handleCopy}
-          >
-            {showCopiedConfirmation ? (
-              <FaRegCheckCircle className={iconClassName} />
-            ) : (
-              <FaRegCopy className={iconClassName} />
-            )}
-          </IconButton>
-        </Flex>
+            icon={showCopiedConfirmation ? FaRegCheckCircle : FaRegCopy}
+          />
+        </div>
       )}
       <div
         className={clsx(
           'whitespace-pre-wrap break-all rounded-md',
           hljsTokenClassNames,
           scrollable && 'overflow-auto',
+          !hideCopyButton && 'pr-4',
         )}
         style={{
           height: height,

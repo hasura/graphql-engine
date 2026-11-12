@@ -11,7 +11,7 @@ import { getDriverPrefix } from '@hasura/metadata/helpers';
 
 const errorTitle = 'Creating event trigger failed';
 
-export type CreateEventTriggerArgs = {
+type CreateEventTriggerArgs = {
   state: LocalEventTriggerState;
   transformState: RequestTransformState;
   sourceKind: SupportedDriver;

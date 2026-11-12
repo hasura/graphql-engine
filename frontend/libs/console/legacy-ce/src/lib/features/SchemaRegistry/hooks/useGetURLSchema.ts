@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { schemaRegsitryControlPlaneClient } from '../utils';
 import { FETCH_URL_REGISTRY_SCHEMA_QUERY } from '../queries';

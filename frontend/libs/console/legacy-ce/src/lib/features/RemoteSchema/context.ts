@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
 import type { Metadata, RemoteSchema } from '@hasura/shared/types';
 
-export type CurrentRemoteSchemaState = Metadata & {
+type CurrentRemoteSchemaState = Metadata & {
   currentRemoteSchema: RemoteSchema;
 };
 

@@ -20,7 +20,7 @@ type HandlersOptions = {
   enabledFeatureFlag?: boolean;
 };
 
-export type BulkArgsType<ArgType> = {
+type BulkArgsType<ArgType> = {
   type: string;
   args: ArgType;
 };

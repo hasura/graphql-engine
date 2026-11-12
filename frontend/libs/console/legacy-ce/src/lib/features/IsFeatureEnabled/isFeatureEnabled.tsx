@@ -78,7 +78,7 @@ export type Compatibility = {
  * TODO: after the completion of the API (when ALL the environments are managed) check if this
  * variable shape management is still needed or not
  */
-export type Match<PASSED_COMPATIBILITY extends Compatibility> =
+type Match<PASSED_COMPATIBILITY extends Compatibility> =
   ConditionalPickDeepCompatibilityProperties<PASSED_COMPATIBILITY, 'enabled'>;
 
 /**
@@ -217,9 +217,7 @@ export function checkCompatibility<PASSED_COMPATIBILITY extends Compatibility>(
  *   return <div>Enjoy Prometheus!</div>
  * }
  */
-export function useIsFeatureEnabled<FEATURE extends Feature>(
-  featureName: FEATURE,
-) {
+function useIsFeatureEnabled<FEATURE extends Feature>(featureName: FEATURE) {
   const hasuraPlan = useHasuraPlan();
   const compatibility = features[featureName];
 

@@ -214,14 +214,16 @@ export function getSubscribe<TSource, TContext, TArgs extends object>({
       pubsubLog(`Analyzing subscription path: ${cbParams.toString()}`);
 
       cbParams.forEach((cbParam) => {
-        value = value.replace(
-          cbParam,
-          resolveRuntimeExpression(
-            paramName,
-            cbParam.substring(1, cbParam.length - 1),
-            resolveData,
-            root,
-            args,
+        // A replacer function keeps `$` sequences in the value literal
+        value = value.replace(cbParam, () =>
+          String(
+            resolveRuntimeExpression(
+              paramName,
+              cbParam.substring(1, cbParam.length - 1),
+              resolveData,
+              root,
+              args,
+            ),
           ),
         );
       });
@@ -370,14 +372,16 @@ function inferLinkArguments<TSource, TContext, TArgs>({
     // Replace link parameters with appropriate values
     const linkParams = value.match(/{([^}]*)}/g);
     linkParams.forEach((linkParam) => {
-      value = value.replace(
-        linkParam,
-        resolveRuntimeExpression(
-          paramName,
-          linkParam.substring(1, linkParam.length - 1),
-          resolveData,
-          source,
-          args,
+      // A replacer function keeps `$` sequences in the value literal
+      value = value.replace(linkParam, () =>
+        String(
+          resolveRuntimeExpression(
+            paramName,
+            linkParam.substring(1, linkParam.length - 1),
+            resolveData,
+            source,
+            args,
+          ),
         ),
       );
     });
@@ -1408,7 +1412,10 @@ export function extractRequestDataFromArgs<
       switch (param.in) {
         // Path parameters
         case 'path':
-          path = path.replace(`{${param.name}}`, args[saneParamName]);
+          // A replacer function keeps `$` sequences in the value literal
+          path = path.replace(`{${param.name}}`, () =>
+            String(args[saneParamName]),
+          );
           break;
 
         // Query parameters

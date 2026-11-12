@@ -2,11 +2,7 @@ import { createOperatorsObject } from '../../../PermissionsForm.utils';
 import { TableColumn } from '@hasura/metadata/data-source';
 import { Source } from '@hasura/shared/types';
 
-export interface CreateOperatorsArgs {
-  tableName: string;
-  existingPermission?: Record<string, any>;
-}
-export interface CreateDefaultsArgs {
+interface CreateDefaultsArgs {
   tableName: string;
   existingPermission?: Record<string, any>;
   sourceMetadata: Source | undefined;

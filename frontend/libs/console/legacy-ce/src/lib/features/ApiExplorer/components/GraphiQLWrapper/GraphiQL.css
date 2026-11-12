@@ -1,6 +1,10 @@
 @import 'graphiql/style.css';
 @import '@graphiql/plugin-explorer/style.css';
 
+.graphiql-container {
+  --font-size-body: 14px;
+}
+
 /* Hasura Analyse modal css */
 .wd25 {
   width: 25%;

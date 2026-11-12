@@ -7,5 +7,3 @@ export { getTablesListAsTree } from './getTablesListAsTree';
 export { getTrackableTables } from './getTrackableTables';
 export { getTrackableObjects } from './getTrackableObjects';
 export { getSupportedScalars } from './getSupportedScalars';
-export { convertToTreeData } from './utils';
-export type { GetTableInfoResponse } from './types';

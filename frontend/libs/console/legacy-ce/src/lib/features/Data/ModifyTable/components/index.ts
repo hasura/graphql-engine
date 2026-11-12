@@ -1,11 +1,7 @@
-export { TableColumnDescription } from './TableColumnDescription';
 export { TableColumns } from './TableColumns';
 export { TableComments } from './TableComments';
 export { TableRootFields } from './TableRootFields';
 export { ForeignKeys } from './ForeignKeys';
-export { ForeignKeyForm } from './ForeignKeyForm';
-export { ForeignKeyAddForm } from './ForeignKeyAddForm';
-export { ForeignKeyEditForm } from './ForeignKeyEditForm';
 export { ComputedFields } from './ComputedFields/ComputedFields';
 export { SetAsEnum } from './SetAsEnum';
 export { CheckConstraints } from './CheckConstraints';

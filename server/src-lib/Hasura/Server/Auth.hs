@@ -101,8 +101,10 @@ hashAdminSecret = AdminSecretHash . Crypto.hash . T.encodeUtf8
 --
 -- See: https://hasura.io/docs/latest/graphql/core/auth/authentication/unauthenticated-access.html
 data AuthMode
+  -- Authentication is not configured. The request is run as whatever role the client requests.
   = AMNoAuth
-  | AMUnauthentication
+  -- Unauthenticated request, resolves to the fixed "unauthorized role" if configured.
+  | AMUnauthentication !(Maybe RoleName)
   | AMHook !AuthHook
   | AMJWT ![JWTCtx] !(Maybe RoleName)
   | AMAdminSecret !(Set.HashSet AdminSecretHash) !(Maybe RoleName)
@@ -150,10 +152,18 @@ setupAuthMode ::
   Logger Hasura ->
   HTTP.Manager ->
   m AuthMode
-setupAuthMode adminSecretHashSet mWebHook mJwtSecrets mUnAuthRole disableAdminSecret logger httpManager =
+setupAuthMode adminSecretHashSet mWebHook mJwtSecrets mUnAuthRole disableAdminSecret logger httpManager = do
+  -- With admin-secret authentication disabled, an @admin@ unauthorized role
+  -- would hand admin access to every unauthenticated request.
+  when (disableAdminSecret && mUnAuthRole == Just adminRoleName)
+    $ throwError
+    $ unauthorizedRolePrefix
+    <> " cannot be "
+    <> adminRoleName
+    <<> " when --disable-admin-secret (HASURA_GRAPHQL_DISABLE_ADMIN_SECRET) is set"
   case (not (Set.null adminSecretHashSet), mWebHook, not (null mJwtSecrets), disableAdminSecret) of
-    -- Always rejects incoming requests.
-    (_, Nothing, False, True) -> return AMUnauthentication
+    -- Use the unauthorized role, or reject requests if none is configured.
+    (_, Nothing, False, True) -> return $ AMUnauthentication mUnAuthRole
     -- No auth. All requests are authenticated as admin role.
     (False, Nothing, False, False) -> case mUnAuthRole of
       Nothing -> return AMNoAuth
@@ -305,7 +315,10 @@ getUserInfoWithExpTime_ ::
   m (UserInfo, Maybe UTCTime, [HTTP.Header])
 getUserInfoWithExpTime_ userInfoFromAuthHook_ processJwt_ logger manager rawHeaders authMode reqs = case authMode of
   AMNoAuth -> withNoExpTime $ mkUserInfoFallbackAdminRole UAuthNotSet
-  AMUnauthentication -> throw401 "unauthenticated"
+  AMUnauthentication maybeUnauthRole -> withNoExpTime $ case maybeUnauthRole of
+    Nothing -> throw401 "unauthenticated"
+    Just unAuthRole ->
+      mkUserInfo (URBPreDetermined unAuthRole) UAdminSecretNotSent sessionVariables
   -- If hasura was started with an admin secret we:
   --   - check if a secret was sent in the request
   --     - if so, check it and authorize as admin else fail

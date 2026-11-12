@@ -24,7 +24,7 @@ import styles from '../Metrics.module.scss';
 import { useSearchParams } from 'react-router';
 import { useProjectInfo } from '../../../../hooks/useProjectInfo';
 
-export const Error = () => {
+const Error = () => {
   const [searchParams] = useSearchParams();
   const { data: projectInfo } = useProjectInfo();
   const preAppliedFilter = applyFilterByQueryParam(

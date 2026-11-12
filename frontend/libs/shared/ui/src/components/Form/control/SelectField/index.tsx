@@ -58,6 +58,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
           <Select
             {...fieldProps?.root}
             {...field}
+            disabled={disabled || field.disabled}
             full={full}
             placeholder={placeholder}
             defaultValue={defaultValue}

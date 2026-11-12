@@ -1,11 +1,4 @@
 import { useState } from 'react';
-
-export type HeaderItem = {
-  name: string;
-  type: string;
-  value: string;
-};
-
 const createHeader = () => ({
   name: '',
   type: '',
@@ -78,8 +71,4 @@ const useRemoteSchemaHeaderForm = () => {
     changeHeaderType,
   };
 };
-
-export type UseRemoteSchemaHeaderForm = ReturnType<
-  typeof useRemoteSchemaHeaderForm
->;
 export default useRemoteSchemaHeaderForm;

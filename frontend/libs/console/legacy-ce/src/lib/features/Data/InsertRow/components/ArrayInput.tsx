@@ -6,7 +6,7 @@ import { TableColumn } from '@hasura/metadata/data-source';
 import { isArrayString, parsePostgresArrayLiteral } from '@hasura/shared/utils';
 import { convertTableValue } from '../InsertRowForm.utils';
 
-export type ArrayInputProps = {
+type ArrayInputProps = {
   name?: string;
   /** console data type of the elements */
   itemType?: TableColumn['arrayItemType'];

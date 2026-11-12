@@ -1,7 +1,4 @@
 import { dataRoutes } from '@hasura/shared/utils';
-
-export const appPrefix = '/events';
-
 export type AdhocEventsTab = 'add' | 'pending' | 'processed' | 'logs' | 'info';
 
 type TabInfo = {

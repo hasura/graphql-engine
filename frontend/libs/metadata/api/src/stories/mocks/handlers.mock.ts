@@ -3,7 +3,7 @@ import { Metadata, MetadataTable } from '@hasura/shared/types';
 
 const baseUrl = 'http://localhost:8080';
 
-export const metadata: Metadata = {
+const metadata: Metadata = {
   resource_version: 1,
   metadata: {
     version: 3,

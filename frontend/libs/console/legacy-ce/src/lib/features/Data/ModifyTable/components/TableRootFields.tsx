@@ -6,7 +6,7 @@ import { useUpdateTableConfiguration } from '../hooks';
 import { ModifyTableProps } from '../types';
 import { Strong } from '@radix-ui/themes';
 
-export const RootField: React.FC<{ property: string; value: string }> = ({
+const RootField: React.FC<{ property: string; value: string }> = ({
   property,
   value,
 }) => (

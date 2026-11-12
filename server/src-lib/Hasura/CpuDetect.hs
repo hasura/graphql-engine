@@ -45,19 +45,13 @@ tryAutoSetNumCapabilities (Logger logger) = do
     setBasedOnCgroups capabilitiesBefore = do
       detectCgroupVersion >>= \case
         Nothing ->
-          logg LevelInfo
-            $ "Could not detect cgroups. "
-            <> leavingThingsAloneMsg capabilitiesBefore
+          logWithoutCpuLimit capabilitiesBefore "Could not detect cgroups. "
         Just v -> do
           getCpuLimit v >>= \case
             InCgroupNoLimitSet ->
-              logg LevelInfo
-                $ "Running within a cgroup but no CPU limit detected. Leaving haskell capabilities at "
-                <> showBlob capabilitiesBefore
+              logWithoutCpuLimit capabilitiesBefore "Running within a cgroup but no CPU limit detected. "
             NotInCgroup ->
-              logg LevelInfo
-                $ "We don't appear to be running within a cgroup. Leaving haskell capabilities at "
-                <> showBlob capabilitiesBefore
+              logWithoutCpuLimit capabilitiesBefore "We don't appear to be running within a cgroup. "
             InCgroupLimited cpuAllocation -> do
               processors <- getNumProcessors
               -- `floor` is also an options here, but rounding up just seems
@@ -73,6 +67,26 @@ tryAutoSetNumCapabilities (Logger logger) = do
                 <> " CPU cgroup limit. "
                 <> "Setting number of haskell capabilities to: "
                 <> showBlob caps
+
+    -- Eight is a warning threshold, not a limit on supported capabilities.
+    -- Leave the runtime configuration unchanged and let the user size it for
+    -- their workload.
+    logWithoutCpuLimit capabilitiesBefore reason =
+      if capabilitiesBefore > 16
+        then
+          logg LevelWarn
+            $ reason
+            <> "Leaving haskell capabilities at "
+            <> showBlob capabilitiesBefore
+            <> ". A very high capability count can increase memory usage and cause memory leak-like growth. "
+            <> "Consider setting `GHCRTS=-N<number>` (for example, `GHCRTS=-N4`) or configuring a container CPU limit "
+            <> "so that the engine can size capabilities to the available CPU resources when cgroup limits are detectable. "
+            <> "Setting the number of capabilities too low reduces parallelism and can throttle performance; "
+            <> "a low container CPU limit can also cause CPU throttling. Tune these settings for your workload."
+        else
+          logg LevelInfo
+            $ reason
+            <> leavingThingsAloneMsg capabilitiesBefore
 
     getCpuLimit V1 = getCpuLimitV1
     getCpuLimit V2 = getCpuLimitV2

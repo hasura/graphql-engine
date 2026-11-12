@@ -3,7 +3,7 @@ import { EELicenseInfo, EELiteAccess } from './types';
 import { createControlPlaneClient } from '../ControlPlane';
 import endpoints from '../../Endpoints';
 
-export const getExpiryDetails = (
+const getExpiryDetails = (
   expiry_at: Date,
   grace_at?: Date,
 ): {

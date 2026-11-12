@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { Badge } from '@hasura/shared/ui';
 import { FaTimesCircle } from 'react-icons/fa';
 

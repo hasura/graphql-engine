@@ -1,6 +1,6 @@
 import { buildClientSchema, IntrospectionQuery } from 'graphql';
 
-export const results = {
+const results = {
   data: {
     __schema: {
       queryType: {

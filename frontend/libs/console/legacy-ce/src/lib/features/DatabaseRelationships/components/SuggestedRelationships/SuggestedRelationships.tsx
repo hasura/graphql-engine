@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { FaDatabase, FaMagic } from 'react-icons/fa';
-import { Button, CardedTable, SkeletonList, Text } from '@hasura/shared/ui';
+import { Button, CardedTable, Text } from '@hasura/shared/ui';
 import { useSuggestedRelationships } from '@hasura/metadata/api';
 import { Table } from '@hasura/shared/types';
 import { SuggestedRelationshipTrackModal } from '../SuggestedRelationshipTrackModal/SuggestedRelationshipTrackModal';
@@ -9,6 +9,15 @@ import { areTablesEqual } from '@hasura/metadata/helpers';
 import { Flex } from '@radix-ui/themes';
 import { capitalizeFirstLetter } from '@hasura/shared/utils';
 import { DisplaySuggestedRelationship } from '../common/mapping/DisplaySuggestedRelationship';
+
+const COLUMNS = [
+  <Flex align="center" gap="2" key="suggested-header">
+    <FaMagic /> SUGGESTED RELATIONSHIPS
+  </Flex>,
+  'SOURCE',
+  'TYPE',
+  'RELATIONSHIP',
+];
 
 type SuggestedRelationshipsProps = {
   dataSourceName: string;
@@ -33,19 +42,15 @@ export const SuggestedRelationships = ({
   const [selectedRelationship, setSelectedRelationship] =
     useState<SuggestedRelationshipWithName | null>(null);
 
-  if (isLoading) return <SkeletonList count={4} />;
+  if (isLoading)
+    return (
+      <CardedTable columns={COLUMNS} data={[]} loading loadingRowCount={4} />
+    );
 
   return untrackedSuggestedRelationships.length > 0 ? (
     <>
       <CardedTable
-        columns={[
-          <Flex align="center" gap="2" key="suggested-header">
-            <FaMagic /> SUGGESTED RELATIONSHIPS
-          </Flex>,
-          'SOURCE',
-          'TYPE',
-          'RELATIONSHIP',
-        ]}
+        columns={COLUMNS}
         data={untrackedSuggestedRelationships.map((relationship) => [
           <Flex
             direction="row"
