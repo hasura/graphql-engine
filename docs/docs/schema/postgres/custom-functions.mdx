@@ -609,6 +609,81 @@ Metadata API to track [VOLATILE functions](https://www.postgresql.org/docs/curre
 Aside from showing up under the `mutation` root (and presumably having side-effects), these tracked functions behave the
 same as described above for `queries`.
 
+**For example**, let's count how many times each article from the [text-search example](#example-text-search-functions)
+is read. Add a `views` column to the `articles` table and a function that increments it and returns the updated row:
+
+```plsql
+ALTER TABLE articles ADD COLUMN views integer NOT NULL DEFAULT 0;
+
+CREATE FUNCTION record_article_view(article_id integer)
+RETURNS SETOF articles AS $$
+    UPDATE articles
+    SET views = views + 1
+    WHERE id = article_id
+    RETURNING *
+$$ LANGUAGE sql VOLATILE;
+```
+
+Track the function as a mutation:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_track_function",
+  "args": {
+    "function": {
+      "schema": "public",
+      "name": "record_article_view"
+    },
+    "configuration": {
+      "exposed_as": "mutation"
+    },
+    "source": "default"
+  }
+}
+```
+
+Since the function is `VOLATILE`, it would also be exposed as a mutation if `exposed_as` were left out. You can now call
+it like any other mutation:
+
+<GraphiQLIDE
+  query={`mutation {
+  record_article_view(
+    args: {article_id: 1}
+  ){
+    id
+    title
+    views
+  }
+}`}
+  response={`{
+  "data": {
+    "record_article_view": [
+      {
+        "id": 1,
+        "title": "first post by hasura",
+        "views": 1
+      }
+    ]
+  }
+}`}
+/>
+
+When deciding how to write and track such a function, keep the following in mind:
+
+- Mark a function `VOLATILE` only when it changes data (`INSERT`, `UPDATE`, `DELETE`) or otherwise has side effects. A
+  function that only reads data should be `STABLE`, and one whose result depends only on its arguments should be
+  `IMMUTABLE`, so that it is exposed as a query instead.
+- Hasura applies the role's select permissions on the returned table to the rows the function returns, not to the rows
+  it changes. The SQL inside the function runs with the privileges of the database user that Hasura connects with, so
+  check any access rules you need inside the function itself, for example with a
+  [session argument](#accessing-hasura-session-variables-in-custom-functions).
+- A role other than `admin` can only call the mutation once a function permission has been added for it, see
+  [Permissions for custom functions](#permissions-for-custom-functions).
+
 We also permit tracking `VOLATILE` functions under the `query` root, in which case the user needs to guarantee that the
 field is idempotent and side-effect free, in the context of the resulting GraphQL API. One such use case might be a
 function that wraps a simple query and performs some logging visible only to administrators.
