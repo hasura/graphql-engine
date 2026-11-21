@@ -85,7 +85,11 @@ If you're using a database user other than the default one, make sure to give it
 
 :::
 
-## Step 4: Allow connections to your DB from Hasura {#connect-hasura-aiven}
+## Step 4 (optional): Restrict access to your DB to Hasura {#connect-hasura-aiven}
+
+Aiven services accept connections from any IP address by default (the allowed IP addresses list contains `0.0.0.0/0`),
+so Hasura can already connect to your database and you can skip this step. We do recommend limiting access to the IP
+address of your Hasura instance.
 
 On the `Services` dashboard, click on your DB:
 
@@ -115,7 +119,7 @@ Add the Hasura IP address that you copied, click on the `+`:
 
 <Thumbnail src="/img/cloud-dbs/aiven/add-hasura-ip.png" alt="Add the Hasura IP on Aiven" width="1000px" />
 
-Then click on `Save changes`.
+Remove the default `0.0.0.0/0` entry, otherwise every IP address can still connect. Then click on `Save changes`.
 
 ## Step 5: Get the database connection URL {#get-db-url-aiven}
 
