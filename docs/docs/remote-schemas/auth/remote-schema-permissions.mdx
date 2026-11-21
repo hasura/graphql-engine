@@ -200,6 +200,35 @@ get_user(id: ID! @preset(value: "x-hasura-user-id", static: true)) : User
 
 :::
 
+### Session variables in list arguments
+
+A session variable can only be used as the preset of a single value, not of a whole list. Using one as the preset of a
+list argument or input field fails with the error `Session arguments can only be set for singleton values`, even if the
+session variable holds an array such as `{1,2,3}`. For example, if the Remote Schema has a field
+`get_users(ids: [ID!]!): [User]`, the following role-based schema is rejected:
+
+```graphql
+type Query {
+  # not allowed: the whole list comes from one session variable
+  get_users(ids: [ID!]! @preset(value: "x-hasura-allowed-ids")): [User]
+}
+```
+
+This differs from [table permissions](/auth/authorization/permissions/row-level-permissions.mdx), where an array session
+variable can be used with operators such as `_in`.
+
+A session variable can still be used as an element of a list preset, as each element is a single value. The following
+sends a list with one element, the value of `x-hasura-user-id`:
+
+```graphql
+type Query {
+  get_users(ids: [ID!]! @preset(value: ["x-hasura-user-id"])): [User]
+}
+```
+
+If the remote server needs every value of an array session variable, preset an argument of type `String` with the
+session variable instead, and parse the value in the remote server.
+
 ## Input object field presets
 
 Input object fields can also have preset values set. When an input object contains multiple fields and only some of them
