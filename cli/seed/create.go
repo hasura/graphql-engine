@@ -91,9 +91,13 @@ func (d *Driver) ExportDatadump(tableNames []string, sourceName string) (io.Read
 		pgDumpOpts = append(pgDumpOpts, "--table", table)
 	}
 
+	// clean_output is not used here: the server drops every blank line and
+	// every line starting with "--", including lines inside multi-line text
+	// values, which corrupts the seed data. The output is cleaned below with
+	// the same rules, applied only to lines that start outside a literal.
 	request := hasura.PGDumpRequest{
 		Opts:        pgDumpOpts,
-		CleanOutput: true,
+		CleanOutput: false,
 		SourceName:  sourceName,
 	}
 
@@ -102,5 +106,71 @@ func (d *Driver) ExportDatadump(tableNames []string, sourceName string) (io.Read
 		return nil, internalerrors.E(op, err)
 	}
 
-	return response, nil
+	dump, err := io.ReadAll(response)
+	if err != nil {
+		return nil, internalerrors.E(op, fmt.Errorf("reading pg_dump response: %w", err))
+	}
+
+	return strings.NewReader(cleanDataDump(string(dump))), nil
+}
+
+// preambleLines are the session settings pg_dump writes at the top of a dump.
+// It is the list the server drops when clean_output is set.
+var preambleLines = map[string]bool{
+	"SET statement_timeout = 0;":                              true,
+	"SET lock_timeout = 0;":                                   true,
+	"SET idle_in_transaction_session_timeout = 0;":            true,
+	"SET client_encoding = 'UTF8';":                           true,
+	"SET standard_conforming_strings = on;":                   true,
+	"SELECT pg_catalog.set_config('search_path', '', false);": true,
+	"SET xmloption = content;":                                true,
+	"SET client_min_messages = warning;":                      true,
+	"SET row_security = off;":                                 true,
+	"SET default_tablespace = '';":                            true,
+	"SET default_with_oids = false;":                          true,
+	"SET default_table_access_method = heap;":                 true,
+	"CREATE SCHEMA public;":                                   true,
+	"COMMENT ON SCHEMA public IS 'standard public schema';":   true,
+}
+
+// cleanDataDump removes blank lines, "--" comments and the preamble from a
+// pg_dump data dump, like the server does for clean_output, but keeps every
+// line that starts inside a quoted string or identifier, so that blank lines
+// and lines starting with "--" in multi-line text values are preserved.
+func cleanDataDump(dump string) string {
+	lines := strings.Split(dump, "\n")
+	if len(lines) > 0 && lines[len(lines)-1] == "" {
+		lines = lines[:len(lines)-1]
+	}
+
+	var (
+		out      strings.Builder
+		inSingle bool
+		inDouble bool
+	)
+
+	for _, line := range lines {
+		inLiteral := inSingle || inDouble
+		if !inLiteral && (strings.TrimSpace(line) == "" ||
+			strings.HasPrefix(line, "--") ||
+			preambleLines[line]) {
+			continue
+		}
+
+		out.WriteString(line)
+		out.WriteString("\n")
+
+		// pg_dump writes literals with standard_conforming_strings on, so
+		// quotes are escaped by doubling them, which toggles the state twice
+		for _, c := range line {
+			switch {
+			case c == '\'' && !inDouble:
+				inSingle = !inSingle
+			case c == '"' && !inSingle:
+				inDouble = !inDouble
+			}
+		}
+	}
+
+	return out.String()
 }
