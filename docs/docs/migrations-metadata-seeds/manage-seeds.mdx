@@ -46,7 +46,14 @@ INSERT INTO public.author (id, name) VALUES ('1', 'Woolf');
 INSERT INTO public.author (id, name) VALUES ('2', 'Tolkien');
 INSERT INTO public.author (id, name) VALUES ('3', 'Austen');
 INSERT INTO public.author (id, name) VALUES ('4', 'Orwell');
+SELECT pg_catalog.setval('public.author_id_seq', 4, true);
 ```
+
+The `SELECT pg_catalog.setval(...)` statements at the end set the sequences behind the table's `serial` or identity
+columns to their current value in the database. Applying the seed then leaves the sequence in step with the inserted
+ids, so that the next row inserted without an explicit id does not collide with a seeded one. For a table with no rows,
+the statement looks like `SELECT pg_catalog.setval('public.author_id_seq', 1, false);`, which makes the next generated
+id `1`. You can remove these statements if you don't want the Seed to change your sequences.
 
 :::info Want to generate seed data for a table that doesn't exist yet?
 
