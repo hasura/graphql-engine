@@ -1,4 +1,6 @@
 import { useConsoleForm } from '@hasura/shared/ui';
+import { useMetadata } from '@hasura/metadata/api';
+import { MetadataSelectors } from '@hasura/metadata/helpers';
 import React from 'react';
 import { useWatch } from 'react-hook-form';
 import { z } from 'zod';
@@ -32,6 +34,7 @@ export const useCustomFieldNamesForm = ({
   initialTableName,
   currentConfiguration,
   onSubmit,
+  source,
 }: Omit<CustomFieldNamesFormProps, 'onClose'>) => {
   const { methods, Form } = useConsoleForm({
     schema,
@@ -52,8 +55,14 @@ export const useCustomFieldNamesForm = ({
     name: 'custom_name',
   });
 
+  const { data: namingConvention } = useMetadata(
+    (m) =>
+      MetadataSelectors.findSource(source)(m)?.customization?.naming_convention,
+  );
+
   const placeholders = customFieldNamesPlaceholders(
     customTableName || initialTableName,
+    { namingConvention, isCustomName: !!customTableName },
   );
 
   const values = watch();
