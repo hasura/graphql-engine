@@ -69,16 +69,20 @@ instance.
 The JDBC connection URL should look like this:
 
 ```yaml {4-6}
-jdbc:mariadb://<hostname>:<port>/<database name>?user=<username>&password=<password>
+jdbc:mariadb://<hostname>:<port>/<database name>?user=<username>&password=<password>&allowMultiQueries=true
 ```
 
 For example:
 
 ```yaml {4-6}
-jdbc:mariadb://myhost.mycompany.com/mariadbtest?user=abc&password=pqr  # assuming the default port 3306
-jdbc:mariadb://localhost:4533/mariadbtest?user=abc&password=pqr        # assuming MariaDB is running on port 4533
+jdbc:mariadb://myhost.mycompany.com/mariadbtest?user=abc&password=pqr&allowMultiQueries=true  # assuming the default port 3306
+jdbc:mariadb://localhost:4533/mariadbtest?user=abc&password=pqr&allowMultiQueries=true        # assuming MariaDB is running on port 4533
 
 ```
+
+Keep the `allowMultiQueries=true` parameter: without it, MariaDB Connector/J rejects requests that contain more than one
+statement and queries from Hasura fail. The data connector adds this option automatically for MySQL, but not for
+MariaDB.
 
 For more information see
 [MariaDB Connection URL syntax](https://mariadb.com/kb/en/about-mariadb-connector-j/#using-the-driver).
