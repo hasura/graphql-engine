@@ -245,6 +245,34 @@ corresponding Hasura features will not work.
 - `TRIGGER` is required to use [Event Triggers](/event-triggers/overview.mdx)
 - If you want to use computed fields or user-defined Postgres functions, the `EXECUTE` permission is required.
 
+## Special characters in the connection URL {#special-characters-in-connection-url}
+
+A Postgres connection URL is a URI, so characters that have a meaning in a URI, such as `@`, `:`, `/`, `?`, `#`, `[`,
+`]` and `%`, must be [percent-encoded](https://developer.mozilla.org/en-US/docs/Glossary/Percent-encoding) when they
+appear in the username or password. For example, the password `p@ss#word` is written as `p%40ss%23word`:
+
+```bash
+postgres://hasura:p%40ss%23word@db.example.com:5432/postgres
+```
+
+This also applies when you build the URL from several environment variables, for example from a username and password
+that a secrets manager generates and rotates. Without the encoding, the URL is split at the wrong places and the
+connection fails.
+
+If you cannot encode the password, you can pass the parts separately with
+[`connection_parameters`](/api-reference/syntax-defs.mdx#pgconnectionparameters), where each value is used as is. Note
+that these values are stored in plain text in the Metadata:
+
+```yaml
+database_url:
+  connection_parameters:
+    username: hasura
+    password: p@ss#word
+    host: db.example.com
+    port: 5432
+    database: postgres
+```
+
 ## Connecting to Postgres with SSL Authentication {#postgres-ssl-authentication}
 
 Hasura supports SSL-based authentication for connecting to a PostgreSQL database without requiring password
