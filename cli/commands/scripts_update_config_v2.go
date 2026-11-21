@@ -136,6 +136,9 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command { //no
 				buf := new(bytes.Buffer)
 
 				_, err = buf.ReadFrom(bodyReader)
+				// close the file right away: it is removed further down, and
+				// Windows refuses to remove a file that is still open
+				bodyReader.Close()
 				if err != nil {
 					return errors.E(op, fmt.Errorf("unable to read bytes: %w", err))
 				}
@@ -255,6 +258,9 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command { //no
 				buf := new(bytes.Buffer)
 
 				_, err = buf.ReadFrom(bodyReader)
+				// close the file right away: it is removed further down, and
+				// Windows refuses to remove a file that is still open
+				bodyReader.Close()
 				if err != nil {
 					return errors.E(op, fmt.Errorf("unable to read bytes: %w", err))
 				}
