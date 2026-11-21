@@ -7,6 +7,7 @@ import { useFormContext } from 'react-hook-form';
 import { useDebouncedEffect } from '@hasura/shared/hooks';
 import { SchemaType } from './types';
 import { formatGraphQL } from '@hasura/shared/utils';
+import { prepareJsonSample, sampleErrorMessage } from './utils';
 
 export const schema = z.object({
   jsonInput: z.string(),
@@ -47,7 +48,7 @@ export const TypeGeneratorForm = (props: {
       try {
         if (jsonInput) {
           const schema = jsonToSchema({
-            jsonInput: jsonInput,
+            jsonInput: prepareJsonSample(jsonInput),
             baseType: 'SampleInput',
           });
           setValue(
@@ -59,21 +60,21 @@ export const TypeGeneratorForm = (props: {
         }
       } catch (e) {
         setError('jsonInput', {
-          message: 'Invalid JSON',
+          message: sampleErrorMessage(e),
         });
       }
 
       try {
         if (jsonOutput) {
           const schema = jsonToSchema({
-            jsonInput: jsonOutput,
+            jsonInput: prepareJsonSample(jsonOutput),
             baseType: 'SampleOutput',
           });
           setValue('graphqlOutput', formatGraphQL(schema.value));
         }
       } catch (e) {
         setError('jsonOutput', {
-          message: 'Invalid JSON',
+          message: sampleErrorMessage(e),
         });
       }
     },
