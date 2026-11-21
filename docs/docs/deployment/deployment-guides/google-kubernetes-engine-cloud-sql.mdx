@@ -47,6 +47,14 @@ a project called `hasura` for this guide.
 gcloud projects create hasura
 ```
 
+:::info Note
+
+Project IDs are globally unique across Google Cloud, so the ID `hasura` is most likely taken already and the command
+above will fail. Pick an ID of your own, such as `hasura-<your-company>`, and use it in place of `hasura` wherever this
+guide passes `--project hasura` or `project=hasura`.
+
+:::
+
 ## Create a Google Cloud SQL Postgres instance
 
 Create a Cloud SQL Postgres instance called `hasura-postgres` in the
