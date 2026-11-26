@@ -42,6 +42,7 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as HashSet
 import Data.Maybe qualified as Maybe
 import Data.Text qualified as T
+import Data.Text.Encoding qualified as TE
 import Data.Text.Extended
 import Hasura.Authentication.Header (filterHeaders)
 import Hasura.Authentication.Role (RoleName, mkRoleName)
@@ -178,7 +179,18 @@ mkSessionVariablesHeaders =
     . HashMap.fromList
     . map (first SessionVariable)
     . filter (isSessionVariable . fst) -- Only x-hasura-* headers
-    . map (CI.map bsToTxt *** bsToTxt)
+    . map (CI.map bsToTxt *** decodeHeaderValueText)
+
+-- HTTP header values are bytes without a declared character encoding. Clients
+-- commonly send non-ASCII values either as UTF-8 or, following legacy HTTP
+-- semantics, as ISO-8859-1. Prefer UTF-8 when the bytes form a valid sequence;
+-- otherwise preserve every byte as Latin-1 instead of replacing them with
+-- U+FFFD and losing the user's original value.
+decodeHeaderValueText :: BS.ByteString -> Text
+decodeHeaderValueText bytes =
+  either (const latin1) id (TE.decodeUtf8' bytes)
+  where
+    latin1 = T.pack $ map (toEnum . fromIntegral) $ BS.unpack bytes
 
 ---- Something like this a little faster, but I expect some test failures
 --   . map (lowerToTxt *** bsToTxt)
