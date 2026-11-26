@@ -250,9 +250,13 @@
         },
         "issuer": {
           "description": "Optional validation to check that the `iss` field is a member of the `iss` received, otherwise will throw error.",
-          "type": [
-            "string",
-            "null"
+          "anyOf": [
+            {
+              "$ref": "#/definitions/StringOrEnvironmentValue"
+            },
+            {
+              "type": "null"
+            }
           ]
         },
         "allowedSkew": {
@@ -290,6 +294,50 @@
         }
       },
       "additionalProperties": false
+    },
+    "StringOrEnvironmentValue": {
+      "$id": "https://hasura.io/jsonschemas/metadata/StringOrEnvironmentValue",
+      "title": "StringOrEnvironmentValue",
+      "description": "Either a plain string or an environment-value object. This is useful for configuration fields that historically accepted a plain string and now also support `value` / `valueFromEnv` object forms. `valueFromEnv` is resolved during the metadata build before the engine deserializes the object form.",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/definitions/EnvironmentValue"
+        }
+      ]
+    },
+    "EnvironmentValue": {
+      "$id": "https://hasura.io/jsonschemas/EnvironmentValue",
+      "title": "EnvironmentValue",
+      "description": "Either a literal string or a reference to a Hasura secret",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "value"
+          ],
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "valueFromEnv"
+          ],
+          "properties": {
+            "valueFromEnv": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
     },
     "JWTClaimsConfig": {
       "$id": "https://hasura.io/jsonschemas/metadata/JWTClaimsConfig",
@@ -682,8 +730,7 @@
           ],
           "properties": {
             "jwkFromUrl": {
-              "type": "string",
-              "format": "uri"
+              "$ref": "#/definitions/ResolvableUrl"
             }
           },
           "additionalProperties": false
@@ -810,34 +857,17 @@
         }
       ]
     },
-    "EnvironmentValue": {
-      "$id": "https://hasura.io/jsonschemas/EnvironmentValue",
-      "title": "EnvironmentValue",
-      "description": "Either a literal string or a reference to a Hasura secret",
-      "oneOf": [
+    "ResolvableUrl": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ResolvableUrl",
+      "title": "ResolvableUrl",
+      "description": "A URL specified either as a string or as a value/valueFromEnv object.",
+      "anyOf": [
         {
-          "type": "object",
-          "required": [
-            "value"
-          ],
-          "properties": {
-            "value": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false
+          "type": "string",
+          "format": "uri"
         },
         {
-          "type": "object",
-          "required": [
-            "valueFromEnv"
-          ],
-          "properties": {
-            "valueFromEnv": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false
+          "$ref": "#/definitions/EnvironmentValue"
         }
       ]
     },

@@ -11,6 +11,7 @@ bench = false
 engine-types = { path = "../../engine-types" }
 hasura-authn-core = { path = "../hasura-authn-core" }
 open-dds = { path = "../../open-dds" }
+jsonpath = { path = "../../utils/jsonpath" }
 tracing-util = { path = "../../utils/tracing-util"}
 
 axum = { workspace = true }

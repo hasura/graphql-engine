@@ -75,6 +75,52 @@ impl traits::OpenDd for EnvironmentValue {
 
 impl_JsonSchema_with_OpenDd_for!(EnvironmentValue);
 
+/// Either a plain string or an environment-value object. This is useful for
+/// configuration fields that historically accepted a plain string and now also
+/// support `value` / `valueFromEnv` object forms. `valueFromEnv` is resolved
+/// during the metadata build before the engine deserializes the object form.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[serde(untagged)]
+#[schemars(title = "StringOrEnvironmentValue")]
+pub enum StringOrEnvironmentValue {
+    Value(String),
+    EnvironmentValue(EnvironmentValue),
+}
+
+impl StringOrEnvironmentValue {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Value(value) => value,
+            Self::EnvironmentValue(value) => &value.value,
+        }
+    }
+}
+
+impl traits::OpenDd for StringOrEnvironmentValue {
+    fn deserialize(
+        json: serde_json::Value,
+        path: jsonpath::JSONPath,
+    ) -> Result<Self, traits::OpenDdDeserializeError> {
+        serde_json::from_value(json).map_err(|error| traits::OpenDdDeserializeError { error, path })
+    }
+
+    fn json_schema(generator: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+        let mut schema = <Self as JsonSchema>::json_schema(generator);
+        if let schemars::schema::Schema::Object(schema_object) = &mut schema {
+            schema_object.metadata().title = Some(Self::_schema_name());
+        }
+        schema
+    }
+
+    fn _schema_name() -> String {
+        "StringOrEnvironmentValue".to_owned()
+    }
+
+    fn _schema_is_referenceable() -> bool {
+        true
+    }
+}
+
 // This is copied from ndc-sdk to avoid establishing a dependency.
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 #[serde(rename_all = "camelCase")]

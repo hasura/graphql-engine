@@ -713,6 +713,49 @@ mod tests {
     }
 
     #[test]
+    fn test_jwt_auth_config_accepts_resolved_env_value_shapes() {
+        let auth_config_json = serde_json::json!({
+            "version": "v3",
+            "definition": {
+                "mode": {
+                    "jwt": {
+                        "key": {
+                            "jwkFromUrl": {
+                                "value": "https://auth.example.com/.well-known/jwks.json"
+                            }
+                        },
+                        "issuer": {
+                            "value": "https://auth.example.com/"
+                        },
+                        "tokenLocation": {
+                            "type": "BearerAuthorization"
+                        },
+                        "claimsConfig": {
+                            "namespace": {
+                                "claimsFormat": "Json",
+                                "location": "/claims.jwt.hasura.io"
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        let auth_config = <super::AuthConfig as open_dds::traits::OpenDd>::deserialize(
+            auth_config_json,
+            jsonpath::JSONPath::new(),
+        )
+        .unwrap();
+        let serialized = serde_json::to_value(&auth_config).unwrap();
+        let round_tripped = <super::AuthConfig as open_dds::traits::OpenDd>::deserialize(
+            serialized,
+            jsonpath::JSONPath::new(),
+        )
+        .unwrap();
+        assert_eq!(auth_config, round_tripped);
+    }
+
+    #[test]
     /// This test is a round trip test for the AuthConfig type. It reads a reference auth config file,
     /// deserializes it into a AuthConfig type, serializes it back to JSON, deserializes it back into
     /// a AuthConfig type, and compares the two AuthConfig types to ensure they are equal.
