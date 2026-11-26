@@ -593,7 +593,7 @@ pub async fn authenticate_request_v2(
 ///
 /// Note that, in the case the auth hook mode is `POST`, this is *not* applicable, i.e. all the
 /// headers sent by the client are forwarded to the auth hook.
-const COMMON_CLIENT_HEADERS_TO_IGNORE: [&str; 14] = [
+const COMMON_CLIENT_HEADERS_TO_IGNORE: [&str; 13] = [
     "Accept",
     "Accept-Datetime",
     "Accept-Encoding",
@@ -607,7 +607,6 @@ const COMMON_CLIENT_HEADERS_TO_IGNORE: [&str; 14] = [
     "Host",
     "Origin",
     "Referer",
-    "User-Agent",
 ];
 
 /// Decides whether to ignore the given header sent by the client when making a GET request to
@@ -1423,11 +1422,26 @@ mod tests {
     }
 
     #[test]
+    fn test_legacy_get_request_forwards_user_agent() {
+        let mut client_headers = HeaderMap::new();
+        client_headers.insert("user-agent", "test-agent".parse().unwrap());
+        client_headers.insert("accept", "application/json".parse().unwrap());
+
+        let request = get_auth_hook_request_v1(&AuthHookMethod::Get, &client_headers);
+        let AuthHookRequest::Get { headers } = request else {
+            panic!("expected a GET auth hook request")
+        };
+
+        assert_eq!(headers.get("user-agent").unwrap(), "test-agent");
+        assert!(!headers.contains_key("accept"));
+    }
+
+    #[test]
     fn test_get_filtered_headers_forward_all() {
         let mut client_headers = HeaderMap::new();
         client_headers.insert("x-custom-header", "custom-value".parse().unwrap());
         client_headers.insert("authorization", "Bearer token".parse().unwrap());
-        client_headers.insert("user-agent", "test-agent".parse().unwrap()); // This is in common headers
+        client_headers.insert("user-agent", "test-agent".parse().unwrap());
 
         let config = AuthHookConfigV3Headers {
             forward: AllOrList::All(All(())),
@@ -1438,7 +1452,7 @@ mod tests {
         let filtered_headers = get_filtered_headers(&config, &client_headers, true);
         assert!(filtered_headers.contains_key("x-custom-header"));
         assert!(filtered_headers.contains_key("authorization"));
-        assert!(!filtered_headers.contains_key("user-agent")); // Should be filtered out
+        assert!(filtered_headers.contains_key("user-agent"));
 
         // Test with ignore_common_headers = false
         let filtered_headers = get_filtered_headers(&config, &client_headers, false);
