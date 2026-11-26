@@ -2877,6 +2877,7 @@ dependencies = [
  "cookie",
  "engine-types",
  "hasura-authn-core",
+ "jsonpath",
  "jsonptr",
  "jsonwebkey",
  "jsonwebtoken",

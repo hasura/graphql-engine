@@ -7,6 +7,7 @@ use hasura_authn_core::{JsonSessionVariableValue, Role};
 use jsonptr::PointerBuf;
 use jsonwebtoken::{self as jwt, DecodingKey, Validation, decode};
 use jwt::decode_header;
+use open_dds::StringOrEnvironmentValue;
 use open_dds::session_variables::SessionVariableName;
 use reqwest::StatusCode;
 use reqwest::header::{AUTHORIZATION, COOKIE};
@@ -204,13 +205,95 @@ where
     s.serialize_str(url.as_str())
 }
 
-fn deserialize_url<'de, D>(deserializer: D) -> Result<Url, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let buf = String::deserialize(deserializer)?;
+/// A URL that accepts either the historical plain-string form or the
+/// environment-value object form. `valueFromEnv` is resolved during the
+/// metadata build, so deserialization always sees the resolved value and can
+/// validate it as a URL before the engine starts serving requests.
+#[derive(Debug, PartialEq, Clone)]
+pub struct ResolvableUrl(Url);
 
-    Url::parse(&buf).map_err(SerdeDeError::custom)
+impl Serialize for ResolvableUrl {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serialize_url(&self.0, serializer)
+    }
+}
+
+fn parse_resolvable_url(value: &StringOrEnvironmentValue) -> Result<ResolvableUrl, String> {
+    Url::parse(value.as_str())
+        .map(ResolvableUrl)
+        .map_err(|error| format!("invalid URL `{}`: {error}", value.as_str()))
+}
+
+impl<'de> Deserialize<'de> for ResolvableUrl {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let value = StringOrEnvironmentValue::deserialize(deserializer)?;
+        parse_resolvable_url(&value).map_err(SerdeDeError::custom)
+    }
+}
+
+impl open_dds::traits::OpenDd for ResolvableUrl {
+    fn deserialize(
+        json: serde_json::Value,
+        path: jsonpath::JSONPath,
+    ) -> Result<Self, open_dds::traits::OpenDdDeserializeError> {
+        let value = <StringOrEnvironmentValue as open_dds::traits::OpenDd>::deserialize(
+            json,
+            path.clone(),
+        )?;
+        parse_resolvable_url(&value).map_err(|message| open_dds::traits::OpenDdDeserializeError {
+            path,
+            error: serde_json::Error::custom(message),
+        })
+    }
+
+    fn json_schema(generator: &mut SchemaGenerator) -> Schema {
+        let mut uri_schema: SchemaObject =
+            <String as schemars::JsonSchema>::json_schema(generator).into();
+        uri_schema.format = Some("uri".to_owned());
+        SchemaObject {
+            metadata: Some(Box::new(schemars::schema::Metadata {
+                title: Some(Self::_schema_name()),
+                description: Some(
+                    "A URL specified either as a string or as a value/valueFromEnv object."
+                        .to_owned(),
+                ),
+                ..Default::default()
+            })),
+            subschemas: Some(Box::new(schemars::schema::SubschemaValidation {
+                any_of: Some(vec![
+                    uri_schema.into(),
+                    open_dds::traits::gen_subschema_for::<open_dds::EnvironmentValue>(generator),
+                ]),
+                ..Default::default()
+            })),
+            ..Default::default()
+        }
+        .into()
+    }
+
+    fn _schema_name() -> String {
+        "ResolvableUrl".to_owned()
+    }
+
+    fn _schema_is_referenceable() -> bool {
+        true
+    }
+}
+
+impl schemars::JsonSchema for ResolvableUrl {
+    fn schema_name() -> String {
+        <Self as open_dds::traits::OpenDd>::_schema_name()
+    }
+
+    fn json_schema(generator: &mut SchemaGenerator) -> Schema {
+        <Self as open_dds::traits::OpenDd>::json_schema(generator)
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone, JsonSchema)]
@@ -223,8 +306,7 @@ pub enum JWTKey {
     Fixed(JWTKeyConfig),
     /// JWT mode where the `type` and `key` parameters
     /// are obtained dynamically through JWK.
-    #[serde(serialize_with = "serialize_url", deserialize_with = "deserialize_url")]
-    JwkFromUrl(Url),
+    JwkFromUrl(ResolvableUrl),
 }
 
 #[derive(Serialize, Deserialize, Default, PartialEq, Clone, JsonSchema, Debug)]
@@ -357,7 +439,7 @@ pub struct JWTConfig {
     pub audience: Option<HashSet<String>>,
     /// Optional validation to check that the `iss` field is
     /// a member of the `iss` received, otherwise will throw error.
-    pub issuer: Option<String>,
+    pub issuer: Option<StringOrEnvironmentValue>,
     /// Allowed leeway (in seconds) to the `exp` validation
     /// to account for clock skew.
     pub allowed_skew: Option<u64>,
@@ -614,7 +696,7 @@ pub(crate) async fn decode_and_parse_hasura_claims(
     let (acceptable_algorithms, decoding_key) = match &jwt_config.key {
         JWTKey::Fixed(conf) => (vec![conf.algorithm], get_decoding_key(conf)?),
         JWTKey::JwkFromUrl(jwk_url) => {
-            get_decoding_key_from_jwk_url(http_client, jwk_url, &jwt).await?
+            get_decoding_key_from_jwk_url(http_client, &jwk_url.0, &jwt).await?
         }
     };
 
@@ -631,7 +713,7 @@ pub(crate) async fn decode_and_parse_hasura_claims(
     }
 
     if let Some(issuer) = &jwt_config.issuer {
-        validation.set_issuer(&[issuer]);
+        validation.set_issuer(&[issuer.as_str()]);
     }
 
     if let Some(leeway) = jwt_config.allowed_skew {
@@ -870,6 +952,71 @@ mod tests {
             jwt::Algorithm::PS512,
             jwt::Algorithm::EdDSA,
         ]
+    }
+
+    fn jwt_config_json(key: &serde_json::Value, issuer: &serde_json::Value) -> serde_json::Value {
+        json!({
+            "key": key,
+            "issuer": issuer,
+            "tokenLocation": {
+                "type": "BearerAuthorization",
+            },
+            "claimsConfig": {
+                "namespace": {
+                    "claimsFormat": "Json",
+                    "location": jsonptr::PointerBuf::from_tokens([DEFAULT_HASURA_CLAIMS_NAMESPACE]),
+                },
+            },
+        })
+    }
+
+    #[test]
+    fn test_jwk_url_and_issuer_accept_legacy_string_and_resolved_env_shapes() {
+        let url = "https://auth.example.com/.well-known/jwks.json";
+        let issuer = "https://auth.example.com/";
+
+        let legacy_config: JWTConfig = serde_json::from_value(jwt_config_json(
+            &json!({ "jwkFromUrl": url }),
+            &json!(issuer),
+        ))
+        .unwrap();
+        assert!(
+            matches!(&legacy_config.key, JWTKey::JwkFromUrl(jwk_url) if jwk_url.0.as_str() == url)
+        );
+        assert_eq!(
+            legacy_config
+                .issuer
+                .as_ref()
+                .map(StringOrEnvironmentValue::as_str),
+            Some(issuer)
+        );
+
+        let env_config: JWTConfig = serde_json::from_value(jwt_config_json(
+            &json!({ "jwkFromUrl": { "value": url } }),
+            &json!({ "value": issuer }),
+        ))
+        .unwrap();
+        assert!(
+            matches!(&env_config.key, JWTKey::JwkFromUrl(jwk_url) if jwk_url.0.as_str() == url)
+        );
+        assert_eq!(
+            env_config
+                .issuer
+                .as_ref()
+                .map(StringOrEnvironmentValue::as_str),
+            Some(issuer)
+        );
+    }
+
+    #[test]
+    fn test_jwk_url_is_validated_after_env_resolution() {
+        let error = serde_json::from_value::<JWTConfig>(jwt_config_json(
+            &json!({ "jwkFromUrl": { "value": "not a url" } }),
+            &json!("https://auth.example.com/"),
+        ))
+        .unwrap_err();
+
+        assert!(error.to_string().contains("invalid URL"));
     }
 
     #[test]
